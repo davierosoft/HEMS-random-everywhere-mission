@@ -1,5 +1,5 @@
 { 
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 6",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 7",
 "id":"HEMSRandE",
 "author":"Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 
@@ -7731,6 +7731,9 @@
         {"image":"bar"},
         {"text":"AMBULANCE PRE-VISIT"},
         {"text":"monitor: {0}; active: {1}; patient loaded: {2}; roll: {3}","params":[{"local":"ambulance_previsit_monitor"},{"local":"ambulance_previsit_active"},{"local":"ambulance_previsit_patient_loaded"},{"local":"ambulance_previsit_roll"}]},
+        {"text":"decision: {0}; preload: {1}; weather force: {2}; forced: {3}","params":[{"local":"ambulance_previsit_decision"},{"local":"ambulance_preload"},{"local":"ambulance_previsit_weather_force"},{"local":"ambulance_previsit_forced"}]},
+        {"text":"weather simvars - precip state: {0}; ambient temperature: {1} C","params":[{"var":["AMBIENT PRECIP STATE","number"]},{"var":["AMBIENT TEMPERATURE","celsius"]}]},
+        {"text":"eligible: {0}; allowed: {1}; police present: {2}; police arrived: {3}; hospital WP match: {4}; ready: {5}","params":[{"local":"ambulance_previsit_eligible"},{"local":"ambulance_previsit_allowed"},{"local":"ambulance_previsit_police_present"},{"local":"ambulance_previsit_police_arrived"},{"local":"thospital_wp_match"},{"local":"thospital_wp_ready"}]},
         {"image":"bar"},
         {"text":"POLICE LANDING SPOT TRANSFER"},
         {"text":"state: {0}; pickup ready: {1}; force pickup: {2}; movement lock: {3}; departure delay: {4}","params":[{"local":"police_lz_transfer_state"},{"local":"police_lz_pickup_ready"},{"local":"police_lz_force_pickup"},{"local":"police_lz_move_lock"},{"local":"police_lz_departure_delay_done"}]},
@@ -18986,7 +18989,8 @@
 
 
     "ambustretcher full" :[
-     {"set":{"local": "ambustretcherarrived"}, "value":"no"}, 
+     {"set":{"local": "ambustretcherarrived"}, "value":"no"},
+     {"if":{"local":"ambulance_previsit_decision"},"eq":null,"then":[{"set":{"local":"ambulance_previsit_decision"},"value":"pending"}]}, 
      {"create_thread":{"commands":[{"call_macro":"ambulance previsit monitor"}]}},
      {"create_thread": {
        "commands": [
@@ -19007,6 +19011,7 @@
     	  {"set": {"object":"ambumedic7", "var":"VAR 1"}, "value": 0},
         {"sleep": 5},
         {"set": {"var":["L:HOLD", "number"]}, "value":1 },
+        {"wait_for":{"local":"ambulance_previsit_decision"},"ne":"pending"},
   {"if": {"var":["L:RESCUED", "number"]}, "eq": 0,
     "then": [
      {"if": {"local":"HELOVICTIMS"}, "eq": 1,
@@ -19244,25 +19249,28 @@
     ]}}
    ], 
 
-	"preambustretcher":[
-     {"wait_for": {"has_object":"hoist_crew"}, "eq": 1},
-     {"wait_for": {"local": "crewarrived"}, "eq": "yes"},
-     {"if": {"local": "crewvisitended"}, "ne": "yes","then":[
-     {"drive_object": {"name": "ambumedic7", "to": [{"closest": ["INJU12","INJU13","LUP","RUP","RDWN","LDWN"], "to": "ambumedic7"},{"bearing2": 120, "dist":2.5, "object": "hoist_crew"}, {"bearing2": 120, "dist":0.5, "object": "hoist_crew"}], "VAR1": 1, "speed": 3}}
-	 ]},
-    	  {"set": {"object":"ambumedic7", "var":"VAR 1"}, "value": 0},
-     {"wait_for": {"local": "crewvisiting1"}, "eq":"yes" },
-        {"set": {"object": "ambulance1", "var": "VAR 2"}, "value": 0},
-        {"create_object": {"name": "ambustretcher7", "title": "Airbus H145 Medic Stretcher", "location": "ambulance1"}},
-    	  {"set": {"object":"ambustretcher7", "var":"VAR 1"}, "value": 0},
-        {"set": {"object":"ambustretcher7", "var":"VAR 2"}, "value": 1},
-        {"set": {"object":"ambustretcher7", "var": "COUPLED"}, "value": 0},
-      	{"sleep": 1},
-        {"drive_object": {"name": "ambustretcher7", "to": ["AMBWP"], "VAR1": 1, "speed": 4}},
-    	  {"set": {"object":"ambustretcher7", "var":"VAR 1"}, "value": 0},
-        {"wait_for": {"var":["L:RESCUED", "number"]}, "ne":0 }
-	],
-    "ambustretcher close" :[
+		"preambustretcher":[
+     {"wait_for":{"local":"ambulance_previsit_decision"},"ne":"pending"},
+     {"if":{"local":"ambulance_previsit_active"},"ne":"yes","then":[
+       {"wait_for":{"has_object":"hoist_crew"},"eq":1},
+       {"wait_for":{"local":"crewarrived"},"eq":"yes"},
+       {"if":{"local":"crewvisitended"},"ne":"yes","then":[
+         {"drive_object":{"name":"ambumedic7","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambumedic7"},{"bearing2":120,"dist":2.5,"object":"hoist_crew"},{"bearing2":120,"dist":0.5,"object":"hoist_crew"}],"VAR1":1,"speed":3}}
+       ]},
+       {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0},
+       {"wait_for":{"local":"crewvisiting1"},"eq":"yes"},
+       {"set":{"object":"ambulance1","var":"VAR 2"},"value":0},
+       {"create_object":{"name":"ambustretcher7","title":"Airbus H145 Medic Stretcher","location":"ambulance1"}},
+       {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
+       {"set":{"object":"ambustretcher7","var":"VAR 2"},"value":1},
+       {"set":{"object":"ambustretcher7","var":"COUPLED"},"value":0},
+       {"sleep":1},
+       {"drive_object":{"name":"ambustretcher7","to":["AMBWP"],"VAR1":1,"speed":4}},
+       {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
+       {"wait_for":{"var":["L:RESCUED","number"]},"ne":0}
+     ]}
+    ],
+"ambustretcher close" :[
    {"wait_for": {"local": "crewvisitended"}, "eq":"yes" },
     {"if": {"and":[ {"require":{"global":"AMBULOCK"}, "eq": 0},
 					{"require":{"local":"whobringpatient"},"eq":"lethimdie"},
@@ -24327,6 +24335,7 @@
        {"set_message": {"text": "Pick organ transportation box at this location: <br /> {0:LOCATION} ({3}). <br /> Deliver to:  <br /> {4} ({2:LOCATION}) <br /> Delivery has to be accomplished before {1:TIME}LT", "params": [ "userA", {"local":"organexpiration"},"hospital_user",{"local":"accident_nation"},{"local":"hospital_name"}]}}
     ]}},
      {"call_macro": "user hospital WP for transfer"},
+     {"wait_for":{"local":"thospital_wp_ready"},"eq":"ready"},
      {"call_macro": "organ life decrease"},
      {"set": {"local":"MISSION_PHASE"}, "value": 4}
 	],
@@ -25869,49 +25878,105 @@
   ],
 
 
+    "set ambulance previsit rules":[
+      {"set":{"local":"ambulance_preload"},"value":"enable"},
+      {"for_each":{"static":"accidents"},"do":[
+        {"if":{"struct":{"param":"$item"},"path":"ID_CARD"},"eq":{"local":"VAR_MISSION_NUMBER"},"then":[
+          {"set":{"local":"ambulance_preload"},"value":{"struct":{"param":"$item"},"path":"preload"}},
+          {"break":1}
+        ]}
+      ]},
+      {"set":{"local":"ambulance_previsit_weather_force"},"value":0},
+      {"if":{"var":["AMBIENT PRECIP STATE","number"]},"gte":4,"then":[{"set":{"local":"ambulance_previsit_weather_force"},"value":1}]},
+      {"if":{"var":["AMBIENT TEMPERATURE","celsius"]},"gt":30,"then":[{"set":{"local":"ambulance_previsit_weather_force"},"value":1}]},
+      {"if":{"var":["AMBIENT TEMPERATURE","celsius"]},"lt":3,"then":[{"set":{"local":"ambulance_previsit_weather_force"},"value":1}]}
+    ],
     "ambulance previsit monitor": [
       {"if":{"local":"ambulance_previsit_monitor"},"eq":null,
         "then":[
           {"set":{"local":"ambulance_previsit_monitor"},"value":"waiting"},
-          {"create_thread":
-		   {"commands":[
+          {"if":{"local":"ambulance_previsit_decision"},"eq":null,"then":[{"set":{"local":"ambulance_previsit_decision"},"value":"pending"}]},
+          {"create_thread":{"commands":[
+            {"call_macro":"set ambulance previsit rules"},
             {"or":[
               {"wait_for":{"local":"ambu1arrived"},"eq":"yes"},
               {"wait_for":{"local":"AMBU_AVAIL"},"eq":1},
               {"wait_for":{"var":["L:VARAMBUAVAIL","number"]},"eq":1}
             ]},
-            {"or":[
-              {"wait_for":{"local":"poli1arrived"},"eq":"yes"},
-              {"wait_for":{"local":"poli7arrived"},"eq":"yes"},
-              {"wait_for":{"local":"POLICE_AVAIL"},"eq":1},
-              {"wait_for":{"var":["L:VARPOLICEAVAIL","number"]},"eq":1}
-            ]},
-            {"sleep":120},
-            {"wait_for":{"has_object":"ambumedic7"},"eq":1},
-            {"if":{"and":[
-              {"require":{"local":"HELOVICTIMS"},"eq":1},
-              {"require":{"local":"LIFESCORE"},"gt":40},
-              {"require":{"local":"CREW"},"eq":3},
-              {"require":{"local":"MISSION_PHASE"},"lte":6},
-              {"require":{"local":"ambulance_previsit_active"},"ne":"yes"},
-              {"require":{"has_object":"ambulance1"},"eq":1},
-              {"require":{"or":[{"require":{"has_object":"police"},"eq":1},{"require":{"has_object":"police7"},"eq":1}]},"eq":1},
-              {"require":{"has_object":"injured_human"},"eq":1},
-              {"require":{"has_object":"hoist_crew"},"eq":0}
-            ]},"eq":1,
+            {"set":{"local":"ambulance_previsit_eligible"},"value":1},
+            {"if":{"local":"HELOVICTIMS"},"ne":1,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"local":"LIFESCORE"},"lte":40,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"local":"CREW"},"ne":3,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"local":"MISSION_PHASE"},"gt":6,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"has_object":"ambulance1"},"ne":1,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"has_object":"injured_human"},"ne":1,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+            {"if":{"local":"ambulance_previsit_eligible"},"eq":0,
               "then":[
-                {"set":{"local":"ambulance_previsit_roll"},"value":{"floor":{"rand":[0,100]}}},
-                {"if":{"local":"ambulance_previsit_roll"},"lt":99,
-                  "then":[{"call_macro":"ambulance previsit load"}],
-                  "else":[
-                    {"set":{"local":"ambulance_previsit_monitor"},"value":"done"}
-                  ]
-                }
+                {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
+                {"set":{"local":"ambulance_previsit_monitor"},"value":"done"}
               ],
               "else":[
-                {"set":{"local":"ambulance_previsit_monitor"},"value":"done"}
-              ]
-            }
+                {"or":[
+                  {"wait_for":{"local":"poli1arrived"},"eq":"yes"},
+                  {"wait_for":{"local":"poli7arrived"},"eq":"yes"},
+                  {"wait_for":{"local":"POLICE_AVAIL"},"eq":1},
+                  {"wait_for":{"var":["L:VARPOLICEAVAIL","number"]},"eq":1},
+                  {"wait_for":{"local":"POLICE_AVAIL"},"eq":0}
+                ]},
+                {"set":{"local":"ambulance_previsit_police_present"},"value":0},
+                {"if":{"has_object":"police"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_police_present"},"value":1}]},
+                {"if":{"has_object":"police7"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_police_present"},"value":1}]},
+                {"set":{"local":"ambulance_previsit_police_arrived"},"value":0},
+                {"if":{"local":"poli1arrived"},"eq":"yes","then":[{"set":{"local":"ambulance_previsit_police_arrived"},"value":1}]},
+                {"if":{"local":"poli7arrived"},"eq":"yes","then":[{"set":{"local":"ambulance_previsit_police_arrived"},"value":1}]},
+                {"if":{"local":"POLICE_AVAIL"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_police_arrived"},"value":1}]},
+                {"if":{"var":["L:VARPOLICEAVAIL","number"]},"eq":1,"then":[{"set":{"local":"ambulance_previsit_police_arrived"},"value":1}]},
+                {"if":{"local":"ambulance_previsit_police_arrived"},"eq":0,"then":[{"set":{"local":"ambulance_previsit_police_present"},"value":0}]},
+                {"if":{"local":"ambulance_previsit_police_present"},"eq":0,
+                  "then":[
+                    {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
+                    {"set":{"local":"ambulance_previsit_monitor"},"value":"done"}
+                  ],
+                  "else":[
+                    {"sleep":120},
+                    {"wait_for":{"has_object":"ambumedic7"},"eq":1},
+                    {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_eligible"},"value":0}]},
+                    {"set":{"local":"ambulance_previsit_forced"},"value":0},
+                    {"if":{"has_object":"VFXA"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_forced"},"value":1}]},
+                    {"if":{"local":"ambulance_previsit_weather_force"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_forced"},"value":1}]},
+                    {"set":{"local":"ambulance_previsit_allowed"},"value":1},
+                    {"if":{"local":"ambulance_previsit_eligible"},"eq":0,"then":[{"set":{"local":"ambulance_previsit_allowed"},"value":0}]},
+                    {"if":{"local":"ambulance_preload"},"eq":"disable","then":[{"set":{"local":"ambulance_previsit_allowed"},"value":0}]},
+                    {"if":{"local":"ambulance_previsit_forced"},"eq":1,"then":[{"set":{"local":"ambulance_previsit_allowed"},"value":1}]},
+                    {"if":{"local":"ambulance_previsit_allowed"},"eq":0,
+                      "then":[
+                        {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
+                        {"set":{"local":"ambulance_previsit_monitor"},"value":"done"}
+                      ],
+                      "else":[
+                        {"set":{"local":"ambulance_previsit_roll"},"value":{"floor":{"rand":[0,100]}}},
+                        {"if":{"local":"ambulance_previsit_forced"},"eq":1,
+                          "then":[
+                            {"set":{"local":"ambulance_previsit_decision"},"value":"load"},
+                            {"call_macro":"ambulance previsit load"},
+                            {"if":{"local":"ambulance_previsit_active"},"ne":"yes","then":[{"set":{"local":"ambulance_previsit_decision"},"value":"skip"},{"set":{"local":"ambulance_previsit_monitor"},"value":"done"}]}
+                          ],
+                          "else":[
+                            {"if":{"local":"ambulance_previsit_roll"},"lt":99,
+                              "then":[
+                                {"set":{"local":"ambulance_previsit_decision"},"value":"load"},
+                                {"call_macro":"ambulance previsit load"},
+                                {"if":{"local":"ambulance_previsit_active"},"ne":"yes","then":[{"set":{"local":"ambulance_previsit_decision"},"value":"skip"},{"set":{"local":"ambulance_previsit_monitor"},"value":"done"}]}
+                              ],
+                              "else":[
+                                {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
+                                {"set":{"local":"ambulance_previsit_monitor"},"value":"done"}
+                              ]}
+                          ]}
+                      ]}
+                  ]}
+              ]}
           ]}}
         ]}
     ],
@@ -25923,10 +25988,12 @@
         {"require":{"local":"MISSION_PHASE"},"lte":6},
         {"require":{"has_object":"ambulance1"},"eq":1},
         {"require":{"has_object":"ambumedic7"},"eq":1},
-        {"require":{"has_object":"injured_human"},"eq":1}
+        {"require":{"has_object":"injured_human"},"eq":1},
+        {"require":{"has_object":"hoist_crew"},"eq":0}
       ]},"eq":1,
         "then":[
           {"set":{"local":"ambulance_previsit_active"},"value":"yes"},
+          {"set":{"local":"ambulance_previsit_decision"},"value":"load"},
           {"set":{"local":"ambulance_previsit_monitor"},"value":"done"},
           {"set":{"var":["L:HOLDAMBU","number"]},"value":1},
           {"if":{"has_object":"ambustretcher7"},"eq":1,"then":[{"destroy_object":"ambustretcher7"}]},
@@ -29299,54 +29366,50 @@
 
     ]}}
    ],
-    "user hospital WP for transfer":[
+    	"user hospital WP for transfer":[
     {"set":{"local":"thospital_wptot"}, "value":0},
-    {"create_thread": { 
-     "commands": [
-     {"wait_for": {"has_location":"userA"}, "eq": 1 },
-     {"sleep": 5},
-     {"create_location": "thospital_door", "zones": [{"zone": {"location": {"bearing": 0, "dist": 7, "object": "userA"}}}]},
-     {"sleep": 1},
-     {"for_each":{"static":"hospitals wps"},"do":[
-       {"create_location": "tCUSTOM_HOSPITAL_DOOR", "zones": [{"zone": {"location": {"resolve_location":{"create_array":[
-              {"struct":{"param":"$item"},"path":"WPdoorlat"},
-              {"struct":{"param":"$item"},"path":"WPdoorlon"}
-        ]}}}}]},
-        {"wait_for": {"has_location": "tCUSTOM_HOSPITAL_DOOR"}, "eq":1 },
-        {"if":{"location":"tCUSTOM_HOSPITAL_DOOR", "var":"distance:km", "to":"userA"}, "lte":0.56,
-          "then":[
-		   {"sleep": 0.05},
-           {"create_location": "thospital_door", "zones": [{"zone": {"location": {"bearing": 0, "dist": 0,"object":"tCUSTOM_HOSPITAL_DOOR"}}}]},
-           {"set": {"local":"thospital_wptot"}, "value": {"struct": {"param":"$item"}, "path": "WPtot"}},
-		   {"if":{"local":"thospital_wptot"}, "gte": 1,
-			"then":[
-             {"create_location": "thospital_wp1", "zones": [{"zone": {"location": {"resolve_location":{"create_array":[
-                {"struct":{"param":"$item"},"path":"WP1lat"},
-                {"struct":{"param":"$item"},"path":"WP1lon"}
-             ]}}}}]}
-		   ]},
-		   {"if":{"local":"thospital_wptot"}, "gte": 2,
-			"then":[
-             {"create_location": "thospital_wp2", "zones": [{"zone": {"location": {"resolve_location":{"create_array":[
-                {"struct":{"param":"$item"},"path":"WP2lat"},
-                {"struct":{"param":"$item"},"path":"WP2lon"}
-             ]}}}}]}
-		   ]},
-		   {"if":{"local":"thospital_wptot"}, "gte": 3,
-			"then":[
-             {"create_location": "thospital_wp3", "zones": [{"zone": {"location": {"resolve_location":{"create_array":[
-                {"struct":{"param":"$item"},"path":"WP3lat"},
-                {"struct":{"param":"$item"},"path":"WP3lon"}
-             ]}}}}]}
-		   ]},
-		   {"sleep": 0.02},
-           {"break":1}
-		]}
-	 ]}
-
-    ]}}
+    {"set":{"local":"thospital_wp_ready"}, "value":"pending"},
+    {"set":{"local":"thospital_wp_match"}, "value":"no"},
+    {"create_thread":{
+      "commands":[
+        {"wait_for":{"has_location":"userA"}, "eq":1},
+        {"create_location":"thospital_door", "zones":[{"zone":{"location":{"bearing":0,"dist":7,"object":"userA"}}}]},
+        {"for_each":{"static":"hospitals wps"},"do":[
+          {"create_location":"tCUSTOM_HOSPITAL_DOOR", "zones":[{"zone":{"location":{"resolve_location":{"create_array":[
+            {"struct":{"param":"$item"},"path":"WPdoorlat"},
+            {"struct":{"param":"$item"},"path":"WPdoorlon"}
+          ]}}}}]},
+          {"if":{"location":"tCUSTOM_HOSPITAL_DOOR", "var":"distance:km", "to":"userA"}, "lte":0.56,
+            "then":[
+              {"create_location":"thospital_door", "zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"tCUSTOM_HOSPITAL_DOOR"}}}]},
+              {"set":{"local":"thospital_wptot"}, "value":{"struct":{"param":"$item"},"path":"WPtot"}},
+              {"set":{"local":"thospital_wp_match"}, "value":"yes"},
+              {"if":{"local":"thospital_wptot"}, "gte":1,"then":[
+                {"create_location":"thospital_wp1", "zones":[{"zone":{"location":{"resolve_location":{"create_array":[
+                  {"struct":{"param":"$item"},"path":"WP1lat"},
+                  {"struct":{"param":"$item"},"path":"WP1lon"}
+                ]}}}}]}
+              ]},
+              {"if":{"local":"thospital_wptot"}, "gte":2,"then":[
+                {"create_location":"thospital_wp2", "zones":[{"zone":{"location":{"resolve_location":{"create_array":[
+                  {"struct":{"param":"$item"},"path":"WP2lat"},
+                  {"struct":{"param":"$item"},"path":"WP2lon"}
+                ]}}}}]}
+              ]},
+              {"if":{"local":"thospital_wptot"}, "gte":3,"then":[
+                {"create_location":"thospital_wp3", "zones":[{"zone":{"location":{"resolve_location":{"create_array":[
+                  {"struct":{"param":"$item"},"path":"WP3lat"},
+                  {"struct":{"param":"$item"},"path":"WP3lon"}
+                ]}}}}]}
+              ]},
+              {"break":1}
+            ]}
+        ]},
+        {"set":{"local":"thospital_wp_ready"}, "value":"ready"}
+      ]
+    }}
    ],
-    "user hangar WP":[
+"user hangar WP":[
  
      {"set":{"local":"hangar_wptot"}, "value":0},
      {"for_each":{"static":"hangar wps"},"do":[
@@ -36699,6 +36762,7 @@
     "transfer patient paperwork":[
    {"call_macro": "Query closest hospital for stretcher transfer"},
    {"call_macro": "user hospital WP for transfer"},
+   {"wait_for":{"local":"thospital_wp_ready"},"eq":"ready"},
    {"if": {"global":"CREWTRK"}, "eq": 1,
      "then": [
        {"create_thread": { 
@@ -38721,6 +38785,16 @@
         {"set":{"local":"ambulance_previsit_active"},"value":null},
         {"set":{"local":"ambulance_previsit_patient_loaded"},"value":null},
         {"set":{"local":"ambulance_previsit_roll"},"value":null},
+        {"set":{"local":"ambulance_previsit_decision"},"value":null},
+        {"set":{"local":"ambulance_preload"},"value":null},
+        {"set":{"local":"ambulance_previsit_weather_force"},"value":0},
+        {"set":{"local":"ambulance_previsit_forced"},"value":0},
+        {"set":{"local":"ambulance_previsit_eligible"},"value":0},
+        {"set":{"local":"ambulance_previsit_allowed"},"value":0},
+        {"set":{"local":"ambulance_previsit_police_present"},"value":0},
+        {"set":{"local":"ambulance_previsit_police_arrived"},"value":0},
+        {"set":{"local":"thospital_wp_ready"},"value":null},
+        {"set":{"local":"thospital_wp_match"},"value":null},
         {"set": {"local":"scene_elev"}, "value":0},
         {"set": {"local":"WAIT_SECOND_DISPATCH"}, "value":0},
         {"set": {"local":"ENDWAIT_SECOND_DISPATCH"}, "value":0},
@@ -43258,6 +43332,7 @@
 		"type":1,
 		"camping":1,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":1
       },
       {"id":"ID:2 / Road Traffic Collision (RTC)", 
@@ -43298,6 +43373,7 @@
 		"type":2,
 		"camping":2,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":2
       },
       {"id":"ID:3 / Road Traffic Collision (RTC)", 
@@ -43336,6 +43412,7 @@
 		"type":3,
 		"camping":3,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":3
       },
       {"id":"ID:4 / Road Traffic Collision (RTC)- motorbike", 
@@ -43374,6 +43451,7 @@
 		"type":4,
 		"camping":4,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":4
       },
       {"id":"ID:5 / A vehicle hit an animal while speeding", 
@@ -43418,6 +43496,7 @@
             "downloadUrl": "https://it.flightsim.to/file/69699/hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":5
       },
       {"id":"ID:6 / Road Traffic Collision involving a bicycle", 
@@ -43462,6 +43541,7 @@
             "downloadUrl": "https://flightsim.to/file/42450/pack-vehicules-et-personnages-franais"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":6
       },
 
@@ -43500,6 +43580,7 @@
 		"type":23,
 		"camping":6,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":62
       },
 
@@ -43545,6 +43626,7 @@
             "downloadUrl": "https://flightsim.to/file/42450/pack-vehicules-et-personnages-franais"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":7
       },
       {"id":"ID:8 / All Terrain Vehicle ATV (Quad) accident", 
@@ -43591,6 +43673,7 @@
             "downloadUrl": "https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":8
       },
       {"id":"ID:9 / Road Traffic Collision (RTC) involving a bus", 
@@ -43629,6 +43712,7 @@
 		"type":9,
 		"camping":9,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":9
       },
 
@@ -43670,6 +43754,7 @@
 		"type":22,
 		"camping":1,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":59
       },                  
 
@@ -43718,6 +43803,7 @@
             "downloadUrl": "https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":10
       },
       {"id":"ID:11/ Tractor accident with injured farmer", 
@@ -43755,6 +43841,7 @@
 		"type":5,
 		"camping":5,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":11
       },
       {"id":"ID:12/ Road Traffic Collision (RTC) - Train", 
@@ -43795,6 +43882,7 @@
 		"type":17,
 		"camping":3,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":12
       },
       {"id":"ID:13/ Quarry accident with injured worker", 
@@ -43839,6 +43927,7 @@
             "downloadUrl": "https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":13
       },
       {"id":"ID:14/ Worker injured in a construction site accident", 
@@ -43883,6 +43972,7 @@
             "downloadUrl": "https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":14
       },
       {"id":"ID:15/ Worker injured in a construction site accident", 
@@ -43927,6 +44017,7 @@
             "downloadUrl": "https://it.flightsim.to/file/69699/hems-objects"
           }
         ],
+		"preload":"disable",
 		"ID_CARD":15
       },
       {"id":"ID:16/ Forklift accident in a depot", 
@@ -43971,6 +44062,7 @@
             "downloadUrl": "https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":16
       },
       {"id":"ID:17/ Paraglider accident (SAR)", 
@@ -44017,6 +44109,7 @@
             "downloadUrl": "https://it.flightsim.to/file/69699/hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":17
       },
       {"id":"ID:18/ Lost contact with helicopter (SAR)", 
@@ -44062,6 +44155,7 @@
             "downloadUrl": "https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":18
       },
       {"id":"ID:19/ Aircraft, loss of contact after mayday (SAR)", 
@@ -44100,6 +44194,7 @@
 		"type":8,
 		"camping":8,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":19
       },
       {"id":"ID:20/ An airliner performed an emergency landing", 
@@ -44137,6 +44232,7 @@
 		"type":11,
 		"camping":9,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":20
       },
       {"id":"ID:21/ Small plane performed an emergency landing", 
@@ -44174,6 +44270,7 @@
 		"type":12,
 		"camping":8,
 		"mnumber":1,
+		"preload":"enable",
 		"ID_CARD":21
       },
       {"id":"ID:22/ Camping accident in camping area", 
@@ -44213,6 +44310,7 @@
 		"type":1,
 		"camping":1,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":22
       },
       {"id":"ID:23/ Camping accident at peak campsite", 
@@ -44252,6 +44350,7 @@
 		"type":1,
 		"camping":2,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":23
       },
       {"id":"ID:24/ Apartment/house/hotel accident", 
@@ -44291,6 +44390,7 @@
 		"type":5,
 		"camping":6,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":24
       },
       {"id":"ID:25/ Nursing home accident", 
@@ -44330,6 +44430,7 @@
 		"type":5,
 		"camping":14,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":25
       },
       {"id":"ID:26/ Injured person in apartment/hotel", 
@@ -44369,6 +44470,7 @@
 		"type":8,
 		"camping":9,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":26
       },
       {"id":"ID:27/ Injured person in apartment/hotel", 
@@ -44408,6 +44510,7 @@
 		"type":8,
 		"camping":15,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":27
       },
       {"id":"ID:28/ Injured person in apartment", 
@@ -44447,6 +44550,7 @@
 		"type":8,
 		"camping":16,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":28
       }, 
       {"id":"ID:29/ Injured person in apartment", 
@@ -44486,6 +44590,7 @@
 		"type":8,
 		"camping":17,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":29
       },
       {"id":"ID:30/ Injured person in apartment", 
@@ -44525,6 +44630,7 @@
 		"type":8,
 		"camping":18,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":30
       },
       {"id":"ID:31/ Injured person in apartment", 
@@ -44564,6 +44670,7 @@
 		"type":14,
 		"camping":19,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":31
       },
       {"id":"ID:32/ Injured person in apartment", 
@@ -44603,6 +44710,7 @@
 		"type":5,
 		"camping":20,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":32
       },
       {"id":"ID:33/ Injured person in his garden", 
@@ -44649,6 +44757,7 @@
             "downloadUrl": "https://it.flightsim.to/file/69699/hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":33
       },                          
       {"id":"ID:34/ Student injured in a school", 
@@ -44688,6 +44797,7 @@
 		"type":6,
 		"camping":7,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":34
       },
 
@@ -44729,6 +44839,7 @@
 		"type":6,
 		"camping":39,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":61
       },
 
@@ -44770,6 +44881,7 @@
 		"type":1,
 		"camping":10,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":35
       },
       {"id":"ID:36/ Worker injured by power tranformer explosion", 
@@ -44810,6 +44922,7 @@
 		"type":4,
 		"camping":5,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":36
       },
       {"id":"ID:37/ Climber fallen from a rock", 
@@ -44849,6 +44962,7 @@
 		"type":2,
 		"camping":3,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":37
       },
       {"id":"ID:38/ Injured reported in chair lift accident", 
@@ -44889,6 +45003,7 @@
 		"type":3,
 		"camping":4,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":38
       },
       {"id":"ID:39/ Injured reported in cableway accident", 
@@ -44936,6 +45051,7 @@
             "downloadUrl": "https://it.flightsim.to/file/69699/hems-objects"
           }
         ],
+		"preload":"enable",
 		"ID_CARD":39
       },
       {"id":"ID:40/ Missing hiker on mountain (SAR)", 
@@ -44975,6 +45091,7 @@
 		"type":1,
 		"camping":12,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":40
       },
       {"id":"ID:41/ Hiker on mountain requires medical assistance", 
@@ -45014,6 +45131,7 @@
 		"type":1,
 		"camping":13,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":41
       },
       {"id":"ID:42/ Missing climber on glacier after avalanche (SAR)", 
@@ -45054,6 +45172,7 @@
 		"type":7,
 		"camping":8,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":42
       },
       {"id":"ID:43/ Injured person in cemetery requires medical assistance", 
@@ -45093,6 +45212,7 @@
 		"type":7,
 		"camping":22,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":43
       },
       {"id":"ID:44/ A person fallen from a cliff (SAR)", 
@@ -45132,6 +45252,7 @@
 		"type":2,
 		"camping":23,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":44
       },
       {"id":"ID:45/ A person fallen from a cliff", 
@@ -45171,6 +45292,7 @@
 		"type":2,
 		"camping":24,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":45
       },
       {"id":"ID:46/ A missing person has been reported 2 days ago (SAR)", 
@@ -45210,6 +45332,7 @@
 		"type":2,
 		"camping":25,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":46
       },
       {"id":"ID:47/ A skier fell while skiing and was injured", 
@@ -45249,6 +45372,7 @@
 		"type":2,
 		"camping":26,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":47
       },
 
@@ -45289,6 +45413,7 @@
 		"type":2,
 		"camping":29,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":50
       },
 
@@ -45329,6 +45454,7 @@
 		"type":2,
 		"camping":27,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":48
       },
       {"id":"ID:49/ General practitioner requests emergency medical assistance", 
@@ -45368,6 +45494,7 @@
 		"type":2,
 		"camping":28,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":49
       },
 
@@ -45408,6 +45535,7 @@
 		"type":5,
 		"camping":30,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":51
       },                  
 	  {"id":"ID:52/ Injured person in apartment", 
@@ -45447,6 +45575,7 @@
 		"type":5,
 		"camping":31,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":52
       },            
       {"id":"ID:53/ Injured person in apartment", 
@@ -45486,6 +45615,7 @@
 		"type":5,
 		"camping":32,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":53
       },      
 	  {"id":"ID:54/ Injured person in apartment", 
@@ -45525,6 +45655,7 @@
 		"type":5,
 		"camping":33,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":54
       },    
 	  {"id":"ID:55/ Injured person in apartment", 
@@ -45564,6 +45695,7 @@
 		"type":5,
 		"camping":34,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":55
       },     
 	  {"id":"ID:56/ Injured person in apartment", 
@@ -45603,6 +45735,7 @@
 		"type":5,
 		"camping":35,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":56
       }, 
 	  {"id":"ID:57/ Injured person in apartment", 
@@ -45642,6 +45775,7 @@
 		"type":5,
 		"camping":36,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":57
       },     
 	  {"id":"ID:58/ Injured person in train station", 
@@ -45681,6 +45815,7 @@
 		"type":1,
 		"camping":37,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":58
       },                  
 
@@ -45721,6 +45856,7 @@
 		"type":1,
 		"camping":38,
 		"mnumber":2,
+		"preload":"disable",
 		"ID_CARD":60
       },                  
 	  {"id":"ID:63/ Injured person while hunting", 
@@ -45760,6 +45896,7 @@
 		"type":7,
 		"camping":40,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":63
       },                  
       {"id":"ID:64/ Fisherman requires medical assistance", 
@@ -45799,6 +45936,7 @@
 		"type":8,
 		"camping":41,
 		"mnumber":2,
+		"preload":"enable",
 		"ID_CARD":64
       },
   
@@ -45839,6 +45977,7 @@
 		"type":1,
 		"camping":1,
 		"mnumber":4,
+		"preload":"enable",
 		"ID_CARD":99
       },
       {"id":"ID:100/ Secondary mission: Organ transportation", 
@@ -45878,6 +46017,7 @@
 		"type":2,
 		"camping":1,
 		"mnumber":4,
+		"preload":"enable",
 		"ID_CARD":100
       },
       {"id":"ID:0 / Injured only (custom location)", 
@@ -45918,6 +46058,7 @@
 		"camping":1,
 		"mnumber":3,
 		"is_random":"no",
+		"preload":"enable",
 		"ID_CARD":0
       },
       {"id":"ID:300 / Injured only (random location)", 
@@ -45958,6 +46099,7 @@
 		"camping":1,
 		"mnumber":3,
 		"is_random":"no",
+		"preload":"enable",
 		"ID_CARD":300
       }
     ],
