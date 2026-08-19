@@ -246,7 +246,7 @@ Health-data fallback:
 
 Run tests in this order and record the result for each:
 
-1. Load `outputs/everywhere_all.json` and verify the title suffix.
+1. Load `everywhere_all.json` and verify the title suffix.
 2. Test 3 crew, one heli-rescuer, skid landing:
    - four securing movements complete without premature repositioning;
    - patient hoist order is visible and synchronized;
