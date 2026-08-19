@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 8`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 9`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,7 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 493 macros, valid JSON, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has 497 macros, valid JSON, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
 ## 2. Important generation warning
 
@@ -276,4 +276,15 @@ The latest release has only been structurally validated in this workspace. Runti
 - Preserve existing user changes when starting from a newer Desktop file.
 - Write the next artifact as `everywhere_all.json` and increment the title suffix.
 - Re-run JSON parsing, macro-reference scanning, duplicate-key scanning, and Unicode-dash scanning before handoff.
+
+## 15. Ambulance distance and second-ambulance work in release 0.997 9
+
+- The pre-visit monitor now measures the parked `ambulance1` distance from `accident_location`. The closest-ambulance flow uses the same `ambulance1` alias after its final parking step, so the check covers both normal and closest ambulance.
+- Pre-load is rejected when the parked ambulance is more than 600 m from the scene. The distance rejection is applied after the VFXA/weather force calculation, so forced weather loading cannot bypass the 600 m safety limit.
+- When the normal ambulance is known to be over 600 m away, the user destination menu exposes a direct `Unload to ambulance` action. It is available only after the ambulance arrival flag is set and a measured distance is present; the existing closest-ambulance unload action remains available for the closest branch.
+- Added `closest ambulance police crew transfer`. For a closest-ambulance mission, it evaluates the stopped `police7` distance to the patient. At more than 600 m it leaves the crew on the normal walking path; otherwise it moves the crew into the police car, sends the car through dedicated landing-zone and return routes, and deboards the crew at the scene. It is launched from both ground-ops variants and guarded by a per-dispatch state local.
+- Added `ambulance2 secondary rescue`, `ambulance2 secondary patient2`, and `ambulance2 secondary patient3`. When a second ambulance is parked and a second/third patient remains, a literal-named crew is created, visits the patient, and loads that patient aboard the second ambulance. The patient2 branch is preferred, with patient3 as fallback.
+- The second ambulance waits until the visit/load sequence is complete, waits for the ambulance1 destination/departure state, and creates a route to the same `hospital_user` destination. If `poordead` exists, it waits until at least one police or fire unit remains available before departing.
+- New session locals are reset in Objective 1: pre-visit distance state, second-ambulance rescue state, ambulance1 destination/departure state, closest-police transfer state, and closest-police crew-onboard flags.
+- Two landing-zone police routes and one second-ambulance destination route family were added only for these new transport cases. They use literal object/location names and do not use `copy_location` or parameterized `create_location`.
 
