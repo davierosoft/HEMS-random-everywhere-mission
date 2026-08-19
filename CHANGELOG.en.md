@@ -73,9 +73,9 @@ This changelog records the consolidated results of the work performed during the
 - The ambulance loading decision is independent of later dispatch cancellation; a high lifescore may still cancel the HEMS dispatch after the patient has been loaded.
 - Prevented police-only arrival from selecting the ambulance transport branch; the pre-visit police requirement remains separate from transport availability.
 
-## Ambulance distance handling and secondary ambulance rescue
+## Ambulance distance handling and secondary ambulance rescue - release 0.997 10
 
-- Release title advanced to `0.997 9`; the artifact remains `everywhere_all.json`.
+- Release title advanced to `0.997 10`; the artifact remains `everywhere_all.json`.
 - Added a post-parking distance measurement for the ambulance pre-visit monitor. The same check covers the closest-ambulance alias because that flow also parks as `ambulance1`.
 - Disabled patient pre-load when the parked ambulance is more than 600 m from the accident, including when VFXA or weather would otherwise force loading.
 - Added a direct `Unload to ambulance` destination action for an arrived normal ambulance measured beyond 600 m. The existing closest-ambulance unload path remains available.
@@ -83,6 +83,7 @@ This changelog records the consolidated results of the work performed during the
 - Added a second-ambulance rescue controller with dedicated patient2/patient3 branches. The second crew visits and obligatorily loads a remaining patient, then departs to `hospital_user` only after the visit/load completes and ambulance1 has received its destination. With `poordead` present, departure waits for at least one available police or fire unit.
 - Reset all new distance, transfer, destination, and secondary-ambulance locals in Objective 1.
 - Added the new locals to the grouped debug page sections.
+- Restored the hand-formatted layout: simple API commands are kept on one line, complex APIs and IF structures remain multiline, and blank lines separate macro categories.
 
 ## Drive watchdogs and failure dispatch
 
