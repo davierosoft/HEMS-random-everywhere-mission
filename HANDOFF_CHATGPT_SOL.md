@@ -4,11 +4,11 @@
 
 Use this file as the current working release:
 
-`C:\Users\Andrew\Documents\Codex\2026-08-11\d\outputs\everywhere_all.json`
+`everywhere_all.json`
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 6`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 8`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,7 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 470 macros, valid JSON, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has 493 macros, valid JSON, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
 ## 2. Important generation warning
 
@@ -222,6 +222,12 @@ When cancellation criteria are valid, do not emit any ground-service message tha
 
 Important discrepancy to verify: the latest Desktop source and the current generated release contain `ambulance_previsit_roll < 99`, while an earlier implementation used `< 30` for the requested 30% probability. This was preserved from the user's latest source and should be explicitly confirmed before changing it.
 
+Health-data fallback:
+
+- The current release normalizes missing fields in every `health*` data list before the mission consumes them.
+- Missing values use: `id = No info received`, `smoke = no`, `fire = no`, `medical_symptoms = No info received`, `diagnosis = Undetermined`, `scoremin = 30`, `scoremax = 90`, `decr_rate = 1`, `spo2 = 97`, and `bpm = 70`.
+- Existing authored values are preserved; only absent keys are filled.
+
 ## 11. Dispatch map and refueling
 
 - `accident prelocation` must recreate/update the current dispatch location and refresh the map point on every new dispatch.
@@ -229,7 +235,14 @@ Important discrepancy to verify: the latest Desktop source and the current gener
 - Do not rely on `location_name` alone to move an existing icon; update the point location explicitly.
 - Refueling must be debounced so moving the slider cannot launch multiple refueling macros. Keep the 2-second delay and the active-macro guard.
 
-## 12. Testing sequence for SOL
+## 12. Current issue resolutions
+
+- Issue 06: `whobringpatient = ambulance` is now selected only after an ambulance arrival state (`ambu1arrived`, `ambu2arrived`) is true. Police arrival alone no longer selects the ambulance branch; the separate police requirement for ambulance pre-visit remains intact.
+- Issue 10: rescue-vehicle `drive_object` calls are routed through per-vehicle watchdog macros. Each wrapper runs the drive in a worker thread, catches command errors, applies a vehicle-specific timeout, records `arrived`/`failed`, and uses the terminal waypoint as a guarded `move_object` fallback so a blocked vehicle cannot hold the mission indefinitely. Watchdog state locals are prefixed `drive_watchdog_`.
+- Issue 11: pathology selection no longer leaves `myhealth*` pointing at the last incompatible random record after the retry limit. The selector installs the deterministic fallback record agreed in the issue and marks the result `fallback`; this applies to patients 1-3 and the Halloween selector.
+- Issue 14: the failure engine now dispatches the failure index through one supported `switch` command. The original failure side effects are preserved, with one common delay and reset per cycle.
+
+## 13. Testing sequence for SOL
 
 Run tests in this order and record the result for each:
 
@@ -253,7 +266,7 @@ Run tests in this order and record the result for each:
 
 The latest release has only been structurally validated in this workspace. Runtime behavior in MSFS/HOC still needs to be tested after these final heli-rescuer changes.
 
-## 13. Editing and release rules
+## 14. Editing and release rules
 
 - Keep simple commands on one line.
 - Keep complex conditions and IF structures multiline.
@@ -263,3 +276,4 @@ The latest release has only been structurally validated in this workspace. Runti
 - Preserve existing user changes when starting from a newer Desktop file.
 - Write the next artifact as `everywhere_all.json` and increment the title suffix.
 - Re-run JSON parsing, macro-reference scanning, duplicate-key scanning, and Unicode-dash scanning before handoff.
+
