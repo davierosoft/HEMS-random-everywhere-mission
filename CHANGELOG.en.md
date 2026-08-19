@@ -82,6 +82,7 @@ This changelog records the consolidated results of the work performed during the
 - Added closest-ambulance police crew transfer logic. When the stopped `police7` is within 600 m, the crew can board, travel to the landing spot, return to the closest ambulance meeting point, and continue to the scene. Beyond 600 m, the normal walking path is retained.
 - Added a second-ambulance rescue controller with dedicated patient2/patient3 branches. The second crew visits and obligatorily loads a remaining patient, then departs to `hospital_user` only after the visit/load completes and ambulance1 has received its destination. With `poordead` present, departure waits for at least one available police or fire unit.
 - Reset all new distance, transfer, destination, and secondary-ambulance locals in Objective 1.
+- Added the new locals to the grouped debug page sections.
 
 ## Drive watchdogs and failure dispatch
 
