@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 11`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 12`
 
 The latest user-supplied Desktop source was:
 
@@ -26,7 +26,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 11`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 12`.
 
 ## 3. Mission architecture and state model
 
@@ -108,7 +108,7 @@ The current synchronization rule is:
 
 Doors are explicitly closed at the end of ground deboarding, hoist deboarding, ground boarding, hoist boarding, and the three-crew skid branch. If a future branch opens a door asynchronously, add its close operation after the final object movement, not before.
 
-### EU Firefighter marshaller support - release 0.997 11
+### EU Firefighter marshaller support - release 0.997 12
 
 - `addon check` fetches `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and sets `68pony_marshal` to `OK` or `NO`.
 - When `68pony_marshal = OK`, `marshall` and `pisteur3` use the `EU Firefighter 1` title with `Airbus H145 FR Pisteur 1` as fallback. Without the addon, the original titles remain in use.
