@@ -108,6 +108,14 @@ The current synchronization rule is:
 
 Doors are explicitly closed at the end of ground deboarding, hoist deboarding, ground boarding, hoist boarding, and the three-crew skid branch. If a future branch opens a door asynchronously, add its close operation after the final object movement, not before.
 
+### EU Firefighter marshaller support - release 0.997 11
+
+- `addon check` fetches `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and sets `68pony_marshal` to `OK` or `NO`.
+- When `68pony_marshal = OK`, `marshall` and `pisteur3` use the `EU Firefighter 1` title with `Airbus H145 FR Pisteur 1` as fallback. Without the addon, the original titles remain in use.
+- `marshaller animation monitor` drives VAR2 mask state and VAR1 idle, hover, land, left/right/up/down, rotor-engage, and wind-relative departure signals. It uses the landing spot for `marshall` and `heli_rescuer_location` for `pisteur3`, with the requested altitude bands, tolerances, and minimum animation timing. Halloween fool mode uses VAR1 `100` for idle/ready states.
+- Objective 1 resets the guidance state; the debug page exposes addon status, activity, distances, bearings, and signal flags. Engine start macros wait for active marshaller guidance to finish.
+- The two pre-existing delayed monitor threads that move/orient the marshallers according to wind are deliberately preserved unchanged. Do not remove, replace, or rewrite those threads; future changes must coexist with them.
+
 Hoist arming is intentionally requested before close-contact positioning in:
 
 - the `us` branch of `3 crew SKID LDG`;
