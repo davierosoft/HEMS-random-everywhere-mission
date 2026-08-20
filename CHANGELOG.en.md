@@ -73,6 +73,16 @@ This changelog records the consolidated results of the work performed during the
 - The ambulance loading decision is independent of later dispatch cancellation; a high lifescore may still cancel the HEMS dispatch after the patient has been loaded.
 - Prevented police-only arrival from selecting the ambulance transport branch; the pre-visit police requirement remains separate from transport availability.
 
+## EU Firefighter marshaller support - release 0.997 11
+
+- Advanced the release title to `0.997 11`; the artifact remains `everywhere_all.json`.
+- Added addon detection for `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and stored the result in `68pony_marshal`.
+- When the addon is available, `marshall` and `pisteur3` are created as `EU Firefighter 1`, with `Airbus H145 FR Pisteur 1` as the title fallback. The original marshaller titles remain the fallback when the addon is not installed.
+- Added the EU Firefighter `VAR2` mask state for fire scenes and `VAR1` signals for idle, hover, land, directional correction, rotor engagement, and departure. Halloween fool mode continues to use `VAR1 = 100`.
+- Added monitored approach guidance using the landing spot or heli-rescuer location, altitude bands, axis-priority corrections, tolerance timing, landing indication, prime-pump rotor engagement, and wind-relative departure signals.
+- Added session resets, debug-page values, and engine-start guards while marshaller guidance is active.
+- Preserved the two existing delayed monitor threads that move/orient the marshallers according to wind. They were not replaced or modified; the new VAR1/VAR2 guidance runs alongside them.
+
 ## Ambulance distance handling and secondary ambulance rescue - release 0.997 10
 
 - Release title advanced to `0.997 10`; the artifact remains `everywhere_all.json`.
@@ -148,6 +158,5 @@ This changelog records the consolidated results of the work performed during the
 - Blank lines between macro categories were restored for readability.
 - Text uses the ASCII hyphen `-`; incompatible long dash characters are excluded.
 - Release titles use the progressive suffix format `0.997 N`.
-- The latest generated release is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 8` and contains 493 macros, including the rescue-vehicle watchdog wrappers.
-- The latest output contains 470 macros and passes JSON parsing.
+- The release 0.997 11 output contains 498 macros and passes JSON parsing.
 - Static analysis still reports the inherited references `beforetockl` and dynamic `ELT {local:ELT}`; they were not changed without runtime confirmation because they may be system or dynamically expanded macros.
