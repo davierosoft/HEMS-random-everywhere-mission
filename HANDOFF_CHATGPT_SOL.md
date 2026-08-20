@@ -112,7 +112,7 @@ Doors are explicitly closed at the end of ground deboarding, hoist deboarding, g
 
 - `addon check` fetches `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and sets `68pony_marshal` to `OK` or `NO`.
 - When `68pony_marshal = OK`, `marshall` and `pisteur3` use the `EU Firefighter 1` title with `Airbus H145 FR Pisteur 1` as fallback. Without the addon, the original titles remain in use.
-- `marshaller animation monitor` drives VAR2 mask state and VAR1 idle, hover, land, left/right/up/down, rotor-engage, and wind-relative departure signals. It uses the landing spot for `marshall` and `heli_rescuer_location` for `pisteur3`, with the requested altitude bands, tolerances, and minimum animation timing. Halloween fool mode uses VAR1 `100` for idle/ready states.
+- `marshaller animation monitor` drives VAR2 mask state and VAR1 idle, hover, land, left/right/up/down, rotor-engage, and wind-relative departure signals. It uses the landing spot for `marshall` and `heli_rescuer_location` for `pisteur3`, with the requested altitude bands, tolerances, and minimum animation timing. Approach guidance is gated to 150 m and below 100 ft. Departure guidance is cleared at 50 ft or after 70 m from the spot. Halloween fool mode uses VAR1 `100` for idle/ready states.
 - Objective 1 resets the guidance state; the debug page exposes addon status, activity, distances, bearings, and signal flags. Engine start macros wait for active marshaller guidance to finish.
 - The two pre-existing delayed monitor threads that move/orient the marshallers according to wind are deliberately preserved unchanged. Do not remove, replace, or rewrite those threads; future changes must coexist with them.
 
