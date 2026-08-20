@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 10",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 11",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -312,6 +312,15 @@
         }
       },
       {"fetch":{"url":"/VFS/Simobjects/Airplanes/30West_Organcooler/aircraft.cfg"}},
+      {"fetch":{"url":"/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg"}},
+      {"set": {"local":"68pony_marshal"},
+        "value": {
+          "if": {"param":"$FETCH_STATUS"},
+          "eq": 200,
+          "then": "OK",
+          "else": "NO"
+        }
+      },
       {"set": {"local":"30West_installed"},
         "value": {
           "if": {"param":"$FETCH_STATUS"},
@@ -1533,6 +1542,18 @@
       {"set":{"var":["L:CPL{local:VCP}2","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}2","number"]},1]}}
     ],
     "engine1": [
+      {"if": {"local":"marshall_ground_ops_active"},
+        "eq": 1,
+        "then": [
+          {"wait_for":{"local":"marshall_ground_ops_active"},"eq":0}
+        ]
+      },
+      {"if": {"local":"pisteur3_guidance_active"},
+        "eq": 1,
+        "then": [
+          {"wait_for":{"local":"pisteur3_guidance_active"},"eq":0}
+        ]
+      },
       {"set":{"var":["L:CPL{local:VCP}13","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}13","number"]},1]}},
       {"if": {"global":"DIFFICULTY"},
         "eq": 0,
@@ -1707,6 +1728,18 @@
       {"set":{"var":["L:CPL{local:VCP}2","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}2","number"]},1]}}
     ],
     "engine2": [
+      {"if": {"local":"marshall_ground_ops_active"},
+        "eq": 1,
+        "then": [
+          {"wait_for":{"local":"marshall_ground_ops_active"},"eq":0}
+        ]
+      },
+      {"if": {"local":"pisteur3_guidance_active"},
+        "eq": 1,
+        "then": [
+          {"wait_for":{"local":"pisteur3_guidance_active"},"eq":0}
+        ]
+      },
       {"set":{"var":["L:CPL{local:VCP}14","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}14","number"]},1]}},
       {"if": {"global":"DIFFICULTY"},
         "eq": 0,
@@ -14503,7 +14536,13 @@
           {"text":"closest_police_crew_transfer: {0}; car_distance_m: {1}","params":[{"local":"closest_police_crew_transfer"},{"local":"closest_police_car_distance_m"}]},
           {"text":"pax3onpolice7: {0}; hoistcrewonpolice7: {1}","params":[{"local":"pax3onpolice7"},{"local":"hoistcrewonpolice7"}]}
         ]},
-      {"call_macro":"missioncount"}
+      {"call_macro":"missioncount"},
+      {"image":"bar"},
+      {"text":"MARSHALLER"},
+      {"text":"EU Firefighter addon: {0}; marshall active: {1}; pisteur3 active: {2}","params":[{"local":"68pony_marshal"},{"local":"marshall_ground_ops_active"},{"local":"pisteur3_guidance_active"}]},
+      {"text":"marshall distance/bearing/relative: {0}/{1}/{2}","params":[{"local":"marshall_lz_distance"},{"local":"marshall_target_bearing"},{"local":"marshall_relative_bearing"}]},
+      {"text":"pisteur3 distance/bearing/relative: {0}/{1}/{2}","params":[{"local":"pisteur3_lz_distance"},{"local":"pisteur3_target_bearing"},{"local":"pisteur3_relative_bearing"}]},
+      {"text":"rotor signals: marshall {0}/{1}; pisteur3 {2}/{3}","params":[{"local":"marshall_rotor_signal_sent"},{"local":"marshall_departure_signal_sent"},{"local":"pisteur3_rotor_signal_sent"},{"local":"pisteur3_departure_signal_sent"}]}
     ],
 
     "dispatch control": [
@@ -29619,7 +29658,15 @@
           {"create_object":{"name":"guardaboschi","title":"Airbus H145 Service Truck","location":{"bearing":150,"dist":14,"heading":{"rand":[300,359]},"object":"heli_rescuer_location"}}}
         ]
       },
-      {"create_object":{"name":"pisteur3","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":60,"dist":11,"heading":0,"object":"heli_rescuer_location"}}},
+      {"if": {"local":"68pony_marshal"},
+        "eq": "OK",
+        "then": [
+          {"create_object":{"name":"pisteur3","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":60,"dist":11,"heading":0,"object":"heli_rescuer_location"}}}
+        ],
+        "else": [
+          {"create_object":{"name":"pisteur3","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":60,"dist":11,"heading":0,"object":"heli_rescuer_location"}}}
+        ]
+      },
       {"create_object":{"name":"pisteur1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew"}},
       {"create_object":{"name":"pisteur2","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew"}},
       {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
@@ -54486,6 +54533,20 @@
       {"set":{"local":"poli7_park_side"},"value":null},
       {"set":{"local":"fire1_park_side"},"value":null},
       {"set":{"local":"fire2_park_side"},"value":null},
+      {"set":{"local":"marshall_ground_ops_active"},"value":0},
+      {"set":{"local":"pisteur3_guidance_active"},"value":0},
+      {"set":{"local":"marshall_rotor_signal_sent"},"value":0},
+      {"set":{"local":"pisteur3_rotor_signal_sent"},"value":0},
+      {"set":{"local":"marshall_departure_signal_sent"},"value":0},
+      {"set":{"local":"pisteur3_departure_signal_sent"},"value":0},
+      {"set":{"local":"marshall_lz_distance"},"value":null},
+      {"set":{"local":"pisteur3_lz_distance"},"value":null},
+      {"set":{"local":"marshall_target_bearing"},"value":null},
+      {"set":{"local":"pisteur3_target_bearing"},"value":null},
+      {"set":{"local":"marshall_relative_bearing"},"value":null},
+      {"set":{"local":"pisteur3_relative_bearing"},"value":null},
+      {"set":{"local":"marshall_wind_relative"},"value":null},
+      {"set":{"local":"pisteur3_wind_relative"},"value":null},
       {"set":{"local":"MISSION_END_WAITING"},"value":0},
       {"set":{"var":["L:MENU","number"]},"value":0},
       {"set":{"var":["L:MISSION_HOIST","number"]},"value":0},
@@ -55549,6 +55610,7 @@
     ],
 
     "delayed threads": [
+      {"call_macro":"marshaller animation monitor"},
       {"#comment":"30WestAlarm variable reset"},
       {"create_thread": {
           "commands": [
@@ -55656,7 +55718,15 @@
                 {"set":{"local":"slight"},"value":{"struct":{"static":"polilights"},"index":{"floor":{"rand":[0,{"struct":{"static":"polilights"},"path":"length"}]}}}}
               ]
             },
-            {"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":0,"dist":12,"heading":0,"object":"landing_spot"}}},
+            {"if": {"local":"68pony_marshal"},
+              "eq": "OK",
+              "then": [
+                {"create_object":{"name":"marshall","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":0,"dist":12,"heading":0,"object":"landing_spot"}}}
+              ],
+              "else": [
+                {"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":0,"dist":12,"heading":0,"object":"landing_spot"}}}
+              ]
+            },
             {"point_object":"marshall","to":"landing_spot"},
             {"wait_for":{"local":"FIREENGINE_AVAIL"},"eq":1},
             {"wait_for":{"var":["E:TIME OF DAY","number"]},"ne":1},
@@ -59944,6 +60014,561 @@
           {"set":{"local":"ambulance2_secondary_departed"},"value":"yes"}
         ]
       }
+    ],
+
+    "marshaller animation monitor": [
+      {"create_thread": {
+          "commands": [
+            {"wait_for":{"has_object":"marshall"},"eq":1},
+            {"set":{"local":"marshall_ground_ops_active"},"value":1},
+            {"set":{"object":"marshall","var":"VAR 2"},"value":0},
+            {"if": {"local":"random_fire"},
+              "ne": "no",
+              "then": [
+                {"set":{"object":"marshall","var":"VAR 2"},"value":1}
+              ]
+            },
+            {"if": {"local":"halloween"},
+              "eq": 1,
+              "then": [
+                {"set":{"object":"marshall","var":"VAR 1"},"value":100}
+              ],
+              "else": [
+                {"set":{"object":"marshall","var":"VAR 1"},"value":1}
+              ]
+            },
+            {"set":{"local":"marshall_rotor_signal_sent"},"value":0},
+            {"set":{"local":"marshall_departure_signal_sent"},"value":0},
+            {"while": {"local":"MISSION_PHASE"},
+              "lte": 9,
+              "do": [
+                {"if": {"has_object":"marshall"},
+                  "eq": 1,
+                  "then": [
+                    {"set":{"local":"marshall_lz_distance"},"value":{"location":"landing_spot","var":"distance:m","to":"$USER"}},
+                    {"set":{"local":"marshall_target_bearing"},"value":{"bearing":{"from":"$USER","to":"landing_spot"}}},
+                    {"set":{"local":"marshall_relative_bearing"},"value":{"round":{"add360":[{"local":"marshall_target_bearing"},{"subtract":[360,{"var":["PLANE HEADING DEGREES TRUE","degrees"]}]}]},"to":0}},
+                    {"if": {"var":["SIM ON GROUND","bool"]},
+                      "eq": 1,
+                      "then": [
+                        {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":80},
+                        {"if": {"local":"halloween"},
+                          "eq": 1,
+                          "then": [
+                            {"set":{"object":"marshall","var":"VAR 1"},"value":100}
+                          ],
+                          "else": [
+                            {"set":{"object":"marshall","var":"VAR 1"},"value":0}
+                          ]
+                        },
+                        {"if": {"local":"marshall_rotor_signal_sent"},
+                          "eq": 0,
+                          "then": [
+                            {"if": {"var":["L:{local:HXX}_SDK_OH_FUEL_ENG1_PRIME","number"]},
+                              "eq": 1,
+                              "then": [
+                                {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},
+                                  "lte": 5,
+                                  "then": [
+                                    {"set":{"object":"marshall","var":"VAR 1"},"value":2},
+                                    {"set":{"local":"marshall_rotor_signal_sent"},"value":1},
+                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
+                                    {"if": {"local":"halloween"},
+                                      "eq": 1,
+                                      "then": [
+                                        {"set":{"object":"marshall","var":"VAR 1"},"value":100}
+                                      ],
+                                      "else": [
+                                        {"set":{"object":"marshall","var":"VAR 1"},"value":0}
+                                      ]
+                                    }
+                                  ],
+                                  "else": [
+                                    {"set":{"local":"marshall_rotor_signal_sent"},"value":1}
+                                  ]
+                                }
+                              ]
+                            },
+                            {"if": {"var":["L:{local:HXX}_SDK_OH_FUEL_ENG2_PRIME","number"]},
+                              "eq": 1,
+                              "then": [
+                                {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},
+                                  "lte": 5,
+                                  "then": [
+                                    {"set":{"object":"marshall","var":"VAR 1"},"value":2},
+                                    {"set":{"local":"marshall_rotor_signal_sent"},"value":1},
+                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
+                                    {"if": {"local":"halloween"},
+                                      "eq": 1,
+                                      "then": [
+                                        {"set":{"object":"marshall","var":"VAR 1"},"value":100}
+                                      ],
+                                      "else": [
+                                        {"set":{"object":"marshall","var":"VAR 1"},"value":0}
+                                      ]
+                                    }
+                                  ],
+                                  "else": [
+                                    {"set":{"local":"marshall_rotor_signal_sent"},"value":1}
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},
+                          "gt": 99,
+                          "then": [
+                            {"if": {"local":"marshall_departure_signal_sent"},
+                              "eq": 0,
+                              "then": [
+                                {"set":{"local":"marshall_wind_relative"},"value":{"round":{"add360":[{"var":["AMBIENT WIND DIRECTION","degrees"]},{"subtract":[360,{"var":["PLANE HEADING DEGREES TRUE","degrees"]}]}]},"to":0}},
+                                {"if": {"local":"marshall_wind_relative"},
+                                  "lt": 45,
+                                  "then": [
+                                    {"set":{"object":"marshall","var":"VAR 1"},"value":11},
+                                    {"sleep":2}
+                                  ],
+                                  "else": [
+                                    {"if": {"local":"marshall_wind_relative"},
+                                      "lt": 135,
+                                      "then": [
+                                        {"set":{"object":"marshall","var":"VAR 1"},"value":10},
+                                        {"sleep":2}
+                                      ],
+                                      "else": [
+                                        {"if": {"local":"marshall_wind_relative"},
+                                          "lt": 225,
+                                          "then": [
+                                            {"set":{"object":"marshall","var":"VAR 1"},"value":12},
+                                            {"sleep":2}
+                                          ],
+                                          "else": [
+                                            {"set":{"object":"marshall","var":"VAR 1"},"value":9},
+                                            {"sleep":2}
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {"set":{"local":"marshall_departure_signal_sent"},"value":1}
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "else": [
+                        {"if": {"local":"marshall_lz_distance"},
+                          "gt": 7,
+                          "then": [
+                            {"if": {"var":["RADIO HEIGHT","feet"]},
+                              "lt": 60,
+                              "then": [
+                                {"set":{"object":"marshall","var":"VAR 1"},"value":7},
+                                {"sleep":2}
+                              ],
+                              "else": [
+                                {"if": {"local":"marshall_relative_bearing"},
+                                  "gt": 180,
+                                  "then": [
+                                    {"set":{"object":"marshall","var":"VAR 1"},"value":5},
+                                    {"if": {"local":"marshall_lz_distance"},
+                                      "lte": 1,
+                                      "then": [
+                                        {"sleep":0.5}
+                                      ],
+                                      "else": [
+                                        {"sleep":2}
+                                      ]
+                                    }
+                                  ],
+                                  "else": [
+                                    {"set":{"object":"marshall","var":"VAR 1"},"value":6},
+                                    {"if": {"local":"marshall_lz_distance"},
+                                      "lte": 1,
+                                      "then": [
+                                        {"sleep":0.5}
+                                      ],
+                                      "else": [
+                                        {"sleep":2}
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "else": [
+                            {"if": {"var":["RADIO HEIGHT","feet"]},
+                              "gt": 17,
+                              "then": [
+                                {"set":{"object":"marshall","var":"VAR 1"},"value":8},
+                                {"sleep":2}
+                              ],
+                              "else": [
+                                {"if": {"var":["RADIO HEIGHT","feet"]},
+                                  "lt": 13,
+                                  "then": [
+                                    {"set":{"object":"marshall","var":"VAR 1"},"value":7},
+                                    {"sleep":2}
+                                  ],
+                                  "else": [
+                                    {"if": {"local":"marshall_lz_distance"},
+                                      "gt": 2,
+                                      "then": [
+                                        {"if": {"local":"marshall_relative_bearing"},
+                                          "gt": 180,
+                                          "then": [
+                                            {"set":{"object":"marshall","var":"VAR 1"},"value":5},
+                                            {"if": {"local":"marshall_lz_distance"},
+                                              "lte": 1,
+                                              "then": [
+                                                {"sleep":0.5}
+                                              ],
+                                              "else": [
+                                                {"sleep":2}
+                                              ]
+                                            }
+                                          ],
+                                          "else": [
+                                            {"set":{"object":"marshall","var":"VAR 1"},"value":6},
+                                            {"if": {"local":"marshall_lz_distance"},
+                                              "lte": 1,
+                                              "then": [
+                                                {"sleep":0.5}
+                                              ],
+                                              "else": [
+                                                {"sleep":2}
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "else": [
+                                        {"if": {"var":["RADIO HEIGHT","feet"]},
+                                          "gt": 12,
+                                          "then": [
+                                            {"if": {"var":["RADIO HEIGHT","feet"]},
+                                              "lt": 18,
+                                              "then": [
+                                                {"set":{"object":"marshall","var":"VAR 1"},"value":4},
+                                                {"sleep":2}
+                                              ],
+                                              "else": [
+                                                {"set":{"object":"marshall","var":"VAR 1"},"value":8},
+                                                {"sleep":2}
+                                              ]
+                                            }
+                                          ],
+                                          "else": [
+                                            {"set":{"object":"marshall","var":"VAR 1"},"value":7},
+                                            {"sleep":2}
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {"sleep":0.2}
+              ]
+            },
+            {"set":{"local":"marshall_ground_ops_active"},"value":0},
+            {"if": {"local":"halloween"},
+              "eq": 1,
+              "then": [
+                {"set":{"object":"marshall","var":"VAR 1"},"value":100}
+              ],
+              "else": [
+                {"set":{"object":"marshall","var":"VAR 1"},"value":0}
+              ]
+            }
+          ]
+        }},
+      {"create_thread": {
+          "commands": [
+            {"wait_for":{"has_object":"pisteur3"},"eq":1},
+            {"set":{"local":"pisteur3_guidance_active"},"value":1},
+            {"set":{"object":"pisteur3","var":"VAR 2"},"value":0},
+            {"if": {"local":"random_fire"},
+              "ne": "no",
+              "then": [
+                {"set":{"object":"pisteur3","var":"VAR 2"},"value":1}
+              ]
+            },
+            {"if": {"local":"halloween"},
+              "eq": 1,
+              "then": [
+                {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
+              ],
+              "else": [
+                {"set":{"object":"pisteur3","var":"VAR 1"},"value":1}
+              ]
+            },
+            {"set":{"local":"pisteur3_rotor_signal_sent"},"value":0},
+            {"set":{"local":"pisteur3_departure_signal_sent"},"value":0},
+            {"while": {"local":"MISSION_PHASE"},
+              "lte": 11,
+              "do": [
+                {"if": {"has_object":"pisteur3"},
+                  "eq": 1,
+                  "then": [
+                    {"set":{"local":"pisteur3_lz_distance"},"value":{"location":"heli_rescuer_location","var":"distance:m","to":"$USER"}},
+                    {"set":{"local":"pisteur3_target_bearing"},"value":{"bearing":{"from":"$USER","to":"heli_rescuer_location"}}},
+                    {"set":{"local":"pisteur3_relative_bearing"},"value":{"round":{"add360":[{"local":"pisteur3_target_bearing"},{"subtract":[360,{"var":["PLANE HEADING DEGREES TRUE","degrees"]}]}]},"to":0}},
+                    {"if": {"var":["SIM ON GROUND","bool"]},
+                      "eq": 1,
+                      "then": [
+                        {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":80},
+                        {"if": {"local":"halloween"},
+                          "eq": 1,
+                          "then": [
+                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
+                          ],
+                          "else": [
+                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
+                          ]
+                        },
+                        {"if": {"local":"pisteur3_rotor_signal_sent"},
+                          "eq": 0,
+                          "then": [
+                            {"if": {"var":["L:{local:HXX}_SDK_OH_FUEL_ENG1_PRIME","number"]},
+                              "eq": 1,
+                              "then": [
+                                {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},
+                                  "lte": 5,
+                                  "then": [
+                                    {"set":{"object":"pisteur3","var":"VAR 1"},"value":2},
+                                    {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1},
+                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
+                                    {"if": {"local":"halloween"},
+                                      "eq": 1,
+                                      "then": [
+                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
+                                      ],
+                                      "else": [
+                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
+                                      ]
+                                    }
+                                  ],
+                                  "else": [
+                                    {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1}
+                                  ]
+                                }
+                              ]
+                            },
+                            {"if": {"var":["L:{local:HXX}_SDK_OH_FUEL_ENG2_PRIME","number"]},
+                              "eq": 1,
+                              "then": [
+                                {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},
+                                  "lte": 5,
+                                  "then": [
+                                    {"set":{"object":"pisteur3","var":"VAR 1"},"value":2},
+                                    {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1},
+                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
+                                    {"if": {"local":"halloween"},
+                                      "eq": 1,
+                                      "then": [
+                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
+                                      ],
+                                      "else": [
+                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
+                                      ]
+                                    }
+                                  ],
+                                  "else": [
+                                    {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1}
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},
+                          "gt": 99,
+                          "then": [
+                            {"if": {"local":"pisteur3_departure_signal_sent"},
+                              "eq": 0,
+                              "then": [
+                                {"set":{"local":"pisteur3_wind_relative"},"value":{"round":{"add360":[{"var":["AMBIENT WIND DIRECTION","degrees"]},{"subtract":[360,{"var":["PLANE HEADING DEGREES TRUE","degrees"]}]}]},"to":0}},
+                                {"if": {"local":"pisteur3_wind_relative"},
+                                  "lt": 45,
+                                  "then": [
+                                    {"set":{"object":"pisteur3","var":"VAR 1"},"value":11},
+                                    {"sleep":2}
+                                  ],
+                                  "else": [
+                                    {"if": {"local":"pisteur3_wind_relative"},
+                                      "lt": 135,
+                                      "then": [
+                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":10},
+                                        {"sleep":2}
+                                      ],
+                                      "else": [
+                                        {"if": {"local":"pisteur3_wind_relative"},
+                                          "lt": 225,
+                                          "then": [
+                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":12},
+                                            {"sleep":2}
+                                          ],
+                                          "else": [
+                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":9},
+                                            {"sleep":2}
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                },
+                                {"set":{"local":"pisteur3_departure_signal_sent"},"value":1}
+                              ]
+                            }
+                          ]
+                        }
+                      ],
+                      "else": [
+                        {"if": {"local":"pisteur3_lz_distance"},
+                          "gt": 7,
+                          "then": [
+                            {"if": {"var":["RADIO HEIGHT","feet"]},
+                              "lt": 60,
+                              "then": [
+                                {"set":{"object":"pisteur3","var":"VAR 1"},"value":7},
+                                {"sleep":2}
+                              ],
+                              "else": [
+                                {"if": {"local":"pisteur3_relative_bearing"},
+                                  "gt": 180,
+                                  "then": [
+                                    {"set":{"object":"pisteur3","var":"VAR 1"},"value":5},
+                                    {"if": {"local":"pisteur3_lz_distance"},
+                                      "lte": 1,
+                                      "then": [
+                                        {"sleep":0.5}
+                                      ],
+                                      "else": [
+                                        {"sleep":2}
+                                      ]
+                                    }
+                                  ],
+                                  "else": [
+                                    {"set":{"object":"pisteur3","var":"VAR 1"},"value":6},
+                                    {"if": {"local":"pisteur3_lz_distance"},
+                                      "lte": 1,
+                                      "then": [
+                                        {"sleep":0.5}
+                                      ],
+                                      "else": [
+                                        {"sleep":2}
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ],
+                          "else": [
+                            {"if": {"var":["RADIO HEIGHT","feet"]},
+                              "gt": 17,
+                              "then": [
+                                {"set":{"object":"pisteur3","var":"VAR 1"},"value":8},
+                                {"sleep":2}
+                              ],
+                              "else": [
+                                {"if": {"var":["RADIO HEIGHT","feet"]},
+                                  "lt": 13,
+                                  "then": [
+                                    {"set":{"object":"pisteur3","var":"VAR 1"},"value":7},
+                                    {"sleep":2}
+                                  ],
+                                  "else": [
+                                    {"if": {"local":"pisteur3_lz_distance"},
+                                      "gt": 2,
+                                      "then": [
+                                        {"if": {"local":"pisteur3_relative_bearing"},
+                                          "gt": 180,
+                                          "then": [
+                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":5},
+                                            {"if": {"local":"pisteur3_lz_distance"},
+                                              "lte": 1,
+                                              "then": [
+                                                {"sleep":0.5}
+                                              ],
+                                              "else": [
+                                                {"sleep":2}
+                                              ]
+                                            }
+                                          ],
+                                          "else": [
+                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":6},
+                                            {"if": {"local":"pisteur3_lz_distance"},
+                                              "lte": 1,
+                                              "then": [
+                                                {"sleep":0.5}
+                                              ],
+                                              "else": [
+                                                {"sleep":2}
+                                              ]
+                                            }
+                                          ]
+                                        }
+                                      ],
+                                      "else": [
+                                        {"if": {"var":["RADIO HEIGHT","feet"]},
+                                          "gt": 12,
+                                          "then": [
+                                            {"if": {"var":["RADIO HEIGHT","feet"]},
+                                              "lt": 18,
+                                              "then": [
+                                                {"set":{"object":"pisteur3","var":"VAR 1"},"value":4},
+                                                {"sleep":2}
+                                              ],
+                                              "else": [
+                                                {"set":{"object":"pisteur3","var":"VAR 1"},"value":8},
+                                                {"sleep":2}
+                                              ]
+                                            }
+                                          ],
+                                          "else": [
+                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":7},
+                                            {"sleep":2}
+                                          ]
+                                        }
+                                      ]
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {"sleep":0.2}
+              ]
+            },
+            {"set":{"local":"pisteur3_guidance_active"},"value":0},
+            {"if": {"local":"halloween"},
+              "eq": 1,
+              "then": [
+                {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
+              ],
+              "else": [
+                {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
+              ]
+            }
+          ]
+        }}
     ]
   },
 "aircraft": ["H145"],
