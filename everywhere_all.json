@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 13",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 14",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -30916,7 +30916,11 @@
       {"if": {"local":"helirescuers_drop_here_selected"},
         "eq": "yes",
         "then": [
-          {"call_macro":"helirescuers_follow_destination"},
+          {"create_thread": {
+              "commands": [
+                {"call_macro":"helirescuers_follow_destination_delayed"}
+              ]
+            }},
           {"set":{"local":"helirescuers_drop_here_selected"},"value":"done"},
           {"set":{"local":"helirescuers_drop_here_ready"},"value":"no"},
           {"set":{"local":"helirescuers_drop_here_monitor"},"value":"no"},
@@ -30958,6 +30962,33 @@
       {"set_objective_title":"LEAVE HELIRESCUER(S) HERE","color":"orange"},
       {"set_message":{"text":"Helirescuer(s) will leave the helicopter here and follow the ground crew."}},
       {"call_macro":"drop heli rescuer ground"}
+    ],
+
+    "helirescuers_follow_destination_delayed": [
+      {"if": {"local":"helirescuers_drop_here_mode"},
+        "eq": "hospital",
+        "then": [
+          {"wait_for":{"has_location":"hospital_door"},"eq":1},
+          {"wait_for":{"has_location":"hospital"},"eq":1},
+          {"sleep":[2,5]},
+          {"call_macro":"helirescuers_follow_destination"}
+        ]
+      },
+      {"if": {"local":"helirescuers_drop_here_mode"},
+        "eq": "hospital_user",
+        "then": [
+          {"wait_for":{"has_location":"hospital_user"},"eq":1},
+          {"sleep":[2,5]},
+          {"call_macro":"helirescuers_follow_destination"}
+        ]
+      },
+      {"if": {"local":"helirescuers_drop_here_mode"},
+        "eq": "base",
+        "then": [
+          {"sleep":[2,5]},
+          {"call_macro":"helirescuers_follow_destination"}
+        ]
+      }
     ],
 
     "helirescuers_follow_destination": [
@@ -31075,28 +31106,38 @@
           {"if": {"has_object":"pisteur2"},
             "eq": 1,
             "then": [
-              {"if": {"has_object":"pax1"},
+              {"if": {"has_object":"servicecar2"},
                 "eq": 1,
                 "then": [
-                  {"drive_object": {"name":"pisteur2","to":["pax1"],"VAR1":3,"speed":5}},
+                  {"drive_object": {"name":"pisteur2","to":["servicecar2"],"VAR1":3,"speed":5}},
                   {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
-                  {"point_object":"pisteur2","to":"pax1"}
+                  {"point_object":"pisteur2","to":"servicecar2"}
                 ],
                 "else": [
-                  {"if": {"has_object":"pax2"},
+                  {"if": {"has_object":"pax1"},
                     "eq": 1,
                     "then": [
-                      {"drive_object": {"name":"pisteur2","to":["pax2"],"VAR1":3,"speed":5}},
+                      {"drive_object": {"name":"pisteur2","to":["pax1"],"VAR1":3,"speed":5}},
                       {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
-                      {"point_object":"pisteur2","to":"pax2"}
+                      {"point_object":"pisteur2","to":"pax1"}
                     ],
                     "else": [
-                      {"if": {"has_location":"RTB_location"},
+                      {"if": {"has_object":"pax2"},
                         "eq": 1,
                         "then": [
-                          {"drive_object": {"name":"pisteur2","to":["RTB_location"],"VAR1":3,"speed":5}},
+                          {"drive_object": {"name":"pisteur2","to":["pax2"],"VAR1":3,"speed":5}},
                           {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
-                          {"point_object":"pisteur2","to":"RTB_location"}
+                          {"point_object":"pisteur2","to":"pax2"}
+                        ],
+                        "else": [
+                          {"if": {"has_location":"RTB_location"},
+                            "eq": 1,
+                            "then": [
+                              {"drive_object": {"name":"pisteur2","to":["RTB_location"],"VAR1":3,"speed":5}},
+                              {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
+                              {"point_object":"pisteur2","to":"RTB_location"}
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -31108,28 +31149,38 @@
           {"if": {"has_object":"pisteur1"},
             "eq": 1,
             "then": [
-              {"if": {"has_object":"pax1"},
+              {"if": {"has_object":"servicecar2"},
                 "eq": 1,
                 "then": [
-                  {"drive_object": {"name":"pisteur1","to":["pax1"],"VAR1":3,"speed":5}},
+                  {"drive_object": {"name":"pisteur1","to":["servicecar2"],"VAR1":3,"speed":5}},
                   {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
-                  {"point_object":"pisteur1","to":"pax1"}
+                  {"point_object":"pisteur1","to":"servicecar2"}
                 ],
                 "else": [
-                  {"if": {"has_object":"pax2"},
+                  {"if": {"has_object":"pax1"},
                     "eq": 1,
                     "then": [
-                      {"drive_object": {"name":"pisteur1","to":["pax2"],"VAR1":3,"speed":5}},
+                      {"drive_object": {"name":"pisteur1","to":["pax1"],"VAR1":3,"speed":5}},
                       {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
-                      {"point_object":"pisteur1","to":"pax2"}
+                      {"point_object":"pisteur1","to":"pax1"}
                     ],
                     "else": [
-                      {"if": {"has_location":"RTB_location"},
+                      {"if": {"has_object":"pax2"},
                         "eq": 1,
                         "then": [
-                          {"drive_object": {"name":"pisteur1","to":["RTB_location"],"VAR1":3,"speed":5}},
+                          {"drive_object": {"name":"pisteur1","to":["pax2"],"VAR1":3,"speed":5}},
                           {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
-                          {"point_object":"pisteur1","to":"RTB_location"}
+                          {"point_object":"pisteur1","to":"pax2"}
+                        ],
+                        "else": [
+                          {"if": {"has_location":"RTB_location"},
+                            "eq": 1,
+                            "then": [
+                              {"drive_object": {"name":"pisteur1","to":["RTB_location"],"VAR1":3,"speed":5}},
+                              {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
+                              {"point_object":"pisteur1","to":"RTB_location"}
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -41485,10 +41536,7 @@
       {"set":{"object":"ambustretcher","var":"COUPLED"},"value":0},
       {"create_thread": {
           "commands": [
-            {"or": [
-                {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.3},
-                {"wait_for":{"var":["L:AMBULANCE","number"]},"ne":0}
-              ]},
+            {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.3},
             {"create_thread": {
                 "commands": [
                   {"destroy_user_action":"ambulance_prime"}
@@ -50542,10 +50590,10 @@
             {"set":{"var":["H:{local:HXX}_SDK_PAX_3_OFF","number"]},"value":0},
             {"sleep":1},
             {"close_door":"pax_right"},
-            {"if": {"object":"hangar","var":"distance"},
-              "gt": {"var":["L:VANACTION","number"]},
+            {"if": {"has_object":"servicecar2"},
+              "eq": 1,
               "then": [
-                {"wait_for":{"var":["L:HOLD","number"]},"eq":0}
+                {"sleep":[2,5]}
               ]
             },
             {"drive_object": {"name":"pax3","to":[{"bearing":40,"dist":5},{"bearing":25,"dist":22},{"bearing":17,"dist":21}],"VAR1":2,"speed":7}},
@@ -50762,7 +50810,7 @@
                 {"if": {"object":"hangar","var":"distance"},
                   "gt": {"var":["L:VANACTION","number"]},
                   "then": [
-                    {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
+                    {"sleep":[2,5]},
                     {"sleep":2},
                     {"if": {"has_object":"pilot"},
                       "eq": 1,
@@ -50822,7 +50870,7 @@
           {"if": {"object":"hangar","var":"distance"},
             "gt": {"var":["L:VANACTION","number"]},
             "then": [
-              {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
+              {"sleep":[2,5]},
               {"sleep":2},
               {"destroy_object":"copilott"},
               {"set":{"local":"COPILOT"},"value":0},
