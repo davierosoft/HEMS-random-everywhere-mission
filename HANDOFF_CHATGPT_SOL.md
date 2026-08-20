@@ -18,6 +18,8 @@ It was used as the base because it contained user changes to heli-rescuer drop d
 
 The latest release has 499 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
+The GitHub handoff for this release is on branch `agent/doctor-deboarding-0999`, pull request [#26](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/26).
+
 ## 2. Important generation warning
 
 The current release script is:
