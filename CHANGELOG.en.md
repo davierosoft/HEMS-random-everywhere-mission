@@ -73,9 +73,9 @@ This changelog records the consolidated results of the work performed during the
 - The ambulance loading decision is independent of later dispatch cancellation; a high lifescore may still cancel the HEMS dispatch after the patient has been loaded.
 - Prevented police-only arrival from selecting the ambulance transport branch; the pre-visit police requirement remains separate from transport availability.
 
-## EU Firefighter marshaller support - release 0.997 13
+## EU Firefighter marshaller support - release 0.997 14
 
-- Advanced the release title to `0.997 13`; the artifact remains `everywhere_all.json`.
+- Advanced the release title to `0.997 14`; the artifact remains `everywhere_all.json`.
 - Added addon detection for `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and stored the result in `68pony_marshal`.
 - When the addon is available, `marshall` and `pisteur3` are created as `EU Firefighter 1`, with `Airbus H145 FR Pisteur 1` as the title fallback. The original marshaller titles remain the fallback when the addon is not installed.
 - Added the EU Firefighter `VAR2` mask state for fire scenes and `VAR1` signals for idle, hover, land, directional correction, rotor engagement, and departure. Halloween fool mode continues to use `VAR1 = 100`.
@@ -154,6 +154,10 @@ This changelog records the consolidated results of the work performed during the
 - Ordered the three-crew patient hoist hand-off as: hoist at ground, short random delay, stretcher visible, ground patient destroyed, short random delay, ground operator destroyed and operator visible on the hoist, one-second delay, then hoist-up.
 - Added `has_object` guards to the patient and operator destruction steps.
 - Added the final three-crew signal that allows the heli-rescuer reboarding thread to complete.
+- Fixed final deboarding synchronization for the three-crew doctor (`pax3`). The crew member no longer waits indefinitely on the global `L:HOLD` state when a service vehicle is present; the vehicle handoff now uses a bounded 2-5 second pause so a stale or failed service-vehicle route cannot leave the doctor frozen at the aircraft.
+- Applied the same bounded handoff to the pilot and copilot deboarding branches so the fix is consistent for 3-, 4-, and 5-crew returns.
+- Removed a fragile alternate wait from the user-hospital arrival thread. Hospital medical staff are released when the helicopter reaches `hospital_user`, avoiding a branch that could leave `ambumedic` stationary when the optional ambulance state changed first.
+- Heli-rescuer destination following now runs in a worker thread after destination locations are available; at base it prefers `servicecar2` when present and otherwise follows the remaining cabin crew.
 
 ## Formatting, release and validation rules
 
@@ -161,5 +165,5 @@ This changelog records the consolidated results of the work performed during the
 - Blank lines between macro categories were restored for readability.
 - Text uses the ASCII hyphen `-`; incompatible long dash characters are excluded.
 - Release titles use the progressive suffix format `0.997 N`.
-- The release 0.997 11 output contains 498 macros and passes JSON parsing.
+- The release 0.997 14 output contains 499 macros and passes JSON parsing.
 - Static analysis still reports the inherited references `beforetockl` and dynamic `ELT {local:ELT}`; they were not changed without runtime confirmation because they may be system or dynamically expanded macros.
