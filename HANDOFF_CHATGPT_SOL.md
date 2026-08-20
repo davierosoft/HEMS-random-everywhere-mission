@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 13`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 14`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,7 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 498 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has 499 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
 ## 2. Important generation warning
 
@@ -26,7 +26,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 13`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 14`.
 
 ## 3. Mission architecture and state model
 
@@ -108,7 +108,7 @@ The current synchronization rule is:
 
 Doors are explicitly closed at the end of ground deboarding, hoist deboarding, ground boarding, hoist boarding, and the three-crew skid branch. If a future branch opens a door asynchronously, add its close operation after the final object movement, not before.
 
-### EU Firefighter marshaller support - release 0.997 13
+### EU Firefighter marshaller support - release 0.997 14
 
 - `addon check` fetches `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and sets `68pony_marshal` to `OK` or `NO`.
 - When `68pony_marshal = OK`, `marshall` and `pisteur3` use the `EU Firefighter 1` title with `Airbus H145 FR Pisteur 1` as fallback. Without the addon, the original titles remain in use.
@@ -141,6 +141,12 @@ State locals:
 Current destination modes are `base`, `hospital`, and `hospital_user`.
 
 The monitor uses a widened 500 m destination readiness tolerance in the current release, as requested by the user. The normal operational landing/hover checks remain separate. The selected drop path calls `helirescuers_follow_destination`, clears the normal route-restoration state, and prevents the normal return-to-drop-point action from being used afterward.
+
+The selected drop path now starts `helirescuers_follow_destination_delayed` in a worker thread. The helper waits until the selected hospital locations exist, then adds a short 2-5 second handoff delay before the heli-rescuer follows the hospital medical staff. At base, `servicecar2` is preferred when it exists; otherwise the heli-rescuer follows the remaining cabin crew or the RTB location. This keeps the deboarding macro responsive and avoids a race with hospital staff creation.
+
+### Doctor deboarding fix
+
+In the final `deboarding` macro, the three-crew medical cabin member is the `pax3` object. A previous synchronization gate made `pax3` wait forever on `L:HOLD` whenever a service vehicle object was present, even if that vehicle route had failed or was no longer the active handoff. The current release replaces that unbounded wait with a bounded 2-5 second pause. The pilot and copilot branches use the same bounded handoff, so 4- and 5-crew returns do not inherit the same stall. The user-hospital predefined arrival thread also waits for the reliable `hospital_user` arrival rather than an unsupported/fragile alternate OR branch before moving `ambumedic` and `ambustretcher`.
 
 ## 7. Police landing-zone transfer
 
@@ -273,7 +279,7 @@ Run tests in this order and record the result for each:
 11. Press `Next Dispatch` repeatedly and verify the icon location and stale-icon cleanup.
 12. Move the refueling slider repeatedly and verify only one macro instance starts.
 
-The latest release has only been structurally validated in this workspace. Runtime behavior in MSFS/HOC still needs to be tested after these final heli-rescuer changes.
+The latest release has only been structurally validated in this workspace. Runtime behavior in MSFS/HOC still needs to be tested after these final heli-rescuer and deboarding changes, especially 3-crew doctor movement and 4-/5-crew returns.
 
 ## 14. Editing and release rules
 
