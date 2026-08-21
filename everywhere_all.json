@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 14",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 15",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -8233,11 +8233,34 @@
           {"describe_icon": "connext",
             "description": "SEND DIRECT-TO NAVIGATION TO FMS",
             "commands": [
-              {"set_route":{"local":"location_name"}}
+              {"if": {"local":"location_name"},
+                "ne": null,
+                "then": [
+                  {"if": {"has_location":{"local":"location_name"}},
+                    "eq": 1,
+                    "then": [
+                      {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                        {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed"},
+                        {"sleep":1},
+                        {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                          {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed_twice"}
+                        ]}
+                      ]}
+                    ],
+                    "else": [
+                      {"set":{"local":"routeupdate_error"},"value":"direct_missing_location"}
+                    ]
+                  }
+                ],
+                "else": [
+                  {"set":{"local":"routeupdate_error"},"value":"direct_missing_location"}
+                ]
+              }
             ],
             "show_condition": {
               "and": [
                 {"require":{"local":"location_name"},"ne":null},
+                {"require":{"has_location":{"local":"location_name"}},"eq":1},
                 {"require":{"global":"NOCONNEXT"},"ne":0}
               ],
               "eq": 1
@@ -14377,6 +14400,7 @@
           {"image":"bar"},
           {"text":"DISPATCH MAP PREVIEW"},
           {"text":"generation: {0}; location name: {1}; ready: {2}","params":[{"local":"map_preview_generation"},{"local":"location_name"},{"local":"has_location"}]},
+          {"text":"route target: {0}; valid: {1}; status: {2}","params":[{"local":"routeupdate_target"},{"local":"routeupdate_valid"},{"local":"routeupdate_error"}]},
           {"image":"bar"},
           {"text":"REFUELLING"},
           {"text":"active: {0}; slider dirty: {1}; debounce armed: {2}","params":[{"local":"refueling_active"},{"local":"refueling_slider_dirty"},{"local":"refueling_slider_debounce_armed"}]},
@@ -20533,18 +20557,40 @@
     ],
 
     "routeupdate": [
-      {"if": {"local":"location_name"},
+      {"set":{"local":"routeupdate_target"},"value":{"local":"location_name"}},
+      {"set":{"local":"routeupdate_valid"},"value":0},
+      {"set":{"local":"routeupdate_error"},"value":null},
+      {"if": {"local":"routeupdate_target"},
         "ne": null,
+        "then": [
+          {"if": {"has_location":{"local":"routeupdate_target"}},
+            "eq": 1,
+            "then": [
+              {"set":{"local":"routeupdate_valid"},"value":1}
+            ]
+          }
+        ]
+      },
+      {"if": {"local":"routeupdate_valid"},
+        "eq": 1,
         "then": [
           {"create_location":"route_start","zones":[{"zone":{"location":"$USER"}}]},
           {"if": {"global":"NOCONNEXT"},
             "eq": 0,
             "then": [
               {"sleep":2},
-              {"set_route":{"local":"location_name"}}
+              {"try":[{"set_route":{"local":"routeupdate_target"}}],"catch":[
+                {"set":{"local":"routeupdate_error"},"value":"set_route_failed"},
+                {"sleep":1},
+                {"try":[{"set_route":{"local":"routeupdate_target"}}],"catch":[
+                  {"set":{"local":"routeupdate_error"},"value":"set_route_failed_twice"}
+                ]}
+              ]}
             ],
             "else": [
-              {"set_route":[]},
+              {"try":[{"set_route":[]}],"catch":[
+                {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"}
+              ]},
               {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
               {"if": {"global":"NOCONNEXT"},
                 "eq": 1,
@@ -20552,16 +20598,23 @@
                   {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
                     "eq": 3,
                     "then": [
-                      {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                      {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
                     ],
                     "else": [
-                      {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                      {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
                     ]
                   }
                 ]
               }
             ]
           }
+        ],
+        "else": [
+          {"set":{"local":"routeupdate_error"},"value":"missing_location"},
+          {"try":[{"set_route":[]}],"catch":[
+            {"set":{"local":"routeupdate_error"},"value":"missing_location_clear_failed"}
+          ]},
+          {"set_map":{"remove":{"line":{"id":"ROUTE"}}}}
         ]
       }
     ],
@@ -20581,7 +20634,9 @@
                       "eq": 3,
                       "then": [
                         {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                        {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                        {"if":{"local":"routeupdate_valid"},"eq":1,"then":[
+                          {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                        ]}
                       ]
                     },
                     {"wait_for":{"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},"ne":3}
@@ -20600,7 +20655,9 @@
                       "ne": 3,
                       "then": [
                         {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                        {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                        {"if":{"local":"routeupdate_valid"},"eq":1,"then":[
+                          {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                        ]}
                       ]
                     },
                     {"wait_for":{"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},"eq":3}
@@ -29626,10 +29683,26 @@
       {"if": {"global":"NOCONNEXT"},
         "eq": 0,
         "then": [
-          {"set_route":"heli_rescuer_location"}
+          {"if": {"has_location":"heli_rescuer_location"},
+            "eq": 1,
+            "then": [
+              {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
+                {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"},
+                {"sleep":1},
+                {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
+                  {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed_twice"}
+                ]}
+              ]}
+            ],
+            "else": [
+              {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_missing_location"}
+            ]
+          }
         ],
         "else": [
-          {"set_route":[]},
+          {"try":[{"set_route":[]}],"catch":[
+            {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"}
+          ]},
           {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
           {"if": {"global":"NOCONNEXT"},
             "eq": 1,
@@ -53103,6 +53176,9 @@
     "objective1": [
       {"set":{"local":"nddisabled"},"value":null},
       {"set":{"local":"location_name"},"value":"SOUL_BUOY"},
+      {"set":{"local":"routeupdate_target"},"value":null},
+      {"set":{"local":"routeupdate_valid"},"value":0},
+      {"set":{"local":"routeupdate_error"},"value":null},
       {"set":{"local":"FUEL_UPDATED"},"value":"no"},
       {"set":{"var":["L:VAR_MISSION_NUMBER","number"]},"value":0},
       {"set":{"var":["L:VAR_SEND_DISPATCH","number"]},"value":0},
@@ -55852,37 +55928,65 @@
                   "eq": 5,
                   "then": [
                     {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                    {"set_route":"heli_rescuer_location"},
-                    {"if": {"global":"NOCONNEXT"},
+                    {"if": {"has_location":"heli_rescuer_location"},
                       "eq": 1,
                       "then": [
-                        {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
-                          "eq": 3,
+                        {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
+                          {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"}
+                        ]},
+                        {"if": {"global":"NOCONNEXT"},
+                          "eq": 1,
                           "then": [
-                            {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
-                          ],
-                          "else": [
-                            {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                            {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
+                              "eq": 3,
+                              "then": [
+                                {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                              ],
+                              "else": [
+                                {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                              ]
+                            }
                           ]
                         }
+                      ],
+                      "else": [
+                        {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_missing_location"}
                       ]
                     }
                   ],
                   "else": [
                     {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                    {"set_route":{"local":"location_name"}},
-                    {"if": {"global":"NOCONNEXT"},
-                      "eq": 1,
+                    {"if": {"local":"location_name"},
+                      "ne": null,
                       "then": [
-                        {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
-                          "eq": 3,
+                        {"if": {"has_location":{"local":"location_name"}},
+                          "eq": 1,
                           "then": [
-                            {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                            {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                              {"set":{"local":"routeupdate_error"},"value":"flightplan_set_route_failed"}
+                            ]},
+                            {"if": {"global":"NOCONNEXT"},
+                              "eq": 1,
+                              "then": [
+                                {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
+                                  "eq": 3,
+                                  "then": [
+                                    {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                                  ],
+                                  "else": [
+                                    {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                                  ]
+                                }
+                              ]
+                            }
                           ],
                           "else": [
-                            {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                            {"set":{"local":"routeupdate_error"},"value":"flightplan_missing_location"}
                           ]
                         }
+                      ],
+                      "else": [
+                        {"set":{"local":"routeupdate_error"},"value":"flightplan_missing_location"}
                       ]
                     }
                   ]
@@ -57843,7 +57947,25 @@
                 ]
               },
               {"set_message":{"text":"SENDING TO FMS, PLEASE WAIT..."}},
-              {"set_route":{"local":"location_name"}}
+              {"if": {"local":"location_name"},
+                "ne": null,
+                "then": [
+                  {"if": {"has_location":{"local":"location_name"}},
+                    "eq": 1,
+                    "then": [
+                      {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                        {"set":{"local":"routeupdate_error"},"value":"rescuetrack_set_route_failed"}
+                      ]}
+                    ],
+                    "else": [
+                      {"set":{"local":"routeupdate_error"},"value":"rescuetrack_missing_location"}
+                    ]
+                  }
+                ],
+                "else": [
+                  {"set":{"local":"routeupdate_error"},"value":"rescuetrack_missing_location"}
+                ]
+              }
             ]
           }
         ]
