@@ -2,6 +2,26 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Final statistics cleanup - release 0.997 21
+
+- Advanced the release title to `0.997 21`; the artifact remains `everywhere_all.json`.
+- Removed the redundant `1 deceased on scene - total casualties` line from the pink end-of-mission statistics view. Operational deceased reports and casualty accounting remain unchanged.
+
+## 3-crew pilot animation correction - release 0.997 20
+
+- Advanced the release title to `0.997 20`; the artifact remains `everywhere_all.json`.
+- Corrected the 3-crew `pax3` pilot state after the poordead approach: it now returns to the pilot idle state (`VAR 1 = 14`) instead of entering the crew-only animation state used by the other cabin members.
+
+## Marshal guidance and VFXA placement - release 0.997 19
+
+- Advanced the release title to `0.997 19`; the artifact remains `everywhere_all.json`.
+- Kept the marshal's departure-direction mapping unchanged; inverted only the lateral approach indications.
+- Suppressed lateral/vertical approach guidance when the landing spot is behind the marshal, lowered the lateral correction threshold from 7 m to 2 m, widened the approach-height band to keep a 10 ft buffer, and added a land signal for a grounded helicopter within 15 m.
+- Paused the existing wind-facing orientation loops within 60 m until one minute after takeoff without changing their bearing formulas.
+- Corrected custom VFXA placement to use the exact custom VFX coordinates instead of a 1 m/10 degree offset.
+- Removed stale OBJECT1-OBJECT15 and VFXA instances at Objective 1, and reset the corresponding custom-object locals before each dispatch to prevent overlap with a previous scene.
+- Reworked the 3-crew and 4/5-crew stretcher return paths to use side-of-helicopter bearing2 waypoints and a single four-waypoint drive ending at `rpaxdoor`, with VAR1 reset after the drive.
+
 ## Pathology/VFX compatibility and Halloween fallback - release 0.997 18
 
 - Advanced the release title to `0.997 18`; the artifact remains `everywhere_all.json`.
