@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 13`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 15`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,9 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 498 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has 499 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+
+The GitHub handoff for this release is on branch `agent/doctor-deboarding-0999`, pull request [#26](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/26).
 
 ## 2. Important generation warning
 
@@ -26,7 +28,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 13`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 15`.
 
 ## 3. Mission architecture and state model
 
@@ -108,7 +110,7 @@ The current synchronization rule is:
 
 Doors are explicitly closed at the end of ground deboarding, hoist deboarding, ground boarding, hoist boarding, and the three-crew skid branch. If a future branch opens a door asynchronously, add its close operation after the final object movement, not before.
 
-### EU Firefighter marshaller support - release 0.997 13
+### EU Firefighter marshaller support - release 0.997 14
 
 - `addon check` fetches `/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg` and sets `68pony_marshal` to `OK` or `NO`.
 - When `68pony_marshal = OK`, `marshall` and `pisteur3` use the `EU Firefighter 1` title with `Airbus H145 FR Pisteur 1` as fallback. Without the addon, the original titles remain in use.
@@ -141,6 +143,12 @@ State locals:
 Current destination modes are `base`, `hospital`, and `hospital_user`.
 
 The monitor uses a widened 500 m destination readiness tolerance in the current release, as requested by the user. The normal operational landing/hover checks remain separate. The selected drop path calls `helirescuers_follow_destination`, clears the normal route-restoration state, and prevents the normal return-to-drop-point action from being used afterward.
+
+The selected drop path now starts `helirescuers_follow_destination_delayed` in a worker thread. The helper waits until the selected hospital locations exist, then adds a short 2-5 second handoff delay before the heli-rescuer follows the hospital medical staff. At base, `servicecar2` is preferred when it exists; otherwise the heli-rescuer follows the remaining cabin crew or the RTB location. This keeps the deboarding macro responsive and avoids a race with hospital staff creation.
+
+### Doctor deboarding fix
+
+In the final `deboarding` macro, the three-crew medical cabin member is the `pax3` object. A previous synchronization gate made `pax3` wait forever on `L:HOLD` whenever a service vehicle object was present, even if that vehicle route had failed or was no longer the active handoff. The current release replaces that unbounded wait with a bounded 2-5 second pause. The pilot and copilot branches use the same bounded handoff, so 4- and 5-crew returns do not inherit the same stall. The user-hospital predefined arrival thread also waits for the reliable `hospital_user` arrival rather than an unsupported/fragile alternate OR branch before moving `ambumedic` and `ambustretcher`.
 
 ## 7. Police landing-zone transfer
 
@@ -244,14 +252,32 @@ Health-data fallback:
 - Do not rely on `location_name` alone to move an existing icon; update the point location explicitly.
 - Refueling must be debounced so moving the slider cannot launch multiple refueling macros. Keep the 2-second delay and the active-macro guard.
 
-## 12. Current issue resolutions
+## 12. Route delivery hardening - release 0.997 15
+
+`routeupdate` now serializes concurrent calls with `routeupdate_lock`, then copies `location_name` into `routeupdate_target` before its existing delay. It validates the snapshot in two steps: the value must be non-null, then `has_location` must resolve it. A valid automatic route uses `try`/`catch` around `set_route` and retries once after one second. A missing target or two failed attempts records `routeupdate_error`, captures `$ERROR` in `routeupdate_error_detail`, clears the route/map line safely, and lets the mission continue.
+
+The same guard is used by the manual `SEND DIRECT-TO NAVIGATION TO FMS` action, the heli-rescuer flight-plan selection, the tablet home-key flight-plan thread, and RescueTrack waypoint activation. Manual map-preview lines use the validated snapshot and are not drawn when it is invalid.
+
+`NOCONNEXT` remains intentional: `0` sends a direct-to through `set_route`; `1` clears the FMS route and draws the map line; `2` clears the FMS route and does not draw a line. Therefore a user in mode `1` or `2` should not expect an FMS `set_route` until switching to automatic mode or using the direct-to action.
+
+Debug page values:
+
+- `routeupdate_target` - destination snapshot used by the most recent route update.
+- `routeupdate_valid` - `1` only when the snapshot resolved with `has_location`.
+- `routeupdate_lock` - `1` while a route update owns the serialized handoff.
+- `routeupdate_error` - last route status (`missing_location`, `set_route_failed`, retry failure, or context-specific failure code).
+- `routeupdate_error_detail` - the `$ERROR` value captured by the last `try`/`catch`, when the Mission System supplied one.
+
+When debugging a report that says no route was supplied, first record `NOCONNEXT`, `location_name`, `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error`. If the target is valid and the status is clear but the FMS still has no route, capture the Mission System `$ERROR` from the command log and the simulator build/add-on state.
+
+## 13. Current issue resolutions
 
 - Issue 06: `whobringpatient = ambulance` is now selected only after an ambulance arrival state (`ambu1arrived`, `ambu2arrived`) is true. Police arrival alone no longer selects the ambulance branch; the separate police requirement for ambulance pre-visit remains intact.
 - Issue 10: rescue-vehicle `drive_object` calls are routed through per-vehicle watchdog macros. Each wrapper runs the drive in a worker thread, catches command errors, applies a vehicle-specific timeout, records `arrived`/`failed`, and uses the terminal waypoint as a guarded `move_object` fallback so a blocked vehicle cannot hold the mission indefinitely. Watchdog state locals are prefixed `drive_watchdog_`.
 - Issue 11: pathology selection no longer leaves `myhealth*` pointing at the last incompatible random record after the retry limit. The selector installs the deterministic fallback record agreed in the issue and marks the result `fallback`; this applies to patients 1-3 and the Halloween selector.
 - Issue 14: the failure engine now dispatches the failure index through one supported `switch` command. The original failure side effects are preserved, with one common delay and reset per cycle.
 
-## 13. Testing sequence for SOL
+## 14. Testing sequence for SOL
 
 Run tests in this order and record the result for each:
 
@@ -273,9 +299,9 @@ Run tests in this order and record the result for each:
 11. Press `Next Dispatch` repeatedly and verify the icon location and stale-icon cleanup.
 12. Move the refueling slider repeatedly and verify only one macro instance starts.
 
-The latest release has only been structurally validated in this workspace. Runtime behavior in MSFS/HOC still needs to be tested after these final heli-rescuer changes.
+The latest release has only been structurally validated in this workspace. Runtime behavior in MSFS/HOC still needs to be tested after these final heli-rescuer and deboarding changes, especially 3-crew doctor movement and 4-/5-crew returns.
 
-## 14. Editing and release rules
+## 15. Editing and release rules
 
 - Keep simple commands on one line.
 - Keep complex conditions and IF structures multiline.
@@ -286,7 +312,7 @@ The latest release has only been structurally validated in this workspace. Runti
 - Write the next artifact as `everywhere_all.json` and increment the title suffix.
 - Re-run JSON parsing, macro-reference scanning, duplicate-key scanning, and Unicode-dash scanning before handoff.
 
-## 15. Ambulance distance and second-ambulance work in release 0.997 10
+## 16. Ambulance distance and second-ambulance work in release 0.997 10
 
 - The pre-visit monitor now measures the parked `ambulance1` distance from `accident_location`. The closest-ambulance flow uses the same `ambulance1` alias after its final parking step, so the check covers both normal and closest ambulance.
 - Pre-load is rejected when the parked ambulance is more than 600 m from the scene. The distance rejection is applied after the VFXA/weather force calculation, so forced weather loading cannot bypass the 600 m safety limit.

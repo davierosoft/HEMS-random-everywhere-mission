@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 13",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 15",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -8233,11 +8233,38 @@
           {"describe_icon": "connext",
             "description": "SEND DIRECT-TO NAVIGATION TO FMS",
             "commands": [
-              {"set_route":{"local":"location_name"}}
+              {"set":{"local":"routeupdate_error"},"value":null},
+              {"set":{"local":"routeupdate_error_detail"},"value":null},
+              {"if": {"local":"location_name"},
+                "ne": null,
+                "then": [
+                  {"if": {"has_location":{"local":"location_name"}},
+                    "eq": 1,
+                    "then": [
+                      {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                        {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed"},
+                        {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}},
+                        {"sleep":1},
+                        {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                          {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed_twice"},
+                          {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+                        ]}
+                      ]}
+                    ],
+                    "else": [
+                      {"set":{"local":"routeupdate_error"},"value":"direct_missing_location"}
+                    ]
+                  }
+                ],
+                "else": [
+                  {"set":{"local":"routeupdate_error"},"value":"direct_missing_location"}
+                ]
+              }
             ],
             "show_condition": {
               "and": [
                 {"require":{"local":"location_name"},"ne":null},
+                {"require":{"has_location":{"local":"location_name"}},"eq":1},
                 {"require":{"global":"NOCONNEXT"},"ne":0}
               ],
               "eq": 1
@@ -14377,6 +14404,7 @@
           {"image":"bar"},
           {"text":"DISPATCH MAP PREVIEW"},
           {"text":"generation: {0}; location name: {1}; ready: {2}","params":[{"local":"map_preview_generation"},{"local":"location_name"},{"local":"has_location"}]},
+          {"text":"route target: {0}; valid: {1}; lock: {2}; status: {3}; detail: {4}","params":[{"local":"routeupdate_target"},{"local":"routeupdate_valid"},{"local":"routeupdate_lock"},{"local":"routeupdate_error"},{"local":"routeupdate_error_detail"}]},
           {"image":"bar"},
           {"text":"REFUELLING"},
           {"text":"active: {0}; slider dirty: {1}; debounce armed: {2}","params":[{"local":"refueling_active"},{"local":"refueling_slider_dirty"},{"local":"refueling_slider_debounce_armed"}]},
@@ -20533,18 +20561,49 @@
     ],
 
     "routeupdate": [
-      {"if": {"local":"location_name"},
+      {"if":{"local":"routeupdate_lock"},"eq":null,"then":[
+        {"set":{"local":"routeupdate_lock"},"value":0}
+      ]},
+      {"wait_for":{"local":"routeupdate_lock"},"eq":0},
+      {"set":{"local":"routeupdate_lock"},"value":1},
+      {"set":{"local":"routeupdate_target"},"value":{"local":"location_name"}},
+      {"set":{"local":"routeupdate_valid"},"value":0},
+      {"set":{"local":"routeupdate_error"},"value":null},
+      {"set":{"local":"routeupdate_error_detail"},"value":null},
+      {"if": {"local":"routeupdate_target"},
         "ne": null,
+        "then": [
+          {"if": {"has_location":{"local":"routeupdate_target"}},
+            "eq": 1,
+            "then": [
+              {"set":{"local":"routeupdate_valid"},"value":1}
+            ]
+          }
+        ]
+      },
+      {"if": {"local":"routeupdate_valid"},
+        "eq": 1,
         "then": [
           {"create_location":"route_start","zones":[{"zone":{"location":"$USER"}}]},
           {"if": {"global":"NOCONNEXT"},
             "eq": 0,
             "then": [
               {"sleep":2},
-              {"set_route":{"local":"location_name"}}
+              {"try":[{"set_route":{"local":"routeupdate_target"}}],"catch":[
+                {"set":{"local":"routeupdate_error"},"value":"set_route_failed"},
+                {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}},
+                {"sleep":1},
+                {"try":[{"set_route":{"local":"routeupdate_target"}}],"catch":[
+                  {"set":{"local":"routeupdate_error"},"value":"set_route_failed_twice"},
+                  {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+                ]}
+              ]}
             ],
             "else": [
-              {"set_route":[]},
+              {"try":[{"set_route":[]}],"catch":[
+                {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"},
+                {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+              ]},
               {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
               {"if": {"global":"NOCONNEXT"},
                 "eq": 1,
@@ -20552,18 +20611,27 @@
                   {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
                     "eq": 3,
                     "then": [
-                      {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                      {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
                     ],
                     "else": [
-                      {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                      {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
                     ]
                   }
                 ]
               }
             ]
           }
+        ],
+        "else": [
+          {"set":{"local":"routeupdate_error"},"value":"missing_location"},
+          {"try":[{"set_route":[]}],"catch":[
+            {"set":{"local":"routeupdate_error"},"value":"missing_location_clear_failed"},
+            {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+          ]},
+          {"set_map":{"remove":{"line":{"id":"ROUTE"}}}}
         ]
-      }
+      },
+      {"set":{"local":"routeupdate_lock"},"value":0}
     ],
 
     "legcolor": [
@@ -20581,7 +20649,9 @@
                       "eq": 3,
                       "then": [
                         {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                        {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                        {"if":{"local":"routeupdate_valid"},"eq":1,"then":[
+                          {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                        ]}
                       ]
                     },
                     {"wait_for":{"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},"ne":3}
@@ -20600,7 +20670,9 @@
                       "ne": 3,
                       "then": [
                         {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                        {"set_map":{"add":{"line":{"points":["route_start","{local:location_name}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                        {"if":{"local":"routeupdate_valid"},"eq":1,"then":[
+                          {"set_map":{"add":{"line":{"points":["route_start","{local:routeupdate_target}"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                        ]}
                       ]
                     },
                     {"wait_for":{"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},"eq":3}
@@ -29623,13 +29695,34 @@
         ]
       },
       {"set":{"local":"FPL_NMBR"},"value":5},
+      {"set":{"local":"routeupdate_error"},"value":null},
+      {"set":{"local":"routeupdate_error_detail"},"value":null},
       {"if": {"global":"NOCONNEXT"},
         "eq": 0,
         "then": [
-          {"set_route":"heli_rescuer_location"}
+          {"if": {"has_location":"heli_rescuer_location"},
+            "eq": 1,
+            "then": [
+              {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
+                {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"},
+                {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}},
+                {"sleep":1},
+                {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
+                  {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed_twice"},
+                  {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+                ]}
+              ]}
+            ],
+            "else": [
+              {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_missing_location"}
+            ]
+          }
         ],
         "else": [
-          {"set_route":[]},
+          {"try":[{"set_route":[]}],"catch":[
+            {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"},
+            {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+          ]},
           {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
           {"if": {"global":"NOCONNEXT"},
             "eq": 1,
@@ -30916,7 +31009,11 @@
       {"if": {"local":"helirescuers_drop_here_selected"},
         "eq": "yes",
         "then": [
-          {"call_macro":"helirescuers_follow_destination"},
+          {"create_thread": {
+              "commands": [
+                {"call_macro":"helirescuers_follow_destination_delayed"}
+              ]
+            }},
           {"set":{"local":"helirescuers_drop_here_selected"},"value":"done"},
           {"set":{"local":"helirescuers_drop_here_ready"},"value":"no"},
           {"set":{"local":"helirescuers_drop_here_monitor"},"value":"no"},
@@ -30958,6 +31055,33 @@
       {"set_objective_title":"LEAVE HELIRESCUER(S) HERE","color":"orange"},
       {"set_message":{"text":"Helirescuer(s) will leave the helicopter here and follow the ground crew."}},
       {"call_macro":"drop heli rescuer ground"}
+    ],
+
+    "helirescuers_follow_destination_delayed": [
+      {"if": {"local":"helirescuers_drop_here_mode"},
+        "eq": "hospital",
+        "then": [
+          {"wait_for":{"has_location":"hospital_door"},"eq":1},
+          {"wait_for":{"has_location":"hospital"},"eq":1},
+          {"sleep":[2,5]},
+          {"call_macro":"helirescuers_follow_destination"}
+        ]
+      },
+      {"if": {"local":"helirescuers_drop_here_mode"},
+        "eq": "hospital_user",
+        "then": [
+          {"wait_for":{"has_location":"hospital_user"},"eq":1},
+          {"sleep":[2,5]},
+          {"call_macro":"helirescuers_follow_destination"}
+        ]
+      },
+      {"if": {"local":"helirescuers_drop_here_mode"},
+        "eq": "base",
+        "then": [
+          {"sleep":[2,5]},
+          {"call_macro":"helirescuers_follow_destination"}
+        ]
+      }
     ],
 
     "helirescuers_follow_destination": [
@@ -31075,28 +31199,38 @@
           {"if": {"has_object":"pisteur2"},
             "eq": 1,
             "then": [
-              {"if": {"has_object":"pax1"},
+              {"if": {"has_object":"servicecar2"},
                 "eq": 1,
                 "then": [
-                  {"drive_object": {"name":"pisteur2","to":["pax1"],"VAR1":3,"speed":5}},
+                  {"drive_object": {"name":"pisteur2","to":["servicecar2"],"VAR1":3,"speed":5}},
                   {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
-                  {"point_object":"pisteur2","to":"pax1"}
+                  {"point_object":"pisteur2","to":"servicecar2"}
                 ],
                 "else": [
-                  {"if": {"has_object":"pax2"},
+                  {"if": {"has_object":"pax1"},
                     "eq": 1,
                     "then": [
-                      {"drive_object": {"name":"pisteur2","to":["pax2"],"VAR1":3,"speed":5}},
+                      {"drive_object": {"name":"pisteur2","to":["pax1"],"VAR1":3,"speed":5}},
                       {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
-                      {"point_object":"pisteur2","to":"pax2"}
+                      {"point_object":"pisteur2","to":"pax1"}
                     ],
                     "else": [
-                      {"if": {"has_location":"RTB_location"},
+                      {"if": {"has_object":"pax2"},
                         "eq": 1,
                         "then": [
-                          {"drive_object": {"name":"pisteur2","to":["RTB_location"],"VAR1":3,"speed":5}},
+                          {"drive_object": {"name":"pisteur2","to":["pax2"],"VAR1":3,"speed":5}},
                           {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
-                          {"point_object":"pisteur2","to":"RTB_location"}
+                          {"point_object":"pisteur2","to":"pax2"}
+                        ],
+                        "else": [
+                          {"if": {"has_location":"RTB_location"},
+                            "eq": 1,
+                            "then": [
+                              {"drive_object": {"name":"pisteur2","to":["RTB_location"],"VAR1":3,"speed":5}},
+                              {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
+                              {"point_object":"pisteur2","to":"RTB_location"}
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -31108,28 +31242,38 @@
           {"if": {"has_object":"pisteur1"},
             "eq": 1,
             "then": [
-              {"if": {"has_object":"pax1"},
+              {"if": {"has_object":"servicecar2"},
                 "eq": 1,
                 "then": [
-                  {"drive_object": {"name":"pisteur1","to":["pax1"],"VAR1":3,"speed":5}},
+                  {"drive_object": {"name":"pisteur1","to":["servicecar2"],"VAR1":3,"speed":5}},
                   {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
-                  {"point_object":"pisteur1","to":"pax1"}
+                  {"point_object":"pisteur1","to":"servicecar2"}
                 ],
                 "else": [
-                  {"if": {"has_object":"pax2"},
+                  {"if": {"has_object":"pax1"},
                     "eq": 1,
                     "then": [
-                      {"drive_object": {"name":"pisteur1","to":["pax2"],"VAR1":3,"speed":5}},
+                      {"drive_object": {"name":"pisteur1","to":["pax1"],"VAR1":3,"speed":5}},
                       {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
-                      {"point_object":"pisteur1","to":"pax2"}
+                      {"point_object":"pisteur1","to":"pax1"}
                     ],
                     "else": [
-                      {"if": {"has_location":"RTB_location"},
+                      {"if": {"has_object":"pax2"},
                         "eq": 1,
                         "then": [
-                          {"drive_object": {"name":"pisteur1","to":["RTB_location"],"VAR1":3,"speed":5}},
+                          {"drive_object": {"name":"pisteur1","to":["pax2"],"VAR1":3,"speed":5}},
                           {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
-                          {"point_object":"pisteur1","to":"RTB_location"}
+                          {"point_object":"pisteur1","to":"pax2"}
+                        ],
+                        "else": [
+                          {"if": {"has_location":"RTB_location"},
+                            "eq": 1,
+                            "then": [
+                              {"drive_object": {"name":"pisteur1","to":["RTB_location"],"VAR1":3,"speed":5}},
+                              {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
+                              {"point_object":"pisteur1","to":"RTB_location"}
+                            ]
+                          }
                         ]
                       }
                     ]
@@ -41485,10 +41629,7 @@
       {"set":{"object":"ambustretcher","var":"COUPLED"},"value":0},
       {"create_thread": {
           "commands": [
-            {"or": [
-                {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.3},
-                {"wait_for":{"var":["L:AMBULANCE","number"]},"ne":0}
-              ]},
+            {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.3},
             {"create_thread": {
                 "commands": [
                   {"destroy_user_action":"ambulance_prime"}
@@ -50542,10 +50683,10 @@
             {"set":{"var":["H:{local:HXX}_SDK_PAX_3_OFF","number"]},"value":0},
             {"sleep":1},
             {"close_door":"pax_right"},
-            {"if": {"object":"hangar","var":"distance"},
-              "gt": {"var":["L:VANACTION","number"]},
+            {"if": {"has_object":"servicecar2"},
+              "eq": 1,
               "then": [
-                {"wait_for":{"var":["L:HOLD","number"]},"eq":0}
+                {"sleep":[2,5]}
               ]
             },
             {"drive_object": {"name":"pax3","to":[{"bearing":40,"dist":5},{"bearing":25,"dist":22},{"bearing":17,"dist":21}],"VAR1":2,"speed":7}},
@@ -50762,7 +50903,7 @@
                 {"if": {"object":"hangar","var":"distance"},
                   "gt": {"var":["L:VANACTION","number"]},
                   "then": [
-                    {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
+                    {"sleep":[2,5]},
                     {"sleep":2},
                     {"if": {"has_object":"pilot"},
                       "eq": 1,
@@ -50822,7 +50963,7 @@
           {"if": {"object":"hangar","var":"distance"},
             "gt": {"var":["L:VANACTION","number"]},
             "then": [
-              {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
+              {"sleep":[2,5]},
               {"sleep":2},
               {"destroy_object":"copilott"},
               {"set":{"local":"COPILOT"},"value":0},
@@ -53055,6 +53196,11 @@
     "objective1": [
       {"set":{"local":"nddisabled"},"value":null},
       {"set":{"local":"location_name"},"value":"SOUL_BUOY"},
+      {"set":{"local":"routeupdate_target"},"value":null},
+      {"set":{"local":"routeupdate_valid"},"value":0},
+      {"set":{"local":"routeupdate_lock"},"value":0},
+      {"set":{"local":"routeupdate_error"},"value":null},
+      {"set":{"local":"routeupdate_error_detail"},"value":null},
       {"set":{"local":"FUEL_UPDATED"},"value":"no"},
       {"set":{"var":["L:VAR_MISSION_NUMBER","number"]},"value":0},
       {"set":{"var":["L:VAR_SEND_DISPATCH","number"]},"value":0},
@@ -55800,41 +55946,73 @@
                     {"wait_for":{"var":["L:TDSGTNXI750U2_HomeKey","number"]},"eq":1},
                     {"wait_for":{"var":["L:TDSGTNXI750U1_HomeKey","number"]},"eq":1}
                   ]},
+                {"set":{"local":"routeupdate_error"},"value":null},
+                {"set":{"local":"routeupdate_error_detail"},"value":null},
                 {"if": {"local":"FPL_NMBR"},
                   "eq": 5,
                   "then": [
                     {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                    {"set_route":"heli_rescuer_location"},
-                    {"if": {"global":"NOCONNEXT"},
+                    {"if": {"has_location":"heli_rescuer_location"},
                       "eq": 1,
                       "then": [
-                        {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
-                          "eq": 3,
+                        {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
+                          {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"},
+                          {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+                        ]},
+                        {"if": {"global":"NOCONNEXT"},
+                          "eq": 1,
                           "then": [
-                            {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
-                          ],
-                          "else": [
-                            {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                            {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
+                              "eq": 3,
+                              "then": [
+                                {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                              ],
+                              "else": [
+                                {"set_map":{"add":{"line":{"points":["route_start","heli_rescuer_location"],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                              ]
+                            }
                           ]
                         }
+                      ],
+                      "else": [
+                        {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_missing_location"}
                       ]
                     }
                   ],
                   "else": [
                     {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
-                    {"set_route":{"local":"location_name"}},
-                    {"if": {"global":"NOCONNEXT"},
-                      "eq": 1,
+                    {"if": {"local":"location_name"},
+                      "ne": null,
                       "then": [
-                        {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
-                          "eq": 3,
+                        {"if": {"has_location":{"local":"location_name"}},
+                          "eq": 1,
                           "then": [
-                            {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                            {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                              {"set":{"local":"routeupdate_error"},"value":"flightplan_set_route_failed"},
+                              {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+                            ]},
+                            {"if": {"global":"NOCONNEXT"},
+                              "eq": 1,
+                              "then": [
+                                {"if": {"var":["L:{local:HXX}_SDK_AFCS_MODE_ROLL","number"]},
+                                  "eq": 3,
+                                  "then": [
+                                    {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#0CC100","width":3},"id":"ROUTE"}}}}
+                                  ],
+                                  "else": [
+                                    {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                                  ]
+                                }
+                              ]
+                            }
                           ],
                           "else": [
-                            {"set_map":{"add":{"line":{"points":["route_start",{"local":"location_name"}],"stroke":{"color":"#34D2EB","width":3},"id":"ROUTE"}}}}
+                            {"set":{"local":"routeupdate_error"},"value":"flightplan_missing_location"}
                           ]
                         }
+                      ],
+                      "else": [
+                        {"set":{"local":"routeupdate_error"},"value":"flightplan_missing_location"}
                       ]
                     }
                   ]
@@ -57795,7 +57973,28 @@
                 ]
               },
               {"set_message":{"text":"SENDING TO FMS, PLEASE WAIT..."}},
-              {"set_route":{"local":"location_name"}}
+              {"set":{"local":"routeupdate_error"},"value":null},
+              {"set":{"local":"routeupdate_error_detail"},"value":null},
+              {"if": {"local":"location_name"},
+                "ne": null,
+                "then": [
+                  {"if": {"has_location":{"local":"location_name"}},
+                    "eq": 1,
+                    "then": [
+                      {"try":[{"set_route":{"local":"location_name"}}],"catch":[
+                        {"set":{"local":"routeupdate_error"},"value":"rescuetrack_set_route_failed"},
+                        {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
+                      ]}
+                    ],
+                    "else": [
+                      {"set":{"local":"routeupdate_error"},"value":"rescuetrack_missing_location"}
+                    ]
+                  }
+                ],
+                "else": [
+                  {"set":{"local":"routeupdate_error"},"value":"rescuetrack_missing_location"}
+                ]
+              }
             ]
           }
         ]
