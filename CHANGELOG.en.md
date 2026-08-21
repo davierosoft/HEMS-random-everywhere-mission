@@ -86,6 +86,16 @@ This changelog records the consolidated results of the work performed during the
 - Corrected officer-clearance routes by resolving each vehicle-to-patient bearing into a parameter before using it as a `bearing2` drive waypoint, matching the working train/midway pattern and avoiding unsupported inline bearing queries.
 - Re-armed airborne marshaller guidance when a previously settled position is left before departure, so VAR1 is recalculated continuously instead of remaining on the last descent signal.
 
+## Route delivery hardening - release 0.997 15
+
+- Advanced the release title to `0.997 15`; the artifact remains `everywhere_all.json`.
+- Hardened `routeupdate` by snapshotting the destination, checking that the target is not null and that `has_location` resolves it before attempting navigation.
+- Added `try`/`catch` handling with one delayed retry for the automatic FMS `set_route` path, plus a local diagnostic status for missing or failed targets. Invalid targets now clear the route and map line without aborting the mission thread.
+- Applied the same location validation and guarded retry behavior to the manual direct-to button, heli-rescuer flight-plan selection, delayed tablet flight-plan updates, and RescueTrack waypoint activation.
+- Updated manual route-preview lines to use the validated route snapshot and prevented them from being drawn when the snapshot is invalid.
+- Added `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error` to the Objective 1 session reset and grouped debug page.
+- Kept the intended `NOCONNEXT` behavior: `0` sends an FMS direct-to, `1` clears the FMS route and draws the manual map line, and `2` clears the FMS route without drawing a line.
+
 ## Ambulance distance handling and secondary ambulance rescue - release 0.997 10
 
 - Release title advanced to `0.997 10`; the artifact remains `everywhere_all.json`.
@@ -165,5 +175,5 @@ This changelog records the consolidated results of the work performed during the
 - Blank lines between macro categories were restored for readability.
 - Text uses the ASCII hyphen `-`; incompatible long dash characters are excluded.
 - Release titles use the progressive suffix format `0.997 N`.
-- The release 0.997 14 output contains 499 macros and passes JSON parsing.
+- The release 0.997 15 output contains 499 macros and passes JSON parsing.
 - Static analysis still reports the inherited references `beforetockl` and dynamic `ELT {local:ELT}`; they were not changed without runtime confirmation because they may be system or dynamically expanded macros.
