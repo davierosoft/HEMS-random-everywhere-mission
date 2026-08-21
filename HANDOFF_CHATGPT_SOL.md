@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 16`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 17`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,7 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 499 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has 500 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
 The GitHub handoff for this release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28).
 
@@ -28,7 +28,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 16`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 17`.
 
 ## 3. Mission architecture and state model
 
@@ -281,6 +281,17 @@ Fallback locals:
 - `AGEMIN` and `AGEMAX` are cleared for patient 1 so the existing age fallback is used afterward.
 
 The direct assignments are present for standard, secondary, and Halloween selection. Do not restore the old `set param myhealth*` object-literal fallback.
+
+### Autosave pathology persistence - release 0.997 17
+
+`pathology random engine` and its Halloween counterpart run their selector in `create_thread`. Before this release, `objective4` could call `savetemp` before that worker had assigned `generic_pathology1`; setting `TEMPPATHOLOGY1` from a null local does not create a useful persisted global entry. The release adds:
+
+- `pathology_random_ready`, initialized to `1` in Objective 1, set to `0` when a pathology worker starts, and set to `1` only after the worker has completed its fallback/selection normalization.
+- A bounded 5-second polling window at the start of `savetemp`, avoiding an indefinite `wait_for` while allowing the normal asynchronous selector to finish.
+- The shared `ensure pathology1 fallback` macro, which guarantees `generic_pathology1`, symptoms, diagnosis, score, SpO2, BPM, and degradation rate have valid values before autosave. If the source pathology is unavailable, it uses the agreed fallback (`No info received`, `Undetermined`, score 30-90, 97, 70, 1).
+- Objective 1 resets the patient-1 pathology locals and readiness state so stale values cannot be copied into a new dispatch.
+
+Therefore `TEMPPATHOLOGY1` is now always assigned a non-null value by autosave. If it is absent from a locally inspected `global.json`, verify that the file belongs to the active mission save/profile and was read after the autosave completed; the mission source itself does not embed runtime global values.
 
 ## 13. Current issue resolutions
 
