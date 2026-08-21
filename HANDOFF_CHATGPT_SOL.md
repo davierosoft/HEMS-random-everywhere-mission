@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 15`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 16`
 
 The latest user-supplied Desktop source was:
 
@@ -28,7 +28,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 15`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 16`.
 
 ## 3. Mission architecture and state model
 
@@ -269,6 +269,18 @@ Debug page values:
 - `routeupdate_error_detail` - the `$ERROR` value captured by the last `try`/`catch`, when the Mission System supplied one.
 
 When debugging a report that says no route was supplied, first record `NOCONNEXT`, `location_name`, `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error`. If the target is valid and the status is clear but the FMS still has no route, capture the Mission System `$ERROR` from the command log and the simulator build/add-on state.
+
+### Pathology fallback correction - release 0.997 16
+
+The pathology fallback must not assign a plain object literal to a Mission System `param`. The object is resolved as a query expression, so keys such as `id` produce `query not found`. In the standard and Halloween pathology engines, when the retry limit is reached, `randomhealth1/2/3` is set to the string `fallback`; a following multiline IF assigns the fallback values directly to the patient locals.
+
+Fallback locals:
+
+- Patient 1: `generic_pathology1 = No info received`, `medical_symptoms1 = No info received`, `diagnosis1 = Undetermined`, `LIFESCORE` randomized from 30-90, `SPO2 = 97`, `BPM = 70`, `decr_rate = 1`.
+- Patients 2 and 3: the corresponding pathology, symptoms, diagnosis, and `LIFESCORE2/3` values use the same fallback range and text.
+- `AGEMIN` and `AGEMAX` are cleared for patient 1 so the existing age fallback is used afterward.
+
+The direct assignments are present for standard, secondary, and Halloween selection. Do not restore the old `set param myhealth*` object-literal fallback.
 
 ## 13. Current issue resolutions
 
