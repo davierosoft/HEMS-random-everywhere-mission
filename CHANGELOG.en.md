@@ -97,6 +97,14 @@ This changelog records the consolidated results of the work performed during the
 - Added `routeupdate_target`, `routeupdate_valid`, `routeupdate_error`, and the captured Mission System `$ERROR` detail to the Objective 1 session reset and grouped debug page.
 - Kept the intended `NOCONNEXT` behavior: `0` sends an FMS direct-to, `1` clears the FMS route and draws the manual map line, and `2` clears the FMS route without drawing a line.
 
+## Pathology fallback correction - release 0.997 16
+
+- Advanced the release title to `0.997 16`; the artifact remains `everywhere_all.json`.
+- Fixed the fallback error caused by assigning a plain object literal to the `myhealth1`, `myhealth2`, and `myhealth3` parameters. The Mission System interpreted the object as a query expression and failed on the unknown `id` key.
+- Fallback branches now assign the agreed values directly to the patient locals: `No info received`, `Undetermined`, lifescore randomized from 30-90, SpO2 97, BPM 70, and deterioration rate 1. Age range locals are cleared so the normal age fallback remains deterministic.
+- Applied the same direct-local fallback to standard, secondary, and Halloween pathology selection for patients 1-3.
+- Restored the requested pathology formatting: simple commands remain single-line and complex fallback IF blocks are multiline and consistently indented.
+
 ## Ambulance distance handling and secondary ambulance rescue - release 0.997 10
 
 - Release title advanced to `0.997 10`; the artifact remains `everywhere_all.json`.
