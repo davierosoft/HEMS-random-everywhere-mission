@@ -254,7 +254,7 @@ Health-data fallback:
 
 ## 12. Route delivery hardening - release 0.997 15
 
-`routeupdate` now copies `location_name` into `routeupdate_target` before its existing delay. It validates the snapshot in two steps: the value must be non-null, then `has_location` must resolve it. A valid automatic route uses `try`/`catch` around `set_route` and retries once after one second. A missing target or two failed attempts records `routeupdate_error`, clears the route/map line safely, and lets the mission continue.
+`routeupdate` now serializes concurrent calls with `routeupdate_lock`, then copies `location_name` into `routeupdate_target` before its existing delay. It validates the snapshot in two steps: the value must be non-null, then `has_location` must resolve it. A valid automatic route uses `try`/`catch` around `set_route` and retries once after one second. A missing target or two failed attempts records `routeupdate_error`, captures `$ERROR` in `routeupdate_error_detail`, clears the route/map line safely, and lets the mission continue.
 
 The same guard is used by the manual `SEND DIRECT-TO NAVIGATION TO FMS` action, the heli-rescuer flight-plan selection, the tablet home-key flight-plan thread, and RescueTrack waypoint activation. Manual map-preview lines use the validated snapshot and are not drawn when it is invalid.
 
@@ -264,7 +264,9 @@ Debug page values:
 
 - `routeupdate_target` - destination snapshot used by the most recent route update.
 - `routeupdate_valid` - `1` only when the snapshot resolved with `has_location`.
+- `routeupdate_lock` - `1` while a route update owns the serialized handoff.
 - `routeupdate_error` - last route status (`missing_location`, `set_route_failed`, retry failure, or context-specific failure code).
+- `routeupdate_error_detail` - the `$ERROR` value captured by the last `try`/`catch`, when the Mission System supplied one.
 
 When debugging a report that says no route was supplied, first record `NOCONNEXT`, `location_name`, `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error`. If the target is valid and the status is clear but the FMS still has no route, capture the Mission System `$ERROR` from the command log and the simulator build/add-on state.
 
