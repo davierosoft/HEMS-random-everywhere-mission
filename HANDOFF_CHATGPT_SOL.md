@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 18`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 21`
 
 The latest user-supplied Desktop source was:
 
@@ -22,6 +22,14 @@ Release 0.997 18 also separates scene fire/VFX selection from pathology selectio
 
 The VFX contract is unchanged and is now consistent across random, custom, and multiplayer selection: `random_fire=yes` sets `VFX` to a random integer from 0 to 36, `random_fire=forced` sets it from 5 to 13, and `random_fire=no` sets `VFX=100`. Objective 2 now waits for `pathology_random_ready=1` before starting the scene macro, closing the remaining race between pathology/sex selection and `random injured` object creation.
 
+Release 0.997 19 keeps the marshal departure-direction mapping unchanged. It only inverts the lateral approach signals, suppresses approach guidance when the landing spot is behind the marshal's forward cone, lowers the lateral correction threshold from 7 m to 2 m, and widens the vertical landing band to preserve a 10 ft separation around the 15 ft approach height. A landed helicopter within 15 m now receives the land signal. Wind-facing rotation formulas are unchanged; a separate lock pauses those two orientation loops inside 60 m until one minute after takeoff. Custom VFXA repositioning now uses the exact CUSVFXA coordinates (zero bearing/offset/heading), avoiding the previous 1 m/10 degree placement error. Objective 1 also removes stale custom scene objects and clears OBJECT1-OBJECT15 locals before the next dispatch, preventing old object instances from overlapping new VFX or scene objects.
+
+Release 0.997 20 corrects the 3-crew pilot (`pax3`) state after the optional poordead approach. The pilot now returns to `VAR 1 = 14` (pilot idle) instead of the crew-only state used in the 4/5-crew patient-visit branch.
+
+Release 0.997 21 removes the redundant deceased-on-scene line from the pink end-of-mission statistics view only. Operational deceased messages and casualty-count logic are unchanged.
+
+The 3-crew and 4/5-crew stretcher return paths now use three side-of-helicopter bearing2 waypoints followed by `rpaxdoor`, with VAR1 reset after the single four-waypoint drive, so the operator does not route through the helicopter body.
+
 The GitHub handoff for this release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28).
 
 ## 2. Important generation warning
@@ -32,7 +40,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 18`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 19`.
 
 ## 3. Mission architecture and state model
 
