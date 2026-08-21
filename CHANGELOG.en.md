@@ -2,6 +2,16 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Pathology/VFX compatibility and Halloween fallback - release 0.997 18
+
+- Advanced the release title to `0.997 18`; the artifact remains `everywhere_all.json`.
+- Kept the VFX contract identical in random, custom, and multiplayer dispatches: `yes` uses 0-36, `forced` uses 5-13, and `no` uses 100 (no effect).
+- Decoupled pathology selection from the scene VFX randomizer: ordinary `random_fire` values now prefer non-fire pathology records, while only `forced` prefers fire records.
+- Added a bounded relaxation pass that accepts an available fire state when the preferred state is absent, preventing the old 800/100-attempt fallback caused solely by a fire-field mismatch.
+- Added a final sex-relaxation pass that aligns `SEX1` with the selected pathology record before the later `random injured` object-selection macro runs. Worker scenes are explicitly synchronized to male before pathology selection, so the created injured object and pathology no longer race on sex.
+- Normalized missing or out-of-range standard pathology types to the available `health1`-`health107` range before selection, leaving fallback only for genuinely unavailable health data.
+- Normalized Halloween pathology types outside the existing `healthhalloween` type range to a valid 0-29 type before selection, while retaining the same fallback values for genuinely missing data.
+
 ## Autosave pathology persistence - release 0.997 17
 
 - Advanced the release title to `0.997 17`; the artifact remains `everywhere_all.json`.
