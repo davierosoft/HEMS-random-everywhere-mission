@@ -2,6 +2,14 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Autosave pathology persistence - release 0.997 17
+
+- Advanced the release title to `0.997 17`; the artifact remains `everywhere_all.json`.
+- Diagnosed the missing `TEMPPATHOLOGY1` condition: `savetemp` could run while the asynchronous pathology-selection thread was still populating `generic_pathology1`, causing a `null` global assignment and no persisted key.
+- Added a bounded pathology-readiness handoff before autosave, so `savetemp` waits briefly for the selector without introducing an unbounded wait.
+- Added a shared patient-1 fallback guard used by both pathology engines and by autosave. If the pathology local is still null, the agreed fallback values are written directly before `TEMPPATHOLOGY1` and the related health globals are saved.
+- Reset the readiness and pathology session locals in Objective 1 so a previous dispatch cannot be mistaken for the current one.
+
 ## Initial audit and macro refactoring
 
 - Audited the mission JSON for syntax errors, duplicate JSON keys, unresolved static macro calls, repeated command blocks, unsafe object operations, and formatting inconsistencies.
@@ -184,5 +192,5 @@ This changelog records the consolidated results of the work performed during the
 - Blank lines between macro categories were restored for readability.
 - Text uses the ASCII hyphen `-`; incompatible long dash characters are excluded.
 - Release titles use the progressive suffix format `0.997 N`.
-- The release 0.997 15 output contains 499 macros and passes JSON parsing.
+- The release 0.997 17 output contains 500 macros and passes JSON parsing.
 - Static analysis still reports the inherited references `beforetockl` and dynamic `ELT {local:ELT}`; they were not changed without runtime confirmation because they may be system or dynamically expanded macros.
