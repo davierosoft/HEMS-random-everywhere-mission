@@ -91,9 +91,10 @@ This changelog records the consolidated results of the work performed during the
 - Advanced the release title to `0.997 15`; the artifact remains `everywhere_all.json`.
 - Hardened `routeupdate` by snapshotting the destination, checking that the target is not null and that `has_location` resolves it before attempting navigation.
 - Added `try`/`catch` handling with one delayed retry for the automatic FMS `set_route` path, plus a local diagnostic status for missing or failed targets. Invalid targets now clear the route and map line without aborting the mission thread.
+- Serialized concurrent `routeupdate` calls with a session lock so an older delayed update cannot overwrite a newer dispatch target during the two-second handoff.
 - Applied the same location validation and guarded retry behavior to the manual direct-to button, heli-rescuer flight-plan selection, delayed tablet flight-plan updates, and RescueTrack waypoint activation.
 - Updated manual route-preview lines to use the validated route snapshot and prevented them from being drawn when the snapshot is invalid.
-- Added `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error` to the Objective 1 session reset and grouped debug page.
+- Added `routeupdate_target`, `routeupdate_valid`, `routeupdate_error`, and the captured Mission System `$ERROR` detail to the Objective 1 session reset and grouped debug page.
 - Kept the intended `NOCONNEXT` behavior: `0` sends an FMS direct-to, `1` clears the FMS route and draws the manual map line, and `2` clears the FMS route without drawing a line.
 
 ## Ambulance distance handling and secondary ambulance rescue - release 0.997 10
