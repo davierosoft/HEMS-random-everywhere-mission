@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 16",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 17",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -2077,7 +2077,39 @@
       {"set":{"var":["L:CPL{local:VCP}2","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}2","number"]},1]}}
     ],
 
+    "ensure pathology1 fallback": [
+      {"if":{"local":"generic_pathology1"},"eq":null,
+        "then":[
+          {"set":{"local":"randomhealth1"},"value":"fallback"},
+          {"set":{"local":"generic_pathology1"},"value":"No info received"},
+          {"set":{"local":"medical_symptoms1"},"value":"No info received"},
+          {"set":{"local":"diagnosis1"},"value":"Undetermined"},
+          {"set":{"local":"LIFESCORE"},"value":{"rand":[30,90]}},
+          {"set":{"local":"SPO2"},"value":97},
+          {"set":{"local":"BPM"},"value":70},
+          {"set":{"local":"decr_rate"},"value":1},
+          {"set":{"local":"AGEMIN"},"value":null},
+          {"set":{"local":"AGEMAX"},"value":null}
+        ]
+      }
+    ],
+
     "savetemp": [
+      {"set":{"local":"pathology_save_wait"},"value":0},
+      {"while":{"local":"pathology_save_wait"},"lt":50,
+        "do":[
+          {"if":{"local":"pathology_random_ready"},"eq":1,
+            "then":[
+              {"set":{"local":"pathology_save_wait"},"value":50}
+            ],
+            "else":[
+              {"sleep":0.1},
+              {"set":{"local":"pathology_save_wait"},"value":{"add":[{"local":"pathology_save_wait"},1]}}
+            ]
+          }
+        ]
+      },
+      {"call_macro":"ensure pathology1 fallback"},
       {"set":{"global":"SAVEVALID0"},"value":"no"},
       {"set":{"global":"SAVENAME"},"value":"AUTO SAVED"},
       {"set":{"global":"TEMPVAR_MISSION_NUMBER"},"value":{"local":"VAR_MISSION_NUMBER"}},
@@ -4139,6 +4171,7 @@
     ],
 
     "pathology random engine": [
+      {"set":{"local":"pathology_random_ready"},"value":0},
       {"create_thread": {
           "commands": [
             {"set":{"local":"healthblock"},"value":null},
@@ -4479,12 +4512,15 @@
                 {"set":{"local":"BPM"},"value":{"global":"TEMPBPM"}},
                 {"set":{"local":"decr_rate"},"value":{"global":"TEMPDECRRATE"}}
               ]
-            }
+            },
+            {"call_macro":"ensure pathology1 fallback"},
+            {"set":{"local":"pathology_random_ready"},"value":1}
           ]
         }}
     ],
 
     "halloween pathology random engine": [
+      {"set":{"local":"pathology_random_ready"},"value":0},
       {"create_thread": {
           "commands": [
             {"set":{"local":"LIFESCORE"},"value":null},
@@ -4733,7 +4769,9 @@
               "then": [
                 {"set":{"local":"decr_rate"},"value":{"floor":{"rand":[1,2]}}}
               ]
-            }
+            },
+            {"call_macro":"ensure pathology1 fallback"},
+            {"set":{"local":"pathology_random_ready"},"value":1}
           ]
         }}
     ],
@@ -54405,6 +54443,12 @@
       {"set":{"local":"xfer_location_type"},"value":"none"},
       {"set":{"local":"organexpiration"},"value":" "},
       {"set":{"local":"randomdeadmsg"},"value":null},
+      {"set":{"local":"pathology_random_ready"},"value":1},
+      {"set":{"local":"pathology_save_wait"},"value":0},
+      {"set":{"local":"randomhealth1"},"value":null},
+      {"set":{"local":"generic_pathology1"},"value":null},
+      {"set":{"local":"medical_symptoms1"},"value":null},
+      {"set":{"local":"diagnosis1"},"value":null},
       {"set":{"local":"dispatch_cancellation_monitor"},"value":null},
       {"set":{"local":"dispatch_cancellation_pending"},"value":null},
       {"set":{"local":"dispatch_cancellation_ready"},"value":0},
