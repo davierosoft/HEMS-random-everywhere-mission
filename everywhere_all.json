@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 17",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 18",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -3848,13 +3848,13 @@
       {"if": {"local":"random_fire"},
         "eq": "yes",
         "then": [
-          {"set":{"local":"VFX"},"value":{"floor":{"rand":[1,11]}}}
+          {"set":{"local":"VFX"},"value":{"floor":{"rand":[0,36]}}}
         ]
       },
       {"if": {"local":"random_fire"},
         "eq": "forced",
         "then": [
-          {"set":{"local":"VFX"},"value":{"floor":{"rand":[10,16]}}}
+          {"set":{"local":"VFX"},"value":{"floor":{"rand":[5,13]}}}
         ]
       },
       {"if": {"local":"random_fire"},
@@ -4172,8 +4172,36 @@
 
     "pathology random engine": [
       {"set":{"local":"pathology_random_ready"},"value":0},
+      {"if": {"local":"PATOLOGY_TYPE"},
+        "eq": null,
+        "then": [
+          {"set":{"local":"PATOLOGY_TYPE"},"value":{"floor":{"rand":[1,107]}}}
+        ]
+      },
+      {"if": {"local":"PATOLOGY_TYPE"},
+        "gt": 107,
+        "then": [
+          {"set":{"local":"PATOLOGY_TYPE"},"value":{"floor":{"rand":[1,107]}}}
+        ]
+      },
+      {"if": {"local":"PATOLOGY_TYPE"},
+        "lt": 1,
+        "then": [
+          {"set":{"local":"PATOLOGY_TYPE"},"value":{"floor":{"rand":[1,107]}}}
+        ]
+      },
       {"create_thread": {
           "commands": [
+            {"if": {"local":"random_fire"},
+              "eq": "forced",
+              "then": [
+                {"set":{"local":"pathology_fire_mode"},"value":"yes"}
+              ],
+              "else": [
+                {"set":{"local":"pathology_fire_mode"},"value":"no"}
+              ]
+            },
+            {"set":{"local":"pathology_relax_stage"},"value":0},
             {"set":{"local":"healthblock"},"value":null},
             {"set":{"local":"LIFESCORE"},"value":"inprogress"},
             {"set":{"local":"randomhealth1"},"value":null},
@@ -4190,6 +4218,19 @@
                         {"set":{"local":"loopcheck"},"value":{"add":[{"local":"loopcheck"},1]}},
                         {"set":{"param":"myhealth1"},"value":{"struct":{"static":"health{local:PATOLOGY_TYPE}"},"index":{"floor":{"rand":[0,{"struct":{"static":"health{local:PATOLOGY_TYPE}"},"path":"length"}]}}}},
                         {"sleep":0.005},
+                        {"if": {"local":"pathology_relax_stage"},
+                          "gt": 0,
+                          "then": [
+                            {"set":{"local":"pathology_fire_mode"},"value":{"struct":{"param":"myhealth1"},"path":"fire"}}
+                          ]
+                        },
+                        {"if": {"local":"pathology_relax_stage"},
+                          "eq": 2,
+                          "then": [
+                            {"if": {"struct":{"param":"myhealth1"},"path":"sex"},"eq":"male","then":[{"set":{"local":"SEX1"},"value":"male"}]},
+                            {"if": {"struct":{"param":"myhealth1"},"path":"sex"},"eq":"female","then":[{"set":{"local":"SEX1"},"value":"female"}]}
+                          ]
+                        },
                         {"if": {"struct":{"param":"myhealth1"},"path":"type"},
                           "eq": {"local":"PATOLOGY_TYPE"},
                           "then": [
@@ -4199,11 +4240,11 @@
                                 {"if": {"local":"SEX1"},
                                   "eq": "male",
                                   "then": [
-                                    {"if": {"local":"random_fire"},
+                                    {"if": {"local":"pathology_fire_mode"},
                                       "ne": "no",
                                       "then": [
                                         {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
-                                          "eq": {"local":"random_fire"},
+                                          "eq": {"local":"pathology_fire_mode"},
                                           "then": [
                                             {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
                                           ]
@@ -4228,11 +4269,11 @@
                                     {"if": {"local":"SEX1"},
                                       "eq": "female",
                                       "then": [
-                                        {"if": {"local":"random_fire"},
+                                        {"if": {"local":"pathology_fire_mode"},
                                           "ne": "no",
                                           "then": [
                                             {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
-                                              "eq": {"local":"random_fire"},
+                                              "eq": {"local":"pathology_fire_mode"},
                                               "then": [
                                                 {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
                                               ]
@@ -4251,11 +4292,11 @@
                                     }
                                   ],
                                   "else": [
-                                    {"if": {"local":"random_fire"},
+                                    {"if": {"local":"pathology_fire_mode"},
                                       "ne": "no",
                                       "then": [
                                         {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
-                                          "eq": {"local":"random_fire"},
+                                          "eq": {"local":"pathology_fire_mode"},
                                           "then": [
                                             {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
                                           ]
@@ -4279,7 +4320,25 @@
                         {"if": {"local":"loopcheck"},
                           "eq": 800,
                           "then": [
-                            {"set":{"local":"randomhealth1"},"value":"fallback"}
+                            {"if": {"local":"pathology_relax_stage"},
+                              "eq": 0,
+                              "then": [
+                                {"set":{"local":"pathology_relax_stage"},"value":1},
+                                {"set":{"local":"loopcheck"},"value":0}
+                              ],
+                              "else": [
+                                {"if": {"local":"pathology_relax_stage"},
+                                  "eq": 1,
+                                  "then": [
+                                    {"set":{"local":"pathology_relax_stage"},"value":2},
+                                    {"set":{"local":"loopcheck"},"value":0}
+                                  ],
+                                  "else": [
+                                    {"set":{"local":"randomhealth1"},"value":"fallback"}
+                                  ]
+                                }
+                              ]
+                            }
                           ]
                         }
                       ]
@@ -4521,8 +4580,36 @@
 
     "halloween pathology random engine": [
       {"set":{"local":"pathology_random_ready"},"value":0},
+      {"if": {"local":"PATOLOGY_TYPE"},
+        "eq": null,
+        "then": [
+          {"set":{"local":"PATOLOGY_TYPE"},"value":{"floor":{"rand":[0,29]}}}
+        ]
+      },
+      {"if": {"local":"PATOLOGY_TYPE"},
+        "gt": 29,
+        "then": [
+          {"set":{"local":"PATOLOGY_TYPE"},"value":{"floor":{"rand":[0,29]}}}
+        ]
+      },
+      {"if": {"local":"PATOLOGY_TYPE"},
+        "lt": 0,
+        "then": [
+          {"set":{"local":"PATOLOGY_TYPE"},"value":{"floor":{"rand":[0,29]}}}
+        ]
+      },
       {"create_thread": {
           "commands": [
+            {"if": {"local":"random_fire"},
+              "eq": "forced",
+              "then": [
+                {"set":{"local":"pathology_fire_mode"},"value":"yes"}
+              ],
+              "else": [
+                {"set":{"local":"pathology_fire_mode"},"value":"no"}
+              ]
+            },
+            {"set":{"local":"pathology_relax_stage"},"value":0},
             {"set":{"local":"LIFESCORE"},"value":null},
             {"set":{"local":"randomhealth1"},"value":null},
             {"set":{"local":"loopcheck"},"value":0},
@@ -4532,6 +4619,19 @@
                 {"set":{"local":"loopcheck"},"value":{"add":[{"local":"loopcheck"},1]}},
                 {"set":{"param":"myhealth1"},"value":{"struct":{"static":"healthhalloween"},"index":{"floor":{"rand":[0,{"struct":{"static":"healthhalloween"},"path":"length"}]}}}},
                 {"sleep":0.005},
+                {"if": {"local":"pathology_relax_stage"},
+                  "gt": 0,
+                  "then": [
+                    {"set":{"local":"pathology_fire_mode"},"value":{"struct":{"param":"myhealth1"},"path":"fire"}}
+                  ]
+                },
+                {"if": {"local":"pathology_relax_stage"},
+                  "eq": 2,
+                  "then": [
+                    {"if": {"struct":{"param":"myhealth1"},"path":"sex"},"eq":"male","then":[{"set":{"local":"SEX1"},"value":"male"}]},
+                    {"if": {"struct":{"param":"myhealth1"},"path":"sex"},"eq":"female","then":[{"set":{"local":"SEX1"},"value":"female"}]}
+                  ]
+                },
                 {"if": {"struct":{"param":"myhealth1"},"path":"type"},
                   "eq": {"local":"PATOLOGY_TYPE"},
                   "then": [
@@ -4541,18 +4641,23 @@
                         {"if": {"local":"SEX1"},
                           "eq": "male",
                           "then": [
-                            {"if": {"local":"random_fire"},
+                            {"if": {"local":"pathology_fire_mode"},
                               "ne": "no",
                               "then": [
                                 {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
-                                  "eq": {"local":"random_fire"},
+                                  "eq": {"local":"pathology_fire_mode"},
                                   "then": [
                                     {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
                                   ]
                                 }
                               ],
                               "else": [
-                                {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
+                                {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
+                                  "eq": "no",
+                                  "then": [
+                                    {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -4565,36 +4670,46 @@
                             {"if": {"local":"SEX1"},
                               "eq": "female",
                               "then": [
-                                {"if": {"local":"random_fire"},
+                                {"if": {"local":"pathology_fire_mode"},
                                   "ne": "no",
                                   "then": [
                                     {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
-                                      "eq": {"local":"random_fire"},
+                                      "eq": {"local":"pathology_fire_mode"},
                                       "then": [
                                         {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
                                       ]
                                     }
                                   ],
                                   "else": [
-                                    {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
+                                    {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
+                                      "eq": "no",
+                                      "then": [
+                                        {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
+                                      ]
+                                    }
                                   ]
                                 }
                               ]
                             }
                           ],
                           "else": [
-                            {"if": {"local":"random_fire"},
+                            {"if": {"local":"pathology_fire_mode"},
                               "ne": "no",
                               "then": [
                                 {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
-                                  "eq": {"local":"random_fire"},
+                                  "eq": {"local":"pathology_fire_mode"},
                                   "then": [
                                     {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
                                   ]
                                 }
                               ],
                               "else": [
-                                {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
+                                {"if": {"struct":{"param":"myhealth1"},"path":"fire"},
+                                  "eq": "no",
+                                  "then": [
+                                    {"set":{"local":"randomhealth1"},"value":{"struct":{"param":"myhealth1"},"path":"type"}}
+                                  ]
+                                }
                               ]
                             }
                           ]
@@ -4606,7 +4721,25 @@
                 {"if": {"local":"loopcheck"},
                   "eq": 100,
                   "then": [
-                    {"set":{"local":"randomhealth1"},"value":"fallback"}
+                    {"if": {"local":"pathology_relax_stage"},
+                      "eq": 0,
+                      "then": [
+                        {"set":{"local":"pathology_relax_stage"},"value":1},
+                        {"set":{"local":"loopcheck"},"value":0}
+                      ],
+                      "else": [
+                        {"if": {"local":"pathology_relax_stage"},
+                          "eq": 1,
+                          "then": [
+                            {"set":{"local":"pathology_relax_stage"},"value":2},
+                            {"set":{"local":"loopcheck"},"value":0}
+                          ],
+                          "else": [
+                            {"set":{"local":"randomhealth1"},"value":"fallback"}
+                          ]
+                        }
+                      ]
+                    }
                   ]
                 }
               ]
@@ -14550,6 +14683,7 @@
           {"image":"bar"},
           {"text":"CREW Members: {4}; HELOVICTIMS: {0};NAMES and SEX1,2,3: {5} {1}, {6} {2}, {7} {3}","params":[{"local":"HELOVICTIMS"},{"local":"SEX1"},{"local":"SEX2"},{"local":"SEX3"},{"local":"CREW"},{"local":"injured1"},{"local":"injured2"},{"local":"injured3"}]},
           {"text":"LIFESCORE {0}, LIFESCORE2 {1}, LIFESCORE3 {2}, PATOLOGY_TYPE {3}","params":[{"tofixed":{"local":"LIFESCORE"},"digits":1},{"local":"LIFESCORE2"},{"local":"LIFESCORE3"},{"local":"PATOLOGY_TYPE"}]},
+          {"text":"PATHOLOGY FIRE MODE {0}; RELAX STAGE {1}","params":[{"local":"pathology_fire_mode"},{"local":"pathology_relax_stage"}]},
           {"text":"HEART RATE: {0}BPM","params":[{"round":{"local":"BPM"},"to":0}]},
           {"text":"SpO2: {0}%","params":[{"tofixed":{"local":"SPO2"},"digits":1}]},
           {"image":"bar"},
@@ -54445,6 +54579,8 @@
       {"set":{"local":"randomdeadmsg"},"value":null},
       {"set":{"local":"pathology_random_ready"},"value":1},
       {"set":{"local":"pathology_save_wait"},"value":0},
+      {"set":{"local":"pathology_fire_mode"},"value":null},
+      {"set":{"local":"pathology_relax_stage"},"value":0},
       {"set":{"local":"randomhealth1"},"value":null},
       {"set":{"local":"generic_pathology1"},"value":null},
       {"set":{"local":"medical_symptoms1"},"value":null},
@@ -55327,6 +55463,12 @@
           {"set":{"local":"AGE3"},"value":" "},
           {"set":{"local":"SEX3"},"value":" "},
           {"set":{"local":"consciousness3"},"value":" "}
+        ]
+      },
+      {"if": {"local":"injured_type"},
+        "eq": "injured_workers",
+        "then": [
+          {"set":{"local":"SEX1"},"value":"male"}
         ]
       },
       {"if": {"local":"halloween"},
