@@ -2,6 +2,25 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Pathology/VFX compatibility and Halloween fallback - release 0.997 18
+
+- Advanced the release title to `0.997 18`; the artifact remains `everywhere_all.json`.
+- Kept the VFX contract identical in random, custom, and multiplayer dispatches: `yes` uses 0-36, `forced` uses 5-13, and `no` uses 100 (no effect).
+- Decoupled pathology selection from the scene VFX randomizer: ordinary `random_fire` values now prefer non-fire pathology records, while only `forced` prefers fire records.
+- Added a bounded relaxation pass that accepts an available fire state when the preferred state is absent, preventing the old 800/100-attempt fallback caused solely by a fire-field mismatch.
+- Added a final sex-relaxation pass that aligns `SEX1` with the selected pathology record before the later `random injured` object-selection macro runs. Worker scenes are explicitly synchronized to male before pathology selection, so the created injured object and pathology no longer race on sex.
+- Added a readiness handoff before the mission scene macros start, so `random injured` cannot create `injured_human` while the pathology thread is still selecting `SEX1`.
+- Normalized missing or out-of-range standard pathology types to the available `health1`-`health107` range before selection, leaving fallback only for genuinely unavailable health data.
+- Normalized Halloween pathology types outside the existing `healthhalloween` type range to a valid 0-29 type before selection, while retaining the same fallback values for genuinely missing data.
+
+## Autosave pathology persistence - release 0.997 17
+
+- Advanced the release title to `0.997 17`; the artifact remains `everywhere_all.json`.
+- Diagnosed the missing `TEMPPATHOLOGY1` condition: `savetemp` could run while the asynchronous pathology-selection thread was still populating `generic_pathology1`, causing a `null` global assignment and no persisted key.
+- Added a bounded pathology-readiness handoff before autosave, so `savetemp` waits briefly for the selector without introducing an unbounded wait.
+- Added a shared patient-1 fallback guard used by both pathology engines and by autosave. If the pathology local is still null, the agreed fallback values are written directly before `TEMPPATHOLOGY1` and the related health globals are saved.
+- Reset the readiness and pathology session locals in Objective 1 so a previous dispatch cannot be mistaken for the current one.
+
 ## Initial audit and macro refactoring
 
 - Audited the mission JSON for syntax errors, duplicate JSON keys, unresolved static macro calls, repeated command blocks, unsafe object operations, and formatting inconsistencies.
@@ -97,6 +116,14 @@ This changelog records the consolidated results of the work performed during the
 - Added `routeupdate_target`, `routeupdate_valid`, `routeupdate_error`, and the captured Mission System `$ERROR` detail to the Objective 1 session reset and grouped debug page.
 - Kept the intended `NOCONNEXT` behavior: `0` sends an FMS direct-to, `1` clears the FMS route and draws the manual map line, and `2` clears the FMS route without drawing a line.
 
+## Pathology fallback correction - release 0.997 16
+
+- Advanced the release title to `0.997 16`; the artifact remains `everywhere_all.json`.
+- Fixed the fallback error caused by assigning a plain object literal to the `myhealth1`, `myhealth2`, and `myhealth3` parameters. The Mission System interpreted the object as a query expression and failed on the unknown `id` key.
+- Fallback branches now assign the agreed values directly to the patient locals: `No info received`, `Undetermined`, lifescore randomized from 30-90, SpO2 97, BPM 70, and deterioration rate 1. Age range locals are cleared so the normal age fallback remains deterministic.
+- Applied the same direct-local fallback to standard, secondary, and Halloween pathology selection for patients 1-3.
+- Restored the requested pathology formatting: simple commands remain single-line and complex fallback IF blocks are multiline and consistently indented.
+
 ## Ambulance distance handling and secondary ambulance rescue - release 0.997 10
 
 - Release title advanced to `0.997 10`; the artifact remains `everywhere_all.json`.
@@ -176,5 +203,5 @@ This changelog records the consolidated results of the work performed during the
 - Blank lines between macro categories were restored for readability.
 - Text uses the ASCII hyphen `-`; incompatible long dash characters are excluded.
 - Release titles use the progressive suffix format `0.997 N`.
-- The release 0.997 15 output contains 499 macros and passes JSON parsing.
+- The release 0.997 17 output contains 500 macros and passes JSON parsing.
 - Static analysis still reports the inherited references `beforetockl` and dynamic `ELT {local:ELT}`; they were not changed without runtime confirmation because they may be system or dynamically expanded macros.

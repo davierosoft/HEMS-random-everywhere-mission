@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 15`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 18`
 
 The latest user-supplied Desktop source was:
 
@@ -16,9 +16,13 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 499 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has 500 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
-The GitHub handoff for this release is on branch `agent/doctor-deboarding-0999`, pull request [#26](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/26).
+Release 0.997 18 also separates scene fire/VFX selection from pathology selection. Normal scenes prefer a non-fire pathology for both `random_fire=no` and the non-forced `yes` VFX mode; `random_fire=forced` prefers fire. If the preferred fire state is absent from the selected health list, a bounded relaxation accepts an available record instead of producing the old fallback. A second bounded pass can align `SEX1` to the selected pathology record before `random injured` creates `injured_human`; `injured_workers` is synchronized to male before the pathology thread starts. Missing or out-of-range standard types are remapped to `health1`-`health107`, and Halloween pathology types outside `healthhalloween` are remapped to the available 0-29 range. In normal mission data, the old fallback should now be reachable only if the relevant health static is missing or empty.
+
+The VFX contract is unchanged and is now consistent across random, custom, and multiplayer selection: `random_fire=yes` sets `VFX` to a random integer from 0 to 36, `random_fire=forced` sets it from 5 to 13, and `random_fire=no` sets `VFX=100`. Objective 2 now waits for `pathology_random_ready=1` before starting the scene macro, closing the remaining race between pathology/sex selection and `random injured` object creation.
+
+The GitHub handoff for this release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28).
 
 ## 2. Important generation warning
 
@@ -28,7 +32,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 15`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 18`.
 
 ## 3. Mission architecture and state model
 
@@ -269,6 +273,29 @@ Debug page values:
 - `routeupdate_error_detail` - the `$ERROR` value captured by the last `try`/`catch`, when the Mission System supplied one.
 
 When debugging a report that says no route was supplied, first record `NOCONNEXT`, `location_name`, `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error`. If the target is valid and the status is clear but the FMS still has no route, capture the Mission System `$ERROR` from the command log and the simulator build/add-on state.
+
+### Pathology fallback correction - release 0.997 16
+
+The pathology fallback must not assign a plain object literal to a Mission System `param`. The object is resolved as a query expression, so keys such as `id` produce `query not found`. In the standard and Halloween pathology engines, when the retry limit is reached, `randomhealth1/2/3` is set to the string `fallback`; a following multiline IF assigns the fallback values directly to the patient locals.
+
+Fallback locals:
+
+- Patient 1: `generic_pathology1 = No info received`, `medical_symptoms1 = No info received`, `diagnosis1 = Undetermined`, `LIFESCORE` randomized from 30-90, `SPO2 = 97`, `BPM = 70`, `decr_rate = 1`.
+- Patients 2 and 3: the corresponding pathology, symptoms, diagnosis, and `LIFESCORE2/3` values use the same fallback range and text.
+- `AGEMIN` and `AGEMAX` are cleared for patient 1 so the existing age fallback is used afterward.
+
+The direct assignments are present for standard, secondary, and Halloween selection. Do not restore the old `set param myhealth*` object-literal fallback.
+
+### Autosave pathology persistence - release 0.997 17
+
+`pathology random engine` and its Halloween counterpart run their selector in `create_thread`. Before this release, `objective4` could call `savetemp` before that worker had assigned `generic_pathology1`; setting `TEMPPATHOLOGY1` from a null local does not create a useful persisted global entry. The release adds:
+
+- `pathology_random_ready`, initialized to `1` in Objective 1, set to `0` when a pathology worker starts, and set to `1` only after the worker has completed its fallback/selection normalization.
+- A bounded 5-second polling window at the start of `savetemp`, avoiding an indefinite `wait_for` while allowing the normal asynchronous selector to finish.
+- The shared `ensure pathology1 fallback` macro, which guarantees `generic_pathology1`, symptoms, diagnosis, score, SpO2, BPM, and degradation rate have valid values before autosave. If the source pathology is unavailable, it uses the agreed fallback (`No info received`, `Undetermined`, score 30-90, 97, 70, 1).
+- Objective 1 resets the patient-1 pathology locals and readiness state so stale values cannot be copied into a new dispatch.
+
+Therefore `TEMPPATHOLOGY1` is now always assigned a non-null value by autosave. If it is absent from a locally inspected `global.json`, verify that the file belongs to the active mission save/profile and was read after the autosave completed; the mission source itself does not embed runtime global values.
 
 ## 13. Current issue resolutions
 
