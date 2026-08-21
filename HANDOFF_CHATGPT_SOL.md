@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 14`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 15`
 
 The latest user-supplied Desktop source was:
 
@@ -28,7 +28,7 @@ The current release script is:
 
 It reads the Desktop file and writes `outputs/everywhere_all.json`. Running it again after modifying only the current output can overwrite those changes because the Desktop file is its source. If you continue from the current release, either update the script source path to the current release or apply changes directly to a new copy and preserve the user's Desktop modifications deliberately.
 
-Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 14`.
+Every new release must continue to be named `everywhere_all.json`; distinguish releases by incrementing the title suffix, for example `0.997 15`.
 
 ## 3. Mission architecture and state model
 
@@ -252,14 +252,30 @@ Health-data fallback:
 - Do not rely on `location_name` alone to move an existing icon; update the point location explicitly.
 - Refueling must be debounced so moving the slider cannot launch multiple refueling macros. Keep the 2-second delay and the active-macro guard.
 
-## 12. Current issue resolutions
+## 12. Route delivery hardening - release 0.997 15
+
+`routeupdate` now copies `location_name` into `routeupdate_target` before its existing delay. It validates the snapshot in two steps: the value must be non-null, then `has_location` must resolve it. A valid automatic route uses `try`/`catch` around `set_route` and retries once after one second. A missing target or two failed attempts records `routeupdate_error`, clears the route/map line safely, and lets the mission continue.
+
+The same guard is used by the manual `SEND DIRECT-TO NAVIGATION TO FMS` action, the heli-rescuer flight-plan selection, the tablet home-key flight-plan thread, and RescueTrack waypoint activation. Manual map-preview lines use the validated snapshot and are not drawn when it is invalid.
+
+`NOCONNEXT` remains intentional: `0` sends a direct-to through `set_route`; `1` clears the FMS route and draws the map line; `2` clears the FMS route and does not draw a line. Therefore a user in mode `1` or `2` should not expect an FMS `set_route` until switching to automatic mode or using the direct-to action.
+
+Debug page values:
+
+- `routeupdate_target` - destination snapshot used by the most recent route update.
+- `routeupdate_valid` - `1` only when the snapshot resolved with `has_location`.
+- `routeupdate_error` - last route status (`missing_location`, `set_route_failed`, retry failure, or context-specific failure code).
+
+When debugging a report that says no route was supplied, first record `NOCONNEXT`, `location_name`, `routeupdate_target`, `routeupdate_valid`, and `routeupdate_error`. If the target is valid and the status is clear but the FMS still has no route, capture the Mission System `$ERROR` from the command log and the simulator build/add-on state.
+
+## 13. Current issue resolutions
 
 - Issue 06: `whobringpatient = ambulance` is now selected only after an ambulance arrival state (`ambu1arrived`, `ambu2arrived`) is true. Police arrival alone no longer selects the ambulance branch; the separate police requirement for ambulance pre-visit remains intact.
 - Issue 10: rescue-vehicle `drive_object` calls are routed through per-vehicle watchdog macros. Each wrapper runs the drive in a worker thread, catches command errors, applies a vehicle-specific timeout, records `arrived`/`failed`, and uses the terminal waypoint as a guarded `move_object` fallback so a blocked vehicle cannot hold the mission indefinitely. Watchdog state locals are prefixed `drive_watchdog_`.
 - Issue 11: pathology selection no longer leaves `myhealth*` pointing at the last incompatible random record after the retry limit. The selector installs the deterministic fallback record agreed in the issue and marks the result `fallback`; this applies to patients 1-3 and the Halloween selector.
 - Issue 14: the failure engine now dispatches the failure index through one supported `switch` command. The original failure side effects are preserved, with one common delay and reset per cycle.
 
-## 13. Testing sequence for SOL
+## 14. Testing sequence for SOL
 
 Run tests in this order and record the result for each:
 
@@ -283,7 +299,7 @@ Run tests in this order and record the result for each:
 
 The latest release has only been structurally validated in this workspace. Runtime behavior in MSFS/HOC still needs to be tested after these final heli-rescuer and deboarding changes, especially 3-crew doctor movement and 4-/5-crew returns.
 
-## 14. Editing and release rules
+## 15. Editing and release rules
 
 - Keep simple commands on one line.
 - Keep complex conditions and IF structures multiline.
@@ -294,7 +310,7 @@ The latest release has only been structurally validated in this workspace. Runti
 - Write the next artifact as `everywhere_all.json` and increment the title suffix.
 - Re-run JSON parsing, macro-reference scanning, duplicate-key scanning, and Unicode-dash scanning before handoff.
 
-## 15. Ambulance distance and second-ambulance work in release 0.997 10
+## 16. Ambulance distance and second-ambulance work in release 0.997 10
 
 - The pre-visit monitor now measures the parked `ambulance1` distance from `accident_location`. The closest-ambulance flow uses the same `ambulance1` alias after its final parking step, so the check covers both normal and closest ambulance.
 - Pre-load is rejected when the parked ambulance is more than 600 m from the scene. The distance rejection is applied after the VFXA/weather force calculation, so forced weather loading cannot bypass the 600 m safety limit.
