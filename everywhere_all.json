@@ -8233,6 +8233,8 @@
           {"describe_icon": "connext",
             "description": "SEND DIRECT-TO NAVIGATION TO FMS",
             "commands": [
+              {"set":{"local":"routeupdate_error"},"value":null},
+              {"set":{"local":"routeupdate_error_detail"},"value":null},
               {"if": {"local":"location_name"},
                 "ne": null,
                 "then": [
@@ -8241,9 +8243,11 @@
                     "then": [
                       {"try":[{"set_route":{"local":"location_name"}}],"catch":[
                         {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed"},
+                        {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}},
                         {"sleep":1},
                         {"try":[{"set_route":{"local":"location_name"}}],"catch":[
-                          {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed_twice"}
+                          {"set":{"local":"routeupdate_error"},"value":"direct_set_route_failed_twice"},
+                          {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
                         ]}
                       ]}
                     ],
@@ -14400,7 +14404,7 @@
           {"image":"bar"},
           {"text":"DISPATCH MAP PREVIEW"},
           {"text":"generation: {0}; location name: {1}; ready: {2}","params":[{"local":"map_preview_generation"},{"local":"location_name"},{"local":"has_location"}]},
-          {"text":"route target: {0}; valid: {1}; status: {2}","params":[{"local":"routeupdate_target"},{"local":"routeupdate_valid"},{"local":"routeupdate_error"}]},
+          {"text":"route target: {0}; valid: {1}; lock: {2}; status: {3}; detail: {4}","params":[{"local":"routeupdate_target"},{"local":"routeupdate_valid"},{"local":"routeupdate_lock"},{"local":"routeupdate_error"},{"local":"routeupdate_error_detail"}]},
           {"image":"bar"},
           {"text":"REFUELLING"},
           {"text":"active: {0}; slider dirty: {1}; debounce armed: {2}","params":[{"local":"refueling_active"},{"local":"refueling_slider_dirty"},{"local":"refueling_slider_debounce_armed"}]},
@@ -20557,9 +20561,12 @@
     ],
 
     "routeupdate": [
+      {"wait_for":{"local":"routeupdate_lock"},"eq":0},
+      {"set":{"local":"routeupdate_lock"},"value":1},
       {"set":{"local":"routeupdate_target"},"value":{"local":"location_name"}},
       {"set":{"local":"routeupdate_valid"},"value":0},
       {"set":{"local":"routeupdate_error"},"value":null},
+      {"set":{"local":"routeupdate_error_detail"},"value":null},
       {"if": {"local":"routeupdate_target"},
         "ne": null,
         "then": [
@@ -20581,15 +20588,18 @@
               {"sleep":2},
               {"try":[{"set_route":{"local":"routeupdate_target"}}],"catch":[
                 {"set":{"local":"routeupdate_error"},"value":"set_route_failed"},
+                {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}},
                 {"sleep":1},
                 {"try":[{"set_route":{"local":"routeupdate_target"}}],"catch":[
-                  {"set":{"local":"routeupdate_error"},"value":"set_route_failed_twice"}
+                  {"set":{"local":"routeupdate_error"},"value":"set_route_failed_twice"},
+                  {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
                 ]}
               ]}
             ],
             "else": [
               {"try":[{"set_route":[]}],"catch":[
-                {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"}
+                {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"},
+                {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
               ]},
               {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
               {"if": {"global":"NOCONNEXT"},
@@ -20612,11 +20622,13 @@
         "else": [
           {"set":{"local":"routeupdate_error"},"value":"missing_location"},
           {"try":[{"set_route":[]}],"catch":[
-            {"set":{"local":"routeupdate_error"},"value":"missing_location_clear_failed"}
+            {"set":{"local":"routeupdate_error"},"value":"missing_location_clear_failed"},
+            {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
           ]},
           {"set_map":{"remove":{"line":{"id":"ROUTE"}}}}
         ]
-      }
+      },
+      {"set":{"local":"routeupdate_lock"},"value":0}
     ],
 
     "legcolor": [
@@ -29680,6 +29692,8 @@
         ]
       },
       {"set":{"local":"FPL_NMBR"},"value":5},
+      {"set":{"local":"routeupdate_error"},"value":null},
+      {"set":{"local":"routeupdate_error_detail"},"value":null},
       {"if": {"global":"NOCONNEXT"},
         "eq": 0,
         "then": [
@@ -29688,9 +29702,11 @@
             "then": [
               {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
                 {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"},
+                {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}},
                 {"sleep":1},
                 {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
-                  {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed_twice"}
+                  {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed_twice"},
+                  {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
                 ]}
               ]}
             ],
@@ -29701,7 +29717,8 @@
         ],
         "else": [
           {"try":[{"set_route":[]}],"catch":[
-            {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"}
+            {"set":{"local":"routeupdate_error"},"value":"clear_route_failed"},
+            {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
           ]},
           {"set_map":{"remove":{"line":{"id":"ROUTE"}}}},
           {"if": {"global":"NOCONNEXT"},
@@ -53178,7 +53195,9 @@
       {"set":{"local":"location_name"},"value":"SOUL_BUOY"},
       {"set":{"local":"routeupdate_target"},"value":null},
       {"set":{"local":"routeupdate_valid"},"value":0},
+      {"set":{"local":"routeupdate_lock"},"value":0},
       {"set":{"local":"routeupdate_error"},"value":null},
+      {"set":{"local":"routeupdate_error_detail"},"value":null},
       {"set":{"local":"FUEL_UPDATED"},"value":"no"},
       {"set":{"var":["L:VAR_MISSION_NUMBER","number"]},"value":0},
       {"set":{"var":["L:VAR_SEND_DISPATCH","number"]},"value":0},
@@ -55924,6 +55943,8 @@
                     {"wait_for":{"var":["L:TDSGTNXI750U2_HomeKey","number"]},"eq":1},
                     {"wait_for":{"var":["L:TDSGTNXI750U1_HomeKey","number"]},"eq":1}
                   ]},
+                {"set":{"local":"routeupdate_error"},"value":null},
+                {"set":{"local":"routeupdate_error_detail"},"value":null},
                 {"if": {"local":"FPL_NMBR"},
                   "eq": 5,
                   "then": [
@@ -55932,7 +55953,8 @@
                       "eq": 1,
                       "then": [
                         {"try":[{"set_route":"heli_rescuer_location"}],"catch":[
-                          {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"}
+                          {"set":{"local":"routeupdate_error"},"value":"heli_rescuer_set_route_failed"},
+                          {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
                         ]},
                         {"if": {"global":"NOCONNEXT"},
                           "eq": 1,
@@ -55963,7 +55985,8 @@
                           "eq": 1,
                           "then": [
                             {"try":[{"set_route":{"local":"location_name"}}],"catch":[
-                              {"set":{"local":"routeupdate_error"},"value":"flightplan_set_route_failed"}
+                              {"set":{"local":"routeupdate_error"},"value":"flightplan_set_route_failed"},
+                              {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
                             ]},
                             {"if": {"global":"NOCONNEXT"},
                               "eq": 1,
@@ -57947,6 +57970,8 @@
                 ]
               },
               {"set_message":{"text":"SENDING TO FMS, PLEASE WAIT..."}},
+              {"set":{"local":"routeupdate_error"},"value":null},
+              {"set":{"local":"routeupdate_error_detail"},"value":null},
               {"if": {"local":"location_name"},
                 "ne": null,
                 "then": [
@@ -57954,7 +57979,8 @@
                     "eq": 1,
                     "then": [
                       {"try":[{"set_route":{"local":"location_name"}}],"catch":[
-                        {"set":{"local":"routeupdate_error"},"value":"rescuetrack_set_route_failed"}
+                        {"set":{"local":"routeupdate_error"},"value":"rescuetrack_set_route_failed"},
+                        {"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}
                       ]}
                     ],
                     "else": [
