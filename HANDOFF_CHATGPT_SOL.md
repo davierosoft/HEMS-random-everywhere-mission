@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 30`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 31`
 
 The latest user-supplied Desktop source was:
 
@@ -377,12 +377,13 @@ The latest release has only been structurally validated in this workspace. Runti
 - The pump wait_for commands remain only as edge detection for the simulator switch transition; they no longer defer an already-requested engine start.
 - JSON parsing and structural checks passed. Runtime verification is still required with prime pumps enabled during marshal ground operations and then switched off.
 
-## 19. Save/load audit and slot restoration - release 0.997 30
+## 19. Save/load audit and slot restoration - release 0.997 31
 
 - The save contract contains one autosave (`savetemp`) and three manual slots (`save1`, `save2`, `save3`). Each manual slot already stores the mission code, scene variant, crash variable, victim state/pathology values, VFX/casualty state, coordinates, heading, SAR start coordinates, and rescue-vehicle availability.
-- `preload1`, `preload2`, and `preload3` copy those slot values into the base `TEMP...` namespace before `reloadtemp` starts the reload. The missing copies for `TEMPaccident_description` and `TEMPSAR` were added in release 0.997 30. Without them a slot could retain the previous autosave description or SAR mode and restore the wrong location branch.
+- `preload1`, `preload2`, and `preload3` copy those slot values into the base `TEMP...` namespace before `reloadtemp` starts the reload. The copies for `TEMPaccident_description` and `TEMPSAR` are now present as defensive slot-state restoration. For a standard accident ID, however, the final local `SAR` is regenerated from `VAR_MISSION_NUMBER`/`CUS_ID_CARD` by `missionupdate CUSTOM`; those copies are not what decides the standard mission's SAR flag.
 - `SAVENAME*` and `SAVEVALID*` are slot metadata, not mission state. `TEMPELEVATION*` is used by the save-preview location macros; the mission itself recreates the scene location and does not need that value to run.
-- On reload, `reloadtemp` restores the start/accident/rescue/user-A coordinates, heading, SAR start coordinates when `TEMPSAR=yes`, mission identifiers, victim data, VFX/casualty data, and rescue-vehicle availability. Static accident metadata (name, objective, scene macro, query, icon, and allowed vehicle flags) is regenerated from the saved mission ID and variant, so duplicating those fields in the save is unnecessary for ordinary missions.
+- On reload, `reloadtemp` restores the start/accident/rescue/user-A coordinates, heading, SAR start coordinates when the saved SAR state is active, mission identifiers, victim data, VFX/casualty data, and rescue-vehicle availability. Static accident metadata (including SAR, name, objective, scene macro, query, icon, and allowed vehicle flags) is regenerated from the saved mission ID and variant, so duplicating those fields in the save is unnecessary for ordinary missions.
+- The custom location pre-generator now tests the regenerated local `SAR` value instead of the persistent `TEMPSAR` global. This avoids a stale/missing autosave global changing an externally launched standard custom mission selected by ID.
 - The current format is a semantic mission restart, not a byte-for-byte snapshot of an in-flight scene. Object coordinates, active thread positions, current mission/dispatch phase, timers, landing-spot edits, and vehicle positions are not serialized. Restoring those would require a separate operational-state protocol and should not be approximated by adding random globals.
 - A latest simulator `global.json` may omit null or never-assigned save keys; that is normal. `savetemp` creates the autosave globals at runtime. The project copy is included with the release, but the live MSFS profile file could not be read from this environment because the Windows app container denied access; compare it after copying it out of the protected folder if a byte-level profile audit is required.
 
@@ -391,6 +392,7 @@ The latest release has only been structurally validated in this workspace. Runti
 - `CUSTOM_MISSION` is also entered by an external mission script; it is not limited to the in-mission custom menu. The external loader must set the `L:CUS_*` inputs before loading `everywhere_all.json` and must leave them available until Objective 1 reaches the custom branch.
 - Required custom-dispatch inputs are `L:CUS_SEND_DISPATCH=1`, `L:CUS_ID_CARD`, `L:CUS_CRASH_VARIABLE`, `L:CUS_MISSION_SCENE_VARIANT`, `L:CUS_START LAT/LON`, `L:CUS_ACCIDENT LAT/LON`, `L:CUS_RESCUE LAT/LON`, and `L:CUS_USERA LAT/LON`. SAR scripts additionally provide `L:CUS_SAR_reload=1` plus `L:CUS_SAR_START LAT/LON`.
 - The custom path consumes those values in this order: `CUSTOM_MISSION` -> `missionupdate CUSTOM` -> custom location generators -> `Mission dispatch`. Do not reset or rename these LVARs in Objective 1, save/load changes, or scene-generation macros before that sequence completes.
+- For a standard accident ID, `missionupdate CUSTOM` is authoritative for `SAR` and the other accident metadata; it resolves them from the accident table using `L:CUS_ID_CARD`. External scripts do not need to duplicate those derived values.
 - Save reload intentionally reuses the same `L:CUS_*` handoff after copying the saved coordinates into the base namespace. Any external script should therefore treat the CUS variables as the stable interface, rather than depending on internal locals such as `accident_name` or `MISSION_PHASE`.
 - `train.json` was supplied from the protected MSFS package path, but that path is ACL-protected in this workspace and the file could not yet be read or copied. Before changing the custom interface, place an accessible copy in the repository/workspace; then add it to GitHub as a reference fixture and validate its exact `L:CUS_*` writes against this contract.
 

@@ -2,11 +2,12 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
-## Save/load audit and slot restoration - release 0.997 30
+## External custom SAR handoff and save/load audit - release 0.997 31
 
-- Advanced the release title to `0.997 30`; the artifact remains `everywhere_all.json`.
+- Advanced the release title to `0.997 31`; the artifact remains `everywhere_all.json`.
 - Audited the autosave and three manual-slot contract. Manual slots already persist mission identifiers, patient/pathology values, scene coordinates, heading, SAR start coordinates, VFX/casualty state, and rescue-vehicle availability.
-- Fixed `preload1`, `preload2`, and `preload3` so each slot copies both `TEMPaccident_description` and `TEMPSAR` into the base namespace before `reloadtemp`. This prevents stale autosave description/SAR data from being used after loading a manual slot.
+- Kept the defensive `TEMPaccident_description` and `TEMPSAR` slot copies, while confirming that standard mission `SAR` is regenerated from `VAR_MISSION_NUMBER`/`CUS_ID_CARD` by `missionupdate CUSTOM`.
+- Changed `accident location pregenerator CUSTOM` to use that regenerated local `SAR` value instead of the persistent `TEMPSAR` global. An externally launched custom mission therefore cannot inherit a stale/missing autosave SAR flag when its standard accident ID already defines the correct value.
 - Confirmed that slot labels/validity flags are UI metadata and that scene elevation is preview-only; static accident metadata is regenerated from the mission ID and variant.
 - Documented the supported semantic reload boundary: active object positions, running threads, operational phases, timers, landing-spot changes, and vehicle positions are not serialized by the current Mission System save model.
 
