@@ -2,6 +2,14 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Marshal activation and non-blocking guidance - release 0.997 32
+
+- Advanced the release title to `0.997 32`; the artifact remains `everywhere_all.json`.
+- Corrected the marshal and `pisteur3` approach bearing: the behind-marshal test now compares the helicopter bearing with the marshaller's actual facing direction, rather than the helicopter's own heading. The wind-orientation threads remain unchanged.
+- Enforced the existing approach gate of 150 m and below 100 ft before a guidance signal is emitted.
+- Removed blocking rotor-RPM waits from the marshal animation monitor. Engage-rotor signalling is now polled, so a prime-pump transition cannot leave the guidance monitor permanently stalled; the signal is cleared as soon as rotor RPM exceeds 5%.
+- Added facing bearings to the debug output and reset them at Objective 1.
+
 ## External custom SAR handoff and save/load audit - release 0.997 31
 
 - Advanced the release title to `0.997 31`; the artifact remains `everywhere_all.json`.

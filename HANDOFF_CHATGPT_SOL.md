@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 31`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 32`
 
 The latest user-supplied Desktop source was:
 
@@ -30,9 +30,11 @@ Release 0.997 21 removes the redundant deceased-on-scene line from the pink end-
 
 Release 0.997 22 corrects the marshal and `pisteur3` altitude guidance. Above 60 ft they signal descent; between 30 and 60 ft they retain horizontal guidance without a vertical command; below 30 ft they signal climb unless within 5 m of the landing spot. Within 5 m, the signal is hover while moving at 2 knots or more and descent below 2 knots. After touchdown the non-Halloween marshal signal is cleared to `VAR 1 = 0`; the existing rotor-deceleration and restart state machine is otherwise unchanged.
 
+Release 0.997 32 fixes the marshal monitor activation path. The behind-marshal test now compares the helicopter's bearing from the actual `marshall`/`pisteur3` object with that object's facing bearing to the landing/heli-rescuer spot; it no longer uses the helicopter's own heading, which could suppress every signal while the wind thread continued moving the object. The monitor explicitly suppresses approach signalling at or above 100 ft, retaining the 150 m gate. Rotor-engage waits are now polled instead of blocking the whole monitor on `wait_for rotor >5`; the signal is held while rotor RPM is at or below 5% and cleared once RPM rises. The two pre-existing wind-orientation threads were not modified. Debug output now includes target, facing, relative, and behind flags, and Objective 1 resets the new locals.
+
 The 3-crew and 4/5-crew stretcher return paths now use three side-of-helicopter bearing2 waypoints followed by `rpaxdoor`, with VAR1 reset after the single four-waypoint drive, so the operator does not route through the helicopter body.
 
-The GitHub handoff for the previous pathology release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28). The save/load audit release is on branch `codex/save-load-audit-0999`, pull request [#30](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/30).
+The GitHub handoff for the previous pathology release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28). The save/load audit release is on branch `codex/save-load-audit-0999`, pull request [#30](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/30). The marshal activation follow-up is on branch `codex/marshal-fix-0999`, pull request [#31](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/31).
 
 ## 2. Important generation warning
 
