@@ -2,6 +2,12 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Debug-page dynamic variable cleanup - release 0.997 33
+
+- Advanced the release title to `0.997 33`; the artifact remains `everywhere_all.json`.
+- Removed debug-page entries that attempted to resolve dynamic LVAR names built from `local:VCP` or `local:HXX`, plus the dynamic `rescuetrack_{local:rescuetrack_id}` local.
+- Kept the mission logic and all static local/LVAR debug entries unchanged; only the incompatible dynamic-variable display entries were removed.
+
 ## Marshal activation and non-blocking guidance - release 0.997 32
 
 - Advanced the release title to `0.997 32`; the artifact remains `everywhere_all.json`.
