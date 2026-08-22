@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 21`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 30`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,7 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has 500 macros, valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, complete debug coverage for all 623 local references and 559 LVAR references (including dynamic templates), and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
 
 Release 0.997 18 also separates scene fire/VFX selection from pathology selection. Normal scenes prefer a non-fire pathology for both `random_fire=no` and the non-forced `yes` VFX mode; `random_fire=forced` prefers fire. If the preferred fire state is absent from the selected health list, a bounded relaxation accepts an available record instead of producing the old fallback. A second bounded pass can align `SEX1` to the selected pathology record before `random injured` creates `injured_human`; `injured_workers` is synchronized to male before the pathology thread starts. Missing or out-of-range standard types are remapped to `health1`-`health107`, and Halloween pathology types outside `healthhalloween` are remapped to the available 0-29 range. In normal mission data, the old fallback should now be reachable only if the relevant health static is missing or empty.
 
@@ -27,6 +27,8 @@ Release 0.997 19 keeps the marshal departure-direction mapping unchanged. It onl
 Release 0.997 20 corrects the 3-crew pilot (`pax3`) state after the optional poordead approach. The pilot now returns to `VAR 1 = 14` (pilot idle) instead of the crew-only state used in the 4/5-crew patient-visit branch.
 
 Release 0.997 21 removes the redundant deceased-on-scene line from the pink end-of-mission statistics view only. Operational deceased messages and casualty-count logic are unchanged.
+
+Release 0.997 22 corrects the marshal and `pisteur3` altitude guidance. Above 60 ft they signal descent; between 30 and 60 ft they retain horizontal guidance without a vertical command; below 30 ft they signal climb unless within 5 m of the landing spot. Within 5 m, the signal is hover while moving at 2 knots or more and descent below 2 knots. After touchdown the non-Halloween marshal signal is cleared to `VAR 1 = 0`; the existing rotor-deceleration and restart state machine is otherwise unchanged.
 
 The 3-crew and 4/5-crew stretcher return paths now use three side-of-helicopter bearing2 waypoints followed by `rpaxdoor`, with VAR1 reset after the single four-waypoint drive, so the operator does not route through the helicopter body.
 
@@ -358,4 +360,29 @@ The latest release has only been structurally validated in this workspace. Runti
 - New session locals are reset in Objective 1: pre-visit distance state, second-ambulance rescue state, ambulance1 destination/departure state, closest-police transfer state, and closest-police crew-onboard flags.
 - The debug page now displays the new distance, secondary-ambulance, destination/departure, closest-police transfer, and police-crew-onboard locals in grouped sections.
 - Two landing-zone police routes and one second-ambulance destination route family were added only for these new transport cases. They use literal object/location names and do not use `copy_location` or parameterized `create_location`.
+
+## 17. Closest waypoint route split - release 0.997 27
+
+- Every remaining `drive_object` whose route contained two or more top-level `closest` waypoints was split into one drive command per waypoint.
+- A standing animation state is inserted between the segments so the next closest calculation starts only after the preceding movement has completed.
+- The reset uses the HPG H145 Crew VAR 1 state appropriate to the object: HEMS walking without a backpack (2) -> standing without a backpack (0), HEMS walking with a backpack (3) -> standing with a backpack (1), stretcher walking without/with patient (10/11) -> standing stretcher without/with patient (12/13), and pilot walking (16) -> pilot standing (14).
+- No generic reset to zero was added. Patient VAR1 states and existing crouch/hoist states remain unchanged. The final audit reports zero drive commands with multiple top-level closest waypoints; routes containing one closest waypoint followed by fixed waypoints were left unchanged because they cannot switch closest side between two dynamic waypoints.
+- JSON parsing passed after the transformation. Runtime behavior still needs an MSFS test, with priority on the 3-crew, 4-crew, 5-crew, hoisting-return, ambulance-transfer, and heli-rescuer paths.
+
+## 18. Prime-pump engine-start guard - release 0.997 29
+
+- Removed the wait_for blocks from the engine1 and engine2 macros that queued an engine start until marshal guidance ended.
+- The ENG 1_2 and ENG 2_1 monitor threads now evaluate the start conditions immediately after the prime-pump transition.
+- If marshall_ground_ops_active or pisteur3_guidance_active is 1 at that instant, the engine-start action is discarded and cannot restart later when the marshal becomes inactive.
+- The pump wait_for commands remain only as edge detection for the simulator switch transition; they no longer defer an already-requested engine start.
+- JSON parsing and structural checks passed. Runtime verification is still required with prime pumps enabled during marshal ground operations and then switched off.
+
+## 19. Save/load audit and slot restoration - release 0.997 30
+
+- The save contract contains one autosave (`savetemp`) and three manual slots (`save1`, `save2`, `save3`). Each manual slot already stores the mission code, scene variant, crash variable, victim state/pathology values, VFX/casualty state, coordinates, heading, SAR start coordinates, and rescue-vehicle availability.
+- `preload1`, `preload2`, and `preload3` copy those slot values into the base `TEMP...` namespace before `reloadtemp` starts the reload. The missing copies for `TEMPaccident_description` and `TEMPSAR` were added in release 0.997 30. Without them a slot could retain the previous autosave description or SAR mode and restore the wrong location branch.
+- `SAVENAME*` and `SAVEVALID*` are slot metadata, not mission state. `TEMPELEVATION*` is used by the save-preview location macros; the mission itself recreates the scene location and does not need that value to run.
+- On reload, `reloadtemp` restores the start/accident/rescue/user-A coordinates, heading, SAR start coordinates when `TEMPSAR=yes`, mission identifiers, victim data, VFX/casualty data, and rescue-vehicle availability. Static accident metadata (name, objective, scene macro, query, icon, and allowed vehicle flags) is regenerated from the saved mission ID and variant, so duplicating those fields in the save is unnecessary for ordinary missions.
+- The current format is a semantic mission restart, not a byte-for-byte snapshot of an in-flight scene. Object coordinates, active thread positions, current mission/dispatch phase, timers, landing-spot edits, and vehicle positions are not serialized. Restoring those would require a separate operational-state protocol and should not be approximated by adding random globals.
+- A latest simulator `global.json` may omit null or never-assigned save keys; that is normal. `savetemp` creates the autosave globals at runtime. The project copy is included with the release, but the live MSFS profile file could not be read from this environment because the Windows app container denied access; compare it after copying it out of the protected folder if a byte-level profile audit is required.
 
