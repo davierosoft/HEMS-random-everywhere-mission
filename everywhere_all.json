@@ -14793,8 +14793,10 @@
       {"text":"MARSHALLER"},
       {"text":"EU Firefighter addon: {0}; marshall active: {1}; pisteur3 active: {2}","params":[{"local":"68pony_marshal"},{"local":"marshall_ground_ops_active"},{"local":"pisteur3_guidance_active"}]},
       {"text":"marshall distance/bearing/facing/relative: {0}/{1}/{2}/{3}","params":[{"local":"marshall_lz_distance"},{"local":"marshall_target_bearing"},{"local":"marshall_facing_bearing"},{"local":"marshall_relative_bearing"}]},
+      {"text":"marshall behind: {0}","params":[{"local":"marshall_behind"}]},
       {"text":"marshall wind lock: {0}","params":[{"local":"marshall_wind_rotation_lock"}]},
       {"text":"pisteur3 distance/bearing/facing/relative: {0}/{1}/{2}/{3}","params":[{"local":"pisteur3_lz_distance"},{"local":"pisteur3_target_bearing"},{"local":"pisteur3_facing_bearing"},{"local":"pisteur3_relative_bearing"}]},
+      {"text":"pisteur3 behind: {0}","params":[{"local":"pisteur3_behind"}]},
       {"text":"rotor signals: marshall {0}/{1}; pisteur3 {2}/{3}","params":[{"local":"marshall_rotor_signal_sent"},{"local":"marshall_departure_signal_sent"},{"local":"pisteur3_rotor_signal_sent"},{"local":"pisteur3_departure_signal_sent"}]},
       {"text":"ground idle: marshall {0}; pisteur3 {1}","params":[{"local":"marshall_ground_idle"},{"local":"pisteur3_ground_idle"}]},
       {"image":"bar"},
@@ -55676,6 +55678,8 @@
       {"set":{"local":"pisteur3_facing_bearing"},"value":null},
       {"set":{"local":"marshall_relative_bearing"},"value":null},
       {"set":{"local":"pisteur3_relative_bearing"},"value":null},
+      {"set":{"local":"marshall_behind"},"value":0},
+      {"set":{"local":"pisteur3_behind"},"value":0},
       {"set":{"local":"marshall_wind_relative"},"value":null},
       {"set":{"local":"pisteur3_wind_relative"},"value":null},
       {"set":{"local":"marshall_wind_rotation_lock"},"value":0},
@@ -61294,11 +61298,13 @@
                   "eq": 1,
                   "then": [
                     {"set":{"local":"marshall_lz_distance"},"value":{"location":"landing_spot","var":"distance:m","to":"$USER"}},
+                    {"set":{"local":"marshall_behind"},"value":0},
                     {"set":{"local":"marshall_target_bearing"},"value":{"bearing":{"from":"marshall","to":"$USER"}}},
                     {"set":{"local":"marshall_facing_bearing"},"value":{"bearing":{"from":"marshall","to":"landing_spot"}}},
                     {"set":{"local":"marshall_relative_bearing"},"value":{"round":{"add360":[{"local":"marshall_target_bearing"},{"subtract":[360,{"local":"marshall_facing_bearing"}]}]},"to":0}},
                     {"if":{"local":"marshall_relative_bearing"},"gt":90,"then":[
                       {"if":{"local":"marshall_relative_bearing"},"lt":270,"then":[
+                        {"set":{"local":"marshall_behind"},"value":1},
                         {"set":{"local":"marshall_lz_distance"},"value":999}
                       ]}
                     ]},
@@ -61747,11 +61753,13 @@
                   "eq": 1,
                   "then": [
                     {"set":{"local":"pisteur3_lz_distance"},"value":{"location":"heli_rescuer_location","var":"distance:m","to":"$USER"}},
+                    {"set":{"local":"pisteur3_behind"},"value":0},
                     {"set":{"local":"pisteur3_target_bearing"},"value":{"bearing":{"from":"pisteur3","to":"$USER"}}},
                     {"set":{"local":"pisteur3_facing_bearing"},"value":{"bearing":{"from":"pisteur3","to":"heli_rescuer_location"}}},
                     {"set":{"local":"pisteur3_relative_bearing"},"value":{"round":{"add360":[{"local":"pisteur3_target_bearing"},{"subtract":[360,{"local":"pisteur3_facing_bearing"}]}]},"to":0}},
                     {"if":{"local":"pisteur3_relative_bearing"},"gt":90,"then":[
                       {"if":{"local":"pisteur3_relative_bearing"},"lt":270,"then":[
+                        {"set":{"local":"pisteur3_behind"},"value":1},
                         {"set":{"local":"pisteur3_lz_distance"},"value":999}
                       ]}
                     ]},
