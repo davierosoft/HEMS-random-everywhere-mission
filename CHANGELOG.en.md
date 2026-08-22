@@ -2,6 +2,37 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## External custom SAR handoff and save/load audit - release 0.997 31
+
+- Advanced the release title to `0.997 31`; the artifact remains `everywhere_all.json`.
+- Audited the autosave and three manual-slot contract. Manual slots already persist mission identifiers, patient/pathology values, scene coordinates, heading, SAR start coordinates, VFX/casualty state, and rescue-vehicle availability.
+- Kept the defensive `TEMPaccident_description` and `TEMPSAR` slot copies, while confirming that standard mission `SAR` is regenerated from `VAR_MISSION_NUMBER`/`CUS_ID_CARD` by `missionupdate CUSTOM`.
+- Changed `accident location pregenerator CUSTOM` to use that regenerated local `SAR` value instead of the persistent `TEMPSAR` global. An externally launched custom mission therefore cannot inherit a stale/missing autosave SAR flag when its standard accident ID already defines the correct value.
+- Confirmed that slot labels/validity flags are UI metadata and that scene elevation is preview-only; static accident metadata is regenerated from the mission ID and variant.
+- Documented the supported semantic reload boundary: active object positions, running threads, operational phases, timers, landing-spot changes, and vehicle positions are not serialized by the current Mission System save model.
+
+## Prime-pump engine-start guard - release 0.997 29
+
+- Advanced the release title to 0.997 29; the artifact remains everywhere_all.json.
+- Removed the deferred marshal wait from the engine1 and engine2 macros.
+- Prime-pump monitor threads now apply the engine-start conditions immediately after the switch transition. If marshal ground operations or pisteur3 guidance is active at that instant, the request is discarded and cannot restart later.
+- The existing pump waits are used only to detect the switch transition; they no longer queue an engine start.
+- Added complete debug-page coverage for all static and dynamic local/LVAR references used by the mission.
+
+## Closest waypoint route split - release 0.997 27
+
+- Advanced the release title to `0.997 27`; the artifact remains `everywhere_all.json`.
+- Split every multi-`closest` `drive_object` route into sequential single-waypoint drives, covering routes with two, three, and four dynamic closest waypoints.
+- Inserted the documented standing state between segments: HEMS walking without/with backpack (2/3) returns to standing without/with backpack (0/1), stretcher walking without/with patient (10/11) returns to standing stretcher without/with patient (12/13), and pilot walking (16) returns to pilot standing (14).
+- Kept the existing object-specific animation states and did not use a blanket VAR1 reset to zero. Routes with only one closest waypoint followed by fixed waypoints were intentionally left unchanged.
+
+## Marshal altitude and landing guidance - release 0.997 22
+
+- Advanced the release title to `0.997 22`; the artifact remains `everywhere_all.json`.
+- Corrected the marshal and `pisteur3` vertical guidance thresholds: above 60 ft they signal descent, between 30 and 60 ft they retain only horizontal guidance, and below 30 ft they signal climb unless already within 5 m of the landing spot.
+- Added the 5 m hover band and the under-2-knot descent condition, using GPS ground speed as the all-direction movement check.
+- Cleared the marshal signal after touchdown while preserving the existing rotor-deceleration and restart logic; guidance becomes active again after takeoff.
+
 ## Final statistics cleanup - release 0.997 21
 
 - Advanced the release title to `0.997 21`; the artifact remains `everywhere_all.json`.
