@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 31",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 32",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -14792,9 +14792,9 @@
       {"image":"bar"},
       {"text":"MARSHALLER"},
       {"text":"EU Firefighter addon: {0}; marshall active: {1}; pisteur3 active: {2}","params":[{"local":"68pony_marshal"},{"local":"marshall_ground_ops_active"},{"local":"pisteur3_guidance_active"}]},
-      {"text":"marshall distance/bearing/relative: {0}/{1}/{2}","params":[{"local":"marshall_lz_distance"},{"local":"marshall_target_bearing"},{"local":"marshall_relative_bearing"}]},
+      {"text":"marshall distance/bearing/facing/relative: {0}/{1}/{2}/{3}","params":[{"local":"marshall_lz_distance"},{"local":"marshall_target_bearing"},{"local":"marshall_facing_bearing"},{"local":"marshall_relative_bearing"}]},
       {"text":"marshall wind lock: {0}","params":[{"local":"marshall_wind_rotation_lock"}]},
-      {"text":"pisteur3 distance/bearing/relative: {0}/{1}/{2}","params":[{"local":"pisteur3_lz_distance"},{"local":"pisteur3_target_bearing"},{"local":"pisteur3_relative_bearing"}]},
+      {"text":"pisteur3 distance/bearing/facing/relative: {0}/{1}/{2}/{3}","params":[{"local":"pisteur3_lz_distance"},{"local":"pisteur3_target_bearing"},{"local":"pisteur3_facing_bearing"},{"local":"pisteur3_relative_bearing"}]},
       {"text":"rotor signals: marshall {0}/{1}; pisteur3 {2}/{3}","params":[{"local":"marshall_rotor_signal_sent"},{"local":"marshall_departure_signal_sent"},{"local":"pisteur3_rotor_signal_sent"},{"local":"pisteur3_departure_signal_sent"}]},
       {"text":"ground idle: marshall {0}; pisteur3 {1}","params":[{"local":"marshall_ground_idle"},{"local":"pisteur3_ground_idle"}]},
       {"image":"bar"},
@@ -55671,7 +55671,9 @@
       {"set":{"local":"marshall_lz_distance"},"value":null},
       {"set":{"local":"pisteur3_lz_distance"},"value":null},
       {"set":{"local":"marshall_target_bearing"},"value":null},
+      {"set":{"local":"marshall_facing_bearing"},"value":null},
       {"set":{"local":"pisteur3_target_bearing"},"value":null},
+      {"set":{"local":"pisteur3_facing_bearing"},"value":null},
       {"set":{"local":"marshall_relative_bearing"},"value":null},
       {"set":{"local":"pisteur3_relative_bearing"},"value":null},
       {"set":{"local":"marshall_wind_relative"},"value":null},
@@ -61292,11 +61294,25 @@
                   "eq": 1,
                   "then": [
                     {"set":{"local":"marshall_lz_distance"},"value":{"location":"landing_spot","var":"distance:m","to":"$USER"}},
-                    {"set":{"local":"marshall_target_bearing"},"value":{"bearing":{"from":"$USER","to":"landing_spot"}}},
-                    {"set":{"local":"marshall_relative_bearing"},"value":{"round":{"add360":[{"local":"marshall_target_bearing"},{"subtract":[360,{"var":["PLANE HEADING DEGREES TRUE","degrees"]}]}]},"to":0}},
+                    {"set":{"local":"marshall_target_bearing"},"value":{"bearing":{"from":"marshall","to":"$USER"}}},
+                    {"set":{"local":"marshall_facing_bearing"},"value":{"bearing":{"from":"marshall","to":"landing_spot"}}},
+                    {"set":{"local":"marshall_relative_bearing"},"value":{"round":{"add360":[{"local":"marshall_target_bearing"},{"subtract":[360,{"local":"marshall_facing_bearing"}]}]},"to":0}},
                     {"if":{"local":"marshall_relative_bearing"},"gt":90,"then":[
                       {"if":{"local":"marshall_relative_bearing"},"lt":270,"then":[
                         {"set":{"local":"marshall_lz_distance"},"value":999}
+                      ]}
+                    ]},
+                    {"if":{"var":["RADIO HEIGHT","feet"]},"gte":100,"then":[
+                      {"set":{"local":"marshall_lz_distance"},"value":999}
+                    ]},
+                    {"if":{"local":"marshall_rotor_signal_sent"},"eq":1,"then":[
+                      {"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5,"then":[
+                        {"set":{"local":"marshall_rotor_signal_sent"},"value":2},
+                        {"if":{"local":"halloween"},"eq":1,"then":[
+                          {"set":{"object":"marshall","var":"VAR 1"},"value":100}
+                        ],"else":[
+                          {"set":{"object":"marshall","var":"VAR 1"},"value":0}
+                        ]}
                       ]}
                     ]},
                     {"if": {"var":["SIM ON GROUND","bool"]},
@@ -61328,16 +61344,7 @@
                                   "then": [
                                     {"set":{"object":"marshall","var":"VAR 1"},"value":2},
                                     {"set":{"local":"marshall_rotor_signal_sent"},"value":1},
-                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                    {"if": {"local":"halloween"},
-                                      "eq": 1,
-                                      "then": [
-                                        {"set":{"object":"marshall","var":"VAR 1"},"value":100}
-                                      ],
-                                      "else": [
-                                        {"set":{"object":"marshall","var":"VAR 1"},"value":0}
-                                      ]
-                                    }
+                                    {"sleep":0.2}
                                   ],
                                   "else": [
                                     {"set":{"local":"marshall_rotor_signal_sent"},"value":1}
@@ -61353,16 +61360,7 @@
                                   "then": [
                                     {"set":{"object":"marshall","var":"VAR 1"},"value":2},
                                     {"set":{"local":"marshall_rotor_signal_sent"},"value":1},
-                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                    {"if": {"local":"halloween"},
-                                      "eq": 1,
-                                      "then": [
-                                        {"set":{"object":"marshall","var":"VAR 1"},"value":100}
-                                      ],
-                                      "else": [
-                                        {"set":{"object":"marshall","var":"VAR 1"},"value":0}
-                                      ]
-                                    }
+                                    {"sleep":0.2}
                                   ],
                                   "else": [
                                     {"set":{"local":"marshall_rotor_signal_sent"},"value":1}
@@ -61434,16 +61432,7 @@
                                       "then": [
                                         {"set":{"object":"marshall","var":"VAR 1"},"value":2},
                                         {"set":{"local":"marshall_rotor_signal_sent"},"value":1},
-                                        {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                        {"if": {"local":"halloween"},
-                                          "eq": 1,
-                                          "then": [
-                                            {"set":{"object":"marshall","var":"VAR 1"},"value":100}
-                                          ],
-                                          "else": [
-                                            {"set":{"object":"marshall","var":"VAR 1"},"value":0}
-                                          ]
-                                        }
+                                        {"sleep":0.2}
                                       ],
                                       "else": [
                                         {"set":{"local":"marshall_rotor_signal_sent"},"value":1}
@@ -61459,16 +61448,7 @@
                                       "then": [
                                         {"set":{"object":"marshall","var":"VAR 1"},"value":2},
                                         {"set":{"local":"marshall_rotor_signal_sent"},"value":1},
-                                        {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                        {"if": {"local":"halloween"},
-                                          "eq": 1,
-                                          "then": [
-                                            {"set":{"object":"marshall","var":"VAR 1"},"value":100}
-                                          ],
-                                          "else": [
-                                            {"set":{"object":"marshall","var":"VAR 1"},"value":0}
-                                          ]
-                                        }
+                                        {"sleep":0.2}
                                       ],
                                       "else": [
                                         {"set":{"local":"marshall_rotor_signal_sent"},"value":1}
@@ -61478,6 +61458,11 @@
                                 }
                               ]
                             },
+                            {"if":{"local":"marshall_rotor_signal_sent"},"eq":1,"then":[
+                              {"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lte":5,"then":[
+                                {"set":{"object":"marshall","var":"VAR 1"},"value":2}
+                              ]}
+                            ]},
                             {"if": {"local":"marshall_ground_idle"},
                               "eq": 1,
                               "then": [
@@ -61762,11 +61747,25 @@
                   "eq": 1,
                   "then": [
                     {"set":{"local":"pisteur3_lz_distance"},"value":{"location":"heli_rescuer_location","var":"distance:m","to":"$USER"}},
-                    {"set":{"local":"pisteur3_target_bearing"},"value":{"bearing":{"from":"$USER","to":"heli_rescuer_location"}}},
-                    {"set":{"local":"pisteur3_relative_bearing"},"value":{"round":{"add360":[{"local":"pisteur3_target_bearing"},{"subtract":[360,{"var":["PLANE HEADING DEGREES TRUE","degrees"]}]}]},"to":0}},
+                    {"set":{"local":"pisteur3_target_bearing"},"value":{"bearing":{"from":"pisteur3","to":"$USER"}}},
+                    {"set":{"local":"pisteur3_facing_bearing"},"value":{"bearing":{"from":"pisteur3","to":"heli_rescuer_location"}}},
+                    {"set":{"local":"pisteur3_relative_bearing"},"value":{"round":{"add360":[{"local":"pisteur3_target_bearing"},{"subtract":[360,{"local":"pisteur3_facing_bearing"}]}]},"to":0}},
                     {"if":{"local":"pisteur3_relative_bearing"},"gt":90,"then":[
                       {"if":{"local":"pisteur3_relative_bearing"},"lt":270,"then":[
                         {"set":{"local":"pisteur3_lz_distance"},"value":999}
+                      ]}
+                    ]},
+                    {"if":{"var":["RADIO HEIGHT","feet"]},"gte":100,"then":[
+                      {"set":{"local":"pisteur3_lz_distance"},"value":999}
+                    ]},
+                    {"if":{"local":"pisteur3_rotor_signal_sent"},"eq":1,"then":[
+                      {"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5,"then":[
+                        {"set":{"local":"pisteur3_rotor_signal_sent"},"value":2},
+                        {"if":{"local":"halloween"},"eq":1,"then":[
+                          {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
+                        ],"else":[
+                          {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
+                        ]}
                       ]}
                     ]},
                     {"if": {"var":["SIM ON GROUND","bool"]},
@@ -61798,16 +61797,7 @@
                                   "then": [
                                     {"set":{"object":"pisteur3","var":"VAR 1"},"value":2},
                                     {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1},
-                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                    {"if": {"local":"halloween"},
-                                      "eq": 1,
-                                      "then": [
-                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
-                                      ],
-                                      "else": [
-                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
-                                      ]
-                                    }
+                                    {"sleep":0.2}
                                   ],
                                   "else": [
                                     {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1}
@@ -61823,16 +61813,7 @@
                                   "then": [
                                     {"set":{"object":"pisteur3","var":"VAR 1"},"value":2},
                                     {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1},
-                                    {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                    {"if": {"local":"halloween"},
-                                      "eq": 1,
-                                      "then": [
-                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
-                                      ],
-                                      "else": [
-                                        {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
-                                      ]
-                                    }
+                                    {"sleep":0.2}
                                   ],
                                   "else": [
                                     {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1}
@@ -61904,16 +61885,7 @@
                                       "then": [
                                         {"set":{"object":"pisteur3","var":"VAR 1"},"value":2},
                                         {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1},
-                                        {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                        {"if": {"local":"halloween"},
-                                          "eq": 1,
-                                          "then": [
-                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
-                                          ],
-                                          "else": [
-                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
-                                          ]
-                                        }
+                                        {"sleep":0.2}
                                       ],
                                       "else": [
                                         {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1}
@@ -61929,16 +61901,7 @@
                                       "then": [
                                         {"set":{"object":"pisteur3","var":"VAR 1"},"value":2},
                                         {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1},
-                                        {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":5},
-                                        {"if": {"local":"halloween"},
-                                          "eq": 1,
-                                          "then": [
-                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":100}
-                                          ],
-                                          "else": [
-                                            {"set":{"object":"pisteur3","var":"VAR 1"},"value":0}
-                                          ]
-                                        }
+                                        {"sleep":0.2}
                                       ],
                                       "else": [
                                         {"set":{"local":"pisteur3_rotor_signal_sent"},"value":1}
@@ -61948,6 +61911,11 @@
                                 }
                               ]
                             },
+                            {"if":{"local":"pisteur3_rotor_signal_sent"},"eq":1,"then":[
+                              {"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lte":5,"then":[
+                                {"set":{"object":"pisteur3","var":"VAR 1"},"value":2}
+                              ]}
+                            ]},
                             {"if": {"local":"pisteur3_ground_idle"},
                               "eq": 1,
                               "then": [
