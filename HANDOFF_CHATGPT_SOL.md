@@ -32,7 +32,7 @@ Release 0.997 22 corrects the marshal and `pisteur3` altitude guidance. Above 60
 
 The 3-crew and 4/5-crew stretcher return paths now use three side-of-helicopter bearing2 waypoints followed by `rpaxdoor`, with VAR1 reset after the single four-waypoint drive, so the operator does not route through the helicopter body.
 
-The GitHub handoff for this release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28).
+The GitHub handoff for the previous pathology release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28). The save/load audit release is on branch `codex/save-load-audit-0999`, pull request [#30](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/30).
 
 ## 2. Important generation warning
 
