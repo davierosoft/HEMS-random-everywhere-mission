@@ -8,7 +8,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 32`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 33`
 
 The latest user-supplied Desktop source was:
 
@@ -16,7 +16,9 @@ The latest user-supplied Desktop source was:
 
 It was used as the base because it contained user changes to heli-rescuer drop distances and ambulance-previsit behavior. The Desktop source is read-only from this workspace. Do not overwrite it.
 
-The latest release has valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, complete debug coverage for all 623 local references and 559 LVAR references (including dynamic templates), and only the inherited static macro references `beforetockl` and `ELT {local:ELT}` unresolved by the local scanner.
+The latest release has valid JSON, restored compact command formatting, intentional blank lines between macro groups, no incompatible Unicode dash characters, and static debug coverage for the supported local/LVAR references. Dynamic debug entries whose names depend on `local:VCP`, `local:HXX`, or `local:rescuetrack_id` are intentionally omitted because the HPG debug `var` form cannot resolve those interpolated names. The inherited static macro references `beforetockl` and `ELT {local:ELT}` remain unresolved by the local scanner.
+
+Release 0.997 33 removes 226 `local:VCP` LVAR displays, 96 `local:HXX` LVAR displays, and the dynamic `rescuetrack_{local:rescuetrack_id}` local display from the debug page. Mission logic and static local/LVAR debug entries are unchanged. The consolidated changelog was updated, and the GitHub change was merged into `main` through pull request [#32](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/32).
 
 Release 0.997 18 also separates scene fire/VFX selection from pathology selection. Normal scenes prefer a non-fire pathology for both `random_fire=no` and the non-forced `yes` VFX mode; `random_fire=forced` prefers fire. If the preferred fire state is absent from the selected health list, a bounded relaxation accepts an available record instead of producing the old fallback. A second bounded pass can align `SEX1` to the selected pathology record before `random injured` creates `injured_human`; `injured_workers` is synchronized to male before the pathology thread starts. Missing or out-of-range standard types are remapped to `health1`-`health107`, and Halloween pathology types outside `healthhalloween` are remapped to the available 0-29 range. In normal mission data, the old fallback should now be reachable only if the relevant health static is missing or empty.
 
@@ -34,7 +36,7 @@ Release 0.997 32 fixes the marshal monitor activation path. The behind-marshal t
 
 The 3-crew and 4/5-crew stretcher return paths now use three side-of-helicopter bearing2 waypoints followed by `rpaxdoor`, with VAR1 reset after the single four-waypoint drive, so the operator does not route through the helicopter body.
 
-The GitHub handoff for the previous pathology release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28). The save/load audit release is on branch `codex/save-load-audit-0999`, pull request [#30](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/30). The marshal activation follow-up is on branch `codex/marshal-fix-0999`, pull request [#31](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/31).
+The GitHub handoff for the previous pathology release is on branch `agent/pathology-fallback-0999`, pull request [#28](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/28). The save/load audit release is on branch `codex/save-load-audit-0999`, pull request [#30](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/30). The marshal activation follow-up is on branch `codex/marshal-fix-0999`, pull request [#31](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/31). The debug-page dynamic-variable cleanup is merged into `main` through pull request [#32](https://github.com/davierosoft/HEMS-random-everywhere-mission/pull/32).
 
 ## 2. Important generation warning
 
@@ -60,7 +62,7 @@ Every new release must continue to be named `everywhere_all.json`; distinguish r
 - LVARs survive for the flight session and normally start at zero if never initialized.
 - Locals survive for the flight session and normally start as `NULL` if never initialized.
 - Objective 1 contains both always-reset session values and first-dispatch-only values. Keep these categories separate.
-- New locals and LVARs should be added to the debug page, grouped by function and separated with `image: bar` where useful.
+- Supported static locals and LVARs should be added to the debug page, grouped by function and separated with `image: bar` where useful. Do not add dynamic variable names that contain an interpolated local.
 
 ### Condition syntax
 
