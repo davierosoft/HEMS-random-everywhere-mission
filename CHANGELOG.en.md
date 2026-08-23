@@ -2,6 +2,49 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Persistent settings and Objective 1 session-state policy - release 0.997 39
+
+- Advanced the release title to `0.997 39`; the artifact remains `everywhere_all.json`.
+- Preserved the user-controlled `VOLUME_CREW` and `VOLUME_CHK` globals across dispatch reloads. Their `L:VOLUME_CREW` and `L:VOLUME_CHK` mirrors are rehydrated from the persisted globals, with a default of 100 only when the corresponding global is `NULL`.
+- Kept configuration values, external `L:CUS_*` handoff variables, save-slot `TEMP...` values, and the `L:SECOND_DISPATCH_ACCEPTED` handoff gate out of the per-dispatch reset policy.
+- Kept Objective 1 resets limited to transient mission state: phase/progress flags, route diagnostics, pathology readiness, rescue-vehicle/arrival state, scene-object handles, and all marshal/pisteur3 guidance, restart, hover, bearing, and arming locals.
+- Preserved the intentional `resetdefault` macro behavior, which is the explicit user-settings reset path and is not part of a normal second dispatch.
+- Updated the handoff to document the persistence boundary and strict JSON validation.
+
+## Debug color spelling audit and startup LVAR synchronization - release 0.997 38
+
+- Advanced the release title to `0.997 38`; the artifact remains `everywhere_all.json`.
+- Audited all gray color values across the mission pages and standardized the eleven isolated `dispatch control` entries to the majority spelling `gray`; all color tokens now use `gray`.
+- The original volume setup was conditional on `L:SECOND_DISPATCH_ACCEPTED != 1`, so reloads/second dispatches could skip the `L:VOLUME_CREW` and `L:VOLUME_CHK` assignments. Objective 1 now preserves each global value (default 100) and synchronizes both LVARs unconditionally before the debug page; the original `L:WAVING_CIVILIAN_STOP` initialization later in Objective 1 remains unchanged.
+- Strict JSON parsing succeeds for both the authoritative source and the output copy; no GitHub publication or merge was performed.
+
+## Marshal procedure arming arbitration - release 0.997 36
+
+- Advanced the release title to `0.997 36`; the artifact remains `everywhere_all.json`.
+- Added mutually exclusive arming locals for the approach and departure procedures of both `marshall` and `pisteur3`.
+- The approach procedure arms only when the helicopter is airborne and more than 150 m from the active landing/meeting spot. It disarms when the helicopter is on the ground inside the configured lime-circle radius and can re-arm only after the airborne/outside-radius condition is met again.
+- The departure/restart procedure arms when approach is disarmed and is suppressed as soon as approach re-arms, preventing competing `VAR1` writes during a return or restart.
+- Wind repositioning workers may now arm at 500 m from the relevant landing/meeting spot; their existing wind-facing logic is otherwise unchanged.
+- Added the four arming flags to the debug/reset paths and reset them when the controlled object disappears.
+
+## Marshal restart/departure sequencing - release 0.997 35
+
+- Advanced the release title to `0.997 35`; the artifact remains `everywhere_all.json`.
+- Added a non-blocking restart state machine for both `marshall` and `pisteur3`: with the helicopter on ground, rotor RPM at or below 5% and either first fuel pump primed, `VAR1=2` engages the rotor; above 50% the marshal holds `VAR1=1` until RPM exceeds 90%.
+- After RPM exceeds 90%, `VAR1=7` commands movement up until the helicopter leaves the ground. The marshal then holds `VAR1=3` (hover) for 2 seconds before selecting a departure signal.
+- Departure direction now uses the active route destination (`RTB_location`, `hospital`, or `hospital_user`) relative to the marshal's facing bearing. Because the marshal faces the helicopter, the longitudinal indications are inverted as requested: a target in the marshal-forward sector uses `VAR1=12` rear, while the opposite sector uses `VAR1=11` straight/forward; lateral sectors use `VAR1=9` left and `10` right. Missing route locations fall back safely to the inverted forward/rear default (`VAR1=12`).
+- Restart state is polled without `wait_for` calls, reset when the controlled object disappears, and re-armed for a later low-RPM/pump-primed return.
+- The pre-existing wind-orientation threads and normal landing guidance remain unchanged.
+
+## Marshal guidance sequencing and late-return support - release 0.997 34
+
+- Advanced the release title to `0.997 34`; the artifact remains `everywhere_all.json`.
+- Removed the upper `MISSION_PHASE` limits from both the `marshall` and `pisteur3` guidance monitors. The monitors remain available while their objects exist and re-arm when an object is recreated, so a return to the scene is not blocked by mission phase.
+- Reduced the normal signal-animation hold from 2 seconds to 1 second. The first hover signal in the slow/close approach envelope is deliberately held for 2 seconds before the descent signal.
+- Increased the no-lateral-correction buffer from 5 m to 7 m and changed the ground-speed transition from 2 kt to 3 kt.
+- Added explicit hover-state tracking to the debug/reset paths. When the helicopter enters the close/slow envelope without a prior hover signal, `VAR 1 = 3` is held for 2 seconds, then `VAR 1 = 8` signals descent; at or below 10 ft under the descent conditions, `VAR 1 = 4` signals land.
+- Left the two pre-existing wind-orientation threads unchanged.
+
 ## Debug-page dynamic variable cleanup - release 0.997 33
 
 - Advanced the release title to `0.997 33`; the artifact remains `everywhere_all.json`.
