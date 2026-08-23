@@ -2,6 +2,23 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Loading choreography and 3-crew copilot VAR1 correction - release 0.997 41
+
+- Advanced the release title to `0.997 41`; the artifact remains `everywhere_all.json`.
+- Used the historical `0.9961-20260126-daikan` source dated 8 March 2026 as the route and formatting reference without replacing the current user changes.
+- Restored the empty- and patient-stretcher choreography in `3 crew ground ops`, `4 or 5 crew ground ops`, `hoist land`, `midway patient load1`, `transfer patient load1`, `Ambulance destination1`, and `User destination1`. Closest waypoints are split into separate drive objects where required, while the final closest-plus-fixed alignment is preserved; empty stretcher movement uses speed 5 and patient movement speed 4.
+- Corrected the CREW=3 copilot branch used during unloading/loading: after `PILOT_FO_OFF`, `pax1` uses the crew walking/standing states (`VAR1` 2/0) and returns to pilot standing (`VAR1` 14) only when going back to the cockpit, preventing irregular `VAR1` changes near the ambustretcher.
+- SKID landing macros were not modified. Both authoritative copies pass strict JSON parsing; this release remains local and has not been published or merged on GitHub.
+
+## Ground-ops arbitration and 3-crew stretcher return correction - release 0.997 40
+
+- Advanced the release title to `0.997 40`; the artifact remains `everywhere_all.json`.
+- Kept `marshall_departure_armed`/`pisteur3_departure_armed` as mutually exclusive departure-mode gates; they do not themselves start a restart sequence. The restart state advances only on the low-RPM plus first-pump condition.
+- Removed repeated `VAR 1` writes while waiting for rotor thresholds, while still issuing the intended transition commands once. Direction signals in restart state 5 are emitted once per departure, then left stable.
+- When a completed departure is left on the ground with both first pumps off, the restart state and transient signals are cleared and the object returns to idle, preventing a stale departure state from competing with shutdown.
+- In `3 crew ground ops`, the earlier direct-return correction was subsequently superseded by the consolidated historical-route restoration in release 0.997 41.
+- Both authoritative copies pass strict JSON parsing; this release remains local and has not been published or merged on GitHub.
+
 ## Persistent settings and Objective 1 session-state policy - release 0.997 39
 
 - Advanced the release title to `0.997 39`; the artifact remains `everywhere_all.json`.
