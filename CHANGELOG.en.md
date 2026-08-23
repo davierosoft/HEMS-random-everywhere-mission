@@ -2,6 +2,13 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## 3-crew copilot animation VAR restoration - release 0.997 42
+
+- Advanced the release title to `0.997 42`; the artifact remains `everywhere_all.json`.
+- Used the Desktop historical file supplied by the user (`C:\Users\Andrew\OneDrive\Desktop\everywhere_all.json`) only as the reference for the requested VAR restoration.
+- Restored only `VAR1`/`VAR 1` animation values in the CREW=3 copilot branches of `Ambulance destination1`, `User destination1`, `midway patient load1`, and `transfer patient load1`: walking uses the historical `VAR1:16`, with the historical standing transitions retained (`0` for unloading and `14` for loading/return). Removed only the extra animation-variable assignments introduced before movement. No route, wait, trigger, or other logic was reverted.
+- SKID landing macros and all other progressive logic remain unchanged. Both authoritative copies pass strict JSON parsing; this release is ready for local publication.
+
 ## Loading choreography and 3-crew copilot VAR1 correction - release 0.997 41
 
 - Advanced the release title to `0.997 41`; the artifact remains `everywhere_all.json`.
