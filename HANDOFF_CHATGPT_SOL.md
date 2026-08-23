@@ -1,6 +1,6 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
-Release 0.997 41 uses `everywhere_all_0.9961-20260126-daikan.json` (dated 8 March 2026) as the route and formatting reference. It restores the loading choreography in `3 crew ground ops`, `4 or 5 crew ground ops`, `hoist land`, `midway patient load1`, `transfer patient load1`, `Ambulance destination1`, and `User destination1`, including split closest waypoints and the final closest-plus-fixed alignment. Empty stretcher movement uses speed 5 and patient movement speed 4. In the CREW=3 unloading/loading branches, after `PILOT_FO_OFF` `pax1` uses crew walking/standing states (`VAR1` 2/0) and returns to pilot standing (`VAR1` 14) only at the cockpit, preventing irregular changes near the ambustretcher. SKID landing macros are untouched. Both authoritative copies pass strict JSON parsing; this release is local only, with no GitHub publication or merge.
+Release 0.997 42 uses the Desktop historical file supplied by the user (`C:\Users\Andrew\OneDrive\Desktop\everywhere_all.json`) only for the requested animation-variable restoration. In the CREW=3 copilot branches of `Ambulance destination1`, `User destination1`, `midway patient load1`, and `transfer patient load1`, the historical `VAR1:16` walking values and the corresponding standing transitions (`0` for unloading, `14` for loading/return) are restored. Only `VAR1`/`VAR 1` assignments were changed; route, wait, trigger, and other progressive logic were not reverted. SKID landing macros are untouched. Both authoritative copies pass strict JSON parsing; this release is local until published.
 
 ## 1. Current authoritative file
 
@@ -10,7 +10,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 41`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 42`
 
 The latest user-supplied Desktop source was:
 
