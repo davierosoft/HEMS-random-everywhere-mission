@@ -1,6 +1,6 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
-Release 0.997 42 uses the Desktop historical file supplied by the user (`C:\Users\Andrew\OneDrive\Desktop\everywhere_all.json`) only for the requested animation-variable restoration. In the CREW=3 copilot branches of `Ambulance destination1`, `User destination1`, `midway patient load1`, and `transfer patient load1`, the historical `VAR1:16` walking values and the corresponding standing transitions (`0` for unloading, `14` for loading/return) are restored. Only `VAR1`/`VAR 1` assignments were changed; route, wait, trigger, and other progressive logic were not reverted. SKID landing macros are untouched. Both authoritative copies pass strict JSON parsing; this release is local until published.
+Release 0.997 43 replaces the marshal monitor with isolated, mutually exclusive state machines for `marshall` and `pisteur3`. This supersedes the earlier overlapping approach/restart/departure paths: each object has one controller thread, and every `VAR 1` command is state-gated so it is emitted only on an animation transition. The Desktop historical source remains a limited reference only for the previous CREW=3 copilot VAR restoration; it must not overwrite current progressive logic. Both authoritative copies pass strict JSON parsing and the marshal structure checks described below.
 
 ## 1. Current authoritative file
 
@@ -10,7 +10,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 42`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 43`
 
 The latest user-supplied Desktop source was:
 
@@ -31,6 +31,14 @@ Release 0.997 36 adds explicit mutual arming for the approach and departure proc
 Release 0.997 38 records the gray spelling audit and the debug-page `NotFound` fix. All eleven isolated `dispatch control` color tokens were changed to the majority spelling `gray`; all mission color tokens now use `gray`. The original `L:VOLUME_CREW` and `L:VOLUME_CHK` assignments were inside the `L:SECOND_DISPATCH_ACCEPTED != 1` branch and could be skipped on reload/second dispatch. Objective 1 now preserves their global values (default 100) and synchronizes both LVARs unconditionally; the original later `L:WAVING_CIVILIAN_STOP = 0` assignment is unchanged. Mission-flow updates, debug exclusions, and other parameters remain unchanged. The source and output files both pass strict JSON parsing, and this release remains local with no GitHub publication or merge.
 
 Release 0.997 39 defines the reload persistence boundary. `VOLUME_CREW` and `VOLUME_CHK` are user settings: Objective 1 never resets them, defaults them to 100 only when `NULL`, and always restores their `L:VOLUME_CREW`/`L:VOLUME_CHK` mirrors. Configuration values, external `L:CUS_*` inputs, save-slot `TEMP...` values, and the `L:SECOND_DISPATCH_ACCEPTED` handoff gate are not part of the normal per-dispatch reset. Objective 1 resets only transient phase/progress state, route diagnostics, pathology readiness, rescue-vehicle and arrival state, scene-object handles, and marshal/pisteur3 guidance, restart, hover, bearing, and mutual-arming locals. The explicit `resetdefault` macro remains the separate user-settings reset path. This release is prepared for publication after strict JSON validation.
+
+Release 0.997 43 is the authoritative marshal-controller design. `marshaller animation monitor` now has exactly two `create_thread` entries: one owns `marshall`, and one owns `pisteur3`. There are no other `VAR 1` writers for either object. Both use the same state contract:
+
+- Approach and departure arming are mutually exclusive. Approach can arm only when airborne and more than 150 m from the relevant spot; the landing procedure arms departure only once on ground inside `ldg_spot_area_size`. No `MISSION_PHASE` condition is used.
+- Approach is suppressed behind the marshal and at or above 100 ft. Valid close guidance uses 7 m lateral tolerance. Above 45 ft it commands down (`VAR 1 = 8`); with lateral error, it commands up (`7`) only below 15 ft, otherwise left/right (`5`/`6`). Inside the buffer it holds hover (`3`) for 2 seconds, then permits down only at <=3 kt and land (`4`) only at <=10 ft.
+- Departure begins only after the landing procedure has disarmed. On ground with either first pump primed and Nr <=5%, it sends engage rotor (`2`) once. It holds idle (`1`) above 50%, sends up (`7`) above 90%, holds hover (`3`) for 2 seconds after take-off, and then sends exactly one route-relative departure direction (`9`-`12`). If both first pumps are off and Nr is below 80% on the ground, all departure transient state is cleared and idle is held.
+- `marshall_guidance_state` / `pisteur3_guidance_state` record the last command; `*_guidance_initialized` prevents duplicate initialization. `*_hover_signal_sent` is now a phase (`0` not issued, `1` during the required two-second hover, `2` complete). All are reset in Objective 1 and shown in the debug page.
+- Do not add a parallel writer to either object. Wind-orientation threads are intentionally separate and were left byte-for-byte outside the monitor replacement.
 
 Release 0.997 18 also separates scene fire/VFX selection from pathology selection. Normal scenes prefer a non-fire pathology for both `random_fire=no` and the non-forced `yes` VFX mode; `random_fire=forced` prefers fire. If the preferred fire state is absent from the selected health list, a bounded relaxation accepts an available record instead of producing the old fallback. A second bounded pass can align `SEX1` to the selected pathology record before `random injured` creates `injured_human`; `injured_workers` is synchronized to male before the pathology thread starts. Missing or out-of-range standard types are remapped to `health1`-`health107`, and Halloween pathology types outside `healthhalloween` are remapped to the available 0-29 range. In normal mission data, the old fallback should now be reachable only if the relevant health static is missing or empty.
 

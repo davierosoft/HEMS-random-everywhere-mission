@@ -2,6 +2,15 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Marshal controller state-machine rewrite - release 0.997 43
+
+- Advanced the release title to `0.997 43`; the artifact remains `everywhere_all.json`.
+- Replaced the competing marshal monitor paths with one isolated controller for `marshall` and one for `pisteur3`. Each controller has mutually exclusive approach and departure modes and changes `VAR 1` only when the requested animation state changes.
+- Approach arms only while airborne beyond 150 m, disarms on ground inside the configured landing-circle radius, and never runs while the helicopter is behind the marshal or at/above 100 ft. The close approach uses a 7 m horizontal buffer, commands descent above 45 ft, reserves up for a low (<15 ft) lateral correction, holds hover for 2 seconds, accepts descent only at <=3 kt, and announces land only at <=10 ft after hover/descent conditions are met.
+- Departure is the sole active mode after the landing procedure disarms. With a primed first pump and low Nr it sends engage rotor once; >50% Nr holds idle, >90% Nr sends up, take-off holds hover for 2 seconds, then a single route-relative departure direction. A stopped helicopter with both first pumps off remains idle and clears transient departure state.
+- The implementation contains no `MISSION_PHASE` gate or blocking `wait_for`. The existing wind-orientation threads were not changed. Objective 1 and debug now include the controller state and initialization locals; debug hover is explicitly a three-phase value (`0` none, `1` holding, `2` complete).
+- Strict JSON parsing and structural checks confirm one macro invocation, two controller threads, no marshal `VAR 1` writer outside the controllers, and a state guard on every marshal/pisteur3 `VAR 1` command.
+
 ## 3-crew copilot animation VAR restoration - release 0.997 42
 
 - Advanced the release title to `0.997 42`; the artifact remains `everywhere_all.json`.
