@@ -2,6 +2,13 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Native meter distance query restoration - release 0.997 45
+
+- Advanced the release title to `0.997 45`; the artifact remains `everywhere_all.json`.
+- Removed the unnecessary feet-to-meter calculation from the marshal and `pisteur3` controllers. Both now use the mission's native `distance:m` query directly, matching the established HEMS mission syntax and the other landing-spot distance checks.
+- Kept the corrected approach lateral mapping: relative-bearing >180 is left (`VAR 1 = 5`), the opposite sector is right (`VAR 1 = 6`). Restart sequencing and forward/aft inversion remain unchanged.
+- Strict JSON and marshal-structure validation remains required before publication.
+
 ## Marshal lateral guidance and documented distance query - release 0.997 44
 
 - Advanced the release title to `0.997 44`; the artifact remains `everywhere_all.json`.

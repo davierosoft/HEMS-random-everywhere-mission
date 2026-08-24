@@ -1,6 +1,6 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
-Release 0.997 44 keeps the successful marshal state-machine rewrite and corrects the two remaining approach mismatches: lateral `VAR 1` mapping and the distance query used for the 7 m buffer. The HPG-documented `location/var distance:ft` query is converted to meters before all marshal/pisteur3 distance comparisons. The restart forward/aft inversion is unchanged and remains validated by the previous test. Both authoritative copies pass strict JSON parsing and the marshal structure checks described below.
+Release 0.997 45 keeps the successful marshal state-machine rewrite and the corrected lateral `VAR 1` mapping. It restores the native `distance:m` query in both controllers, as used by the rest of this HEMS mission, instead of performing an unnecessary feet-to-meter calculation. The restart forward/aft inversion is unchanged and remains validated by the previous test. Both authoritative copies pass strict JSON parsing and the marshal structure checks described below.
 
 ## 1. Current authoritative file
 
@@ -10,7 +10,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 44`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 45`
 
 The latest user-supplied Desktop source was:
 
@@ -41,6 +41,8 @@ Release 0.997 43 is the authoritative marshal-controller design. `marshaller ani
 - Do not add a parallel writer to either object. Wind-orientation threads are intentionally separate and were left byte-for-byte outside the monitor replacement.
 
 Release 0.997 44 applies the follow-up alignment corrections. In the approach branch, relative bearing >180 now emits left (`VAR 1 = 5`) and the opposite sector emits right (`VAR 1 = 6`) for both objects. The controller now reads the HPG-documented `distance:ft` location query and multiplies by `0.3048`; consequently `marshall_lz_distance` and `pisteur3_lz_distance` remain meter values while the 7 m buffer and 150 m arming gate are unit-consistent. The departure route mapping is untouched: forward/aft remains intentionally opposite (`12` for the marshal-forward sector and `11` for the opposite longitudinal sector).
+
+Release 0.997 45 supersedes only the distance-query implementation of 0.997 44. The controller directly queries `distance:m` for `landing_spot` and `heli_rescuer_location`, avoiding a redundant conversion. The 7 m and 150 m thresholds, corrected left/right mapping, departure state machine, and forward/aft inversion are otherwise unchanged.
 
 Release 0.997 18 also separates scene fire/VFX selection from pathology selection. Normal scenes prefer a non-fire pathology for both `random_fire=no` and the non-forced `yes` VFX mode; `random_fire=forced` prefers fire. If the preferred fire state is absent from the selected health list, a bounded relaxation accepts an available record instead of producing the old fallback. A second bounded pass can align `SEX1` to the selected pathology record before `random injured` creates `injured_human`; `injured_workers` is synchronized to male before the pathology thread starts. Missing or out-of-range standard types are remapped to `health1`-`health107`, and Halloween pathology types outside `healthhalloween` are remapped to the available 0-29 range. In normal mission data, the old fallback should now be reachable only if the relevant health static is missing or empty.
 
