@@ -2,6 +2,15 @@
 
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
+## Marshal lateral guidance and documented distance query - release 0.997 44
+
+- Advanced the release title to `0.997 44`; the artifact remains `everywhere_all.json`.
+- Corrected the lateral mapping in both approach controllers: a helicopter on the relative-bearing side previously mapped to `VAR 1 = 6`; it now correctly maps to left (`5`), while the opposite side maps to right (`6`).
+- Replaced the undocumented location `distance:m` query in the marshal monitor with the HPG-documented `distance:ft` query and converted the result to meters. The 7 m deadband, 150 m arming gate, lime-circle test, and debug distance therefore use the intended units consistently.
+- Kept the successful restart state machine and its forward/aft inversion unchanged: the route-forward sector still produces the opposite rear indication (`12`), and the opposite longitudinal sector produces straight/forward (`11`).
+- The HPG query reference documents `distance:ft` for `location/var`; the conversion is applied only inside the two marshal controllers. Other mission queries and wind-orientation threads are unchanged.
+- Strict JSON and marshal-structure validation remains required before publication.
+
 ## Marshal controller state-machine rewrite - release 0.997 43
 
 - Advanced the release title to `0.997 43`; the artifact remains `everywhere_all.json`.

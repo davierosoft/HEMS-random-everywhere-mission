@@ -1,6 +1,6 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
-Release 0.997 43 replaces the marshal monitor with isolated, mutually exclusive state machines for `marshall` and `pisteur3`. This supersedes the earlier overlapping approach/restart/departure paths: each object has one controller thread, and every `VAR 1` command is state-gated so it is emitted only on an animation transition. The Desktop historical source remains a limited reference only for the previous CREW=3 copilot VAR restoration; it must not overwrite current progressive logic. Both authoritative copies pass strict JSON parsing and the marshal structure checks described below.
+Release 0.997 44 keeps the successful marshal state-machine rewrite and corrects the two remaining approach mismatches: lateral `VAR 1` mapping and the distance query used for the 7 m buffer. The HPG-documented `location/var distance:ft` query is converted to meters before all marshal/pisteur3 distance comparisons. The restart forward/aft inversion is unchanged and remains validated by the previous test. Both authoritative copies pass strict JSON parsing and the marshal structure checks described below.
 
 ## 1. Current authoritative file
 
@@ -10,7 +10,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 43`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 44`
 
 The latest user-supplied Desktop source was:
 
@@ -39,6 +39,8 @@ Release 0.997 43 is the authoritative marshal-controller design. `marshaller ani
 - Departure begins only after the landing procedure has disarmed. On ground with either first pump primed and Nr <=5%, it sends engage rotor (`2`) once. It holds idle (`1`) above 50%, sends up (`7`) above 90%, holds hover (`3`) for 2 seconds after take-off, and then sends exactly one route-relative departure direction (`9`-`12`). If both first pumps are off and Nr is below 80% on the ground, all departure transient state is cleared and idle is held.
 - `marshall_guidance_state` / `pisteur3_guidance_state` record the last command; `*_guidance_initialized` prevents duplicate initialization. `*_hover_signal_sent` is now a phase (`0` not issued, `1` during the required two-second hover, `2` complete). All are reset in Objective 1 and shown in the debug page.
 - Do not add a parallel writer to either object. Wind-orientation threads are intentionally separate and were left byte-for-byte outside the monitor replacement.
+
+Release 0.997 44 applies the follow-up alignment corrections. In the approach branch, relative bearing >180 now emits left (`VAR 1 = 5`) and the opposite sector emits right (`VAR 1 = 6`) for both objects. The controller now reads the HPG-documented `distance:ft` location query and multiplies by `0.3048`; consequently `marshall_lz_distance` and `pisteur3_lz_distance` remain meter values while the 7 m buffer and 150 m arming gate are unit-consistent. The departure route mapping is untouched: forward/aft remains intentionally opposite (`12` for the marshal-forward sector and `11` for the opposite longitudinal sector).
 
 Release 0.997 18 also separates scene fire/VFX selection from pathology selection. Normal scenes prefer a non-fire pathology for both `random_fire=no` and the non-forced `yes` VFX mode; `random_fire=forced` prefers fire. If the preferred fire state is absent from the selected health list, a bounded relaxation accepts an available record instead of producing the old fallback. A second bounded pass can align `SEX1` to the selected pathology record before `random injured` creates `injured_human`; `injured_workers` is synchronized to male before the pathology thread starts. Missing or out-of-range standard types are remapped to `health1`-`health107`, and Halloween pathology types outside `healthhalloween` are remapped to the available 0-29 range. In normal mission data, the old fallback should now be reachable only if the relevant health static is missing or empty.
 
