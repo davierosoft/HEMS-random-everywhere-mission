@@ -10,6 +10,25 @@ For every behavior change, treat this as a blocking release gate before reportin
 4. Re-fetch the published files and verify the mission title, changelog entry, and handoff entry all name the same release.
 5. Do not create a pull request unless the user explicitly asks for one. Do not announce the release as complete if any of the above checks is missing.
 
+## Release 0.997 49
+
+Release 0.997 49 fixes manually created marshal operation. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 49`; strict JSON parsing confirms 509 macros and the 27 existing `set_dispatch` commands. No pull request was created.
+
+Root cause: `marshaller animation monitor` was launched only from `delayed threads` after DOC connection. A Technical page marshal could exist before that call, keep `VAR 1 = 0`, and never set the state which blocks the automatic prime-pump engine handlers.
+
+The new `ensure marshaller animation monitor` macro starts exactly one shared controller. `activate marshall guidance` is called after every physical marshal creation, immediately applies idle/flashlight state, and computes `marshall_engine_guard_active`. The guard is active only if the helicopter is inside that marshal's configured landing-circle area. The `ENG 1_2` and `ENG 2_1` event handlers now test this precise guard, so a nearby manual marshal blocks their automatic copilot start sequence while a distant marshal does not.
+
+Manual marshal behavior to test in MSFS/HOC:
+
+1. Create in front with engine/rotor stopped: marshal must immediately show idle/flashlights.
+2. Switch either first prime pump on while inside its landing circle: no automatic ENG 1/ENG 2 copilot sequence may start; marshal must control restart.
+3. Complete rotor start, lift, hover, route direction, return airborne beyond 150 m, and approach/land.
+4. Create at an accepted custom POI, then repeat the restart and approach test.
+5. Replace an existing manual marshal repeatedly and confirm monitor debug remains 1, not multiple controller writers.
+6. Move outside the landing circle and confirm a distant marshal no longer blocks a normal engine start.
+
+The future patient architecture work is documented separately in `HANDOFF_SOL_MULTI_PATIENT_ARCHITECTURE.md`; it is not part of this release.
+
 ## Release 0.997 48
 
 Release 0.997 48 corrects the Technical page front-marshal reference. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 48`; strict JSON parsing confirms 507 macros. No pull request was created.
@@ -48,7 +67,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 48`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 49`
 
 The latest user-supplied Desktop source was:
 
