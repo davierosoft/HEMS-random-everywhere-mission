@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 48",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 49",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -14817,7 +14817,7 @@
           {"text":"pax3onpolice7: {0}; hoistcrewonpolice7: {1}","params":[{"local":"pax3onpolice7"},{"local":"hoistcrewonpolice7"}]},
       {"image":"bar"},
       {"text":"MARSHALLER"},
-      {"text":"marshall role/target/enabled/wind/hospital spawned: {0}/{1}/{2}/{3}/{4}","params":[{"local":"marshall_role"},{"local":"marshall_guidance_target"},{"local":"marshall_guidance_enabled"},{"local":"marshall_wind_enabled"},{"local":"hospital_marshall_spawned"}]},
+      {"text":"marshall role/target/enabled/wind/hospital spawned/monitor/engine guard: {0}/{1}/{2}/{3}/{4}/{5}/{6}","params":[{"local":"marshall_role"},{"local":"marshall_guidance_target"},{"local":"marshall_guidance_enabled"},{"local":"marshall_wind_enabled"},{"local":"hospital_marshall_spawned"},{"local":"marshaller_animation_monitor_started"},{"local":"marshall_engine_guard_active"}]},
       {"text":"EU Firefighter addon: {0}; marshall active: {1}; pisteur3 active: {2}","params":[{"local":"68pony_marshal"},{"local":"marshall_ground_ops_active"},{"local":"pisteur3_guidance_active"}]},
       {"text":"marshall distance/bearing/facing/relative: {0}/{1}/{2}/{3}","params":[{"local":"marshall_lz_distance"},{"local":"marshall_target_bearing"},{"local":"marshall_facing_bearing"},{"local":"marshall_relative_bearing"}]},
       {"text":"marshall behind: {0}","params":[{"local":"marshall_behind"}]},
@@ -55598,6 +55598,8 @@
       {"set":{"local":"marshall_guidance_state"},"value":0},
       {"set":{"local":"pisteur3_guidance_state"},"value":0},
       {"set":{"local":"marshall_guidance_initialized"},"value":0},
+      {"set":{"local":"marshaller_animation_monitor_started"},"value":0},
+      {"set":{"local":"marshall_engine_guard_active"},"value":0},
       {"set":{"local":"marshall_guidance_enabled"},"value":0},
       {"set":{"local":"marshall_guidance_target"},"value":null},
       {"set":{"local":"marshall_role"},"value":"none"},
@@ -56676,7 +56678,7 @@
     ],
 
     "delayed threads": [
-      {"call_macro":"marshaller animation monitor"},
+      {"call_macro":"ensure marshaller animation monitor"},
       {"#comment":"LOCK MARSHALL WIND ROTATION NEAR LANDING SPOT"},
       {"create_thread": {
           "commands": [
@@ -56860,6 +56862,7 @@
               ]
             },
             {"point_object":"marshall","to":"marshall_guidance_location"},
+            {"call_macro":"activate marshall guidance"},
             {"wait_for":{"local":"FIREENGINE_AVAIL"},"eq":1},
             {"wait_for":{"var":["E:TIME OF DAY","number"]},"ne":1},
             {"create_object":{"name":"slight1","title":{"local":"slight"},"fallback_title":"Airbus H145 Worklight","location":{"bearing":35,"dist":17,"heading":0,"object":"landing_spot"}}},
@@ -61287,6 +61290,11 @@
                               ]
                             },
                         {"set":{"local":"marshall_lz_distance"},"value":{"location":"marshall_guidance_location","var":"distance:m","to":"$USER"}},
+                            {"if":{"local":"marshall_lz_distance"},"lte":{"local":"ldg_spot_area_size"},"then":[
+                              {"if":{"local":"marshall_engine_guard_active"},"ne":1,"then":[{"set":{"local":"marshall_engine_guard_active"},"value":1}]}
+                            ],"else":[
+                              {"if":{"local":"marshall_engine_guard_active"},"ne":0,"then":[{"set":{"local":"marshall_engine_guard_active"},"value":0}]}
+                            ]},
                             {
                               "if": {"var":["SIM ON GROUND","bool"]},
                               "eq": 0,
@@ -62243,7 +62251,7 @@
                               "if": {"local":"marshall_ground_ops_active"},
                               "ne": 0,
                               "then": [
-                                {"set":{"local":"marshall_ground_ops_active"},"value":0}
+                                {"set":{"local":"marshall_ground_ops_active"},"value":0},{"if":{"local":"marshall_engine_guard_active"},"ne":0,"then":[{"set":{"local":"marshall_engine_guard_active"},"value":0}]}
                               ]
                             },
                             {
@@ -62306,7 +62314,7 @@
                           "if": {"local":"marshall_ground_ops_active"},
                           "ne": 0,
                           "then": [
-                            {"set":{"local":"marshall_ground_ops_active"},"value":0}
+                            {"set":{"local":"marshall_ground_ops_active"},"value":0},{"if":{"local":"marshall_engine_guard_active"},"ne":0,"then":[{"set":{"local":"marshall_engine_guard_active"},"value":0}]}
                           ]
                         },
                         {
@@ -62369,7 +62377,7 @@
                       "if": {"local":"marshall_ground_ops_active"},
                       "ne": 0,
                       "then": [
-                        {"set":{"local":"marshall_ground_ops_active"},"value":0}
+                        {"set":{"local":"marshall_ground_ops_active"},"value":0},{"if":{"local":"marshall_engine_guard_active"},"ne":0,"then":[{"set":{"local":"marshall_engine_guard_active"},"value":0}]}
                       ]
                     },
                     {
@@ -63626,6 +63634,7 @@
     ],
     "reset marshall guidance": [
       {"set":{"local":"marshall_ground_ops_active"},"value":0},
+      {"set":{"local":"marshall_engine_guard_active"},"value":0},
       {"set":{"local":"marshall_guidance_initialized"},"value":0},
       {"set":{"local":"marshall_guidance_state"},"value":0},
       {"set":{"local":"marshall_approach_armed"},"value":0},
@@ -63670,7 +63679,8 @@
           }
         ]
       },
-      {"point_object":"marshall","to":"marshall_guidance_location"}
+      {"point_object":"marshall","to":"marshall_guidance_location"},
+      {"call_macro":"activate marshall guidance"}
     ],
     "create hospital marshall": [
       {"call_macro":"reset marshall guidance"},
@@ -63778,7 +63788,8 @@
           },
           {"point_object":"marshall","to":"marshall_guidance_location"}
         ]
-      }
+      },
+      {"call_macro":"activate marshall guidance"}
     ],
     "create technical marshall front": [
       {"call_macro":"reset marshall guidance"},
@@ -63815,7 +63826,8 @@
             "point": {"location":"technical_marshall_icon_location","icon":"injured_location","id":"technical_marshall","text":"MARSHAL"}
           }
         }
-      }
+      },
+      {"call_macro":"activate marshall guidance"}
     ],
     "create technical marshall custom": [
       {"set_dispatch_dialog":0},
@@ -63884,6 +63896,7 @@
             ]
           },
           {"point_object":"marshall","to":"marshall_guidance_location"},
+          {"call_macro":"activate marshall guidance"},
           {"set_map":{"remove":{"point":{"id":"technical_marshall"}}}},
           {
             "set_map": {
@@ -63897,6 +63910,34 @@
       {"clear_user_poi":1},
       {"set_message":{"text":""}},
       {"set_dispatch_dialog":1}
+    ],
+
+    "ensure marshaller animation monitor": [
+      {"if":{"local":"marshaller_animation_monitor_started"},"ne":1,"then":[
+        {"set":{"local":"marshaller_animation_monitor_started"},"value":1},
+        {"call_macro":"marshaller animation monitor"}
+      ]}
+    ],
+    "activate marshall guidance": [
+      {"call_macro":"ensure marshaller animation monitor"},
+      {"set":{"local":"marshall_ground_ops_active"},"value":1},
+      {"if":{"and":[
+        {"require":{"has_location":"marshall_guidance_location"},"eq":1},
+        {"require":{"location":"marshall_guidance_location","var":"distance:m","to":"$USER"},"lte":{"local":"ldg_spot_area_size"}}
+      ]},"eq":1,"then":[
+        {"set":{"local":"marshall_engine_guard_active"},"value":1}
+      ],"else":[
+        {"set":{"local":"marshall_engine_guard_active"},"value":0}
+      ]},
+      {"if":{"has_object":"marshall"},"eq":1,"then":[
+        {"if":{"local":"halloween"},"eq":1,"then":[
+          {"set":{"object":"marshall","var":"VAR 1"},"value":100},
+          {"set":{"local":"marshall_guidance_state"},"value":100}
+        ],"else":[
+          {"set":{"object":"marshall","var":"VAR 1"},"value":1},
+          {"set":{"local":"marshall_guidance_state"},"value":1}
+        ]}
+      ]}
     ]
   },
 "aircraft": ["H145"],
@@ -71042,7 +71083,7 @@
                   {"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10},
                   {"require":{"local":"COPILOT"},"eq":1},
                   {"require":{"local":"startingsequence"},"ne":21},
-                  {"require":{"local":"marshall_ground_ops_active"},"ne":1},
+                  {"require":{"local":"marshall_engine_guard_active"},"ne":1},
                   {"require":{"local":"pisteur3_guidance_active"},"ne":1}
                 ]
               },
@@ -71090,7 +71131,7 @@
                   {"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10},
                   {"require":{"local":"COPILOT"},"eq":1},
                   {"require":{"local":"startingsequence"},"ne":12},
-                  {"require":{"local":"marshall_ground_ops_active"},"ne":1},
+                  {"require":{"local":"marshall_engine_guard_active"},"ne":1},
                   {"require":{"local":"pisteur3_guidance_active"},"ne":1}
                 ]
               },
