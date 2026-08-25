@@ -1,5 +1,16 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Manual marshal monitor and engine interlock - release 0.997 49
+
+- Advanced the release title to `0.997 49`; the artifact remains `everywhere_all.json`.
+- Corrected the Technical page marshal failure: the marshal animation monitor was previously started only by `delayed threads` after DOC connection. A manually created marshal could therefore remain at `VAR 1 = 0`, with neither approach nor restart logic running.
+- Added one deduplicated shared monitor launcher. Every marshal creation path - scene, base, hospital, front, and accepted custom location - activates it after the marshal object exists. Replacing a marshal does not create a second controller thread.
+- New marshals immediately enter idle/flashlight state (`VAR 1 = 1`, except the existing Halloween state) while their normal controller takes ownership of later transitions.
+- Added `marshall_engine_guard_active`. It is calculated from the helicopter's distance to the marshal guidance point against the configured landing-circle radius. Only a marshal whose landing area currently contains the helicopter inhibits the first-pump automatic engine handlers `ENG 1_2` and `ENG 2_1`; a marshal elsewhere does not block engine starts.
+- The existing marshal controller then selects landing or restart/departure behavior from on-ground state, rotor RPM, pumps, distance, and altitude. Its no-`MISSION_PHASE` behavior, 7 m buffer, 3 kt gate, 2-second hover, <=10 ft land condition, and 18 m marshal offsets are retained.
+- Debug now shows shared-monitor and engine-guard state. Strict JSON parsing succeeds with 509 macros and the existing 27 `set_dispatch` commands remain intact.
+- Added `HANDOFF_SOL_MULTI_PATIENT_ARCHITECTURE.md` as a separate, non-implementation design handoff for the future five-patient triage refactor.
+
 ## Technical marshal landing-reference correction - release 0.997 48
 
 - Advanced the release title to `0.997 48`; the artifact remains `everywhere_all.json`.
