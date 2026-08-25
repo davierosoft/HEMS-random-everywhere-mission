@@ -1,5 +1,13 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Custom marshal icon and transparent hospital marker - release 0.997 51
+
+- Advanced the release title to `0.997 51`; the artifact remains `everywhere_all.json`.
+- Added the supplied 32 x 32 PNG URI as the `custom_marshall` icon. It is used only by the Technical page `CREATE ON CUSTOM LOCATION` landing-point marker; the existing `CREATE IN FRONT` marker is unchanged.
+- Rebuilt `cus_hospital` as an 18 x 18 RGBA PNG with the 132 white background pixels changed to alpha zero. The green medical symbol and all non-white pixels are preserved.
+- The five custom-hospital database markers continue to use `cus_hospital`, now without the opaque white square.
+- Strict JSON parsing succeeds with 509 macros. No pull request was created.
+
 ## Marshal lateral-direction correction and 20% restart latch - release 0.997 50
 
 - Advanced the release title to `0.997 50`; the artifact remains `everywhere_all.json`.
