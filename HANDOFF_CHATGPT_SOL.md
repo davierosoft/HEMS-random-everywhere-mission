@@ -1,5 +1,21 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
+## Mandatory release closeout - do not skip
+
+For every behavior change, treat this as a blocking release gate before reporting completion:
+
+1. Read the current title from `everywhere_all.json` and advance its progressive `0.997 N` suffix exactly once for the release.
+2. Update all three release artifacts in the same publication: `everywhere_all.json`, `CHANGELOG.en.md`, and this handoff.
+3. Preserve the mission's compact/manual JSON formatting; parse the complete JSON after editing.
+4. Re-fetch the published files and verify the mission title, changelog entry, and handoff entry all name the same release.
+5. Do not create a pull request unless the user explicitly asks for one. Do not announce the release as complete if any of the above checks is missing.
+
+## Release 0.997 46
+
+Release 0.997 46 fixes the road-vehicle spawn race: the generic sampled OSM query now clears and waits for its response, while police, fire, ambulance, and closest ambulance/police station resolvers guarantee a valid scene-relative fallback and readiness before a vehicle can be moved. The ambulance candidate resolver no longer writes `[0,0]` temporary locations. This prevents a valid route from being created after its vehicle has already remained at the simulator origin. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 46`; strict JSON parsing confirms 502 macros and the 27 `set_dispatch` commands are unchanged. Runtime verification is still required for all road-rescue variants.
+
+## Historical release 0.997 45
+
 Release 0.997 45 keeps the successful marshal state-machine rewrite and the corrected lateral `VAR 1` mapping. It restores the native `distance:m` query in both controllers, as used by the rest of this HEMS mission, instead of performing an unnecessary feet-to-meter calculation. The restart forward/aft inversion is unchanged and remains validated by the previous test. Both authoritative copies pass strict JSON parsing and the marshal structure checks described below.
 
 ## 1. Current authoritative file
@@ -10,7 +26,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 45`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 46`
 
 The latest user-supplied Desktop source was:
 
