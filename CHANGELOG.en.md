@@ -10,6 +10,7 @@
 - The existing marshal controller now reads the configured guidance location, not only `landing_spot`. Role-scoped reset and wind workers prevent an old scene/hospital worker from moving the current marshal. The obsolete scene `MISSION_PHASE <= 9` loop was removed.
 - Corrected the still-inverted lateral approach mapping: relative bearing >180 now commands right (`VAR 1 = 6`); the opposite side commands left (`VAR 1 = 5`). The 7 m deadband, native `distance:m`, 45 ft descent threshold, 3 kt descent gate, 2-second hover and <=10 ft land announcement remain in force. Departure retains the requested inverted forward/rear mapping.
 - Replaced every marshal-specific 13 m placement with 18 m. Strict JSON parsing succeeds with 507 macros; the existing 27 `set_dispatch` commands remain intact, and the new debug row is inside the existing debug `set_dispatch`.
+- Reformatted the five new marshal macros to the mission's compact/manual convention: simple commands remain on one line and complex conditions remain multiline.
 
 ## Asynchronous road-vehicle spawn guard - release 0.997 46
 
