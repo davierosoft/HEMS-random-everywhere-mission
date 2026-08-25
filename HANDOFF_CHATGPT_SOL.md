@@ -22,6 +22,8 @@ All marshal roles use one configured guidance target and reset their transient c
 
 The final static checks also corrected the live left/right branch: relative bearing >180 produces right (`VAR 1 = 6`), and the opposite sector produces left (`VAR 1 = 5`). Keep the established 7 m deadband, `distance:m`, 45 ft descent threshold, 3 kt gate, 2-second hover, <=10 ft landing condition, and inverted forward/rear departure mapping. Marshal-specific 13 m positions are now 18 m.
 
+The five new marshal macros follow the compact/manual JSON convention: simple commands are one line and complex conditions remain multiline.
+
 Runtime test focus: verify the new settings buttonbar before dispatch, base marshal creation, both hospital placement branches, both Technical page actions, and a full approach/restart/departure sequence. Static validation cannot replace an MSFS/HOC runtime test.
 
 ## Release 0.997 46
