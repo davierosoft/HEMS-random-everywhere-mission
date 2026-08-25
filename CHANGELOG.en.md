@@ -1,5 +1,14 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Asynchronous road-vehicle spawn guard - release 0.997 46
+
+- Advanced the release title to `0.997 46`; the artifact remains `everywhere_all.json`.
+- Corrected the asynchronous OSM spawn race affecting road vehicles. `Query closest nodes with sampling` now clears `my_data` before requesting OSM data and waits for the response before reading its elements. A fixed sleep is no longer used as a readiness substitute.
+- The police and fire-station resolvers now guarantee a valid fallback location and wait until that location exists before their callers can move a vehicle. The closest ambulance/police flow applies the same readiness checks to both station locations.
+- `Query closest ambugo` no longer uses `[0,0]` as a temporary hospital/station sentinel. It starts each candidate with a valid scene-relative fallback, then replaces it with the OSM result when available, and waits for the selected `ambu_station`.
+- This prevents a route from being created after its logical start location resolves while the corresponding vehicle has already been left at the simulator origin. The 27 `set_dispatch` commands and all unrelated mission logic are unchanged.
+- Strict JSON parsing succeeds with 502 macros. Runtime verification remains required with road police, fire, normal ambulance, and closest ambulance/police dispatches.
+
 This changelog records the consolidated results of the work performed during the discussion. Intermediate corrections to newly created features are intentionally collapsed into their final behavior instead of being listed as separate revisions.
 
 ## Native meter distance query restoration - release 0.997 45
