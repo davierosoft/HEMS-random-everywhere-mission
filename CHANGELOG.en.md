@@ -1,5 +1,16 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Marshal controls and complete implementation audit - release 0.997 47
+
+- Advanced the release title to `0.997 47`; the artifact remains `everywhere_all.json`.
+- Reconciled the current main branch against the earlier marshal requirements and found that the requested optional marshal controls had never landed in release 45. This release adds the missing implementation instead of merely documenting it.
+- Added persistent destination settings in one two-button buttonbar: start-base marshal defaults to `no`; destination-hospital marshal defaults to `yes`. Normal Objective 1 reloads preserve both choices. `resetdefault` clears them so their documented defaults are restored on the next initialization.
+- A start-base marshal is created 25 m in front of the mission start position and does not follow the wind. A destination-hospital marshal uses wind orientation only when `hospital_wptot = 0`; with custom hospital waypoints it is created 1 m to the right of `ambumedic`. Both face the actual landing point and use the existing marshal controller and engine-start guard behavior.
+- Added always-visible Technical page actions: `CREATE IN FRONT` creates a marshal 25 m ahead of the helicopter; `CREATE ON CUSTOM LOCATION` asks for a map POI and creates only the marshal plus the temporary `injured_location` map icon. Neither technical action creates a route or other scene objects.
+- The existing marshal controller now reads the configured guidance location, not only `landing_spot`. Role-scoped reset and wind workers prevent an old scene/hospital worker from moving the current marshal. The obsolete scene `MISSION_PHASE <= 9` loop was removed.
+- Corrected the still-inverted lateral approach mapping: relative bearing >180 now commands right (`VAR 1 = 6`); the opposite side commands left (`VAR 1 = 5`). The 7 m deadband, native `distance:m`, 45 ft descent threshold, 3 kt descent gate, 2-second hover and <=10 ft land announcement remain in force. Departure retains the requested inverted forward/rear mapping.
+- Replaced every marshal-specific 13 m placement with 18 m. Strict JSON parsing succeeds with 507 macros; the existing 27 `set_dispatch` commands remain intact, and the new debug row is inside the existing debug `set_dispatch`.
+
 ## Asynchronous road-vehicle spawn guard - release 0.997 46
 
 - Advanced the release title to `0.997 46`; the artifact remains `everywhere_all.json`.
