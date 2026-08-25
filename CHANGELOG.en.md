@@ -1,5 +1,13 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Technical marshal landing-reference correction - release 0.997 48
+
+- Advanced the release title to `0.997 48`; the artifact remains `everywhere_all.json`.
+- Corrected `CREATE IN FRONT`: `marshall_guidance_location` now snapshots the helicopter's position at the button press. The marshal and its map icon remain 25 m ahead of that point, and the marshal faces the helicopter/landing reference.
+- Confirmed `CREATE ON CUSTOM LOCATION` already uses the accepted POI as `marshall_guidance_location`, with the marshal and temporary map icon 18 m offset from the selected landing point.
+- Reusing either Technical page action first removes the existing marshal and transient guidance state, then creates one replacement marshal at the new offset. Rejected custom selections leave the current marshal unchanged.
+- Strict JSON parsing succeeds with 507 macros. No route or additional scene object is created by either Technical marshal action.
+
 ## Marshal controls and complete implementation audit - release 0.997 47
 
 - Advanced the release title to `0.997 47`; the artifact remains `everywhere_all.json`.
