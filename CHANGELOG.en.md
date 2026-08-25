@@ -1,5 +1,14 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Marshal lateral-direction correction and 20% restart latch - release 0.997 50
+
+- Advanced the release title to `0.997 50`; the artifact remains `everywhere_all.json`.
+- Verified the Technical-page marshal is not a separate lateral controller: it uses the shared `marshall` path, so its reversed left/right instruction also affected scene, base, and hospital marshals using that object. The shared mapping is now aligned with the already-correct `pisteur3` mapping: relative bearing >180 selects VAR 1 = 5 (move left); the other side selects VAR 1 = 6 (move right).
+- Kept `pisteur3` unchanged; inspection confirmed it already used the correct left/right mapping.
+- Changed the restart handover from rotor RPM >50% to >=20% in every first-pump and latched-start branch for both marshal controllers. Once a pump-initiated start reaches 20% NR, the restart is committed and the marshal enters idle/flashlights (VAR 1 = 1) independently of subsequent first-pump switch changes, until the existing >90% NR takeoff transition.
+- Below 20% NR, the existing engage-rotor indication remains available; the >90% move-up, lift-off hover, and direction sequence is unchanged.
+- Strict JSON parsing succeeds with 509 macros and all six restart-handover checks now use >=20% NR. No pull request was created.
+
 ## Manual marshal monitor and engine interlock - release 0.997 49
 
 - Advanced the release title to `0.997 49`; the artifact remains `everywhere_all.json`.
