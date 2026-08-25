@@ -1,5 +1,21 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
+## Release 0.997 50
+
+Release 0.997 50 corrects marshal lateral guidance and makes a pump-initiated rotor start latch at 20% NR. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 50`; strict JSON parsing confirms 509 macros. No pull request was created.
+
+The Technical page does not own a special left/right controller: its marshal is the shared `marshall` object. That controller had its VAR 1 = 5/6 mapping reversed. It now matches the already-correct `pisteur3` controller: relative bearing >180 gives move left (VAR 1 = 5), otherwise move right (VAR 1 = 6). Therefore the correction covers manual, scene, base, and hospital `marshall` roles; `pisteur3` was verified and left unchanged.
+
+For both controllers, each first-pump start and its latched continuation now promotes restart state 1 to state 2 at rotor RPM >=20% rather than >50%. State 2 holds idle/flashlights regardless of first-pump switch release until the existing >90% NR move-up threshold. This prevents an already-spooled start from falling back to engage-rotor when the first pump is released between 20% and 50%.
+
+Targeted MSFS/HOC test:
+
+1. Test manual, scene/base/hospital marshal approach at the same relative positions on both sides of the landing point: it must command the visually correct left/right motion and remain centered inside the 7 m buffer.
+2. Start with either first prime pump, then release it after NR has passed 20% but before 50%: the marshal must stay idle/flashlights, not restart or reset.
+3. Continue above 90% NR: verify move-up, lift-off hover for two seconds, then the existing departure direction.
+4. Repeat the rotor test with `pisteur3`; its lateral mapping must remain unchanged and its 20% restart latch must behave identically.
+5. Reuse manual marshal creation and confirm monitor debug remains one shared controller and the engine guard blocks automatic ENG 1/ENG 2 only while the helicopter is inside that marshal landing area.
+
 ## Mandatory release closeout - do not skip
 
 For every behavior change, treat this as a blocking release gate before reporting completion:
