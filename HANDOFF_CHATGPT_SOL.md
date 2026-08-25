@@ -10,6 +10,12 @@ For every behavior change, treat this as a blocking release gate before reportin
 4. Re-fetch the published files and verify the mission title, changelog entry, and handoff entry all name the same release.
 5. Do not create a pull request unless the user explicitly asks for one. Do not announce the release as complete if any of the above checks is missing.
 
+## Release 0.997 48
+
+Release 0.997 48 corrects the Technical page front-marshal reference. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 48`; strict JSON parsing confirms 507 macros. No pull request was created.
+
+`CREATE IN FRONT` snapshots `$USER` as the landing/departure reference and creates the marshal 25 m ahead, facing that reference. Thus the controller guides the helicopter to its current point, not to the marshal. `CREATE ON CUSTOM LOCATION` continues to use the accepted map POI as the landing reference and creates the marshal 18 m offset. Both actions replace an existing marshal through `reset marshall guidance`; rejecting the map selection makes no change.
+
 ## Release 0.997 47
 
 Release 0.997 47 completes the optional marshal work that was requested before release 45 but was absent from main. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 47`; JSON parsing confirms 507 macros and the 27 existing `set_dispatch` commands. No pull request was created.
@@ -42,7 +48,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 47`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 48`
 
 The latest user-supplied Desktop source was:
 
