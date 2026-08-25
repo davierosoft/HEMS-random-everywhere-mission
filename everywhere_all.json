@@ -21686,7 +21686,9 @@
               {"set":{"param":"SAMPLE_RADIUS"},"value":{"multiply":[{"param":"SAMPLE_RADIUS"},{"param":"MULTIPLIER"}]}}
             ]
           },
+          {"set":{"param":"my_data"},"value":null},
           {"osm_query_data":{"param":"QUERY"},"location":{"param":"CENTER_AREA"},"size":{"param":"SAMPLE_RADIUS"},"result":"my_data"},
+          {"wait_for":{"param":"my_data"},"ne":null},
           {"sleep":0.05},
           {"debug_write":{"text":"my_data is of type {0}","params":[{"typeof":{"param":"my_data"}}]}},
           {"set":{"param":"elements"},"value":{"struct":{"param":"my_data"},"path":"elements"}},
@@ -22585,18 +22587,16 @@
           {"create_location":"police_station","zones":[{"zone":{"location":{"bearing":90,"dist":5000,"object":"accident_location"}}}]}
         ]
       },
+      {"wait_for":{"has_location":"ambu_station"},"eq":1},
+      {"wait_for":{"has_location":"police_station"},"eq":1},
       {"set_message":{"text":"Police destination found"}},
       {"wait_for":{"has_location":"accident_location"},"eq":1}
     ],
     "Query closest ambugo": [
-      {"if": {"has_location":"ambu1test"},
-        "eq": 1,
-        "then": [
-          {"create_location":"ambu1test","zones":[{"zone":{"location":[0,0]}}]},
-          {"create_location":"ambu2test","zones":[{"zone":{"location":[0,0]}}]},
-          {"sleep":0.5}
-        ]
-      },
+      {"create_location":"ambu1test","zones":[{"zone":{"location":{"bearing":180,"dist":2000,"object":"INJURED"}}}]},
+      {"create_location":"ambu2test","zones":[{"zone":{"location":{"bearing":90,"dist":2000,"object":"INJURED"}}}]},
+      {"wait_for":{"has_location":"ambu1test"},"eq":1},
+      {"wait_for":{"has_location":"ambu2test"},"eq":1},
       {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=hospital];(._;>;);out center;","MAX_ATTEMPTS":8,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"ambu1test"}},
       {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=ambulance_station];(._;>;);out center;","MAX_ATTEMPTS":8,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"ambu2test"}},
       {"if": {
@@ -22618,7 +22618,8 @@
         "then": [
           {"create_location":"ambu_station","zones":[{"zone":{"location":{"bearing":180,"dist":2000,"object":"INJURED"}}}]}
         ]
-      }
+      },
+      {"wait_for":{"has_location":"ambu_station"},"eq":1}
     ],
     "query closest residential rescue team": [
       {"wait_for":{"has_location":"rescue_location"},"ne":0},
@@ -22686,16 +22687,23 @@
         "then": [
           {"create_location":"fire_station","zones":[{"zone":{"location":{"bearing":90,"dist":1000,"object":"INJURED"}}}]}
         ]
-      }
+      },
+      {"wait_for":{"has_location":"fire_station"},"eq":1}
     ],
     "Query closest police": [
       {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=police];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"police_station"}},
-      {"if": {"object":"INJURED","var":"distance:m","to":"police_station"},
-        "gt": 20000,
+      {"if": {
+          "or": [
+            {"require":{"object":"INJURED","var":"distance:m","to":"police_station"},"gt":20000},
+            {"require":{"has_location":"police_station"},"ne":1}
+          ]
+        },
+        "eq": 1,
         "then": [
           {"create_location":"police_station","zones":[{"zone":{"location":{"bearing":90,"dist":1000,"object":"INJURED"}}}]}
         ]
-      }
+      },
+      {"wait_for":{"has_location":"police_station"},"eq":1}
     ],
     "Query random camping": [
       {"if": {"local":"skip_query"},
