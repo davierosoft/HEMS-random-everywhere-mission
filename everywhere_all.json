@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 46",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 47",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -5697,6 +5697,13 @@
               }
             ]},
           {"image":"bar"},
+          {"image":"bar"},
+          {"text":"MARSHAL CONTROL","color":"green","align":"center"},
+          {"text":"Create a marshal for the current position or a map-selected landing point."},
+          {"buttonbar":[
+            {"title":"CREATE IN FRONT","commands":[{"call_macro":"create technical marshall front"}]},
+            {"title":"CREATE ON CUSTOM LOCATION","commands":[{"call_macro":"create technical marshall custom"}]}
+          ]},
           {"text":"FUEL OPTIONS","color":"green","align":"center"},
           {"text":"Fuel at mission start up (P). If fixed, value can be set by the slider"},
           {"buttonbar": [
@@ -10939,6 +10946,30 @@
               "eq": 1
             }
           },
+          {"image":"bar","show_condition":{"and":[
+              {"require":{"local":"MISSION_PHASE"},"lt":2},
+              {"require":{"local":"tab5"},"ne":0}
+            ],"eq":1}},
+          {"text":"MARSHAL POSITIONS — base: {0}; destination hospital: {1}",
+            "color":"green","align":"center",
+            "params":[{"global":"MARSHAL_START_ENABLED"},{"global":"MARSHAL_HOSPITAL_ENABLED"}],
+            "show_condition":{"and":[
+              {"require":{"local":"MISSION_PHASE"},"lt":2},
+              {"require":{"local":"tab5"},"ne":0}
+            ],"eq":1}},
+          {"buttonbar":[
+            {"title":"START BASE MARSHAL",
+              "select_condition":{"require":{"global":"MARSHAL_START_ENABLED"},"eq":"yes"},
+              "commands":[{"set":{"global":"MARSHAL_START_ENABLED"},"value":{"if":{"global":"MARSHAL_START_ENABLED"},"eq":"yes","then":"no","else":"yes"}}]
+            },
+            {"title":"DEST. HOSPITAL MARSHAL",
+              "select_condition":{"require":{"global":"MARSHAL_HOSPITAL_ENABLED"},"eq":"yes"},
+              "commands":[{"set":{"global":"MARSHAL_HOSPITAL_ENABLED"},"value":{"if":{"global":"MARSHAL_HOSPITAL_ENABLED"},"eq":"yes","then":"no","else":"yes"}}]
+            }
+          ],"show_condition":{"and":[
+              {"require":{"local":"MISSION_PHASE"},"lt":2},
+              {"require":{"local":"tab5"},"ne":0}
+            ],"eq":1}},
           {"text": "(P)Radius of the landing spot(hoist ops): {0}m (default 150)",
             "params": [
               {"tofixed":{"global":"LANDING_SPOT_HOIST"},"digits":1}
@@ -14786,6 +14817,7 @@
           {"text":"pax3onpolice7: {0}; hoistcrewonpolice7: {1}","params":[{"local":"pax3onpolice7"},{"local":"hoistcrewonpolice7"}]},
       {"image":"bar"},
       {"text":"MARSHALLER"},
+      {"text":"marshall role/target/enabled/wind/hospital spawned: {0}/{1}/{2}/{3}/{4}","params":[{"local":"marshall_role"},{"local":"marshall_guidance_target"},{"local":"marshall_guidance_enabled"},{"local":"marshall_wind_enabled"},{"local":"hospital_marshall_spawned"}]},
       {"text":"EU Firefighter addon: {0}; marshall active: {1}; pisteur3 active: {2}","params":[{"local":"68pony_marshal"},{"local":"marshall_ground_ops_active"},{"local":"pisteur3_guidance_active"}]},
       {"text":"marshall distance/bearing/facing/relative: {0}/{1}/{2}/{3}","params":[{"local":"marshall_lz_distance"},{"local":"marshall_target_bearing"},{"local":"marshall_facing_bearing"},{"local":"marshall_relative_bearing"}]},
       {"text":"marshall behind: {0}","params":[{"local":"marshall_behind"}]},
@@ -24565,7 +24597,7 @@
           {"if": {"has_object":"marshall"},
             "eq": 1,
             "then": [
-              {"move_object":"marshall","to":{"bearing":0,"dist":13,"heading":0,"object":"landing_spot"}},
+              {"move_object":"marshall","to":{"bearing":0,"dist":18,"heading":0,"object":"landing_spot"}},
               {"point_object":"marshall","to":"landing_spot"}
             ]
           },
@@ -53754,6 +53786,8 @@
       {"set":{"global":"RESCUETRACK_ID"},"value":null},
       {"set":{"global":"LANDING_SPOT_GND"},"value":null},
       {"set":{"global":"LANDING_SPOT_HOIST"},"value":null},
+      {"set":{"global":"MARSHAL_START_ENABLED"},"value":null},
+      {"set":{"global":"MARSHAL_HOSPITAL_ENABLED"},"value":null},
       {"set":{"global":"CREW"},"value":null},
       {"set":{"global":"BOARDING_HOLD_GLOBAL"},"value":null},
       {"set":{"global":"PILOT_ANIMATION"},"value":null},
@@ -54241,6 +54275,8 @@
               {"set":{"global":"LANDING_SPOT_HOIST"},"value":150}
             ]
           },
+          {"if":{"global":"MARSHAL_START_ENABLED"},"eq":null,"then":[{"set":{"global":"MARSHAL_START_ENABLED"},"value":"no"}]},
+          {"if":{"global":"MARSHAL_HOSPITAL_ENABLED"},"eq":null,"then":[{"set":{"global":"MARSHAL_HOSPITAL_ENABLED"},"value":"yes"}]},
           {"set":{"local":"ldg_spot_area_size"},"value":{"global":"LANDING_SPOT_GND"}},
           {"if": {"local":"COMPLETED_TEMP_MISSIONS"},
             "eq": null,
@@ -55381,6 +55417,10 @@
         ]
       },
       {"set":{"var":["L:LOADSTART","number"]},"value":30},
+      {"if":{"and":[
+        {"require":{"global":"MARSHAL_START_ENABLED"},"eq":"yes"},
+        {"require":{"has_location":"mission_start_location"},"eq":1}
+      ]},"eq":1,"then":[{"call_macro":"create base marshall"}]},
       {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},
         "eq": 1,
         "then": [
@@ -55558,6 +55598,13 @@
       {"set":{"local":"marshall_guidance_state"},"value":0},
       {"set":{"local":"pisteur3_guidance_state"},"value":0},
       {"set":{"local":"marshall_guidance_initialized"},"value":0},
+      {"set":{"local":"marshall_guidance_enabled"},"value":0},
+      {"set":{"local":"marshall_guidance_target"},"value":null},
+      {"set":{"local":"marshall_role"},"value":"none"},
+      {"set":{"local":"marshall_wind_enabled"},"value":"no"},
+      {"set":{"local":"hospital_marshall_spawned"},"value":"no"},
+      {"set_map":{"remove":{"point":{"id":"technical_marshall"}}}},
+      {"if":{"has_object":"marshall"},"eq":1,"then":[{"destroy_object":"marshall"}]},
       {"set":{"local":"pisteur3_guidance_initialized"},"value":0},
       {"set":{"local":"MISSION_END_WAITING"},"value":0},
       {"set":{"var":["L:MENU","number"]},"value":0},
@@ -56722,7 +56769,7 @@
                       },
                       {"sleep":1},
                       {"if":{"local":"pisteur3_wind_rotation_lock"},"ne":1,"then":[
-                        {"move_object":"pisteur3","to":{"bearing":{"local":"BRG"},"dist":-13,"heading":180,"object":"heli_rescuer_location"}},
+                        {"move_object":"pisteur3","to":{"bearing":{"local":"BRG"},"dist":-18,"heading":180,"object":"heli_rescuer_location"}},
                         {"point_object":"pisteur3","to":"heli_rescuer_location"}
                       ]},
                       {"sleep":[30,60]},
@@ -56754,13 +56801,19 @@
       {"create_thread": {
           "commands": [
             {"wait_for":{"local":"customLZ"},"eq":"yes"},
+            {"call_macro":"reset marshall guidance"},
+            {"set":{"local":"marshall_role"},"value":"scene"},
+            {"set":{"local":"marshall_guidance_target"},"value":"landing_spot"},
+            {"set":{"local":"marshall_guidance_enabled"},"value":1},
+            {"set":{"local":"marshall_wind_enabled"},"value":"yes"},
+            {"create_location":"marshall_guidance_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"landing_spot"}}}]},
             {"create_thread": {
                 "commands": [
                   {"wait_for":{"has_object":"marshall"},"eq":1},
                   {"set":{"var":["L:CPL{local:VCP}59","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}59","number"]},1]}},
                   {"wait_for":{"location":"landing_spot","var":"distance:m"},"lte":500},
-                  {"while": {"local":"MISSION_PHASE"},
-                    "lte": 9,
+                  {"while": {"local":"marshall_role"},
+                    "eq": "scene",
                     "do": [
                       {"set":{"local":"DELTABRG"},"value":{"subtract":[180,{"var":["PLANE HEADING DEGREES TRUE","DEGREES"]}]}},
                       {"sleep":0.1},
@@ -56772,9 +56825,12 @@
                         ]
                       },
                       {"sleep":1},
-                      {"if":{"local":"marshall_wind_rotation_lock"},"ne":1,"then":[
-                        {"move_object":"marshall","to":{"bearing":{"local":"BRG"},"dist":-13,"heading":180,"object":"landing_spot"}},
-                        {"point_object":"marshall","to":"landing_spot"}
+                      {"if":{"and":[
+                        {"require":{"local":"marshall_role"},"eq":"scene"},
+                        {"require":{"local":"marshall_wind_rotation_lock"},"ne":1}
+                      ]},"eq":1,"then":[
+                        {"move_object":"marshall","to":{"bearing":{"local":"BRG"},"dist":-18,"heading":180,"object":"marshall_guidance_location"}},
+                        {"point_object":"marshall","to":"marshall_guidance_location"}
                       ]},
                       {"sleep":0.25}
                     ]
@@ -56797,13 +56853,13 @@
             {"if": {"local":"68pony_marshal"},
               "eq": "OK",
               "then": [
-                {"create_object":{"name":"marshall","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":0,"dist":12,"heading":0,"object":"landing_spot"}}}
+                {"create_object":{"name":"marshall","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":0,"dist":18,"heading":0,"object":"marshall_guidance_location"}}}
               ],
               "else": [
-                {"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":0,"dist":12,"heading":0,"object":"landing_spot"}}}
+                {"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":0,"dist":18,"heading":0,"object":"marshall_guidance_location"}}}
               ]
             },
-            {"point_object":"marshall","to":"landing_spot"},
+            {"point_object":"marshall","to":"marshall_guidance_location"},
             {"wait_for":{"local":"FIREENGINE_AVAIL"},"eq":1},
             {"wait_for":{"var":["E:TIME OF DAY","number"]},"ne":1},
             {"create_object":{"name":"slight1","title":{"local":"slight"},"fallback_title":"Airbus H145 Worklight","location":{"bearing":35,"dist":17,"heading":0,"object":"landing_spot"}}},
@@ -56820,6 +56876,19 @@
             {"set":{"object":"slight4","var":"VAR 1"},"value":1}
           ]
         }},
+      {"#comment":"OPTIONAL MARSHALLER AT DESTINATION HOSPITAL"},
+      {"create_thread":{"commands":[
+        {"wait_for":{"local":"MISSION_PHASE"},"gte":8},
+        {"wait_for":{"has_location":"hospital_user"},"eq":1},
+        {"wait_for":{"location":"hospital_user","var":"distance:m","to":"$USER"},"lte":500},
+        {"if":{"and":[
+          {"require":{"global":"MARSHAL_HOSPITAL_ENABLED"},"eq":"yes"},
+          {"require":{"local":"hospital_marshall_spawned"},"ne":"yes"}
+        ]},"eq":1,"then":[
+          {"call_macro":"create hospital marshall"},
+          {"set":{"local":"hospital_marshall_spawned"},"value":"yes"}
+        ]}
+      ]}},
       {"#comment":"HOIST SWITCH"},
       {"create_thread": {
           "commands": [
@@ -61203,11 +61272,11 @@
                       ]
                     },
                     {
-                      "if": {"local":"customLZ"},
-                      "eq": "yes",
+                      "if": {"local":"marshall_guidance_enabled"},
+                      "eq": 1,
                       "then": [
                         {
-                          "if": {"has_location":"landing_spot"},
+                          "if": {"has_location":"marshall_guidance_location"},
                           "eq": 1,
                           "then": [
                             {
@@ -61217,7 +61286,7 @@
                                 {"set":{"local":"marshall_ground_ops_active"},"value":1}
                               ]
                             },
-                        {"set":{"local":"marshall_lz_distance"},"value":{"location":"landing_spot","var":"distance:m","to":"$USER"}},
+                        {"set":{"local":"marshall_lz_distance"},"value":{"location":"marshall_guidance_location","var":"distance:m","to":"$USER"}},
                             {
                               "if": {"var":["SIM ON GROUND","bool"]},
                               "eq": 0,
@@ -61352,7 +61421,7 @@
                             },
                             {"set":{"local":"marshall_behind"},"value":0},
                             {"set":{"local":"marshall_target_bearing"},"value":{"bearing":{"from":"marshall","to":"$USER"}}},
-                            {"set":{"local":"marshall_facing_bearing"},"value":{"bearing":{"from":"marshall","to":"landing_spot"}}},
+                            {"set":{"local":"marshall_facing_bearing"},"value":{"bearing":{"from":"marshall","to":"marshall_guidance_location"}}},
                             {"set":{"local":"marshall_relative_bearing"},"value":{"round":{"add360":[{"local":"marshall_target_bearing"},{"subtract":[360,{"local":"marshall_facing_bearing"}]}]},"to":0}},
                             {
                               "if": {"local":"marshall_relative_bearing"},
@@ -61452,20 +61521,20 @@
                                                       "then": [
                                                         {
                                                           "if": {"local":"marshall_guidance_state"},
-                                                          "ne": 5,
+                                                          "ne": 6,
                                                           "then": [
-                                                            {"set":{"object":"marshall","var":"VAR 1"},"value":5},
-                                                            {"set":{"local":"marshall_guidance_state"},"value":5}
+                                                            {"set":{"object":"marshall","var":"VAR 1"},"value":6},
+                                                            {"set":{"local":"marshall_guidance_state"},"value":6}
                                                           ]
                                                         }
                                                       ],
                                                       "else": [
                                                         {
                                                           "if": {"local":"marshall_guidance_state"},
-                                                          "ne": 6,
+                                                          "ne": 5,
                                                           "then": [
-                                                            {"set":{"object":"marshall","var":"VAR 1"},"value":6},
-                                                            {"set":{"local":"marshall_guidance_state"},"value":6}
+                                                            {"set":{"object":"marshall","var":"VAR 1"},"value":5},
+                                                            {"set":{"local":"marshall_guidance_state"},"value":5}
                                                           ]
                                                         }
                                                       ]
@@ -63553,6 +63622,744 @@
             }
           ]
         }
+      }
+    ],
+    "reset marshall guidance": [
+      {
+        "set": {
+          "local": "marshall_ground_ops_active"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_initialized"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_state"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_approach_armed"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_departure_armed"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_restart_state"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_rotor_signal_sent"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_hover_signal_sent"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_departure_signal_sent"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_ground_idle"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_behind"
+        },
+        "value": 0
+      },
+      {
+        "set": {
+          "local": "marshall_lz_distance"
+        },
+        "value": 999
+      },
+      {
+        "if": {
+          "has_object": "marshall"
+        },
+        "eq": 1,
+        "then": [
+          {
+            "destroy_object": "marshall"
+          }
+        ]
+      }
+    ],
+    "create base marshall": [
+      {
+        "call_macro": "reset marshall guidance"
+      },
+      {
+        "create_location": "marshall_guidance_location",
+        "zones": [
+          {
+            "zone": {
+              "location": {
+                "bearing": 0,
+                "dist": 0,
+                "object": "mission_start_location"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "set": {
+          "local": "marshall_role"
+        },
+        "value": "base"
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_target"
+        },
+        "value": "mission_start_location"
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_enabled"
+        },
+        "value": 1
+      },
+      {
+        "set": {
+          "local": "marshall_wind_enabled"
+        },
+        "value": "no"
+      },
+      {
+        "if": {
+          "local": "68pony_marshal"
+        },
+        "eq": "OK",
+        "then": [
+          {
+            "create_object": {
+              "name": "marshall",
+              "title": "EU Firefighter 1",
+              "fallback_title": "Airbus H145 FR Pisteur 1",
+              "location": {
+                "bearing": 0,
+                "dist": 25,
+                "heading": 0,
+                "object": "mission_start_location"
+              }
+            }
+          }
+        ],
+        "else": [
+          {
+            "create_object": {
+              "name": "marshall",
+              "title": "Airbus H145 FR Pisteur 1",
+              "fallback_title": "$TITLE Crew",
+              "location": {
+                "bearing": 0,
+                "dist": 25,
+                "heading": 0,
+                "object": "mission_start_location"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "point_object": "marshall",
+        "to": "marshall_guidance_location"
+      }
+    ],
+    "create hospital marshall": [
+      {
+        "call_macro": "reset marshall guidance"
+      },
+      {
+        "create_location": "marshall_guidance_location",
+        "zones": [
+          {
+            "zone": {
+              "location": {
+                "bearing": 0,
+                "dist": 0,
+                "object": "hospital_user"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "set": {
+          "local": "marshall_role"
+        },
+        "value": "hospital"
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_target"
+        },
+        "value": "hospital_user"
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_enabled"
+        },
+        "value": 1
+      },
+      {
+        "if": {
+          "local": "hospital_wptot"
+        },
+        "eq": 0,
+        "then": [
+          {
+            "set": {
+              "local": "marshall_wind_enabled"
+            },
+            "value": "yes"
+          },
+          {
+            "if": {
+              "local": "68pony_marshal"
+            },
+            "eq": "OK",
+            "then": [
+              {
+                "create_object": {
+                  "name": "marshall",
+                  "title": "EU Firefighter 1",
+                  "fallback_title": "Airbus H145 FR Pisteur 1",
+                  "location": {
+                    "bearing": 0,
+                    "dist": 18,
+                    "heading": 0,
+                    "object": "marshall_guidance_location"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "create_object": {
+                  "name": "marshall",
+                  "title": "Airbus H145 FR Pisteur 1",
+                  "fallback_title": "$TITLE Crew",
+                  "location": {
+                    "bearing": 0,
+                    "dist": 18,
+                    "heading": 0,
+                    "object": "marshall_guidance_location"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "point_object": "marshall",
+            "to": "marshall_guidance_location"
+          },
+          {
+            "create_thread": {
+              "commands": [
+                {
+                  "while": {
+                    "local": "marshall_role"
+                  },
+                  "eq": "hospital",
+                  "do": [
+                    {
+                      "if": {
+                        "and": [
+                          {
+                            "require": {
+                              "has_object": "marshall"
+                            },
+                            "eq": 1
+                          },
+                          {
+                            "require": {
+                              "local": "marshall_wind_enabled"
+                            },
+                            "eq": "yes"
+                          },
+                          {
+                            "require": {
+                              "local": "marshall_wind_rotation_lock"
+                            },
+                            "ne": 1
+                          }
+                        ]
+                      },
+                      "eq": 1,
+                      "then": [
+                        {
+                          "set": {
+                            "local": "hospital_marshall_delta_bearing"
+                          },
+                          "value": {
+                            "subtract": [
+                              180,
+                              {
+                                "var": [
+                                  "PLANE HEADING DEGREES TRUE",
+                                  "DEGREES"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        {
+                          "set": {
+                            "local": "hospital_marshall_wind_bearing"
+                          },
+                          "value": {
+                            "round": {
+                              "add360": [
+                                {
+                                  "local": "hospital_marshall_delta_bearing"
+                                },
+                                {
+                                  "var": [
+                                    "AMBIENT WIND DIRECTION",
+                                    "degrees"
+                                  ]
+                                }
+                              ]
+                            }
+                          }
+                        },
+                        {
+                          "move_object": "marshall",
+                          "to": {
+                            "bearing": {
+                              "local": "hospital_marshall_wind_bearing"
+                            },
+                            "dist": -18,
+                            "heading": 180,
+                            "object": "marshall_guidance_location"
+                          }
+                        },
+                        {
+                          "point_object": "marshall",
+                          "to": "marshall_guidance_location"
+                        }
+                      ]
+                    },
+                    {
+                      "sleep": 1
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "else": [
+          {
+            "set": {
+              "local": "marshall_wind_enabled"
+            },
+            "value": "no"
+          },
+          {
+            "wait_for": {
+              "has_object": "ambumedic"
+            },
+            "eq": 1
+          },
+          {
+            "if": {
+              "local": "68pony_marshal"
+            },
+            "eq": "OK",
+            "then": [
+              {
+                "create_object": {
+                  "name": "marshall",
+                  "title": "EU Firefighter 1",
+                  "fallback_title": "Airbus H145 FR Pisteur 1",
+                  "location": {
+                    "bearing2": 90,
+                    "dist": 1,
+                    "heading": 0,
+                    "object": "ambumedic"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "create_object": {
+                  "name": "marshall",
+                  "title": "Airbus H145 FR Pisteur 1",
+                  "fallback_title": "$TITLE Crew",
+                  "location": {
+                    "bearing2": 90,
+                    "dist": 1,
+                    "heading": 0,
+                    "object": "ambumedic"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "point_object": "marshall",
+            "to": "marshall_guidance_location"
+          }
+        ]
+      }
+    ],
+    "create technical marshall front": [
+      {
+        "call_macro": "reset marshall guidance"
+      },
+      {
+        "create_location": "marshall_guidance_location",
+        "zones": [
+          {
+            "zone": {
+              "location": {
+                "bearing": 0,
+                "dist": 25,
+                "object": "$USER"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "create_location": "technical_marshall_icon_location",
+        "zones": [
+          {
+            "zone": {
+              "location": {
+                "bearing": 0,
+                "dist": 25,
+                "object": "$USER"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "set": {
+          "local": "marshall_role"
+        },
+        "value": "technical"
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_target"
+        },
+        "value": "technical_front"
+      },
+      {
+        "set": {
+          "local": "marshall_guidance_enabled"
+        },
+        "value": 1
+      },
+      {
+        "set": {
+          "local": "marshall_wind_enabled"
+        },
+        "value": "no"
+      },
+      {
+        "if": {
+          "local": "68pony_marshal"
+        },
+        "eq": "OK",
+        "then": [
+          {
+            "create_object": {
+              "name": "marshall",
+              "title": "EU Firefighter 1",
+              "fallback_title": "Airbus H145 FR Pisteur 1",
+              "location": {
+                "bearing": 0,
+                "dist": 25,
+                "heading": 0,
+                "object": "$USER"
+              }
+            }
+          }
+        ],
+        "else": [
+          {
+            "create_object": {
+              "name": "marshall",
+              "title": "Airbus H145 FR Pisteur 1",
+              "fallback_title": "$TITLE Crew",
+              "location": {
+                "bearing": 0,
+                "dist": 25,
+                "heading": 0,
+                "object": "$USER"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "point_object": "marshall",
+        "to": "marshall_guidance_location"
+      },
+      {
+        "set_map": {
+          "remove": {
+            "point": {
+              "id": "technical_marshall"
+            }
+          }
+        }
+      },
+      {
+        "set_map": {
+          "add": {
+            "point": {
+              "location": "technical_marshall_icon_location",
+              "icon": "injured_location",
+              "id": "technical_marshall",
+              "text": "MARSHAL"
+            }
+          }
+        }
+      }
+    ],
+    "create technical marshall custom": [
+      {
+        "set_dispatch_dialog": 0
+      },
+      {
+        "set_briefing_dialog": 0
+      },
+      {
+        "set": {
+          "local": "technical_marshall_accept"
+        },
+        "value": 0
+      },
+      {
+        "set_user_poi": "technical_marshall"
+      },
+      {
+        "set_message": {
+          "text": "Select the marshal landing point on the map, then accept or reject it."
+        }
+      },
+      {
+        "clear_user_poi": 1
+      },
+      {
+        "create_user_action": {
+          "id": "accept_technical_marshall",
+          "title": "Accept marshal location",
+          "show_condition": {
+            "require": {
+              "has_location": "$MISSION_SELECTED_POI_LOCATION"
+            },
+            "eq": 1
+          },
+          "click_commands": [
+            {
+              "destroy_user_action": "accept_technical_marshall"
+            },
+            {
+              "destroy_user_action": "reject_technical_marshall"
+            },
+            {
+              "set": {
+                "local": "technical_marshall_accept"
+              },
+              "value": 1
+            }
+          ]
+        }
+      },
+      {
+        "create_user_action": {
+          "id": "reject_technical_marshall",
+          "title": "Reject marshal location",
+          "click_commands": [
+            {
+              "destroy_user_action": "accept_technical_marshall"
+            },
+            {
+              "destroy_user_action": "reject_technical_marshall"
+            },
+            {
+              "set": {
+                "local": "technical_marshall_accept"
+              },
+              "value": 2
+            }
+          ]
+        }
+      },
+      {
+        "wait_for": {
+          "has_user_action": "accept_technical_marshall"
+        },
+        "eq": 0
+      },
+      {
+        "if": {
+          "local": "technical_marshall_accept"
+        },
+        "eq": 1,
+        "then": [
+          {
+            "call_macro": "reset marshall guidance"
+          },
+          {
+            "create_location": "marshall_guidance_location",
+            "zones": [
+              {
+                "zone": {
+                  "location": {
+                    "bearing": 0,
+                    "dist": 0,
+                    "object": "$MISSION_SELECTED_POI_LOCATION"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "create_location": "technical_marshall_icon_location",
+            "zones": [
+              {
+                "zone": {
+                  "location": {
+                    "bearing": 0,
+                    "dist": 18,
+                    "object": "marshall_guidance_location"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "set": {
+              "local": "marshall_role"
+            },
+            "value": "technical"
+          },
+          {
+            "set": {
+              "local": "marshall_guidance_target"
+            },
+            "value": "technical_custom"
+          },
+          {
+            "set": {
+              "local": "marshall_guidance_enabled"
+            },
+            "value": 1
+          },
+          {
+            "set": {
+              "local": "marshall_wind_enabled"
+            },
+            "value": "no"
+          },
+          {
+            "if": {
+              "local": "68pony_marshal"
+            },
+            "eq": "OK",
+            "then": [
+              {
+                "create_object": {
+                  "name": "marshall",
+                  "title": "EU Firefighter 1",
+                  "fallback_title": "Airbus H145 FR Pisteur 1",
+                  "location": {
+                    "bearing": 0,
+                    "dist": 18,
+                    "heading": 0,
+                    "object": "marshall_guidance_location"
+                  }
+                }
+              }
+            ],
+            "else": [
+              {
+                "create_object": {
+                  "name": "marshall",
+                  "title": "Airbus H145 FR Pisteur 1",
+                  "fallback_title": "$TITLE Crew",
+                  "location": {
+                    "bearing": 0,
+                    "dist": 18,
+                    "heading": 0,
+                    "object": "marshall_guidance_location"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "point_object": "marshall",
+            "to": "marshall_guidance_location"
+          },
+          {
+            "set_map": {
+              "remove": {
+                "point": {
+                  "id": "technical_marshall"
+                }
+              }
+            }
+          },
+          {
+            "set_map": {
+              "add": {
+                "point": {
+                  "location": "technical_marshall_icon_location",
+                  "icon": "injured_location",
+                  "id": "technical_marshall",
+                  "text": "MARSHAL"
+                }
+              }
+            }
+          }
+        ]
+      },
+      {
+        "clear_user_poi": 1
+      },
+      {
+        "set_message": {
+          "text": ""
+        }
+      },
+      {
+        "set_dispatch_dialog": 1
       }
     ]
   },
