@@ -1,5 +1,19 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
+## Release 0.997 51
+
+Release 0.997 51 adds the requested custom-location marshal icon and corrects custom-hospital icon transparency. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 51`; strict JSON parsing confirms 509 macros. No pull request was created.
+
+The supplied 32 x 32 PNG URI is registered as `custom_marshall`. Only the Technical-page `CREATE ON CUSTOM LOCATION` map point uses it. Its point remains the selected landing reference, not the marshal object; the marshal itself remains offset by 18 m. The `CREATE IN FRONT` marker remains unchanged.
+
+The existing 18 x 18 `cus_hospital` PNG is now RGBA-transparent: precisely 132 pure-white background pixels were converted to alpha 0. The green hospital mark was not redrawn or recolored. All five persistent custom-hospital database points retain their `cus_hospital` reference, so they receive the transparency correction automatically.
+
+Test in MSFS/HOC:
+
+1. Use `CREATE ON CUSTOM LOCATION` and confirm the selected landing point shows the new marshal icon, while the physical marshal remains offset from that point.
+2. Use `CREATE IN FRONT` and confirm its pre-existing icon remains unchanged.
+3. Add or load each custom hospital and confirm its green symbol has no white square on the map.
+
 ## Release 0.997 50
 
 Release 0.997 50 corrects marshal lateral guidance and makes a pump-initiated rotor start latch at 20% NR. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 50`; strict JSON parsing confirms 509 macros. No pull request was created.
