@@ -10,6 +10,20 @@ For every behavior change, treat this as a blocking release gate before reportin
 4. Re-fetch the published files and verify the mission title, changelog entry, and handoff entry all name the same release.
 5. Do not create a pull request unless the user explicitly asks for one. Do not announce the release as complete if any of the above checks is missing.
 
+## Release 0.997 47
+
+Release 0.997 47 completes the optional marshal work that was requested before release 45 but was absent from main. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 47`; JSON parsing confirms 507 macros and the 27 existing `set_dispatch` commands. No pull request was created.
+
+The destination-settings category now has one persistent two-button marshal control: start base (default `no`) and destination hospital (default `yes`). Normal second dispatches retain the user choices; `resetdefault` clears them for the documented first-start defaults. The start-base marshal is 25 m ahead of the mission start and does not rotate to wind. The hospital marshal faces the landing point; it uses wind orientation only without custom hospital waypoints, otherwise it is created 1 m right of `ambumedic`.
+
+Technical page marshal actions have no visibility condition: `CREATE IN FRONT` is 25 m ahead of the helicopter; `CREATE ON CUSTOM LOCATION` uses an accepted map POI and creates no route or other scene object. Both use the existing temporary `injured_location` map icon.
+
+All marshal roles use one configured guidance target and reset their transient controller state before replacing an existing marshal. Scene wind updates run only for role `scene`; hospital wind updates run only for role `hospital`. This prevents stale workers from competing for `marshall`. The phase-limited scene wind loop is removed.
+
+The final static checks also corrected the live left/right branch: relative bearing >180 produces right (`VAR 1 = 6`), and the opposite sector produces left (`VAR 1 = 5`). Keep the established 7 m deadband, `distance:m`, 45 ft descent threshold, 3 kt gate, 2-second hover, <=10 ft landing condition, and inverted forward/rear departure mapping. Marshal-specific 13 m positions are now 18 m.
+
+Runtime test focus: verify the new settings buttonbar before dispatch, base marshal creation, both hospital placement branches, both Technical page actions, and a full approach/restart/departure sequence. Static validation cannot replace an MSFS/HOC runtime test.
+
 ## Release 0.997 46
 
 Release 0.997 46 fixes the road-vehicle spawn race: the generic sampled OSM query now clears and waits for its response, while police, fire, ambulance, and closest ambulance/police station resolvers guarantee a valid scene-relative fallback and readiness before a vehicle can be moved. The ambulance candidate resolver no longer writes `[0,0]` temporary locations. This prevents a valid route from being created after its vehicle has already remained at the simulator origin. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 46`; strict JSON parsing confirms 502 macros and the 27 `set_dispatch` commands are unchanged. Runtime verification is still required for all road-rescue variants.
@@ -26,7 +40,7 @@ Use this file as the current working release:
 
 Current title:
 
-`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 46`
+`HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 47`
 
 The latest user-supplied Desktop source was:
 
