@@ -1,5 +1,13 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Patient-physiology initialization and medical-page layout correction - release 0.997 54
+
+- Advanced the release title to `0.997 54`.
+- Fixed the failed cross-macro profile handoff that produced zero BP/RR/temperature/GCS values. The selected diagnosis now copies all eighteen profile bounds to persistent patient-1 locals before initialization; a live-patient fallback prevents null vital signs.
+- The physiology monitor and vital-sign deterioration wait until the helicopter is within the existing 0.8 distance gate of the scene. Lifescore decay continues to use the pre-existing `decr_rate` mechanics and its randomness.
+- Medical page now uses separate `describe_icon` rows for BP, respiratory rate, temperature, and GCS. The GCS explanation is retained as separate E, V, and M legend rows.
+- Strict JSON parsing succeeds with 511 macros. No pull request was created.
+
 ## Per-diagnosis physiology profiles and vital-sign trend - release 0.997 53
 
 - Advanced the release title to `0.997 53`.
