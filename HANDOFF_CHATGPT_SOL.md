@@ -1,5 +1,11 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
+## Release 0.997 53
+
+Release 0.997 53 moves patient-1 physiology from 107 aggregate category profiles to 609 individual diagnosis records. Every `health*` record now contains bounds for E/V/M GCS, SpO2, HR, systolic/diastolic BP, RR, and temperature. Patient 1 reads the selected diagnosis directly.
+
+A new 20-40 second monitor gives the displayed observations small bounded variation. It calls the same physiology logic used by life decrease: moderate hypoxia increases HR/RR; severe hypoxia reduces HR/RR/BP; CPR still forces E1V1M1, GCS 3 and RR 0. No pull request was created.
+
 ## Release 0.997 52
 
 Patient 1 now has a pathology-profiled physiology model and full GCS display. Release title: `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 52`; JSON parses with 511 macros. No pull request was created.
