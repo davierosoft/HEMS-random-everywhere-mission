@@ -1,3 +1,11 @@
+## Release 0.997 57
+
+Release 0.997 57 changes only the tablet GCS text format.
+
+- Numeric: `GCS: E: {E} // V: {V} // M: {M} // Total: {total}/15`.
+- Not Testable: `GCS: E: {E/NT} // V: {V/NT} // M: {M/NT} // Total: NT`.
+- The NT row remains yellow and no numeric sum is calculated or displayed.
+
 ## Release 0.997 56
 
 Release 0.997 56 implements randomizable GCS Not Testable (NT) components without reporting a misleading total.
