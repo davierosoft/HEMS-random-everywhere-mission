@@ -1,3 +1,14 @@
+## Marshal touchdown interlock, coherent patient telemetry, and cropped medical icons - release 0.997 55
+
+- Advanced the release title to `0.997 55`.
+- Reworked the shared scene-marshal and pisteur3 arming transition. A brief, unintended touchdown no longer disarms approach or enables departure. A ground transition is committed only after the marshal has already issued LAND inside its landing area, or after rotor RPM falls below 80% (the deliberate shutdown/land-elsewhere signal).
+- Wind repositioning locks at 150 m, on any ground contact, and after the landing commit. Once committed, the marshal points at the helicopter exactly once; the wind worker cannot turn or move it again. The same latch is initialized and reset with the existing marshal guidance state.
+- Patient-1 physiological profiles now enforce non-zero living vital ranges whenever lifescore is positive, with stronger floors from lifescore 30 upward. Blood pressure is kept physiologically ordered (systolic above diastolic), and all three GCS components are integral values.
+- Lifescore deterioration still uses the existing `decr_rate` and random mechanics, but its first iteration now waits for the existing 0.8 scene-distance gate rather than reducing the patient while the helicopter is still en route.
+- The medical page places GCS immediately below the gray emergency-code legend. It renders as one named GCS row plus three separate gray E/V/M legend rows, with green/yellow/red GCS thresholds. BP, respiratory rate, and temperature are each independent `describe_icon` rows and appear only after the same patient-visit condition as HR and SpO2. Critical readings are red; the erroneous critical-SpO2 `-1%` display was removed.
+- Added four opaque-black, tightly cropped custom icon URIs: `gcs`, `blood_pressure`, `respiratory_rate`, and `body_temperature`. They contain no transparent backdrop, avoiding the white-square rendering issue.
+- Strict JSON parsing succeeds with 511 macros and 609 diagnosis records. No pull request was created; runtime validation in MSFS is still required.
+
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
 ## Patient-physiology initialization and medical-page layout correction - release 0.997 54
