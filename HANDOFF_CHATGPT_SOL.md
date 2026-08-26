@@ -1,3 +1,22 @@
+## Release 0.997 56
+
+Release 0.997 56 implements randomizable GCS Not Testable (NT) components without reporting a misleading total.
+
+### GCS NT contract
+
+- `0` is the internal NT sentinel only. It is never shown on the tablet.
+- Profile records retain `gcs_eye_min`, `gcs_verbal_min`, and `gcs_motor_min`; for compatible scenarios the relevant minimum is set to `0`, so the existing random extraction can choose NT naturally.
+- Profile matching is deliberately limited: E covers facial burn/edema/compatible facial trauma; V covers intubation, tracheostomy, aphasia and dysphasia; M covers spinal/paralytic and severe movement-preventing fracture trauma. A generic fracture or unconfirmed minor symptom is not automatically NT.
+- `update patient1 physiology` derives `GCS_ANY_NT`. If any component is zero, it sets its display local to `NT`, suppresses the numeric GCS total, and the medical page shows a yellow `GCS: E… V… M… - NT (no total)` row. If none is zero, existing numerical total rendering and severity colours apply.
+- Coma/CPR writes assessable components to `1` but do not overwrite an existing zero NT component.
+
+### Validation
+
+1. Force or select a compatible profile until one component draws zero.
+2. After visiting patient 1, verify the tablet renders `NT`, not `0`, in that component.
+3. Verify there is no `/15` or numeric total on the NT row and that the row is yellow.
+4. Select a normal profile and verify the green/yellow/red numeric total path remains unchanged.
+
 ## Release 0.997 55
 
 Release 0.997 55 combines the requested marshal-touchdown interlock, patient-1 vital-sign correction, and opaque cropped medical icons.
