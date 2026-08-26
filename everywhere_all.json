@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 55",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 56",
 "id": "HEMSRandE",
 "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
 "start_info": {
@@ -26436,6 +26436,12 @@
                                                 "local": "GCS_TOTAL"
                                           },
                                           "gte": 13
+                                    },
+                                    {
+                                          "require": {
+                                                "local": "GCS_ANY_NT"
+                                          },
+                                          "eq": 0
                                     }
                               ],
                               "eq": 1
@@ -26508,6 +26514,12 @@
                                                 "local": "GCS_TOTAL"
                                           },
                                           "lte": 12
+                                    },
+                                    {
+                                          "require": {
+                                                "local": "GCS_ANY_NT"
+                                          },
+                                          "eq": 0
                                     }
                               ],
                               "eq": 1
@@ -26574,6 +26586,12 @@
                                                 "local": "GCS_TOTAL"
                                           },
                                           "lte": 8
+                                    },
+                                    {
+                                          "require": {
+                                                "local": "GCS_ANY_NT"
+                                          },
+                                          "eq": 0
                                     }
                               ],
                               "eq": 1
@@ -26581,7 +26599,58 @@
                         "color": "red"
                   },
                   {
-                        "text": "GCS EYE (E): 4 spontaneous | 3 sound | 2 pressure | 1 none",
+                        "describe_icon": "gcs",
+                        "color": "yellow",
+                        "description": "GCS: E{0} V{1} M{2} - NT (no total)",
+                        "params": [
+                              {
+                                    "local": "GCS_EYE_DISPLAY"
+                              },
+                              {
+                                    "local": "GCS_VERBAL_DISPLAY"
+                              },
+                              {
+                                    "local": "GCS_MOTOR_DISPLAY"
+                              }
+                        ],
+                        "show_condition": {
+                              "and": [
+                                    {
+                                          "require": {
+                                                "var": [
+                                                      "L:RESCUED",
+                                                      "number"
+                                                ]
+                                          },
+                                          "ne": 0
+                                    },
+                                    {
+                                          "require": {
+                                                "var": [
+                                                      "L:SAVED",
+                                                      "number"
+                                                ]
+                                          },
+                                          "ne": 1
+                                    },
+                                    {
+                                          "require": {
+                                                "local": "MISSION_PHASE"
+                                          },
+                                          "gt": 6
+                                    },
+                                    {
+                                          "require": {
+                                                "local": "GCS_ANY_NT"
+                                          },
+                                          "eq": 1
+                                    }
+                              ],
+                              "eq": 1
+                        }
+                  },
+                  {
+                        "text": "GCS EYE (E): 4 spontaneous | 3 sound | 2 pressure | 1 none | NT not testable",
                         "color": "gray",
                         "show_condition": {
                               "and": [
@@ -26614,7 +26683,7 @@
                         }
                   },
                   {
-                        "text": "GCS VERBAL (V): 5 orientated | 4 confused | 3 words | 2 sounds | 1 none",
+                        "text": "GCS VERBAL (V): 5 orientated | 4 confused | 3 words | 2 sounds | 1 none | NT intubated/unassessable",
                         "color": "gray",
                         "show_condition": {
                               "and": [
@@ -26647,7 +26716,7 @@
                         }
                   },
                   {
-                        "text": "GCS MOTOR (M): 6 obeys | 5 localises | 4 normal flexion | 3 abnormal flexion | 2 extension | 1 none",
+                        "text": "GCS MOTOR (M): 6 obeys | 5 localises | 4 normal flexion | 3 abnormal flexion | 2 extension | 1 none | NT not testable",
                         "color": "gray",
                         "show_condition": {
                               "and": [
@@ -69754,22 +69823,46 @@
                         "value": 0
                   },
                   {
-                        "set": {
+                        "if": {
                               "local": "GCS_EYE"
                         },
-                        "value": 1
+                        "ne": 0,
+                        "then": [
+                              {
+                                    "set": {
+                                          "local": "GCS_EYE"
+                                    },
+                                    "value": 1
+                              }
+                        ]
                   },
                   {
-                        "set": {
+                        "if": {
                               "local": "GCS_VERBAL"
                         },
-                        "value": 1
+                        "ne": 0,
+                        "then": [
+                              {
+                                    "set": {
+                                          "local": "GCS_VERBAL"
+                                    },
+                                    "value": 1
+                              }
+                        ]
                   },
                   {
-                        "set": {
+                        "if": {
                               "local": "GCS_MOTOR"
                         },
-                        "value": 1
+                        "ne": 0,
+                        "then": [
+                              {
+                                    "set": {
+                                          "local": "GCS_MOTOR"
+                                    },
+                                    "value": 1
+                              }
+                        ]
                   }
             ],
             "else": [
@@ -70162,44 +70255,211 @@
                         "lt": 18,
                         "then": [
                               {
-                                    "set": {
+                                    "if": {
                                           "local": "GCS_EYE"
                                     },
-                                    "value": 1
+                                    "ne": 0,
+                                    "then": [
+                                          {
+                                                "set": {
+                                                      "local": "GCS_EYE"
+                                                },
+                                                "value": 1
+                                          }
+                                    ]
                               },
                               {
-                                    "set": {
+                                    "if": {
                                           "local": "GCS_VERBAL"
                                     },
-                                    "value": 1
+                                    "ne": 0,
+                                    "then": [
+                                          {
+                                                "set": {
+                                                      "local": "GCS_VERBAL"
+                                                },
+                                                "value": 1
+                                          }
+                                    ]
                               },
                               {
-                                    "set": {
+                                    "if": {
                                           "local": "GCS_MOTOR"
                                     },
-                                    "value": 1
+                                    "ne": 0,
+                                    "then": [
+                                          {
+                                                "set": {
+                                                      "local": "GCS_MOTOR"
+                                                },
+                                                "value": 1
+                                          }
+                                    ]
                               }
                         ]
                   }
             ]
       },
       {
-            "set": {
-                  "local": "GCS_TOTAL"
-            },
-            "value": {
-                  "add": [
+            "if": {
+                  "or": [
                         {
-                              "local": "GCS_EYE"
+                              "require": {
+                                    "local": "GCS_EYE"
+                              },
+                              "eq": 0
                         },
                         {
-                              "local": "GCS_VERBAL"
+                              "require": {
+                                    "local": "GCS_VERBAL"
+                              },
+                              "eq": 0
                         },
                         {
-                              "local": "GCS_MOTOR"
+                              "require": {
+                                    "local": "GCS_MOTOR"
+                              },
+                              "eq": 0
                         }
                   ]
-            }
+            },
+            "eq": 1,
+            "then": [
+                  {
+                        "set": {
+                              "local": "GCS_ANY_NT"
+                        },
+                        "value": 1
+                  },
+                  {
+                        "set": {
+                              "local": "GCS_TOTAL"
+                        },
+                        "value": 0
+                  },
+                  {
+                        "if": {
+                              "local": "GCS_EYE"
+                        },
+                        "eq": 0,
+                        "then": [
+                              {
+                                    "set": {
+                                          "local": "GCS_EYE_DISPLAY"
+                                    },
+                                    "value": "NT"
+                              }
+                        ],
+                        "else": [
+                              {
+                                    "set": {
+                                          "local": "GCS_EYE_DISPLAY"
+                                    },
+                                    "value": {
+                                          "local": "GCS_EYE"
+                                    }
+                              }
+                        ]
+                  },
+                  {
+                        "if": {
+                              "local": "GCS_VERBAL"
+                        },
+                        "eq": 0,
+                        "then": [
+                              {
+                                    "set": {
+                                          "local": "GCS_VERBAL_DISPLAY"
+                                    },
+                                    "value": "NT"
+                              }
+                        ],
+                        "else": [
+                              {
+                                    "set": {
+                                          "local": "GCS_VERBAL_DISPLAY"
+                                    },
+                                    "value": {
+                                          "local": "GCS_VERBAL"
+                                    }
+                              }
+                        ]
+                  },
+                  {
+                        "if": {
+                              "local": "GCS_MOTOR"
+                        },
+                        "eq": 0,
+                        "then": [
+                              {
+                                    "set": {
+                                          "local": "GCS_MOTOR_DISPLAY"
+                                    },
+                                    "value": "NT"
+                              }
+                        ],
+                        "else": [
+                              {
+                                    "set": {
+                                          "local": "GCS_MOTOR_DISPLAY"
+                                    },
+                                    "value": {
+                                          "local": "GCS_MOTOR"
+                                    }
+                              }
+                        ]
+                  }
+            ],
+            "else": [
+                  {
+                        "set": {
+                              "local": "GCS_ANY_NT"
+                        },
+                        "value": 0
+                  },
+                  {
+                        "set": {
+                              "local": "GCS_EYE_DISPLAY"
+                        },
+                        "value": {
+                              "local": "GCS_EYE"
+                        }
+                  },
+                  {
+                        "set": {
+                              "local": "GCS_VERBAL_DISPLAY"
+                        },
+                        "value": {
+                              "local": "GCS_VERBAL"
+                        }
+                  },
+                  {
+                        "set": {
+                              "local": "GCS_MOTOR_DISPLAY"
+                        },
+                        "value": {
+                              "local": "GCS_MOTOR"
+                        }
+                  },
+                  {
+                        "set": {
+                              "local": "GCS_TOTAL"
+                        },
+                        "value": {
+                              "add": [
+                                    {
+                                          "local": "GCS_EYE"
+                                    },
+                                    {
+                                          "local": "GCS_VERBAL"
+                                    },
+                                    {
+                                          "local": "GCS_MOTOR"
+                                    }
+                              ]
+                        }
+                  }
+            ]
       }
 ],
     "ensure marshaller animation monitor": [
@@ -75423,7 +75683,7 @@
       {"id":"acute hemorrhage","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"hypovolemic shock","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Severe bleeding","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"bone fracture","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Suspected spinal injury","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":60,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":65,"bpm_max":79,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":60,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":65,"bpm_max":79,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Amputated leg","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":30,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":83,"spo2_max":98,"bpm_min":65,"bpm_max":104,"bp_sys_min":76,"bp_sys_max":97,"bp_dia_min":45,"bp_dia_max":62,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated arm","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated hand","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75431,18 +75691,18 @@
       {"id":"Severed extremities","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":40,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":87,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Heavy bleeding head wound","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":100,"bp_sys_min":80,"bp_sys_max":100,"bp_dia_min":47,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Dizziness","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Numbness of hands","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":60,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":65,"bpm_max":79,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"Back pain and numbness","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Numbness of hands","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":60,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":65,"bpm_max":79,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"Back pain and numbness","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"Disorientated","diagnosis":"","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"acute hemorrhage","diagnosis":"","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":95,"bp_sys_min":85,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
-      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"yes","fire":"yes","medical_symptoms":"Burns","diagnosis":"Burned torso and legs from fuel","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":88,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
-      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"Blunt trauma to the abdomen","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"Blunt trauma to the abdomen","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"Blunt trauma to the abdomen","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":60,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":65,"bpm_max":79,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":60,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":65,"bpm_max":79,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":1,"smoke":"no","fire":"no","medical_symptoms":"Acute coronary Syndrome","diagnosis":"","scoremin":30,"scoremax":60,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Blunt trauma to the abdomen","type":1,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":40,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":87,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
     ],
@@ -75450,25 +75710,25 @@
       {"id":"Burned torso and legs from fuel","type":2,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":40,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"Dizziness","type":2,"smoke":"no","fire":"no","medical_symptoms":"Dizziness","diagnosis":"Concussion","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Heavy bleeding head wound","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":40,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":102,"bp_sys_min":78,"bp_sys_max":99,"bp_dia_min":46,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
-      {"id":"Numbness of lower extremities","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"spinal injury, paraplegia","scoremin":55,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Numbness of lower extremities","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"spinal injury, paraplegia","scoremin":55,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Amputated leg","diagnosis":"","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":99,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Visible open head wound","diagnosis":"","scoremin":25,"scoremax":30,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":83,"spo2_max":98,"bpm_min":65,"bpm_max":104,"bp_sys_min":76,"bp_sys_max":97,"bp_dia_min":45,"bp_dia_max":62,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"acute hemorrhage","diagnosis":"hypovolemic shock","scoremin":25,"scoremax":30,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":83,"spo2_max":98,"bpm_min":65,"bpm_max":104,"bp_sys_min":76,"bp_sys_max":97,"bp_dia_min":45,"bp_dia_max":62,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Disorientated","diagnosis":"traumatic brain injury (TBI)","scoremin":45,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":65,"bpm_max":81,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"spinal injury, paraplegia","scoremin":55,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"paraplegia","scoremin":55,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"spinal injury, paraplegia","scoremin":55,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"paraplegia","scoremin":55,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":0,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Numbness of hands","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Severed extremities","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Amputated arm","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":99,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated hand","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":99,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated foot","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":99,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated leg","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":99,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
-      {"id":"Suspected spinal injury","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":2,"smoke":"no","fire":"no","medical_symptoms":"Numbness of lower extremities","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"bone fracture","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"bleeding head","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":99,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Disorientated","type":2,"smoke":"no","fire":"no","medical_symptoms":"headache","diagnosis":"traumatic brain injury (TBI)","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Back pain and numbness","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"pinal injury, paraplegia","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Back pain and numbness","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"pinal injury, paraplegia","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Abdominal pain","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"Blunt trauma to the abdomen","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Visible open head wound","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":25,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":82,"spo2_max":98,"bpm_min":65,"bpm_max":105,"bp_sys_min":75,"bp_sys_max":96,"bp_dia_min":44,"bp_dia_max":61,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"abdominal hemorrhage","type":2,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":40,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":84,"spo2_max":98,"bpm_min":65,"bpm_max":103,"bp_sys_min":77,"bp_sys_max":98,"bp_dia_min":45,"bp_dia_max":62,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75478,7 +75738,7 @@
     ],
     "health3": [
       {"id":"Disorientated","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"traumatic brain injury","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Back pain and numbness","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Back pain and numbness","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Abdominal pain","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"ACS","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Visible open head wound","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"abdominal hemorrhage","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75487,7 +75747,7 @@
       {"id":"Severe bleeding abdomen","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Dislocated arm","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Collarbone fracture and rip fracture","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Suspected spinal injury","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Amputated leg","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":103,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated arm","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":80,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":75,"bpm_max":108,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated foot","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75496,11 +75756,11 @@
       {"id":"Heavy bleeding head wound","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Dizziness","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Numbness of hands","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Numbness of legs","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Numbness of legs","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury, paraplegia","scoremin":50,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":92,"spo2_max":98,"bpm_min":65,"bpm_max":80,"bp_sys_min":103,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Internal bruising","type":3,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Collarbone fracture and rip fracture","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Numbness of hands","diagnosis":"Suspected spinal injury","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Numbness of legs","diagnosis":"Suspected spinal injury","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Numbness of hands","diagnosis":"Suspected spinal injury","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Numbness of legs","diagnosis":"Suspected spinal injury","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Numbness of legs","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Dislocated arm","diagnosis":"Dislocated arm","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":3,"smoke":"no","fire":"no","medical_symptoms":"Severe bleeding abdomen","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75508,7 +75768,7 @@
     ],
     "health4": [
       {"id":"Burns","type":4,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"2nd degree burns","scoremin":30,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":90,"bp_sys_min":98,"bp_sys_max":118,"bp_dia_min":62,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
-      {"id":"Back pain and numbness","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Back pain and numbness","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Abdominal pain","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Visible open head wound","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"life-threatening hemorrhage","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75516,7 +75776,7 @@
       {"id":"acute hemorrhage","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Severe bleeding","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"bone fracture","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Suspected spinal injury","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Amputated leg","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":87,"spo2_max":98,"bpm_min":69,"bpm_max":104,"bp_sys_min":80,"bp_sys_max":101,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated hand","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Severed extremities","type":4,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":88,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
@@ -75541,7 +75801,7 @@
       {"id":"acute hemorrhage","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"severe bleeding","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"bone fracture","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Suspected spinal injury","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Amputated leg","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":45,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":105,"bp_sys_min":80,"bp_sys_max":100,"bp_dia_min":46,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated arm","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated hand","type":5,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":50,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75563,12 +75823,12 @@
       {"id":"Sharp thorax pain","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":81,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":88,"spo2_max":88,"bpm_min":69,"bpm_max":90,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5},
       {"id":"Fear of death","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"bone fracture","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Suspected spinal injury","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Dizziness","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Internal bruising","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Strong stinning chest pain","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":70,"scoremax":75,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":90,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Femur fracture","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":85,"scoremax":99,"decr_rate":0.5,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Femur fracture","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":85,"scoremax":99,"decr_rate":0.5,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":0,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Fallen from >3mt height","type":6,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":40,"scoremax":55,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":88,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
     ],
     "health7": [
@@ -75599,7 +75859,7 @@
       {"id":"abdominal hemorrhage","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":59,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":90,"spo2_max":98,"bpm_min":69,"bpm_max":101,"bp_sys_min":83,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"acute hemorrhage","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":35,"scoremax":60,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":103,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"severe bleeding","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":60,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":90,"spo2_max":98,"bpm_min":69,"bpm_max":101,"bp_sys_min":83,"bp_sys_max":104,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
-      {"id":"Suspected spinal injury","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":85,"bp_sys_min":102,"bp_sys_max":123,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Amputated hand","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":59,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":90,"spo2_max":98,"bpm_min":69,"bpm_max":101,"bp_sys_min":83,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Amputated finger","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":69,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Heavy bleeding head","type":8,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":69,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75633,7 +75893,7 @@
       {"id":"Insect bite and allergic reaction","type":10,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":65,"scoremax":79,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":126,"bp_dia_min":66,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Insect bite and allergic reaction","type":10,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":65,"scoremax":80,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Insect puncture and allergic reaction","type":10,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":55,"scoremax":79,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":93,"spo2_max":98,"bpm_min":69,"bpm_max":83,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Suspected spinal injury","type":10,"smoke":"no","fire":"no","medical_symptoms":"numbness of lower body","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":6,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":10,"smoke":"no","fire":"no","medical_symptoms":"numbness of lower body","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Dislocated arm","type":10,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"life-threatening hemorrhage","type":10,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":35,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":104,"bp_sys_min":80,"bp_sys_max":101,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Bleeding head wound","type":10,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":6,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":94,"bp_sys_min":90,"bp_sys_max":110,"bp_dia_min":52,"bp_dia_max":68,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75648,7 +75908,7 @@
     "health11": [
       {"id":"3rd degree burn","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":92,"spo2_max":98,"bpm_min":69,"bpm_max":89,"bp_sys_min":103,"bp_sys_max":124,"bp_dia_min":64,"bp_dia_max":81,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"Visible open head wound","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":90,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":93,"spo2_max":98,"bpm_min":69,"bpm_max":98,"bp_sys_min":86,"bp_sys_max":107,"bp_dia_min":50,"bp_dia_max":67,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
-      {"id":"Suspected spinal injury","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":6,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Suspected spinal injury","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"life-threatening hemorrhage","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":49,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":86,"spo2_max":98,"bpm_min":69,"bpm_max":105,"bp_sys_min":79,"bp_sys_max":100,"bp_dia_min":46,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"abdominal hemorrhage","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":69,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":91,"spo2_max":98,"bpm_min":69,"bpm_max":100,"bp_sys_min":84,"bp_sys_max":105,"bp_dia_min":49,"bp_dia_max":66,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"acute hemorrhage","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":45,"scoremax":55,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":69,"bpm_max":102,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75662,7 +75922,7 @@
       {"id":"Blisters on burned skin","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":84,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"Shiny skin","type":11,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":69,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Layers of skin peeling away","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"Burned face","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":90,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":84,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
+      {"id":"Burned face","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":90,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":0,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":84,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"Burned hands","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"3rd degree burn","scoremin":45,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":86,"bp_sys_min":106,"bp_sys_max":126,"bp_dia_min":66,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"Burned arms","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"2nd degree burn","scoremin":45,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":86,"bp_sys_min":106,"bp_sys_max":126,"bp_dia_min":66,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"Burned legs","type":11,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"3rd degree burn","scoremin":35,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":93,"spo2_max":98,"bpm_min":69,"bpm_max":88,"bp_sys_min":104,"bp_sys_max":125,"bp_dia_min":65,"bp_dia_max":82,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
@@ -75690,7 +75950,7 @@
       {"id":"Abdominal gunshot wound","type":12,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":35,"scoremax":60,"decr_rate":2,"spo2":97,"bpm":74,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":103,"bp_sys_min":81,"bp_sys_max":102,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Massive bleeding wound","type":12,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":25,"scoremax":50,"decr_rate":2,"spo2":86,"bpm":74,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":82,"spo2_max":87,"bpm_min":69,"bpm_max":105,"bp_sys_min":79,"bp_sys_max":100,"bp_dia_min":46,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Visible open head wound","type":12,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":35,"scoremax":40,"decr_rate":2,"spo2":97,"bpm":74,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":105,"bp_sys_min":80,"bp_sys_max":100,"bp_dia_min":46,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
-      {"id":"Numbness of lower extremities","type":12,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"Numbness of lower extremities","type":12,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"spinal injury","scoremin":25,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":88,"spo2_max":98,"bpm_min":65,"bpm_max":84,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Internal bruising","type":12,"medical_symptoms":"","diagnosis":"","scoremin":95,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"No info received","type":12,"smoke":"no","fire":"no","medical_symptoms":"stabbing wound","diagnosis":"abdomeninal hemorrhage","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"abdomeninal hemorrhage","type":12,"smoke":"no","fire":"no","medical_symptoms":"stabbing wound","diagnosis":"abdomeninal hemorrhage","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -75805,7 +76065,7 @@
       {"id":"shiny skin","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":87,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"2nd degree burn","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"burned flesh, layers of skin peeling away ","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
-      {"id":"burned face","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
+      {"id":"burned face","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":0,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"burned hands","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"burned arms","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
       {"id":"burned legs","type":18,"smoke":"yes","fire":"yes","medical_symptoms":"","diagnosis":"","scoremin":20,"scoremax":50,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":92,"bp_sys_min":96,"bp_sys_max":117,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39},
@@ -75831,12 +76091,12 @@
       {"id":"unconscious after stair case fall, bleeding head wound","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":20,"scoremax":45,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":85,"spo2_max":98,"bpm_min":65,"bpm_max":102,"bp_sys_min":78,"bp_sys_max":99,"bp_dia_min":46,"bp_dia_max":63,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"abdominal pain","type":19,"smoke":"no","fire":"no","medical_symptoms":"Strong stinning chest pain, Suspected heart attack (ACS)","diagnosis":"confirmed ACS","agemin":46,"agemax":65,"scoremin":25,"scoremax":35,"decr_rate":1,"spo2":97,"bpm":79,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":82,"spo2_max":98,"bpm_min":74,"bpm_max":106,"bp_sys_min":95,"bp_sys_max":116,"bp_dia_min":60,"bp_dia_max":77,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5},
       {"id":"dislocated leg after fall in gym","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":90,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"suspected spinal injury","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":90,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":6,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"suspected spinal injury","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":90,"scoremax":99,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":3,"gcs_verbal_min":5,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":5,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"pain and numb legs","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"pain and numb arms","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"back wound and numbness in hands","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":70,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":94,"bp_sys_min":90,"bp_sys_max":110,"bp_dia_min":52,"bp_dia_max":68,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"acute coronary syndrome","type":19,"smoke":"no","fire":"no","medical_symptoms":"Strong stinning chest pain, Suspected heart attack (ACS)","diagnosis":"confirmed ACS","agemin":46,"agemax":65,"scoremin":25,"scoremax":35,"decr_rate":1,"spo2":97,"bpm":79,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":82,"spo2_max":98,"bpm_min":74,"bpm_max":106,"bp_sys_min":95,"bp_sys_max":116,"bp_dia_min":60,"bp_dia_max":77,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5},
-      {"id":"femur fracture","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":18,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"femur fracture","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":18,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":0,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"radialis fracture","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":18,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"collar bone fracture","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":18,"scoremin":90,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":4,"gcs_eye_max":4,"gcs_verbal_min":5,"gcs_verbal_max":5,"gcs_motor_min":6,"gcs_motor_max":6,"spo2_min":97,"spo2_max":98,"bpm_min":69,"bpm_max":79,"bp_sys_min":108,"bp_sys_max":128,"bp_dia_min":67,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"fallen and injured head","type":19,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","agemin":6,"agemax":18,"scoremin":50,"scoremax":95,"decr_rate":1,"spo2":97,"bpm":74,"gcs_eye_min":3,"gcs_eye_max":3,"gcs_verbal_min":4,"gcs_verbal_max":4,"gcs_motor_min":5,"gcs_motor_max":5,"spo2_min":95,"spo2_max":98,"bpm_min":69,"bpm_max":81,"bp_sys_min":106,"bp_sys_max":127,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
@@ -75913,7 +76173,7 @@
       {"id":"headache after head injuries with swelling","type":24,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"GCS 10 and heavy bleeding wound","type":24,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"Syncope","type":24,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
-      {"id":"facial edema","type":24,"smoke":"no","fire":"no","medical_symptoms":"GCS 7","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
+      {"id":"facial edema","type":24,"smoke":"no","fire":"no","medical_symptoms":"GCS 7","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":0,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"Head wound","type":24,"smoke":"no","fire":"no","medical_symptoms":"GCS 6","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
       {"id":"fallen and injured head","type":24,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":83,"bp_sys_min":100,"bp_sys_max":121,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5},
       {"id":"unconscious with visible head wound","type":24,"smoke":"no","fire":"no","medical_symptoms":"","diagnosis":"","scoremin":30,"scoremax":70,"decr_rate":1,"spo2":97,"bpm":70,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":89,"spo2_max":98,"bpm_min":65,"bpm_max":98,"bp_sys_min":82,"bp_sys_max":103,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37},
@@ -76008,13 +76268,13 @@
       {"id":"RTC","type":32,"smoke":"no","fire":"no","medical_symptoms":"Visibly agitated, complains of severe thorax and abdomen pain, disoriented speech suggesting shock, bleeding into throat.","diagnosis":"Suspected internal injuries, pneumothorax, shock","agemin":1,"agemax":18,"scoremin":20,"scoremax":35,"decr_rate":2,"spo2":96,"bpm":120,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":82,"spo2_max":97,"bpm_min":115,"bpm_max":154,"bp_sys_min":76,"bp_sys_max":97,"bp_dia_min":45,"bp_dia_max":62,"rr_min":18,"rr_max":32,"temp_min":35,"temp_max":37}
     ],
     "health33": [
-      {"id":"RTC","type":33,"smoke":"no","fire":"no","medical_symptoms":"Severe hypovolemic shock, guarding in the upper left abdominal quadrant, signs of spinal cord injury, jugular vein distension, silent lung on the right, diminished breath sounds on the left, respiratory rate 35/min, minor cuts on hands.","diagnosis":"Polytrauma; suspected spleen rupture, suspected spinal trauma, pneumothorax, multiple lacerations; Allergy to penicillin, known hypertension","agemin":1,"agemax":18,"scoremin":20,"scoremax":35,"decr_rate":2,"spo2":89,"bpm":146,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":82,"spo2_max":90,"bpm_min":141,"bpm_max":160,"bp_sys_min":76,"bp_sys_max":97,"bp_dia_min":45,"bp_dia_max":62,"rr_min":18,"rr_max":32,"temp_min":35,"temp_max":37}
+      {"id":"RTC","type":33,"smoke":"no","fire":"no","medical_symptoms":"Severe hypovolemic shock, guarding in the upper left abdominal quadrant, signs of spinal cord injury, jugular vein distension, silent lung on the right, diminished breath sounds on the left, respiratory rate 35/min, minor cuts on hands.","diagnosis":"Polytrauma; suspected spleen rupture, suspected spinal trauma, pneumothorax, multiple lacerations; Allergy to penicillin, known hypertension","agemin":1,"agemax":18,"scoremin":20,"scoremax":35,"decr_rate":2,"spo2":89,"bpm":146,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":0,"gcs_motor_max":4,"spo2_min":82,"spo2_max":90,"bpm_min":141,"bpm_max":160,"bp_sys_min":76,"bp_sys_max":97,"bp_dia_min":45,"bp_dia_max":62,"rr_min":18,"rr_max":32,"temp_min":35,"temp_max":37}
     ],
     "health34": [
       {"id":"RTC","type":34,"smoke":"no","fire":"no","medical_symptoms":"Responds only to verbal stimuli, poorly oriented, no memory of the accident, was unconscious for over 5 minutes, severe headache, eyes open only to pain, disoriented verbal responses","diagnosis":"Closed moderate traumatic brain injury (TBI)","agemin":18,"agemax":67,"scoremin":20,"scoremax":35,"decr_rate":2,"spo2":98,"bpm":105,"gcs_eye_min":1,"gcs_eye_max":2,"gcs_verbal_min":2,"gcs_verbal_max":3,"gcs_motor_min":3,"gcs_motor_max":4,"spo2_min":84,"spo2_max":99,"bpm_min":100,"bpm_max":124,"bp_sys_min":94,"bp_sys_max":115,"bp_dia_min":60,"bp_dia_max":77,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
     ],
     "health35": [
-      {"id":"No pulse, no breathing, blood in the throat, pale with central cyanosis","type":35,"smoke":"no","fire":"no","medical_symptoms":"No pulse, no breathing, blood in the throat, pale with central cyanosis, bilateral diminished breath sounds, unstable chest on both sides showing paradoxical breathing, subcutaneous emphysema, pulseless electrical activity (PEA), unstable pelvis, left thigh instability, right lower leg openly fractured.","diagnosis":"Traumatic cardiac arrest with PEA due to hypovolemic shock in the context of polytrauma, suspected bilateral unstable thoracic trauma, unstable pelvic fracture, bilateral closed forearm fractures, open right tibial fracture, and closed left femoral fracture.","agemin":18,"agemax":67,"scoremin":15,"scoremax":20,"decr_rate":2,"spo2":0,"bpm":0,"gcs_eye_min":1,"gcs_eye_max":1,"gcs_verbal_min":1,"gcs_verbal_max":1,"gcs_motor_min":1,"gcs_motor_max":1,"spo2_min":82,"spo2_max":98,"bpm_min":69,"bpm_max":110,"bp_sys_min":74,"bp_sys_max":95,"bp_dia_min":44,"bp_dia_max":61,"rr_min":18,"rr_max":32,"temp_min":35,"temp_max":37}
+      {"id":"No pulse, no breathing, blood in the throat, pale with central cyanosis","type":35,"smoke":"no","fire":"no","medical_symptoms":"No pulse, no breathing, blood in the throat, pale with central cyanosis, bilateral diminished breath sounds, unstable chest on both sides showing paradoxical breathing, subcutaneous emphysema, pulseless electrical activity (PEA), unstable pelvis, left thigh instability, right lower leg openly fractured.","diagnosis":"Traumatic cardiac arrest with PEA due to hypovolemic shock in the context of polytrauma, suspected bilateral unstable thoracic trauma, unstable pelvic fracture, bilateral closed forearm fractures, open right tibial fracture, and closed left femoral fracture.","agemin":18,"agemax":67,"scoremin":15,"scoremax":20,"decr_rate":2,"spo2":0,"bpm":0,"gcs_eye_min":1,"gcs_eye_max":1,"gcs_verbal_min":1,"gcs_verbal_max":1,"gcs_motor_min":0,"gcs_motor_max":1,"spo2_min":82,"spo2_max":98,"bpm_min":69,"bpm_max":110,"bp_sys_min":74,"bp_sys_max":95,"bp_dia_min":44,"bp_dia_max":61,"rr_min":18,"rr_max":32,"temp_min":35,"temp_max":37}
     ],
     "health36": [
       {"id":"RTC","type":36,"smoke":"no","fire":"no","medical_symptoms":"Sudden severe abdominal pain, nausea, vomiting","diagnosis":"Acute pancreatitis","agemin":28,"agemax":67,"scoremin":40,"scoremax":65,"decr_rate":1,"spo2":95,"bpm":102,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":96,"bpm_min":97,"bpm_max":114,"bp_sys_min":101,"bp_sys_max":122,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
@@ -76041,7 +76301,7 @@
       {"id":"Patient experiencing a toxic reaction following local anesthesia.","type":43,"smoke":"no","fire":"no","medical_symptoms":"Tremors, seizures, confusion, tachycardia, hypertension","diagnosis":"Toxic reaction to local anesthetic, HR elevated due to systemic toxic response; prepare to manage seizures and cardiac symptoms","agemin":18,"agemax":87,"scoremin":40,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":137,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":90,"spo2_max":98,"bpm_min":132,"bpm_max":149,"bp_sys_min":101,"bp_sys_max":122,"bp_dia_min":63,"bp_dia_max":80,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
     ],
     "health44": [
-      {"id":"wheezing and rattling breath sounds, similar to an asthma attack. Known allergic asthma, no previous reactions to insect venom","type":44,"smoke":"no","fire":"no","medical_symptoms":"acute dyspnea, extremely labored breathing, pronounced tachypnea, increasing vigilance reduction (CO2 narcosis) due to respiratory muscle fatigue.","diagnosis":"Severe asthmatic attack, various allergies. Immediate intubation and ventilation required!","agemin":18,"agemax":77,"scoremin":25,"scoremax":50,"decr_rate":1,"spo2":91,"bpm":132,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":82,"spo2_max":92,"bpm_min":127,"bpm_max":157,"bp_sys_min":97,"bp_sys_max":118,"bp_dia_min":61,"bp_dia_max":78,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
+      {"id":"wheezing and rattling breath sounds, similar to an asthma attack. Known allergic asthma, no previous reactions to insect venom","type":44,"smoke":"no","fire":"no","medical_symptoms":"acute dyspnea, extremely labored breathing, pronounced tachypnea, increasing vigilance reduction (CO2 narcosis) due to respiratory muscle fatigue.","diagnosis":"Severe asthmatic attack, various allergies. Immediate intubation and ventilation required!","agemin":18,"agemax":77,"scoremin":25,"scoremax":50,"decr_rate":1,"spo2":91,"bpm":132,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":0,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":82,"spo2_max":92,"bpm_min":127,"bpm_max":157,"bp_sys_min":97,"bp_sys_max":118,"bp_dia_min":61,"bp_dia_max":78,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
     ],
     "health45": [
       {"id":"responsive, pain in arm and leg, unable to continue","type":45,"smoke":"no","fire":"no","medical_symptoms":"Abnormal alignment of the right forearm and left lower leg","diagnosis":"Closed right forearm fracture, closed left lower leg fracture","agemin":15,"agemax":67,"scoremin":70,"scoremax":85,"decr_rate":1,"spo2":96,"bpm":90,"gcs_eye_min":3,"gcs_eye_max":4,"gcs_verbal_min":4,"gcs_verbal_max":5,"gcs_motor_min":5,"gcs_motor_max":6,"spo2_min":95,"spo2_max":97,"bpm_min":85,"bpm_max":96,"bp_sys_min":107,"bp_sys_max":128,"bp_dia_min":66,"bp_dia_max":83,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
@@ -76059,10 +76319,10 @@
       {"id":"Ski-induced laceration to the hand, bleeding heavily.","type":49,"smoke":"no","fire":"no","medical_symptoms":"Deep laceration on right hand between thumb and index finger, soft tissue involvement, suspected ligament rupture","diagnosis":"Suspected rupture of flexor digitorum superficialis tendons for fingers II and III.","agemin":15,"agemax":77,"scoremin":40,"scoremax":65,"decr_rate":1,"spo2":97,"bpm":89,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":90,"spo2_max":98,"bpm_min":84,"bpm_max":116,"bp_sys_min":83,"bp_sys_max":104,"bp_dia_min":48,"bp_dia_max":65,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37}
     ],
     "health50": [
-      {"id":"Skier veered off course, severely injured, substantial blood visible beside.","type":50,"smoke":"no","fire":"no","medical_symptoms":"Responsive, post-fall facial injuries, open facial skull injury","diagnosis":"Open traumatic brain injury, hypovolemic shock, analgesia and sedation applied, intubated and mechanically ventilated","agemin":21,"agemax":70,"scoremin":30,"scoremax":55,"decr_rate":1,"spo2":96,"bpm":110,"gcs_eye_min":2,"gcs_eye_max":2,"gcs_verbal_min":3,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":97,"bpm_min":105,"bpm_max":140,"bp_sys_min":80,"bp_sys_max":101,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37}
+      {"id":"Skier veered off course, severely injured, substantial blood visible beside.","type":50,"smoke":"no","fire":"no","medical_symptoms":"Responsive, post-fall facial injuries, open facial skull injury","diagnosis":"Open traumatic brain injury, hypovolemic shock, analgesia and sedation applied, intubated and mechanically ventilated","agemin":21,"agemax":70,"scoremin":30,"scoremax":55,"decr_rate":1,"spo2":96,"bpm":110,"gcs_eye_min":0,"gcs_eye_max":2,"gcs_verbal_min":0,"gcs_verbal_max":3,"gcs_motor_min":4,"gcs_motor_max":4,"spo2_min":88,"spo2_max":97,"bpm_min":105,"bpm_max":140,"bp_sys_min":80,"bp_sys_max":101,"bp_dia_min":47,"bp_dia_max":64,"rr_min":16,"rr_max":28,"temp_min":35,"temp_max":37}
     ],
     "health51": [
-      {"id":"Skier fell on an icy slope, impacting the chest, now experiencing severe pain and difficulty breathing.","type":51,"smoke":"no","fire":"no","medical_symptoms":"Paradoxical breathing, severe thoracic pain, dyspnea, respiratory exhaustion","diagnosis":"Serial rib fractures with unstable thorax, analgesia and sedation applied, intubated and mechanically ventilated","agemin":16,"agemax":67,"scoremin":40,"scoremax":65,"decr_rate":1,"spo2":94,"bpm":94,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":95,"bpm_min":89,"bpm_max":115,"bp_sys_min":101,"bp_sys_max":122,"bp_dia_min":63,"bp_dia_max":80,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
+      {"id":"Skier fell on an icy slope, impacting the chest, now experiencing severe pain and difficulty breathing.","type":51,"smoke":"no","fire":"no","medical_symptoms":"Paradoxical breathing, severe thoracic pain, dyspnea, respiratory exhaustion","diagnosis":"Serial rib fractures with unstable thorax, analgesia and sedation applied, intubated and mechanically ventilated","agemin":16,"agemax":67,"scoremin":40,"scoremax":65,"decr_rate":1,"spo2":94,"bpm":94,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":0,"gcs_verbal_max":4,"gcs_motor_min":0,"gcs_motor_max":6,"spo2_min":88,"spo2_max":95,"bpm_min":89,"bpm_max":115,"bp_sys_min":101,"bp_sys_max":122,"bp_dia_min":63,"bp_dia_max":80,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
     ],
     "health52": [
       {"id":"Electrical accident, patient unresponsive.","type":52,"smoke":"no","fire":"no","medical_symptoms":"Unresponsiveness, possible burns, arrhythmia","diagnosis":"Electrical injury with potential cardiac and neurological complications","agemin":24,"agemax":67,"scoremin":30,"scoremax":65,"decr_rate":1,"spo2":94,"bpm":110,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":95,"bpm_min":105,"bpm_max":129,"bp_sys_min":99,"bp_sys_max":120,"bp_dia_min":62,"bp_dia_max":79,"rr_min":12,"rr_max":20,"temp_min":36.8,"temp_max":39}
@@ -76077,7 +76337,7 @@
       {"id":"Unresponsive, no pulse, sudden collaps","type":55,"smoke":"no","fire":"no","medical_symptoms":"No breathing, no pulse, history of 4xACVb","diagnosis":"Ventricular fibrillation","agemin":24,"agemax":84,"scoremin":30,"scoremax":45,"decr_rate":2,"spo2":0,"bpm":0,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":98,"bpm_min":69,"bpm_max":90,"bp_sys_min":97,"bp_sys_max":118,"bp_dia_min":61,"bp_dia_max":78,"rr_min":12,"rr_max":20,"temp_min":36.2,"temp_max":37.5}
     ],
     "health56": [
-      {"id":"Tracheostomy patient experiencing respiratory distress.","type":56,"smoke":"no","fire":"no","medical_symptoms":"Difficulty breathing, stridor, coughing spells","diagnosis":"Duchenne muscular dystrophy, obstructed tracheal cannula","agemin":48,"agemax":97,"scoremin":30,"scoremax":45,"decr_rate":2,"spo2":88,"bpm":100,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":2,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":89,"bpm_min":95,"bpm_max":125,"bp_sys_min":97,"bp_sys_max":118,"bp_dia_min":61,"bp_dia_max":78,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
+      {"id":"Tracheostomy patient experiencing respiratory distress.","type":56,"smoke":"no","fire":"no","medical_symptoms":"Difficulty breathing, stridor, coughing spells","diagnosis":"Duchenne muscular dystrophy, obstructed tracheal cannula","agemin":48,"agemax":97,"scoremin":30,"scoremax":45,"decr_rate":2,"spo2":88,"bpm":100,"gcs_eye_min":1,"gcs_eye_max":3,"gcs_verbal_min":0,"gcs_verbal_max":4,"gcs_motor_min":3,"gcs_motor_max":5,"spo2_min":88,"spo2_max":89,"bpm_min":95,"bpm_max":125,"bp_sys_min":97,"bp_sys_max":118,"bp_dia_min":61,"bp_dia_max":78,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
     ],
     "health57": [
       {"id":"Acute asthma attack","type":57,"smoke":"no","fire":"no","medical_symptoms":"Shortness of breath, wheezing on exhalation","diagnosis":"Exacerbated asthma","agemin":24,"agemax":84,"scoremin":50,"scoremax":55,"decr_rate":1,"spo2":90,"bpm":101,"gcs_eye_min":2,"gcs_eye_max":4,"gcs_verbal_min":3,"gcs_verbal_max":4,"gcs_motor_min":4,"gcs_motor_max":6,"spo2_min":88,"spo2_max":91,"bpm_min":96,"bpm_max":122,"bp_sys_min":101,"bp_sys_max":122,"bp_dia_min":63,"bp_dia_max":80,"rr_min":18,"rr_max":32,"temp_min":36.2,"temp_max":37.5}
