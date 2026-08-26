@@ -1,5 +1,13 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Per-diagnosis physiology profiles and vital-sign trend - release 0.997 53
+
+- Advanced the release title to `0.997 53`.
+- Replaced the category-level physiology table with explicit GCS and vital-sign bounds in every one of the 609 `health*` diagnosis records.
+- Patient 1 now initializes solely from the selected record, enabling later diagnosis-by-diagnosis tuning without changing controller logic.
+- Added a 20-40 second patient-1 monitor for restrained random variation; hypoxia, low lifescore, and CPR rules remain the dominant trend.
+- Strict JSON parsing succeeds with 511 macros. No pull request was created.
+
 ## Patient 1 physiology and Glasgow Coma Scale - release 0.997 52
 
 - Advanced the release title to `0.997 52`.
