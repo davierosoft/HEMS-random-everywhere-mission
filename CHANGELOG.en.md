@@ -1,5 +1,13 @@
 # HEMS Random and Everywhere Missions - Consolidated Changelog
 
+## Patient 1 physiology and Glasgow Coma Scale - release 0.997 52
+
+- Advanced the release title to `0.997 52`.
+- Added 107 pathology-type profiles for patient 1. Each provides bounded initial ranges for GCS eye/verbal/motor responses, SpO2, heart rate, blood pressure, respiratory rate, and temperature.
+- Added BP, RR, temperature, and component GCS plus total GCS to the medical page. GCS uses the complete E1-V1-M1 minimum, therefore GCS 3 represents coma.
+- Patient 1 now links falling SpO2 with tachycardia/tachypnea in moderate hypoxia, then falling HR, RR, and systolic BP in severe hypoxia. CPR explicitly shows GCS 3, RR 0, and compression-state BP.
+- Strict JSON parsing succeeds with 511 macros. No pull request was created.
+
 ## Custom marshal icon and transparent hospital marker - release 0.997 51
 
 - Advanced the release title to `0.997 51`; the artifact remains `everywhere_all.json`.
