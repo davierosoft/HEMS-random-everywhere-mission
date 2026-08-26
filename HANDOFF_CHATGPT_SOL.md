@@ -1,3 +1,32 @@
+## Release 0.997 55
+
+Release 0.997 55 combines the requested marshal-touchdown interlock, patient-1 vital-sign correction, and opaque cropped medical icons.
+
+### Marshal state-machine changes
+
+- The common scene marshal and heli-rescuer marshal (`pisteur3`) now keep approach armed after an accidental, brief ground contact.
+- Departure may arm only after either:
+  1. the controller had already selected `VAR 1 = 4` (LAND) while inside the configured landing area; or
+  2. rotor RPM falls below 80%, which is the explicit sustained shutdown/land-elsewhere signal.
+- `*_wind_rotation_lock` activates inside 150 m, on the ground, or after a landing commit. This stops the old wind worker before the final approach. A one-shot `*_final_facing_done` command points the marshal at the helicopter after a committed landing. The latch is cleared once a new distant airborne approach is armed.
+- The implementation alters locals and guarded object orientation only; it does not introduce a second `VAR 1` writer.
+
+### Patient-1 physiology and page
+
+- All 609 health records retain their diagnosis-specific profile fields but no longer contain an initial range that can create zero/negative telemetry for a living patient. Values are constrained by lifescore: >=30 has at least SpO2 88%, HR 40, BP 80/45, RR 8 and temperature 35 C; lower positive lifescores allow moribund values but remain non-zero.
+- Initialization falls back if a profile field is null or zero, randomizes integer GCS E/V/M values, and enforces systolic > diastolic.
+- The pre-existing `life decrease` thread now waits for the established 0.8 scene-distance gate before the first decrease. Its `decr_rate` and randomized decrease mechanics otherwise remain in place.
+- GCS is placed directly below the gray emergency-code explanation and is shown only after the same `RESCUED/SAVED/MISSION_PHASE` conditions already used by HR/SpO2. Its three explanatory rows remain separate and gray. BP, RR and temperature use their own custom icons, show only post-visit, and turn red outside their stated critical ranges.
+- The four custom PNG data URIs use opaque black backgrounds and compact crops, because transparent pixels are displayed white by the tablet renderer.
+
+### Required MSFS test sequence
+
+1. Start an approach, briefly touch ground before a LAND signal, then lift off: approach must continue and departure must remain disarmed.
+2. Complete a commanded landing: marshal must stop wind movement, face the helicopter once, and then run the established restart/departure sequence.
+3. Land away from the designated spot, shut down below 80% Nr: approach may hand over to departure/idle as the intentional shutdown case.
+4. Open Medical page before and after visiting patient 1. Before the visit, no GCS/BP/RR/temp rows should appear. Afterwards, values must be non-zero for lifescore >0, GCS components must be integers, and icon backgrounds must be black without white margins.
+5. Verify lifescore remains unchanged while travelling to the scene, then begins its existing randomized `decr_rate` progression only inside the 0.8 gate.
+
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
 ## Release 0.997 54
