@@ -1,3 +1,10 @@
+## GCS display separator refinement - release 0.997 57
+
+- Advanced the release title to `0.997 57`.
+- Reformatted every GCS display row as `E: value // V: value // M: value`.
+- The Not Testable variant now displays `// Total: NT`; it still has no numeric total and remains yellow.
+- Strict JSON parsing succeeds with 511 macros. No pull request was created.
+
 ## GCS Not Testable component handling - release 0.997 56
 
 - Advanced the release title to `0.997 56`.
