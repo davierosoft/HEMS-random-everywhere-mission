@@ -1,5 +1,11 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
+## Release 0.997 54
+
+Release 0.997 54 fixes patient-1 physiology initialization: profile values are copied inside the pathology-selection context, then read from locals by the initializer. This eliminates the 0/0 mmHg, 0/min, 0.0 C, and GCS 0 display seen in testing. A normal fallback remains only for missing data.
+
+Vitals and their small monitor variations begin after the existing 0.8 scene-distance gate; the original lifescore decay and `decr_rate` behavior are retained. Medical page shows separate icon rows for BP, RR, temperature, and GCS; E/V/M explanations are three individual lines. No pull request was created.
+
 ## Release 0.997 53
 
 Release 0.997 53 moves patient-1 physiology from 107 aggregate category profiles to 609 individual diagnosis records. Every `health*` record now contains bounds for E/V/M GCS, SpO2, HR, systolic/diastolic BP, RR, and temperature. Patient 1 reads the selected diagnosis directly.
