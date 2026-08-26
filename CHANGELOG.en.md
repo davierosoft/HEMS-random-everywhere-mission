@@ -1,3 +1,12 @@
+## GCS Not Testable component handling - release 0.997 56
+
+- Advanced the release title to `0.997 56`.
+- Implemented `0` as the internal randomizable Not Testable (NT) value for patient-1 GCS components. Compatible diagnosis profiles now include zero in the relevant component range: facial burn/edema or compatible facial trauma for E; intubation, tracheostomy, aphasia, or dysphasia for V; spinal/paralytic or severe movement-preventing fracture trauma for M.
+- The existing random component draw can therefore select NT case-by-case instead of making a diagnosis permanently NT.
+- If E, V, or M resolves to zero, the page renders `NT` for that component and a single yellow `GCS: E… V… M… - NT (no total)` row. The score total is not displayed and none of the green/yellow/red numeric-total rows can render.
+- When all components are testable, the integral E/V/M and the normal total/colour thresholds remain unchanged. CPR and low-lifescore processing preserve a pre-existing NT component instead of overwriting it with `1`.
+- Strict JSON parsing succeeds with 511 macros and 609 diagnosis records. No pull request was created.
+
 ## Marshal touchdown interlock, coherent patient telemetry, and cropped medical icons - release 0.997 55
 
 - Advanced the release title to `0.997 55`.
