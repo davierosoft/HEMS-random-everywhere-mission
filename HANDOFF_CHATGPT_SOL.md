@@ -1,5 +1,13 @@
 # HEMS Random and Everywhere Missions - Handoff for ChatGPT SOL
 
+## Release 0.997 52
+
+Patient 1 now has a pathology-profiled physiology model and full GCS display. Release title: `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 52`; JSON parses with 511 macros. No pull request was created.
+
+There are 107 profiles, one for each existing pathology list. They bound initial GCS E/V/M, SpO2, HR, BP, RR, and temperature. The page records component GCS plus the total; it includes all official response levels, including None = 1. At LIFESCORE below 18 the simulation records E1 V1 M1, total GCS 3. CPR is represented explicitly as GCS 3, RR 0 and compression-state pressure.
+
+Test selection, declining SpO2, severe hypoxia, and CPR on patient 1 before extending this model to patients 2-5. The Technical-page marshal button edits already present on main were preserved.
+
 ## Release 0.997 51
 
 Release 0.997 51 adds the requested custom-location marshal icon and corrects custom-hospital icon transparency. The mission title is `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 51`; strict JSON parsing confirms 509 macros. No pull request was created.
