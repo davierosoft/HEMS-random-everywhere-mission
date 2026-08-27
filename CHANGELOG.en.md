@@ -1,3 +1,13 @@
+## HPG query compatibility and full structural audit - release 0.997 64
+
+- Advanced the release title to `0.997 64`.
+- Replaced the release-63 nested boolean operands that caused the medical-page `TypeError` with flat, explicit local flags. Blood pressure, respiratory rate and body-temperature critical display now use `BP_CRITICAL`, `RR_CRITICAL` and `TEMP_CRITICAL` respectively.
+- Reworked CPR provider eligibility as the flat `cpr_provider_present` flag, preserving the existing HEMS/ambulance priority while removing the incompatible nested `or` from its gate.
+- Reworked the marshal and pisteur3 ground-transition gate as per-controller `*_landing_authorized` flags. The final transition is now a flat HPG condition: ground, within the appropriate landing area, and an authorized LAND/RPM state. The controller macros contain no nested logical query.
+- Audited the full 512-macro mission: valid JSON; 4,006 `require` nodes all have a comparator; 1,353 `and`/`or` nodes are arrays; 773 threads have command arrays; all 150 `while` loops have `do` arrays; and all dispatch widget conditions are objects.
+- Static macro-reference audit found no newly introduced dangling reference. One unrelated literal `beforetockl` call has been absent since release 46; it remains untouched because recreating its intended checklist would be a separate feature change. Dynamic `ELT {local:ELT}` calls resolve to the existing normal/crash macros.
+- Strict JSON parsing succeeds. Only `patient health`, `CPR`, `reset marshall guidance`, and `marshaller animation monitor` changed. No pull request was created.
+
 ## Restore historical patient-decrease activation behaviour - release 0.997 62
 
 - Advanced the release title to `0.997 62`.
