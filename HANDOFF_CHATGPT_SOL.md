@@ -1,3 +1,12 @@
+## Release 0.997 60
+
+Release 0.997 60 is a formatting-only correction to release 59.
+
+- The mission source was restored from the approved compact release-58 text instead of being serialized as a new whole-file layout.
+- Release-59 behaviour is retained exactly. The only semantic regions present in the diff are the three integration macros and `on-site operations progress monitor`.
+- Keep this formatting contract for every later edit: retain the existing file layout, alter only the necessary macro/data lines, keep simple commands on one line, keep each data entry on one line, preserve compact consecutive command closures, and never reserialize the whole mission through a generic JSON formatter.
+- Structural audit: data, threads, locations, icons, objects, user actions, objectives, briefing, and every unrelated macro match the formatted release-58 source. The file remains valid JSON with 512 macros.
+
 ## Release 0.997 59
 
 Release 0.997 59 adds an on-site progress display for users who need to distinguish ordinary long scene procedures from a stalled mission.
