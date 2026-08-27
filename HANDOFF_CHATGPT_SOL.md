@@ -1,3 +1,52 @@
+## Release 0.997 58
+
+Release 0.997 58 replaces the previous CPR implementation with a guarded simulation controller and adds the requested manual stop.
+
+### CPR state contract
+
+- `L:CPR = 0`: idle.
+- `L:CPR = 1`: CPR requested. For an onboard patient without mCPR this is the explicit “awaiting landing” state; vitals continue to deteriorate normally.
+- `L:CPR = 2`: active CPR. `cpr_active = 1`, `cpr_elapsed` increases in five-second steps, and the two legacy lifescore monitors wait rather than writing competing values.
+- `L:CPR = 3`: ROSC. It requires at least 90 seconds of CPR plus recovery across lifescore, HR, SpO2, systolic BP and RR; it is not triggered by a BPM value alone.
+- `L:CPR = 4`: unsuccessful CPR/death-path outcome.
+- `L:CPR = 5`: manual stop. `cpr_manual_stop = 1` blocks an automatic restart until the next dispatch reset, while normal deterioration remains enabled.
+
+`cpr_armed` is set synchronously before the worker thread starts. This is the concurrency interlock for the existing `life decrease` and `Life rescued` callers; both may still request CPR, but only the first can own it.
+
+### mCPR and provider selection
+
+- Persistent global: `MCPR_ONBOARD`, initialized once to `"no"`. The setting is at **Settings → Scene/Vehicles → Medical Options**.
+- A rescued patient with mCPR enabled begins CPR even in flight. With mCPR disabled, the controller waits for `SIM ON GROUND = 1`; no separate hoist exception remains, so ground/hoist/skid paths use one landing gate.
+- On scene, HEMS is selected if `crewvisiting1 = yes`; otherwise an ambulance is selected only after `ambu1arrived` or `ambu2arrived` is `yes`. This gives HEMS priority when both are available.
+- The H145 cabin CPR animation is only triggered for HEMS CPR after the patient is rescued. Scene/ambulance CPR stays in logic/UI rather than falsely animating the cabin.
+
+### Medical page and STOP CPR
+
+- Active CPR is shown for scene or onboard cases, with provider and elapsed time.
+- After `cpr_elapsed >= 300`, the Medical page displays the warning and **STOP CPR** button.
+- STOP writes state 5. The worker clears compression rate, releases the two health monitors, sets the manual-stop latch, and does not raise any vital sign or lifescore.
+- The compression-rate display is no longer cleared merely by opening the Medical page.
+
+### Indoor privacy screens
+
+- Every item in `data.accidents` has `indoor_scene: "yes" | "no"`.
+- `missionupdate` assigns it to the live local; `fence road` requires `indoor_scene != "yes"` before creating an ambulance or police privacy screen.
+- Indoor IDs are determined from the actual indoor location macros: apartments/hotels, nursing homes, schools, factories, doctors’ offices, train stations and supermarkets. Garden, road, outdoor and SAR scenes remain eligible for fences.
+
+### Formatting
+
+- The full mission is compacted deliberately: one line per macro command and one line per `data` entry. This preserves the requested same-line closing delimiters and removes the prior multi-megabyte indentation growth.
+- Do not run a whole-file pretty-printer with deep indentation; use the compact formatter contract above for future edits.
+
+### Required MSFS validation
+
+1. With mCPR disabled, induce a low-score arrest after boarding while airborne: CPR must show state 1 and wait for landing, then begin only on the ground.
+2. Repeat with mCPR installed: state 2 must begin in flight; no second loop may alternate `L:CPR` or CPR animation.
+3. Trigger arrest on scene with HEMS and an ambulance present: HEMS must be reported as provider. Repeat before HEMS visit with an arrived ambulance: ambulance must be reported.
+4. Let active CPR reach five minutes, press **STOP CPR**, and verify no vital sign improves, no restart occurs, and the normal death path remains possible.
+5. Run an apartment/hotel and a road RTC: no `fence` object in the former; normal police/ambulance fence in the latter.
+6. Reopen the Medical page during CPR and verify the compression-rate row persists.
+
 ## Release 0.997 57
 
 Release 0.997 57 changes only the tablet GCS text format.
