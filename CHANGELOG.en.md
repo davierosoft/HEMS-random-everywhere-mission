@@ -1,3 +1,15 @@
+## CPR state machine, mCPR option, privacy screens, and manual stop - release 0.997 58
+
+- Advanced the release title to `0.997 58`.
+- Replaced the former CPR sequence with one guarded state machine: state 1 is a request/landing wait, state 2 is active CPR, state 3 is ROSC, state 4 is unsuccessful CPR, and state 5 is a crew-directed stop. The new `cpr_armed` latch prevents the scene and onboard health monitors from starting concurrent procedures.
+- Added the persistent `MCPR_ONBOARD` option under **Settings → Scene/Vehicles → Medical Options**. It defaults to “not installed”; when installed, a rescued patient can receive simulated CPR in flight. Without it, CPR waits for `SIM ON GROUND`, uniformly covering ground, hoist, and skid workflows.
+- Scene CPR now chooses the HEMS crew whenever it has visited the patient; otherwise an already-arrived ambulance crew may provide it. The cabin CPR animation is limited to HEMS CPR for a rescued patient, avoiding a cabin animation on the scene.
+- Active CPR updates lifescore, HR, SpO2, systolic/diastolic pressure and respiratory rate every five seconds with variable outcomes. ROSC now requires a sustained multi-parameter recovery; a single BPM threshold cannot complete CPR.
+- Added a Medical page **STOP CPR** button after five minutes of active CPR. It stops compressions, does not improve the patient, blocks automatic re-entry for the current dispatch, and lets the ordinary critical deterioration/death logic resume.
+- Added `indoor_scene` to all 68 mission-ID records and passes it through `missionupdate`. Ambulance and police privacy fences are skipped for indoor locations (apartments/hotels, nursing homes, schools, factories, doctors’ offices, stations and supermarkets).
+- Restored compact mission formatting: each macro command and each `data` entry occupies one line, same-command closing delimiters remain together, and unnecessary indentation was removed. The mission file is now 7,511,942 bytes (down from 9,327,684) while remaining valid JSON.
+- Strict JSON parsing succeeds with 511 macros, 68 mission IDs, and 609 diagnosis records. No pull request was created.
+
 ## GCS display separator refinement - release 0.997 57
 
 - Advanced the release title to `0.997 57`.
