@@ -1,3 +1,32 @@
+## Release 0.997 59
+
+Release 0.997 59 adds an on-site progress display for users who need to distinguish ordinary long scene procedures from a stalled mission.
+
+### Dispatch progress contract
+
+- `L:SATISFACTION` is a per-dispatch LVAR and is reset to 0 in Objective 1.
+- The green Mission Dispatch progress bar is visible only when `ops_progress_active = 1`, which is set immediately as the ground crew operation begins.
+- A single deduplicated `on-site operations progress monitor` runs every two seconds. It must never start a second worker when the Dispatch page is reopened.
+- Progress stages and upper bounds:
+  - Crew deployment: 0-18.
+  - Patient assessment/treatment: interpolated toward 55 using `TIMERGND`.
+  - CPR: a separate slow band to 65 while `L:CPR` is 1 or 2.
+  - Patient loading / crew return: toward 88 after clinical care or stretcher-loading states.
+  - Final crew return: toward 95 after the patient has loaded.
+  - Completion: exactly 100 only when `L:HOISTED = 1` or `L:DISPATCH_ENDED != 0`.
+- `TIMERGND` is explicitly not an operation-wide duration. It contains visit timing only; movement between patients, CPR, stretcher activity and return are represented by separate live milestones.
+- If the value does not increase for 120 seconds, `ops_progress_warning = 1` and the Dispatch page shows an orange diagnostic row. The monitor does not call `set_message`, so it cannot erase an active operational instruction.
+- Reset locals: `ops_progress_active`, `ops_progress_monitor`, `ops_progress_stage`, `ops_progress_warning`, `ops_progress_stalled_seconds`, `ops_progress_last`, and the visit-plan locals.
+
+### Runtime test
+
+1. Begin a 3-crew ground operation: bar appears at 0 and changes during crew deployment.
+2. Confirm that it continues through a normal `TIME1*` visit, but cannot exceed 55 before a real later milestone.
+3. Trigger CPR and confirm the stage changes without a false completion.
+4. Test stretcher/ambulance and direct HEMS loading paths; each must progress only after its actual local changes.
+5. Confirm `HOISTED = 1` produces 100 and that the next Objective 1 dispatch begins from a hidden/reset bar.
+6. Force a genuine blocked state for at least 120 seconds and confirm the orange Dispatch warning appears once without replacing the mission message.
+
 ## Release 0.997 58
 
 Release 0.997 58 replaces the previous CPR implementation with a guarded simulation controller and adds the requested manual stop.
