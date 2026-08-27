@@ -1,3 +1,16 @@
+## Release 0.997 62
+
+Release 0.997 62 restores the historical patient-deterioration activation behaviour while keeping the Objective 2 deadlock fix.
+
+- Source audit: release 46 and release 54 have no distance wait at the start of the `life decrease` worker. The first deterioration pass begins after `injured_human` exists.
+- The previous `distance < 0.8` wait remains later in the loop, after the timed first segment. The historical `distance < 0.2` wait also remains before the next cycle.
+- Current structure: `life decrease` returns immediately after creating its worker; the worker waits for the patient object, then runs the historic loop. It no longer waits for 0.8 before the first pass, so Objective 2 cannot stall at 20%.
+- Test from a distant base with a low-lifescore patient: loading must pass 20%; record whether the patient remains viable at normal transit time and whether a very critical patient can still deteriorate before arrival.
+
+## Release 0.997 61
+
+Release 0.997 61 moved the synchronous patient-existence and distance waits from `life decrease` into its worker, fixing the Objective 2 block. Release 62 refines that worker by restoring the historical absence of an initial distance gate.
+
 ## Release 0.997 60
 
 Release 0.997 60 is a formatting-only correction to release 59.
