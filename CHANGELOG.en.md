@@ -1,3 +1,11 @@
+## Mission source formatting restoration - release 0.997 60
+
+- Advanced the release title to `0.997 60`.
+- Restored the established compact/manual mission formatting after the accidental whole-file serialization in release 59. The file now again follows the accepted source layout: one top-level macro command per line, compact same-command closures, one data record per line, and no newly expanded whitespace.
+- Rebased the source text on the already formatted release-58 artifact, then reapplied only the release-59 progress-monitor semantics. The only changed macro regions are `Mission dispatch`, `ground ops`, `objective1`, and the new `on-site operations progress monitor`.
+- Data records, background threads, locations, icons, objects, user actions, objectives, briefing, and all unrelated macros are structurally identical to the formatted release-58 source. No progress logic was changed by this formatting-only correction.
+- Strict JSON parsing succeeds with 512 macros. No pull request was created.
+
 ## On-site dispatch progress bar and stall indication - release 0.997 59
 
 - Advanced the release title to `0.997 59`.
