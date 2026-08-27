@@ -1,3 +1,12 @@
+## On-site dispatch progress bar and stall indication - release 0.997 59
+
+- Advanced the release title to `0.997 59`.
+- Added a green `0-100` progress bar to Mission Dispatch, driven by the dedicated `L:SATISFACTION` LVAR. It becomes visible only once ground crew operations begin, starts at 0 during crew deployment, and preserves the completed 100% state until the next dispatch reset.
+- The bar is milestone-driven rather than a fictional total timer: crew deployment reaches at most 18%; the clinical visit uses the existing calculated `TIMERGND` only to interpolate its own portion up to 55%; active CPR advances only within its own limited band; loading/crew-return and final-return stages advance separately; only actual `HOISTED = 1` or dispatch end completes the bar at 100%.
+- The monitor samples every two seconds and is deduplicated per dispatch. Objective 1 resets the new LVAR and all monitor locals, preventing stale state across mission reloads.
+- After two minutes without an increase, the Dispatch page displays one orange diagnostic line asking the user to check crew, patient, vehicle, or aircraft state. It does not overwrite the mission's operational messages.
+- Strict JSON parsing succeeds with 512 macros. No pull request was created.
+
 ## CPR state machine, mCPR option, privacy screens, and manual stop - release 0.997 58
 
 - Advanced the release title to `0.997 58`.
