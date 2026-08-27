@@ -1,3 +1,19 @@
+## Restore historical patient-decrease activation behaviour - release 0.997 62
+
+- Advanced the release title to `0.997 62`.
+- Audited the original release-46 source and the pre-change release 54. Neither had a distance gate at the start of the `life decrease` worker. The first deterioration pass began immediately after the patient existed.
+- Restored that behaviour while retaining the release-61 non-blocking worker structure. The accidental initial `distance < 0.8` gate was removed.
+- Preserved the two historical in-loop gates unchanged: `distance < 0.8` after the timed first deterioration segment, and `distance < 0.2` before the next deterioration cycle. A critical patient can therefore still deteriorate if the crew does not arrive in time, without blocking Objective 2.
+- The change is limited to `life decrease`; all marshal, progress-monitor, CPR, patient-selection and display logic is unchanged.
+- Strict JSON parsing succeeds with 512 macros. No pull request was created.
+
+## Objective 2 initialization deadlock correction - release 0.997 61
+
+- Advanced the release title to `0.997 61`.
+- Corrected the synchronous Objective 2 deadlock: `random injured` invokes `life decrease` during scene creation, so its patient-existence/distance waits could not run outside the worker.
+- Moved the waits to the existing worker thread, allowing scene generation and cabin preparation to continue. Release 62 subsequently restores the historical activation-distance behaviour inside that worker.
+- Strict JSON parsing succeeds with 512 macros. No pull request was created.
+
 ## Mission source formatting restoration - release 0.997 60
 
 - Advanced the release title to `0.997 60`.
