@@ -1,3 +1,14 @@
+## Release 0.997 64
+
+Release 0.997 64 supersedes the release-63 condition repair with HPG-compatible flat conditions and a full structural audit.
+
+- Why release 63 still failed: HPG treats `and`/`or` as query operands. Adding `eq: 1` to a nested operand made the medical widget invalid and caused the `Symbol.iterator` TypeError.
+- Medical display: three critical-vitals flags are recomputed before `set_dispatch`; the three red widgets use flat `and` conditions only. The original normal/critical ranges are unchanged.
+- CPR: `cpr_provider_present` is reset then set by HEMS or either ambulance before the existing CPR eligibility condition is evaluated.
+- Marshal/pisteur3: `*_landing_authorized` is recomputed in the singleton controller and the ground transition is flat. It needs ground state + distance inside its own landing circle + VAR1 LAND or NR below 80. A touch outside the circle cannot arm departure.
+- Audit results: 512 macros; valid JSON; zero `require` missing a comparator; zero non-array `and`/`or`; zero malformed thread/while command lists; zero malformed dispatch-widget conditions. The only literal macro call without a definition is the pre-existing release-46 `beforetockl` link. Do not replace it without a defined checklist scope.
+- Regression test: open the medical page only after patient assessment and exercise normal/critical BP, RR and temperature. Then test scene/manual marshal approach, an accidental ground tap outside the landing circle, a commanded landing, prime-pump restart, hover and route departure. Verify the HEMS/ambulance CPR provider gate for each availability combination.
+
 ## Release 0.997 62
 
 Release 0.997 62 restores the historical patient-deterioration activation behaviour while keeping the Objective 2 deadlock fix.
