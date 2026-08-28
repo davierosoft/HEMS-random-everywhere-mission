@@ -1,3 +1,13 @@
+## Indoor privacy-fence, ground-stretcher, and clinical-assessment corrections - release 0.997 65
+
+- Advanced the release title to `0.997 65`.
+- Kept `fence road` conditional on `indoor_scene`, but now derive that flag immediately after every one of the eight mission-query assignments. The exact selected query, rather than the pathology, marks apartments/hotels, nursing homes, schools, factories, doctors offices, train stations, and supermarkets as indoor. This repairs the randomize path that previously omitted the flag and could create a fence in an indoor cardiovascular case.
+- Restored the far-ambulance stretcher approach for 3-crew and 4/5-crew ground operations: the hoist operator now travels through `200 degrees / 5 m` before the final `185 degrees / 1.5 m` position. After the stretcher starts returning, the operator returns to that final position before pointing to the helicopter and closing the cargo doors. The existing 245 degrees / 5 m waiting position and slow movement remain in place.
+- Replaced the concatenated medical-action status with separate, descending action rows. The current action is yellow; previous actions are green; once the final action completes, every action is green. No action string uses the former `//` separator.
+- Removed the trailing yellow dashed medical-page footer. The LifeScore text and slider now form the final page section, after the medical-action and gray reference material.
+- Added the initial-assessment visibility gate: while action 1 is in progress, the page states that vital signs and GCS are pending. Heart rate, SpO2, blood pressure, respiratory rate, temperature, GCS, and the assigned patient code first appear when action 2 begins, then remain live for the rest of the visit.
+- Strict JSON parsing succeeds with 513 macros, 68 mission records, and 660 action-profiled health records. No pull request was created.
+
 ## HPG query compatibility and full structural audit - release 0.997 64
 
 - Advanced the release title to `0.997 64`.

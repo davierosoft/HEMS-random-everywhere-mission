@@ -1,3 +1,20 @@
+## Release 0.997 65
+
+Release 0.997 65 repairs the indoor privacy-fence regression, restores the approved far-stretcher approach, and completes the automatic medical-action display contract.
+
+- Release contract completed: mission title, `CHANGELOG.en.md`, and this handoff are all updated to `0.997 65`. No pull request was created.
+- Fence contract: do not change `fence road` to inspect a query directly. It remains gated by `indoor_scene`. The flag is now reset to `no` and then derived immediately after all eight assignments to local `Query`, including the randomize selection path that had no flag assignment. Indoor query set: apartments/hotels, nursing homes, schools, factories, doctors offices, train stations, supermarkets. This prevents fences for indoor cardiovascular calls regardless of pathology.
+- Far-stretcher contract: in `3 crew ground ops` and `4 or 5 crew ground ops`, in the non-ambulance-return branch, the operator approach is exactly `200 degrees / 5 m`, then `185 degrees / 1.5 m`. The post-stretcher return is `185 degrees / 1.5 m`; it then points to the helicopter and closes cargo doors. Keep the existing 245 degrees / 5 m observation point, speed 2, and the wait for `ambustretcher_returning`.
+- Medical display contract: action rows are in descending order from the active or latest action to action 1. Current action is yellow and prefixed `IN PROGRESS:`; completed actions are green. Completion is delayed to 75% of the final action interval, giving a visible yellow current state and then a short all-green state. Do not reintroduce concatenated `//` action text or the trailing yellow dashed footer.
+- Assessment visibility contract: `medical_assessment_complete` starts `no`, becomes `yes` at the transition to action 2, and gates HR, SpO2, BP, RR, temperature, GCS, and patient code. Before that transition the medical page shows a gray pending-assessment line, not placeholder vital values. LifeScore remains the final page section.
+- Static validation: strict JSON parse succeeds; 513 macros; 68 mission records; 660 health records with action profiles. Check all eight Query assignments retain the flag derivation, the two far-stretcher routes retain both approach waypoints, and all 18 measured/code widgets include `medical_assessment_complete` in their show condition.
+
+### Runtime checks for release 65
+
+1. Run a random indoor cardiovascular call (apartment, surgery, school, factory, station, or supermarket) and confirm no ambulance or police fence appears. Run an outdoor call and confirm the appropriate fence can still appear.
+2. In 3-crew and 4/5-crew far-ambulance cases, watch the hoist operator travel through 200/5 before 185/1.5, wait at 245/5 while facing the ambulance stretcher, then return to 185/1.5 before cargo-door closure.
+3. Open the medical page at visit start: only the assessment-pending message and first yellow action are visible. At action 2, verify patient code and all clinical readings appear. Verify active action yellow, earlier actions green, descending ordering, and a brief all-green final state.
+
 ## Release 0.997 64
 
 Release 0.997 64 supersedes the release-63 condition repair with HPG-compatible flat conditions and a full structural audit.
