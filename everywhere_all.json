@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 68",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 69",
   "id": "HEMSRandE",
   "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
   "start_info": {"icon_src":"R&E","query":["DB:H_CIVIL","DB:H_HOSPITAL","DB:AIRPORT","DB:AIRPORT-NOCODE"]},
@@ -8081,7 +8081,7 @@
     ],
     "UpdateRescueTrack": [
       {"set":{"local":"rescuetrack_message_count"},"value":{"struct":{"local":"Dispatcher_Messages"},"path":"length"}},
-      {"if":{"local":"rescuetrack_message_count"},"gt":{"local":"rescuetrack_alerted_message_count"},"then":[{"set":{"local":"rescuetrack_alerted_message_count"},"value":{"local":"rescuetrack_message_count"}},{"if":{"local":"rescuetrack_audio_ready"},"eq":"yes","then":[]}]},
+      {"if":{"local":"rescuetrack_message_count"},"gt":{"local":"rescuetrack_alerted_message_count"},"then":[{"set":{"local":"rescuetrack_alerted_message_count"},"value":{"local":"rescuetrack_message_count"}},{"if":{"local":"rescuetrack_audio_ready"},"eq":"yes","then":[{"set":{"var":["L:{local:VCP}NEWMSG","number"]},"value":{"add":[{"var":["L:{local:VCP}NEWMSG","number"]},1]}}]}]},
       {"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"for_each":{"static":"statusMessages{local:RESCUETRACK_ID}translation"},"do":[{"set":{"local":"rescuetrack_id"},"value":{"struct":{"param":"$item"},"path":"id"}},{"set":{"local":"rescuetrack_{local:rescuetrack_id}"},"value":{"struct":{"param":"$item"},"path":"name"}},{"sleep":0.01}]},{"set_rescuetrack":{"statusVar":"L:DISPATCH_PHASE_RAW","statusVarInvalidText":"No accepted dispatch","statusMessages":{"static":"statusMessages{local:RESCUETRACK_ID}"},"dispatcherMessages":{"local":"Dispatcher_Messages"}},"activate_waypoint_commands":[{"if":{"local":"MISSION_PHASE"},"lt":2,"then":[{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},{"call_macro":"Update_dispatchphase from raw"}]},{"set_message":{"text":"SENDING TO FMS, PLEASE WAIT..."}},{"set":{"local":"routeupdate_error"},"value":null},{"set":{"local":"routeupdate_error_detail"},"value":null},{"if":{"local":"location_name"},"ne":null,"then":[{"if":{"has_location":{"local":"location_name"}},"eq":1,"then":[{"try":[{"set_route":{"local":"location_name"}}],"catch":[{"set":{"local":"routeupdate_error"},"value":"rescuetrack_set_route_failed"},{"set":{"local":"routeupdate_error_detail"},"value":{"param":"$ERROR"}}]}],"else":[{"set":{"local":"routeupdate_error"},"value":"rescuetrack_missing_location"}]}],"else":[{"set":{"local":"routeupdate_error"},"value":"rescuetrack_missing_location"}]}]}]}
     ],
     "UpdateRescuemsg": [

@@ -1,3 +1,11 @@
+## Restore centralized RescueTrack alert - release 0.997 69
+
+- Advanced the mission title to 0.997 69.
+- Restored the single dynamic VCP notification write in UpdateRescueTrack. Release 68 accidentally removed this command while removing the previous per-message writes, leaving the audio-ready branch empty.
+- When a new Dispatcher_Messages entry is detected after the initial dispatch, the central branch now increments L:{local:VCP}NEWMSG exactly once. The selected package therefore resolves dynamically (for example AND, KEK, DUS) without hardcoding a voice package.
+- The initial dispatch remains protected by rescuetrack_audio_ready = no until its existing dispatch ringtone has run, preventing a duplicate first-call alert. No direct VCP NEWMSG writes remain in individual ambulance, police, fire, cancellation, or status macros.
+- Static validation: strict JSON parsing succeeds with 514 macros; the sole L:{local:VCP}NEWMSG write is in UpdateRescueTrack. CHANGELOG_USER.en.md remains unchanged.
+
 ## RescueTrack alerts and marshal/clinical regression fixes - release 0.997 68
 
 - Advanced the mission title to `0.997 68`.

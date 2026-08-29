@@ -1,3 +1,20 @@
+## Release 0.997 69
+
+Release 0.997 69 repairs the centralized RescueTrack audio regression published in Release 68.
+
+- Release contract: mission title, CHANGELOG.en.md, and this handoff are updated to 0.997 69. CHANGELOG_USER.en.md remains untouched. Direct push to main is authorized; do not create a pull request.
+- Root cause: the Release 68 cleanup correctly removed old per-macro VCP writes but also removed the new central write because it used the same command shape. UpdateRescueTrack therefore contained an empty then array beneath rescuetrack_audio_ready = yes.
+- Required central action: after Dispatcher_Messages length increases and the audio-ready gate is yes, the macro must contain exactly one command: set var [L:{local:VCP}NEWMSG, number] to its current value plus 1. Do not hardcode AND/KEK/DUS: local VCP resolves the currently active voice package.
+- Initial-dispatch contract remains: objective1 starts with rescuetrack_audio_ready = no and changes it to yes immediately after dispatch ringtone. The initial dispatch has its existing ringtone only; every later RescueTrack message receives exactly one dynamic VCP alert.
+- Scope constraint: no other macro may write L:{local:VCP}NEWMSG. Do not use an indiscriminate text cleanup for that command again; validate the central branch after any refactor.
+- Static validation: strict JSON parsing succeeds with 514 macros. The central signal has one command, and repository-wide macro audit finds zero direct NEWMSG writers outside UpdateRescueTrack.
+
+### Runtime checks for release 69
+
+1. Accept a dispatch: dispatch ringtone plays once; no second VCP message alert follows.
+2. Trigger each available ambulance, police, fire, delayed injury, cancellation, and generic RescueTrack update. Each appended RescueTrack message plays one alert using the currently selected VCP package.
+3. Repeat using different available VCP values (for example AND, KEK, DUS) and confirm the same dynamic LVAR route is used without per-package source changes.
+
 ## Release 0.997 68
 
 Release 0.997 68 fixes the Release 67 HPG regression, makes every RescueTrack update audible, and completes the marshal's low-NR restart path.
