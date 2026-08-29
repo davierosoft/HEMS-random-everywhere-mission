@@ -1,3 +1,10 @@
+## Unique public and casualty selection - release 0.997 72
+
+- Added a locked, mission-local public-title selector for the civilian, dog, dancer, and worker pools. Every requested public model is selected from titles not already spawned by the current scene; only after the requested pool has no unused title remaining can the selector reuse one.
+- Covered all random public creation paths that use these pools: general scenes, large random crowds, staged dancer crowds, and the road-accident civilian generators. The original object locations, headings, and behaviour remain unchanged.
+- Added model-ID de-duplication for casualty slots 2 and 3. A compatible injured model already used by an earlier casualty is rejected when another sex/age-compatible model exists; an unavoidable duplicate is accepted immediately when the eligible pool is exhausted (including the single-model motorcyclist case).
+- Static validation: strict JSON parsing succeeds; all civilian/dancer/worker static title draws are routed through the selector, and the second/third casualty branches explicitly test for an alternative model before falling back. `CHANGELOG_USER.en.md` remains unchanged.
+
 ## Return-to-base dispatch availability and tablet 5G - release 0.997 71
 
 - Added a persistent Tablet 5G setting in Avionics Options, adjacent to the CARLS radio self-test setting. It defaults to NO and, when enabled, keeps only the tablet data connection available regardless of Wi-Fi range or CARLS radio state.

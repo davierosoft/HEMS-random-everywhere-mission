@@ -1,3 +1,20 @@
+## Release 0.997 72
+
+Release 0.997 72 removes accidental duplicate public/casualty models without treating a genuinely exhausted pool as an error.
+
+- Release contract: mission title, CHANGELOG.en.md, and this handoff are updated to 0.997 72. CHANGELOG_USER.en.md remains untouched. Direct push to main is authorized; do not create a pull request.
+- Public selector: `select unique public title` owns a mission-local used-title array and a lock for concurrently spawned crowd threads. It returns an unused title from the requested `civils1`, `civils2`, `dancers`, or `workers` source while one remains. The common used-title registry deliberately makes the overlapping `civils1`/`civils2` models unique across both lists; the dog remains selectable as the extra civils2 entry.
+- Public scope: the selector is inserted before every random `create_object` draw from those four pools, including random people, random fool, random scene 2/3, truck-vs-car, and bus-crash civilian spawns. Dynamic object names, positioning, fallback titles, and animation commands remain untouched.
+- Casualty selector: `random injured2` and `random injured3` now scan the current `injured_type` pool for a different eligible model `id` before accepting a candidate. This compares actual spawned titles rather than weighted duplicate entries in the data array. The scan preserves all scene restrictions: injury category (such as workers or motorcyclists), required sex, and the selected age range. If no different compatible ID exists, the current candidate is accepted; this is required for the one visual `30West Motorcyclist` model.
+- 30West pose limitation: the mission can set object variables and model physics, but it receives no readable skeleton/animation-state signal for third-party dynamic objects. The standing arms-out fallback therefore cannot be detected or reliably repaired after it occurs from mission JSON alone. The new de-duplication reduces repeated initialization of the same 30West injured asset; do not add blind VAR loops or blacklist 30West titles without identifying the exact failing model.
+
+### Runtime checks for release 72
+
+1. Run a high-CIVILS scene. Before the nine shared civilian titles are consumed, confirm every public person is visually different. With more requested people than titles, confirm duplicates only start after exhaustion; the civils2 dog may be the tenth distinct selection.
+2. Run the dancer/fool crowd. Confirm the seven dancer titles do not duplicate before all seven have appeared, then allow reuse for additional crowd slots.
+3. Run two- and three-casualty worker, general, and motorcyclist incidents. Confirm later casualties use a different compatible model where one exists and the motorcyclist case still spawns instead of stalling.
+4. Record the exact 30West title if the arms-out fallback recurs. The mission cannot see that animation state, so the title and scene type are required before an evidence-based asset-specific workaround can be considered.
+
 ## Release 0.997 71
 
 Release 0.997 71 keeps a returned crew available for a following dispatch and makes the end-of-shift state explicit.
