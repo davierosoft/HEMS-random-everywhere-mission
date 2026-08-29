@@ -1,3 +1,17 @@
+## Release 0.997 66
+
+Release 0.997 66 adds a fixed angular hysteresis buffer to the common marshal left/right approach instructions.
+
+- Release contract completed: mission title, `CHANGELOG.en.md`, and this handoff are updated to `0.997 66`. No pull request was created.
+- Marshal lateral contract: outside the existing 7 m landing area, only during the pre-existing 15–45 ft lateral-guidance phase, the first side instruction still follows the actual relative bearing. Thereafter it is latched: state 5 changes to state 6 only at or below 168°, and state 6 changes to state 5 only at or above 192°. Thus the neutral sector is exactly ±12° around the former 180° boundary.
+- Do not widen this angular buffer as distance increases: a constant 12° sector already produces increasing lateral clearance in metres as distance grows. Do not apply it inside the landing area, where the established hover/descent/landing states (3, 4, 8) remain authoritative and no lateral state is emitted.
+- `marshall_lateral_direction` is reset when a marshal is created, so a new marshal begins with its first lateral indication taken from the actual approach side.
+
+### Runtime check for release 66
+
+1. Approach outside 7 m at 15–45 ft and move slowly back and forth around the former 180° line. The marshal must retain its current lateral indication between 168° and 192°, rather than alternating at every position update.
+2. Cross below 168° or above 192° and confirm one deliberate side change. Then enter the landing area and confirm the marshal uses only hover, descent or landing guidance, never a lateral indication.
+
 ## Release 0.997 65
 
 Release 0.997 65 repairs the indoor privacy-fence regression, restores the approved far-stretcher approach, and completes the automatic medical-action display contract.

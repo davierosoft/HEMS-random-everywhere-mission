@@ -1,3 +1,11 @@
+## Fixed angular marshal lateral buffer - release 0.997 66
+
+- Advanced the release title to `0.997 66`.
+- Replaced the former hard `180°` left/right split in the common marshal approach controller with a persistent lateral-direction latch.
+- Outside the existing landing area and only in the existing lateral-guidance phase (15–45 ft radio altitude), the first indication still uses the actual side of the approach. A left/right change is now accepted only after the relative bearing crosses `168°` or `192°`, creating the requested fixed `±12°` angular sector with the marshal as its origin.
+- The sector is intentionally constant: its lateral clearance naturally increases with distance. Inside the landing area the lateral branch remains disabled, so the existing hover, descent and landing signals retain complete control.
+- The latch is reset whenever a marshal is created. Strict JSON parsing succeeds with 513 macros. No pull request was created.
+
 ## Indoor privacy-fence, ground-stretcher, and clinical-assessment corrections - release 0.997 65
 
 - Advanced the release title to `0.997 65`.
