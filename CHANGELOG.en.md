@@ -1,3 +1,10 @@
+## Correct marshal central approach cone - release 0.997 78
+
+- Advanced the mission title to 0.997 78.
+- Corrected the actual marshal anomaly: the previous ±12-degree “buffer” retained the last left/right instruction, so the centreline never became a neutral guidance condition. This was why the marshal continued to indicate a lateral move after the helicopter passed the centre.
+- For both marshall and pisteur3, relative bearings from 348 through 360 and from 0 through 12 now issue idle (VAR 1 = 1) during the existing 15-45 ft distant lateral phase. Outside that cone, the existing side mapping is preserved: 13-180 degrees uses VAR 1 = 6 and 181-347 degrees uses VAR 1 = 5.
+- The outer half of the 150 m-to-7 m approach adds a 70 ft radio-height floor. From 150 m to the 78.5 m midpoint, the marshal signals up below 70 ft and defers the usual descent profile until the helicopter enters the inner half. At or above 70 ft, lateral and neutral-cone guidance remain available. The near-area hover, landing, restart, departure, wind-facing, and visual left/right mapping are otherwise unchanged.
+
 ## Clinical report before handover presentation - release 0.997 77
 
 - Advanced the mission title to 0.997 77.

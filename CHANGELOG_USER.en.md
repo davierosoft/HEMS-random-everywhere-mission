@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 77.
+This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 78.
 
 It describes the final behavior that a user receives after upgrading from the public build. It does not list temporary test-build regressions or corrections that were superseded before this release. Update this file only for meaningful finished user-facing changes.
 
@@ -34,7 +34,7 @@ It describes the final behavior that a user receives after upgrading from the pu
 ### Guidance, audio, and operational feedback
 
 - **Expanded marshal guidance.** Scene, base, hospital, custom landing, and heli-rescuer references can provide approach, hover, vertical correction, landing, restart, and departure guidance.
-- **Stable distant lateral guidance.** Outside the landing area, left/right calls use a fixed angular buffer around the marshal centreline. Inside the landing area, lateral calls yield to hover, descent, landing, and climb guidance.
+- **Stable distant lateral guidance.** Outside the landing area, both marshal controllers use the same fixed ±12° neutral cone across the front-approach centreline. Inside it, the marshal gives idle guidance rather than retaining a left/right call. In the outer half of the approach it first protects a 70 ft minimum radio height; the normal descent profile resumes only in the inner half. Inside the landing area, lateral calls yield to hover, descent, landing, and climb guidance.
 - **Restart-aware marshal behavior.** After a real landing and a 30-second low-rotor confirmation, the marshal can arm departure guidance even if an idle restart or CTRL+E skips the usual early rotor-pump phase. Hover and departure-direction signals still appear after lift-off.
 - **Central RescueTrack alerts.** Every new RescueTrack message after the initial dispatch receives one audio alert from the currently selected voice package. The original new-dispatch ringtone remains a single distinct sound, with no duplicate first alert.
 - **Clearer dispatch and RescueTrack messages.** The tablet distinguishes waiting-for-HEMS, ambulance transfer, cancellation, police movement to a custom LZ, additional deceased persons, no active mission, and route problems. Errors have their own visible indicator instead of replacing normal operational text.

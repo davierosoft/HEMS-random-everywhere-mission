@@ -1,3 +1,20 @@
+## Release 0.997 78
+
+Release 0.997 78 turns the distant marshal centre buffer into the intended neutral guidance cone for both marshal controllers.
+
+- Release contract: mission title, CHANGELOG.en.md, HANDOFF_CHATGPT_SOL.md, and CHANGELOG_USER.en.md are updated to 0.997 78. Direct push to main is authorized; do not create a pull request.
+- Diagnosis: relative_bearing is bearing(marshal, helicopter) - bearing(marshal, landing reference). The controller deliberately suppresses the behind sector 90-270 degrees, so the live lateral centreline is the 0/360-degree wrap. The old code recognised the wrap but incorrectly latched the previous left/right state through it; it had no neutral branch.
+- Neutral-cone contract for both marshall and pisteur3: only in the existing distant lateral phase (outside 7 m and from 15 to 45 ft), a relative bearing <= 12 or >= 348 must issue idle (VAR 1 = 1). Do not retain or emit VAR 1 = 5/6 within this cone.
+- Side contract outside the cone: retain the validated visual mapping. Relative bearing 13-180 issues VAR 1 = 6; 181-347 issues VAR 1 = 5. Do not invert those states based on marshal-facing assumptions.
+- Far-altitude contract: the existing approach envelope is 150 m outside and 7 m inside, whose midpoint is 78.5 m. From 150 m down to (and including) 78.5 m, radio height below 70 ft must issue up (VAR 1 = 7). At or above 70 ft, use the neutral/lateral branch; do not issue down in this outer half.
+- Inner-altitude contract: inside 78.5 m, preserve the existing outer vertical branches. Above 45 ft, issue down (VAR 1 = 8); below 15 ft, issue up (VAR 1 = 7), including in the centre cone. Preserve the near-area hover/landing, restart, departure, and wind-facing controllers.
+
+### Runtime checks for release 78
+
+1. With either marshal active, remain outside the 7 m area at 15-45 ft. Test relative bearings 0, 12, 348, and 359: each must issue idle. Test 13 and 180: each must issue state 6; test 181 and 347: each must issue state 5.
+2. Repeat the same sweep for pisteur3 and its heli-rescuer reference. Its neutral cone and two lateral sides must be identical to marshall.
+3. At 100 m from the reference, test below 70 ft (must issue up) and at/above 70 ft (must return to neutral/lateral guidance). At 70 m, confirm the ordinary inner-half descent profile resumes above 45 ft. Enter the 7 m landing area and confirm the established hover/landing states take priority.
+
 ## Release 0.997 77
 
 Release 0.997 77 separates early rescue-team information from the later HEMS handover presentation.
