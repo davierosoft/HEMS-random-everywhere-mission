@@ -1,3 +1,20 @@
+## Release 0.997 77
+
+Release 0.997 77 separates early rescue-team information from the later HEMS handover presentation.
+
+- Release contract: mission title, CHANGELOG.en.md, HANDOFF_CHATGPT_SOL.md, and CHANGELOG_USER.en.md are updated to 0.997 77. Direct push to main is authorized; do not create a pull request.
+- Reporting contract: after ambulance1 arrives, ambulance clinical handover must set rescuediagnosis immediately to an on-scene/initial-assessment-in-progress report. This is what the Medical page displays before HEMS arrival. Do not wait for ambulance clinical actions or crewvisiting1 before publishing it.
+- Assessment contract: once action 1 is assigned, rescuediagnosis must describe Initial assessment completed and action 1. If the optional action 2 branch succeeds, replace it with Initial assessment and basic treatment completed plus actions 1 and 2. The existing generic ambulance writer in consciousness may update the report only while ambulance_handover_status is neither ready nor acknowledged; it must not erase a completed report.
+- Presentation contract: do not set ambulance_handover_visible or medical_actions_visible in the early ambulance eligibility branch. After handover becomes ready, its presentation thread waits for crewvisiting1 = yes and only then enables those flags. The two AMBULANCE action rows and the HEMS HANDOVER ACKNOWLEDGED row must additionally require ambulance_handover_visible = yes.
+- Clinical behavior contract: the ambulance may still perform its pre-arrival assessment/effect as before. The change is UI/report ordering only; do not delay the actual ambulance treatment or the automatic/manual HEMS action controller.
+
+### Runtime checks for release 77
+
+1. In an eligible single-patient mission with an early ambulance, open the Medical page before landing. Confirm Info from rescue team on scene appears as Ambulance on scene / Initial patient assessment in progress, with no AMBULANCE HANDOVER or action rows.
+2. Wait for ambulance assessment while still airborne. Confirm the report upgrades with the completed assessment (and, when rolled, the basic treatment), but the handover/action section remains absent.
+3. Reach the patient so crewvisiting1 becomes yes. Confirm the handover header, report, acknowledged state, ambulance action rows, and HEMS medical timeline appear at that point.
+4. Repeat when HEMS arrives before ambulance assessment completes. Confirm ordinary HEMS actions start at arrival; completed ambulance rows appear only once the handover becomes ready, without hiding or restarting HEMS actions.
+
 ## Release 0.997 76
 
 Release 0.997 76 removes redundant manual Wi-Fi controls whenever Tablet 5G is selected.

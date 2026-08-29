@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 76.
+This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 77.
 
 It describes the final behavior that a user receives after upgrading from the public build. It does not list temporary test-build regressions or corrections that were superseded before this release. Update this file only for meaningful finished user-facing changes.
 
@@ -44,7 +44,7 @@ It describes the final behavior that a user receives after upgrading from the pu
 ### Medical page
 
 - The Medical page is now a vertical **Patient Clinical Record** designed for the tablet single-column renderer.
-- The initial dispatch/scene information is followed by an ambulance-handover section only when an eligible ambulance has actually produced a report. No empty or null ambulance report is shown.
+- The rescue-team report can arrive before HEMS reaches the patient: it first advises that ambulance assessment is in progress, then adds completed assessment/basic-treatment information when available. The detailed ambulance-handover panel and action rows appear only when HEMS reaches the patient; no empty or null report is shown.
 - Before the first completed assessment, the page explicitly shows that observations are pending. GCS, emergency code, Life Score, and vital signs appear when the assessment is clinically available, including ambulance-credited work.
 - GCS and Code share a compact single line with a protected visual gap; numeric and Not Testable combinations are supported without allowing Code to wrap onto a new line.
 - Medical procedures are separate lines: the current procedure is yellow, prior completed procedures are green, newest first, and all rows remain green after completion. The old concatenated // display and dashed text separators are gone.

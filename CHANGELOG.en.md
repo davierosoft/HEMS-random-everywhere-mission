@@ -1,3 +1,11 @@
+## Clinical report before handover presentation - release 0.997 77
+
+- Advanced the mission title to 0.997 77.
+- An ambulance that reaches an eligible single-patient scene now publishes the Medical-page rescue-team report immediately: ambulance on scene and initial assessment in progress. This report is independent of HEMS arrival.
+- When its first assessment is completed, the report is upgraded with the completed action. If the controlled second basic-treatment action is completed, its action is included too. A late generic ambulance update cannot overwrite a ready or acknowledged handover report.
+- The AMBULANCE HANDOVER section, acknowledgement, ambulance action rows, and medical-action visibility are now delayed until crewvisiting1 = yes, the established point at which HEMS reaches the patient. Ambulance work may still be completed before arrival; only its clinical presentation is deferred.
+- Static validation: strict JSON parsing succeeds; early, completed-assessment, and completed-basic-treatment report states all exist; the three handover rows and the presentation thread are gated by HEMS clinical arrival.
+
 ## Hide manual Wi-Fi controls while Tablet 5G is active - release 0.997 76
 
 - Advanced the mission title to 0.997 76.
