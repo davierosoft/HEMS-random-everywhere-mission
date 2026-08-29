@@ -1,3 +1,22 @@
+## Release 0.997 70
+
+Release 0.997 70 makes the optional base marshal persistent across a return-to-base interruption and second-dispatch reload.
+
+- Release contract: mission title, `CHANGELOG.en.md`, and this handoff are updated to `0.997 70`. `CHANGELOG_USER.en.md` remains untouched. Direct push to `main` is authorized; do not create a pull request.
+- Objective 1 ordering: the old startup path created the start-base marshal and later destroyed `marshall` in its generic cleanup. Creation now occurs after that cleanup. This is a real logic correction, not a visual change.
+- Snapshot contract: only an active marshal with `marshall_role = base` can be serialized. The macro stores both the marshal position and its guidance target as HPG LVAR locations, which exposes the persisted `LAT`/`LON` pairs. Scene, hospital, technical and pisteur3 instances are deliberately excluded.
+- Same-base return: after `RTB_location` resolves to the mission start base, recreate `marshall` at the saved coordinates and point it to the saved guidance target. Do not substitute a newly calculated position.
+- Alternate-base return: the menu marks the selection as alternate, invalidates the old-base coordinates, and creates the replacement 18 m wind-relative to the selected `RTB_location`. Its new exact position and target are immediately snapshotted for a later reload.
+- Reload contract: `accept_dispatch` snapshots the base marshal immediately before setting `SECOND_DISPATCH_ACCEPTED` and reloading. On the reload path, Objective 1 restores the saved marshal only for an active return-base session; otherwise it creates the ordinary optional start-base marshal.
+- State scope: use only the LVAR/local persistence already retained across reloads. No new global variable is permitted for this feature.
+
+### Runtime checks for release 70
+
+1. With START BASE MARSHAL enabled, load a fresh mission and confirm the marshal remains at base after Objective 1 completes.
+2. Let a scene marshal replace the base marshal, then choose Return to starting point. Confirm the base marshal is recreated at its original exact position, faces the base, and provides its normal landing/departure guidance.
+3. Enable destination-base selection and choose a different map base. Confirm the old-base snapshot is not reused; the new marshal is around the chosen base, wind-relative, and faces that base.
+4. While flying back to either type of base, accept a second dispatch. After reload, confirm the base marshal returns at the exact last saved position and retains the same base target. Repeat with a scene marshal active and confirm it is not mistaken for a base snapshot.
+
 ## Release 0.997 69
 
 Release 0.997 69 repairs the centralized RescueTrack audio regression published in Release 68.

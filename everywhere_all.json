@@ -1,5 +1,5 @@
 {
-  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 69",
+  "title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 70",
   "id": "HEMSRandE",
   "author": "Andrea Daviero (Andreeewww - Davierosoft) + 30West + Daikan + Kekkeruuu",
   "start_info": {"icon_src":"R&E","query":["DB:H_CIVIL","DB:H_HOSPITAL","DB:AIRPORT","DB:AIRPORT-NOCODE"]},
@@ -6532,13 +6532,14 @@
       {"set":{"local":"SEX_TIME"},"value":2},
       {"set":{"var":["L:PATOLOGY_TIME","number"]},"value":0},
       {"set":{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},"value":{"add":[{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},1]}},
-      {"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":1,"then":[{"set_modal":{"title":"DISPATCH ENDED. Destination base selection","text":"Return to mission starting point or manually select a destination base","options":[{"text":"Return to starting point","style":"","commands":[{"create_location":"RTB_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}]},{"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},{"call_macro":"return to base"}]},{"text":"Select a base from map","style":"","commands":[{"call_macro":"Query user position RTB"},{"call_macro":"return to base"}]}]}}],"else":[{"create_location":"RTB_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}]},{"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},{"call_macro":"return to base"}]}
+      {"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":1,"then":[{"set_modal":{"title":"DISPATCH ENDED. Destination base selection","text":"Return to mission starting point or manually select a destination base","options":[{"text":"Return to starting point","style":"","commands":[{"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},{"create_location":"RTB_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}]},{"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},{"call_macro":"return to base"}]},{"text":"Select a base from map","style":"","commands":[{"call_macro":"Query user position RTB"},{"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":2},{"call_macro":"return to base"}]}]}}],"else":[{"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},{"create_location":"RTB_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}]},{"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},{"call_macro":"return to base"}]}
     ],
     "return to base": [
       {"set_hover_display":{"range":0}},
       {"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},{"call_macro":"Update_raw from dispatchphase"}]}]},
       {"set_dispatch_dialog":1},
       {"set":{"local":"MISSION_PHASE"},"value":10},
+      {"if":{"global":"MARSHAL_START_ENABLED"},"eq":"yes","then":[{"set":{"var":["L:BASE_MARSHAL_SESSION","number"]},"value":1},{"call_macro":"restore return base marshall"}],"else":[{"set":{"var":["L:BASE_MARSHAL_SESSION","number"]},"value":0}]},
       {"sleep":0.5},
       {"set":{"local":"location_name"},"value":"RTB_location"},
       {"sleep":0.1},
@@ -7689,7 +7690,7 @@
       {"set":{"local":"RESCUE_DISPATCHED"},"value":0},
       {"if":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"ne":1,"then":[{"create_location":"mission_start_location","zones":[{"zone":{"location":"$USER"}}]},{"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},{"create_thread":{"commands":[{"call_macro":"kit globals population"},{"if":{"global":"CUSTOM_KIT"},"eq":1,"then":[{"call_macro":"kit options optimal"}]},{"if":{"global":"CUSTOM_KIT"},"eq":2,"then":[{"call_macro":"kit options"}]}]}}]},
       {"set":{"var":["L:LOADSTART","number"]},"value":30},
-      {"if":{"and":[{"require":{"global":"MARSHAL_START_ENABLED"},"eq":"yes"},{"require":{"has_location":"mission_start_location"},"eq":1}]},"eq":1,"then":[{"call_macro":"create base marshall"}]},
+      {"if":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"ne":1,"then":[{"call_macro":"clear base marshall snapshot"}]},
       {"if":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"eq":1,"then":[{"if":{"local":"player"},"eq":"multiplayer","then":[{"set":{"local":"nddisabled"},"value":"disabled"},{"call_macro":"multiplayer ping"},{"call_macro":"multiplayer resveh"}]},{"set":{"var":["L:MISSION_TIME_OFFSET","number"]},"value":{"var":["L:MISSION_TIME","number"]}},{"create_location":"mission_start_location","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}]},{"if":{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},"ne":0,"then":[{"create_location":"accident_location","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},{"var":["L:PRE_ACCIDENT_LOCATION LON","number"]}]}}}}]}]},{"if":{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},"ne":0,"then":[{"create_location":"rescue_location","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},{"var":["L:PRE_RESCUE_LOCATION LON","number"]}]}}}}]}]},{"if":{"var":["L:CUSTOM_CENTER_LOCATION LAT","number"]},"ne":0,"then":[{"create_location":"custom_center_location","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUSTOM_CENTER_LOCATION LAT","number"]},{"var":["L:CUSTOM_CENTER_LOCATION LON","number"]}]}}}}]}]},{"if":{"var":["L:PRE_USERA LAT","number"]},"ne":0,"then":[{"create_location":"userA","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:PRE_USERA LAT","number"]},{"var":["L:PRE_USERA LON","number"]}]}}}}]}]},{"if":{"var":["L:PRE_HOSPITAL LAT","number"]},"ne":0,"then":[{"create_location":"hospital_user","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:PRE_HOSPITAL LAT","number"]},{"var":["L:PRE_HOSPITAL LON","number"]}]}}}}]},{"set":{"local":"has_hospital_location"},"value":"yes"},{"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}},{"call_macro":"timefororgantransport"}]},{"call_macro":"missionupdate"}]},
       {"sleep":0.2},
       {"if":{"and":[{"require":{"global":"location_ref"},"eq":"custom_center_location"},{"require":{"has_location":"custom_center_location"},"eq":1}]},"eq":1,"then":[{"set_map":{"add":{"point":{"location":"custom_center_location","icon":"dispatcher","id":"custom_center_location_icon"}}}}],"else":[{"if":{"global":"location_ref"},"eq":"custom_center_location","then":[{"set":{"global":"location_ref"},"value":"$USER"},{"set_map":{"remove":{"point":{"id":"custom_center_location_icon"}}}}]}]},
@@ -7771,6 +7772,7 @@
       {"set":{"local":"hospital_marshall_spawned"},"value":"no"},
       {"set_map":{"remove":{"point":{"id":"technical_marshall"}}}},
       {"if":{"has_object":"marshall"},"eq":1,"then":[{"destroy_object":"marshall"}]},
+      {"if":{"and":[{"require":{"global":"MARSHAL_START_ENABLED"},"eq":"yes"},{"require":{"has_location":"mission_start_location"},"eq":1}]},"eq":1,"then":[{"if":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"eq":1,"then":[{"call_macro":"restore reloaded base marshall"}],"else":[{"call_macro":"create base marshall"}]}]},
       {"set":{"local":"pisteur3_guidance_initialized"},"value":0},
       {"set":{"local":"MISSION_END_WAITING"},"value":0},
       {"set":{"var":["L:MENU","number"]},"value":0},
@@ -8099,7 +8101,7 @@
     ],
     "accept_dispatch": [
       {"if":{"local":"player"},"eq":"multiplayer","then":[{"wait_for":{"var":["L:VAR_SEND_DISPATCH","number"]},"eq":1},{"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0}]},
-      {"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set_briefing_dialog":0},{"set":{"local":"SUBMITTED"},"value":0},{"sleep":0.5},{"if":{"and":[{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":4}]},"eq":1,"then":[{"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1},{"set":{"local":"MISSION_PHASE"},"value":2},{"set_briefing_dialog":0},{"set":{"local":"SUBMITTED"},"value":0},{"sleep":0.5},{"set_briefing_dialog":0},{"reload_mission":1}]},{"if":{"local":"MISSION_PHASE"},"lt":2,"then":[{"set":{"local":"MISSION_PHASE"},"value":2}]},{"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},{"set":{"var":["L:CARLS_TEMP","number"]},"value":1},{"sleep":[1,3]},{"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}}],"else":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":100},{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100},{"set_message":{"text":"NOT CONNECTED"}},{"sleep":5},{"set_message":{"text":" "}}]}
+      {"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set_briefing_dialog":0},{"set":{"local":"SUBMITTED"},"value":0},{"sleep":0.5},{"if":{"and":[{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":4}]},"eq":1,"then":[{"call_macro":"snapshot base marshall"},{"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1},{"set":{"local":"MISSION_PHASE"},"value":2},{"set_briefing_dialog":0},{"set":{"local":"SUBMITTED"},"value":0},{"sleep":0.5},{"set_briefing_dialog":0},{"reload_mission":1}]},{"if":{"local":"MISSION_PHASE"},"lt":2,"then":[{"set":{"local":"MISSION_PHASE"},"value":2}]},{"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},{"set":{"var":["L:CARLS_TEMP","number"]},"value":1},{"sleep":[1,3]},{"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}}],"else":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":100},{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100},{"set_message":{"text":"NOT CONNECTED"}},{"sleep":5},{"set_message":{"text":" "}}]}
     ],
     "first_dispatch": [
       {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
@@ -8667,6 +8669,7 @@
       {"set":{"local":"marshall_landing_commit"},"value":0},
       {"set":{"local":"marshall_final_facing_done"},"value":0},
       {"set":{"local":"marshall_wind_rotation_lock"},"value":0},
+      {"if":{"and":[{"require":{"has_object":"marshall"},"eq":1},{"require":{"local":"marshall_role"},"eq":"base"}]},"eq":1,"then":[{"call_macro":"snapshot base marshall"}]},
       {"if":{"has_object":"marshall"},"eq":1,"then":[{"destroy_object":"marshall"}]}
     ],
     "create base marshall": [
@@ -8678,7 +8681,70 @@
       {"set":{"local":"marshall_wind_enabled"},"value":"no"},
       {"if":{"local":"68pony_marshal"},"eq":"OK","then":[{"create_object":{"name":"marshall","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":0,"dist":25,"heading":0,"object":"mission_start_location"}}}],"else":[{"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":0,"dist":25,"heading":0,"object":"mission_start_location"}}}]},
       {"point_object":"marshall","to":"marshall_guidance_location"},
-      {"call_macro":"activate marshall guidance"}
+      {"call_macro":"activate marshall guidance"},
+      {"call_macro":"snapshot base marshall"}
+    ],
+    "clear base marshall snapshot": [
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT LAT","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT LON","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_TARGET","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_TARGET LAT","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_TARGET LON","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SESSION","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":0}
+    ],
+    "invalidate base marshall snapshot": [
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT LAT","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT LON","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_TARGET","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_TARGET LAT","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_TARGET LON","number"]},"value":0},
+      {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"value":0}
+    ],
+    "snapshot base marshall": [
+      {"if":{"and":[{"require":{"has_object":"marshall"},"eq":1},{"require":{"local":"marshall_role"},"eq":"base"}]},"eq":1,"then":[
+        {"create_location":"base_marshall_snapshot_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"marshall"}}}]},
+        {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT","number"]},"value":{"location":"base_marshall_snapshot_location"}},
+        {"set":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"value":1},
+        {"if":{"has_location":"marshall_guidance_location"},"eq":1,"then":[{"set":{"var":["L:BASE_MARSHAL_TARGET","number"]},"value":{"location":"marshall_guidance_location"}}]}
+      ]}
+    ],
+    "create saved base marshall": [
+      {"call_macro":"reset marshall guidance"},
+      {"create_location":"marshall_guidance_location","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:BASE_MARSHAL_TARGET LAT","number"]},{"var":["L:BASE_MARSHAL_TARGET LON","number"]}]}}}}]},
+      {"create_location":"base_marshall_snapshot_location","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:BASE_MARSHAL_SNAPSHOT LAT","number"]},{"var":["L:BASE_MARSHAL_SNAPSHOT LON","number"]}]}}}}]},
+      {"set":{"local":"marshall_role"},"value":"base"},
+      {"set":{"local":"marshall_guidance_target"},"value":"base_saved"},
+      {"set":{"local":"marshall_guidance_enabled"},"value":1},
+      {"set":{"local":"marshall_wind_enabled"},"value":"no"},
+      {"if":{"local":"68pony_marshal"},"eq":"OK","then":[{"create_object":{"name":"marshall","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":0,"dist":0,"heading":0,"object":"base_marshall_snapshot_location"}}}],"else":[{"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":0,"dist":0,"heading":0,"object":"base_marshall_snapshot_location"}}}]},
+      {"point_object":"marshall","to":"marshall_guidance_location"},
+      {"call_macro":"activate marshall guidance"},
+      {"call_macro":"snapshot base marshall"}
+    ],
+    "create wind return base marshall": [
+      {"call_macro":"reset marshall guidance"},
+      {"call_macro":"invalidate base marshall snapshot"},
+      {"create_location":"marshall_guidance_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"RTB_location"}}}]},
+      {"set":{"local":"marshall_role"},"value":"base"},
+      {"set":{"local":"marshall_guidance_target"},"value":"RTB_location"},
+      {"set":{"local":"marshall_guidance_enabled"},"value":1},
+      {"set":{"local":"marshall_wind_enabled"},"value":"no"},
+      {"set":{"local":"return_base_marshall_delta_bearing"},"value":{"subtract":[180,{"var":["PLANE HEADING DEGREES TRUE","DEGREES"]}]}},
+      {"set":{"local":"return_base_marshall_wind_bearing"},"value":{"round":{"add360":[{"local":"return_base_marshall_delta_bearing"},{"var":["AMBIENT WIND DIRECTION","degrees"]}]}}},
+      {"if":{"local":"68pony_marshal"},"eq":"OK","then":[{"create_object":{"name":"marshall","title":"EU Firefighter 1","fallback_title":"Airbus H145 FR Pisteur 1","location":{"bearing":{"local":"return_base_marshall_wind_bearing"},"dist":-18,"heading":180,"object":"marshall_guidance_location"}}}],"else":[{"create_object":{"name":"marshall","title":"Airbus H145 FR Pisteur 1","fallback_title":"$TITLE Crew","location":{"bearing":{"local":"return_base_marshall_wind_bearing"},"dist":-18,"heading":180,"object":"marshall_guidance_location"}}}]},
+      {"point_object":"marshall","to":"marshall_guidance_location"},
+      {"call_macro":"activate marshall guidance"},
+      {"call_macro":"snapshot base marshall"}
+    ],
+    "restore return base marshall": [
+      {"if":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"eq":2,"then":[{"call_macro":"create wind return base marshall"}],"else":[{"if":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"eq":1,"then":[{"call_macro":"create saved base marshall"}],"else":[{"call_macro":"create base marshall"}]}]}
+    ],
+    "restore reloaded base marshall": [
+      {"if":{"and":[{"require":{"var":["L:BASE_MARSHAL_SESSION","number"]},"eq":1},{"require":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"eq":1}]},"eq":1,"then":[{"call_macro":"create saved base marshall"}],"else":[{"call_macro":"create base marshall"}]}
     ],
     "create hospital marshall": [
       {"call_macro":"reset marshall guidance"},

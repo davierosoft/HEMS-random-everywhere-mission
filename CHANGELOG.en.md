@@ -1,3 +1,13 @@
+## Persistent base-marshal return and reload recovery - release 0.997 70
+
+- Advanced the mission title to `0.997 70`.
+- Corrected Objective 1 ordering: the optional start-base marshal is now created only after the initialization cleanup that previously destroyed it in the same startup pass.
+- The base marshal stores its exact live position and guidance target in persistent LVAR locations. A normal return to the original base recreates that marshal at the saved coordinates and points it to the original base target.
+- Selecting a different return base explicitly invalidates the old-base snapshot. A replacement marshal is generated at an 18 m wind-relative fallback position around the selected RTB location, then its new location and target are stored for later recovery.
+- Accepting a second dispatch while returning to base snapshots only a marshal whose role is `base`, before the mission reload. Objective 1 then rehydrates that same marshal position and target from LVAR latitude/longitude data. Scene, hospital, and technical marshals cannot overwrite this snapshot.
+- The new state uses LVAR/local persistence only; no global marshal state was added. `CHANGELOG_USER.en.md` remains untouched.
+- Static validation: strict JSON parsing succeeds with 521 macros; all seven new marshal macros resolve and their calls are non-dangling.
+
 ## Restore centralized RescueTrack alert - release 0.997 69
 
 - Advanced the mission title to 0.997 69.
