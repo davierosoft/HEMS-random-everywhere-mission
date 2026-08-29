@@ -1,3 +1,9 @@
+## RescueTrack audio arming for realistic dispatch - release 0.997 73
+
+- Fixed the missing RescueTrack sound after a realistic initial dispatch. The initial path used `first_dispatch`, which played the dispatch ringtone but never armed the central NEWMSG notification gate; every later message was therefore correctly detected but intentionally muted.
+- Moved arming into `dispatch ringtone`. Every dispatch route now enables RescueTrack message alerts immediately after emitting its dedicated first-dispatch ringtone, while the initial message itself remains protected from a duplicate NEWMSG alert.
+- Static validation: strict JSON parsing succeeds; `rescuetrack_audio_ready` has one initialization, one central dispatch-ringtone arm, and the sole dynamic `L:{local:VCP}NEWMSG` writer remains in `UpdateRescueTrack`. `CHANGELOG_USER.en.md` remains unchanged.
+
 ## Unique public and casualty selection - release 0.997 72
 
 - Added a locked, mission-local public-title selector for the civilian, dog, dancer, and worker pools. Every requested public model is selected from titles not already spawned by the current scene; only after the requested pool has no unused title remaining can the selector reuse one.

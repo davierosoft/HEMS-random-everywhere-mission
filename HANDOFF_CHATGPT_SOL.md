@@ -1,3 +1,18 @@
+## Release 0.997 73
+
+Release 0.997 73 restores audible RescueTrack updates for realistic-dispatch missions.
+
+- Release contract: mission title, CHANGELOG.en.md, and this handoff are updated to 0.997 73. CHANGELOG_USER.en.md remains untouched. Direct push to main is authorized; do not create a pull request.
+- Root cause: objective1 initialized `rescuetrack_audio_ready = no`. The ordinary initial-dispatch branch called `dispatch ringtone` and then set it to yes. The realistic branch instead spawned `first_dispatch`; that macro updated RescueTrack and played the ringtone, but never armed the gate. Consequently the central UpdateRescueTrack writer existed but was permanently suppressed for the whole mission.
+- Central fix: `dispatch ringtone` now sets `rescuetrack_audio_ready = yes` after issuing the selected package ringtone. The old branch-specific setter has been removed. Every existing path that invokes the dedicated dispatch ringtone (ordinary, realistic, custom-menu and later-dispatch routes) shares this one arm point.
+- Initial-message contract: `first_dispatch` and the non-realistic initial path both append/update the initial RescueTrack message before they call the ringtone. It is therefore counted while the gate is still no and receives no second alert. Any later Dispatcher_Messages append increments `L:{local:VCP}NEWMSG` once through UpdateRescueTrack.
+
+### Runtime checks for release 73
+
+1. Enable REALISTIC_DISPATCH, accept the first dispatch, then wait for ambulance/police/fire or clinical RescueTrack updates. Confirm the initial dispatch has its ringtone only and each later message produces exactly one package-specific NEWMSG sound.
+2. Repeat with non-realistic dispatch and with a custom dispatched mission. Confirm initial dispatch still has no duplicate alert and later messages remain audible.
+3. Repeat using at least two voice packages (for example AND and KEK). Confirm the dynamic `{local:VCP}` prefix reaches the active package rather than a hard-coded sound bank.
+
 ## Release 0.997 72
 
 Release 0.997 72 removes accidental duplicate public/casualty models without treating a genuinely exhausted pool as an error.
