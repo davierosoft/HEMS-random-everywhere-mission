@@ -1,3 +1,13 @@
+## Adaptive residential road selection and map-selection reject stability - release 0.997 75
+
+- Advanced the mission title to 0.997 75.
+- Residential road preparation now keeps an explicitly configured radius of 120 m or more, but raises the standard 100 m setup only to 120 m instead of forcing 250 m before every query. A scene that has no usable road result from that short standard query gets exactly one retry at 250 m; an explicitly larger custom radius is never reduced and is not queried again.
+- Removed the per-way node enumeration that built node_location_list and then discarded it. Road candidate, nearest-node, connected-road, waypoint, marker, and fallback logic continue to consume the original OSM result directly, so the generated scene is unchanged while unnecessary OSM-node iteration and micro-sleeps are avoided.
+- Corrected landing-spot rejection. The landing spot selector now calls routeupdate, or changes the heli-rescuer FPL state, only after ACCEPT = 1. Rejecting a proposed spot leaves the previously accepted landing marker, route, and current route calculation untouched.
+- Audited the other map-selection Reject/Cancel flows. Their route and location mutations are already inside their respective Accept branches, so no duplicate changes were introduced merely for symmetry.
+- Updated CHANGELOG_USER.en.md intentionally for this release. It now covers the public July baseline through 0.997 75 and lists user-facing options by screen/menu.
+- Static validation: strict JSON parsing succeeds. The shared road generator no longer contains node_location_list; its final guard provides one 120-to-250 m retry only on the first unsuccessful standard attempt; the landing selector contains routeupdate only beneath ACCEPT = 1.
+
 ## Manual patient-one treatment interaction - release 0.997 74
 
 - Added the persistent P1 manual medical mode option to Ground / Hoist Operations. Automatic remains the default, so existing missions keep their timed clinical flow until the option is explicitly set to MANUAL.

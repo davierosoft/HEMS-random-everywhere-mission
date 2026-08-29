@@ -1,3 +1,22 @@
+## Release 0.997 75
+
+Release 0.997 75 reduces residential-scene preparation work without changing the generated road-scene contract, and stops map Reject from needlessly rebuilding an existing flight route.
+
+- Release contract: mission title, CHANGELOG.en.md, HANDOFF_CHATGPT_SOL.md, and CHANGELOG_USER.en.md are updated to 0.997 75. The user changelog update is intentional for this release. Direct push to main is authorized; do not create a pull request.
+- Residential radius contract: do not globally lower roadnodequerydistance. In the residential macro, only a value below 120 is raised to 120. Thus ordinary dispatches that arrive from Objective 1 at 100 m use the short query, while custom/trains/manual flows which deliberately supplied 250 m or more keep their selected reach.
+- Shared road generator contract: remove only the my_ways to node_location_list enumeration. It had no consumer. Do not remove osm_get_all_ways itself: it remains a harmless existing staging command and may be useful to future diagnostics.
+- Adaptive retry contract: after a generator pass did not set has_accident_location to yes, retry exactly once only if roadqueryattempt is 1 and the current radius is below 121. Reset the status to no, set the radius to 250, and recursively call the same generator. On a second unsuccessful pass, or an initially larger radius, set failed and allow the existing launcher fallback path. Do not create another polling thread or alter marker/waypoint selection.
+- Landing Reject contract: landing spot selection begins with ACCEPT = 0; ACCEPT = 1 is the sole path permitted to remove/create the landing marker, update location_name/ring, refresh routeupdate, or set FPL_NMBR = 5 for a heli-rescuer location. ACCEPT = 2 is a pure cancellation: its only effects are closing the actions and restoring the map layer/dialog state. The prior accepted route and marker remain visible and valid.
+- Other map selection controls were inspected: Query temp position, Query user position midway, Query user heli rescuer, Query list hospital destination, Query dispatcher position custom, and create technical marshall custom already place route/location writes beneath acceptance. Do not change them unless a concrete defect is reproduced.
+
+### Runtime checks for release 75
+
+1. Start a normal residential road incident. At the 42% Cabin preparation stage, confirm the first road lookup uses the normal short setup and that accident, rescue, road, and vehicle waypoints still appear as before.
+2. Test a sparse location where no connected road is found in the short area. Confirm one wider retry occurs, then either normal road-scene generation succeeds or the existing fallback scene proceeds. Confirm there is no infinite retry.
+3. Start a custom/manual scene that intentionally has a 250 m or larger road radius. Confirm its radius is retained rather than reduced to 120 m.
+4. Open Select a point or POI on the map for a landing spot, move the proposed point, then choose Reject position change. Confirm no route redraw/recalculation occurs and the former landing icon/ring remains. Repeat with a heli-rescuer point.
+5. Repeat and choose Accept HOV/LDG spot. Confirm only this accepted flow moves the landing reference and refreshes the route/FPL as applicable.
+
 ## Release 0.997 74
 
 Release 0.997 74 introduces the first manual clinical-interaction model for patient 1.
