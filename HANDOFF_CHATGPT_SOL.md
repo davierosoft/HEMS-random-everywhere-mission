@@ -1,3 +1,22 @@
+## Release 0.997 67
+
+Release 0.997 67 adds the approved ambulance-to-HEMS clinical handover and adapts the Medical page to HPG's actual single-column widget constraints.
+
+- Release contract: mission title, `CHANGELOG.en.md`, and this handoff are updated to `0.997 67`. `CHANGELOG_USER.en.md` is intentionally untouched until a public-release changelog is requested. No pull request or push was created.
+- Handover eligibility: only one-patient scenes are considered. The controller waits for `ambu1arrived = yes`, then gives the ambulance 8–18 simulated seconds before rechecking that HEMS has not started the visit, the patient is alive and not rescued, the ambulance and patient still exist, and the existing ambulance-preload workflow is not active. If any recheck fails, the handover remains absent; the normal HEMS visit is unchanged.
+- Handover result: the ambulance always credits the profile's action 1 (primary survey / primary-survey-and-arrest-recognition). A 55% branch may also credit action 2, which is already a profile-specific basic on-scene action. For action 2, `apply patient1 medical action effect` runs once before HEMS arrival and its outcome is retained as the ambulance handover effect. The HEMS worker skips each credited step, so a clinical effect cannot be applied twice.
+- HEMS acceptance: when `crewvisiting1` begins and the handover is ready, the state becomes `acknowledged`, waits two seconds for the report, marks the initial assessment complete if action 1 was credited, and starts the yellow current row at the first remaining action. The existing action interval therefore loses exactly the credited first phase(s), rather than shortening unrelated later treatment.
+- Medical-page layout contract: native `bar` image separators are used instead of text dashes; there are no text boxes, columns, mixed-colour lines, or alignment tricks. The conditional handover section is yellow/orange/green as separate HPG lines. The care timeline remains newest action first; ambulance rows are explicit green `AMBULANCE:` entries for actions 2 and 1, and the generic green rows for those credited actions are suppressed.
+- GCS/code layout: numeric and NT GCS both display patient code on the same compact coloured text row. The separator before `CODE` is exactly five spaces: enough to detach it visually while preserving one safe single-line string. NT remains yellow and has no numeric total. Gray GCS/code reference text and LifeScore remain after the action/CPR portion; LifeScore remains the final page section.
+- Static validation: strict JSON parsing succeeds with 514 macros. The new handover macro has a flat HPG `if: { and: [...] }, eq: 1` eligibility test, all of its display `show_condition` objects have explicit comparators, the dashed headings are gone, and all six generic green action pairs contain a handover suppression clause.
+
+### Runtime checks for release 67
+
+1. Run a one-patient call in which the ambulance arrives at least 18 seconds before HEMS, without triggering the existing ambulance-preload case. Before HEMS arrival, open Medical: the ambulance handover report must appear only after the ambulance work is complete. On HEMS arrival, confirm the acknowledgement appears, action 1 (and sometimes action 2) is green and labelled `AMBULANCE:`, and the first yellow row is the first uncredited action.
+2. Repeat with HEMS reaching the patient before the ambulance's 8–18 second window finishes. No handover report or ambulance action row may appear; the ordinary yellow action 1 and deferred vital/GCS reveal must remain unchanged.
+3. Exercise a preloaded ambulance case. The existing ambulance-previsit transport flow must continue without the new clinical-handover rows or duplicate effects.
+4. Test a numeric-GCS case and an NT-GCS case. Both rows must keep `CODE` on the same line; NT must remain yellow and show `T:NT` with no numeric total. In both cases, verify native `bar` separators, a single `MEDICAL ACTIONS` heading, and LifeScore at the bottom.
+
 ## Release 0.997 66
 
 Release 0.997 66 adds a fixed angular hysteresis buffer to the common marshal left/right approach instructions.

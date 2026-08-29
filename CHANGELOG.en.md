@@ -1,3 +1,13 @@
+## Ambulance-to-HEMS clinical handover and record layout - release 0.997 67
+
+- Advanced the mission title to `0.997 67`.
+- Added a single-patient ambulance-to-HEMS handover controller. When an ambulance reaches the scene before HEMS and has time to act, it completes the diagnosis profile's first primary-assessment step and, on a controlled random branch, the second basic-treatment step. The existing ambulance-preload path remains excluded, preventing a second clinical workflow for the same patient.
+- The HEMS clinical controller acknowledges a ready handover, credits one or two ambulance actions, and resumes at the first action not already completed. An effect for the ambulance's second action is applied once before HEMS arrival and is not repeated by the HEMS sequence.
+- Reworked the Medical page as a vertical clinical record compatible with HPG's single-column, single-colour widget limits. A conditional ambulance-handover section uses the native `bar` image separator, an orange report line, and a green acknowledgement; the timeline identifies completed ambulance actions as `AMBULANCE:` rows while HEMS actions retain the existing yellow-in-progress/green-completed contract.
+- Replaced the variable-width dashed page headings with a centered `PATIENT CLINICAL RECORD` title and a single `MEDICAL ACTIONS` heading between native bar separators.
+- Numeric and Not Testable GCS variants both keep patient code on the same compact text row. A fixed five-space separator before `CODE` preserves a clear visual gap while retaining enough width to avoid an unpredictable wrap.
+- Static audit: strict JSON parsing succeeds with 514 macros; the new conditions are HPG-flat and all six generic green action rows suppress an ambulance-credited duplicate. No pull request or push was created.
+
 ## Fixed angular marshal lateral buffer - release 0.997 66
 
 - Advanced the release title to `0.997 66`.
