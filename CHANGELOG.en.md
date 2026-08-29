@@ -1,3 +1,12 @@
+## Return-to-base dispatch availability and tablet 5G - release 0.997 71
+
+- Added a persistent Tablet 5G setting in Avionics Options, adjacent to the CARLS radio self-test setting. It defaults to NO and, when enabled, keeps only the tablet data connection available regardless of Wi-Fi range or CARLS radio state.
+- Clarified the post-return workflow on the statistics screen: it now states that the crew remains on duty awaiting the next dispatch, and the explicit terminal control is named END SHIFT.
+- END SHIFT now marks the dispatch phase unavailable before closing the shift, cancelling a pending post-return availability flow instead of allowing a late dispatch to arrive after the shift is closed.
+- The automatic second-dispatch worker remains the sole scheduler: it starts at the existing return/deboarding dispatch phases and retains the configured random delay. No duplicate dispatcher worker or extra reload action was added.
+- Deboarding remains non-blocking. A dispatch accepted during the animation uses the existing reload path, which clears transient crew and vehicle objects and rebuilds the stopped-aircraft ground-arrival flow.
+- Static validation: strict JSON parsing succeeds; Tablet 5G never changes L:CARLS_CONNECTED, and all existing dispatch and RescueTrack gates continue to consume the tablet connection state.
+
 ## Persistent base-marshal return and reload recovery - release 0.997 70
 
 - Advanced the mission title to `0.997 70`.

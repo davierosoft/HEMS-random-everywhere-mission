@@ -1,3 +1,23 @@
+## Release 0.997 71
+
+Release 0.997 71 keeps a returned crew available for a following dispatch and makes the end-of-shift state explicit.
+
+- Release contract: mission title, CHANGELOG.en.md, and this handoff are updated to 0.997 71. CHANGELOG_USER.en.md remains untouched. Direct push to main is authorized; do not create a pull request.
+- Verified return flow: return to base sends dispatch phase 5; deboarding sends phase 6. The existing root NEW DISPATCH worker already calls ready dispatch for those phases. The final statistics screen does not close the mission by itself. Its old END MISSION label made that state unclear.
+- Real blockers: ready dispatch and accept_dispatch require either L:CARLS_CONNECTED = 1 or wificonnect = Connected. A normal Wi-Fi connection is range-limited to 300 m from the configured base and must be manually connected. The configured TIME_SECOND_DISPATCH random delay also applies.
+- End-of-shift UI: the statistics screen now displays an on-duty/awaiting-dispatch line and names the terminal button END SHIFT. That button sets dispatch phase 7 before MISSION_END_WAITING = 2, so a pending availability worker cannot generate a late call after the user explicitly ends the shift. Do not add a second manual ready dispatch call: the existing NEW DISPATCH worker already owns this transition.
+- Deboarding contract: do not wait for deboarding to finish before accepting a later dispatch. accept_dispatch already reloads the mission and HPG removes transient crew/vehicle objects; the restarted stopped-aircraft path then brings the crew back on foot or by vehicle.
+- 5G contract: persistent global TABLET_5G_ENABLED defaults to no in Objective 1. The root TABLET 5G connection monitor forces only wificonnect = Connected while enabled, then clears that forced state when disabled. Never set or spoof L:CARLS_CONNECTED; CARLS state remains real. Existing HOC, dispatch, acceptance and RescueTrack gates therefore acquire the 5G path through their unchanged tablet-connection checks.
+- Settings placement: (P)Tablet 5G data connection (always available) is immediately after the CARLS self-test selector in AVIONICS OPTIONS. NO is the persistent default.
+
+### Runtime checks for release 71
+
+1. Return home, shut down, and let the statistics screen open while deboarding is still animating. Confirm it remains open and displays the on-duty status rather than closing automatically.
+2. With CARLS off and Wi-Fi outside 300 m, confirm the normal delayed dispatch waits. Enable Tablet 5G and confirm the existing dispatcher then delivers its next call within the configured random delay.
+3. With 5G enabled, CARLS off and no local Wi-Fi, accept the incoming dispatch and use RescueTrack. Confirm data functions work while CARLS stays genuinely disconnected. Disable 5G and confirm the forced tablet connection clears.
+4. Accept a later dispatch while deboarding animations are incomplete. Confirm reload removes the temporary objects and restores the stopped-aircraft crew-arrival flow without object-name conflicts.
+5. Press END SHIFT while the delayed dispatcher is pending. Confirm phase 7 is reported and no late dispatch is generated.
+
 ## Release 0.997 70
 
 Release 0.997 70 makes the optional base marshal persistent across a return-to-base interruption and second-dispatch reload.
