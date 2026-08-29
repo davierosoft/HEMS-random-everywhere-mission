@@ -1,3 +1,14 @@
+## RescueTrack alerts and marshal/clinical regression fixes - release 0.997 68
+
+- Advanced the mission title to `0.997 68`.
+- Centralized the RescueTrack notification signal: every newly appended RescueTrack dispatcher message now increments the VCP `NEWMSG` LVAR exactly once. The first dispatch message remains silent in this path because it retains its dedicated dispatch ringtone; all former per-macro increments were removed to prevent double alerts.
+- Replaced the unsupported HPG widget `or` condition used by the ambulance handover with the flat `ambulance_handover_visible` flag. The flag is reset at dispatch/pathology initialization and only enabled after a real on-scene ambulance report has been produced, so calls without an ambulance no longer show an empty handover or `null REPORT: null`.
+- Removed redundant conditional page separators: native `bar` images now occur once at each active clinical-section boundary. The Medical Actions header itself is hidden until either the ambulance handover or HEMS action controller has made a clinical timeline available.
+- Restored the assessment display contract. Vital signs, coloured GCS/CODE row, and the gray GCS/CODE references now depend solely on `medical_assessment_complete`; they appear with the transition from the first assessment action and are no longer blocked by later rescue/load mission states.
+- Corrected the distant marshal cone to straddle the actual 0°/360° centreline. Outside the landing area, its fixed ±12° latch holds the current left/right indication across the centreline and changes only once the aircraft exits the sector.
+- Added a low-NR landing confirmation for both marshal controller variants. After the helicopter is on the landing spot below `gndopsNR` for 30 seconds, departure guidance is armed. A normal restart still shows the existing rotor sequence; an idle/quick-start that skips the pump phase enters the takeoff-ready state directly, then still emits hover and departure-direction signals after lift-off.
+- Static validation: strict JSON parsing succeeds with 514 macros. `patient health` contains no HPG `show_condition.or`; VCP `NEWMSG` is written only in the centralized RescueTrack macro. `CHANGELOG_USER.en.md` is intentionally unchanged.
+
 ## Ambulance-to-HEMS clinical handover and record layout - release 0.997 67
 
 - Advanced the mission title to `0.997 67`.
