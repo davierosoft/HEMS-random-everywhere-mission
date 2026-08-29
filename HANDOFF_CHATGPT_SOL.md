@@ -1,3 +1,25 @@
+## Release 0.997 74
+
+Release 0.997 74 introduces the first manual clinical-interaction model for patient 1.
+
+- Release contract: mission title, CHANGELOG.en.md, and this handoff are updated to 0.997 74. CHANGELOG_USER.en.md remains untouched. Direct push to main is authorized; do not create a pull request.
+- Setting: Ground / Hoist Operations now includes persistent P1 manual medical mode. The unset/default state is AUTOMATIC and preserves every existing automatic patient-one visit. MANUAL affects only patient 1; patients 2 and 3 continue using their current automatic behavior.
+- Clinical state machine: after crewvisiting1 becomes yes, MANUAL starts patient1 manual treatment. The current pathology action plan supplies from one to six sequential phases. For every phase, the engine selects one of four button slots for the correct profile-specific procedure and one of three alternative wrong-option sets. The user cannot advance until one option finishes its time-scaled procedure.
+- Effects: correct choices call apply patient1 medical action effect, retaining the current pathology-aware randomized effect model. Incorrect choices record an error and apply a persistent randomized penalty of 4 to 10 Life Score points plus deterioration of SpO2, blood pressure, and pulse before update patient1 physiology. The current Life Score is not reset between phases, which is the required chain of consequences.
+- Time presets: set manual patient1 procedure duration reuses PERSIST_MISSION_WAIT_TIME / ULTRASHORT. ULTRAFAST is 2-4 seconds, FAST 5-8, MEDIUM 10-16, and SLOW 18-30 per chosen procedure. Do not add a second timing selector.
+- Visit and transport gate: the five patient-one ground-operation variants now call patient1 clinical visit gate rather than waiting only TIME1SHORT. In MANUAL mode this waits for manual_p1_visit_completed. After the final result the UI requires COMPLETE VISIT and then HELICOPTER or, only when ambulance1 exists, AMBULANCE. select patient1 transport maps this back to whobringpatient; AUTOMATIC uses the untouched original branch parameter.
+- Assessment visibility: manual completion of phase one sets medical_assessment_complete = yes. If an ambulance already completed an initial handover action, the assessment is available at manual-treatment start. The UI hides the automatic action timeline in MANUAL mode and shows newest manual results first in green/red.
+- Safety exit: a patient death while the manual visit is active sets the state to aborted and releases the visit gate, preventing a ground-operations deadlock.
+
+### Runtime checks for release 74
+
+1. In Ground / Hoist Operations set P1 manual medical mode to MANUAL, select each of ULTRAFAST, FAST, MEDIUM, and SLOW, then begin a single-patient mission. Confirm the automatic patient-one visit timer no longer completes the visit by itself and each selected procedure observes the expected relative duration.
+2. At one phase, confirm exactly four short choices are visible. Restart several runs: the correct action must not occupy a fixed position and the incorrect options must vary within the clinical profile.
+3. Choose an incorrect procedure. Confirm a red result with a negative score, lower Life Score and altered vitals; then complete the next phase and confirm it starts from that altered condition. On a separate run choose correct procedures and confirm the existing randomized physiological response is preserved.
+4. Complete phase one and confirm GCS, vital signs, Code and their gray legends appear. Confirm results stack newest first and the automatic green/yellow action timeline is not duplicated in manual mode.
+5. Finish all phases. Confirm COMPLETE VISIT is required, HELICOPTER completes the ground flow, and AMBULANCE appears only when ambulance1 exists and sends the patient through the ambulance branch.
+6. Repeat with two or three casualties and with every relevant 3/4/5-crew or skid-landing ground-operation variant. Confirm only patient 1 is manually gated; patients 2/3 retain their existing flow. Also test a patient death mid-visit to confirm ground operations do not remain blocked.
+
 ## Release 0.997 73
 
 Release 0.997 73 restores audible RescueTrack updates for realistic-dispatch missions.

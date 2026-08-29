@@ -1,3 +1,13 @@
+## Manual patient-one treatment interaction - release 0.997 74
+
+- Added the persistent P1 manual medical mode option to Ground / Hoist Operations. Automatic remains the default, so existing missions keep their timed clinical flow until the option is explicitly set to MANUAL.
+- In manual mode, patient 1 follows the existing pathology-specific treatment plan as a staged interaction of one to six phases. Each phase presents four short procedures: one clinically appropriate choice and three profile-specific incorrect alternatives. The correct slot and the incorrect-option set are randomized for every phase.
+- Correct procedures invoke the established patient-one treatment-effect engine, retaining its pathology-aware, randomized response. A correct procedure may improve, leave unchanged, or occasionally worsen the Life Score as already defined by that model. Incorrect procedures impose a persistent randomized Life Score and vital-sign penalty; later phases therefore operate on the altered condition.
+- Reused the existing ULTRAFAST, FAST, MEDIUM, and SLOW visit-time presets as per-procedure durations. Automatic visit waits are bypassed only for patient 1 in MANUAL mode, and ground operations wait for explicit clinical sign-off instead.
+- After the final phase, the medical page requires COMPLETE VISIT and a transport selection. HELICOPTER is always available; AMBULANCE appears only while ambulance1 exists. The selected route controls the original ground-operation transport flow. Patient 2 and patient 3 remain automatic.
+- The first completed phase reveals the GCS, vital signs, emergency code, and legends; an existing ambulance handover can credit its completed initial actions before manual treatment begins.
+- Static validation: strict JSON parsing succeeds with 530 macros; all eight manual-treatment macros resolve, each of the five patient-one ground-operation variants uses the manual clinical gate once, and no new dangling macro call was introduced. CHANGELOG_USER.en.md remains unchanged.
+
 ## RescueTrack audio arming for realistic dispatch - release 0.997 73
 
 - Fixed the missing RescueTrack sound after a realistic initial dispatch. The initial path used `first_dispatch`, which played the dispatch ringtone but never armed the central NEWMSG notification gate; every later message was therefore correctly detected but intentionally muted.
