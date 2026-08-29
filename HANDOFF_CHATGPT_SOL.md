@@ -1,3 +1,17 @@
+## Release 0.997 79
+
+Release 0.997 79 adds a CARLS Direction Finder interface and connects its accepted frequency to the HPG cockpit DF pointer.
+
+- Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated to 0.997 79. Do not update CHANGELOG_USER.en.md for this test-cycle feature unless the user explicitly requests the public changelog. Direct push to main is authorized; do not create a pull request.
+- Entry point: CARLS main-page L1 was unused in both connected and disconnected states. It is now labelled DF and opens page 13. Do not reuse L3 or R2 on the main page: they point at incomplete legacy page slots.
+- DF display contract: page 13 uses L1/RTN to leave, R2/ENT and the right selector to confirm, and `#` as a keypad confirmation alternative. It shows DIRECTION FINDER, the active frequency as `DDD.DDD MHz`, and an `&nbsp;`-padded dash cursor at the selected digit. `*` cancels only the current DF entry.
+- Input contract: the digits 0–9 are intercepted only while CARLS_PAGE = 13; every other page retains the previous RescueTrack/dispatch actions unchanged. A new entry clears six digit stores and fills them left-to-right. After digit six, R2, right selector, `#`, or five seconds of inactivity calls the same validation. Incomplete or out-of-range input resets to the previously active value.
+- Frequency contract: accept only integer-kHz values 108000 through 426025, representing 108.000–426.025 MHz inclusive. The persistent LVAR is `L:CARLS_DF_FREQUENCY` (default 121500). On open and valid confirm, call `set_df` for `accident_location` with the LVAR divided by 1000; this keeps the HPG MFD bearing pointer source and CARLS display in sync.
+- Runtime checks:
+  1. On either connected or disconnected CARLS home display, verify L1 reads DF and opens DIRECTION FINDER. Initial frequency must be 121.500 MHz unless a valid value was previously retained.
+  2. Enter `121500`. Confirm the frequency updates after R2/ENT, right selector, `#`, or five seconds, and the MFD DF app points to the current incident.
+  3. Enter `108000` and `426025`: both must be accepted. Enter `107999`, `426026`, or fewer than six digits then wait five seconds: each must be rejected and must retain the preceding active frequency.
+  4. While DF is open, confirm `*` clears the pending entry only; L1/RTN returns to home. Leave DF and press digits 0–9: each must retain its original CARLS dispatch behavior.
 ## Release 0.997 78
 
 Release 0.997 78 turns the distant marshal centre buffer into the intended neutral guidance cone for both marshal controllers.

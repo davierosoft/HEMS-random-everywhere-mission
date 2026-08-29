@@ -1,3 +1,12 @@
+## CARLS Direction Finder - release 0.997 79
+
+- Advanced the mission title to 0.997 79.
+- The previously unused CARLS L1 soft key is now labelled DF on the primary page. It opens a dedicated DIRECTION FINDER page without displacing the working status, group, mode, or setup controls.
+- The page displays the active DF frequency in MHz and a non-compressing dash cursor below the digit being edited. A new six-digit entry is assembled left to right as `DDD.DDD`.
+- R2 (ENT), the right selector, or the `#` key confirms an entry. When all six digits are entered, the same validation is applied automatically after five seconds of inactivity. `*` cancels the in-progress entry and L1/RTN returns to the CARLS main page.
+- Only 108.000 through 426.025 MHz, inclusive, is accepted. An incomplete or out-of-range entry is cancelled and the previous active frequency remains unchanged.
+- A valid frequency immediately configures the HPG Direction Finder source at the current accident location, so the cockpit MFD bearing pointer and the CARLS display use the same active frequency.
+- Static validation: strict JSON parsing succeeds; all seven CARLS DF macros and the CARLS DF background thread exist; main-page L1, all keypad digits, `*`, `#`, R2/ENT, and L1/RTN are routed to defined commands.
 ## Correct marshal central approach cone - release 0.997 78
 
 - Advanced the mission title to 0.997 78.
