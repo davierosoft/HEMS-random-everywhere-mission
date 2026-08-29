@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 75.
+This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 76.
 
 It describes the final behavior that a user receives after upgrading from the public build. It does not list temporary test-build regressions or corrections that were superseded before this release. Update this file only for meaningful finished user-facing changes.
 
@@ -69,6 +69,7 @@ It describes the final behavior that a user receives after upgrading from the pu
 
 - **Tablet 5G data connection** is persistent and defaults to NO. When enabled, tablet data remains available even outside Wi-Fi range or with CARLS radio disconnected; it does not falsely report CARLS as connected.
 - The option is placed with the CARLS radio self-test/autoconnect controls so data and radio behavior can be set together.
+- When Tablet 5G is enabled, the manual Wi-Fi connect/disconnect controls are replaced in Mission Dispatch by a green 5G CONNECTED status icon. Switching 5G back to NO restores the normal in-range Wi-Fi control.
 
 ### Map, dispatch, and return screens
 

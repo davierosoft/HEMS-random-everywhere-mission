@@ -1,3 +1,11 @@
+## Hide manual Wi-Fi controls while Tablet 5G is active - release 0.997 76
+
+- Advanced the mission title to 0.997 76.
+- The two interactive Wi-Fi controls in Mission Dispatch (connect and disconnect) now require TABLET_5G_ENABLED to be different from yes. With persistent Tablet 5G enabled, neither manual Wi-Fi action is displayed.
+- In their place, a single green 5G CONNECTED describe_icon is shown. It embeds a 32 by 32 px black-background URI icon, matching the Wi-Fi icon slot dimensions.
+- This is a presentation-only gate. Tablet 5G keeps the established forced connection behavior; disabling it restores the appropriate in-range Wi-Fi control without changing CARLS state.
+- Static validation: strict JSON parsing succeeds; exactly two wifigo controls use the Tablet 5G visibility guard and exactly one 5G CONNECTED status icon uses the inverse gate.
+
 ## Adaptive residential road selection and map-selection reject stability - release 0.997 75
 
 - Advanced the mission title to 0.997 75.

@@ -1,3 +1,17 @@
+## Release 0.997 76
+
+Release 0.997 76 removes redundant manual Wi-Fi controls whenever Tablet 5G is selected.
+
+- Release contract: mission title, CHANGELOG.en.md, HANDOFF_CHATGPT_SOL.md, and CHANGELOG_USER.en.md are updated to 0.997 76. Direct push to main is authorized; do not create a pull request.
+- UI contract: in Mission Dispatch, both describe_icon wifigo controls (available/connect and connected/disconnect) must use the existing Wi-Fi range/state gate plus require global TABLET_5G_ENABLED ne yes. Add exactly one commandless green describe_icon with description 5G CONNECTED and a 32 by 32 px black-background data:image/png URI, shown only when global TABLET_5G_ENABLED eq yes. Do not hide CARLS controls or modify their state.
+- Connection contract: this is only a display guard. Tablet 5G continues to set TABLET_5G_FORCED and wificonnect as established; when it is switched back to NO, the standard manual Wi-Fi icon appears again whenever the original range/state conditions are true. The status icon must not create a second connect/disconnect action.
+
+### Runtime checks for release 76
+
+1. With Tablet 5G set to NO, enter Mission Dispatch in Wi-Fi range. Confirm the ordinary Wi-Fi connect icon appears, then changes to disconnect after use.
+2. Switch Tablet 5G to YES and reopen Mission Dispatch. Confirm neither Wi-Fi icon appears, including when local Wi-Fi is in range and previously connected.
+3. Turn Tablet 5G back to NO. Confirm the ordinary in-range Wi-Fi icon returns according to the original connection state, while CARLS status remains unchanged throughout.
+
 ## Release 0.997 75
 
 Release 0.997 75 reduces residential-scene preparation work without changing the generated road-scene contract, and stops map Reject from needlessly rebuilding an existing flight route.
