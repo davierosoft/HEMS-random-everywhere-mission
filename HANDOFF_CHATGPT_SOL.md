@@ -1,3 +1,20 @@
+## Release 0.997 87
+
+- Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated for this release. Do not update CHANGELOG_USER.en.md unless explicitly requested. Direct push to main is authorized; do not open a pull request.
+- BEFORE TAKE-OFF CHECKLIST contract: `checklist home` must call a defined `beforetockl` macro. It must be a standalone procedure, not an alias to startup, engine-start, or avionics/preflight macros. Leave the historical `afterengstartckl2` chain intact.
+- Tablet layout contract: each operational checklist entry is a single 54-character fixed-width monospace row, using the established white/yellow/gray progression and `[ ]` / `[V]` state markers. Do not split a row into separately aligned text fields or add text long enough to wrap.
+- Real-state checks: ENG 1/2 MAIN requires `SDK_ECP_MAIN_LATCH_1/2 = 1`; rotor requires `SDK_ROTOR_RPM >= 95`; pressure check requires hydraulic 1/2 above 80 and MGB 1/2 above 0.05; cautions require the existing FADEC, HYD low-pressure, fuel, AFCS/APCP, and MGB-chip failure LVARs all clear; AP/BKUP SAS requires `SDK_APCP_BKUP`, `SDK_APCP_AP1`, and `SDK_APCP_AP2` all on.
+- Timed-review rule: never invent an LVAR for fuel quantity, MFD pages, IESI alignment, armrest, dome light, or fuel anti-ice additive. Where no reliable control state exists, announce the item, keep it active for its review delay, then advance. Do not convert those waits into fictional automatic passes.
+- Conditional items: only when `AMBIENT TEMPERATURE` in Celsius is below 0 must the low-temperature fuel caution row appear and receive a seven-second review delay. Only when `E:TIME OF DAY != 1` must the night row appear; it waits for `LIGHT LANDING = 1`, then leaves a five-second secondary-light adjustment period. Daytime skips the row and never waits for landing lights.
+
+### Runtime checks for release 87
+
+1. On ground, open Checklist home and select BEFORE TAKE-OFF CHECKLIST. The page must open without Command Failed, with the first row yellow and all remaining applicable rows white.
+2. With ENG MAIN guards open, low rotor RPM, low pressure, a caution failure, or any AFCS channel off, the corresponding row must remain yellow. Restore the condition and verify it turns gray with `[V]` before the next item begins.
+3. At OAT below 0 C, verify the FUEL LOW TEMP row appears and is reviewed; at 0 C or above it must not render or delay the rest of the checklist.
+4. During MSFS daytime (`E:TIME OF DAY = 1`), the landing-light row must not render. At dawn, dusk, or night it must render, wait for the fixed landing light, then complete after the adjustment delay.
+5. Confirm MFD, IESI, fuel, armrest, and dome-light items advance after their review intervals rather than stalling on nonexistent package LVARs. Return through BACK and verify all older checklist entries still work.
+
 ## Release 0.997 86
 
 - Medical Diagnostic Page display contract: for non-ORGAN missions, AUTOMATIC mode displays the link only while Quick links is open (`dtab0 != 0`); MANUAL mode displays it whether Quick links is open or closed. Ambulance presence and handover state must never gate this link.

@@ -1,3 +1,11 @@
+## Release 0.997 87
+
+- Restored the previously undefined **BEFORE TAKE-OFF CHECKLIST** as its own procedure; it is no longer a broken menu link or an alias to another checklist.
+- Added a compact tablet-oriented checklist page with yellow active items, gray completed items, explicit completion marks, and 54-character fixed-width monospace rows so the tablet cannot reflow the checklist items.
+- Actual simulator checks now gate ENG 1/2 MAIN guard latches, flight rotor RPM, hydraulic and MGB pressures, active caution/failure flags, and AP1/AP2/BKUP SAS. Fuel quantity, MFD page selection, IESI validation, and optional cabin controls retain a timed review window where the H145 package exposes no reliable state variable.
+- The cold-weather fuel-low-temperature check appears only below 0 C OAT. The landing-light item appears only outside MSFS daytime (`E:TIME OF DAY != 1`), waits for the fixed landing light to be on, and retains a short adjustment window for the secondary light.
+- Existing start, engine-start, hydraulic, after-engine-start, and avionics/preflight procedures remain unchanged.
+
 ## Release 0.997 86
 
 - Fixed the Medical Diagnostic Page visibility contract: in AUTOMATIC mode it follows Quick links exactly; in MANUAL mode it remains available even with Quick links closed. ORGAN missions remain excluded.
