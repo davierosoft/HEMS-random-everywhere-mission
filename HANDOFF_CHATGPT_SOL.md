@@ -1,3 +1,10 @@
+## Release 0.997 84
+
+- Hoist altitude contract: all Radio Height conditions that gate hoist readiness, ongoing hoisting, heli-rescuer pickup/drop, and recovery use an internal upper limit of 163 ft. The dispatch page warning and readiness ranges use the same 163 ft threshold. Pilot-facing messages say **40 to 160 ft**; do not change unrelated 130 values such as hydraulic pressure, bearings, vehicle identifiers, or patient data.
+- Tablet 5G visibility contract: never show a Wi-Fi connection/connection-state control while TABLET_5G_ENABLED is yes. This gate is required in both Mission Dispatch and Mission Briefing; 5G CONNECTED remains the only connection status there.
+- Preset refresh contract: each DEFAULT/PRST 1–5 selector in mission_list_page1 and mission_list_page2 must set local/global MSN_CONFIG_PRESET, call msn preset loading with the exact Config_Table key, then rerender its page. This opens the correct saved table before select conditions are evaluated.
+- Release contract remains unchanged: update mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md; leave CHANGELOG_USER.en.md untouched unless explicitly requested.
+
 ## Release 0.997 83
 
 Release 0.997 83 replaces the initial DF proof of concept with constrained radio tuning and repairs the ambulance final-record condition syntax.

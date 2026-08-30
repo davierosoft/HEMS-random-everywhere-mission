@@ -1,3 +1,11 @@
+## Hoist altitude envelope, 5G Wi-Fi visibility, and preset refresh - release 0.997 84
+
+- Advanced the mission title to 0.997 84.
+- Raised every hoist-specific Radio Height gate from 130 ft to 163 ft: main hoisting, recovery hoisting, heli-rescuer pickup/drop, up/down operation, and the dispatch readiness/warning display. Hydraulic-pressure limits, scene bearings, and unrelated data values of 130 remain unchanged.
+- Operational messages now instruct the pilot to remain between 40 and 160 ft, deliberately rounding the internal 163 ft safety boundary for clear cockpit guidance.
+- Fixed the remaining Wi-Fi controls on the Mission Briefing page: both Wi-Fi connection rows are now hidden while Tablet 5G is enabled, matching the existing Mission Dispatch behavior.
+- Fixed preset switching in both manual mission-list pages: selecting DEFAULT or PRST 1–5 now opens the selected table before rerendering, so enabled/disabled mission rows immediately reflect that preset while retaining its saved values.
+
 ## CARLS Direction Finder frequency discipline and ambulance record syntax - release 0.997 83
 
 - Advanced the mission title to 0.997 83.
