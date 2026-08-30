@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 78.
+This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 90.
 
 It describes the final behavior that a user receives after upgrading from the public build. It does not list temporary test-build regressions or corrections that were superseded before this release. Update this file only for meaningful finished user-facing changes.
 
@@ -39,6 +39,15 @@ It describes the final behavior that a user receives after upgrading from the pu
 - **Central RescueTrack alerts.** Every new RescueTrack message after the initial dispatch receives one audio alert from the currently selected voice package. The original new-dispatch ringtone remains a single distinct sound, with no duplicate first alert.
 - **Clearer dispatch and RescueTrack messages.** The tablet distinguishes waiting-for-HEMS, ambulance transfer, cancellation, police movement to a custom LZ, additional deceased persons, no active mission, and route problems. Errors have their own visible indicator instead of replacing normal operational text.
 
+### CARLS navigation and flight preparation
+
+- **CARLS Direction Finder.** The CARLS primary page now includes a dedicated DF page. It can display and tune a valid aviation frequency, show the active source, frequency, and modulation, and provide a bearing only for an active mission beacon.
+- **Manual or automatic DF tuning.** Avionics Options adds persistent **DF AUTO / MANUAL TUNING**. AUTO follows the active ambulance, SAR beacon, or crash ELT; MANUAL leaves tuning to the pilot and enables the bearing only after the matching mission frequency is selected.
+- **Aviation-band tuning discipline.** The DF accepts only supported aviation, maritime, and UHF bands with 25 kHz spacing. Mandatory AM/FM bands are set automatically; UHF modulation remains selectable. IAD, MAD, and MAR presets tune immediately.
+- **Retained DF channel.** The most recently selected valid DF channel is retained. A first use starts at **MAN 108.000 MHz / AM**.
+- **Dedicated Before Take-off checklist.** The checklist menu now includes a complete monitored BEFORE TAKE-OFF CHECKLIST, including engine, rotor, pressure, caution, fuel, display, IESI, autopilot/SAS, optional-equipment, and conditional night-light items. Checks that cannot be read automatically continue after their prescribed delay.
+- **Higher hoist operating ceiling.** Hoist-related guidance, readiness, and warnings use a 163 ft internal ceiling. Cockpit guidance is expressed as **40 to 160 ft** for clear operational use.
+
 ## UI Changes and Controls
 
 ### Medical page
@@ -70,6 +79,13 @@ It describes the final behavior that a user receives after upgrading from the pu
 - **Tablet 5G data connection** is persistent and defaults to NO. When enabled, tablet data remains available even outside Wi-Fi range or with CARLS radio disconnected; it does not falsely report CARLS as connected.
 - The option is placed with the CARLS radio self-test/autoconnect controls so data and radio behavior can be set together.
 - When Tablet 5G is enabled, the manual Wi-Fi connect/disconnect controls are replaced in Mission Dispatch by a green 5G CONNECTED status icon. Switching 5G back to NO restores the normal in-range Wi-Fi control.
+- The tablet home bar changes to a dedicated 5G indicator with three RSSI bars while 5G is enabled. The original Wi-Fi/CARLS home bar is retained for the normal connection mode.
+- **Direction Finder tuning mode** selects DF AUTO or MANUAL TUNING and remains available with the other CARLS avionics settings.
+
+### Checklists
+
+- BEFORE TAKE-OFF CHECKLIST is available from Quick Links with the existing checklist controls and voice-assistant behavior preserved.
+- Its checklist rows use a fixed monospace width: answer fields and `[ ]` / `[V]` markers stay in their right-hand column without wrapping.
 
 ### Map, dispatch, and return screens
 
@@ -92,6 +108,8 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Resolved marshal states that could remain idle, follow wind near a landing point, use the helicopter heading, or stop working after a temporary touchdown.
 - Resolved stale/repeated cues during engine start, prime-pump use, shutdown, idle restart, take-off, and route departure.
 - Resolved incorrect custom landing-reference placement after a rejected or replaced landing spot. A rejected proposal no longer rebuilds the route or removes the active landing reference.
+- Resolved CARLS Direction Finder command failures when opening the page, entering digits, changing modulation, or confirming a valid channel.
+- Resolved DF startup displays that could show an undefined source or an invalid 0.000 MHz frequency after a mission reload.
 
 ### Crew, patient, and ground-service flow
 
@@ -110,3 +128,4 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Resolved competing CPR loops, incorrect provider selection, misleading recovery conditions, and compression information disappearing when the page reopened.
 - Resolved malformed/unsupported tablet condition structures and invalid route/location references that could cause command errors, stuck objectives, or failed dispatch actions.
 - Resolved stale custom/SAR metadata, delayed pathology persistence, duplicate victim messages, stale map icons, repeated refuelling starts, and settings unexpectedly resetting on a later dispatch.
+- Resolved malformed tablet conditions that could interrupt a valid operation with a Command Failed message.

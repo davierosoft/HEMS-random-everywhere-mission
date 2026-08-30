@@ -1,3 +1,10 @@
+## Release 0.997 90
+
+- Repaired the HPG runtime error that still affected CARLS DF digit validation after release 89. The generated DF `and/or` subgroups had a comparison only on the outer command; HPG also requires a comparator on each nested logical subgroup used directly as a condition. All 48 affected nested DF groups now carry their required `eq: 1`.
+- Added `DEVELOPMENT_RELEASE_CHECKLIST.md`, a blocking release checklist derived from the actual regressions encountered during this development cycle: HPG condition syntax, reload/persistence fallbacks, CARLS rendering, progressive input, layout, scope discipline, documentation, and runtime verification.
+- Added `tools/validate-mission.js`. It parses the mission and global defaults, checks executable and renderer condition operators, resolves static macro calls, rejects dynamic CARLS soft-key labels, specifically fails a nested `and/or` condition without its own operator while allowing the established valid `require: { or: [...] }` form, and verifies all 33 BEFORE TAKE-OFF row states remain monospace and exactly 49 characters wide.
+- Release gate is now explicit: read the checklist, run the validator, run `git diff --check`, inspect the staged file set, and keep HPG/MSFS runtime testing separate from static validation.
+
 ## Release 0.997 89
 
 - Fixed the CARLS DF startup-state regression behind the displayed **undefined 0.000** value. A surviving DF LVAR could previously outlive its local source label after a mission reload. The DF page now normalizes every display value and always has a safe MAN/AM fallback.

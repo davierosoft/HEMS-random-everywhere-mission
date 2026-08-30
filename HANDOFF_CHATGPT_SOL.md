@@ -1,3 +1,11 @@
+## Release 0.997 90
+
+- Mandatory first action for any future change: read `DEVELOPMENT_RELEASE_CHECKLIST.md` in full. It is a blocking checklist derived from real regressions, not optional documentation. Run `node tools/validate-mission.js` before staging a release; it must pass together with `git diff --check`.
+- HPG nested-condition rule: the comparison on an executable `if`/`wait_for`/`while` validates only that root expression. An `and` or `or` nested directly inside that expression must itself include a comparator, normally `eq: 1`. This was the remaining CARLS DF failure shown after release 89. Release 90 adds `eq: 1` to all 48 affected nested groups in `CARLS DF validate` and `CARLS DF digit`.
+- Do not confuse that invalid form with the valid value-expression form `require: { or: [ ... ] }, eq: 1`: there, the outer `require` owns the comparison. Existing ambulance/police/fire arrival checks use that syntax and must not receive a gratuitous inner `eq`, which would alter their expression shape.
+- Automated gate contract: `tools/validate-mission.js` parses `everywhere_all.json` and `global.json`; validates executable and static renderer conditions; detects direct executable `require`; detects nested direct logical groups without an operator; resolves static macro calls; requires three static string labels on both CARLS SK sides; and requires all 33 BEFORE TAKE-OFF state rows to be monospace and exactly 49 characters. `create_struct` renderer payloads are dynamic and require their separate emitted-payload review, not a false static failure.
+- Release 90 audit result: validator PASS — 6,630 executable conditions, 1,869 renderer conditions, 1,978 static macro calls, and 45 CARLS layouts. The JSON parser and `git diff --check` also pass. Runtime testing remains mandatory for HPG/MSFS behavior.
+
 ## Release 0.997 89
 
 - Release contract: mission title is **0.997 89**. Update `everywhere_all.json`, `CHANGELOG.en.md`, and `HANDOFF_CHATGPT_SOL.md`; do not update `CHANGELOG_USER.en.md` without an explicit user request. Commit and push directly to `main`; no pull request.
