@@ -1,3 +1,10 @@
+## Refresh briefing connectivity state - release 0.997 80
+
+- Advanced the mission title to 0.997 80.
+- Corrected the Tablet 5G display regression: changing the persistent 5G option now rebuilds Mission Dispatch immediately. The briefing cannot retain a Wi-Fi connect/disconnect action that was rendered before the new option was selected.
+- With Tablet 5G set to YES, the rebuilt briefing displays only the green 5G CONNECTED status icon; the two manual Wi-Fi actions are absent. Switching it back to NO rebuilds the same page and restores only the appropriate in-range Wi-Fi action.
+- The correction changes presentation refresh only. The established CARLS and forced Tablet 5G connection behavior are unchanged.
+
 ## CARLS Direction Finder - release 0.997 79
 
 - Advanced the mission title to 0.997 79.

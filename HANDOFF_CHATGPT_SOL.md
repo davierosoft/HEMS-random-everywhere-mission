@@ -1,3 +1,18 @@
+## Release 0.997 80
+
+Release 0.997 80 fixes the stale connectivity presentation after changing the persistent Tablet 5G setting.
+
+- Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated to 0.997 80. Do not update CHANGELOG_USER.en.md unless the user explicitly asks for the public changelog. Direct push to main is authorized; do not create a pull request.
+- Diagnosis: the persistent global TABLET_5G_ENABLED correctly changed to yes, but the already-built Mission Dispatch content could retain its pre-change Wi-Fi rows. This was a presentation-refresh issue, not a server-side version-banner issue and not a CARLS/connection-state failure.
+- Fix: both Tablet 5G NO and YES setting actions end by calling Mission dispatch. This rebuilds the current briefing from the new global state. Selecting YES must show only 5G CONNECTED; selecting NO must restore only the valid in-range manual Wi-Fi action.
+- Scope: do not change the 5G monitor thread, forced wificonnect behavior, CARLS connectivity, or the server-provided latest-version banner.
+
+### Runtime checks for release 80
+
+1. Open Settings with Tablet 5G set to NO and select YES. The screen returns to the rebuilt Mission Briefing: no Wi-Fi connect/disconnect control may remain; exactly one green 5G CONNECTED icon must be visible.
+2. Reopen Settings and select NO. The briefing must rebuild again and display the original Wi-Fi state control only when the tablet is in range.
+3. Toggle YES/NO repeatedly during a single mission. The displayed connectivity control must always match the selected option without a mission reload.
+
 ## Release 0.997 79
 
 Release 0.997 79 adds a CARLS Direction Finder interface and connects its accepted frequency to the HPG cockpit DF pointer.
