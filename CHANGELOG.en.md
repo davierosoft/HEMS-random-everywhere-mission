@@ -1,3 +1,9 @@
+## Release 0.997 88
+
+- Corrected all eleven CARLS Direction Finder conditions that used `require` as the direct operand of an `if` command. HPG requires the direct `var` or `local` operand with its comparison operator as the command sibling; the malformed form caused the reported **Missing operator** runtime failure when DF opened or processed input.
+- Rebuilt the BEFORE TAKE-OFF CHECKLIST display against the working After Engine Start layout. Every operational row is monospace and exactly 49 characters, so answer fields and `[ ]/[V]` markers remain on one line without wrapping.
+- Expanded the release audit to the whole mission: all macro arrays, every `if`/`wait_for`/`while` operator, static and generated renderer conditions, static macro calls, interpolated macro prefixes, image/icon references, and all checklist rows are checked. The audit completed with no static errors.
+
 ## Release 0.997 87
 
 - Restored the previously undefined **BEFORE TAKE-OFF CHECKLIST** as its own procedure; it is no longer a broken menu link or an alias to another checklist.

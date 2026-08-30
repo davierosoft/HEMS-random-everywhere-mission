@@ -1,3 +1,18 @@
+## Release 0.997 88
+
+- Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated for this release. Do not update CHANGELOG_USER.en.md unless explicitly requested. Direct push to main is authorized; do not open a pull request.
+- DF condition syntax contract: an executable `if`, `wait_for`, or `while` command must have exactly one comparison operator (`eq/ne/gt/gte/lt/lte`) as a sibling of the command. Its direct operand is `var`, `local`, `global`, `param`, or a logical expression. `require` is never valid as the direct operand of those commands; it is valid only as a leaf inside a logical group or a renderer condition. This release repaired eleven CARLS DF violations: modulation toggle, tune message, edit initialisation, all six digit-position branches, and DF-open default-channel handling.
+- Checklist display contract: any checklist row containing `[ ]` or `[V]` must have `monospace: 1` and must not exceed 49 characters. BEFORE TAKE-OFF CHECKLIST is stricter: every one of its 33 rendered state rows is exactly 49 characters, matching AFTER ENGINE START. Keep answer text right-aligned through underscore fill; never use a separate alignment field for checklist row fragments.
+- Full-audit contract before every release: parse the entire JSON; assert every macro is a command array; verify all 6,373 `if`/`wait_for`/`while` conditions have a direct sibling operator and no direct `require`; validate all 1,737 renderer conditions including `create_struct` payloads; resolve every static macro call and the prefix of every interpolated macro name; verify icon/image references; and check all operational checklist rows for monospace and the 49-character maximum. Do not falsely exclude dynamic renderer structures: unwrap `create_struct` first, then validate the emitted condition shape.
+- Audit result at release 88: 547 macros, 82,954 JSON nodes, 1,910 static macro calls, 28 dynamic macro calls/expressions, 232 image/icon references, and 262 checklist rows were checked; no static errors remained. Runtime-only values (LVAR values, simulator object availability, dynamic macro suffixes) still require the listed in-simulator test cases and must not be reported as statically executed.
+
+### Runtime checks for release 88
+
+1. Open CARLS DF with no previous valid tune: it must open normally and default to IAD 121.500 AM, without Command Failed.
+2. Enter a valid six-digit DF frequency one digit at a time, change UHF modulation, use IAD/MAD/MAR presets, cancel partial entry, and test the five-second completion timeout. No DF control may produce Missing operator.
+3. Open BEFORE TAKE-OFF CHECKLIST on the tablet: all answer fields and `[ ]/[V]` markers must remain on the same line. Compare its alignment with AFTER ENGINE START; no row may wrap.
+4. Run the day, night/twilight, and below-zero-OAT branches of the before-takeoff procedure. Confirm only the applicable conditional rows appear and that the real H145 gates still hold the active item.
+
 ## Release 0.997 87
 
 - Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated for this release. Do not update CHANGELOG_USER.en.md unless explicitly requested. Direct push to main is authorized; do not open a pull request.
