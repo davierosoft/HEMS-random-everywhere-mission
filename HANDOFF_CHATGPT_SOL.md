@@ -1,3 +1,19 @@
+## Release 0.997 89
+
+- Release contract: mission title is **0.997 89**. Update `everywhere_all.json`, `CHANGELOG.en.md`, and `HANDOFF_CHATGPT_SOL.md`; do not update `CHANGELOG_USER.en.md` without an explicit user request. Commit and push directly to `main`; no pull request.
+- Root cause fixed: LVARs can survive mission reload while `local` DF labels do not. `CARLS DF open` must never trust `L:CARLS_DF_ACTIVE_VALID` as evidence that a local source exists. Normalize the render label through `CARLS_DF_RENDER_SOURCE`, defaulting to `MAN`, and normalize modulation through `CARLS_DF_RENDER_MODULATION`, defaulting to `AM`. Renderer text must use those normalized locals, never raw `CARLS_DF_SOURCE` / `CARLS_DF_MODULATION` values.
+- Persistent-state contract: `global.CARLS_DF_FREQUENCY`, `global.CARLS_DF_SOURCE`, and `global.CARLS_DF_MODULATION` store the current channel. Seed `global.json` with `108000`, `MAN`, `AM`. On DF open, restore a stored 108.000-400.000 value; otherwise write and tune **MAN 108.000 MHz / AM**. A manual confirm, IAD/MAD/MAR preset, or automatic ambulance/SAR/ELT retune must update the same globals.
+- Page-13 layout contract: Item 1 is DIRECTION FINDER; Item 2 is `SOURCE DDD.DDD MHz` and must not wrap; Item 3 displays current `AM` or `FM`; Item 4 is blank when idle, otherwise the sole `EDT:` template or `ILLEGAL`. `CARLS_DF_RENDER_SOURCE` prevents any literal `undefined` output. UHF renders L1 RTN/L2 opposite-modulation/L3 IAD; fixed bands render L2 blank. R1 MAD and R2 MAR remain immediate presets. R3 is blank outside edit, ESC only while editing without a valid completed frequency, and ENT only while editing with `INPUT_INDEX = 7` and `VALID = 1`.
+- Progressive-entry contract: reject, do not store, and do not advance an invalid digit. Leave the current template/cursor position unchanged, set `CARLS_DF_INPUT_ERROR = 1`, show `ILLEGAL`, and issue the brief orange message. Clear that error when the next valid digit is accepted. Valid prefixes are limited to supported bands; e.g. entering 101 rejects the third `1`, whereas 108 remains possible. The final 25 kHz endings are strictly `00`, `25`, `50`, and `75`; do not reintroduce `05` or `55`. 400.000 is the sole selectable 400 MHz value.
+- Modulation contract: NAV (108.000-117.975) and ATC (118.000-136.975) force AM; maritime (156.000-162.000) forces FM; UHF (225.000-400.000) permits AM/FM. IAD 121.500 is AM, MAD 243.000 begins AM, MAR 156.800 is FM. Do not show the L2 modulation label for a forced band.
+- Audit result for this release: JSON parses; 6,630 executable `if`/`wait_for`/`while` conditions have one sibling comparison; 1,869 renderer conditions were inspected (dynamic `create_struct` conditions retain their separate emitted-payload contract); 1,978 static macro calls resolve; all 45 CARLS layouts use three static labels per side; all nine DF renderer states are present. Macro simulation accepted 108.000, 117.975, 118.000, 119.975, 136.975, 156.800, 162.000, 225.000, 243.000, and 400.000, and rejected the specified invalid vectors.
+
+### Runtime checks for release 89
+
+1. Clear or omit the three DF globals, open CARLS DF, and verify exactly `MAN 108.000 MHz` then `AM`, with no `undefined`, no `0.000`, no wrapped MHz, and no ESC on R3.
+2. Tune a manual valid channel, leave/reopen page 13, reload a dispatch, and reopen again: the last channel and modulation must be restored. Repeat after IAD, MAD, MAR, automatic ambulance, normal-SAR, and crash-ELT tuning.
+3. Start an edit and enter 101: the third digit must be refused, ILLEGAL must appear, and the cursor must remain before the third digit. Enter 108.000, 117.975, 136.975, 156.800, 225.000, 243.000, and 400.000: each must complete. Reject 107.000, 112.127, 122.022, 137.000, 155.975, 162.025, 224.975, 400.025, `.005`, and `.055` endings.
+4. Verify IAD shows AM with no L2 mode SK, MAR shows FM with no L2 mode SK, and UHF MAD lets L2 alternate AM/FM. R3 must be blank while idle, ESC only during partial entry, ENT only after a valid sixth digit; # and the five-second timer must use the same valid confirm path.
 ## Release 0.997 88
 
 - Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated for this release. Do not update CHANGELOG_USER.en.md unless explicitly requested. Direct push to main is authorized; do not open a pull request.
@@ -8,7 +24,7 @@
 
 ### Runtime checks for release 88
 
-1. Open CARLS DF with no previous valid tune: it must open normally and default to IAD 121.500 AM, without Command Failed.
+1. Open CARLS DF with no previous valid tune: it must open normally and default to MAN 108.000 AM, without Command Failed.
 2. Enter a valid six-digit DF frequency one digit at a time, change UHF modulation, use IAD/MAD/MAR presets, cancel partial entry, and test the five-second completion timeout. No DF control may produce Missing operator.
 3. Open BEFORE TAKE-OFF CHECKLIST on the tablet: all answer fields and `[ ]/[V]` markers must remain on the same line. Compare its alignment with AFTER ENGINE START; no row may wrap.
 4. Run the day, night/twilight, and below-zero-OAT branches of the before-takeoff procedure. Confirm only the applicable conditional rows appear and that the real H145 gates still hold the active item.
@@ -55,19 +71,21 @@
 
 ## Release 0.997 83
 
+> Historical DF record only. Release 89 supersedes all DF defaults, rendering, entry validation, channel spacing, and soft-key behavior below.
+
 Release 0.997 83 replaces the initial DF proof of concept with constrained radio tuning and repairs the ambulance final-record condition syntax.
 
 - Release contract: update the mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md. Do not update CHANGELOG_USER.en.md unless the user explicitly requests the public changelog. Direct push to main is authorized; do not create a pull request.
 - Avionics mode contract: add persistent global CARLS_DF_TUNING_MODE in Avionics Options. Default is AUTO when the value is missing or not manual. AUTO selects and refreshes CARLS to active mission beacon frequencies (ambulance 281.500, normal SAR 282.575, crash ELT 121.500); MANUAL leaves CARLS untouched until the user tunes a matching valid channel. The distance/reference loops continue running only when AUTO or when MANUAL has the matching active CARLS frequency.
 - Renderer safety contract: no show_condition may contain a nested and/or expression. Flatten same-operator AND groups; for mixed boolean cases calculate a local visibility state before set_dispatch. The Medical Diagnostic Page link must use medical_page_link_visible plus MISSION_NUMBER != organ, never an AND containing an OR.
-- DF layout contract: CARLS page 13 displays DIRECTION FINDER, then the active row SOURCE DDD.DDD MHz where SOURCE is MAN, IAD, MAD, or MAR. The next row is blank while idle and is the sole edit template while entering: EDT: _##.###, then the entered digits, next-digit underscore, and unfilled hashes. The modulation state is a separate MOD: AM/FM row so the frequency never wraps.
+- DF layout contract: CARLS page 13 displays DIRECTION FINDER, then the active row SOURCE DDD.DDD MHz where SOURCE is MAN, IAD, MAD, or MAR. The next row is blank while idle and is the sole edit template while entering: EDT: _##.###, then the entered digits, next-digit underscore, and unfilled hashes. The modulation state is a separate AM/FM row so the frequency never wraps.
 - Soft-key contract: L1 RTN, L2 modulation (UHF only; show the opposite option), L3 IAD 121.500 AM; R1 MAD 243.000 AM, R2 MAR 156.800 FM, R3 bottom ESC until a complete valid entry then ENT. The right selector and # request confirmation; * cancels current entry. Presets are immediate and do not open an edit template.
-- Frequency contract: accept only six-digit values on a 25 kHz grid where the final two digits form 00, 05, 25, 50, 55, or 75. Allowed bands are 108.000-117.975 (NAV, AM), 118.000-136.975 (ATC, AM), 156.000-162.000 (maritime, FM), and 225.000-400.000 (UHF, AM/FM selectable). Reject all gaps and values over 400.000. L:CARLS_DF_ACTIVE_VALID guards retained active state from old broad-range values.
+- Frequency contract: accept only six-digit values on a 25 kHz grid where the final two digits form 00, 25, 50, or 75. Allowed bands are 108.000-117.975 (NAV, AM), 118.000-136.975 (ATC, AM), 156.000-162.000 (maritime, FM), and 225.000-400.000 (UHF, AM/FM selectable). Reject all gaps and values over 400.000. L:CARLS_DF_ACTIVE_VALID guards retained active state from old broad-range values.
 - Timeout contract: after every digit CARLS records MISSION_TIME. At five seconds, a six-digit valid entry invokes the same confirm path as ENT; incomplete or invalid input clears silently and preserves the active tuned frequency.
 - Bearing contract: remove all generic DF assignment to accident_location. CARLS DF assign mission bearing acts only for an active real mission source: ambulance1 while HOLD = 1 at 281.500, normal SAR beacon while CARLS_DF_SAR_NORMAL_ACTIVE = yes at 282.575, or crash ELT while CARLS_DF_SAR_CRASH_ACTIVE = yes at 121.500. Generic/manual/preset channels with no corresponding active source must leave the cockpit pointer unassigned. ELT normal/crash set their active flags on activation and reset them when their existing beacon threads finish.
 - Ambulance record syntax: the ambulance patient report snapshot condition must be { if: { and: [...] }, eq: 1, then: [...] }. Never put the comparator inside if.and; that causes HPGs Missing operator runtime failure.
 
-### Runtime checks for release 83
+### Historical runtime checks for release 83 — superseded by Release 89 DF contract
 
 1. Open DF: initial state must show IAD 121.500 MHz, blank edit row, MOD: AM, IAD/MAD/MAR presets, and ESC on bottom R3. Press 1: the second row becomes EDT: 1_#.###; continue through six digits and confirm ENT moves to R3 only when the final value is valid.
 2. Enter 121.500, 117.975, 136.975, 156.800, 225.000, and 400.000: each must be accepted with its mandated modulation. Confirm 122.022, 137.000, 155.975, 162.025, 224.975, 400.025, and any partial six-digit entry: each must be rejected/cancelled while retaining the prior active frequency.
@@ -132,17 +150,19 @@ Release 0.997 80 fixes the stale connectivity presentation after changing the pe
 
 ## Release 0.997 79
 
-Release 0.997 79 adds a CARLS Direction Finder interface and connects its accepted frequency to the HPG cockpit DF pointer.
+> Historical DF record only. Release 89 supersedes the behavior below.
+
+Release 0.997 79 historical DF baseline — superseded by Releases 83 and 89. Do not restore its range, default channel, generic bearing, or soft-key behavior.
 
 - Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated to 0.997 79. Do not update CHANGELOG_USER.en.md for this test-cycle feature unless the user explicitly requests the public changelog. Direct push to main is authorized; do not create a pull request.
 - Entry point: CARLS main-page L1 was unused in both connected and disconnected states. It is now labelled DF and opens page 13. Do not reuse L3 or R2 on the main page: they point at incomplete legacy page slots.
 - DF display contract: page 13 uses L1/RTN to leave, R2/ENT and the right selector to confirm, and `#` as a keypad confirmation alternative. It shows DIRECTION FINDER, the active frequency as `DDD.DDD MHz`, and an `&nbsp;`-padded dash cursor at the selected digit. `*` cancels only the current DF entry.
 - Input contract: the digits 0–9 are intercepted only while CARLS_PAGE = 13; every other page retains the previous RescueTrack/dispatch actions unchanged. A new entry clears six digit stores and fills them left-to-right. After digit six, R2, right selector, `#`, or five seconds of inactivity calls the same validation. Incomplete or out-of-range input resets to the previously active value.
-- Frequency contract: accept only integer-kHz values 108000 through 426025, representing 108.000–426.025 MHz inclusive. The persistent LVAR is `L:CARLS_DF_FREQUENCY` (default 121500). On open and valid confirm, call `set_df` for `accident_location` with the LVAR divided by 1000; this keeps the HPG MFD bearing pointer source and CARLS display in sync.
-- Runtime checks:
-  1. On either connected or disconnected CARLS home display, verify L1 reads DF and opens DIRECTION FINDER. Initial frequency must be 121.500 MHz unless a valid value was previously retained.
-  2. Enter `121500`. Confirm the frequency updates after R2/ENT, right selector, `#`, or five seconds, and the MFD DF app points to the current incident.
-  3. Enter `108000` and `426025`: both must be accepted. Enter `107999`, `426026`, or fewer than six digits then wait five seconds: each must be rejected and must retain the preceding active frequency.
+- Historical frequency contract (obsolete): the 108.000-426.025 range, default 121.500, and generic incident `set_df` are no longer valid. Follow Release 89: persisted global MAN 108.000 first run, 108.000-400.000 supported bands only, and `set_df` only for active mission beacons.
+- Historical runtime checks (obsolete; use Release 89):
+  1. L1 still opens DIRECTION FINDER; the current initial frequency is MAN 108.000 MHz unless the persisted global has a valid later selection.
+  2. Obsolete: current tests are defined by Release 89; valid automatic bearings only use an active ambulance/SAR/ELT mission source.
+  3. Obsolete: 426.025 is not selectable. Use the Release 89 valid/invalid channel vectors.
   4. While DF is open, confirm `*` clears the pending entry only; L1/RTN returns to home. Leave DF and press digits 0–9: each must retain its original CARLS dispatch behavior.
 ## Release 0.997 78
 

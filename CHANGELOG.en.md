@@ -1,3 +1,13 @@
+## Release 0.997 89
+
+- Fixed the CARLS DF startup-state regression behind the displayed **undefined 0.000** value. A surviving DF LVAR could previously outlive its local source label after a mission reload. The DF page now normalizes every display value and always has a safe MAN/AM fallback.
+- Added persistent global DF state: `CARLS_DF_FREQUENCY`, `CARLS_DF_SOURCE`, and `CARLS_DF_MODULATION`. The latest selected/automatic channel is restored when the page is reopened. A first run with no stored value initializes **MAN 108.000 MHz / AM**.
+- Rebuilt the display rows so the active channel remains on one line as `SOURCE DDD.DDD MHz`; the current AM/FM modulation is on the line below it. The renderer never formats the untrusted raw source variable.
+- Entry is now progressively constrained instead of accepting an invalid six-digit value and failing only at the end. Invalid prefix digits are rejected in place, show **ILLEGAL**, and leave the cursor at the same editable position. This blocks values such as 101.xxx as soon as the third digit is entered and rejects an invalid final channel-grid digit such as 112.127.
+- Corrected 25 kHz channel spacing: valid endings are `00`, `25`, `50`, or `75`; obsolete `.005` and `.055` acceptance was removed. Valid bands remain NAV 108.000-117.975 AM, ATC 118.000-136.975 AM, maritime 156.000-162.000 FM, and UHF 225.000-400.000 AM/FM. The upper boundary 400.000 remains selectable.
+- IAD 121.500 is forced AM, MAR 156.800 is forced FM, and MAD 243.000 opens in AM. The AM/FM soft key is shown only on a selectable UHF channel; fixed-band channels have no modulation soft key. R3 is blank outside edit mode, ESC only during an unfinished edit, and ENT only for a completed valid entry.
+- Automatic ambulance/SAR/ELT tuning now also updates the persistent DF state, so reopening the page cannot restore an obsolete channel or label.
+- Release audit: strict JSON parsing, 6,630 executable condition/operator checks, 1,869 renderer-condition inspections, 1,978 static macro-call resolutions, 45 CARLS layouts, all nine DF renderer modes, and simulated valid/invalid progressive-entry vectors completed without static errors.
 ## Release 0.997 88
 
 - Corrected all eleven CARLS Direction Finder conditions that used `require` as the direct operand of an `if` command. HPG requires the direct `var` or `local` operand with its comparison operator as the command sibling; the malformed form caused the reported **Missing operator** runtime failure when DF opened or processed input.
