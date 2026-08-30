@@ -1,3 +1,9 @@
+## Release 0.997 86
+
+- Fixed the Medical Diagnostic Page visibility contract: in AUTOMATIC mode it follows Quick links exactly; in MANUAL mode it remains available even with Quick links closed. ORGAN missions remain excluded.
+- Root cause fixed: Quick links updated only `dtab0`, whereas the medical link read a separately cached visibility value that was never refreshed. Open/close actions now update both states, including the manual-mode exception.
+- Regression gate: JSON parsing, static renderer-condition validation, DF entry points and settings, 5G/Wi-Fi exclusivity, asset references, and all 12 independent preset selectors were checked before release.
+
 ## DF access and renderer integrity - release 0.997 85
 
 - Advanced the mission title to 0.997 85.

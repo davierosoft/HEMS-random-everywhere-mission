@@ -1,3 +1,10 @@
+## Release 0.997 86
+
+- Medical Diagnostic Page display contract: for non-ORGAN missions, AUTOMATIC mode displays the link only while Quick links is open (`dtab0 != 0`); MANUAL mode displays it whether Quick links is open or closed. Ambulance presence and handover state must never gate this link.
+- Implementation contract: `medical_page_link_visible` is a renderer-safe flattened visibility flag. Mission Dispatch initializes it from MANUAL mode and `dtab0`; the Quick-links OPEN action must set it to `yes`. The CLOSE action must set it to `no`, then restore `yes` only when `P1_MANUAL_MEDICAL_MODE = manual`. Do not replace this with a nested OR in `show_condition`.
+- Validation performed before release: full JSON parse; all static renderer show/disabled conditions checked for invalid/null logical terms, nested logical trees, and missing sibling operators; DF macro/entry/settings checks; 5G Wi-Fi interaction guards; asset references; and all twelve DEFAULT/PRST selectors verified not to call `mission enable engine`.
+- Legacy audit note: `beforetockl` remains an undefined BEFORE TAKE-OFF CHECKLIST macro inherited from the historical baseline. Do not silently alias it to a different checklist; restore its intended procedure only from a valid source or an explicit requirement.
+
 ## Release 0.997 85
 
 - DF regression fix: CARLS DF open and ten related DF command conditions had their operators placed within IF operands, which blocked normal HPG evaluation. Operators must always be siblings of IF, never nested inside a direct require/local/param operand.
