@@ -1,3 +1,15 @@
+## Release 0.997 91
+
+- Made ambulance patient transport independent from helicopter/HEMS recovery as soon as `whobringpatient=ambulance`. The release-88 far-stretcher path still waited for `crewdoconboard` and `stretcheronambulance`; those waits are now restricted to `ambudoc` and `us` respectively. Near and far ambulance routes resolve their hospital automatically before departure.
+- Added an explicit ambulance transfer state machine (loading, secured, returning, at ambulance, departing, hospital arrived) and exposed it on the debug page.
+- Extended manual clinical handling to every present patient (currently P1-P3) through one modular active-patient queue and one dynamic Medical page. AUTO follows the patient being visited; MANUAL lets the operator select a record, while treatment/complete/transport actions remain enabled only for the active patient. Death/completion releases the queue.
+- Added P2/P3 pathology-driven vital-sign updates, treatment effects, frozen ambulance reports, and canonical `manual_pN_*` state names.
+- Reworked early ambulance care into two phases: all available patients receive initial assessment first, then realistic treatment continues only for patients suitable for ground care. The second ambulance loads only a `ground_transport_ready` patient, records/removes that casualty, and all HEMS ground/hoist variants skip patients already transported.
+- Rebuilt mission-preset editing around deferred dirty-table persistence. Individual/group changes stay in memory; dirty presets flush on preset switch or page exit. Category selection is derived from the current table, partial groups require a same-button confirmation to enable all, and no Save button is added.
+- Expanded `tools/validate-mission.js` with release-specific anti-regression checks for ambulance/HEMS independence, multipatient state naming and action ownership, debug coverage, secondary ambulance clearance, HEMS skip guards, and preset persistence architecture. The whole-script gate also checks every `require`, every logical group, all macro arrays, dynamic macro prefixes, and every icon/image reference.
+- Release 91 static audit result: PASS — 586 macro arrays, 6,842 executable conditions, 6,298 `require` leaves, 1,825 renderer conditions, 2,055 static and 3 dynamic macro calls, 263 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, and 216 feature-specific regression assertions.
+- Updated the release checklist so every changed state machine must update the debug page in the same commit and so ambulance, multipatient, and preset test matrices are blocking release work.
+
 ## Release 0.997 90
 
 - Repaired the HPG runtime error that still affected CARLS DF digit validation after release 89. The generated DF `and/or` subgroups had a comparison only on the outer command; HPG also requires a comparator on each nested logical subgroup used directly as a condition. All 48 affected nested DF groups now carry their required `eq: 1`.

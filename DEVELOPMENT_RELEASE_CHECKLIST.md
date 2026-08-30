@@ -17,27 +17,50 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Normalise values before formatting them. A renderer must not print an optional local directly when `undefined` is possible.
 - When an automatic action changes the user-visible state, update the same persistent state used by its manual counterpart.
 
-## 3. CARLS / renderer rules
+## 3. Debug-page contract
+
+- Every new or renamed runtime state, queue owner, transport phase, persistent editor flag, and recovery watchdog added to the mission must be exposed on the debug page in the same commit. If a state is intentionally omitted, record the reason in the technical changelog.
+- The release validator must assert the presence of critical debug fields. A debug row that references an obsolete or misspelled state is a blocking failure.
+- Before publishing, compare the debug page against each changed state machine: medical patient owner/display, ambulance transfer, ground-transport completion, preset dirty/loaded/pending, vehicle route and timeout.
+
+## 4. CARLS / renderer rules
 
 - `set_carls_radio` always receives exactly three **string** labels for `LSK` and three for `RSK`; never pass a dynamic expression as a soft-key label.
 - Each renderer state must be mutually exclusive and complete. Test idle, edit, invalid edit, valid edit, fixed-modulation bands, UHF AM, and UHF FM.
 - A blank SK is also a state: its event handler must be harmless.
 - Text that has a known display limit is measured before release. Never rely on wrapping for units, status labels, or checklist answer fields.
 
-## 4. Validation and user input
+## 5. Validation and user input
 
 - Validate incrementally where the UI asks for digit-by-digit entry. Reject an illegal digit without advancing the cursor.
 - Re-check all boundaries, gaps, and grids after changing validation: lower bound, upper bound, first valid value after each gap, last valid value before each gap, and prohibited spacing values.
 - Keep the previous accepted state intact on cancel, timeout, or invalid input.
 
-## 5. Scope and regressions
+## 6. Scope and regressions
 
 - Inspect the existing working macro/page before replacing it. Preserve unrelated controls, handlers, and feature gates.
 - Check every call site when changing shared state, object names, doors, crew counts, route ETA, or patient transport variables.
 - Do not change files outside the requested scope. Preserve existing user changes.
 - `CHANGELOG_USER.en.md` changes only on an explicit request. Always update `CHANGELOG.en.md` and `HANDOFF_CHATGPT_SOL.md` for a release.
 
-## 6. Required release gate
+## 7. Ambulance, crew, and multipatient independence
+
+- Test near and far stretcher routes with 3-, 4-, and 5-person crews for `whobringpatient=us`, `ambulance`, and `ambudoc`.
+- Once `whobringpatient=ambulance`, `ambustretcher` must not wait for HEMS crew, aircraft doors, rotor/hoist state, or `stretcheronambulance`. The helicopter/HEMS crew return path and the ambulance patient-transfer path advance independently.
+- `ambudoc` may wait only for the HEMS doctor who is actually travelling with the patient. `us` retains the HEMS stretcher synchronization.
+- The ambulance must resolve an automatic hospital destination before creating/driving its route; no extra hospital prompt is introduced unless the normal mission logic explicitly requires one.
+- For multiple patients, use canonical `manual_pN_*` state names. Completion and death must release the active-patient mutex. Manual actions are enabled only for the displayed active patient.
+- Ambulances assess every available patient before continuing treatment. They may load only a patient explicitly marked `ground_transport_ready`; after loading, record the transport, finalize the report, remove the scene casualty, and make every HEMS flow skip it.
+
+## 8. Mission preset editor
+
+- Individual and category clicks modify only the open in-memory preset and mark it dirty. Do not call `save_table` for every click.
+- Flush a dirty table before switching preset and when leaving either mission-list page. Loading/recomputing a preset never rewrites it.
+- Derive category selected state from every mission row in the currently open table. One disabled mission makes the category false.
+- A partial category requires a second press on the same category to enable all. A fully enabled category disables all on the next press. Any individual change clears pending confirmation.
+- No Save button: persistence is automatic on switch/exit. Test two edited presets, both pages, mission reload, single toggles, partial groups, full groups, and ALL MISSIONS.
+
+## 9. Required release gate
 
 1. Parse `everywhere_all.json` and `global.json`.
 2. Run `node tools/validate-mission.js`.
@@ -53,4 +76,6 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Soft-key labels rendered from unsupported dynamic objects.
 - DF frequency-grid errors, invalid band acceptance, and incorrect forced AM/FM behavior.
 - Checklist wrapping caused by non-monospace or overlong rows.
-- Medical-page visibility, 5G/Wi-Fi exclusivity, preset persistence, ambulance-watchdog, and door/crew sequencing regressions.
+- Medical-page visibility, active-patient ownership, 5G/Wi-Fi exclusivity, preset persistence, ambulance-watchdog, and door/crew sequencing regressions.
+- Ambulance transport blocked by HEMS-only crew/stretcher waits after `whobringpatient=ambulance`.
+- Debug pages that silently reference obsolete state names and therefore hide the real failure during field testing.

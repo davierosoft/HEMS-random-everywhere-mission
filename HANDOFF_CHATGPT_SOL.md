@@ -1,3 +1,20 @@
+## Release 0.997 91
+
+- Ambulance ownership contract: after `whobringpatient=ambulance`, the ambulance macro owns patient/stretcher transfer and must never wait on HEMS reboarding, doors, hoist/rotor, or `stretcheronambulance`. Only `ambudoc` may wait for `crewdoconboard`; only `us` may wait for the HEMS stretcher. Near/far routes query `unhospital` automatically before departure.
+- Multipatient contract: P1-P3 share the `manual_active_patient` mutex, canonical `manual_pN_*` state, and dynamic `medical_display_*` adapter. AUTO follows the current visit. MANUAL selectors are view-only unless the selected patient owns the mutex. Completion and death release it.
+- Ground-care contract: ambulance1 assesses P1/P2/P3 before any continuation. Only non-HEMS-required patients can reach `ground_transport_ready`. Ambulance2 may load only that stage, then sets `P2/P3_GROUND_TRANSPORTED=yes`, freezes the report, destroys the casualty object, and every HEMS ground/hoist flow excludes it.
+- Preset contract: individual/group edits mutate the open table and set `preset_dirty=yes`; `flush mission preset` is the only writer and runs on switch/exit. Recompute is table-to-UI only. Partial category requires the same button twice to enable all; a full category disables all with one press.
+- Debug contract: all new/renamed queue, transfer, patient, and preset states are present on the debug page; the validator blocks obsolete names.
+- Static audit result: PASS — 586 macro arrays, 6,842 executable conditions, 6,298 `require` leaves, 1,825 renderer conditions, 2,055 static and 3 dynamic macro calls, 263 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, and 216 release-specific checks. This is not an MSFS/HPG runtime test.
+
+### Runtime checks for release 91
+
+1. Run near and far ambulance transfer with 3-, 4-, and 5-person crews. For `ambulance`, HEMS crew may return/reboard independently while the ambulance completes loading and drives to the automatically selected hospital. For `ambudoc`, only the doctor transfer may hold departure. For `us`, retain the HEMS stretcher sequence.
+2. In MANUAL mode with 1, 2, and 3 casualties, select each record, confirm only the active patient exposes actions, complete/death-transition each patient, and verify the next patient activates. In AUTO, verify the page follows the patient actually under assessment.
+3. Let ambulance1 arrive first in a three-patient scene: all three initial assessments must precede continued treatment. Verify a HEMS-required patient is not ground-loaded. Let ambulance2 load a cleared P2/P3 and verify the object disappears, the frozen report remains, and HEMS skips it.
+4. Edit PRST 1, switch to PRST 2 and edit it, return to PRST 1, leave/reopen both mission-list pages, and reload the mission. Test single toggles, partial-category double confirmation, full-category disable, and ALL MISSIONS; each table must retain only its own choices.
+5. Open Debug and verify active/display patient, P1-P3 states/owners, ground-transport/report flags, ambulance transfer phase, HEMS crew/stretcher states, and current preset/dirty/pending values update during the scenarios above.
+
 ## Release 0.997 90
 
 - Mandatory first action for any future change: read `DEVELOPMENT_RELEASE_CHECKLIST.md` in full. It is a blocking checklist derived from real regressions, not optional documentation. Run `node tools/validate-mission.js` before staging a release; it must pass together with `git diff --check`.

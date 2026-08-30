@@ -2,7 +2,7 @@
 
 ## Scope
 
-This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 90.
+This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 91.
 
 It describes the final behavior that a user receives after upgrading from the public build. It does not list temporary test-build regressions or corrections that were superseded before this release. Update this file only for meaningful finished user-facing changes.
 
@@ -14,11 +14,11 @@ It describes the final behavior that a user receives after upgrading from the pu
 - **Complete heli-rescuer destination handling.** A heli-rescuer can be dropped at a compatible base, hospital, or user-selected destination and later recovered using the selected point. The destination is retained by the subsequent ground/hoist flow instead of reverting to an obsolete reference.
 - **Door-safe and role-safe choreography.** Crew boarding, stretchers, patients, hoist personnel, pilots, and copilots use dedicated approach, transfer, and seating sequences. Passenger doors open before the related crew member enters and close only when the side no longer has a pending movement.
 - **Better far-ambulance stretcher work.** When the ambulance is distant, the hoist/ground operator now follows the complete intermediate approach, observation, return, and cargo-door sequence rather than skipping directly to the final point.
-- **Ambulance work before HEMS arrival.** In eligible single-patient scenes, an early ambulance can complete the first assessment step and sometimes one basic treatment step before the helicopter arrives. HEMS receives an on-screen clinical report, credits the completed work, and continues from the next required action.
-- **Second-ambulance capability.** In suitable multi-casualty calls, a secondary ambulance can assess, load, and transport its assigned patient after its own visit is complete.
+- **Ambulance work before HEMS arrival.** In multi-patient scenes, an early ambulance now performs the initial assessment of every available casualty before continuing treatment. Patients whose condition does not require mandatory HEMS intervention may then be treated and prepared for ground transport with realistic staged timings. HEMS receives the completed clinical work and continues from the correct point.
+- **Second-ambulance capability.** In suitable multi-casualty calls, a secondary ambulance can load and transport only a patient already assessed and cleared for ground care. The transported casualty is removed from the active scene while their final clinical report remains available.
 - **Pathology-driven patient state.** Diagnosis, age/scene profile, and controlled random variation shape Life Score, consciousness, oxygen saturation, pulse, blood pressure, respiratory rate, temperature, GCS, and emergency code. The patient is no longer generated from a single generic vital-sign preset.
 - **Automatic clinical timeline.** A visit may include up to six ordered procedures. Each can improve, leave unchanged, or occasionally worsen the patient within the diagnosis-specific model; the displayed vital signs update as the visit develops.
-- **Manual treatment model for patient 1.** Patient 1 can now be handled in staged manual mode. Each phase presents four concise procedures: one appropriate choice and three randomized unsuitable choices. Correct and incorrect choices have persistent clinical consequences; the visit ends only after the clinician completes the sequence and chooses helicopter or, when present, ambulance transport. Patients 2 and 3 remain automatic.
+- **Manual treatment for every patient.** In staged manual mode, every casualty present (currently up to three) can be assessed and treated from the same modular workflow. Each phase presents four concise procedures: one appropriate choice and three randomized unsuitable choices. Choices have persistent clinical consequences; only the patient currently under care exposes treatment, completion, and transport actions.
 - **CPR and mCPR simulation.** CPR includes request, active, recovery, unsuccessful, and manual-stop outcomes. With mechanical CPR enabled, it can continue in flight; without it, it waits for a landing.
 
 ### Dispatch, ground services, and scene generation
@@ -58,12 +58,12 @@ It describes the final behavior that a user receives after upgrading from the pu
 - GCS and Code share a compact single line with a protected visual gap; numeric and Not Testable combinations are supported without allowing Code to wrap onto a new line.
 - Medical procedures are separate lines: the current procedure is yellow, prior completed procedures are green, newest first, and all rows remain green after completion. The old concatenated // display and dashed text separators are gone.
 - The gray GCS/Code reference legends and the Life Score label/slider are placed after the clinical action area to keep the active record readable.
-- Manual patient-1 mode adds concise procedure buttons, a visible result for each choice, COMPLETE VISIT, and an explicit transport decision. AMBULANCE appears only when an ambulance is present.
+- Manual mode adds P1/P2/P3 record selectors, concise procedure buttons, a visible result for each choice, COMPLETE VISIT, and an explicit transport decision. Non-active records remain view-only; AMBULANCE appears only when a suitable ambulance is present.
 - CPR controls include START CPR and, after the appropriate prolonged phase, STOP CPR.
 
 ### Settings → Most Used / clinical controls
 
-- **P1 Manual Medical Mode** is persistent. AUTOMATIC is the default and preserves the timed clinical flow; MANUAL enables the staged treatment interaction for patient 1 only.
+- **Patient clinical treatment mode** is persistent. AUTOMATIC is the default and makes the Medical page follow the patient currently being visited; MANUAL enables the staged interaction and patient selector for every casualty present. The option remains available through mission phase 5.
 - **Visit-time presets** ULTRAFAST, FAST, MEDIUM, and SLOW remain the single timing control. In manual mode they define the duration of each selected procedure instead of creating a second timing setting.
 - **mCPR Onboard** controls whether mechanical CPR is available for in-flight continuation or must wait for landing.
 - **HEMS cancellation threshold** controls the configured point at which a ground-service-managed call may cancel HEMS, where that setting is available for the mission profile.
@@ -95,6 +95,12 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Cleaner map feedback refreshes Next Dispatch markers, clears obsolete dispatch icons, gives custom marshal points their own icon, and removes the opaque background from custom hospital markers.
 - The post-return statistics/dispatch screen now makes the on-duty state clear and offers **END SHIFT** as the explicit terminal control. Otherwise the crew can remain available for the next dispatch.
 
+### Mission Presets
+
+- Preset edits are saved automatically when changing preset or leaving the mission-list page; there is no separate Save button.
+- Individual mission choices remain independent between DEFAULT and PRST 1-5 and survive reopening/reloading.
+- A category appears selected only when all missions in it are enabled. With a partially enabled category, press it once to request “enable all” and press the same category again to confirm. Once fully enabled, the next press disables the category.
+
 ### Persistent preferences and status feedback
 
 - Crew and checklist audio volumes survive a normal dispatch reload and are synchronized at startup.
@@ -118,6 +124,7 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Resolved several walking, standing, pilot, copilot, stretcher, hoist, loading, unloading, skid, and reboarding animation/state mismatches.
 - Resolved premature emergency-vehicle arrival, duplicate reversals, unsafe parking, missing clearance, failed final stops, and stalled service drives.
 - Resolved secondary-ambulance races and departures before the assigned patient visit/load had completed.
+- Resolved a release-88 ambulance transfer stall: after ambulance transport is selected, the ambulance stretcher no longer waits for unrelated HEMS reboarding or helicopter-stretcher states. HEMS and ambulance procedures continue independently; ambudoc still waits for the accompanying doctor.
 
 ### Scene, clinical data, and mission stability
 
@@ -127,5 +134,5 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Resolved zero/impossible vital signs for living patients, reversed blood pressure, misleading GCS totals, inappropriate unconscious-patient presentation, and observations appearing before assessment.
 - Resolved competing CPR loops, incorrect provider selection, misleading recovery conditions, and compression information disappearing when the page reopened.
 - Resolved malformed/unsupported tablet condition structures and invalid route/location references that could cause command errors, stuck objectives, or failed dispatch actions.
-- Resolved stale custom/SAR metadata, delayed pathology persistence, duplicate victim messages, stale map icons, repeated refuelling starts, and settings unexpectedly resetting on a later dispatch.
+- Resolved stale custom/SAR metadata, delayed pathology persistence, duplicate victim messages, stale map icons, repeated refuelling starts, settings unexpectedly resetting on a later dispatch, and mission presets losing individual disabled missions after switching.
 - Resolved malformed tablet conditions that could interrupt a valid operation with a Command Failed message.
