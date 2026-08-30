@@ -1,3 +1,12 @@
+## DF access and renderer integrity - release 0.997 85
+
+- Advanced the mission title to 0.997 85.
+- Fixed eleven Direction Finder command conditions whose comparison operators were nested inside the operand instead of attached to the command. The DF soft key can now complete its initialization and open page 13.
+- Rebuilt the DF renderer as an explicit, flat state table: UHF AM/FM, valid completed entry, incomplete entry, and non-UHF bands all render a defined soft-key layout. ENT is available only for a complete valid edit; all other states show ESC.
+- Aligned the active hover ALT CALLOUTS with the 163 ft hoist ceiling: high at 163 ft, stable band 40-163 ft, and the wake-up threshold at 163 ft.
+- Repaired three literal Dispatch/Settings show conditions missing their required comparison operator.
+- Static validation contract: strict JSON parse, no malformed direct IF operators, no literal renderer condition without an operator, and page-13 soft-key routing all must pass before publication.
+
 ## Hoist altitude envelope, 5G Wi-Fi visibility, and preset refresh - release 0.997 84
 
 - Advanced the mission title to 0.997 84.

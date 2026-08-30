@@ -1,3 +1,12 @@
+## Release 0.997 85
+
+- DF regression fix: CARLS DF open and ten related DF command conditions had their operators placed within IF operands, which blocked normal HPG evaluation. Operators must always be siblings of IF, never nested inside a direct require/local/param operand.
+- Renderer contract: CARLS DF render uses only flat boolean groups. It establishes render flags for UHF availability and complete-valid input, then emits exactly one soft-key layout: RTN/FM-or-AM/IAD with MAD/MAR/ENT-or-ESC in UHF, or RTN/blank/IAD with MAD/MAR/ENT-or-ESC outside UHF.
+- Altitude callout contract: the active hovering guidance must use the same 40-163 ft operational envelope as all hoist gates; its high threshold and re-arm wait are 163 ft, while the stable-band upper check is 164 ft.
+- The EDT templates remain conditionally rendered only with flat show conditions; idle uses a blank second row.
+- Repair any static show_condition that has a literal and/or tree by putting its final eq/ne operator inside the condition object. Dynamic create_struct condition generation is exempt from this literal check.
+- Release contract: update title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md; do not update CHANGELOG_USER.en.md unless explicitly requested.
+
 ## Release 0.997 84
 
 - Hoist altitude contract: all Radio Height conditions that gate hoist readiness, ongoing hoisting, heli-rescuer pickup/drop, and recovery use an internal upper limit of 163 ft. The dispatch page warning and readiness ranges use the same 163 ft threshold. Pilot-facing messages say **40 to 160 ft**; do not change unrelated 130 values such as hydraulic pressure, bearings, vehicle identifiers, or patient data.
