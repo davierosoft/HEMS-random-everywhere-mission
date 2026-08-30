@@ -1,3 +1,23 @@
+## Release 0.997 81
+
+Release 0.997 81 finishes the Tablet 5G presentation and turns ambulance ground transport into a final clinical handover record.
+
+- Release contract: mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md are updated to 0.997 81. Do not update CHANGELOG_USER.en.md unless the user explicitly requests the public changelog. Direct push to main is authorized; do not create a pull request.
+- Homebar contract: `icons.homebar` remains the original asset for Wi-Fi and CARLS. `icons.homebar5g` is a 700×34 derived PNG with 5G plus three of four RSSI bars. Every static page is an exclusive pair guarded by TABLET_5G_ENABLED; the two dynamic `no_resolve` page builders are explicit 5G/base branches. Never replace the original `homebar` asset or show both bars.
+- 5G briefing contract: selecting YES sets the transient notice visible and rebuilds Mission Dispatch. The 5G worker starts a single five-second countdown, then marks the notice hidden while retaining the forced connected tablet state. Selecting NO cancels the notice state, restores base-homebar selection, and keeps the existing manual Wi-Fi rules. Do not change CARLS state.
+- Clinical UI contract: the P1 AUTOMATIC/MANUAL selector is visible while MISSION_PHASE < 6. In MANUAL mode the Medical Diagnostic Page bypasses only the Quick-links `dtab0` display gate; ORGAN missions remain excluded. All GCS/CODE rows use `-------CODE`, including the NT row.
+- Identity contract: do not identify unconscious or GCS-NT patients. For reduced consciousness, only a previously unknown patient may identify themselves. The one-time roll is based on GCS verbal: V4/5 75%, V3 35%, V2 10%, V1 0%; a failed roll writes the existing fictional Doe identity.
+- Ambulance final-record contract: the new worker waits for crewvisitended = yes, finalization still not yes, and whobringpatient equal to ambulance or ambudoc. It snapshots HR (CPBPM when present), SpO2, BP, RR, temperature, GCS components/NT, and `L:HEALTH` Code exactly once. Its provider string is AMBULANCE CREW or AMBULANCE CREW + HEMS DOCTOR. Objective 0 resets only the finalization flag for a new/reloaded dispatch. Do not extend this state to helicopter transport.
+- Final-record presentation: while finalized, hide all live vital/GCS rows, pending/active medical UI, CPR/stabilization UI, code/GCS legends and life-score controls. Show the new ground-transport report with frozen values and, in automatic mode, the pathology action plan; preserve completed manual action history as the manual treatment record.
+
+### Runtime checks for release 81
+
+1. With Tablet 5G NO, open Mission Dispatch, Settings, Medical page, mission selection and a dynamic manual/custom menu: only the original homebar must be visible. Enable YES: each must instead show only the 5G/RSSI homebar; CARLS must remain usable and unchanged. Return to NO and verify the base homebar returns.
+2. Enable 5G from Settings. The rebuilt briefing must show 5G CONNECTED without Wi-Fi controls, then remove that green line after about five seconds. The 5G/RSSI homebar remains present while 5G is YES. Toggle NO/YES twice to verify the timer and state reset.
+3. Start a mission, leave Quick links collapsed, set MANUAL before phase 6, and open Medical Diagnostic Page. It must still open. In AUTOMATIC mode the same collapsed-link gate must remain. Check normal and NT GCS rows: CODE is separated by seven hyphens and never wraps onto a separate line.
+4. Generate reduced-consciousness cases with V4/5, V3, V2 and V1. Across repeated missions, confirm identities become less common by the configured bands; unconscious or NT cases must still use Doe.
+5. Complete a patient-one visit and choose ambulance, then repeat with ambudoc. When the visit closes, the Medical page must replace live monitoring with GROUND TRANSPORT HANDOVER REPORT, show the correct care recipient and frozen last values, and retain treatment history. Repeat helicopter transport: live telemetry must remain available and the final ground report must not appear.
+
 ## Release 0.997 80
 
 Release 0.997 80 fixes the stale connectivity presentation after changing the persistent Tablet 5G setting.

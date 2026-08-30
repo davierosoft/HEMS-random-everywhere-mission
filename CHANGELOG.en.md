@@ -1,3 +1,13 @@
+## Tablet 5G homebar and final ground-transport clinical record - release 0.997 81
+
+- Advanced the mission title to 0.997 81.
+- Added `icons.homebar5g`: a 700 by 34 px version of the existing Davierosoft Operation Center homebar with a compact 5G indicator and three active RSSI bars. Every ordinary page and the two dynamic mission-list builders now select exactly one bar: the original `homebar` while Tablet 5G is NO, the new asset only while it is YES. Wi-Fi and CARLS retain the original homebar.
+- The temporary green 5G CONNECTED dispatch status now opens when 5G is enabled, then is hidden after five seconds. It remains a status-only display; manual Wi-Fi controls stay suppressed while 5G is active.
+- Patient-one manual treatment can now be selected through mission phase 5. The Medical Diagnostic Page remains available in MANUAL mode even when the Quick links section is collapsed; AUTOMATIC mode keeps the original Quick-links gate.
+- Reworked clinical-display separation: all ordinary and Not-Testable GCS rows use seven hyphens before CODE. Reduced-consciousness patients may now provide a fictional identity based on verbal GCS capability (75% for V4+, 35% for V3, 10% for V2; otherwise Doe).
+- Added an ambulance final-record state. After a completed visit chooses `whobringpatient = ambulance` or `ambudoc`, the page snapshots the last HR, SpO2, blood pressure, respiratory rate, temperature, GCS and Code. Live telemetry, active treatment controls, alerts and life-score UI are hidden; the retained record states who took care and shows completed HEMS actions. In manual mode, existing completed-action history remains as the treatment record.
+- Static validation: strict JSON parsing succeeds; `homebar` and `homebar5g` each have 16 reachable references in mutually exclusive 5G branches; the final-record worker is gated by completed visit plus ambulance/ambudoc transport; all 14 live vital/GCS widgets are guarded against final ground handover.
+
 ## Refresh briefing connectivity state - release 0.997 80
 
 - Advanced the mission title to 0.997 80.
