@@ -1,3 +1,25 @@
+## Release 0.997 83
+
+Release 0.997 83 replaces the initial DF proof of concept with constrained radio tuning and repairs the ambulance final-record condition syntax.
+
+- Release contract: update the mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md. Do not update CHANGELOG_USER.en.md unless the user explicitly requests the public changelog. Direct push to main is authorized; do not create a pull request.
+- Avionics mode contract: add persistent global CARLS_DF_TUNING_MODE in Avionics Options. Default is AUTO when the value is missing or not manual. AUTO selects and refreshes CARLS to active mission beacon frequencies (ambulance 281.500, normal SAR 282.575, crash ELT 121.500); MANUAL leaves CARLS untouched until the user tunes a matching valid channel. The distance/reference loops continue running only when AUTO or when MANUAL has the matching active CARLS frequency.
+- Renderer safety contract: no show_condition may contain a nested and/or expression. Flatten same-operator AND groups; for mixed boolean cases calculate a local visibility state before set_dispatch. The Medical Diagnostic Page link must use medical_page_link_visible plus MISSION_NUMBER != organ, never an AND containing an OR.
+- DF layout contract: CARLS page 13 displays DIRECTION FINDER, then the active row SOURCE DDD.DDD MHz where SOURCE is MAN, IAD, MAD, or MAR. The next row is blank while idle and is the sole edit template while entering: EDT: _##.###, then the entered digits, next-digit underscore, and unfilled hashes. The modulation state is a separate MOD: AM/FM row so the frequency never wraps.
+- Soft-key contract: L1 RTN, L2 modulation (UHF only; show the opposite option), L3 IAD 121.500 AM; R1 MAD 243.000 AM, R2 MAR 156.800 FM, R3 bottom ESC until a complete valid entry then ENT. The right selector and # request confirmation; * cancels current entry. Presets are immediate and do not open an edit template.
+- Frequency contract: accept only six-digit values on a 25 kHz grid where the final two digits form 00, 05, 25, 50, 55, or 75. Allowed bands are 108.000-117.975 (NAV, AM), 118.000-136.975 (ATC, AM), 156.000-162.000 (maritime, FM), and 225.000-400.000 (UHF, AM/FM selectable). Reject all gaps and values over 400.000. L:CARLS_DF_ACTIVE_VALID guards retained active state from old broad-range values.
+- Timeout contract: after every digit CARLS records MISSION_TIME. At five seconds, a six-digit valid entry invokes the same confirm path as ENT; incomplete or invalid input clears silently and preserves the active tuned frequency.
+- Bearing contract: remove all generic DF assignment to accident_location. CARLS DF assign mission bearing acts only for an active real mission source: ambulance1 while HOLD = 1 at 281.500, normal SAR beacon while CARLS_DF_SAR_NORMAL_ACTIVE = yes at 282.575, or crash ELT while CARLS_DF_SAR_CRASH_ACTIVE = yes at 121.500. Generic/manual/preset channels with no corresponding active source must leave the cockpit pointer unassigned. ELT normal/crash set their active flags on activation and reset them when their existing beacon threads finish.
+- Ambulance record syntax: the ambulance patient report snapshot condition must be { if: { and: [...] }, eq: 1, then: [...] }. Never put the comparator inside if.and; that causes HPGs Missing operator runtime failure.
+
+### Runtime checks for release 83
+
+1. Open DF: initial state must show IAD 121.500 MHz, blank edit row, MOD: AM, IAD/MAD/MAR presets, and ESC on bottom R3. Press 1: the second row becomes EDT: 1_#.###; continue through six digits and confirm ENT moves to R3 only when the final value is valid.
+2. Enter 121.500, 117.975, 136.975, 156.800, 225.000, and 400.000: each must be accepted with its mandated modulation. Confirm 122.022, 137.000, 155.975, 162.025, 224.975, 400.025, and any partial six-digit entry: each must be rejected/cancelled while retaining the prior active frequency.
+3. Tune 243.000 then use L2: AM/FM must alternate. Tune IAD or MAR: L2 must not change the forced band modulation. Test each preset: it must tune immediately with the correct source label and no edit template.
+4. Tune a generic valid frequency: it must say no mission beacon and must not call set_df at the accident. During an active ambulance hospital transfer, tune 281.500 and verify source ambulance1. During active normal SAR or crash ELT, tune 282.575 or 121.500 respectively and verify the corresponding bearing; repeat outside those states to verify no bearing is created.
+5. Complete ambulance or ambudoc transport after a visit. The ground-transport report must render without Command Failed / Missing operator and retain frozen values as in release 81.
+
 ## Release 0.997 82
 
 Release 0.997 82 repairs the destructive preset-switching regression and the ambudoc ambulance-route fallback.

@@ -1,3 +1,16 @@
+## CARLS Direction Finder frequency discipline and ambulance record syntax - release 0.997 83
+
+- Advanced the mission title to 0.997 83.
+- Added the persistent **Avionics Options -> Direction Finder tuning mode** selector. **DF AUTO** is the default and automatically tunes CARLS to an active ambulance, SAR beacon, or crash ELT source; **MANUAL TUNING** leaves the displayed channel under pilot control and enables its bearing only after the matching CARLS frequency is selected.
+- Flattened the newly added display conditions into renderer-safe single-level boolean groups. This corrects the supplied Medical Diagnostic Page Symbol.iterator failure while preserving its original manual-mode or Quick-links visibility rule.
+- Reworked the CARLS Direction Finder page around a stable active-frequency row (MAN, IAD, MAD, or MAR plus DDD.DDD MHz) and a second, normally blank edit row. During entry that row alone renders EDT:, entered digits, the next-digit underscore, and the remaining # placeholders.
+- ENT has moved to bottom R3. It is rendered only for a complete, valid six-digit entry; R3 is ESC while input is empty, partial, or invalid. The physical selector and # retain confirmation behavior; the five-second inactivity timer confirms a valid entry or silently cancels a partial one.
+- Added band and channel validation: VOR/NAV 108.000-117.975 AM, ATC 118.000-136.975 AM, maritime 156.000-162.000 FM, and UHF 225.000-400.000 MHz. Every accepted channel uses 25 kHz spacing (.000, .025, .050, or .075); unsupported gaps, 400-426 MHz, and values such as 122.022 are rejected.
+- Added DF soft-key presets: IAD 121.500 AM, MAD 243.000 AM, and MAR 156.800 FM. Presets tune immediately without entering edit mode. AM/FM selection is available only in the UHF band and always shows the opposite selectable mode on L2.
+- Stopped the generic DF page from assigning the incident as a bearing source. It now assigns a bearing only when the active mission beacon is also active: the moving ambulance at 281.500, normal SAR beacon at 282.575, or crash ELT at 121.500 MHz. Other valid channels tune successfully but explicitly report that no mission beacon exists.
+- Repaired the ambulance final-record worker condition that caused the Missing operator runtime failure shown by the user. The final eq: 1 is now attached to the enclosing if, rather than incorrectly nested inside its and expression.
+- Static validation: strict JSON parsing succeeds; page-13 handlers route RTN, modulation, all three presets, bottom R3, selector, keypad digits, *, and #; the old generic set_df accident_location calls are absent.
+
 ## Preserve individual mission choices while switching presets - release 0.997 82
 
 - Advanced the mission title to 0.997 82.
