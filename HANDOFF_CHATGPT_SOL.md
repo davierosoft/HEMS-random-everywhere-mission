@@ -1,3 +1,23 @@
+## Release 0.997 82
+
+Release 0.997 82 repairs the destructive preset-switching regression and the ambudoc ambulance-route fallback.
+
+- Release contract: update the mission title, CHANGELOG.en.md, and HANDOFF_CHATGPT_SOL.md. Do not update CHANGELOG_USER.en.md unless the user explicitly requests the public changelog. Direct push to main is authorized; do not create a pull request.
+- Root cause: each individual mission toggle correctly wrote Config_Table1/3-7 and called save_table. However, the DEFAULT/PRST selector buttons also called mission enable engine. That engine intentionally applies the broad category flags to every matching row and saved the table, re-enabling individually disabled missions when category flags were true.
+- Fix: all twelve DEFAULT/PRST selector buttons in mission_list_page1 and mission_list_page2 now set local/global MSN_CONFIG_PRESET and refresh their intended page without calling mission enable engine. Changing a preset must never rewrite any mission entry.
+- Bulk-control contract: ALL MISSIONS and each category button still call mission enable engine after changing their own global category setting. These are the only intended bulk rewrites. Do not move the engine call back into any DEFAULT/PRST selector.
+- Manual-mission contract remains unchanged: Config_Table2 stores the immediate manual selection and is cleared at Objective 1. It is not one of the six persistent mission presets.
+- Ambudoc hospital-route contract: keep the applied ambulance speed multiplier at its existing fixed value of 1.5. The displayed ETA and watchdog must derive from the same actual multiplier, not from the separate distance-based `ambu_multiplier` helper. For hospital road routes over five minutes, use `ETA + ceil(ETA / 900) * 60`; retain the 420-second minimum for short routes.
+- Ambulance failure contract: the multiplier watchdog normally retains its existing fallback behavior. Only when `hold_on_timeout = yes` (the ambudoc hospital route) must a timeout leave `ambulance1` in place, mark `ambulance1_hospital_route_status = interrupted`, keep `L:HOLD = 1`, and require the existing explicit Skip ambulance travel action. Never automatically move this ambulance to the hospital after a timeout.
+
+### Runtime checks for release 82
+
+1. In PRST 1, disable two individual missions from different categories. Switch to PRST 2, disable another mission, then return to PRST 1: the first two must remain Disabled. Repeat via both mission-list pages.
+2. Reload the mission/session, return to PRST 1 and PRST 2, and verify each retains its own individual choices.
+3. In a preset with two individually disabled missions, press one category button or ALL MISSIONS: only this explicit bulk action may rewrite matching rows. Switch away and back afterwards to confirm the resulting bulk state persists.
+4. Use Select This Mission in the manual mission list, then reload: its Config_Table2 entry must still clear as the existing transient manual-selection contract requires.
+5. Run an `ambudoc` transfer with a route longer than seven minutes. The ambulance must remain driveable/tracked throughout the full route; its ETA must reflect the fixed 1.5 multiplier and its watchdog is ETA plus one minute per started fifteen minutes. Force or wait for a watchdog failure only to verify that it remains in place and continues only after the explicit Skip ambulance travel action.
+
 ## Release 0.997 81
 
 Release 0.997 81 finishes the Tablet 5G presentation and turns ambulance ground transport into a final clinical handover record.

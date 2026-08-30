@@ -1,3 +1,11 @@
+## Preserve individual mission choices while switching presets - release 0.997 82
+
+- Advanced the mission title to 0.997 82.
+- Fixed preset switching in the mission-selection pages. Selecting DEFAULT or PRST 1 through PRST 5 now changes only the active table and its persisted selection; it no longer invokes the category-apply engine.
+- Individual Enabled/Disabled choices remain direct table writes followed by save_table. Category controls and ALL MISSIONS continue to invoke the apply engine intentionally, so their documented bulk behavior is unchanged.
+- Fixed the ambudoc hospital-transfer watchdog. The ambulance ETA now uses the exact `1.5` speed multiplier applied to its drive command; the watchdog adds one minute for each started fifteen-minute ETA block (with a 420-second minimum). A watchdog expiry leaves the ambulance in place and asks the user to use the explicit Skip ambulance travel action, rather than teleporting it to the hospital.
+- Static validation: both selector bars contain six persistent selectors with zero calls to mission enable engine; all remaining category controls retain their apply calls.
+
 ## Tablet 5G homebar and final ground-transport clinical record - release 0.997 81
 
 - Advanced the mission title to 0.997 81.
