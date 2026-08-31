@@ -1,3 +1,13 @@
+## Release 0.997 92
+
+- Rebuilt the Debug page as a six-view **Debug Center**: SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE, and INVENTORY. Operational state and active faults use stronger colors; secondary data remains gray, and subsystem blocks are hidden when they are not relevant to the current mission.
+- Added the persistent HPG table `Andrews_debug_snapshots`. **CAPTURE SNAPSHOT** stores mission identity, phase/load/FPL, route/query faults, transport/transfer state, active/display patient and preset, then calls `save_table`; **CLEAR SNAPSHOT** invalidates and saves the same record. Opening Debug reloads the saved snapshot with `open_table`.
+- Fixed a dormant malformed HPG command in the random-fishing scene: `create_lùocation` is now `create_location`. The validator now rejects any near-match `create_l*ocation` spelling other than the exact documented command, preventing the same non-ASCII/typing regression from returning.
+- Extended `tools/validate-mission.js` to parse and validate the companion `train.json` loader as well as the primary mission and globals. It now includes 11 custom-loader contract checks, 5 companion executable-condition checks and 4 companion renderer-condition checks.
+- Added `docs/HEMS_RE_Technical_Documentation_and_Code_Review_0.997_92.docx`: an 18-page technical baseline covering architecture, recovered history, release evidence, prioritized findings, runtime matrix, simulation improvements and a dedicated `train.json` review. `train.json` was analyzed but intentionally not changed because a version-2 loader contract requires a separate compatibility review.
+- Release 92 static gate: PASS — 586 macro arrays, 6,849 primary executable conditions, 6,779 `require` leaves, 2,201 primary renderer conditions, 2,063 resolved static and 3 guarded dynamic macro calls, 266 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, 251 release assertions and 11 companion assertions. This is not an MSFS/HPG runtime test.
+- Prepared a separate review workbook covering all 69 user-facing Settings options and proposed DEFAULT, ROOKIE PILOT, EXPERT PILOT and EXPERT HEMS profiles plus a validated blank CUSTOM column. No runtime profile-selection logic was added.
+
 ## Release 0.997 91
 
 - Made ambulance patient transport independent from helicopter/HEMS recovery as soon as `whobringpatient=ambulance`. The release-88 far-stretcher path still waited for `crewdoconboard` and `stretcheronambulance`; those waits are now restricted to `ambudoc` and `us` respectively. Near and far ambulance routes resolve their hospital automatically before departure.

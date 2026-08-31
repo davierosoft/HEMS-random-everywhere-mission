@@ -1,3 +1,22 @@
+## Release 0.997 92
+
+- Debug UI contract: `debug page` defaults to SUMMARY and exposes exactly six thematic views: SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE and INVENTORY. Navigation changes only `debug_page_section` and rerenders the same macro. Do not merge the complete Local/LVAR inventories back into the operational views.
+- Relevance contract: calculate `debug_relevant_ambulance`, `debug_relevant_police`, `debug_relevant_heli`, `debug_relevant_marshal`, `debug_relevant_multipatient` and `debug_has_issue` before rendering. Irrelevant subsystem blocks and missing optional locations remain hidden; all legacy fields stay available in the applicable thematic view or INVENTORY.
+- Snapshot contract: `mission.data.Debug_Table` maps to `Andrews_debug_snapshots`. Every Debug open calls `open_table` and copies saved keys into renderer-safe locals. Capture writes the complete current record and immediately calls `save_table`; Clear invalidates and saves it. Keep this in a table, not globals: HPG documents `save_table` as the persistence boundary, while `debug_write` only writes to `console.log`.
+- Command-spelling contract: the fishing-scene failure was the non-ASCII typo `create_lùocation`. The source now uses `create_location`, and the validator rejects every `create_l*ocation` near-match except the exact documented key. Do not weaken this guard.
+- Companion-loader contract: when `train.json` is present, the release gate must parse it and validate its executable/renderer conditions and minimal handoff invariants. Release 92 checks 11 invariants. The loader itself remains unchanged pending approval of a versioned minimal v2 contract.
+- Technical baseline: `docs/HEMS_RE_Technical_Documentation_and_Code_Review_0.997_92.docx` is the current architecture/review record. The multi-patient architecture handoff now distinguishes release-91 implementation from the still-open five-slot registry/allocator work.
+- Preset-profile scope: the external Excel proposal is review-only. No DEFAULT/ROOKIE/EXPERT/CUSTOM runtime profile system was added; wait for corrected profile values before implementation.
+- Static gate: PASS — 586 macro arrays, 6,849 primary executable conditions, 6,779 `require` leaves, 2,201 primary renderer conditions, 2,063 resolved static and 3 dynamic macro calls, 266 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, 251 release assertions and 11 companion assertions. Runtime testing remains mandatory.
+
+### Runtime checks for release 92
+
+1. Open Debug before dispatch and during phases 3, 7, 8, 10 and 12. Check all six views, colors, navigation, scroll behavior and BACK routing with/without ambulance, police, heli-rescuer, marshal, multiple patients, route failure and query failure.
+2. Capture a snapshot during a mission, close/reopen Debug, reload the mission and accept a second dispatch. The saved record must remain unchanged until the next Capture. Clear it and verify it remains absent after reload.
+3. Force the random-fishing branch and its RUP/point-in-polygon path. Every dependent location must be created without Command Failed; retain the exact `create_location` command spelling.
+4. Re-run the release-91 ambulance/multipatient/preset matrix and the DF, checklist, 5G/Wi-Fi and marshal regressions listed in `DEVELOPMENT_RELEASE_CHECKLIST.md`.
+5. Inspect INVENTORY against release 91 and confirm the relevance/snapshot locals update. Attach screenshots/log to the release record; static validation does not replace this runtime sign-off.
+
 ## Release 0.997 91
 
 - Ambulance ownership contract: after `whobringpatient=ambulance`, the ambulance macro owns patient/stretcher transfer and must never wait on HEMS reboarding, doors, hoist/rotor, or `stretcheronambulance`. Only `ambudoc` may wait for `crewdoconboard`; only `us` may wait for the HEMS stretcher. Near/far routes query `unhospital` automatically before departure.

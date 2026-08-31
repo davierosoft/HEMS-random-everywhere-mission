@@ -9,6 +9,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Every `and` or `or` **nested inside another logical condition** has its own comparison operator, normally `eq: 1`. Example: `{ "or": [ ... ], "eq": 1 }`.
 - Exception: a logical expression used as the *value* of a `require` is already compared by that outer `require`; do not add a second operator inside it. The ambulance/police/fire arrival checks use this valid form.
 - Do not build boolean groups manually without running `node tools/validate-mission.js` afterwards.
+- Treat command names as an exact API contract. Reject unknown or near-match spellings, including non-ASCII variants such as the release-92 `create_lùocation` defect; a parsed JSON key is not proof that HPG recognizes it.
 
 ## 2. State and persistence
 
@@ -22,6 +23,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Every new or renamed runtime state, queue owner, transport phase, persistent editor flag, and recovery watchdog added to the mission must be exposed on the debug page in the same commit. If a state is intentionally omitted, record the reason in the technical changelog.
 - The release validator must assert the presence of critical debug fields. A debug row that references an obsolete or misspelled state is a blocking failure.
 - Before publishing, compare the debug page against each changed state machine: medical patient owner/display, ambulance transfer, ground-transport completion, preset dirty/loaded/pending, vehicle route and timeout.
+- If Debug provides a persistent snapshot, open the HPG table before reading it and call `save_table` after Capture/Clear. Test close/reopen, mission reload and second dispatch; `debug_write` is console output, not an end-user retrieval mechanism.
 
 ## 4. CARLS / renderer rules
 
@@ -62,8 +64,8 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 ## 9. Required release gate
 
-1. Parse `everywhere_all.json` and `global.json`.
-2. Run `node tools/validate-mission.js`.
+1. Parse `everywhere_all.json`, `global.json`, and every shipped companion/custom-loader JSON such as `train.json`.
+2. Run `node tools/validate-mission.js`; companion loaders must have explicit contract assertions and cannot be silently skipped.
 3. Run `git diff --check` and inspect the staged file list.
 4. Record static checks separately from runtime checks; static checks cannot prove HPG/MSFS behavior.
 5. Execute the feature-specific in-simulator test matrix, including a reload when persistent state is involved.

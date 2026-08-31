@@ -6,6 +6,7 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const mission = JSON.parse(fs.readFileSync(path.join(root, 'everywhere_all.json'), 'utf8'));
+const companionMission = JSON.parse(fs.readFileSync(path.join(root, 'train.json'), 'utf8'));
 JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 
 const comparators = new Set(['eq', 'ne', 'gt', 'gte', 'lt', 'lte']);
@@ -20,6 +21,9 @@ let regressionChecks = 0;
 let requireConditions = 0;
 let dynamicMacroCalls = 0;
 let iconReferences = 0;
+let companionChecks = 0;
+let companionExecutableConditions = 0;
+let companionRendererConditions = 0;
 
 function comparatorCount(value) {
   return Object.keys(value || {}).filter((key) => comparators.has(key)).length;
@@ -72,6 +76,12 @@ function walk(value, trail = '$') {
   }
   if (!value || typeof value !== 'object') return;
 
+  Object.keys(value).forEach((key) => {
+    if (/^create_l.*ocation$/i.test(key) && key !== 'create_location') {
+      errors.push(`invalid create_location command spelling: ${key} at ${trail}`);
+    }
+  });
+
   if (Object.prototype.hasOwnProperty.call(value, 'require')) {
     requireConditions += 1;
     if (comparatorCount(value) !== 1) errors.push(`require must have exactly one sibling comparator at ${trail}`);
@@ -112,6 +122,57 @@ function walk(value, trail = '$') {
     });
   }
   Object.entries(value).forEach(([key, child]) => walk(child, `${trail}/${key}`));
+}
+
+function checkCompanionMission() {
+  function expectCompanion(condition, message) {
+    companionChecks += 1;
+    if (!condition) errors.push(`companion mission: ${message}`);
+  }
+
+  function scan(value, trail) {
+    if (Array.isArray(value)) {
+      value.forEach((child, index) => scan(child, `${trail}/${index}`));
+      return;
+    }
+    if (!value || typeof value !== 'object') return;
+
+    Object.keys(value).forEach((key) => {
+      if (/^create_l.*ocation$/i.test(key) && key !== 'create_location') {
+        errors.push(`companion mission: invalid create_location command spelling: ${key} at ${trail}`);
+      }
+    });
+    ['if', 'wait_for', 'while'].forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) return;
+      companionExecutableConditions += 1;
+      if (comparatorCount(value) !== 1) errors.push(`companion mission: ${key} must have exactly one sibling comparator at ${trail}`);
+      if (key === 'if' && value.if && typeof value.if === 'object' && !Array.isArray(value.if) && value.if.require) {
+        errors.push(`companion mission: if cannot use direct require operand at ${trail}`);
+      }
+    });
+    ['show_condition', 'disabled_condition', 'select_condition'].forEach((key) => {
+      if (!Object.prototype.hasOwnProperty.call(value, key)) return;
+      companionRendererConditions += 1;
+      checkRenderer(value[key], `train.${key}`, trail);
+    });
+    if (Object.prototype.hasOwnProperty.call(value, 'require') && comparatorCount(value) !== 1) {
+      errors.push(`companion mission: require must have exactly one sibling comparator at ${trail}`);
+    }
+    Object.entries(value).forEach(([key, child]) => scan(child, `${trail}/${key}`));
+  }
+
+  scan(companionMission, '$/train');
+  scanLogical(companionMission, '$/train');
+  expectCompanion(companionMission.id !== mission.id, 'id must not collide with the primary mission');
+  expectCompanion(Array.isArray(companionMission.objectives) && companionMission.objectives.length === 1, 'must contain one loader objective');
+  expectCompanion(companionMission.macros && typeof companionMission.macros === 'object' && !Array.isArray(companionMission.macros), 'macros must be an object');
+  const text = compact(companionMission);
+  ['L:CUS_SEND_DISPATCH', 'L:CUS_ID_CARD', 'L:CUS_CRASH_VARIABLE', 'L:CUS_MISSION_SCENE_VARIANT', 'L:CUS_ACCIDENT LAT', 'L:CUS_ACCIDENT LON'].forEach((token) => {
+    expectCompanion(text.includes(token), `missing custom handoff state ${token}`);
+  });
+  expectCompanion(text.includes('\"load_mission\":\"HEMSRandE\"') || text.includes('\"load_mission\": \"HEMSRandE\"'), 'must load HEMSRandE');
+  const accidents = companionMission.data && companionMission.data.accidents;
+  expectCompanion(Array.isArray(accidents) && accidents.some((entry) => entry.ID_CARD === 999), 'must contain the editable custom accident record');
 }
 
 function checkBeforeTakeoffLayout() {
@@ -196,7 +257,7 @@ function scanGuardedWaits(value, guards, macroName, counts) {
 }
 
 function checkRelease91Regressions() {
-  expectRegression(mission.title.includes('0.997 91'), 'mission title must be 0.997 91');
+  expectRegression(mission.title.includes('0.997 92'), 'mission title must be 0.997 92');
 
   const allText = compact(mission);
   const invalidNames = [...allText.matchAll(/manual_p[23][A-Za-z0-9]+/g)].map((match) => match[0]);
@@ -284,6 +345,25 @@ function checkRelease91Regressions() {
   expectRegression(pageCalls.filter((name) => name === 'toggle mission preset category').length === 8, 'all eight group controls must use the confirmation-aware toggle');
   expectRegression(!presetPages.some((page) => compact(page).includes('save_table')), 'preset pages must defer table writes to switch/exit flush');
   expectRegression(!presetPages.some((page) => compact(page).includes('"title":"SAVE"')), 'preset editor must not add a Save button');
+
+  const debugText = compact(debugPage || []);
+  ['SUMMARY', 'MISSION', 'MEDICAL', 'GROUND', 'GUIDANCE', 'INVENTORY'].forEach((section) => {
+    expectRegression(debugText.includes(`"value":"${section}"`), `debug navigation must expose ${section}`);
+    expectRegression(debugText.includes(`"eq":"${section}"`), `debug content must be gated by ${section}`);
+  });
+  ['debug_relevant_ambulance', 'debug_relevant_police', 'debug_relevant_heli', 'debug_relevant_marshal', 'debug_relevant_multipatient', 'debug_has_issue'].forEach((state) => {
+    expectRegression(hasState(debugPage || [], state), `debug page must calculate ${state}`);
+  });
+  ['CAPTURE SNAPSHOT', 'CLEAR SNAPSHOT'].forEach((title) => {
+    expectRegression(debugText.includes(`"title":"${title}"`), `debug page must expose ${title}`);
+  });
+  expectRegression(mission.data.Debug_Table === 'Andrews_debug_snapshots', 'debug snapshot must use a persistent HPG table');
+  expectRegression(debugText.includes('"open_table":{"static":"Debug_Table"}') && debugText.includes('"save_table":{"static":"Debug_Table"}'), 'debug snapshot table must be opened and saved');
+  ['valid', 'time', 'mission_id', 'phase', 'route_error', 'query_error', 'transport', 'transfer_state', 'active_patient', 'display_patient', 'preset'].forEach((key) => {
+    expectRegression(debugText.includes('"key":"' + key + '"'), 'debug snapshot table must persist ' + key);
+  });
+  expectRegression(debugText.includes('LIVE MISSION SUMMARY'), 'debug page must provide a consolidated live summary');
+  expectRegression(debugText.includes('COMPLETE LOCAL INVENTORY') && debugText.includes('COMPLETE LVAR INVENTORY'), 'debug Inventory view must retain both complete inventories');
 }
 
 Object.entries(mission.macros).forEach(([name, commands]) => {
@@ -292,6 +372,7 @@ Object.entries(mission.macros).forEach(([name, commands]) => {
 checkBeforeTakeoffLayout();
 walk(mission);
 scanLogical(mission, '$');
+checkCompanionMission();
 checkRelease91Regressions();
 
 if (errors.length) {
@@ -309,5 +390,8 @@ console.log(JSON.stringify({
   requireConditions,
   dynamicMacroCalls,
   iconReferences,
+  companionChecks,
+  companionExecutableConditions,
+  companionRendererConditions,
   macroArrays: macroNames.size,
 }, null, 2));

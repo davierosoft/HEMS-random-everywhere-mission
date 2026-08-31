@@ -2,7 +2,11 @@
 
 ## Status
 
-This is an architectural handoff only. No multi-patient implementation has been applied yet.
+Partially implemented as of release 0.997 91; the original target architecture below remains authoritative only for the still-open stages.
+
+Implemented: P1-P3 manual/AUTO display adapters, one active-patient mutex, canonical `manual_pN_*` state, pathology-driven P2/P3 vitals, ambulance pre-assessment of all present patients, ground-care eligibility, independent ambulance ownership and frozen transport reports.
+
+Still open: the generic five-slot `PATIENT_CAPACITY` registry, one data-driven medical monitor, atomic resource allocator/reservations, projected-priority policy, a single CPR lease, generic physical-slot adapters for P4/P5 and capacity tests through five patients. Do not create P4/P5 by copying the P2/P3 implementation.
 
 The requested objective is to support up to five interchangeable casualties, while retaining an extension path for a later sixth or higher slot. H145 carries one patient at a time. Each available ambulance carries one patient at a time. The H145 should receive the highest-priority eligible patient; ambulances receive the next eligible patients by medical priority.
 
