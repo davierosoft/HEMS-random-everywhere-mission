@@ -2,7 +2,7 @@
 
 - Replaced the binary orange-marker preference with **NEVER**, **AUTO**, **REALISTIC**, and **ALWAYS**. AUTO preserves the former non-SAR fallback behaviour; REALISTIC waits for the 2 NM approach, requires an eligible road/outdoor/alpine/paraglider scene and at least one responding ground service, suppresses duplicate scene VFX, and expires after five minutes.
 - Added shift-persistent LifeScore monitoring for every configured crew position, including bounded exposure loss near active smoke/fire and graduated hoist-out speed, acceleration, and rapid ground-approach impacts. Only a fatal hoist-out event can kill crew/patient and end the mission.
-- Restored independent DATAQUERYSERVICE persistence: endpoint selection is no longer stored or overwritten by aircraft profiles. The mandatory CICERS health check now snapshots the selected endpoint, tests CICERS, and restores the prior selection; only an invalid prior CICERS selection falls back to AUTO-TOGGLE.
+- Restored independent DATAQUERYSERVICE persistence: endpoint selection is no longer stored or overwritten by aircraft profiles. The mandatory CICERS health check now promotes CICERS when its key is valid; when unavailable or expired it restores the prior selection, and only an invalid prior CICERS selection falls back to AUTO-TOGGLE.
 - Restored CARLS DF manual entry to the proven direct digit route: each numeric key passes its value directly to the linear capture macro, so the first key begins and displays editing immediately. The release gate verifies all ten digit handlers and the absence of delayed handler re-registration.
 - Added compact debug telemetry for crew LifeScore/hoist fatality plus smoke mode and active/persisted endpoint state.
 

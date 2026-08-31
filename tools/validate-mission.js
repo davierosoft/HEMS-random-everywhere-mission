@@ -470,9 +470,11 @@ function checkRelease93Regressions() {
 
   const ping = compact(mission.macros['CICERS PING'] || []);
   const ensure = compact(mission.macros['ensure data query service selection'] || []);
+  const cicersSuccess = compact(mission.macros['restore data query selection after CICERS success'] || []);
   expectRegression(ping.includes('CICERS_PREVIOUS_ENDPOINT') && ping.includes('CICERS_PREVIOUS_DATAQUERY_MODE'), 'CICERS ping must snapshot both persisted endpoint and mode');
   expectRegression(ping.includes(endpointLvar) && ping.includes('restore data query selection after CICERS success') && ping.includes('restore data query selection after CICERS failure'), 'CICERS ping must restore the selection after either result');
   expectRegression(!ping.includes('DATAQUERYSERVICERANDOM'), 'CICERS ping must route expired keys through the same previous-provider fallback');
+  expectRegression(cicersSuccess.includes(endpointLvar) && cicersSuccess.includes('\"global\":\"DATAQUERYSERVICE\"') && cicersSuccess.includes('\"value\":3') && !cicersSuccess.includes('CICERS_PREVIOUS_ENDPOINT'), 'a valid CICERS key must make CICERS the active provider');
   expectRegression(ensure.includes('"call_macro":"CICERS PING"'), 'CICERS key validation must run at every startup');
   const profileMacros = ['ensure aircraft profile defaults', 'sync aircraft profile runtime', 'apply aircraft factory profile', 'save custom aircraft profile', 'load custom aircraft profile'];
   expectRegression(profileMacros.every((name) => !compact(mission.macros[name] || []).includes('DATAQUERYSERVICE')), 'aircraft profiles must not overwrite the independent endpoint selection');
