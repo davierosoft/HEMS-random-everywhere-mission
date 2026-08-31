@@ -29,6 +29,8 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - `set_carls_radio` always receives exactly three **string** labels for `LSK` and three for `RSK`; never pass a dynamic expression as a soft-key label.
 - Each renderer state must be mutually exclusive and complete. Test idle, edit, invalid edit, valid edit, fixed-modulation bands, UHF AM, and UHF FM.
+- Keep CARLS keypad editor state in mission `local` values and pass the pressed key as a same-task `param`; do not route transient digits through LVARs.
+- Preserve direct `if` + comparator checks on the linear DF input path. Do not replace them with one-item `and/require` wrappers; the release test must prove that the first key is captured and renders `EDT: 1_#.###`.
 - A blank SK is also a state: its event handler must be harmless.
 - Text that has a known display limit is measured before release. Never rely on wrapping for units, status labels, or checklist answer fields.
 
