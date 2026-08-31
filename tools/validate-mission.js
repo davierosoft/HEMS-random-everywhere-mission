@@ -7,7 +7,7 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const mission = JSON.parse(fs.readFileSync(path.join(root, 'everywhere_all.json'), 'utf8'));
 const companionMission = JSON.parse(fs.readFileSync(path.join(root, 'train.json'), 'utf8'));
-JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
+const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 
 const comparators = new Set(['eq', 'ne', 'gt', 'gte', 'lt', 'lte']);
 const macroNames = new Set(Object.keys(mission.macros));
@@ -366,6 +366,86 @@ function checkRelease91Regressions() {
   expectRegression(debugText.includes('COMPLETE LOCAL INVENTORY') && debugText.includes('COMPLETE LVAR INVENTORY'), 'debug Inventory view must retain both complete inventories');
 }
 
+function checkAircraftProfileRegression() {
+  const allText = compact(mission);
+  const requiredMacros = [
+    'ensure aircraft profile defaults', 'sync aircraft profile runtime',
+    'apply aircraft factory profile', 'save custom aircraft profile',
+    'load custom aircraft profile', 'apply linked aircraft profile',
+    'aircraft profiles page'
+  ];
+  requiredMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), `aircraft profile macro must exist: ${name}`));
+  expectRegression(!allText.includes('"DIFFICULTY"'), 'legacy difficulty state must be fully migrated');
+  expectRegression(!Object.prototype.hasOwnProperty.call(globals, 'DIFFICULTY'), 'global defaults must not retain legacy Difficulty');
+
+  const expectedTables = {
+    Aircraft_Profile_Links: 'Andrews_aircraft_profile_links',
+    Aircraft_Profile_Table1: 'Andrews_custom_default',
+    Aircraft_Profile_Table2: 'Andrews_custom_prst_1',
+    Aircraft_Profile_Table3: 'Andrews_custom_prst_2',
+    Aircraft_Profile_Table4: 'Andrews_custom_prst_3',
+    Aircraft_Profile_Table5: 'Andrews_custom_prst_4',
+    Aircraft_Profile_Table6: 'Andrews_custom_prst_5'
+  };
+  Object.entries(expectedTables).forEach(([name, table]) => {
+    expectRegression(mission.data[name] === table, `aircraft profile table must be registered: ${name}`);
+  });
+
+  const firstRun = {
+    AIRCRAFT_PROFILE_ACTIVE: 'DEFAULT', AIRCRAFT_PROFILE_SLOT: 'Aircraft_Profile_Table1',
+    ENGINE_FAILURES_ENABLED: 'yes', ORANGE_TARGET_SMOKE: 'no', TARGET_GUIDANCE_RANGE: 'wide',
+    HOIST_SAFETY_MONITOR: 'yes', HOIST_CONTROL_PROFILE: 'auto', AUTO_FPL_NAV_SOURCE: 'yes',
+    TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100
+  };
+  Object.entries(firstRun).forEach(([key, value]) => {
+    expectRegression(globals[key] === value, `first-run DEFAULT profile must set ${key}=${value}`);
+  });
+
+  const profilePage = mission.macros['aircraft profiles page'] || [];
+  const profileText = compact(profilePage);
+  ['CUSTOM DEFAULT', 'CUSTOM PRST 1', 'CUSTOM PRST 5', 'SAVE CUSTOM', 'RELOAD CUSTOM', 'UNLINK', 'LINK DEFAULT', 'LINK PRST 5'].forEach((token) => {
+    expectRegression(profileText.includes(token), `aircraft profile page must expose ${token}`);
+  });
+  expectRegression(!profileText.includes('"static":{"global"'), 'aircraft profile page must not use unsupported static global table references');
+
+  const settingsText = compact(mission.macros.settings || []);
+  ['FLIGHT ASSISTS', 'Engine failure simulation', 'Orange target smoke', 'Target guidance range', 'Hoist risk monitor', 'Hoist control profile', 'Flight-plan NAV source', 'Teleport assist'].forEach((token) => {
+    expectRegression(settingsText.includes(token), `Settings must expose individual flight-assist option: ${token}`);
+  });
+  const linked = compact(mission.macros['apply linked aircraft profile'] || []);
+  ['Config_Table1', 'Config_Table3', 'Config_Table4', 'Config_Table5', 'Config_Table6', 'Config_Table7'].forEach((table) => {
+    expectRegression(linked.includes(table), `linked aircraft profile must resolve ${table}`);
+  });
+  expectRegression(!linked.includes('"key":{"local":"MSN_CONFIG_PRESET"}'), 'linked aircraft profile must use explicit supported mission-table keys');
+  expectRegression(callsInOrder(mission.macros['switch mission preset'] || []).includes('apply linked aircraft profile'), 'mission preset switch must load its linked aircraft profile');
+  expectRegression(callsInOrder(mission.macros.objective1 || []).includes('apply linked aircraft profile'), 'livery-driven mission preset selection must load its linked aircraft profile');
+
+  const profileKeys = new Set([
+    'MISSION_ACCIDENT_MAX_RADIUS', 'MISSION_ACCIDENT_MIN_RADIUS', 'rangeautorandom', 'CREW', 'BOARDING_HOLD_GLOBAL',
+    'PILOT_ANIMATION', 'CREW_SLOTH', 'P1_MANUAL_MEDICAL_MODE', 'SECOND_HOIST', 'SECOND_HR', 'HOIST_ARMING', 'HOIST_SPEED',
+    'SAR_MAX_RADIUS', 'SAR_RING', 'SPOTTED_DISTANCE', 'SAR_HISTORY', 'DATAQUERYSERVICE', 'MOUNT_AUTO_RNG', 'location_ref',
+    'REALISTIC_DISPATCH', 'DISPATCH_TIME', 'TIME_SECOND_DISPATCH', 'HELOVICTIMS_CUSTOM', 'MCPR_ONBOARD', 'LIFESCORE_THR_LO',
+    'LIFESCORE_THR_HI', 'AMBULOCK', 'CANCELTHRESHOLD', 'POLI_RNG_VISIBLE', 'AMBU_RNG_VISIBLE', 'police_bring_crew_min_dist',
+    'ambulance_return_crew_min_dist', 'ambu_route_mode', 'NATION_BYPASS', 'NATION_OTHERS', 'TRAFFIC_DISABLED', 'closestambu',
+    'HRTruck', 'randomdead', 'LANDING_SPOT_GND', 'MARSHAL_START_ENABLED', 'MARSHAL_HOSPITAL_ENABLED', 'LANDING_SPOT_HOIST',
+    'DESTINATION_UNLOCKED', 'FORCE_AMBULANCE', 'DESTINATION_SELECTION_MODE', 'ONLINE_QUERY', 'XFERPAPERWORK', 'PAPERWORK',
+    'maptype', 'CREWTRK', 'RESCUETRK', 'AUTOZOOM', 'VOICEPACK', 'VOLUME_CREW', 'SUONERIA', 'AUDIO_DECLUT', 'HOIST_AUDIO',
+    'MISSION_GUIDANCE_OVERRIDE', 'RINGONCE', 'LOWFUELTHRSLD', 'NOCONNEXT', 'CARLSPBIT', 'CARLS_DF_TUNING_MODE',
+    'TABLET_5G_ENABLED', 'startpage', 'ambu_force', 'poli_force', 'fire_force', 'ENGINE_FAILURES_ENABLED',
+    'ORANGE_TARGET_SMOKE', 'TARGET_GUIDANCE_RANGE', 'HOIST_SAFETY_MONITOR', 'HOIST_CONTROL_PROFILE',
+    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED'
+  ]);
+  const marksCustom = (commands) => Array.isArray(commands) && commands.some((command) => command.call_macro === 'mark aircraft profile custom');
+  const directSettings = collect(mission.macros.settings || [], (item) => Array.isArray(item.commands) && item.commands.some((command) => command.set && profileKeys.has(command.set.global)));
+  expectRegression(directSettings.length > 0 && directSettings.every((item) => marksCustom(item.commands)), 'every direct Settings profile change must mark CUSTOM');
+  const profileSliders = collect(mission.macros.settings || [], (item) => item.slider && profileKeys.has(item.slider.global));
+  expectRegression(profileSliders.length > 0 && profileSliders.every((item) => marksCustom(item.slider.commands)), 'every Settings slider in a profile must mark CUSTOM');
+  const vehiclePages = [mission.macros.variant_selection || [], mission.macros['HEMS mission_type'] || []];
+  const vehicleControls = vehiclePages.flatMap((page) => collect(page, (item) => Array.isArray(item.commands) && item.commands.some((command) => command.set && ['ambu_force', 'poli_force', 'fire_force'].includes(command.set.global))));
+  expectRegression(vehicleControls.length >= 24 && vehicleControls.every((item) => marksCustom(item.commands)), 'all Custom Mission vehicle preferences must mark CUSTOM');
+  const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUSTOM |LINK )/.test(item.title));
+  expectRegression(customIndicators.length === 12 && customIndicators.every((item) => compact(item.select_condition).includes('AIRCRAFT_PROFILE_ACTIVE')), 'only CUSTOM state may select a saved slot or its mission link');
+}
 Object.entries(mission.macros).forEach(([name, commands]) => {
   if (!Array.isArray(commands)) errors.push(`macro must be a command array: ${name}`);
 });
@@ -374,6 +454,7 @@ walk(mission);
 scanLogical(mission, '$');
 checkCompanionMission();
 checkRelease91Regressions();
+checkAircraftProfileRegression();
 
 if (errors.length) {
   console.error(JSON.stringify({ result: 'FAIL', errors }, null, 2));
