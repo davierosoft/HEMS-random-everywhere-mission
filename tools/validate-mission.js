@@ -393,7 +393,7 @@ function checkAircraftProfileRegression() {
 
   const firstRun = {
     AIRCRAFT_PROFILE_ACTIVE: 'DEFAULT', AIRCRAFT_PROFILE_SLOT: 'Aircraft_Profile_Table1',
-    ENGINE_FAILURES_ENABLED: 'yes', ORANGE_TARGET_SMOKE: 'no', TARGET_GUIDANCE_RANGE: 'wide',
+    ENGINE_FAILURES_ENABLED: 'yes', ORANGE_TARGET_SMOKE: 'auto', TARGET_GUIDANCE_RANGE: 'wide',
     HOIST_SAFETY_MONITOR: 'yes', HOIST_CONTROL_PROFILE: 'auto', AUTO_FPL_NAV_SOURCE: 'yes',
     TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100
   };
@@ -423,7 +423,7 @@ function checkAircraftProfileRegression() {
   const profileKeys = new Set([
     'MISSION_ACCIDENT_MAX_RADIUS', 'MISSION_ACCIDENT_MIN_RADIUS', 'rangeautorandom', 'CREW', 'BOARDING_HOLD_GLOBAL',
     'PILOT_ANIMATION', 'CREW_SLOTH', 'P1_MANUAL_MEDICAL_MODE', 'SECOND_HOIST', 'SECOND_HR', 'HOIST_ARMING', 'HOIST_SPEED',
-    'SAR_MAX_RADIUS', 'SAR_RING', 'SPOTTED_DISTANCE', 'SAR_HISTORY', 'DATAQUERYSERVICE', 'MOUNT_AUTO_RNG', 'location_ref',
+    'SAR_MAX_RADIUS', 'SAR_RING', 'SPOTTED_DISTANCE', 'SAR_HISTORY', 'MOUNT_AUTO_RNG', 'location_ref',
     'REALISTIC_DISPATCH', 'DISPATCH_TIME', 'TIME_SECOND_DISPATCH', 'HELOVICTIMS_CUSTOM', 'MCPR_ONBOARD', 'LIFESCORE_THR_LO',
     'LIFESCORE_THR_HI', 'AMBULOCK', 'CANCELTHRESHOLD', 'POLI_RNG_VISIBLE', 'AMBU_RNG_VISIBLE', 'police_bring_crew_min_dist',
     'ambulance_return_crew_min_dist', 'ambu_route_mode', 'NATION_BYPASS', 'NATION_OTHERS', 'TRAFFIC_DISABLED', 'closestambu',
@@ -446,6 +446,49 @@ function checkAircraftProfileRegression() {
   const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUSTOM |LINK )/.test(item.title));
   expectRegression(customIndicators.length === 12 && customIndicators.every((item) => compact(item.select_condition).includes('AIRCRAFT_PROFILE_ACTIVE')), 'only CUSTOM state may select a saved slot or its mission link');
 }
+function checkRelease93Regressions() {
+  const allText = compact(mission);
+  const endpointLvar = 'L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION';
+  ['normalize orange target smoke setting', 'create orange smoke marker', 'evaluate realistic orange smoke scene', 'arm realistic orange smoke', 'initialize crew lifescores for shift', 'apply crew lifescore impact', 'refresh crew lifescore report', 'start crew lifescore monitor', 'hoist out fatal failure', 'start hoist out risk monitor'].forEach((name) => {
+    expectRegression(Array.isArray(mission.macros[name]), `release 93 macro must exist: ${name}`);
+  });
+  const smokeControls = collect(mission.macros.settings || [], (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'NEVER'));
+  expectRegression(smokeControls.length === 1 && compact(smokeControls[0]).includes('AUTO') && compact(smokeControls[0]).includes('REALISTIC') && compact(smokeControls[0]).includes('ALWAYS'), 'orange smoke settings must expose NEVER/AUTO/REALISTIC/ALWAYS');
+  expectRegression(globals.ORANGE_TARGET_SMOKE === 'auto', 'first-run orange smoke setting must be AUTO');
+  const smokeFactoryValues = {
+    DEFAULT: 'auto',
+    'ROOKIE PILOT': 'always',
+    'EXPERT PILOT': 'realistic',
+    'EXPERT HEMS': 'realistic'
+  };
+  Object.entries(smokeFactoryValues).forEach(([profile, value]) => {
+    const factory = compact(mission.macros[`aircraft factory ${profile}`] || []);
+    expectRegression(factory.includes(`"global":"ORANGE_TARGET_SMOKE"`) && factory.includes(`"value":"${value}"`), `factory profile ${profile} must set orange smoke to ${value}`);
+  });
+  const realisticSmoke = compact(mission.macros['arm realistic orange smoke'] || []);
+  expectRegression(realisticSmoke.includes('"lte":2') && realisticSmoke.includes('"sleep":300') && realisticSmoke.includes('"has_object":"VFXA"'), 'realistic smoke must arm at 2 NM, avoid VFX duplication, and expire after five minutes');
+
+  const ping = compact(mission.macros['CICERS PING'] || []);
+  const ensure = compact(mission.macros['ensure data query service selection'] || []);
+  expectRegression(ping.includes('CICERS_PREVIOUS_ENDPOINT') && ping.includes('CICERS_PREVIOUS_DATAQUERY_MODE'), 'CICERS ping must snapshot both persisted endpoint and mode');
+  expectRegression(ping.includes(endpointLvar) && ping.includes('restore data query selection after CICERS success') && ping.includes('restore data query selection after CICERS failure'), 'CICERS ping must restore the selection after either result');
+  expectRegression(!ping.includes('DATAQUERYSERVICERANDOM'), 'CICERS ping must route expired keys through the same previous-provider fallback');
+  expectRegression(ensure.includes('"call_macro":"CICERS PING"'), 'CICERS key validation must run at every startup');
+  const profileMacros = ['ensure aircraft profile defaults', 'sync aircraft profile runtime', 'apply aircraft factory profile', 'save custom aircraft profile', 'load custom aircraft profile'];
+  expectRegression(profileMacros.every((name) => !compact(mission.macros[name] || []).includes('DATAQUERYSERVICE')), 'aircraft profiles must not overwrite the independent endpoint selection');
+
+  const digit = compact(mission.macros['CARLS DF digit'] || []);
+  const open = compact(mission.macros['CARLS DF open'] || []);
+  expectRegression(digit.includes('"param":"digit"') && digit.includes('L:CARLS_DF_D1') && digit.includes('"lte":6') && digit.includes('"require":{"var":["L:CARLS_DF_EDITING","number"]}') && !Array.isArray(mission.macros['CARLS DF begin entry']), 'DF must retain the proven direct first-digit capture path');
+  expectRegression(!open.includes('"sleep":0.1') && open.includes('"call_macro":"CARLS buttons"'), 'DF opening must register handlers immediately after switching page');
+  const dfHandlers = collect(mission.macros['CARLS buttons'] || [], (item) => /^MISSION_RADIO_CARLS_[0-9]$/.test(item.create_event_handler));
+  for (let digitNumber = 0; digitNumber <= 9; digitNumber += 1) {
+    const eventName = `MISSION_RADIO_CARLS_${digitNumber}`;
+    const handler = dfHandlers.find((item) => item.create_event_handler === eventName);
+    const route = handler?.commands?.[0]?.then?.find((command) => command.call_macro === 'CARLS DF digit');
+    expectRegression(route?.params?.digit === digitNumber, `DF digit event ${digitNumber} must pass its digit directly to the capture macro`);
+  }
+}
 Object.entries(mission.macros).forEach(([name, commands]) => {
   if (!Array.isArray(commands)) errors.push(`macro must be a command array: ${name}`);
 });
@@ -455,6 +498,7 @@ scanLogical(mission, '$');
 checkCompanionMission();
 checkRelease91Regressions();
 checkAircraftProfileRegression();
+checkRelease93Regressions();
 
 if (errors.length) {
   console.error(JSON.stringify({ result: 'FAIL', errors }, null, 2));
