@@ -544,6 +544,62 @@ function checkRelease93Regressions() {
     const route = handler?.commands?.[0]?.then?.find((command) => command.call_macro === 'CARLS DF digit');
     expectRegression(route?.params?.digit === digitNumber, `DF digit event ${digitNumber} must pass its digit directly to the capture macro`);
   }
+
+  const crewEmergencyMacros = [
+    'post crew safety message', 'evaluate crew lifescore state', 'apply object crew lifescore impact',
+    'apply hoist crew lifescore impact', 'replace deceased crew object', 'board crew after emergency',
+    'crew emergency hospital admission', 'crew emergency route to care', 'crew emergency response'
+  ];
+  crewEmergencyMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), `crew emergency macro must exist: ${name}`));
+  const crewImpact = compact(mission.macros['apply crew lifescore impact'] || []);
+  expectRegression(crewImpact.includes('"param":"member"') && crewImpact.includes('"local":"CREW_LIFESCORE_CURRENT"'), 'crew impact must target one explicit member and evaluate the resulting score');
+  const crewMonitor = compact(mission.macros['start crew lifescore monitor'] || []);
+  expectRegression(crewMonitor.includes('"object":"pax3","var":"distance:m","to":"VFXA"') && crewMonitor.includes('"object":"hoist_crew","var":"distance:m","to":"VFXA"'), 'scene exposure must use each ground operator distance to the active hazard');
+  expectRegression(crewMonitor.includes('"object":"pax3","member":2') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":3') && !compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":4'), 'crew role mapping must keep pax3 as medical crew 2 and hoist_crew as hoist operator 3');
+  expectRegression(!crewMonitor.includes('"object":"VFXA","var":"distance:m"'), 'scene exposure must never use helicopter-to-smoke distance as crew exposure');
+  const crewPost = compact(mission.macros['post crew safety message'] || []);
+  expectRegression(crewPost.includes('"set_message"') && crewPost.includes('Dispatcher_Messages') && crewPost.includes('UpdateRescueTrack'), 'crew safety alerts must reach tablet, dispatch messages, and RescueTrack');
+  const crewEvaluate = compact(mission.macros['evaluate crew lifescore state'] || []);
+  expectRegression(crewEvaluate.includes('"lte":10') && crewEvaluate.includes('crew emergency response'), 'crew emergency response must enforce the LifeScore <=10 threshold');
+  const crewResponse = compact(mission.macros['crew emergency response'] || []);
+  expectRegression(crewResponse.includes('"value":"CREW_FATAL"') && crewResponse.includes('"value":"CREW_CRITICAL"') && crewResponse.includes('replace deceased crew object'), 'crew death and critical injury must both fail the mission through the emergency response');
+  const fatalReplacement = compact(mission.macros['replace deceased crew object'] || []);
+  ['pax3', 'pax1', 'pax2', 'hoist_crew'].forEach((name) => {
+    expectRegression(fatalReplacement.includes(`"destroy_object":"${name}"`) && fatalReplacement.includes(`"name":"${name}","title":"Airbus H145 Medic Stretcher"`), `deceased ground object ${name} must be replaced in place with the packaged casualty asset under the same name`);
+  });
+  const emergencyBoarding = compact(mission.macros['board crew after emergency'] || []);
+  ['SDK_PAX_1_ON', 'SDK_PAX_2_ON', 'SDK_PAX_3_ON'].forEach((trigger) => expectRegression(emergencyBoarding.includes(trigger), `emergency boarding must restore ${trigger}`));
+  expectRegression(emergencyBoarding.includes('CREW_EMERGENCY_FATAL') && emergencyBoarding.includes('CREW_IMPACT_OBJECT'), 'fatal boarding must leave only the deceased packaged object on scene while boarding survivors');
+  const emergencyRoute = compact(mission.macros['crew emergency route to care'] || []);
+  expectRegression(emergencyRoute.includes('Query closest hospital') && emergencyRoute.includes('user hospital WP') && emergencyRoute.includes('"local":"FPL_NMBR"') && emergencyRoute.includes('"value":8'), 'critical/fatal crew emergency must route to the nearest hospital');
+  expectRegression(emergencyRoute.includes('CREW_EMERGENCY_ROUTE_FALLBACK') && emergencyRoute.includes('return to base'), 'crew emergency must fall back to base if no hospital query result is available');
+  const hospitalAdmission = compact(mission.macros['crew emergency hospital admission'] || []);
+  expectRegression(hospitalAdmission.includes('hospital_door') && hospitalAdmission.includes('"hospital"') && hospitalAdmission.includes('"destroy_object":"pax3"'), 'surviving operators must deboard and enter the hospital building');
+  const hoistRisk = compact(mission.macros['start hoist out risk monitor'] || []);
+  expectRegression(hoistRisk.includes('apply hoist crew lifescore impact') && !hoistRisk.includes('apply crew lifescore impact'), 'hoist risk must damage only the exposed hoist operator');
+  const fatalArrays = [];
+  const collectFatalArrays = (value) => {
+    if (Array.isArray(value)) {
+      if (value.some((command) => command?.call_macro === 'hoist out fatal failure')) fatalArrays.push(value);
+      value.forEach(collectFatalArrays);
+      return;
+    }
+    if (value && typeof value === 'object') Object.values(value).forEach(collectFatalArrays);
+  };
+  collectFatalArrays(mission.macros['Hoisting back up'] || []);
+  expectRegression(fatalArrays.length === 3 && fatalArrays.every((commands) => {
+    const fatalIndex = commands.findIndex((command) => command?.call_macro === 'hoist out fatal failure');
+    const resetIndex = commands.findIndex((command) => command?.set?.local === 'HOIST_OUT' && command?.value === 0);
+    return resetIndex < 0 || fatalIndex < resetIndex;
+  }), 'all legacy hoist fatal branches must call failure before clearing HOIST_OUT');
+  const crewReport = compact(mission.macros['refresh crew lifescore report'] || []);
+  expectRegression(crewReport.includes('"value":"CRITICAL"') && crewReport.includes('"value":"DECEASED"'), 'crew report must distinguish critical injury from death');
+  const endMenuText = compact(mission.macros['end menu'] || []);
+  expectRegression(endMenuText.includes('MISSION FAILED — CREW MEMBER DECEASED') && endMenuText.includes('MISSION FAILED — CREW MEMBER CRITICALLY INJURED'), 'end menu must report both crew emergency failure outcomes');
+  expectRegression(endMenuText.includes('"local":"MISSION_FAILED"},"eq":null'), 'successful completion text must be hidden for every failed mission');
+  const crewDebugText = compact(mission.macros['debug page'] || []);
+  expectRegression(crewDebugText.includes('CREW SAFETY / EMERGENCY') && crewDebugText.includes('CREW_FATAL_OBJECT_REPLACED'), 'debug page must expose crew emergency and packaged-object state');
+
 }
 Object.entries(mission.macros).forEach(([name, commands]) => {
   if (!Array.isArray(commands)) errors.push(`macro must be a command array: ${name}`);

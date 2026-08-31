@@ -1,3 +1,23 @@
+## Release 0.997 93
+
+- Crew-impact ownership contract: `apply crew lifescore impact` always receives an explicit member. Scene exposure is object-to-hazard distance for `pax3`, `pax1`, `pax2`, or `hoist_crew`; it must never use helicopter-to-VFX distance or reduce every crew score. Hoist penalties resolve to the active hoist role only.
+- Emergency threshold contract: LifeScore **<=10** sets `MISSION_FAILED=CREW_CRITICAL`; zero sets `MISSION_FAILED=CREW_FATAL`. Both are one-shot through `CREW_EMERGENCY_ACTIVE`, stop the active mission, terminate the shift, and hide every success banner.
+- Fatal-object contract: preserve the affected object position, destroy it, then create `Airbus H145 Medic Stretcher` with the exact same object name. For a cable-only hoist fatality, use the ground projection beneath the helicopter. Do not board or destroy the packaged casualty during survivor recovery.
+- Recovery contract: surviving ground operators board through the established PAX1/PAX2/PAX3 passenger doors and payload stations. Query and route to the nearest hospital, reuse `user hospital WP`, then deboard living members and send them through `hospital_door` into `hospital`. After 45 seconds without a hospital result, use the existing return-to-base flow with hospital/base deboarding enabled.
+- Messaging contract: every first exposure/injury, deterioration, critical event, fatality, route decision, and hospital handover uses `post crew safety message`; it must update the tablet toast, `Dispatcher_Messages`, and RescueTrack together.
+- Legacy-hoist contract: `hoist out fatal failure` no longer depends on `HOIST_OUT != 0`. In all three historical `Hoisting back up` fatal branches, call it before clearing `HOIST_OUT`.
+- Debug contract: keep emergency active/failure/member/score/fatal/cause/source object/boarding/fallback/packaged state visible under **CREW SAFETY / EMERGENCY**.
+- Static gate: PASS — 626 macro arrays, 7,023 executable conditions, 6,895 `require` leaves, 2,260 renderer conditions, 2,397 static and 3 guarded dynamic macro calls, 274 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, 399 regression assertions and 11 companion assertions. `tools/test-crew-emergency.js` also passes role-mapping, targeted-impact, exact-10 critical, zero-score fatal, and fatal-survivor-boarding scenarios. Runtime testing remains mandatory.
+
+### Runtime checks for release 93 crew emergency
+
+1. Put one ground operator near active VFXA/flare and keep another outside the radius. Only the exposed operator must lose LifeScore; the first loss must appear on tablet, Dispatch and RescueTrack.
+2. Start one member at 11 and apply a one-point impact. At exactly 10 the mission must fail as `CREW_CRITICAL`, every living scene operator must board, and the route must change to the nearest hospital.
+3. At the hospital, land and stop. Living operators must deboard through the correct door, walk to the hospital building, and the final page must show failure/shift termination, never congratulations.
+4. Force zero LifeScore on each supported ground object and during cable-only hoist. The original object name must remain present as the packaged stretcher casualty at the incident position while survivors return aboard.
+5. Force the three historical hoist-fatal branches after `HOIST_OUT` transitions. Every branch must fail the mission once, without a success page or a stalled thread.
+6. Make the hospital query return no location for at least 45 seconds. The flow must announce fallback, route to base, and complete emergency deboarding rather than wait indefinitely.
+
 ## Release 0.997 92
 
 - Debug UI contract: `debug page` defaults to SUMMARY and exposes exactly six thematic views: SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE and INVENTORY. Navigation changes only `debug_page_section` and rerenders the same macro. Do not merge the complete Local/LVAR inventories back into the operational views.

@@ -64,7 +64,19 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - A partial category requires a second press on the same category to enable all. A fully enabled category disables all on the next press. Any individual change clears pending confirmation.
 - No Save button: persistence is automatic on switch/exit. Test two edited presets, both pages, mission reload, single toggles, partial groups, full groups, and ALL MISSIONS.
 
-## 9. Required release gate
+## 9. Crew LifeScore and emergency termination
+
+- Every LifeScore impact names exactly one member. Environmental loss uses the ground object-to-hazard distance; never substitute aircraft-to-hazard distance and never reduce all configured crew members together.
+- Test the exact boundary: 11 -> 10 must produce `CREW_CRITICAL`; any value reduced to zero must produce `CREW_FATAL`. Both fail the mission, terminate the shift, and suppress successful-completion UI.
+- The first injury/exposure and each deterioration threshold must reach all three channels: tablet message, Dispatch message array, and RescueTrack. Threshold flags prevent repeated messages every monitor cycle.
+- A deceased visible operator is replaced in place with the packaged casualty asset using the same object name. Survivor boarding must skip only that replacement, not every other ground operator.
+- Living scene operators must board through the seat/door/payload mapping for 3-, 4-, and 5-person crews. At hospital they must deboard and follow the hospital-door/building path; test cable-only and ground-object hoist cases separately.
+- Keep a bounded hospital-query fallback to the existing return-to-base flow. An absent query result must never leave the failed mission waiting forever.
+- In every historical fatal branch, invoke the fatal handler before clearing `HOIST_OUT`. The handler itself must be one-shot and must not depend on the old hoist flag still being set.
+- Update the Debug page with emergency member, score, cause, source object, fatal/critical state, boarding, route fallback, and packaged-object result.
+- Run both `node tools/validate-mission.js` and `node tools/test-crew-emergency.js`; then execute the runtime matrix in the handoff because object choreography, route queries, and simulator assets cannot be proven statically.
+
+## 10. Required release gate
 
 1. Parse `everywhere_all.json`, `global.json`, and every shipped companion/custom-loader JSON such as `train.json`.
 2. Run `node tools/validate-mission.js`; companion loaders must have explicit contract assertions and cannot be silently skipped.
