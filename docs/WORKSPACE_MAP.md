@@ -16,6 +16,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `CHANGELOG_USER.en.md` | Public-facing changelog; update only on explicit request. |
 | `sound/` | Packaged WAV assets; names are runtime identifiers. |
 | `docs/` | Durable architecture, testing, and renderer references. |
+| `docs/architecture/CICERS_WORKSPACE_OPTIMIZATION.md` | Technical report covering workspace modularization, safeguards, validation, and residual limitations. |
 | `tools/` | Dependency-free assemblers, scope guards, validators, and regression tests. |
 | `.githooks/` | Local safeguards: pre-commit permits only `CICERS/*` and runs workspace checks; pre-push rejects every non-`CICERS/*` branch destination. |
 
