@@ -17,6 +17,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `sound/` | Packaged WAV assets; names are runtime identifiers. |
 | `docs/` | Durable architecture, testing, and renderer references. |
 | `tools/` | Dependency-free assemblers, scope guards, validators, and regression tests. |
+| `.githooks/` | Local safeguards: pre-commit permits only `CICERS/*` and runs workspace checks; pre-push rejects every non-`CICERS/*` branch destination. |
 
 ## Macro modules
 
@@ -54,6 +55,6 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 2. Locate the owner with `mission-workspace.js locate`; read only that module and its callers.
 3. Snapshot mission scope, patch the module, build, and inspect the artifact diff immediately.
 4. Require byte equality and explicit semantic allowlists.
-5. Run focused checks, then `npm test`, `git diff --check`, and the affected simulator matrix.
+5. Run focused checks, then `npm test`, `git diff --check`, and the affected simulator matrix. The consistency gate keeps manifest ownership, module counts, docs, scripts, and AGENTS limits synchronized.
 
 This layout keeps opaque icons and inactive subsystems out of normal model context, gives each macro one owner, and makes accidental cross-subsystem edits machine-detectable.

@@ -4,7 +4,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 
 ## Start every task
 
-1. Run `node tools/assert-cicers-branch.js`. Work only on `CICERS/*`; never edit, commit, or push `main`.
+1. Run `node tools/assert-cicers-branch.js`. Work only on `CICERS/*`; never edit, commit, or push `main`. Ensure `git config core.hooksPath` reports `.githooks`; the tracked pre-commit and pre-push hooks are mandatory.
 2. Read `docs/WORKSPACE_MAP.md`, then only the subsystem documentation relevant to the request.
 3. Inspect `git status --short` and preserve user changes.
 4. Name the allowed files, macro names, and data keys before editing. For mission work, run `node tools/check-mission-scope.js snapshot` first.
@@ -28,7 +28,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 
 1. Run `node tools/mission-workspace.js check` after every mission build.
 2. Run `node tools/check-mission-scope.js check --strict` with one `--allow-macro`, `--allow-data`, or `--allow-root` flag for every intended semantic change.
-3. Run the smallest targeted gate during implementation, then `npm test` once when stable.
+3. Run the smallest targeted gate during implementation, then `npm test` once when stable. `npm test` is branch-neutral for CI; write protection is enforced separately by the branch guard and pre-commit hook.
 4. Run `git diff --check` and inspect `git diff --stat`, `git status --short`, and the staged diff before commit.
 5. Use `docs/testing/RUNTIME_VALIDATION.md` for affected HPG/MSFS scenarios. Static PASS never proves simulator behavior.
 

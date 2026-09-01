@@ -4,6 +4,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { assertCicersBranch } = require('./assert-cicers-branch');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '..');
 const ARTIFACT_PATH = path.join(REPOSITORY_ROOT, 'everywhere_all.json');
@@ -248,10 +249,21 @@ function classify(entries, definitions) {
 function writeFile(relativePath, contents, eol = '\n') {
   const target = path.join(SOURCE_ROOT, relativePath);
   fs.mkdirSync(path.dirname(target), { recursive: true });
-  fs.writeFileSync(target, `${contents}${eol}`, 'utf8');
+  writeFileAtomic(target, `${contents}${eol}`);
+}
+
+function writeFileAtomic(target, contents) {
+  const temporary = `${target}.codex-${process.pid}.tmp`;
+  try {
+    fs.writeFileSync(temporary, contents, 'utf8');
+    fs.renameSync(temporary, target);
+  } finally {
+    if (fs.existsSync(temporary)) fs.unlinkSync(temporary);
+  }
 }
 
 function extract() {
+  assertCicersBranch(REPOSITORY_ROOT);
   if (fs.existsSync(MANIFEST_PATH) && !process.argv.includes('--force')) {
     throw new Error('mission-src already exists; use extract --force only when the artifact intentionally replaces every module');
   }
@@ -289,7 +301,7 @@ function extract() {
       data: captureFormat(root.get('data').value, dataEntries),
     },
   };
-  fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  writeFileAtomic(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`Extracted ${macroEntries.length} macros and ${dataEntries.length} data entries into ${MACRO_MODULES.length + DATA_MODULES.length} modules.`);
 }
 
@@ -362,10 +374,11 @@ function reindexSection(manifest, sectionName, orderProperty) {
 }
 
 function reindex() {
+  assertCicersBranch(REPOSITORY_ROOT);
   const manifest = loadManifest();
   const macros = reindexSection(manifest, 'macros', 'macroOrder');
   const data = reindexSection(manifest, 'data', 'dataOrder');
-  fs.writeFileSync(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`, 'utf8');
+  writeFileAtomic(MANIFEST_PATH, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(JSON.stringify({ macros, data }, null, 2));
   console.log('Manifest reindexed. Run build, inspect the semantic diff, then run check.');
 }
@@ -406,12 +419,13 @@ function check() {
 }
 
 function build() {
+  assertCicersBranch(REPOSITORY_ROOT);
   const { artifact, result } = compose();
   if (artifact === result) {
     console.log('Mission artifact already matches the modular sources byte-for-byte.');
     return;
   }
-  fs.writeFileSync(ARTIFACT_PATH, result, 'utf8');
+  writeFileAtomic(ARTIFACT_PATH, result);
   console.log('Rebuilt everywhere_all.json from mission-src; review the semantic scope before continuing.');
 }
 
