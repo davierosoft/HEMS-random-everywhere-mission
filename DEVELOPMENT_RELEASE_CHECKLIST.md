@@ -36,6 +36,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - `set_carls_radio` always receives exactly three **string** labels for `LSK` and three for `RSK`; never pass a dynamic expression as a soft-key label.
 - Each renderer state must be mutually exclusive and complete. Test idle, edit, invalid edit, valid edit, fixed-modulation bands, UHF AM, and UHF FM.
+- The DF renderer policy is to materialize every selected row and emit a complete four-row payload in each refresh branch; row-level `show_condition` is documented HPG syntax but is not used for this page. Run `node tools/validate-df-regression.js` after changes.
 - Keep every CARLS DF value that must survive a keypad event, renderer pass, or timeout thread in reset-on-open shared `global` state. Use `local` only for scratch values consumed in the same task, pass the pressed key as a same-task `param`, and never route editor state through LVARs.
 - Preserve direct `if` + comparator checks on the linear DF input path. Do not replace them with one-item `and/require` wrappers; the release test must prove that the first key is captured and renders `EDT: 1_#.###`.
 - Treat open, numeric handlers, renderer, ESC/ENT and timeout monitor as different tasks. The blocking test sequence is: open -> press 1 once -> show `EDT: 1_#.###` and ESC -> wait five seconds -> cancel incomplete edit, restore idle frequency/modulation and hide ESC.

@@ -123,7 +123,7 @@ function validateDfRelease(mission, changelog) {
   for (let position = 1; position <= 6; position += 1) state[`CARLS_DF_D${position}`] = 0;
   execute(digit, state, {digit: 1});
   expect(state.CARLS_DF_EDITING === 1 && state.CARLS_DF_INPUT_INDEX === 2 && state.CARLS_DF_D1 === 1 && state.CARLS_DF_ENTRY_FREQUENCY === 100000, 'DF/release gate: open -> first key does not produce shared state for EDT: 1_#.###');
-  expect(renderJson.includes('"text":"EDT: {0}_#.###","params":[{"global":"CARLS_DF_D1"}]'), 'DF/release gate: first digit is not rendered as EDT: 1_#.### from shared state');
+  expect(renderJson.includes('CARLS_DF_RENDER_EDIT_TEXT') && renderJson.includes('EDT: {0}_#.###'), 'DF/release gate: first digit is not represented by the resolved EDT: 1_#.### row');
   expect(renderJson.includes('"global":"CARLS_DF_INPUT_INDEX"') && renderJson.includes('"global":"CARLS_DF_EDITING"'), 'DF/release gate: EDT visibility still depends on task-local state');
 
   const renderStates = (macros['CARLS DF render'] || []).map((command) => ({
@@ -134,7 +134,7 @@ function validateDfRelease(mission, changelog) {
   const idleStates = renderStates.filter((stateItem) => stateItem.layout.RSK?.[2] === '');
   expect(escStates.length > 0 && escStates.every((stateItem) => compact(stateItem.guard).includes('"global":"CARLS_DF_EDITING"') && compact(stateItem.guard).includes('"eq":1')), 'DF/release gate: every ESC layout must be selected only by shared editing state');
   expect(idleStates.length > 0 && idleStates.every((stateItem) => compact(stateItem.guard).includes('"global":"CARLS_DF_EDITING"') && compact(stateItem.guard).includes('"eq":0')), 'DF/release gate: every idle layout must hide ESC through shared editing state');
-  expect(escStates.every((stateItem) => compact(stateItem.layout.Items).includes('"text":"EDT: {0}_#.###"') && compact(stateItem.layout.Items).includes('"global":"CARLS_DF_D1"')), 'DF/release gate: every ESC layout must contain the visible first-digit EDT row');
+  expect(escStates.every((stateItem) => compact(stateItem.layout.Items).includes('CARLS_DF_RENDER_EDIT_TEXT')), 'DF/release gate: every ESC layout must contain the resolved visible edit row');
 
   [2, 1, 5, 0, 0].forEach((value) => execute(digit, state, {digit: value}));
   expect(state.CARLS_DF_INPUT_INDEX === 7 && state.CARLS_DF_ENTRY_FREQUENCY === 121500, 'DF/release gate: the complete 121.500 sequence drops or reorders a key');

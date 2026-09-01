@@ -491,11 +491,11 @@ function checkAircraftProfileRegression() {
   const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUSTOM |LINK )/.test(item.title));
   expectRegression(customIndicators.length === 12 && customIndicators.every((item) => compact(item.select_condition).includes('AIRCRAFT_PROFILE_ACTIVE')), 'only CUSTOM state may select a saved slot or its mission link');
 }
-function checkRelease93Regressions() {
+function checkRelease94Regressions() {
   const allText = compact(mission);
   const endpointLvar = 'L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION';
   ['normalize orange target smoke setting', 'create orange smoke marker', 'evaluate realistic orange smoke scene', 'arm realistic orange smoke', 'initialize crew lifescores for shift', 'apply crew lifescore impact', 'refresh crew lifescore report', 'start crew lifescore monitor', 'hoist out fatal failure', 'start hoist out risk monitor'].forEach((name) => {
-    expectRegression(Array.isArray(mission.macros[name]), `release 93 macro must exist: ${name}`);
+    expectRegression(Array.isArray(mission.macros[name]), `release 94 macro must exist: ${name}`);
   });
   const smokeControls = collect(mission.macros.settings || [], (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'NEVER'));
   expectRegression(smokeControls.length === 1 && compact(smokeControls[0]).includes('AUTO') && compact(smokeControls[0]).includes('REALISTIC') && compact(smokeControls[0]).includes('ALWAYS'), 'orange smoke settings must expose NEVER/AUTO/REALISTIC/ALWAYS');
@@ -628,7 +628,7 @@ scanLogical(mission, '$');
 checkCompanionMission();
 checkRelease91Regressions();
 checkAircraftProfileRegression();
-checkRelease93Regressions();
+checkRelease94Regressions();
 const dfReleaseGate = validateDfRelease(mission, changelog);
 errors.push(...dfReleaseGate.errors);
 regressionChecks += dfReleaseGate.checks;

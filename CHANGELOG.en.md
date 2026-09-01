@@ -1,3 +1,8 @@
+## 0.997 94 — CARLS DF complete refresh and regression protection
+
+- Reworked the CARLS Direction Finder renderer so every idle, editing, invalid, valid, UHF, modulation and ENT/ESC state emits a complete four-row `set_carls_radio` payload. The first digit now renders immediately as `EDT: 1_#.###`, without row-level visibility conditions or stale soft keys.
+- Corrected the renderer’s global-frequency query to use valid HPG `global` syntax, keeping editor state in shared globals and preserving the existing five-second timeout/cancel flow.
+- Added an HPG renderer reference and a dedicated DF regression gate; static checks remain complementary to the required MSFS runtime matrix.
 ## 0.997 93 — smoke modes, crew safety, and endpoint persistence
 
 - Replaced the binary orange-marker preference with **NEVER**, **AUTO**, **REALISTIC**, and **ALWAYS**. AUTO preserves the former non-SAR fallback behaviour; REALISTIC waits for the 2 NM approach, requires an eligible road/outdoor/alpine/paraglider scene and at least one responding ground service, suppresses duplicate scene VFX, and expires after five minutes.
