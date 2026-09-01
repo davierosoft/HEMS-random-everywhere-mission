@@ -8,6 +8,8 @@ const root = path.resolve(__dirname, '..');
 const mission = JSON.parse(fs.readFileSync(path.join(root, 'everywhere_all.json'), 'utf8'));
 const companionMission = JSON.parse(fs.readFileSync(path.join(root, 'train.json'), 'utf8'));
 const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
+const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.en.md'), 'utf8');
+const validateDfRelease = require('./validate-df-release');
 
 const comparators = new Set(['eq', 'ne', 'gt', 'gte', 'lt', 'lte']);
 const macroNames = new Set(Object.keys(mission.macros));
@@ -257,7 +259,6 @@ function scanGuardedWaits(value, guards, macroName, counts) {
 }
 
 function checkRelease91Regressions() {
-  expectRegression(mission.title.includes('0.997 92'), 'mission title must be 0.997 92');
 
   const allText = compact(mission);
   const invalidNames = [...allText.matchAll(/manual_p[23][A-Za-z0-9]+/g)].map((match) => match[0]);
@@ -479,71 +480,7 @@ function checkRelease93Regressions() {
   const profileMacros = ['ensure aircraft profile defaults', 'sync aircraft profile runtime', 'apply aircraft factory profile', 'save custom aircraft profile', 'load custom aircraft profile'];
   expectRegression(profileMacros.every((name) => !compact(mission.macros[name] || []).includes('DATAQUERYSERVICE')), 'aircraft profiles must not overwrite the independent endpoint selection');
 
-  const digit = compact(mission.macros['CARLS DF digit'] || []);
-  const open = compact(mission.macros['CARLS DF open'] || []);
-  const transientDfState = [
-    'CARLS_DF_EDITING', 'CARLS_DF_INPUT_INDEX', 'CARLS_DF_ENTRY_FREQUENCY',
-    'CARLS_DF_VALID', 'CARLS_DF_D1', 'CARLS_DF_D2', 'CARLS_DF_D3',
-    'CARLS_DF_D4', 'CARLS_DF_D5', 'CARLS_DF_D6', 'CARLS_DF_LAST_INPUT_TIME'
-  ];
-  const dfMacros = Object.fromEntries(Object.entries(mission.macros).filter(([name]) => name === 'CARLS buttons' || name.startsWith('CARLS DF')));
-  const dfJson = compact(dfMacros);
-  transientDfState.forEach((name) => {
-    expectRegression(!dfJson.includes(`"var":["L:${name}","number"]`), `DF transient state ${name} must remain local, never an LVAR`);
-  });
-
-  const digitGuard = mission.macros['CARLS DF digit']?.[0];
-  const digitCommands = digitGuard?.then || [];
-  expectRegression(digitGuard?.if?.local === 'CARLS_DF_INPUT_INDEX' && digitGuard?.lte === 6 && !digitGuard?.if?.and, 'DF digit capture must use the proven direct linear condition, not an and/require wrapper');
-  expectRegression(digitCommands[0]?.set?.local === 'CARLS_DF_EDITING' && digitCommands[0]?.value === 1, 'the first DF key must enter edit mode in the same task');
-  for (let position = 1; position <= 6; position += 1) {
-    const capture = digitCommands.find((command) => command?.if?.local === 'CARLS_DF_INPUT_INDEX' && command?.eq === position);
-    expectRegression(capture?.then?.[0]?.set?.local === `CARLS_DF_D${position}` && capture?.then?.[0]?.value?.param === 'digit', `DF position ${position} must capture the current digit param directly into local state`);
-  }
-
-  const evaluateDfValue = (value, state, params) => {
-    if (typeof value === 'number' || typeof value === 'string') return value;
-    if (value?.local) return state[value.local] ?? 0;
-    if (value?.param) return params[value.param];
-    if (value?.var) return 0;
-    if (value?.add) return value.add.reduce((sum, item) => sum + Number(evaluateDfValue(item, state, params)), 0);
-    if (value?.multiply) return value.multiply.reduce((product, item) => product * Number(evaluateDfValue(item, state, params)), 1);
-    return 0;
-  };
-  const compareDfValue = (left, command) => {
-    if (Object.hasOwn(command, 'eq')) return left === command.eq;
-    if (Object.hasOwn(command, 'lte')) return left <= command.lte;
-    if (Object.hasOwn(command, 'gte')) return left >= command.gte;
-    if (Object.hasOwn(command, 'ne')) return left !== command.ne;
-    return Boolean(left);
-  };
-  const executeDfCommands = (commands, state, params) => {
-    for (const command of commands) {
-      if (command.if) {
-        const left = evaluateDfValue(command.if, state, params);
-        if (compareDfValue(left, command)) executeDfCommands(command.then || [], state, params);
-        else executeDfCommands(command.else || [], state, params);
-      } else if (command.set?.local) {
-        state[command.set.local] = evaluateDfValue(command.value, state, params);
-      }
-    }
-  };
-  const dfState = { CARLS_DF_EDITING: 0, CARLS_DF_INPUT_INDEX: 1, CARLS_DF_ENTRY_FREQUENCY: 0 };
-  for (let position = 1; position <= 6; position += 1) dfState[`CARLS_DF_D${position}`] = 0;
-  executeDfCommands(mission.macros['CARLS DF digit'], dfState, { digit: 1 });
-  expectRegression(dfState.CARLS_DF_EDITING === 1 && dfState.CARLS_DF_INPUT_INDEX === 2 && dfState.CARLS_DF_D1 === 1 && dfState.CARLS_DF_ENTRY_FREQUENCY === 100000, 'DF first key must be captured and visible during the same event');
-  expectRegression(dfJson.includes('"text":"EDT: {0}_#.###","params":[{"local":"CARLS_DF_D1"}]'), 'DF first key must render with the agreed EDT: 1_#.### template');
-  [2, 1, 5, 0, 0].forEach((digitValue) => executeDfCommands(mission.macros['CARLS DF digit'], dfState, { digit: digitValue }));
-  expectRegression(dfState.CARLS_DF_INPUT_INDEX === 7 && dfState.CARLS_DF_ENTRY_FREQUENCY === 121500, 'DF 121500 keypad sequence must complete without dropping a digit');
-  expectRegression(digit.includes('"param":"digit"') && digit.includes('"local":"CARLS_DF_D1"') && !Array.isArray(mission.macros['CARLS DF begin entry']), 'DF must retain direct parameter capture without a delayed begin-entry task');
-  expectRegression(!open.includes('"sleep":0.1') && open.includes('"call_macro":"CARLS buttons"'), 'DF opening must register handlers immediately after switching page');
-  const dfHandlers = collect(mission.macros['CARLS buttons'] || [], (item) => /^MISSION_RADIO_CARLS_[0-9]$/.test(item.create_event_handler));
-  for (let digitNumber = 0; digitNumber <= 9; digitNumber += 1) {
-    const eventName = `MISSION_RADIO_CARLS_${digitNumber}`;
-    const handler = dfHandlers.find((item) => item.create_event_handler === eventName);
-    const route = handler?.commands?.[0]?.then?.find((command) => command.call_macro === 'CARLS DF digit');
-    expectRegression(route?.params?.digit === digitNumber, `DF digit event ${digitNumber} must pass its digit directly to the capture macro`);
-  }
+  // Cross-task CARLS DF behavior is enforced by tools/validate-df-release.js.
 
   const crewEmergencyMacros = [
     'post crew safety message', 'evaluate crew lifescore state', 'apply object crew lifescore impact',
@@ -611,6 +548,9 @@ checkCompanionMission();
 checkRelease91Regressions();
 checkAircraftProfileRegression();
 checkRelease93Regressions();
+const dfReleaseGate = validateDfRelease(mission, changelog);
+errors.push(...dfReleaseGate.errors);
+regressionChecks += dfReleaseGate.checks;
 
 if (errors.length) {
   console.error(JSON.stringify({ result: 'FAIL', errors }, null, 2));

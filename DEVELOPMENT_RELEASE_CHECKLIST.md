@@ -2,6 +2,12 @@
 
 This is a blocking checklist. Read it before changing `everywhere_all.json`, run the automated gate after every change, then complete the relevant in-simulator checks before publishing. Do not describe an audit as complete if a required runtime test has not been run.
 
+## 0. Release identity — blocking before every package
+
+- The release number in the first `CHANGELOG.en.md` heading and the static `everywhere_all.json.title` displayed in the tablet must be identical.
+- The validator must fail on a stale displayed build even when every JSON and HPG syntax check passes.
+- Inspect the actual staged title before commit; never infer the displayed release from the changelog or commit message.
+
 ## 1. HPG condition syntax — highest-risk rule
 
 - Every executable `if`, `wait_for`, and `while` has exactly one sibling comparison operator: `eq`, `ne`, `gt`, `gte`, `lt`, or `lte`.
@@ -29,8 +35,9 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - `set_carls_radio` always receives exactly three **string** labels for `LSK` and three for `RSK`; never pass a dynamic expression as a soft-key label.
 - Each renderer state must be mutually exclusive and complete. Test idle, edit, invalid edit, valid edit, fixed-modulation bands, UHF AM, and UHF FM.
-- Keep CARLS keypad editor state in mission `local` values and pass the pressed key as a same-task `param`; do not route transient digits through LVARs.
+- Keep every CARLS DF value that must survive a keypad event, renderer pass, or timeout thread in reset-on-open shared `global` state. Use `local` only for scratch values consumed in the same task, pass the pressed key as a same-task `param`, and never route editor state through LVARs.
 - Preserve direct `if` + comparator checks on the linear DF input path. Do not replace them with one-item `and/require` wrappers; the release test must prove that the first key is captured and renders `EDT: 1_#.###`.
+- Treat open, numeric handlers, renderer, ESC/ENT and timeout monitor as different tasks. The blocking test sequence is: open -> press 1 once -> show `EDT: 1_#.###` and ESC -> wait five seconds -> cancel incomplete edit, restore idle frequency/modulation and hide ESC.
 - A blank SK is also a state: its event handler must be harmless.
 - Text that has a known display limit is measured before release. Never rely on wrapping for units, status labels, or checklist answer fields.
 
@@ -83,12 +90,13 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 3. Run `git diff --check` and inspect the staged file list.
 4. Record static checks separately from runtime checks; static checks cannot prove HPG/MSFS behavior.
 5. Execute the feature-specific in-simulator test matrix, including a reload when persistent state is involved.
-6. Update mission build number, technical changelog, and handoff. Commit and push only after the above is complete.
+6. Update mission build number, technical changelog, and handoff. The validator must compare the displayed mission title with the current changelog heading. Commit and push only after the above is complete.
 
 ## Known regressions this checklist prevents
 
 - Missing HPG operators in `if`/logical groups, including the CARLS DF failures of releases 85, 88, 89, and 90.
 - Undefined renderer labels caused by LVAR/local lifetime mismatch.
+- DF entering ESC without an EDT row because the cursor/digits were task-local, and timeout never firing because its monitor read obsolete LVAR state.
 - Soft-key labels rendered from unsupported dynamic objects.
 - DF frequency-grid errors, invalid band acceptance, and incorrect forced AM/FM behavior.
 - Checklist wrapping caused by non-monospace or overlong rows.

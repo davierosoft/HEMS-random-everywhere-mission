@@ -7,7 +7,19 @@
 - Messaging contract: every first exposure/injury, deterioration, critical event, fatality, route decision, and hospital handover uses `post crew safety message`; it must update the tablet toast, `Dispatcher_Messages`, and RescueTrack together.
 - Legacy-hoist contract: `hoist out fatal failure` no longer depends on `HOIST_OUT != 0`. In all three historical `Hoisting back up` fatal branches, call it before clearing `HOIST_OUT`.
 - Debug contract: keep emergency active/failure/member/score/fatal/cause/source object/boarding/fallback/packaged state visible under **CREW SAFETY / EMERGENCY**.
-- Static gate: PASS — 626 macro arrays, 7,023 executable conditions, 6,895 `require` leaves, 2,260 renderer conditions, 2,397 static and 3 guarded dynamic macro calls, 274 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, 399 regression assertions and 11 companion assertions. `tools/test-crew-emergency.js` also passes role-mapping, targeted-impact, exact-10 critical, zero-score fatal, and fatal-survivor-boarding scenarios. Runtime testing remains mandatory.
+- DF cross-task contract: `CARLS_DF_EDITING`, cursor, six digits, candidate frequency, valid/error/band, source/modulation and last-input time are shared globals reset by open/cancel/leave. Keypad handlers pass only the current digit as a `param`; do not restore task-local or LVAR editor state.
+- DF timeout/render contract: the first numeric event must show `EDT: 1_#.###` and ESC in the same render. The page monitor reads the same shared state, cancels incomplete input after five seconds, auto-confirms a complete valid input, restores idle display and hides ESC.
+- Release identity contract: the static tablet title must equal the first release heading in `CHANGELOG.en.md`; the validator enforces this and currently requires `0.997 93`.
+- Static gate: PASS — 626 macro arrays, 7,017 executable conditions, 6,889 `require` leaves, 2,260 renderer conditions, 2,397 static and 3 guarded dynamic macro calls, 274 icon/image references, 45 CARLS layouts, 33 fixed-width BEFORE TAKE-OFF rows, 444 regression assertions (including 80 DF/release cross-task/render checks) and 11 companion assertions. `tools/test-crew-emergency.js` also passes role-mapping, targeted-impact, exact-10 critical, zero-score fatal, and fatal-survivor-boarding scenarios. Runtime testing remains mandatory.
+
+### Runtime checks for release 93 CARLS DF
+
+1. Open DF on a remembered preset such as IAD. Press `1` once: ESC must appear immediately and the second row must read `EDT: 1_#.###` without a second keypress.
+2. With only that digit entered, wait at least five seconds. The edit must cancel, ESC must disappear, and the remembered frequency/source/modulation must return unchanged.
+3. Enter `121500` without pauses. Verify every intermediate template, then wait five seconds: it must confirm as MAN 121.500 AM. Repeat using ENT immediately after the sixth digit.
+4. Enter an illegal prefix/spacing value. It must show ILLEGAL without tuning; after five seconds it must cancel and retain the previous accepted frequency.
+5. Test IAD, MAD and MAR presets, UHF AM/FM toggle, RTN/reopen persistence, ELT normal/crash automatic selection, ambulance beacon selection and doctor-pick flow. Source and modulation must remain correct across every task transition.
+6. Confirm the tablet title reads `HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 93`.
 
 ### Runtime checks for release 93 crew emergency
 
