@@ -397,7 +397,7 @@
 - Added `marshall_engine_guard_active`. It is calculated from the helicopter's distance to the marshal guidance point against the configured landing-circle radius. Only a marshal whose landing area currently contains the helicopter inhibits the first-pump automatic engine handlers `ENG 1_2` and `ENG 2_1`; a marshal elsewhere does not block engine starts.
 - The existing marshal controller then selects landing or restart/departure behavior from on-ground state, rotor RPM, pumps, distance, and altitude. Its no-`MISSION_PHASE` behavior, 7 m buffer, 3 kt gate, 2-second hover, <=10 ft land condition, and 18 m marshal offsets are retained.
 - Debug now shows shared-monitor and engine-guard state. Strict JSON parsing succeeds with 509 macros and the existing 27 `set_dispatch` commands remain intact.
-- Added `HANDOFF_SOL_MULTI_PATIENT_ARCHITECTURE.md` as a separate, non-implementation design handoff for the future five-patient triage refactor.
+- Added the multi-patient architecture design, now maintained at `docs/architecture/MULTI_PATIENT.md`, for the future five-patient triage refactor.
 
 ## Technical marshal landing-reference correction - release 0.997 48
 

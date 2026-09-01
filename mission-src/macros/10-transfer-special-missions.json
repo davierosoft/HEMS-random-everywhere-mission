@@ -1,0 +1,1099 @@
+{
+    "Special mission launcher": [
+      {"set":{"var":["L:LOAD","number"]},"value":22},
+      {"set_message":{"text":"Cabin preparation, 22% completed... please wait, it can take a while"}},
+      {"call_macro":{"local":"scene_macro"}},
+      {"call_macro":"ELT {local:ELT}"},
+      {"if":{"local":"closestambu"},"eq":"yes","then":[{"call_macro":"closest ambulance"}]},
+      {"set":{"var":["L:LOAD","number"]},"value":60},
+      {"set_message":{"text":"Cabin preparation, 60% completed... please wait, it can take a while"}},
+      {"if":{"local":"SAR"},"eq":"no","then":[{"call_macro":"shared repeated block 027"}]},
+      {"if":{"local":"SAR"},"eq":"yes","then":[{"create_location":"landing_spot","zones":[{"zone":{"location":{"bearing":0,"dist":5,"object":"SAR_start_location"}}}]},{"create_thread":{"commands":[{"wait_for":{"object":"injured_human","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}},{"create_location":"landing_spot","zones":[{"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}]},{"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},{"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}}]}}]}
+    ],
+    "patient transfer": [
+      {"set":{"var":["L:RESCUED","number"]},"value":1},
+      {"set":{"var":["L:PATOLOGY_TIME","number"]},"value":1},
+      {"set_message":{"text":"Load patient at this location: {0:LOCATION} ({1})","params":["userA",{"local":"accident_nation"}]}},
+      {"set_map":{"add":{"point":{"location":"userA","text":"LOADING PT"}}}},
+      {"sleep":0.1},
+      {"set":{"local":"FPL_NMBR"},"value":2},
+      {"call_macro":"routeupdate"},
+      {"set":{"local":"MISSION_PHASE"},"value":4}
+    ],
+    "organ transfer": [
+      {"set":{"local":"whobringpatient"},"value":"organ"},
+      {"set":{"var":["L:RESCUED","number"]},"value":1},
+      {"set":{"var":["L:PATOLOGY_TIME","number"]},"value":1},
+      {"set_map":{"add":{"point":{"location":"userA","text":"PICK-UP PT"}}}},
+      {"sleep":0.1},
+      {"set":{"local":"FPL_NMBR"},"value":2},
+      {"call_macro":"routeupdate"},
+      {"create_thread":{"commands":[{"wait_for":{"local":"MISSION_PHASE"},"gt":3},{"sleep":5},{"set_message":{"text":"Pick organ transportation box at this location: <br /> {0:LOCATION} ({3}). <br /> Deliver to:  <br /> {4} ({2:LOCATION}) <br /> Delivery has to be accomplished before {1:TIME}LT","params":["userA",{"local":"organexpiration"},"hospital_user",{"local":"accident_nation"},{"local":"hospital_name"}]}}]}},
+      {"call_macro":"user hospital WP for transfer"},
+      {"wait_for":{"local":"thospital_wp_ready"},"eq":"ready"},
+      {"call_macro":"organ life decrease"},
+      {"set":{"local":"MISSION_PHASE"},"value":4}
+    ],
+    "ELT normal": [
+  {
+    "set": {
+      "local": "CARLS_DF_SAR_NORMAL_ACTIVE"
+    },
+    "value": "yes"
+  },
+  {
+    "if": {
+      "global": "CARLS_DF_TUNING_MODE"
+    },
+    "ne": "manual",
+    "then": [
+      {
+        "set": {
+          "var": [
+            "L:CARLS_DF_FREQUENCY",
+            "number"
+          ]
+        },
+        "value": 282575
+      },
+      {
+        "set": {
+          "global": "CARLS_DF_FREQUENCY"
+        },
+        "value": 282575
+      },
+      {
+        "set": {
+          "var": [
+            "L:CARLS_DF_ACTIVE_VALID",
+            "number"
+          ]
+        },
+        "value": 1
+      },
+      {
+        "set": {
+          "global": "CARLS_DF_SOURCE"
+        },
+        "value": "SAR"
+      },
+      {
+        "set": {
+          "global": "CARLS_DF_MODULATION"
+        },
+        "value": "AM"
+      },
+      {
+        "set_df": {
+          "location": [
+            0,
+            0
+          ],
+          "freq": 282.575
+        }
+      }
+    ]
+  },
+  {
+    "create_thread": {
+      "commands": [
+        {
+          "while": {
+            "var": [
+              "L:HOISTED",
+              "number"
+            ]
+          },
+          "eq": 0,
+          "do": [
+            {
+              "wait_for": {
+                "has_object": "injured_human"
+              },
+              "eq": 1
+            },
+            {
+              "wait_for": {
+                "object": "injured_human",
+                "var": "distance:m"
+              },
+              "lt": 25001
+            },
+            {
+              "if": {
+                "global": "CARLS_DF_TUNING_MODE"
+              },
+              "ne": "manual",
+              "then": [
+                {
+                  "set_df": {
+                    "location": {
+                      "bearing": 0,
+                      "dist": 5,
+                      "object": "injured_human"
+                    },
+                    "freq": 282.575
+                  }
+                }
+              ],
+              "else": [
+                {
+                  "if": {
+                    "and": [
+                      {
+                        "require": {
+                          "var": [
+                            "L:CARLS_DF_ACTIVE_VALID",
+                            "number"
+                          ]
+                        },
+                        "eq": 1
+                      },
+                      {
+                        "require": {
+                          "var": [
+                            "L:CARLS_DF_FREQUENCY",
+                            "number"
+                          ]
+                        },
+                        "eq": 282575
+                      }
+                    ]
+                  },
+                  "eq": 1,
+                  "then": [
+                    {
+                      "set_df": {
+                        "location": {
+                          "bearing": 0,
+                          "dist": 5,
+                          "object": "injured_human"
+                        },
+                        "freq": 282.575
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "or": [
+                {
+                  "wait_for": {
+                    "object": "injured_human",
+                    "var": "distance:m"
+                  },
+                  "gt": 25500
+                },
+                {
+                  "wait_for": {
+                    "has_object": "injured_human"
+                  },
+                  "eq": 0
+                }
+              ]
+            },
+            {
+              "set_df": {
+                "location": [
+                  0,
+                  0
+                ],
+                "freq": 282.575
+              }
+            }
+          ]
+        },
+        {
+          "set": {
+            "local": "CARLS_DF_SAR_NORMAL_ACTIVE"
+          },
+          "value": "no"
+        }
+      ]
+    }
+  }
+],
+    "ELT crash": [
+  {
+    "set": {
+      "local": "CARLS_DF_SAR_CRASH_ACTIVE"
+    },
+    "value": "yes"
+  },
+  {
+    "if": {
+      "global": "CARLS_DF_TUNING_MODE"
+    },
+    "ne": "manual",
+    "then": [
+      {
+        "set": {
+          "var": [
+            "L:CARLS_DF_FREQUENCY",
+            "number"
+          ]
+        },
+        "value": 121500
+      },
+      {
+        "set": {
+          "global": "CARLS_DF_FREQUENCY"
+        },
+        "value": 121500
+      },
+      {
+        "set": {
+          "var": [
+            "L:CARLS_DF_ACTIVE_VALID",
+            "number"
+          ]
+        },
+        "value": 1
+      },
+      {
+        "set": {
+          "global": "CARLS_DF_SOURCE"
+        },
+        "value": "SAR"
+      },
+      {
+        "set": {
+          "global": "CARLS_DF_MODULATION"
+        },
+        "value": "AM"
+      },
+      {
+        "set_df": {
+          "location": [
+            0,
+            0
+          ],
+          "freq": 121.5
+        }
+      }
+    ]
+  },
+  {
+    "create_thread": {
+      "commands": [
+        {
+          "while": {
+            "var": [
+              "L:HOISTED",
+              "number"
+            ]
+          },
+          "eq": 0,
+          "do": [
+            {
+              "wait_for": {
+                "object": "ADELT",
+                "var": "distance:m"
+              },
+              "lt": 25001
+            },
+            {
+              "if": {
+                "global": "CARLS_DF_TUNING_MODE"
+              },
+              "ne": "manual",
+              "then": [
+                {
+                  "set_df": {
+                    "location": {
+                      "bearing": 0,
+                      "dist": 0.1,
+                      "object": "ADELT"
+                    },
+                    "freq": 121.5
+                  }
+                }
+              ],
+              "else": [
+                {
+                  "if": {
+                    "and": [
+                      {
+                        "require": {
+                          "var": [
+                            "L:CARLS_DF_ACTIVE_VALID",
+                            "number"
+                          ]
+                        },
+                        "eq": 1
+                      },
+                      {
+                        "require": {
+                          "var": [
+                            "L:CARLS_DF_FREQUENCY",
+                            "number"
+                          ]
+                        },
+                        "eq": 121500
+                      }
+                    ]
+                  },
+                  "eq": 1,
+                  "then": [
+                    {
+                      "set_df": {
+                        "location": {
+                          "bearing": 0,
+                          "dist": 0.1,
+                          "object": "ADELT"
+                        },
+                        "freq": 121.5
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "set": {
+                "var": [
+                  "H:{local:HXX}_SDK_ELT_SWITCH_ON",
+                  "number"
+                ]
+              },
+              "value": 0
+            },
+            {
+              "sleep": 5
+            },
+            {
+              "set": {
+                "var": [
+                  "H:{local:HXX}_SDK_ELT_SWITCH_ARM",
+                  "number"
+                ]
+              },
+              "value": 0
+            },
+            {
+              "wait_for": {
+                "object": "ADELT",
+                "var": "distance:m"
+              },
+              "gt": 25500
+            },
+            {
+              "set_df": {
+                "location": [
+                  0,
+                  0
+                ],
+                "freq": 121.5
+              }
+            }
+          ]
+        },
+        {
+          "set": {
+            "local": "CARLS_DF_SAR_CRASH_ACTIVE"
+          },
+          "value": "no"
+        }
+      ]
+    }
+  }
+],
+    "crash site approach": [
+      {"if":{"var":["L:MOUNTAIN","number"]},"eq":1,"then":[{"wait_for":{"local":"HRBOARDED"},"eq":"yes"}]},
+      {"wait_for":{"location":"landing_spot","var":"distance"},"lt":0.8},
+      {"if":{"local":"SAR"},"eq":"yes","then":[{"wait_for":{"local":"patient_found"},"eq":"yes"}]},
+      {"sleep":[3,5]},
+      {"set":{"var":["L:CPL{local:VCP}16","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}16","number"]},1]}},
+      {"sleep":[2,3]},
+      {"call_macro":"min max poli ambu loading"},
+      {"create_thread":{"commands":[{"wait_for":{"location":"landing_spot","var":"distance"},"lt":0.55},{"set_dispatch_dialog":0},{"if":{"has_object":"waving_man"},"eq":1,"then":[{"create_thread":{"commands":[{"wait_for":{"location":"landing_spot","var":"distance"},"lt":0.05},{"point_object":"waving_man","to":"$USER"},{"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":2},{"point_object":"waving_man","to":"$USER"}]}}]},{"create_thread":{"commands":[{"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},{"if":{"has_object":"waving_man"},"eq":1,"then":[{"point_object":"waving_man","to":"$USER"}]}]}},{"wait_for":{"local":"crewvisiting1"},"eq":"yes"},{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"if":{"has_object":"waving_man"},"eq":1,"then":[{"point_object":"waving_man","to":"hoist_crew"}]}]}]}},
+      {"create_user_action":{"id":"begin_gnd_loading","title":"BEGIN GND LOADING","click_commands":[{"set":{"var":["L:MISSION_HOIST","number"]},"value":0},{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":2},{"set":{"var":["L:CPL{local:VCP}11","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}11","number"]},1]}},{"destroy_user_action":"begin_gnd_loading"}],"show_condition":{"require":{"and":[{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":2},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":7},{"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},{"require":{"var":["L:BYPASS_NEOFLY","number"]},"eq":1}]},"eq":1}}},
+      {"if":{"var":["L:BYPASS_NEOFLY","number"]},"eq":0,"then":[{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":95},{"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":0},{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":1},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":1},{"set_message":{"text":"For hoist operation, set HOIST switch OFF then ON, or, select BEGIN HOISTING UP. (Keep height between 40 and 160ft) <br /> Or land and set engines to IDLE or OFF to perform ground ops."}},{"create_user_action":{"id":"begin_hoisting","title":"BEGIN HOISTING","click_commands":[{"destroy_user_action":"begin_hoisting"},{"if":{"local":"halloween"},"ne":1,"then":[{"set":{"local":"ldg_spot_area_size"},"value":{"global":"LANDING_SPOT_HOIST"}},{"set":{"var":["L:MISSION_HOIST","number"]},"value":1},{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":0},{"set":{"var":["L:CPL{local:VCP}12","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}12","number"]},1]}},{"set_map":{"remove":{"point":{"id":"ring1"}}}},{"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},{"call_macro":"HOISTING"}],"else":[{"sleep":[5,30]},{"set":{"var":["L:{local:VCP}HW1","number"]},"value":{"add":[{"var":["L:{local:VCP}HW1","number"]},1]}}]}],"show_condition":{"require":{"and":[{"require":{"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]},"eq":1},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":40},{"require":{"var":["RADIO HEIGHT","feet"]},"gt":30},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":500},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance"},"lt":0.55}]},"eq":1}}},{"create_user_action":{"id":"skid_landing","title":"BEGIN SKID LNDG OPS","click_commands":[{"set":{"var":["L:MISSION_HOIST","number"]},"value":2},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},{"set":{"var":["L:CPL{local:VCP}19","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}19","number"]},1]}},{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":0},{"destroy_user_action":"skid_landing"},{"create_user_action":{"id":"ambuloadlock","title":"LOAD PATIENT ON HELO=","click_commands":[{"set":{"local":"whobringpatient"},"value":"us"},{"destroy_user_action":"ambuloadlock"}],"show_condition":{"require":{"and":[{"require":{"local":"CREW"},"gte":3},{"require":{"local":"HELOVICTIMS"},"eq":1},{"require":{"global":"AMBULOCK"},"eq":0},{"require":{"local":"whobringpatient"},"ne":"us"}]},"eq":1}}},{"if":{"local":"CREW"},"eq":5,"then":[{"call_macro":"5 crew SKID LDG"}]},{"if":{"local":"CREW"},"eq":4,"then":[{"call_macro":"4 crew SKID LDG"}]},{"if":{"local":"CREW"},"eq":3,"then":[{"call_macro":"3 crew SKID LDG"}]}],"show_condition":{"require":{"and":[{"require":{"var":["L:Collective","number"]},"gt":30},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":25},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},"eq":1}}}]},
+      {"if":{"var":["L:BYPASS_NEOFLY","number"]},"eq":1,"then":[{"if":{"local":"CREW"},"eq":2,"then":[{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},{"set_message":{"text":"Select BEGIN GND LOADING if helicopter on ground and engines in IDLE. No hoist operator on board"}}]},{"if":{"local":"CREW"},"ne":2,"then":[{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":1},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":1},{"set_message":{"text":"For hoist operation, set HOIST switch OFF then ON, or, select BEGIN HOISTING UP. (Keep height between 40 and 160ft) <br /> Or land and set engines to IDLE or OFF to perform ground ops."}},{"create_user_action":{"id":"begin_hoisting","title":"-BEGIN HOISTING","click_commands":[{"destroy_user_action":"begin_hoisting"},{"if":{"local":"halloween"},"ne":1,"then":[{"set":{"local":"ldg_spot_area_size"},"value":{"global":"LANDING_SPOT_HOIST"}},{"set":{"var":["L:MISSION_HOIST","number"]},"value":1},{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},{"set":{"var":["L:CPL{local:VCP}12","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}12","number"]},1]}},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":0},{"set_map":{"remove":{"point":{"id":"ring1"}}}},{"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},{"call_macro":"HOISTING"}],"else":[{"sleep":[5,30]},{"set":{"var":["L:{local:VCP}HW1","number"]},"value":{"add":[{"var":["L:{local:VCP}HW1","number"]},1]}}]}],"show_condition":{"require":{"and":[{"require":{"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]},"eq":1},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":40},{"require":{"var":["RADIO HEIGHT","feet"]},"gt":30},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":500},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance"},"lt":0.55}]},"eq":1}}},{"create_user_action":{"id":"skid_landing","title":"BEGIN SKID LNDG OPS","click_commands":[{"set":{"var":["L:MISSION_HOIST","number"]},"value":2},{"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},{"set":{"var":["L:CPL{local:VCP}19","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}19","number"]},1]}},{"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":0},{"destroy_user_action":"skid_landing"},{"create_user_action":{"id":"ambuloadlock","title":"LOAD PATIENT ON HELO=","click_commands":[{"set":{"local":"whobringpatient"},"value":"us"},{"destroy_user_action":"ambuloadlock"}],"show_condition":{"require":{"and":[{"require":{"local":"CREW"},"gte":3},{"require":{"local":"HELOVICTIMS"},"eq":1},{"require":{"global":"AMBULOCK"},"eq":0},{"require":{"local":"whobringpatient"},"ne":"us"}]},"eq":1}}},{"if":{"local":"CREW"},"eq":5,"then":[{"call_macro":"5 crew SKID LDG"}]},{"if":{"local":"CREW"},"eq":4,"then":[{"call_macro":"4 crew SKID LDG"}]},{"if":{"local":"CREW"},"eq":3,"then":[{"call_macro":"3 crew SKID LDG"}]}],"show_condition":{"require":{"and":[{"require":{"var":["L:Collective","number"]},"gt":30},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":25},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},"eq":1}}}]},{"if":{"var":["RADIO HEIGHT","feet"]},"lt":11,"then":[{"or":[{"wait_for":{"var":["RADIO HEIGHT","feet"]},"gt":10},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":95},{"wait_for":{"var":["L:BYPASS_NEOFLY","number"]},"eq":2}]}]},{"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":96,"then":[{"or":[{"wait_for":{"var":["RADIO HEIGHT","feet"]},"gt":10},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":95},{"wait_for":{"var":["L:BYPASS_NEOFLY","number"]},"eq":2}]},{"set":{"var":["L:CPL{local:VCP}11","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}11","number"]},1]}}]}]},
+      {"set":{"local":"distancearm"},"value":0},
+      {"create_thread":{"commands":[{"wait_for":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}},{"set":{"local":"distancearm"},"value":"close"},{"wait_for":{"local":"HELIRESCUER_LOGIC"},"eq":"no"},{"wait_for":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}},{"create_thread":{"commands":[{"while":{"var":["L:HOISTED","number"]},"ne":1,"do":[{"if":{"or":[{"require":{"global":"AUDIO_DECLUT"},"lt":2},{"require":{"global":"AUDIO_DECLUT"},"eq":5}]},"eq":1,"then":[{"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":5},{"if":{"var":["L:MISSION_HOIST","number"]},"eq":0,"then":[{"sleep":[1,2]},{"if":{"and":[{"require":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}},{"require":{"var":["L:RESCUED","number"]},"eq":0}]},"eq":1,"then":[{"if":{"local":"HELIRESCUER_LOGIC"},"eq":"no","then":[{"set":{"local":"distancearm"},"value":"close"},{"set":{"var":["L:{local:VCP}44","number"]},"value":{"add":[{"var":["L:{local:VCP}44","number"]},1]}},{"wait_for":{"object":"landing_spot","var":"distance:m"},"gt":{"local":"ldg_spot_area_size"}}]}],"else":[{"set":{"var":["L:{local:VCP}45","number"]},"value":{"add":[{"var":["L:{local:VCP}45","number"]},1]}},{"wait_for":{"var":["L:RESCUED","number"]},"eq":0},{"wait_for":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]}],"else":[{"if":{"and":[{"require":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}},{"require":{"var":["L:RESCUED","number"]},"eq":0}]},"eq":1,"then":[{"if":{"local":"HELIRESCUER_LOGIC"},"eq":"no","then":[{"set":{"var":["L:{local:VCP}43","number"]},"value":{"add":[{"var":["L:{local:VCP}43","number"]},1]}},{"wait_for":{"object":"landing_spot","var":"distance:m"},"gt":{"local":"ldg_spot_area_size"}}]}],"else":[{"set":{"var":["L:{local:VCP}45","number"]},"value":{"add":[{"var":["L:{local:VCP}45","number"]},1]}},{"wait_for":{"var":["L:RESCUED","number"]},"eq":0},{"wait_for":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]}]},{"sleep":2}],"else":[{"sleep":4}]}]}]}}]}},
+      {"set":{"var":["L:READY","number"]},"value":0},
+      {"if":{"local":"MISSION_GUIDANCE_OVERRIDE"},"eq":1,"then":[{"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":1}]},
+      {"create_thread":{"commands":[{"while":{"var":["L:HOISTED","number"]},"ne":1,"do":[{"if":{"or":[{"require":{"global":"AUDIO_DECLUT"},"lt":2},{"require":{"global":"AUDIO_DECLUT"},"eq":5}]},"eq":1,"then":[{"and":[{"wait_for":{"var":["RADIO HEIGHT","feet"]},"gt":30},{"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":25},{"wait_for":{"local":"MISSION_GUIDANCE_ACTIVE"},"eq":1}]},{"wait_for":{"location":"landing_spot","var":"distance"},"lt":0.0054},{"play_guidance_message":{"target":"landing_spot","self":"$USER:HOIST","vertical":[15,10000]}},{"if":{"location":"landing_spot","var":"distance"},"gt":0.0028,"then":[{"sleep":3}]},{"wait_for":{"var":["GPS GROUND SPEED","knots"]},"gte":0.3}],"else":[{"sleep":3}]}]}]}},
+      {"create_thread":{"commands":[{"wait_for":{"object":"landing_spot","var":"distance"},"lt":0.4},{"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"near","then":[{"set_hover_display":{"target":"landing_spot","range":0.05}}]},{"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"wide","then":[{"set_hover_display":{"target":"landing_spot","range":0.5}}]},{"set_dispatch_dialog":0},{"wait_for":{"object":"landing_spot","var":"distance"},"lt":0.4},{"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"near","then":[{"set_hover_display":{"target":"landing_spot","range":0.01}}]},{"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"wide","then":[{"set_hover_display":{"target":"landing_spot","range":0.1}}]}]}},
+      {"if":{"local":"MISSION_PHASE"},"lt":7,"then":[{"set":{"local":"MISSION_PHASE"},"value":7}]},
+      {"set":{"var":["L:WAVING_CIVILIAN_STOP","number"]},"value":1}
+    ],
+    "on-site operations progress monitor": [
+      {"#comment":"ON-SITE OPERATIONS PROGRESS MONITOR - TIMERGND PACES VISITS ONLY; ACTUAL MILESTONES CONTROL COMPLETION"},
+      {"if":{"local":"ops_progress_monitor"},"ne":"running","then":[{"set":{"local":"ops_progress_monitor"},"value":"running"},{"create_thread":{"commands":[{"while":{"local":"ops_progress_monitor"},"eq":"running","do":[{"if":{"or":[{"require":{"var":["L:HOISTED","number"]},"eq":1},{"require":{"var":["L:DISPATCH_ENDED","number"]},"ne":0}]},"eq":1,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":100},{"set":{"local":"ops_progress_stage"},"value":"ON-SITE OPERATIONS COMPLETE"},{"set":{"local":"ops_progress_warning"},"value":0},{"set":{"local":"ops_progress_stalled_seconds"},"value":0},{"set":{"local":"ops_progress_monitor"},"value":"complete"},{"sleep":3},{"set":{"local":"ops_progress_active"},"value":0}],"else":[{"if":{"or":[{"require":{"var":["L:CPR","number"]},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2}]},"eq":1,"then":[{"set":{"local":"ops_progress_stage"},"value":"CPR IN PROGRESS"},{"if":{"var":["L:SATISFACTION","number"]},"lt":65,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},0.35]},0,65]}}]}],"else":[{"if":{"local":"crewpatientloaded"},"eq":"yes","then":[{"set":{"local":"ops_progress_stage"},"value":"FINAL CREW RETURN"},{"if":{"var":["L:SATISFACTION","number"]},"lt":95,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},0.75]},0,95]}}]}],"else":[{"if":{"or":[{"require":{"local":"crewgoforstretcherload"},"eq":"yes"},{"require":{"local":"crewpatientonstretcher"},"eq":"yes"},{"require":{"local":"crewvisitended"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"ops_progress_stage"},"value":"PATIENT LOADING / CREW RETURN"},{"if":{"var":["L:SATISFACTION","number"]},"lt":88,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},0.9]},0,88]}}]}],"else":[{"if":{"local":"crewvisiting1"},"eq":"yes","then":[{"if":{"local":"ops_progress_visit_plan"},"ne":1,"then":[{"set":{"local":"ops_progress_visit_plan"},"value":1},{"set":{"local":"ops_progress_visit_start"},"value":{"var":["L:SATISFACTION","number"]}},{"set":{"local":"ops_progress_visit_end"},"value":55},{"set":{"local":"ops_progress_visit_duration"},"value":{"clamp":[{"local":"TIMERGND"},45,3600]}},{"set":{"local":"ops_progress_stage"},"value":"PATIENT ASSESSMENT AND TREATMENT"}]},{"if":{"var":["L:SATISFACTION","number"]},"lt":{"local":"ops_progress_visit_end"},"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},{"divide":[{"multiply":[{"subtract":[{"local":"ops_progress_visit_end"},{"local":"ops_progress_visit_start"}]},2]},{"local":"ops_progress_visit_duration"}]}]},0,{"local":"ops_progress_visit_end"}]}}]}],"else":[{"set":{"local":"ops_progress_stage"},"value":"CREW DEPLOYMENT"},{"if":{"var":["L:SATISFACTION","number"]},"lt":18,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},1.5]},0,18]}}]}]}]}]}]},{"if":{"var":["L:SATISFACTION","number"]},"gt":{"local":"ops_progress_last"},"then":[{"set":{"local":"ops_progress_last"},"value":{"var":["L:SATISFACTION","number"]}},{"set":{"local":"ops_progress_stalled_seconds"},"value":0},{"set":{"local":"ops_progress_warning"},"value":0}],"else":[{"set":{"local":"ops_progress_stalled_seconds"},"value":{"add":[{"local":"ops_progress_stalled_seconds"},2]}},{"if":{"and":[{"require":{"local":"ops_progress_stalled_seconds"},"gte":120},{"require":{"local":"ops_progress_warning"},"ne":1}]},"eq":1,"then":[{"set":{"local":"ops_progress_warning"},"value":1}]}]}]},{"sleep":2}]}]}}]}
+    ],
+    "user destination menu": [
+      {"sleep":[1,5]},
+      {"set":{"local":"cambuchoice"},"value":"no"},
+      {"set_dispatch_dialog":0},
+      {"set":{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},"value":{"add":[{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},1]}},
+      {"call_macro":"zoom out"},
+      {"if":{"local":"whobringpatient"},"eq":"us","then":[{"create_thread":{"commands":[{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set_hover_display":{"range":0}}]}},{"set":{"var":["L:READY","number"]},"value":0},{"if":{"and":[{"require":{"local":"ambulance_previsit_distance_ok"},"eq":0},{"require":{"local":"ambulance_previsit_distance_m"},"gt":600},{"require":{"local":"ambu1arrived"},"eq":"yes"},{"require":{"has_object":"ambulance1"},"eq":1}]},"eq":1,"then":[{"set_modal":{"title":"CHOOSE DESTINATION","text":"Ambulance is far from the accident. Select whether to unload the patient at the ambulance.","options":[{"text":"Unload to ambulance","style":"primary","commands":[{"create_location":"hospital_user","zones":[{"zone":{"location":"ambulance1"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"set":{"local":"cambuchoice"},"value":"yes"},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"call_macro":"Ambulance destination2"}]}],"else":[{"call_macro":"Ambulance destination hoist"}]}]},{"text":"Back to destination menu","style":"","commands":[{"call_macro":"user destination menu"}]}]}}]},{"if":{"local":"CLOSEST_AMBULANCE"},"eq":0,"then":[{"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"set_modal":{"title":"CHOOSE DESTINATION","text":"Select destination helipad for patient transport","options":[{"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},{"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},{"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}]}}]},{"if":{"and":[{"require":{"local":"CLOSEST_AMBULANCE"},"ne":0},{"require":{"has_location":"closest_ambupolice_meetpnt"},"ne":0}]},"eq":1,"then":[{"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"set_modal":{"title":"CHOOSE DESTINATION","text":"Select destination helipad for patient transport","options":[{"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},{"text":"Unload to closest ambulance","style":"","commands":[{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},{"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},{"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"create_thread":{"commands":[{"call_macro":"shared repeated block 050"}]}},{"call_macro":"User predestination"}]}]}]}}]}]},
+      {"if":{"local":"whobringpatient"},"eq":"ambulance","then":[{"create_thread":{"commands":[{"set_message":{"text":"Waiting for crew to board, then set route for homebase"}},{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set_hover_display":{"range":0}},{"set":{"var":["L:SAVED","number"]},"value":1},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:STAT_TOG","number"]},"value":{"var":["L:MISSION_TIME","number"]}},{"call_macro":"return to base menu"}]}}]},
+      {"if":{"local":"whobringpatient"},"eq":"ambudoc","then":[{"set_hover_display":{"range":0}},{"set":{"var":["L:READY","number"]},"value":0},{"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"set_modal":{"title":"CHOOSE AMBULANCE DESTINATION","text":"Select helipad for doctor pickup","options":[{"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},{"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},{"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"set_message":{"text":"Waiting for crew to be aboard before proceeding"}},{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set_message":{"text":"Route set to: {1}. Location: {0:LOCATION}","params":["hospital_user",{"local":"hospital_name"}]}},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"set":{"local":"MISSION_PHASE"},"value":8},{"call_macro":"pick doctor"}]}]}]}}]},
+      {"if":{"local":"whobringpatient"},"eq":"organ","then":[{"create_thread":{"commands":[{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set_hover_display":{"range":0}}]}},{"set":{"var":["L:READY","number"]},"value":0},{"set_message":{"text":"Predefined destination: {1} (distance {0}Km) Do you confirm?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"set_modal":{"title":"CONFIRM DESTINATION","text":"Confirm organ transport destination helipad","options":[{"text":"Change destination","style":"","commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]},{"text":"Drop organ box here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},{"text":"Confirm selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}]}}]}
+    ],
+    "shared user destination arrival scene": [
+      {"create_location":"DAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":18}}}]},
+      {"create_location":"DAMBU","zones":[{"zone":{"location":{"bearing":10,"dist":20}}}]},
+      {"create_location":"DRUP","zones":[{"zone":{"location":{"bearing":18,"dist":16}}}]},
+      {"if":{"local":"hospital_wptot"},"eq":0,"then":[{"create_location":"DSTR","zones":[{"zone":{"location":{"bearing":5,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"hospital_user"}}}]},{"create_location":"DMED","zones":[{"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"hospital_user"}}}]}],"else":[{"create_location":"DSTR","zones":[{"zone":{"location":{"bearing":0,"dist":2,"object":"hospital_wp1"}}}]},{"create_location":"DMED","zones":[{"zone":{"location":{"bearing":30,"dist":1,"object":"hospital_wp1"}}}]}]},
+      {"create_thread":{"commands":[{"if":{"has_object":"VFXA"},"eq":1,"then":[{"destroy_object":"VFXA"}]},{"if":{"has_object":"waving_man"},"eq":1,"then":[{"destroy_object":"waving_man"}]}]}},
+      {"create_object":{"name":"ambumedic","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambustretcher","title":"Airbus H145 Medic Stretcher"}},
+      {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher","var":"VAR 2"},"value":1},
+      {"set":{"object":"ambustretcher","var":"COUPLED"},"value":0}
+    ],
+    "User destination2": [
+      {"wait_for":{"location":"hospital_user","var":"distance"},"lt":2},
+      {"if":{"local":"DESTPRST"},"eq":1,"then":[{"call_macro":"user destination scene predefined2"},{"set":{"var":["L:MACRO_STEP","number"]},"value":5001}]},
+      {"set_dispatch_dialog":0},
+      {"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"near","then":[{"set_hover_display":{"target":"hospital_user","range":0.02}}]},
+      {"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"wide","then":[{"set_hover_display":{"target":"hospital_user","range":0.2}}]},
+      {"sleep":1},
+      {"set":{"local":"MISSION_PHASE"},"value":9},
+      {"set":{"var":["L:READY","number"]},"value":1},
+      {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.65},
+      {"set_objective_title":"DESTINATION IN SIGHT","color":"green"},
+      {"set":{"var":["L:CPL{local:VCP}16","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}16","number"]},1]}},
+      {"sleep":4},
+      {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.295},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5002},
+      {"set":{"local":"MISSION_PHASE"},"value":9},
+      {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":1},
+      {"set_objective_title":"DESTINATION PROCEDURES STARTED","color":"yellow"},
+      {"set":{"var":["L:CPL{local:VCP}11","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}11","number"]},1]}},
+      {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start unload procedure"}},
+      {"if":{"local":"DESTPRST"},"eq":0,"then":[{"set":{"var":["L:MACRO_STEP","number"]},"value":5003},{"create_thread":{"commands":[{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":95},{"call_macro":"shared user destination arrival scene"},{"sleep":2},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":90},{"create_thread":{"commands":[{"destroy_user_action":"ambulance_prime"}]}}]}}]},
+      {"sleep":1},
+      {"if":{"local":"DESTPRST"},"eq":0,"then":[{"set":{"var":["L:MACRO_STEP","number"]},"value":5004},{"if":{"and":[{"require":{"global":"FORCE_AMBULANCE"},"eq":"no"},{"require":{"var":["L:POI_TYPE","number"]},"eq":2}]},"eq":1,"then":[{"create_user_action":{"id":"ambulance_prime","title":"Unload to ambulance","show_condition":{"require":{"and":[{"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":90},{"require":{"var":["L:AMBULANCE","number"]},"eq":0}]},"eq":1},"click_commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":89},{"create_location":"DAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":18}}}]},{"create_location":"DAMBU","zones":[{"zone":{"location":{"bearing":10,"dist":20}}}]},{"create_location":"DRUP","zones":[{"zone":{"location":{"bearing":10,"dist":15}}}]},{"sleep":0.2},{"if":{"local":"hospital_wptot"},"eq":0,"then":[{"create_location":"DSTR","zones":[{"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}]},{"create_location":"DMED","zones":[{"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}]}]},{"call_macro":"Ambulance5"},{"move_object":"ambulance5","to":{"bearing":0,"dist":70,"heading":180}},{"sleep":0.2},{"call_macro":"drive ambulance5 safe","params":{"to":[{"bearing":35,"dist":20}],"fallback":{"bearing":35,"dist":20},"speed":20,"var1":1,"timeout":420}},{"call_macro":"drive ambulance5 safe","params":{"to":[{"bearing":15,"dist":15},"DAMBWP","DAMBU"],"fallback":"DAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance5","var":"VAR 1"},"value":0},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}}],"else":[{"set":{"var":["L:MACRO_STEP","number"]},"value":5005},{"if":{"var":["L:POI_TYPE","number"]},"eq":2,"then":[{"call_macro":"hospital_creation_from_unhospital"}]},{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":89},{"create_location":"DAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":18}}}]},{"create_location":"DAMBU","zones":[{"zone":{"location":{"bearing":10,"dist":20}}}]},{"create_location":"DRUP","zones":[{"zone":{"location":{"bearing":10,"dist":15}}}]},{"sleep":0.2},{"if":{"local":"hospital_wptot"},"eq":0,"then":[{"create_location":"DSTR","zones":[{"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}]},{"create_location":"DMED","zones":[{"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}]}]},{"call_macro":"Ambulance5"},{"move_object":"ambulance5","to":{"bearing":0,"dist":70,"heading":180}},{"sleep":0.2},{"call_macro":"drive ambulance5 safe","params":{"to":[{"bearing":35,"dist":20}],"fallback":{"bearing":35,"dist":20},"speed":20,"var1":1,"timeout":420}},{"call_macro":"drive ambulance5 safe","params":{"to":[{"bearing":15,"dist":15},"DAMBWP","DAMBU"],"fallback":"DAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance5","var":"VAR 1"},"value":0},{"set":{"var":["L:AMBULANCE","number"]},"value":2},{"sleep":0.1}]}]},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5006},
+      {"wait_for":{"var":["L:AMBULANCE","number"]},"ne":1},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5007},
+      {"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":81},{"set":{"object":"ambulance5","var":"VAR 1"},"value":0},{"move_object":"ambumedic","to":{"bearing":0,"dist":0,"heading":240,"object":"DMED"}},{"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":240,"object":"DSTR"}}]},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":81},
+      {"create_location":"DAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":18}}}]},
+      {"create_location":"DAMBU","zones":[{"zone":{"location":{"bearing":10,"dist":20}}}]},
+      {"create_location":"DRUP","zones":[{"zone":{"location":{"bearing":10,"dist":15}}}]},
+      {"sleep":0.2},
+      {"if":{"local":"hospital_wptot"},"eq":0,"then":[{"create_location":"DSTR","zones":[{"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}]},{"create_location":"DMED","zones":[{"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}]}]},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":80},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5008},
+      {"if":{"local":"GNDOPS_ROTOR"},"eq":1,"then":[{"set_message":{"text":"Set engines to OFF and stop the rotor to start operations"}},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10}]},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambumedic","to":["DRUP","DAMBWP",{"bearing":300,"dist":4},{"bearing":230,"dist":3}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic","var":"VAR 1"},"value":0}]}},
+      {"sleep":1},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},{"call_macro":"Update_raw from dispatchphase"}]}]},
+      {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
+      {"set_hover_display":{"range":0}},
+      {"set_message":{"text":"Patient unloading procedures started, please wait..."}},
+      {"open_door":"pax_right"},
+      {"set_hover_display":{"range":0}},
+      {"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":3.2,"heading":100}}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}]},
+      {"set":{"var":["L:HOLDING","number"]},"value":1},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5009},
+      {"create_thread":{"commands":[{"drive_object":{"name":"hoist_crew","to":[{"bearing":40,"dist":3.7},{"bearing":150,"dist":4.5},{"bearing":180,"dist":2}],"VAR1":2,"speed":7}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},{"sleep":0.5},{"open_door":"cargo_right"},{"open_door":"cargo_left"},{"drive_object":{"name":"hoist_crew","to":[{"bearing":230,"dist":3}],"VAR1":2,"speed":7}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}]}},
+      {"drive_object":{"name":"ambustretcher","to":["DAMBWP",{"bearing":30,"dist":9},{"bearing":145,"dist":5},{"bearing":190,"dist":4}],"VAR1":1,"speed":6}},
+      {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
+      {"drive_object":{"name":"ambustretcher","to":[{"bearing":200,"dist":1}],"VAR1":1,"speed":6}},
+      {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
+      {"sleep":2.5},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5010},
+      {"create_thread":{"commands":[{"create_object":{"name":"bag","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher"}}}]}},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5011},
+      {"set":{"object":"ambustretcher","var":"VAR 2"},"value":0},
+      {"trigger":"H:{local:HXX}_SDK_PAX_4_OFF"},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
+      {"sleep":5.2},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"},
+      {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher","var":"VAR 2"},"value":3},
+      {"sleep":1},
+      {"if":{"has_object":"bag"},"eq":1,"then":[{"destroy_object":"bag"}]},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
+      {"sleep":2},
+      {"set":{"var":["L:HOLDING","number"]},"value":1},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":5012},
+      {"create_thread":{"commands":[{"create_thread":{"commands":[{"drive_object":{"name":"ambumedic","to":[{"bearing":300,"dist":4},"DAMBWP","DRUP","DAMBU"],"VAR1":1,"speed":6}},{"set":{"object":"ambumedic","var":"VAR 1"},"value":0}]}},{"if":{"local":"LIFESCORE"},"gt":3,"then":[{"set":{"var":["L:PAX3{local:VCP}11","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}11","number"]},1]}}],"else":[{"call_macro":"shared repeated block 021"}]},{"set_message":{"text":"Patient unloading completed"}},{"set":{"var":["L:SAVED","number"]},"value":1},{"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},{"sleep":2},{"drive_object":{"name":"ambustretcher","to":[{"bearing":240,"dist":4},{"bearing":320,"dist":4},"DAMBWP","DAMBU"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},{"sleep":1},{"if":{"var":["L:AMBULANCE","number"]},"ne":2,"then":[{"if":{"var":["L:BACK_TO_HOSPITAL","number"]},"eq":0,"then":[{"sleep":15},{"set":{"var":["L:HOLDING","number"]},"value":80}],"else":[{"if":{"var":["L:POI_TYPE","number"]},"eq":2,"then":[{"call_macro":"paperwork"},{"create_thread":{"commands":[{"call_macro":"shared repeated block 022"}]}},{"wait_for":{"object":"ambustretcher","var":"VELOCITY Z"},"eq":0},{"if":{"local":"hospital_wptot"},"eq":1,"then":[{"drive_object":{"name":"ambustretcher","to":["hospital_wp1"],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0}]},{"if":{"local":"hospital_wptot"},"eq":2,"then":[{"drive_object":{"name":"ambustretcher","to":["hospital_wp1","hospital_wp2"],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0}]},{"if":{"local":"hospital_wptot"},"eq":3,"then":[{"drive_object":{"name":"ambustretcher","to":["hospital_wp1","hospital_wp2","hospital_wp3"],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0}]},{"drive_object":{"name":"ambustretcher","to":["hospital_door","hospital"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},{"set":{"var":["L:HOLDING","number"]},"value":0}],"else":[{"set":{"local":"PAPERWORK"},"value":0},{"set":{"var":["L:HOLDING","number"]},"value":0}]}]}],"else":[{"set":{"local":"PAPERWORK"},"value":0},{"sleep":1},{"create_thread":{"commands":[{"wait_for":{"object":"ambustretcher","var":"VELOCITY Z"},"eq":0},{"drive_object":{"name":"ambustretcher","to":[{"bearing2":180,"dist":7,"object":"ambulance5"},"ambulance5"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0}]}},{"wait_for":{"object":"ambumedic","var":"VELOCITY Z"},"eq":0},{"drive_object":{"name":"ambumedic","to":[{"bearing2":180,"dist":7,"object":"ambulance5"},{"bearing2":270,"dist":6,"object":"ambulance5"},"ambulance5"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},{"set":{"var":["L:HOLDING","number"]},"value":0}]},{"wait_for":{"var":["L:HOLDING","number"]},"eq":0},{"set":{"var":["L:MACRO_STEP","number"]},"value":5013},{"create_thread":{"commands":[{"wait_for":{"object":"ambumedic","var":"VELOCITY Z"},"eq":0},{"sleep":12},{"wait_for":{"object":"ambumedic","var":"VELOCITY Z"},"eq":0},{"sleep":2},{"destroy_object":"ambumedic"}]}},{"create_thread":{"commands":[{"wait_for":{"object":"ambustretcher","var":"VELOCITY Z"},"eq":0},{"sleep":12},{"wait_for":{"object":"ambustretcher","var":"VELOCITY Z"},"eq":0},{"sleep":2},{"destroy_object":"ambustretcher"}]}},{"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"call_macro":"ambu_5_route_and_start_travel_to_hospital","params":{"departure_speed":15}}]}]}},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":190,"dist":4},{"bearing":180,"dist":2}],"VAR1":2,"speed":5}},
+      {"close_door":"cargo_right"},
+      {"sleep":0.25},
+      {"close_door":"cargo_left"},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":145,"dist":4},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5}],"VAR1":2,"speed":5}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"wait_for":{"local":"PAPERWORK"},"eq":0},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":10,"dist":2}],"VAR1":2,"speed":5}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":0.2},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},
+      {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},
+      {"close_door":"pax_right"},
+      {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}},
+      {"set":{"var":["L:READY","number"]},"value":0},
+      {"call_macro":"Return to base or continue menu"}
+    ],
+    "midway": [
+      {"set":{"local":"location_name"},"value":"userA"},
+      {"sleep":0.1},
+      {"set":{"local":"FPL_NMBR"},"value":2},
+      {"call_macro":"routeupdate"},
+      {"set_message":{"text":"Route modified to ambulance meeting point.<br />Location: {0:LOCATION}","params":["userA"]}},
+      {"if":{"global":"CREWTRK"},"eq":1,"then":[{"create_thread":{"commands":[{"wait_for":{"has_object":"ambulance1"},"eq":1},{"track_object":{"object":"ambulance1","icon":"ambo"}}]}},{"create_thread":{"commands":[{"wait_for":{"has_object":"ambustretcher7"},"eq":1},{"track_object":{"object":"ambustretcher7","icon":"ki_medic"}}]}}]},
+      {"create_thread":{"commands":[{"if":{"has_object":"ambustretcher7"},"eq":0,"then":[{"create_object":{"name":"ambustretcher7","title":"Airbus H145 Medic Stretcher","location":"ambulance1"}}]},{"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},{"set":{"object":"ambustretcher7","var":"VAR 2"},"value":1},{"set":{"object":"ambustretcher7","var":"COUPLED"},"value":0},{"sleep":1},{"drive_object":{"name":"ambustretcher7","to":["AMBWP"],"VAR1":1,"speed":4}},{"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0}]}},
+      {"if":{"has_object":"ambumedic7"},"eq":0,"then":[{"create_object":{"name":"ambumedic7","title":"Airbus H145 Medic","location":"ambulance1"}}]},
+      {"sleep":15},
+      {"drive_object":{"name":"ambumedic7","to":[{"bearing2":90,"dist":3,"object":"injured_human"},{"bearing2":90,"dist":1,"object":"injured_human"}],"VAR1":1,"speed":4}},
+      {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0},
+      {"sleep":0.1},
+      {"drive_object":{"name":"ambustretcher7","to":[{"bearing2":0,"dist":4,"object":"injured_human"},{"bearing2":270,"dist":2,"object":"injured_human"}],"VAR1":1,"speed":6}},
+      {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher7","var":"VAR 2"},"value":0},
+      {"set":{"var":["L:HOLDAMBU","number"]},"value":0},
+      {"sleep":[5,30]},
+      {"if":{"has_object":"injured_human"},"eq":1,"then":[{"call_macro":"from_any_injured_to_ready_for_transport"}]},
+      {"sleep":15},
+      {"if":{"has_object":"injured_human"},"eq":1,"then":[{"destroy_object":"injured_human"}]},
+      {"set":{"object":"ambustretcher7","var":"VAR 2"},"value":3},
+      {"create_thread":{"commands":[{"sleep":5},{"drive_object":{"name":"ambustretcher7","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambustretcher7"},"AMBWP","ambulance1"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},{"destroy_object":"ambustretcher7"}]}},
+      {"sleep":2},
+      {"drive_object":{"name":"ambumedic7","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambumedic7"},"AMBWP","ambulance1"],"VAR1":1,"speed":4}},
+      {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0},
+      {"sleep":2},
+      {"destroy_object":"ambumedic7"},
+      {"sleep":30},
+      {"call_macro":"drive ambulance1 safe","params":{"to":[{"bearing":335,"dist":35,"object":"accident_location"}],"fallback":{"bearing":335,"dist":35,"object":"accident_location"},"speed":20,"var1":1,"timeout":420}},
+      {"create_location":"LAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":17,"object":"userA"}}}]},
+      {"create_location":"LAMBU","zones":[{"zone":{"location":{"bearing":325,"dist":20,"object":"userA"}}}]},
+      {"set":{"var":["L:AMBULANCE","number"]},"value":1},
+      {"create_thread":{"commands":[{"create_route":{"name":"ambul1","query":{"to":"LAMBWP","from":"ambulance1","type":"car"}}},{"set":{"local":"ambu_route_distance_meters"},"value":{"param":"$CREATE_ROUTE:DISTANCE"}},{"set":{"local":"ambu_route_raw_time"},"value":{"param":"$CREATE_ROUTE:DURATION"}},{"sleep":0.1},{"if":{"local":"ambu_route_distance_meters"},"gt":10000,"then":[{"set":{"local":"ambu_multiplier"},"value":2}],"else":[{"set":{"local":"ambu_multiplier"},"value":1.5}]},{"sleep":0.1},{"set":{"local":"ambu_route_adjusted_time"},"value":{"divide":[{"local":"ambu_route_raw_time"},{"local":"ambu_multiplier"}]}},{"set":{"local":"ambu_mission_time_arrival"},"value":{"add":[{"local":"ambu_route_adjusted_time"},{"var":["L:MISSION_TIME","number"]}]}},{"draw_route":"ambul1","stroke":{"width":2,"color":"#9A9A9A"}},{"sleep":1},{"set":{"object":"ambulance1","var":"VAR 1"},"value":1},{"create_thread":{"commands":[{"call_macro":"ambulance_restart_at_slow_speed"}]}},{"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambul1","fallback":"ambul1","speed":4,"var1":0,"timeout":420,"speedMultiplier":{"local":"ambu_multiplier"}}},{"set":{"object":"ambulance1","var":"VAR 1"},"value":1},{"wait_for":{"local":"midway_accepted"},"eq":null},{"call_macro":"drive ambulance1 safe","params":{"to":["LAMBU"],"fallback":"LAMBU","speed":7,"var1":1,"timeout":420}},{"call_macro":"rescuetrack patient status summary"},{"set":{"local":"midway_amb_sender"},"value":"Ambulance"},{"if":{"local":"ambuname"},"ne":null,"then":[{"set":{"local":"midway_amb_sender"},"value":{"local":"ambuname"}}]},{"set":{"local":"Dispatcher_text"},"value":"Ambulance crew arrived at the selected midway meeting point (arrival time logged). {local:rescuetrack_patient_status}"},{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"midway_amb_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"LAMBU"}}}},{"set":{"local":"Dispatcher_text"},"value":""},{"call_macro":"UpdateRescueTrack"},{"set":{"object":"ambulance1","var":"VAR 1"},"value":0},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}},
+      {"create_thread":{"commands":[{"wait_for":{"object":"ambulance1","var":"distance"},"lt":2},{"set":{"var":["L:CPL{local:VCP}20","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}20","number"]},1]}}]}},
+      {"sleep":3.5},
+      {"create_thread":{"commands":[{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},{"if":{"object":"ambulance1","var":"distance"},"gt":6,"then":[{"set":{"var":["L:CPL{local:VCP}21","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}21","number"]},1]}},{"sleep":60},{"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":60,"then":[{"set":{"var":["L:CPL{local:VCP}25","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}25","number"]},1]}}]}]}]}},
+      {"create_object":{"name":"ambumedic1","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambustretcher1","title":"Airbus H145 Medic Stretcher"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":2},
+      {"set_dispatch_dialog":0},
+      {"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"near","then":[{"set_hover_display":{"target":"userA","range":0.02}}]},
+      {"if":{"global":"TARGET_GUIDANCE_RANGE"},"eq":"wide","then":[{"set_hover_display":{"target":"userA","range":0.2}}]},
+      {"sleep":1},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":1},
+      {"set":{"var":["L:CPL{local:VCP}16","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}16","number"]},1]}},
+      {"sleep":4},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.3},
+      {"set":{"var":["L:CPL{local:VCP}18","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}18","number"]},1]}},
+      {"set":{"var":["L:READY","number"]},"value":0},
+      {"set":{"var":["L:RESCUED","number"]},"value":1},
+      {"sleep":0.5},
+      {"call_macro":"Life rescued"},
+      {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start loading procedure"}},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},{"call_macro":"Update_raw from dispatchphase"}]}]},
+      {"set":{"local":"MISSION_PHASE"},"value":7},
+      {"set":{"var":["L:STAT_TTG","number"]},"value":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"var":["L:MISSION_TIME_OFFSET","number"]}]}},
+      {"create_thread":{"commands":[{"while":{"local":"ambu_mission_time_arrival"},"gt":{"var":["L:MISSION_TIME","number"]},"do":[{"set":{"local":"ambu_eta"},"value":{"subtract":[{"local":"ambu_mission_time_arrival"},{"var":["L:MISSION_TIME","number"]}]}},{"sleep":30},{"set_message":{"text":"Ambulance will arrive at meeting point within {0:TIME} minutes","params":[{"round":{"local":"ambu_eta"},"to":1}]}}]}]}},
+      {"wait_for":{"var":["L:AMBULANCE","number"]},"eq":2},
+      {"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"call_macro":"drive ambulance1 safe","params":{"to":[{"bearing":45,"dist":22},{"bearing":300,"dist":22}],"fallback":{"bearing":300,"dist":22},"speed":20,"var1":1,"timeout":420}},{"set":{"object":"ambulance1","var":"VAR 1"},"value":0},{"create_location":"LRUP","zones":[{"zone":{"location":{"bearing2":180,"dist":5,"object":"ambulance1"}}}]},{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"ambulance1"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing2":270,"dist":5,"object":"ambulance1"}}}]}]},
+      {"set_hover_display":{"range":0}},
+      {"set":{"var":["L:CPL{local:VCP}22","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}22","number"]},1]}},
+      {"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"call_macro":"midway patient load1"}]},
+      {"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"call_macro":"midway patient load2"}]}
+    ],
+    "midway patient load1": [
+      {"set":{"local":"whobringpatient"},"value":"us"},
+      {"create_thread":{"commands":[{"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":0,"object":"ambulance1"}},{"drive_object":{"name":"ambumedic1","to":[{"bearing2":270,"dist":5,"heading":90,"object":"ambulance1"},{"bearing2":180,"dist":9,"object":"ambulance1"},{"bearing":30,"dist":15},{"bearing":20,"dist":12}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"sleep":0.5},
+      {"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"ambulance1"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"set_message":{"text":"Patient loading procedures started, please wait..."}},
+      {"drive_object":{"name":"ambustretcher1","to":[{"bearing2":180,"dist":6,"object":"ambulance1"},{"bearing":0,"dist":13},{"bearing":30,"dist":12},{"bearing":15,"dist":10}],"VAR1":1,"speed":5}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"open_door":"pax_right"},
+      {"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":3.1,"heading":100}}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}]},
+      {"set":{"var":["L:PAX1_MOVE","number"]},"value":0},
+      {"if":{"local":"CREW"},"ne":3,"then":[{"create_thread":{"commands":[{"open_door":"pax_left"},{"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lpaxdoor"}},{"set":{"object":"pax1","var":"VAR 1"},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_1_OFF"},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},{"sleep":0.5},{"drive_object":{"name":"pax1","to":[{"bearing":315,"dist":4.5},{"bearing":355,"dist":8},{"bearing":11,"dist":9.5}],"VAR1":2,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":0},{"drive_object":{"name":"ambumedic1","to":[{"bearing":10,"dist":13},{"bearing":5,"dist":9.5}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"call_macro":"Patient status"},{"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},{"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lpaxdoor"],"VAR1":2,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":0},{"open_door":"pax_left"},{"sleep":0.5},{"set":{"var":["H:{local:HXX}_SDK_PAX_1_ON","number"]},"value":0},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},{"destroy_object":"pax1"},{"sleep":0.5},{"close_door":"pax_left"}]}}]},
+      {"if":{"local":"CREW"},"eq":3,"then":[{"create_thread":{"commands":[{"open_door":"cockpit_left"},{"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lcocdoor"}},{"set":{"object":"pax1","var":"VAR 1"},"value":14},{"set":{"object":"pax1","var":"VAR 2"},"value":3},{"trigger":"H:{local:HXX}_SDK_PILOT_FO_OFF"},{"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":0},{"set":{"local":"COPILOT"},"value":0},{"sleep":0.5},{"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},{"bearing":355,"dist":8},{"bearing":11,"dist":9.5}],"VAR1":16,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":14},{"drive_object":{"name":"ambumedic1","to":[{"bearing":10,"dist":13},{"bearing":5,"dist":9.5}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"call_macro":"Patient status"},{"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},{"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lcocdoor"],"VAR1":16,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":14},{"set":{"var":["H:{local:HXX}_SDK_PILOT_FO_ON","number"]},"value":0},{"destroy_object":"pax1"},{"close_door":"cockpit_left"}]}}]},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":7}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":0.5},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
+      {"set":{"var":["H:{local:HXX}_SDK_PAX_4_ON","number"]},"value":0},
+      {"open_door":"cargo_right"},
+      {"open_door":"cargo_left"},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
+      {"sleep":7.2},
+      {"trigger":"H:{local:HXX}_SDK_PAX_4_OFF"},
+      {"move_object":"hoist_crew","to":{"bearing":195,"dist":2,"heading":0}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
+      {"sleep":0.5},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":6},{"bearing":30,"dist":10},{"bearing":12,"dist":9}],"VAR1":10,"speed":5}},
+      {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher1"},{"bearing2":90,"dist":2,"object":"ambustretcher1"},{"bearing2":180,"dist":2,"object":"ambustretcher1"},{"bearing2":270,"dist":2,"object":"ambustretcher1"}],"to":"hoist_crew"}],"VAR1":10,"speed":4}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
+      {"sleep":2},
+      {"create_object":{"name":"badg","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher1"}}},
+      {"sleep":3},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":0},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"sleep":3},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":1},
+      {"destroy_object":"badg"},
+      {"sleep":2},
+      {"set":{"var":["L:PAX1_MOVE","number"]},"value":1},
+      {"sleep":2},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":6},{"bearing":190,"dist":4},{"bearing":195,"dist":1.5}],"VAR1":11,"speed":4}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
+      {"set_message":{"text":"Patient loading completed"}},
+      {"set":{"local":"MISSION_PHASE"},"value":8},
+      {"create_thread":{"commands":[{"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},{"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},{"sleep":1},{"trigger":["H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT","H:{local:HXX}_SDK_PAX_4_ON"]},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},{"sleep":2},{"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},{"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"global":"STATION_5"}},{"sleep":4.5},{"if":{"local":"patientlife"},"ne":"died","then":[{"set":{"var":["L:PAX3{local:VCP}10","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}10","number"]},1]}}]},{"close_door":"cargo_right"},{"sleep":0.25},{"close_door":"cargo_left"},{"move_object":"hoist_crew","to":{"bearing":195,"dist":2,"heading":0}},{"set":{"var":["H:{local:HXX}_SDK_PAX_4_OFF","number"]},"value":0},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},{"sleep":0.2},{"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":4}},{"if":{"local":"CREW"},"eq":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]},{"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},{"close_door":"pax_right"},{"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}},{"set":{"var":["L:HOISTED","number"]},"value":1},{"create_thread":{"commands":[{"drive_object":{"name":"ambumedic1","to":["LMED","ambulance1"],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"sleep":[5,20]},{"if":{"has_object":"ambumedic1"},"eq":1,"then":[{"destroy_object":"ambumedic1"}]}]}},{"create_thread":{"commands":[{"sleep":1.5},{"drive_object":{"name":"ambustretcher1","to":["LSTR","ambulance1"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"sleep":[10,20]},{"destroy_object":"ambustretcher1"},{"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"wait_for":{"has_object":"ambustretcher1"},"eq":0},{"wait_for":{"has_object":"ambumedic1"},"eq":0},{"set":{"object":"ambulance1","var":"VAR 1"},"value":1},{"call_macro":"drive ambulance1 safe","params":{"to":[{"bearing":50,"dist":50,"object":"userA"}],"fallback":{"bearing":50,"dist":50,"object":"userA"},"speed":25,"var1":1,"timeout":420}},{"create_route":{"name":"ambu1","query":{"to":"AMBWP","from":"ambulance1","type":"car"}}},{"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}},{"sleep":1},{"set":{"object":"ambulance1","var":"VAR 1"},"value":0},{"create_thread":{"commands":[{"call_macro":"ambulance_restart_at_slow_speed"}]}},{"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"ambu1","speed":4,"var1":0,"timeout":420,"speedMultiplier":1.5}},{"set":{"object":"ambulance1","var":"VAR 1"},"value":0}]},{"set":{"var":["L:AMBULANCE","number"]},"value":0}]}},{"set":{"local":"MISSION_PHASE"},"value":8}]}}
+    ],
+    "midway patient load2": [
+      {"set":{"local":"whobringpatient"},"value":"us"},
+      {"create_thread":{"commands":[{"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":0,"object":"ambulance1"}},{"sleep":[1,3]},{"drive_object":{"name":"ambumedic1","to":[{"bearing2":270,"dist":5,"heading":90,"object":"ambulance1"},{"bearing2":180,"dist":9,"object":"ambulance1"},{"bearing":300,"dist":4},{"bearing":230,"dist":3}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"sleep":0.5},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"ambulance1"}},
+      {"sleep":[1,3]},
+      {"set_message":{"text":"Patient loading procedures started, please wait..."}},
+      {"open_door":"pax_right"},
+      {"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":3.2,"heading":100}}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}]},
+      {"sleep":1},
+      {"set":{"var":["L:HOLD","number"]},"value":1},
+      {"sleep":0.1},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambustretcher1","to":[{"bearing2":180,"dist":7,"object":"ambulance1"},{"bearing":30,"dist":9},{"bearing":145,"dist":5},{"bearing":190,"dist":4}],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"drive_object":{"name":"ambustretcher1","to":[{"bearing":200,"dist":1}],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"set":{"var":["L:HOLD","number"]},"value":0},{"sleep":0.1}]}},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":40,"dist":3.7},{"bearing":150,"dist":4.5},{"bearing":180,"dist":2}],"VAR1":2,"speed":7}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":0.5},
+      {"open_door":"cargo_right"},
+      {"open_door":"cargo_left"},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":230,"dist":3}],"VAR1":2,"speed":7}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":3},
+      {"sleep":3.5},
+      {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
+      {"create_thread":{"commands":[{"create_object":{"name":"bagd","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher"}}}]}},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"trigger":"H:{local:HXX}_SDK_PAX_4_OFF"},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
+      {"sleep":5.2},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT"},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":0},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
+      {"sleep":3},
+      {"if":{"has_object":"bagd"},"eq":1,"then":[{"destroy_object":"bagd"}]},
+      {"sleep":2},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambumedic1","to":[{"bearing":300,"dist":4},"LMED","ambulance1"],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"sleep":[5,20]},{"if":{"has_object":"ambumedic1"},"eq":1,"then":[{"destroy_object":"ambumedic1"}]}]}},
+      {"set_message":{"text":"Patient loading completed"}},
+      {"set":{"local":"MISSION_PHASE"},"value":8},
+      {"set":{"var":["L:SAVED","number"]},"value":1},
+      {"create_thread":{"commands":[{"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"global":"STATION_5"}},{"sleep":2},{"create_thread":{"commands":[{"drive_object":{"name":"ambustretcher1","to":[{"bearing":240,"dist":5},{"bearing":320,"dist":5},"LSTR","ambulance1"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"sleep":[10,30]},{"destroy_object":"ambustretcher1"},{"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"wait_for":{"has_object":"ambustretcher1"},"eq":0},{"wait_for":{"has_object":"ambumedic1"},"eq":0},{"create_route":{"name":"ambu1","query":{"to":"AMBWP","from":"ambulance1","type":"car"}}},{"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}},{"sleep":1},{"set":{"object":"ambulance1","var":"VAR 1"},"value":0},{"create_thread":{"commands":[{"call_macro":"ambulance_restart_at_slow_speed"}]}},{"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"ambu1","speed":4,"var1":0,"timeout":420,"speedMultiplier":1.5}},{"set":{"object":"ambulance1","var":"VAR 1"},"value":0}]},{"set":{"var":["L:AMBULANCE","number"]},"value":0}]}},{"call_macro":"Patient status"},{"sleep":1},{"drive_object":{"name":"hoist_crew","to":[{"bearing":190,"dist":4},{"bearing":180,"dist":2}],"VAR1":2,"speed":5}},{"if":{"local":"patientlife"},"ne":"died","then":[{"set":{"var":["L:PAX3{local:VCP}10","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}10","number"]},1]}}]},{"close_door":"cargo_right"},{"sleep":0.25},{"close_door":"cargo_left"},{"drive_object":{"name":"hoist_crew","to":[{"bearing":145,"dist":4},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},{"sleep":0.2},{"set":{"var":["L:{local:VCP}42","number"]},"value":{"add":[{"var":["L:{local:VCP}42","number"]},1]}},{"if":{"local":"CREW"},"eq":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]},{"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},{"close_door":"pax_right"},{"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}},{"set":{"var":["L:HOISTED","number"]},"value":1},{"set":{"local":"MISSION_PHASE"},"value":8}]}}
+    ],
+    "transfer patient paperwork": [
+      {"call_macro":"Query closest hospital for stretcher transfer"},
+      {"call_macro":"user hospital WP for transfer"},
+      {"wait_for":{"local":"thospital_wp_ready"},"eq":"ready"},
+      {"if":{"global":"CREWTRK"},"eq":1,"then":[{"create_thread":{"commands":[{"wait_for":{"has_object":"hoist_crew"},"eq":1},{"track_object":{"object":"hoist_crew","icon":"ki_medic"}}]}},{"create_thread":{"commands":[{"wait_for":{"has_object":"pax3"},"eq":1},{"track_object":{"object":"pax3","icon":"ki_medic"}}]}}]},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.15},
+      {"set_objective_title":"APPROACHING TO LANDING SPOT","color":"green"},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"set_objective_title":"PATIENT BOARDING OPERATIONS IN PROGRESS","color":"yellow"},
+      {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
+      {"open_door":"pax_right"},
+      {"sleep":3},
+      {"create_object":{"name":"pax3","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew"}},
+      {"set":{"object":"pax3","var":"COUPLED"},"value":0},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+      {"create_thread":{"commands":[{"sleep":[5,8]},{"set":{"object":"pax3","var":"VAR 1"},"value":1},{"sleep":2},{"set":{"var":["H:{local:HXX}_SDK_PAX_3_OFF","number"]},"value":1},{"move_object":"pax3","to":{"bearing":35,"dist":3,"heading":100}},{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"if":{"local":"CREW"},"gt":3,"then":[{"point_object":"hoist_crew","to":"pax3"}]},{"drive_object":{"name":"pax3","to":[{"bearing":45,"dist":5.5}],"VAR1":3,"speed":3}}]}},
+      {"if":{"local":"CREW"},"gt":3,"then":[{"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew"}},{"set":{"object":"hoist_crew","var":"COUPLED"},"value":0},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},{"point_object":"hoist_crew","to":"pax3"},{"set":{"var":["H:{local:HXX}_SDK_PAX_1_OFF","number"]},"value":0},{"move_object":"hoist_crew","to":{"bearing":30,"dist":3.2,"heading":100}},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},{"sleep":2},{"drive_object":{"name":"hoist_crew","to":[{"bearing":65,"dist":6}],"VAR1":3,"speed":3}}]},
+      {"set":{"var":["L:PAX3{local:VCP}5","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}5","number"]},1]}},
+      {"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"close_door":"pax_right"}]},
+      {"set_message":{"text":"Ground operations started, crew will pick the patient at hospital, please wait."}},
+      {"drive_object":{"name":"pax3","to":[{"bearing":90,"dist":3.7},{"bearing":130,"dist":5}],"VAR1":2,"speed":5.5}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":0},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":45,"dist":7},{"bearing":135,"dist":15},{"bearing":225,"dist":15},{"bearing":270,"dist":10}],"to":"pax3"}],"VAR1":2,"speed":4}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":0},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":225,"dist":10},{"bearing":150,"dist":10}],"to":"pax3"}],"VAR1":2,"speed":4}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":0},
+      {"drive_object":{"name":"pax3","to":[{"bearing":200,"dist":2}],"VAR1":2,"speed":2}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":0},
+      {"sleep":0.5},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":-1},
+      {"set":{"var":["H:{local:HXX}_SDK_PAX_4_ON","number"]},"value":0},
+      {"open_door":"cargo_right"},
+      {"open_door":"cargo_left"},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
+      {"sleep":7.2},
+      {"trigger":"H:{local:HXX}_SDK_PAX_4_OFF"},
+      {"move_object":"pax3","to":{"bearing":195,"dist":2,"heading":0}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":12},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
+      {"sleep":0.5},
+      {"close_door":"cargo_right"},
+      {"sleep":0.5},
+      {"close_door":"cargo_left"},
+      {"sleep":0.25},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":120,"dist":6},{"bearing":30,"dist":10},{"bearing":12,"dist":9}],"to":"ambustretcher1"}],"VAR1":10,"speed":6}},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher1"},{"bearing2":90,"dist":2,"object":"ambustretcher1"},{"bearing2":180,"dist":2,"object":"ambustretcher1"},{"bearing2":270,"dist":2,"object":"ambustretcher1"}],"to":"pax3"}],"VAR1":10,"speed":4}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":12},
+      {"sleep":2},
+      {"create_user_action":{"id":"skippc","title":"Skip loading paperwork","click_commands":[{"set_message":{"text":"Wait, skip in progress..."}},{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"set":{"object":"hoist_crew","var":"WP INDEX"},"value":0},{"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},{"move_object":"hoist_crew","to":{"bearing":30,"dist":20,"heading":0}},{"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0}]},{"if":{"has_object":"pax3"},"eq":1,"then":[{"set":{"object":"pax3","var":"WP INDEX"},"value":0},{"set":{"object":"pax3","var":"VELOCITY Z"},"value":0},{"set":{"object":"pax3","var":"VAR 1"},"value":13},{"move_object":"pax3","to":{"bearing":300,"dist":15,"heading":0}},{"set":{"object":"pax3","var":"WP INDEX"},"value":0},{"set":{"object":"pax3","var":"VELOCITY Z"},"value":0}]},{"sleep":5},{"set_message":{"text":" "}},{"set":{"local":"PAPERWORK"},"value":0},{"destroy_user_action":"skippc"}]}},
+      {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"create_thread":{"commands":[{"sleep":6},{"if":{"local":"thospital_wptot"},"eq":1,"then":[{"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":30,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},"thospital_wp1"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]},{"if":{"local":"thospital_wptot"},"eq":2,"then":[{"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":30,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},"thospital_wp1","thospital_wp2"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]},{"if":{"local":"thospital_wptot"},"eq":3,"then":[{"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":30,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},"thospital_wp1","thospital_wp2","thospital_wp3"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]},{"drive_object":{"name":"hoist_crew","to":["thospital_door","thospital"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]}}]},
+      {"sleep":3},
+      {"if":{"local":"thospital_wptot"},"eq":1,"then":[{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":30,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},"thospital_wp1"],"VAR1":10,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":12}]},
+      {"if":{"local":"thospital_wptot"},"eq":2,"then":[{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":30,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},"thospital_wp1","thospital_wp2"],"VAR1":10,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":12}]},
+      {"if":{"local":"thospital_wptot"},"eq":3,"then":[{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":30,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},"thospital_wp1","thospital_wp2","thospital_wp3"],"VAR1":10,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":12}]},
+      {"drive_object":{"name":"pax3","to":["thospital_door","thospital"],"VAR1":10,"speed":5}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":12},
+      {"set_message":{"text":"Crew is preparing patient for transport. Please wait..."}},
+      {"sleep":[50,140]},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":13},
+      {"set_message":{"text":"Patient has been secured on stretcher, crew is returning to the helicopter with patient."}},
+      {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"create_thread":{"commands":[{"wait_for":{"object":"hoist_crew","var":"VELOCITY Z"},"eq":0},{"drive_object":{"name":"hoist_crew","to":["thospital_door"],"VAR1":3,"speed":5}},{"if":{"local":"thospital_wptot"},"eq":1,"then":[{"drive_object":{"name":"hoist_crew","to":["thospital_wp1"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]},{"if":{"local":"thospital_wptot"},"eq":2,"then":[{"drive_object":{"name":"hoist_crew","to":["thospital_wp2","thospital_wp1"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]},{"if":{"local":"thospital_wptot"},"eq":3,"then":[{"drive_object":{"name":"hoist_crew","to":["thospital_wp3","thospital_wp2","thospital_wp1"],"VAR1":3,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}]},{"if":{"local":"thospital_wptot"},"ne":0,"then":[{"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":35,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},{"bearing":25,"dist":5}],"VAR1":3,"speed":5}}],"else":[{"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":30,"dist":8},{"bearing":90,"dist":8},{"bearing":150,"dist":7}],"to":"thospital_door"},{"bearing":25,"dist":5}],"VAR1":3,"speed":6}}]},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},{"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.5},"rpaxdoor"],"VAR1":3,"speed":4}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},{"open_door":"pax_right"},{"sleep":2},{"destroy_object":"hoist_crew"}]}}]},
+      {"sleep":4},
+      {"drive_object":{"name":"pax3","to":["thospital_door"],"VAR1":11,"speed":5}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":13},
+      {"if":{"local":"thospital_wptot"},"eq":1,"then":[{"drive_object":{"name":"pax3","to":["thospital_wp1"],"VAR1":11,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":13}]},
+      {"if":{"local":"thospital_wptot"},"eq":2,"then":[{"drive_object":{"name":"pax3","to":["thospital_wp2","thospital_wp1"],"VAR1":11,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":13}]},
+      {"if":{"local":"thospital_wptot"},"eq":3,"then":[{"drive_object":{"name":"pax3","to":["thospital_wp3","thospital_wp2","thospital_wp1"],"VAR1":11,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":13}]},
+      {"if":{"local":"thospital_wptot"},"ne":0,"then":[{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":35,"dist":6},{"bearing":90,"dist":6},{"bearing":150,"dist":7}],"to":"thospital_wp1"},{"bearing":25,"dist":5}],"VAR1":11,"speed":5}}],"else":[{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":30,"dist":8},{"bearing":90,"dist":8},{"bearing":150,"dist":7}],"to":"thospital_door"},{"bearing":25,"dist":5}],"VAR1":11,"speed":6}}]},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":13},
+      {"if":{"has_user_action":"skippc"},"eq":1,"then":[{"destroy_user_action":"skippc"}]},
+      {"drive_object":{"name":"pax3","to":[{"bearing":170,"dist":4}],"VAR1":11,"speed":4}},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":45,"dist":7},{"bearing":135,"dist":15},{"bearing":225,"dist":15},{"bearing":270,"dist":10}],"to":"pax3"}],"VAR1":11,"speed":4}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":13},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":225,"dist":10},{"bearing":150,"dist":10}],"to":"pax3"}],"VAR1":11,"speed":4}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":13},
+      {"drive_object":{"name":"pax3","to":[{"bearing":200,"dist":2}],"VAR1":11,"speed":2}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":13},
+      {"open_door":"cargo_left"},
+      {"sleep":0.25},
+      {"open_door":"cargo_right"},
+      {"set":{"var":["H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT","number"]},"value":0},
+      {"sleep":1},
+      {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"global":"STATION_5"}},
+      {"set":{"var":["H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT","number"]},"value":0},
+      {"set":{"var":["H:{local:HXX}_SDK_PAX_4_ON","number"]},"value":0},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":-1},
+      {"sleep":2},
+      {"set":{"var":["H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT","number"]},"value":0},
+      {"sleep":4.5},
+      {"if":{"local":"patientlife"},"ne":"died","then":[{"set":{"var":["L:PAX3{local:VCP}10","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}10","number"]},1]}}]},
+      {"close_door":"cargo_left"},
+      {"sleep":0.25},
+      {"close_door":"cargo_right"},
+      {"move_object":"pax3","to":{"bearing":200,"dist":2,"heading":0}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":0},
+      {"set":{"var":["H:{local:HXX}_SDK_PAX_4_OFF","number"]},"value":0},
+      {"sleep":1},
+      {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":150,"dist":3},{"bearing":135,"dist":3.5},{"bearing":20,"dist":3.5}],"to":"pax3"},"rpaxdoor"],"VAR1":2,"speed":5}},
+      {"set":{"object":"pax3","var":"VAR 1"},"value":0},
+      {"if":{"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]},"eq":0,"then":[{"open_door":"pax_right"}]},
+      {"sleep":1},
+      {"open_door":"pax_right"},
+      {"sleep":0.5},
+      {"set":{"var":["H:{local:HXX}_SDK_PAX_3_ON","number"]},"value":0},
+      {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
+      {"if":{"has_object":"pax3"},"eq":1,"then":[{"destroy_object":"pax3"}]},
+      {"sleep":0.5},
+      {"close_door":"pax_right"},
+      {"set_message":{"text":"Patient loading completed"}},
+      {"set":{"local":"MISSION_PHASE"},"value":7},
+      {"set":{"var":["L:SAVED","number"]},"value":1}
+    ],
+    "transfer patient load scene predefined1": [
+      {"create_location":"LAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":17,"object":"userA"}}}]},
+      {"create_location":"LAMBU","zones":[{"zone":{"location":{"bearing":305,"dist":20,"object":"userA"}}}]},
+      {"create_location":"LRUP","zones":[{"zone":{"location":{"bearing":345,"dist":22,"object":"userA"}}}]},
+      {"if":{"local":"thospital_wptot"},"eq":0,"then":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":325,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"userA"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":320,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"userA"}}}]}],"else":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":0,"dist":2,"object":"thospital_wp1"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":30,"dist":1,"object":"thospital_wp1"}}}]}]},
+      {"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":0,"then":[{"create_user_action":{"id":"ambulance_second","title":"Load from ambulance","click_commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":30,"object":"userA"}},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20,"object":"userA"},{"bearing":15,"dist":15,"object":"userA"},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance6","var":"VAR 1"},"value":0},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}},{"if":{"and":[{"require":{"local":"CRASH_VARIABLE"},"gt":2},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":99}]},"eq":1,"then":[{"trigger_user_action":"ambulance_second"}]}],"else":[{"if":{"var":["L:POI_TYPE","number"]},"ne":2,"then":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":70,"object":"userA"}},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20,"object":"userA"},{"bearing":15,"dist":15,"object":"userA"},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance6","var":"VAR 1"},"value":0},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}]},
+      {"create_object":{"name":"ambumedic1","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambustretcher1","title":"Airbus H145 Medic Stretcher"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"create_thread":{"commands":[{"wait_for":{"location":"userA","var":"distance"},"lt":0.3},{"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":120,"object":"LMED"}},{"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"LSTR"}},{"point_object":"ambumedic1","to":"userA"},{"point_object":"ambustretcher1","to":"userA"},{"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":0,"then":[{"destroy_user_action":"ambulance_second"}]}]}}
+    ],
+    "shared transfer patient arrival scene": [
+      {"create_location":"LAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":17}}}]},
+      {"create_location":"LAMBU","zones":[{"zone":{"location":{"bearing":305,"dist":20}}}]},
+      {"create_location":"LRUP","zones":[{"zone":{"location":{"bearing":345,"dist":22}}}]},
+      {"if":{"local":"thospital_wptot"},"eq":0,"then":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":325,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"userA"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":320,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"userA"}}}]}],"else":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":0,"dist":2,"object":"thospital_wp1"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":30,"dist":1,"object":"thospital_wp1"}}}]}]},
+      {"create_object":{"name":"ambumedic1","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambustretcher1","title":"Airbus H145 Medic Stretcher"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0}
+    ],
+    "transfer patient load1": [
+      {"wait_for":{"location":"userA","var":"distance"},"lt":1.2},
+      {"set":{"var":["L:CPL{local:VCP}16","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}16","number"]},1]}},
+      {"if":{"local":"xfer_location_type"},"eq":"airport","then":[{"create_thread":{"commands":[{"create_object":{"name":"bizjet","title":{"struct":{"static":"bizjets"},"index":{"floor":{"rand":[0,{"struct":{"static":"bizjets"},"path":"length"}]}}},"fallback_title":"Cessna CJ4 Citation Asobo","location":{"bearing":10,"dist":15,"object":"userA"}}}]}}]},
+      {"sleep":3.5},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.6},
+      {"set":{"var":["L:CPL{local:VCP}24","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}24","number"]},1]}},
+      {"sleep":4},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.15},
+      {"set_objective_title":"APPROACHING TO LANDING SPOT","color":"green"},
+      {"set":{"var":["L:CPL{local:VCP}18","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}18","number"]},1]}},
+      {"set":{"var":["L:READY","number"]},"value":0},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4000},
+      {"set":{"var":["L:RESCUED","number"]},"value":1},
+      {"sleep":0.5},
+      {"call_macro":"Life rescued"},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4001},
+      {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start loading procedure"}},
+      {"if":{"local":"DESTPRST"},"eq":0,"then":[{"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":0,"then":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4002},{"create_user_action":{"id":"ambulance_second","title":"Load from ambulance","click_commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":88},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":30,"heading":180}},{"sleep":0.5},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20},{"bearing":15,"dist":15},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}},{"if":{"and":[{"require":{"local":"CRASH_VARIABLE"},"gt":3},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":99}]},"eq":1,"then":[{"trigger_user_action":"ambulance_second"}]}],"else":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4003},{"if":{"and":[{"require":{"var":["L:POI_TYPE","number"]},"ne":2},{"require":{"local":"xfer_location_type"},"ne":"airport"}]},"eq":1,"then":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4004},{"create_thread":{"commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":88},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":70,"heading":180}},{"sleep":0.5},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20},{"bearing":15,"dist":15},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}}]}]}]},
+      {"if":{"local":"DESTPRST"},"eq":0,"then":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4005},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":91},{"call_macro":"shared transfer patient arrival scene"},{"create_thread":{"commands":[{"destroy_user_action":"ambulance_second"}]}}]},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"set_objective_title":"PATIENT BOARDING OPERATIONS IN PROGRESS","color":"yellow"},
+      {"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},{"call_macro":"Update_raw from dispatchphase"}]}]},
+      {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
+      {"set":{"var":["L:STAT_TTG","number"]},"value":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"var":["L:MISSION_TIME_OFFSET","number"]}]}},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4006},
+      {"wait_for":{"var":["L:AMBULANCE","number"]},"ne":1},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4007},
+      {"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4008},{"set":{"object":"ambulance6","var":"VAR 1"},"value":0}]},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4009},
+      {"create_thread":{"commands":[{"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":120,"object":"LMED"}},{"drive_object":{"name":"ambumedic1","to":["LRUP",{"bearing":30,"dist":15},{"bearing":20,"dist":12}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"sleep":0.5},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4010},
+      {"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"LSTR"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4011},
+      {"set_message":{"text":"Patient loading procedures started, please wait..."}},
+      {"drive_object":{"name":"ambustretcher1","to":["LAMBWP",{"bearing":30,"dist":12},{"bearing":15,"dist":10}],"VAR1":1,"speed":5}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"global":"SECONDARY_TOTAL"},"value":{"add":[{"global":"SECONDARY_TOTAL"},1]}},
+      {"open_door":"pax_right"},
+      {"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":3.1,"heading":100}}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}]},
+      {"set":{"var":["L:PAX1_MOVE","number"]},"value":0},
+      {"if":{"local":"CREW"},"ne":3,"then":[{"create_thread":{"commands":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4012},{"open_door":"pax_left"},{"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lpaxdoor"}},{"set":{"object":"pax1","var":"VAR 1"},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_1_OFF"},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},{"sleep":0.5},{"drive_object":{"name":"pax1","to":[{"bearing":315,"dist":4.5},{"bearing":355,"dist":8},{"bearing":11,"dist":9.5}],"VAR1":2,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":0},{"drive_object":{"name":"ambumedic1","to":[{"bearing":10,"dist":13},{"bearing":5,"dist":9.5}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"call_macro":"Patient status"},{"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},{"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lpaxdoor"],"VAR1":2,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":0},{"open_door":"pax_left"},{"sleep":0.5},{"set":{"var":["H:{local:HXX}_SDK_PAX_1_ON","number"]},"value":0},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},{"destroy_object":"pax1"},{"sleep":0.5},{"close_door":"pax_left"}]}}]},
+      {"if":{"local":"CREW"},"eq":3,"then":[{"create_thread":{"commands":[{"set":{"var":["L:MACRO_STEP","number"]},"value":4013},{"open_door":"cockpit_left"},{"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lcocdoor"}},{"set":{"object":"pax1","var":"VAR 1"},"value":14},{"set":{"object":"pax1","var":"VAR 2"},"value":3},{"trigger":"H:{local:HXX}_SDK_PILOT_FO_OFF"},{"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":0},{"set":{"local":"COPILOT"},"value":0},{"sleep":0.5},{"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},{"bearing":355,"dist":8},{"bearing":11,"dist":9.5}],"VAR1":16,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":14},{"drive_object":{"name":"ambumedic1","to":[{"bearing":10,"dist":13},{"bearing":5,"dist":9.5}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"call_macro":"Patient status"},{"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},{"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lcocdoor"],"VAR1":16,"speed":5}},{"set":{"object":"pax1","var":"VAR 1"},"value":14},{"set":{"var":["H:{local:HXX}_SDK_PILOT_FO_ON","number"]},"value":0},{"destroy_object":"pax1"},{"close_door":"cockpit_left"}]}}]},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4014},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":7}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":0.5},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
+      {"set":{"var":["H:{local:HXX}_SDK_PAX_4_ON","number"]},"value":0},
+      {"open_door":"cargo_right"},
+      {"open_door":"cargo_left"},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
+      {"sleep":7.2},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4015},
+      {"trigger":"H:{local:HXX}_SDK_PAX_4_OFF"},
+      {"move_object":"hoist_crew","to":{"bearing":195,"dist":2,"heading":0}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
+      {"sleep":0.5},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":6},{"bearing":30,"dist":10},{"bearing":12,"dist":9}],"VAR1":10,"speed":5}},
+      {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher1"},{"bearing2":90,"dist":2,"object":"ambustretcher1"},{"bearing2":180,"dist":2,"object":"ambustretcher1"},{"bearing2":270,"dist":2,"object":"ambustretcher1"}],"to":"hoist_crew"}],"VAR1":10,"speed":4}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
+      {"sleep":2},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4016},
+      {"create_object":{"name":"bag","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher1"}}},
+      {"sleep":3},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":0},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"sleep":3},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":1},
+      {"destroy_object":"bag"},
+      {"sleep":2},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4017},
+      {"set":{"var":["L:PAX1_MOVE","number"]},"value":1},
+      {"sleep":2},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":6},{"bearing":190,"dist":4},{"bearing":195,"dist":1.5}],"VAR1":11,"speed":4}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
+      {"set":{"var":["L:MACRO_STEP","number"]},"value":4018},
+      {"set_message":{"text":"Patient loading completed"}},
+      {"set":{"local":"MISSION_PHASE"},"value":7},
+      {"set":{"var":["L:SAVED","number"]},"value":1},
+      {"create_thread":{"commands":[{"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},{"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},{"sleep":1},{"trigger":["H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT","H:{local:HXX}_SDK_PAX_4_ON"]},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},{"sleep":2},{"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},{"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"global":"STATION_5"}},{"sleep":4.5},{"if":{"local":"patientlife"},"ne":"died","then":[{"set":{"var":["L:PAX3{local:VCP}10","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}10","number"]},1]}}]},{"close_door":"cargo_right"},{"sleep":0.25},{"close_door":"cargo_left"},{"move_object":"hoist_crew","to":{"bearing":195,"dist":2,"heading":0}},{"set":{"var":["H:{local:HXX}_SDK_PAX_4_OFF","number"]},"value":0},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},{"sleep":0.2},{"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":4}},{"set":{"var":["L:{local:VCP}42","number"]},"value":{"add":[{"var":["L:{local:VCP}42","number"]},1]}},{"if":{"local":"CREW"},"eq":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]},{"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},{"close_door":"pax_right"},{"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}},{"create_thread":{"commands":[{"drive_object":{"name":"ambumedic1","to":["LAMBWP","LAMBU"],"VAR1":1,"speed":6}}]}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},{"create_thread":{"commands":[{"sleep":1.5},{"drive_object":{"name":"ambustretcher1","to":["LAMBWP","LAMBU"],"VAR1":1,"speed":5}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"wait_for":{"object":"ambumedic1","var":"VELOCITY Z"},"eq":0},{"sleep":1},{"if":{"has_object":"ambumedic1"},"eq":1,"then":[{"destroy_object":"ambumedic1"}]},{"wait_for":{"object":"ambustretcher1","var":"VELOCITY Z"},"eq":0},{"sleep":1},{"destroy_object":"ambustretcher1"},{"sleep":[10,30]},{"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"create_route":{"name":"ambu6","query":{"to":"unhospital","from":"ambulance6","type":"car"}}},{"sleep":10},{"set":{"object":"ambulance6","var":"VAR 1"},"value":1},{"create_thread":{"commands":[{"wait_for":{"object":"ambulance6","var":"VELOCITY Z"},"ne":0},{"set":{"object":"ambulance6","var":"VELOCITY Z"},"value":5},{"sleep":0.8},{"set":{"object":"ambulance6","var":"VELOCITY Z"},"value":10}]}},{"call_macro":"drive ambulance6 safe multiplier","params":{"to":"ambu6","fallback":"ambu6","speed":4,"var1":0,"timeout":420,"speedMultiplier":1.5}},{"destroy_object":"ambulance6"}]},{"set":{"var":["L:AMBULANCE","number"]},"value":0}]}}]}}
+    ],
+    "transfer patient load scene predefined2": [
+      {"create_location":"LAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":17,"object":"userA"}}}]},
+      {"create_location":"LAMBU","zones":[{"zone":{"location":{"bearing":305,"dist":20,"object":"userA"}}}]},
+      {"create_location":"LRUP","zones":[{"zone":{"location":{"bearing":345,"dist":22,"object":"userA"}}}]},
+      {"if":{"local":"thospital_wptot"},"eq":0,"then":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":325,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"userA"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":320,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"userA"}}}]}],"else":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":0,"dist":2,"object":"thospital_wp1"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":30,"dist":1,"object":"thospital_wp1"}}}]}]},
+      {"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":0,"then":[{"create_user_action":{"id":"ambulance_second","title":"Load from ambulance","click_commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":30,"object":"userA"}},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20,"object":"userA"},{"bearing":15,"dist":15,"object":"userA"},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance6","var":"VAR 1"},"value":1},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}},{"if":{"and":[{"require":{"local":"CRASH_VARIABLE"},"gt":2},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":99}]},"eq":1,"then":[{"trigger_user_action":"ambulance_second"}]}],"else":[{"if":{"var":["L:POI_TYPE","number"]},"ne":2,"then":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":70,"object":"userA"}},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20,"object":"userA"},{"bearing":15,"dist":15,"object":"userA"},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance6","var":"VAR 1"},"value":1},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}]},
+      {"create_object":{"name":"ambumedic1","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambustretcher1","title":"Airbus H145 Medic Stretcher"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.3},
+      {"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":120,"object":"LMED"}},
+      {"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"LSTR"}},
+      {"point_object":"ambumedic1","to":"userA"},
+      {"point_object":"ambustretcher1","to":"userA"},
+      {"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":0,"then":[{"destroy_user_action":"ambulance_second"}]}
+    ],
+    "transfer patient load2": [
+      {"wait_for":{"location":"userA","var":"distance"},"lt":1.2},
+      {"set":{"var":["L:CPL{local:VCP}16","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}16","number"]},1]}},
+      {"sleep":3.5},
+      {"if":{"local":"xfer_location_type"},"eq":"airport","then":[{"create_thread":{"commands":[{"create_object":{"name":"bizjet","title":{"struct":{"static":"bizjets"},"index":{"floor":{"rand":[0,{"struct":{"static":"bizjets"},"path":"length"}]}}},"fallback_title":"Cessna CJ4 Citation Asobo","location":{"bearing":10,"dist":15,"object":"userA"}}}]}}]},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.27},
+      {"set":{"var":["L:CPL{local:VCP}24","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}24","number"]},1]}},
+      {"set":{"var":["L:READY","number"]},"value":0},
+      {"set":{"var":["L:RESCUED","number"]},"value":1},
+      {"sleep":0.5},
+      {"call_macro":"Life rescued"},
+      {"set_objective_title":"APPROACHING TO LANDING SPOT","color":"green"},
+      {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start loading procedure"}},
+      {"if":{"local":"DESTPRST"},"eq":0,"then":[{"if":{"global":"DESTINATION_SELECTION_MODE"},"eq":0,"then":[{"create_user_action":{"id":"ambulance_second","title":"Load from ambulance","click_commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":88},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":30,"heading":180}},{"sleep":0.5},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20},{"bearing":15,"dist":15},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}},{"if":{"and":[{"require":{"local":"CRASH_VARIABLE"},"gt":3},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":99}]},"eq":1,"then":[{"trigger_user_action":"ambulance_second"}]}],"else":[{"if":{"and":[{"require":{"var":["L:POI_TYPE","number"]},"ne":2},{"require":{"local":"xfer_location_type"},"ne":"airport"}]},"eq":1,"then":[{"create_thread":{"commands":[{"set":{"var":["L:AMBULANCE","number"]},"value":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":88},{"call_macro":"Ambulance6"},{"move_object":"ambulance6","to":{"bearing":0,"dist":70,"heading":180}},{"sleep":0.5},{"call_macro":"drive ambulance6 safe","params":{"to":[{"bearing":35,"dist":20},{"bearing":15,"dist":15},"LAMBWP","LAMBU"],"fallback":"LAMBU","speed":10,"var1":1,"timeout":420}},{"set":{"object":"ambulance6","var":"VAR 1"},"value":0},{"set":{"var":["L:AMBULANCE","number"]},"value":2}]}}]}]}]},
+      {"if":{"local":"DESTPRST"},"eq":0,"then":[{"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":91},{"call_macro":"shared transfer patient arrival scene"},{"create_thread":{"commands":[{"destroy_user_action":"ambulance_second"}]}}]},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"set_objective_title":"PATIENT BOARDING OPERATIONS IN PROGRESS","color":"yellow"},
+      {"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},{"call_macro":"Update_raw from dispatchphase"}]}]},
+      {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
+      {"set":{"var":["L:STAT_TTG","number"]},"value":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"var":["L:MISSION_TIME_OFFSET","number"]}]}},
+      {"wait_for":{"var":["L:AMBULANCE","number"]},"ne":1},
+      {"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"set":{"object":"ambulance6","var":"VAR 1"},"value":0}]},
+      {"create_thread":{"commands":[{"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":120,"object":"LMED"}},{"drive_object":{"name":"ambumedic1","to":[{"closest":["LRUP",{"bearing":320,"dist":5}],"to":"$USER"},{"bearing":230,"dist":3}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"sleep":0.5},
+      {"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"LSTR"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"set_message":{"text":"Patient loading procedures started, please wait..."}},
+      {"set":{"global":"SECONDARY_TOTAL"},"value":{"add":[{"global":"SECONDARY_TOTAL"},1]}},
+      {"open_door":"pax_right"},
+      {"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":3.2,"heading":100}}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}]},
+      {"sleep":1},
+      {"set":{"var":["L:HOLD","number"]},"value":1},
+      {"sleep":0.1},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambustretcher1","to":["LAMBWP",{"bearing":30,"dist":9},{"bearing":145,"dist":5},{"bearing":190,"dist":4}],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"drive_object":{"name":"ambustretcher1","to":[{"bearing":200,"dist":1}],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"set":{"var":["L:HOLD","number"]},"value":0},{"sleep":0.1}]}},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":40,"dist":3.7},{"bearing":150,"dist":4.5},{"bearing":180,"dist":2}],"VAR1":2,"speed":7}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":0.5},
+      {"open_door":"cargo_right"},
+      {"open_door":"cargo_left"},
+      {"drive_object":{"name":"hoist_crew","to":[{"bearing":230,"dist":3}],"VAR1":2,"speed":7}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"sleep":3},
+      {"sleep":3.5},
+      {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
+      {"create_thread":{"commands":[{"create_object":{"name":"bagdad","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher1"}}}]}},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":3},
+      {"trigger":"H:{local:HXX}_SDK_PAX_4_OFF"},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
+      {"sleep":5.2},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT"},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":0},
+      {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
+      {"sleep":3},
+      {"if":{"has_object":"bagdad"},"eq":1,"then":[{"destroy_object":"bagdad"}]},
+      {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"global":"STATION_5"}},
+      {"sleep":2},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambumedic1","to":[{"closest":[{"bearing":300,"dist":4},"LRUP"],"to":"ambulance6"},"LAMBWP","LAMBU"],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"set_message":{"text":"Patient loading completed"}},
+      {"set":{"local":"MISSION_PHASE"},"value":7},
+      {"set":{"var":["L:SAVED","number"]},"value":1},
+      {"create_thread":{"commands":[{"sleep":2},{"create_thread":{"commands":[{"drive_object":{"name":"ambustretcher1","to":[{"bearing":240,"dist":4},{"bearing":320,"dist":4},"LAMBWP","LAMBU"],"VAR1":1,"speed":6}},{"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},{"if":{"var":["L:AMBULANCE","number"]},"ne":2,"then":[{"sleep":[10,30]}]},{"wait_for":{"object":"ambumedic1","var":"VELOCITY Z"},"eq":0},{"sleep":1},{"if":{"has_object":"ambumedic1"},"eq":1,"then":[{"destroy_object":"ambumedic1"}]},{"wait_for":{"object":"ambustretcher1","var":"VELOCITY Z"},"eq":0},{"sleep":1},{"destroy_object":"ambustretcher1"},{"if":{"var":["L:AMBULANCE","number"]},"eq":2,"then":[{"create_route":{"name":"ambu6","query":{"to":"unhospital","from":"ambulance6","type":"car"}}},{"sleep":[10,30]},{"set":{"object":"ambulance6","var":"VAR 1"},"value":1},{"create_thread":{"commands":[{"wait_for":{"object":"ambulance6","var":"VELOCITY Z"},"ne":0},{"set":{"object":"ambulance6","var":"VELOCITY Z"},"value":5},{"sleep":0.8},{"set":{"object":"ambulance6","var":"VELOCITY Z"},"value":10}]}},{"call_macro":"drive ambulance6 safe multiplier","params":{"to":"ambu6","fallback":"ambu6","speed":4,"var1":0,"timeout":420,"speedMultiplier":1.5}},{"destroy_object":"ambulance6"}]},{"set":{"var":["L:AMBULANCE","number"]},"value":0}]}},{"call_macro":"Patient status"},{"sleep":1},{"drive_object":{"name":"hoist_crew","to":[{"bearing":190,"dist":4},{"bearing":180,"dist":2}],"VAR1":2,"speed":5}},{"if":{"local":"patientlife"},"ne":"died","then":[{"set":{"var":["L:PAX3{local:VCP}10","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}10","number"]},1]}}]},{"close_door":"cargo_right"},{"sleep":0.25},{"close_door":"cargo_left"},{"drive_object":{"name":"hoist_crew","to":[{"bearing":145,"dist":4},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},{"sleep":0.2},{"if":{"local":"CREW"},"eq":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]},{"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},{"close_door":"pax_right"},{"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}}]}}
+    ],
+    "organ pick up scene1": [
+      {"if":{"local":"xfer_location_type"},"eq":"airport","then":[{"create_thread":{"commands":[{"create_object":{"name":"bizjet","title":{"struct":{"static":"bizjets"},"index":{"floor":{"rand":[0,{"struct":{"static":"bizjets"},"path":"length"}]}}},"fallback_title":"Cessna CJ4 Citation Asobo","location":{"bearing":10,"dist":15,"object":"userA"}}}]}}]},
+      {"create_location":"LAMBWP","zones":[{"zone":{"location":{"bearing":340,"dist":17,"object":"userA"}}}]},
+      {"create_location":"LAMBU","zones":[{"zone":{"location":{"bearing":305,"dist":20,"object":"userA"}}}]},
+      {"create_location":"LRUP","zones":[{"zone":{"location":{"bearing":345,"dist":22,"object":"userA"}}}]},
+      {"if":{"local":"thospital_wptot"},"eq":0,"then":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":325,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"userA"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":320,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"userA"}}}]}],"else":[{"create_location":"LSTR","zones":[{"zone":{"location":{"bearing":0,"dist":2,"object":"thospital_wp1"}}}]},{"create_location":"LMED","zones":[{"zone":{"location":{"bearing":30,"dist":1,"object":"thospital_wp1"}}}]}]},
+      {"create_object":{"name":"ambumedic1","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic1","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambumedic12","title":"Airbus H145 Medic"}},
+      {"set":{"object":"ambumedic12","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"ambustretcher1","title":"30West ParamedicBox"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":3},
+      {"set":{"object":"ambustretcher1","var":"VAR 2"},"value":0},
+      {"set":{"object":"ambustretcher1","var":"COUPLED"},"value":0},
+      {"create_object":{"name":"box","title":"30West cooler red"}},
+      {"set":{"object":"box","var":"VAR 1"},"value":0},
+      {"create_object":{"name":"firext1","title":"Airbus H145 Fire extinguisher"}},
+      {"set":{"object":"firext1","var":"VAR 1"},"value":1},
+      {"create_thread":{"commands":[{"wait_for":{"location":"userA","var":"distance"},"lt":0.3},{"move_object":"ambumedic1","to":{"bearing":0,"dist":0,"heading":120,"object":"LMED"}},{"move_object":"ambumedic12","to":{"bearing2":90,"dist":2,"heading":120,"object":"ambumedic1"}},{"move_object":"firext1","to":{"bearing2":270,"dist":1,"heading":120,"object":"ambumedic1"}},{"move_object":"ambustretcher1","to":{"bearing":0,"dist":0,"heading":90,"object":"LSTR"}},{"point_object":"ambumedic1","to":"userA"},{"point_object":"ambumedic12","to":"userA"},{"point_object":"ambustretcher1","to":"userA"}]}},
+      {"set":{"local":"whobringpatient"},"value":"organ"},
+      {"wait_for":{"location":"userA","var":"distance"},"lt":0.27},
+      {"set":{"var":["L:CPL{local:VCP}24","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}24","number"]},1]}},
+      {"set":{"var":["L:READY","number"]},"value":0},
+      {"set":{"var":["L:RESCUED","number"]},"value":1},
+      {"sleep":0.5},
+      {"call_macro":"Life rescued"},
+      {"set_objective_title":"APPROACHING TO LANDING SPOT","color":"green"},
+      {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start loading procedure"}},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"set_objective_title":"PICK-UP OPERATIONS IN PROGRESS","color":"yellow"},
+      {"create_object":{"name":"hoist_crew","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew"}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},{"call_macro":"Update_raw from dispatchphase"}]}]},
+      {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
+      {"set":{"var":["L:STAT_TTG","number"]},"value":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"var":["L:MISSION_TIME_OFFSET","number"]}]}},
+      {"create_location":"LRUP","zones":[{"zone":{"location":{"bearing":20,"dist":8}}}]},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambumedic1","to":[{"closest":["LRUP",{"bearing":40,"dist":8},{"bearing":150,"dist":12}],"to":"ambumedic1"},{"bearing":35,"dist":4}],"VAR1":1,"speed":5}},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"sleep":0.5},
+      {"set":{"var":["L:HOISTED","number"]},"value":1},
+      {"open_door":"pax_right"},
+      {"move_object":"hoist_crew","to":{"bearing":40,"dist":2.7,"heading":100}},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},{"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}]},
+      {"set_message":{"text":"Pick-up procedures started, please wait..."}},
+      {"set":{"global":"SECONDARY_TOTAL"},"value":{"add":[{"global":"SECONDARY_TOTAL"},1]}},
+      {"wait_for":{"object":"ambumedic1","var":"VELOCITY Z"},"eq":0},
+      {"create_thread":{"commands":[{"drive_object":{"name":"ambumedic1","to":[{"closest":["LRUP",{"bearing":40,"dist":8},{"bearing":165,"dist":9}],"to":"ambustretcher1"},{"bearing2":270,"dist":1.5,"object":"ambustretcher1"}],"VAR1":1,"speed":6}},{"point_object":"ambumedic1","to":"ambustretcher1"},{"set":{"object":"ambumedic1","var":"VAR 1"},"value":0}]}},
+      {"sleep":[1,2]},
+      {"drive_object":{"name":"hoist_crew","to":[{"closest":["LRUP",{"bearing":40,"dist":8},{"bearing":165,"dist":9}],"to":"ambustretcher1"},{"bearing2":0,"dist":6.1,"object":"ambustretcher1"},{"bearing2":0,"dist":0.5,"object":"ambustretcher1"}],"VAR1":2,"speed":6.1}},
+      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+      {"point_object":"hoist_crew","to":"ambustretcher1"},
+      {"sleep":2},
+      {"move_object":"box","to":{"bearing2":0,"dist":0.3,"heading":0,"object":"hoist_crew"}},
+      {"set":{"object":"ambustretcher1","var":"VAR 1"},"value":0},
+      {"point_object":"box","to":"ambustretcher1"},
+      {"sleep":3},
+      {"set":{"local":"MISSION_PHASE"},"value":7},
+      {"create_thread":{"commands":[{"sleep":0.14},{"drive_object":{"name":"hoist_crew","to":[{"closest":["LRUP",{"bearing":40,"dist":8},{"bearing":165,"dist":9}],"to":"hoist_crew"},{"bearing":40,"dist":2.5}],"VAR1":2,"speed":5}},{"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}]}},
+      {"drive_object":{"name":"box","to":[{"closest":["LRUP",{"bearing":40,"dist":8},{"bearing":165,"dist":9}],"to":"hoist_crew"},{"bearing":40,"dist":2.5},{"bearing":0,"dist":2.2}],"VAR1":0,"speed":5}},
+      {"set":{"object":"box","var":"VAR 1"},"value":0},
+      {"destroy_object":"box"},
+      {"sleep":[1,3]},
+      {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},
+      {"if":{"local":"CREW"},"eq":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]},
+      {"if":{"local":"CREW"},"ne":5,"then":[{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},
+      {"close_door":"pax_right"},
+      {"set_message":{"text":"Pick-up completed"}},
+      {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}}
+    ]
+  }

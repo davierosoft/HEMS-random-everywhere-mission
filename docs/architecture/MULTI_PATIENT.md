@@ -1,4 +1,4 @@
-# Handoff for SOL - Multi-patient triage refactor
+# Multi-patient triage architecture
 
 ## Status
 

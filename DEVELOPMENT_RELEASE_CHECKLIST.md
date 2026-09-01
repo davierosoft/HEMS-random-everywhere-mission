@@ -54,7 +54,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Inspect the existing working macro/page before replacing it. Preserve unrelated controls, handlers, and feature gates.
 - Check every call site when changing shared state, object names, doors, crew counts, route ETA, or patient transport variables.
 - Do not change files outside the requested scope. Preserve existing user changes.
-- `CHANGELOG_USER.en.md` changes only on an explicit request. Always update `CHANGELOG.en.md` and `HANDOFF_CHATGPT_SOL.md` for a release.
+- `CHANGELOG_USER.en.md` changes only on an explicit request. Update `CHANGELOG.en.md` for a release and keep affected manual scenarios current in `docs/testing/RUNTIME_VALIDATION.md`.
 - Settings section ownership is explicit: medical controls belong only to MEDICAL OPTIONS, never SCENE/VEHICLES or GROUND/HOIST. FLIGHT ASSISTS and MEDICAL OPTIONS both initialize collapsed on every Settings open. Green is reserved for section headings, not individual medical labels. Pilot boarding belongs inside GROUND/HOIST and must not render as an orphaned MOST USED control. Adjacent collapsed sections retain a bar separator.
 
 ## 7. Ambulance, crew, and multipatient independence
@@ -84,7 +84,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Keep a bounded hospital-query fallback to the existing return-to-base flow. An absent query result must never leave the failed mission waiting forever.
 - In every historical fatal branch, invoke the fatal handler before clearing `HOIST_OUT`. The handler itself must be one-shot and must not depend on the old hoist flag still being set.
 - Update the Debug page with emergency member, score, cause, source object, fatal/critical state, boarding, route fallback, and packaged-object result.
-- Run both `node tools/validate-mission.js` and `node tools/test-crew-emergency.js`; then execute the runtime matrix in the handoff because object choreography, route queries, and simulator assets cannot be proven statically.
+- Run both `node tools/validate-mission.js` and `node tools/test-crew-emergency.js`; then execute the crew-emergency matrix in `docs/testing/RUNTIME_VALIDATION.md` because object choreography, route queries, and simulator assets cannot be proven statically.
 
 ## 10. Required release gate
 
@@ -94,7 +94,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 3. Run `git diff --check` and inspect the staged file list.
 4. Record static checks separately from runtime checks; static checks cannot prove HPG/MSFS behavior.
 5. Execute the feature-specific in-simulator test matrix, including a reload when persistent state is involved.
-6. Update mission build number, technical changelog, and handoff. The validator must compare the displayed mission title with the current changelog heading. Commit and push only after the above is complete.
+6. Update mission build number, technical changelog, and affected runtime scenarios. The validator must compare the displayed mission title with the current changelog heading. Commit and push only after the above is complete.
 
 ## Known regressions this checklist prevents
 
