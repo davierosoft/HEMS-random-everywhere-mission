@@ -16,6 +16,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Exception: a logical expression used as the *value* of a `require` is already compared by that outer `require`; do not add a second operator inside it. The ambulance/police/fire arrival checks use this valid form.
 - Do not build boolean groups manually without running `node tools/validate-mission.js` afterwards.
 - Treat command names as an exact API contract. Reject unknown or near-match spellings, including non-ASCII variants such as the release-92 `create_lùocation` defect; a parsed JSON key is not proof that HPG recognizes it.
+- A page macro may execute state initialization before rendering, but every `image`, `title`, `link`, `text`, `buttonbar`, `describe_icon`, `slider`, and `input` row belongs inside `set_dispatch`. A renderer row at macro command level is executed as an HPG command and causes `NotFound`. The release validator checks every macro, not only known pages.
 
 ## 2. State and persistence
 
@@ -53,6 +54,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Check every call site when changing shared state, object names, doors, crew counts, route ETA, or patient transport variables.
 - Do not change files outside the requested scope. Preserve existing user changes.
 - `CHANGELOG_USER.en.md` changes only on an explicit request. Always update `CHANGELOG.en.md` and `HANDOFF_CHATGPT_SOL.md` for a release.
+- Settings section ownership is explicit: medical controls belong only to MEDICAL OPTIONS, never SCENE/VEHICLES or GROUND/HOIST. FLIGHT ASSISTS and MEDICAL OPTIONS both initialize collapsed on every Settings open. Green is reserved for section headings, not individual medical labels. Pilot boarding belongs inside GROUND/HOIST and must not render as an orphaned MOST USED control. Adjacent collapsed sections retain a bar separator.
 
 ## 7. Ambulance, crew, and multipatient independence
 
@@ -68,7 +70,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Individual and category clicks modify only the open in-memory preset and mark it dirty. Do not call `save_table` for every click.
 - Flush a dirty table before switching preset and when leaving either mission-list page. Loading/recomputing a preset never rewrites it.
 - Derive category selected state from every mission row in the currently open table. One disabled mission makes the category false.
-- A partial category requires a second press on the same category to enable all. A fully enabled category disables all on the next press. Any individual change clears pending confirmation.
+- A partial category requires a second press on the same category to enable all. A fully disabled category enables all immediately; a fully enabled category disables all immediately. Neither complete state may show the partial-category message. Any individual change clears pending confirmation.
 - No Save button: persistence is automatic on switch/exit. Test two edited presets, both pages, mission reload, single toggles, partial groups, full groups, and ALL MISSIONS.
 
 ## 9. Crew LifeScore and emergency termination
@@ -86,6 +88,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 ## 10. Required release gate
 
 1. Parse `everywhere_all.json`, `global.json`, and every shipped companion/custom-loader JSON such as `train.json`.
+   - Parsing is insufficient: verify the required root shape (`macros`, `aircraft`, `applicable`, `api_version`, `data`, `threads`, `locations`, `objects`, `userActions`, `objectives`, `briefing`, `icons`) and confirm `Debug_Table` remains under root `data`, never inside `macros`.
 2. Run `node tools/validate-mission.js`; companion loaders must have explicit contract assertions and cannot be silently skipped.
 3. Run `git diff --check` and inspect the staged file list.
 4. Record static checks separately from runtime checks; static checks cannot prove HPG/MSFS behavior.
