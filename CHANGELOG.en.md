@@ -1,3 +1,7 @@
+## Release 0.997 95
+
+- DF: ESC-only automatic confirmation, 1.5-second invalid-entry recovery, and UHF-only modulation toggle.
+
 ## 0.997 94 — CARLS DF complete refresh and regression protection
 
 - Reworked the CARLS Direction Finder renderer so every idle, editing, invalid, valid, UHF, modulation and ENT/ESC state emits a complete four-row `set_carls_radio` payload. The first digit now renders immediately as `EDT: 1_#.###`, without row-level visibility conditions or stale soft keys.

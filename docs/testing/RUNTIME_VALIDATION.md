@@ -6,8 +6,8 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 
 1. Open DF on a remembered preset, press `1` once, and verify ESC plus `EDT: 1_#.###` appear immediately.
 2. Leave a partial digit sequence for at least five seconds. Editing must cancel and the prior frequency/source/modulation must return.
-3. Enter `121500` without pauses. Verify intermediate templates, timeout confirmation, and immediate ENT confirmation as MAN 121.500 AM.
-4. Enter illegal prefix/grid values. They must show ILLEGAL, never tune, and retain the accepted channel after timeout.
+3. Enter `121500` without pauses. Verify intermediate templates, ESC remains available, and automatic confirmation as MAN 121.500 AM after five seconds.
+4. Enter illegal prefix/grid values. They must show ILLEGAL, never tune, discard the invalid digit, and after 1.5 seconds return to EDT at that same digit; the accepted channel remains unchanged.
 5. Test IAD/MAD/MAR, UHF AM/FM, RTN/reopen persistence, normal/crash ELT, ambulance beacon, and doctor-pick flows.
 6. Confirm the tablet title matches the first `CHANGELOG.en.md` release heading.
 

@@ -35,5 +35,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 ## Documentation and delivery
 
 - Durable architecture belongs in `docs/architecture/`; current manual runtime checks belong in `docs/testing/`. Do not create model-to-model handoff files.
+- Every supplied mission artifact, including an unpublished local copy, must be named exactly `everywhere_all.json`. Before supplying it, increment the release/build number shown in the mission title; never reuse a prior supplied number.
 - Update `CHANGELOG.en.md` only for a mission release or externally visible technical change. Change `CHANGELOG_USER.en.md` only when explicitly requested.
+- When the user changelog is requested, compare every technical release after its stated coverage version with the user changelog. Add every final user-facing change, omit superseded/internal cumulative details, and never advance the coverage version while any intervening release is unaccounted for.
 - Keep commits on `CICERS/*`. Push only the named CICERS branch; never bypass branch protection or claim runtime validation that was not performed.
