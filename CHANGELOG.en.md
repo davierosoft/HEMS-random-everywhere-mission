@@ -1,3 +1,115 @@
+## Release 0.997 115
+
+- Declare the retired PLB personal macro name as part of the ELT dynamic-target rename.
+- Fix the dynamic ELT PLB target and validate every ELT mode against its macro.
+- Prioritize operational Debug Summary data, normalize its colors, fix snapshot date and timer display, and clarify Test Tracker states and controls.
+
+## Release 0.997 114
+
+- Mark the persistent CICERS auto-activation bypass setting with the standard P label.
+
+## Release 0.997 113
+
+- Add an opt-out for automatic CICERS OSM activation while preserving the saved OSM service.
+
+## Release 0.997 112
+
+- Add visible ChatGPT build identity to Debug and its persistent snapshot.
+
+## Release 0.997 111
+
+- CICERS failure now restores the live DATAQUERYSERVICE manual provider (0/1/2), even when the persisted endpoint still says CICERS. CICERS, AUTO-TOGGLE, missing, and invalid prior modes fall back to AUTO-TOGGLE.
+- CICERS PING now initializes and serializes pingstart, so a second request cannot overwrite the provider snapshot used by the first request.
+- Added a regression gate for the stale-endpoint/manual-provider mismatch and overlapping CICERS pings.
+
+## Release 0.997 110
+
+- Test Tracker labels now use plain-language descriptions. Orange smoke remains in progress until AUTO, ALWAYS, REALISTIC, and DISABLED have each been tried; hospital selection remains in progress until the 3-, 4-, and 5-crew flows have each been tried.
+- Debug Summary now always shows the mission ID, key mission variables, crew/transport state, emergency vehicles, phase, and load. Snapshots store local date and clock time separately from the mission timer.
+- Creating a technical marshal on a custom location now opens the map centred on the helicopter's current location.
+
+## Release 0.997 109
+
+- Fixed Default RTC scene setup: the public-title selector now initializes its runtime array and lock on every invocation, releases the lock, and completes tracking before returning. Variant 3 no longer stalls after 80% loading.
+- Added a runtime-state initialization gate for the new PLB/DF, Test Tracker, ambulance handover, public-title selector, and profile-store states.
+
+## Release 0.997 108
+
+- Expanded the persistent Debug snapshot into ordered COMMON, SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE, and INVENTORY sections.
+- Each captured section now preserves every Debug-page local, global, L: variable, table field, object value, and display condition needed to diagnose a blocked mission.
+
+## Release 0.997 107
+
+- Reordered the Debug Test Tracker into mission sequence: setup, mission start, dispatch, scene, recovery, destination, and mission end.
+- Rewrote every tracker label as a short, plain-language test instruction, retaining crew and patient conditions where required.
+
+## Release 0.997 106
+
+- Ambulance assessment now starts immediately after the synchronous arrival drive of its medic at the patient. The handover waits for that assessment to complete instead of relying on a distance gate.
+- After an ambulance stretcher leaves, hoist_crew now walks from the rear cabin return point before the cargo doors close in 3-, 4-, and 5-crew operations.
+- Every Debug Test Tracker entry now has a **RESET** control. It restores the entry to not-tested status and clears any saved failed-test comment.
+
+## Release 0.997 105
+
+- The persisted Direction Finder frequency is now reapplied after late profile/startup initialization, before the DF page is opened.
+- Debug Center reports the active DF source and frequency instead of an undefined saved-station value.
+
+## Release 0.997 104
+
+- Destination confirmation now opens immediately after the transport owner is selected for 3-, 4-, and 5-crew ground operations, before physical patient loading. It no longer relies on MISSION_PHASE 8.
+- Confirming a preselected hospital now immediately sets FPL 8 and routes to hospital_user before boarding; the scene FPL cannot remain active after acceptance.
+- Ambulance assessment now waits for the physical ambulance medic to reach each patient. The clinical page shows INITIAL ASSESSMENT IN PROGRESS and keeps vital signs hidden until the assessment timer completes.
+
+## Release 0.997 103
+
+- Fixed CARLS DF bootstrap: objective1 now sends the saved channel through a frequency-only set_df command. The receiver no longer starts at the 255.000 default before the DF page is opened.
+
+## Release 0.997 102
+
+- Reworked Aircraft Settings Profiles so edits save immediately to the selected custom set. **STORE PRESET ON FILE** now keeps one independent full-profile backup, and **COPY SAVED PRESET TO ACTUAL SET** restores that backup only into an active custom set.
+- Simplified aircraft-to-mission links to **MSN LIST DFLT/1-5**. Pressing an already selected link removes it; linked profiles now apply after interactive list changes, current-list reloads, and startup livery preset selection.
+- Added a blank separator between each Debug Test Tracker item, preserving the single current-state rendering introduced in build 101.
+
+## Release 0.997 101
+
+- Fixed the Debug Test Tracker renderer to show **only the current state** for each test. State values are read from the persistent Debug table into stable locals before rendering, preventing overlapping pending, in-progress, completed, successful, and failed rows.
+- The category filter controls were removed from this diagnostic page so the full test list remains predictable and each completed row exposes one result action pair.
+- Added a static gate that rejects direct Debug-table conditions inside the Test Tracker renderer; renderer rows must use the preloaded per-test local state.
+
+## Release 0.997 100
+
+- Added a Debug Center **TEST TRACKER** covering 36 user-testable functions changed since the July 0.997 baseline: ground response, medical, hoist/crew, guidance/DF, systems, and settings.
+- Each instrumented sequence writes its first execution and completion state to the persistent Debug table. Pending/completed entries are white; first execution is yellow **IN PROGRESS**; completed tests can be marked **SUCCESSFUL** or **FAILED**.
+- Failed results require a tester comment, which is saved with the result and remains available after reopening Debug or reloading the mission. The tracker records code-path execution; the tester still evaluates the simulator outcome and scenario conditions.
+
+## Release 0.997 99
+
+- Added personal locator beacon (PLB) simulation for outdoor SAR, paragliding, skiing, hunting, and fishing incidents. PLB transmissions use 121.500 AM and follow the main casualty.
+- Emergency ELT, PLB, and doctor-pick ambulance beacons now transmit continuously. Their effective reception range is recalculated every 5 to 10 seconds within plus or minus 25 percent; out-of-range receivers are cleared with a frequency-only set_df update.
+- Added the live emergency DF reference and reception range to the Debug Center summary.
+
+## Release 0.997 98
+
+- Restored the persisted CARLS DF channel during mission bootstrap. Startup now sets the DF receiver to that channel before the DF page is opened, with MAN 118.000 AM only as the first-run or invalid-state fallback.
+- Object-station rows now show the name followed by a colon and their frequency. The DF gate explicitly verifies that every ON/OFF selection is saved to and restored from the DF station table.
+
+## Release 0.997 97
+
+- Simplified the DF station form to NAME, FREQUENCY MHz, and LAT/LON text boxes. The redundant SET action is removed: SAVE validates all fields and persists only a complete valid station.
+- Randomized the reserved UHF channels for the built-in object stations while preserving unique 25 kHz DF channels.
+- Every DF station SET DF action now synchronizes the CARLS channel and the set_df frequency. Automatic links set the matching channel first; a manual unlinked channel clears the old reference instead of retaining a mismatched bearing.
+- Added an ASCII-only rule for changed mission UI strings and extended the DF station validation gate and runtime procedure for progressive slots and CARLS/bearing synchronization.
+
+## Release 0.997 96
+
+- Added **ADD DF STATIONS TO DB** below the custom-hospital database link. It stores up to 15 named stations with a frequency, AM/FM selection where the band permits it, and a `latitude,longitude` target. SET validates the draft; SAVE persists it; SET DF tunes it and applies its bearing; DELETE clears it.
+- Custom stations accept only the DF bands and 25 kHz channels: NAV 108.000–117.975 AM, ATC 118.000–136.975 AM, maritime 156.000–162.000 FM, and UHF 225.000–399.975 AM/FM. Gaps, off-grid values, mission channels, object channels, duplicate custom channels, invalid names, and invalid coordinates are rejected.
+- Added independently enabled DF object stations for two ambulances, police, fire engines/crew, casualties, crashed car, PAX3 crew member, hoist crew, and doctors. Their unique UHF frequencies are shown next to their names and are reserved from custom entries.
+- DF station data is stored in the mission table `Andrews_df_stations`; no `global.json` defaults or sidecar file are required. Added Debug Center state and a dedicated static gate plus runtime matrix for station persistence and bearing behavior.
+## Release 0.997 95
+
+- DF: ESC-only automatic confirmation, 1.5-second invalid-entry recovery, and UHF-only modulation toggle.
+
 ## 0.997 94 — CARLS DF complete refresh and regression protection
 
 - Reworked the CARLS Direction Finder renderer so every idle, editing, invalid, valid, UHF, modulation and ENT/ESC state emits a complete four-row `set_carls_radio` payload. The first digit now renders immediately as `EDT: 1_#.###`, without row-level visibility conditions or stale soft keys.
@@ -397,7 +509,7 @@
 - Added `marshall_engine_guard_active`. It is calculated from the helicopter's distance to the marshal guidance point against the configured landing-circle radius. Only a marshal whose landing area currently contains the helicopter inhibits the first-pump automatic engine handlers `ENG 1_2` and `ENG 2_1`; a marshal elsewhere does not block engine starts.
 - The existing marshal controller then selects landing or restart/departure behavior from on-ground state, rotor RPM, pumps, distance, and altitude. Its no-`MISSION_PHASE` behavior, 7 m buffer, 3 kt gate, 2-second hover, <=10 ft land condition, and 18 m marshal offsets are retained.
 - Debug now shows shared-monitor and engine-guard state. Strict JSON parsing succeeds with 509 macros and the existing 27 `set_dispatch` commands remain intact.
-- Added `HANDOFF_SOL_MULTI_PATIENT_ARCHITECTURE.md` as a separate, non-implementation design handoff for the future five-patient triage refactor.
+- Added the multi-patient architecture design, now maintained at `docs/architecture/MULTI_PATIENT.md`, for the future five-patient triage refactor.
 
 ## Technical marshal landing-reference correction - release 0.997 48
 

@@ -2,15 +2,18 @@
 
 ## Scope
 
-This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 91.
+This is the consolidated user changelog for the public July stable baseline through HEMS Random Everywhere Missions 0.997 95.
 
 It describes the final behavior that a user receives after upgrading from the public build. It does not list temporary test-build regressions or corrections that were superseded before this release. Update this file only for meaningful finished user-facing changes.
+
+Release coverage after 0.997 91: **0.997 92** adds Debug Center and saved snapshots; **0.997 93** adds crew-safety, marker, persistence, and Settings changes; **0.997 94–95** complete the CARLS DF editor refresh and entry behavior.
 
 ## What’s New
 
 ### HEMS crew, patients, and rescue operations
 
 - **Three-crew skid operations.** A three-person HEMS crew can complete skid-landed work for one, two, or three patients. PAX3 acts as the ground operator, with dedicated sequences for assessment, treatment, helicopter transport, ambulance handover, doctor transfer, recovery, and reboarding.
+- **Crew safety with operational consequences.** Smoke/fire exposure is calculated only for the crew member actually at risk, while hoist penalties apply only to the active hoist operator. Tablet, Dispatch, and RescueTrack provide staged warnings. A crew LifeScore of 10 or less fails the mission and diverts survivors to the nearest hospital; a zero score records a fatality and ends the shift.
 - **Complete heli-rescuer destination handling.** A heli-rescuer can be dropped at a compatible base, hospital, or user-selected destination and later recovered using the selected point. The destination is retained by the subsequent ground/hoist flow instead of reverting to an obsolete reference.
 - **Door-safe and role-safe choreography.** Crew boarding, stretchers, patients, hoist personnel, pilots, and copilots use dedicated approach, transfer, and seating sequences. Passenger doors open before the related crew member enters and close only when the side no longer has a pending movement.
 - **Better far-ambulance stretcher work.** When the ambulance is distant, the hoist/ground operator now follows the complete intermediate approach, observation, return, and cargo-door sequence rather than skipping directly to the final point.
@@ -43,8 +46,9 @@ It describes the final behavior that a user receives after upgrading from the pu
 
 - **CARLS Direction Finder.** The CARLS primary page now includes a dedicated DF page. It can display and tune a valid aviation frequency, show the active source, frequency, and modulation, and provide a bearing only for an active mission beacon.
 - **Manual or automatic DF tuning.** Avionics Options adds persistent **DF AUTO / MANUAL TUNING**. AUTO follows the active ambulance, SAR beacon, or crash ELT; MANUAL leaves tuning to the pilot and enables the bearing only after the matching mission frequency is selected.
-- **Aviation-band tuning discipline.** The DF accepts only supported aviation, maritime, and UHF bands with 25 kHz spacing. Mandatory AM/FM bands are set automatically; UHF modulation remains selectable. IAD, MAD, and MAR presets tune immediately.
-- **Retained DF channel.** The most recently selected valid DF channel is retained. A first use starts at **MAN 108.000 MHz / AM**.
+- **Aviation-band tuning discipline.** The DF accepts only supported aviation, maritime, and UHF bands with 25 kHz spacing. Mandatory AM/FM bands are set automatically and do not expose a modulation soft key; UHF alone exposes the selectable modulation control. IAD, MAD, and MAR presets tune immediately.
+- **Direct DF entry with safe recovery.** Each keypress refreshes the complete DF page and displays the first key immediately as `EDT: 1_#.###`. In MANUAL TUNING, a valid six-digit channel becomes active after five seconds. **ESC** remains available during that delay to discard the entry. An impossible digit is rejected as soon as it makes the partial frequency invalid; after 1.5 seconds the DF returns to the same edit position so the digit can be corrected.
+- **Retained DF channel.** The most recently selected valid DF channel is retained. A first use starts at **MAN 118.000 MHz / AM**.
 - **Dedicated Before Take-off checklist.** The checklist menu now includes a complete monitored BEFORE TAKE-OFF CHECKLIST, including engine, rotor, pressure, caution, fuel, display, IESI, autopilot/SAS, optional-equipment, and conditional night-light items. Checks that cannot be read automatically continue after their prescribed delay.
 - **Higher hoist operating ceiling.** Hoist-related guidance, readiness, and warnings use a 163 ft internal ceiling. Cockpit guidance is expressed as **40 to 160 ft** for clear operational use.
 
@@ -67,6 +71,12 @@ It describes the final behavior that a user receives after upgrading from the pu
 - **Visit-time presets** ULTRAFAST, FAST, MEDIUM, and SLOW remain the single timing control. In manual mode they define the duration of each selected procedure instead of creating a second timing setting.
 - **mCPR Onboard** controls whether mechanical CPR is available for in-flight continuation or must wait for landing.
 - **HEMS cancellation threshold** controls the configured point at which a ground-service-managed call may cancel HEMS, where that setting is available for the mission profile.
+
+### Settings → Safety, service, and layout
+
+- **Orange scene marker** offers **NEVER**, **AUTO**, **REALISTIC**, and **ALWAYS**. REALISTIC waits for the 2 NM approach, requires an eligible scene and responding ground service, avoids duplicate VFX, and expires after five minutes.
+- **DATAQUERYSERVICE endpoint selection** is retained independently from aircraft profiles. A valid CICERS key selects CICERS; an unavailable or expired key restores the prior endpoint instead of overwriting it.
+- **Settings layout and profiles.** Flight Assist and Medical options open collapsed, the pilot-boarding selector is grouped with Ground/Hoist options, and the Aircraft Settings Profiles link opens reliably.
 
 ### Settings → Marshal and ground-operation controls
 
@@ -101,6 +111,11 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Individual mission choices remain independent between DEFAULT and PRST 1-5 and survive reopening/reloading.
 - A category appears selected only when all missions in it are enabled. With a partially enabled category, press it once to request “enable all” and press the same category again to confirm. Once fully enabled, the next press disables the category.
 
+### Debug Center
+
+- The Debug page is a six-view **Debug Center**: SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE, and INVENTORY. Irrelevant subsystem blocks stay hidden and operational faults are easier to distinguish.
+- **CAPTURE SNAPSHOT** saves the current mission and operational state for later inspection; **CLEAR SNAPSHOT** removes it. The saved record is reloaded when Debug is opened.
+
 ### Persistent preferences and status feedback
 
 - Crew and checklist audio volumes survive a normal dispatch reload and are synchronized at startup.
@@ -116,6 +131,7 @@ It describes the final behavior that a user receives after upgrading from the pu
 - Resolved incorrect custom landing-reference placement after a rejected or replaced landing spot. A rejected proposal no longer rebuilds the route or removes the active landing reference.
 - Resolved CARLS Direction Finder command failures when opening the page, entering digits, changing modulation, or confirming a valid channel.
 - Resolved DF startup displays that could show an undefined source or an invalid 0.000 MHz frequency after a mission reload.
+- Resolved DF soft-key and editor refresh states that could leave the display static, omit the edit cursor, retain an invalid digit, or expose a modulation command in a fixed-modulation band.
 
 ### Crew, patient, and ground-service flow
 

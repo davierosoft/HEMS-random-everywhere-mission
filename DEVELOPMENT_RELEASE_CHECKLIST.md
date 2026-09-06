@@ -2,10 +2,12 @@
 
 This is a blocking checklist. Read it before changing `everywhere_all.json`, run the automated gate after every change, then complete the relevant in-simulator checks before publishing. Do not describe an audit as complete if a required runtime test has not been run.
 
-## 0. Release identity — blocking before every package
+## 0. Release identity — blocking before every local build and package
 
 - The release number in the first `CHANGELOG.en.md` heading and the static `everywhere_all.json.title` displayed in the tablet must be identical.
-- The validator must fail on a stale displayed build even when every JSON and HPG syntax check passes.
+- Before every local build, run `node tools/release-workflow.js begin --release "0.997 N"` with a strictly higher build number and declared scope. `node tools/mission-workspace.js build` consumes that number once, including a byte-identical build. A later correction must begin a higher number.
+- Run `node tools/release-workflow.js static` only after the build. It always creates `outputs/<release>-local-test/everywhere_all.json`, which must be supplied for offline testing unless the user explicitly opts out. `package` is allowed only after that static gate and an actual named simulator runtime sign-off; a static pass is never runtime evidence.
+- The validator must fail on a stale displayed build or a missing/mismatched runtime `L:RELEASE_BUILD`, even when every JSON and HPG syntax check passes.
 - Inspect the actual staged title before commit; never infer the displayed release from the changelog or commit message.
 
 ## 1. HPG condition syntax — highest-risk rule
@@ -22,6 +24,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - Any value displayed after a mission reload must have an explicit fallback. Local variables are not persistence.
 - A persistent user choice must use a named `global` and have a first-run default in `global.json`.
+- Every new option added to Settings or the technical page is persistent by default: it must use a named `global`, have a first-run default in `global.json`, and prefix its user-facing description with `(P)`. Depart from this only when the user explicitly requests a non-persistent option.
 - Normalise values before formatting them. A renderer must not print an optional local directly when `undefined` is possible.
 - When an automatic action changes the user-visible state, update the same persistent state used by its manual counterpart.
 
@@ -36,12 +39,14 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - `set_carls_radio` always receives exactly three **string** labels for `LSK` and three for `RSK`; never pass a dynamic expression as a soft-key label.
 - Each renderer state must be mutually exclusive and complete. Test idle, edit, invalid edit, valid edit, fixed-modulation bands, UHF AM, and UHF FM.
-- The DF renderer policy is to materialize every selected row and emit a complete four-row payload in each refresh branch; row-level `show_condition` is documented HPG syntax but is not used for this page. Run `node tools/validate-df-regression.js` after changes.
+- The DF renderer policy is to materialize exactly three visible items in each refresh branch: title, frequency plus modulation, and edit or status; row-level `show_condition` is documented HPG syntax but is not used for this page. Run `node tools/validate-df-regression.js` after changes.
 - Keep every CARLS DF value that must survive a keypad event, renderer pass, or timeout thread in reset-on-open shared `global` state. Use `local` only for scratch values consumed in the same task, pass the pressed key as a same-task `param`, and never route editor state through LVARs.
 - Preserve direct `if` + comparator checks on the linear DF input path. Do not replace them with one-item `and/require` wrappers; the release test must prove that the first key is captured and renders `EDT: 1_#.###`.
 - Treat open, numeric handlers, renderer, ESC/ENT and timeout monitor as different tasks. The blocking test sequence is: open -> press 1 once -> show `EDT: 1_#.###` and ESC -> wait five seconds -> cancel incomplete edit, restore idle frequency/modulation and hide ESC.
 - A blank SK is also a state: its event handler must be harmless.
 - Text that has a known display limit is measured before release. Never rely on wrapping for units, status labels, or checklist answer fields.
+- New or changed user-facing mission strings must be ASCII-only. Unicode typography and symbols require an explicit user request and HPG/runtime confirmation.
+- Every set_df must use the current CARLS frequency. Automatic flows synchronize CARLS before setting a reference; manual flows create a reference only when the selected radio channel is linked, otherwise they clear it.
 
 ## 5. Validation and user input
 
@@ -54,7 +59,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Inspect the existing working macro/page before replacing it. Preserve unrelated controls, handlers, and feature gates.
 - Check every call site when changing shared state, object names, doors, crew counts, route ETA, or patient transport variables.
 - Do not change files outside the requested scope. Preserve existing user changes.
-- `CHANGELOG_USER.en.md` changes only on an explicit request. Always update `CHANGELOG.en.md` and `HANDOFF_CHATGPT_SOL.md` for a release.
+- `CHANGELOG_USER.en.md` changes only on an explicit request. Update `CHANGELOG.en.md` for a release and keep affected manual scenarios current in `docs/testing/RUNTIME_VALIDATION.md`.
 - Settings section ownership is explicit: medical controls belong only to MEDICAL OPTIONS, never SCENE/VEHICLES or GROUND/HOIST. FLIGHT ASSISTS and MEDICAL OPTIONS both initialize collapsed on every Settings open. Green is reserved for section headings, not individual medical labels. Pilot boarding belongs inside GROUND/HOIST and must not render as an orphaned MOST USED control. Adjacent collapsed sections retain a bar separator.
 
 ## 7. Ambulance, crew, and multipatient independence
@@ -74,6 +79,12 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - A partial category requires a second press on the same category to enable all. A fully disabled category enables all immediately; a fully enabled category disables all immediately. Neither complete state may show the partial-category message. Any individual change clears pending confirmation.
 - No Save button: persistence is automatic on switch/exit. Test two edited presets, both pages, mission reload, single toggles, partial groups, full groups, and ALL MISSIONS.
 
+### 8.1 Aircraft Settings Profiles
+
+- Each change to a custom aircraft-settings profile is saved immediately to its selected slot. A setting changed from a factory profile creates or updates CUSTOM DEFAULT; it must never remain an unsaved transient state.
+- STORE PRESET ON FILE writes one independent full-profile backup. COPY SAVED PRESET TO ACTUAL SET is available only on a custom slot and overwrites that slot from the backup.
+- A selected MSN LIST button is a toggle: pressing it again removes that one link. Profile links must apply after an interactive mission-list change, a current-list reload, and the startup livery preset selection.
+
 ## 9. Crew LifeScore and emergency termination
 
 - Every LifeScore impact names exactly one member. Environmental loss uses the ground object-to-hazard distance; never substitute aircraft-to-hazard distance and never reduce all configured crew members together.
@@ -84,7 +95,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 - Keep a bounded hospital-query fallback to the existing return-to-base flow. An absent query result must never leave the failed mission waiting forever.
 - In every historical fatal branch, invoke the fatal handler before clearing `HOIST_OUT`. The handler itself must be one-shot and must not depend on the old hoist flag still being set.
 - Update the Debug page with emergency member, score, cause, source object, fatal/critical state, boarding, route fallback, and packaged-object result.
-- Run both `node tools/validate-mission.js` and `node tools/test-crew-emergency.js`; then execute the runtime matrix in the handoff because object choreography, route queries, and simulator assets cannot be proven statically.
+- Run both `node tools/validate-mission.js` and `node tools/test-crew-emergency.js`; then execute the crew-emergency matrix in `docs/testing/RUNTIME_VALIDATION.md` because object choreography, route queries, and simulator assets cannot be proven statically.
 
 ## 10. Required release gate
 
@@ -94,7 +105,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 3. Run `git diff --check` and inspect the staged file list.
 4. Record static checks separately from runtime checks; static checks cannot prove HPG/MSFS behavior.
 5. Execute the feature-specific in-simulator test matrix, including a reload when persistent state is involved.
-6. Update mission build number, technical changelog, and handoff. The validator must compare the displayed mission title with the current changelog heading. Commit and push only after the above is complete.
+6. Update mission build number, technical changelog, and affected runtime scenarios. The validator must compare the displayed mission title with the current changelog heading. Commit and push only after the above is complete.
 
 ## Known regressions this checklist prevents
 

@@ -106,26 +106,28 @@ function validateDfRelease(mission, changelog) {
   const cancelJson = compact(macros['CARLS DF cancel'] || []);
   const timeout = macros['CARLS DF timeout'] || [];
   const timeoutThreadJson = compact(mission.threads?.['CARLS DF'] || {});
-  const digitGuard = digit[0];
-  const digitCommands = digitGuard?.then || [];
+  const digitInitial = digit[0];
+  const digitContinue = digitInitial?.else?.find((command) => command.if?.global === 'CARLS_DF_INPUT_INDEX' && command.lte === 6);
 
   expect(open.some((command) => command.set?.global === 'CARLS_DF_EDITING' && command.value === 0), 'DF/release gate: opening the DF page must reset shared editing state');
   expect(open.some((command) => command.set?.global === 'CARLS_DF_INPUT_INDEX' && command.value === 1), 'DF/release gate: opening the DF page must initialize the shared cursor to digit 1');
-  expect(digitGuard?.if?.global === 'CARLS_DF_INPUT_INDEX' && digitGuard?.lte === 6, 'DF/release gate: numeric input must use the shared linear cursor guard');
-  expect(digitCommands[0]?.set?.global === 'CARLS_DF_EDITING' && digitCommands[0]?.value === 1, 'DF/release gate: the first numeric event must enter shared edit mode immediately');
+  expect(digitInitial?.if?.global === 'CARLS_DF_EDITING' && digitInitial?.ne === 1, 'DF/release gate: the first numeric event must branch on shared editing state');
+  expect(digitInitial?.then?.some((command) => command.set?.global === 'CARLS_DF_EDITING' && command.value === 1), 'DF/release gate: the first numeric event must enter shared edit mode immediately');
+  expect(digitInitial?.then?.some((command) => command.set?.global === 'CARLS_DF_D1' && command.value?.param === 'digit'), 'DF/release gate: digit 1 is not captured from the current event parameter into shared state');
+  expect(digitInitial?.then?.some((command) => command.set?.global === 'CARLS_DF_INPUT_INDEX' && command.value === 2), 'DF/release gate: first digit must advance directly to EDT: 1_#.###');
+  expect(Boolean(digitContinue), 'DF/release gate: subsequent numeric input must use the shared linear cursor guard');
 
-  for (let position = 1; position <= 6; position += 1) {
-    const capture = digitCommands.find((command) => command.if?.global === 'CARLS_DF_INPUT_INDEX' && command.eq === position);
-    expect(capture?.then?.[0]?.set?.global === `CARLS_DF_D${position}` && capture?.then?.[0]?.value?.param === 'digit', `DF/release gate: digit ${position} is not captured from the current event parameter into shared state`);
+  for (let position = 2; position <= 6; position += 1) {
+    const capture = digitContinue?.then?.find((command) => command.if?.global === 'CARLS_DF_INPUT_INDEX' && command.eq === position);
+    expect(capture?.then?.[0]?.set?.global === 'CARLS_DF_D' + position && capture?.then?.[0]?.value?.param === 'digit', 'DF/release gate: digit ' + position + ' is not captured from the current event parameter into shared state');
   }
 
   const state = {CARLS_DF_EDITING: 0, CARLS_DF_INPUT_INDEX: 1, CARLS_DF_ENTRY_FREQUENCY: 0};
-  for (let position = 1; position <= 6; position += 1) state[`CARLS_DF_D${position}`] = 0;
+  for (let position = 1; position <= 6; position += 1) state['CARLS_DF_D' + position] = 0;
   execute(digit, state, {digit: 1});
   expect(state.CARLS_DF_EDITING === 1 && state.CARLS_DF_INPUT_INDEX === 2 && state.CARLS_DF_D1 === 1 && state.CARLS_DF_ENTRY_FREQUENCY === 100000, 'DF/release gate: open -> first key does not produce shared state for EDT: 1_#.###');
-  expect(renderJson.includes('CARLS_DF_RENDER_EDIT_TEXT') && renderJson.includes('EDT: {0}_#.###'), 'DF/release gate: first digit is not represented by the resolved EDT: 1_#.### row');
+  expect(renderJson.includes('EDT: {0}_#.###'), 'DF/release gate: first digit is not represented by the direct EDT: 1_#.### row');
   expect(renderJson.includes('"global":"CARLS_DF_INPUT_INDEX"') && renderJson.includes('"global":"CARLS_DF_EDITING"'), 'DF/release gate: EDT visibility still depends on task-local state');
-
   const renderStates = (macros['CARLS DF render'] || []).map((command) => ({
     guard: command.if,
     layout: command.then?.find((item) => item.set_carls_radio)?.set_carls_radio
@@ -134,7 +136,10 @@ function validateDfRelease(mission, changelog) {
   const idleStates = renderStates.filter((stateItem) => stateItem.layout.RSK?.[2] === '');
   expect(escStates.length > 0 && escStates.every((stateItem) => compact(stateItem.guard).includes('"global":"CARLS_DF_EDITING"') && compact(stateItem.guard).includes('"eq":1')), 'DF/release gate: every ESC layout must be selected only by shared editing state');
   expect(idleStates.length > 0 && idleStates.every((stateItem) => compact(stateItem.guard).includes('"global":"CARLS_DF_EDITING"') && compact(stateItem.guard).includes('"eq":0')), 'DF/release gate: every idle layout must hide ESC through shared editing state');
-  expect(escStates.every((stateItem) => compact(stateItem.layout.Items).includes('CARLS_DF_RENDER_EDIT_TEXT')), 'DF/release gate: every ESC layout must contain the resolved visible edit row');
+  expect(escStates.every((stateItem) => {
+    const items = compact(stateItem.layout.Items);
+    return items.includes('EDT:') || items.includes('ILLEGAL');
+  }), 'DF/release gate: every ESC layout must contain a visible edit or ILLEGAL row');
 
   [2, 1, 5, 0, 0].forEach((value) => execute(digit, state, {digit: value}));
   expect(state.CARLS_DF_INPUT_INDEX === 7 && state.CARLS_DF_ENTRY_FREQUENCY === 121500, 'DF/release gate: the complete 121.500 sequence drops or reorders a key');
