@@ -46,6 +46,26 @@ walk({macros, threads: mission.threads || {}}, (item) => {
   for (const name of editorGlobals) expect(item.var[0] !== `L:${name}`, `DF editor state ${name} must not use an L:Var`);
 });
 
+const clearBearing = macros['CARLS DF clear bearing'] || [];
+const clearBearingSetDf = clearBearing.find((command) => command.set_df)?.set_df;
+expect(Boolean(clearBearingSetDf), 'CARLS DF clear bearing must issue set_df');
+expect(!Object.prototype.hasOwnProperty.call(clearBearingSetDf || {}, 'location'), 'CARLS DF clear bearing must send frequency-only set_df without a placeholder position');
+expect(clearBearingSetDf?.freq?.divide?.[0]?.global === 'CARLS_DF_FREQUENCY' && clearBearingSetDf.freq.divide?.[1] === 1000, 'CARLS DF clear bearing must use the current CARLS frequency');
+
+const startupSync = macros['CARLS DF startup sync'] || [];
+const startupSyncText = JSON.stringify(startupSync);
+expect(startupSyncText.includes('L:CARLS_DF_FREQUENCY') && startupSyncText.includes('CARLS DF clear bearing'), 'CARLS DF startup sync must restore the persisted frequency and program the DF');
+const objective1 = macros.objective1 || [];
+const linkedProfileIndex = objective1.findIndex((command) => command.call_macro === 'apply linked aircraft profile');
+const lateStartupSyncIndex = objective1.findIndex((command, index) => index > linkedProfileIndex && command.call_macro === 'CARLS DF startup sync');
+expect(linkedProfileIndex >= 0 && lateStartupSyncIndex > linkedProfileIndex, 'Objective1 must reapply the DF startup sync after late profile initialization');
+expect(objective1[lateStartupSyncIndex - 1]?.sleep === 0.5, 'Objective1 DF retry must occur after the post-profile startup delay');
+const dfDebugState = JSON.stringify(macros['DF stations debug state'] || []);
+const debugPage = JSON.stringify(macros['debug page'] || []);
+expect(dfDebugState.includes('CARLS_DF_FREQUENCY') && dfDebugState.includes('CARLS_DF_SOURCE'), 'DF Debug state must report the active persisted DF channel');
+expect(!dfDebugState.includes('\"key\":\"last_frequency\"'), 'DF Debug state must not report an undefined table last_frequency as the active channel');
+expect(debugPage.includes('DF STATIONS: {0}/15 | ACTIVE: {1} {2} MHz'), 'DF Debug page must label the active channel, not a stale last station');
+
 const digit = macros['CARLS DF digit'] || [];
 const initial = digit[0];
 const continued = initial?.else?.find((command) => command.if?.global === 'CARLS_DF_INPUT_INDEX' && command.lte === 6);

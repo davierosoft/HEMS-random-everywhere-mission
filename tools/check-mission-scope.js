@@ -127,6 +127,7 @@ function main(argv = process.argv.slice(2)) {
 module.exports = {
   analyzeScope,
   createBaselineRecord,
+  readBaseline,
   scopeViolations,
   validateBaselineRecord,
 };

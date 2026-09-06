@@ -27,7 +27,9 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `01-bootstrap-settings.json` | Version/custom settings, CICERS integration, service selection, startup fallbacks. |
 | `02-save-load-presets.json` | Save/reload, persistent mission presets, aircraft-profile persistence. |
 | `03-aircraft-crew-checklists.json` | Aircraft setup, boarding, engines, fuel, weights, audio, checklists. |
-| `04-dispatch-tablet-ui.json` | Tablet pages, settings, mission lists, Debug, CARLS, keypad events. |
+| `15-debug-and-df-ui.json` | Debug Center plus CARLS Direction Finder controls, renderer, and DF-station database UI. |
+| `16-release-test-tracker.json` | Debug Test Tracker: persistent first-execution, completion, tester result, and failure-comment flow. |
+| `04-dispatch-tablet-ui.json` | Tablet pages, settings, mission lists, and keypad events. |
 | `05-navigation-queries.json` | Queries, locations, waypoints, maps, routes, destinations. |
 | `06-scene-generation.json` | Incident profiles, random assets, people, vehicles, VFX, SAR scenes. |
 | `07-patient-medical.json` | Patient creation, physiology, treatment, CPR, identity, multi-patient state. |
@@ -43,7 +45,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 
 | Module | Contents |
 | --- | --- |
-| `01-persistence-tables.json` | Debug, mission preset, and aircraft-profile tables. |
+| `01-persistence-tables.json` | Debug, mission preset, aircraft-profile, and independent saved-profile tables. |
 | `02-waypoints-and-categories.json` | Hospital/hangar/accident waypoints and browse categories. |
 | `03-people-and-names.json` | Casualties, civilians, responders, and generated names. |
 | `04-vehicles-and-scene-assets.json` | Response vehicles, barriers, lights, transport, wrecks, scene pools. |
@@ -54,8 +56,8 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 
 1. Assert `CICERS/*`, inspect Git status, and declare semantic scope.
 2. Locate the owner with `mission-workspace.js locate`; read only that module and its callers.
-3. Snapshot mission scope, patch the module, build, and inspect the artifact diff immediately.
-4. Require byte equality and explicit semantic allowlists.
-5. Run focused checks, then `npm test`, `git diff --check`, and the affected simulator matrix. The consistency gate keeps manifest ownership, module counts, docs, scripts, and AGENTS limits synchronized.
+3. Snapshot mission scope, begin one strictly higher local release with declared scope, patch the module, and build once; the build consumes that release number.
+4. Inspect the artifact diff, require byte equality and explicit semantic allowlists, then pass the static release gate.
+5. Run focused checks, then `npm test`, `git diff --check`, and the affected simulator matrix. Package only after actual runtime sign-off. The consistency gate keeps manifest ownership, module counts, docs, scripts, and AGENTS limits synchronized.
 
 This layout keeps opaque icons and inactive subsystems out of normal model context, gives each macro one owner, and makes accidental cross-subsystem edits machine-detectable.

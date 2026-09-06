@@ -100,8 +100,21 @@
       {"if":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"eq":2,"then":[{"call_macro":"create wind return base marshall"}],"else":[{"if":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"eq":1,"then":[{"call_macro":"create saved base marshall"}],"else":[{"call_macro":"create base marshall"}]}]}
     ],
     "restore reloaded base marshall": [
+    {
+      "call_macro": "test tracker begin",
+      "params": {
+        "test_id": "base_marshal_reload"
+      }
+    },
       {"if":{"and":[{"require":{"var":["L:BASE_MARSHAL_SESSION","number"]},"eq":1},{"require":{"var":["L:BASE_MARSHAL_SNAPSHOT_VALID","number"]},"eq":1}]},"eq":1,"then":[{"call_macro":"create saved base marshall"}],"else":[{"call_macro":"create base marshall"}]}
-    ],
+    ,
+    {
+      "call_macro": "test tracker complete",
+      "params": {
+        "test_id": "base_marshal_reload"
+      }
+    }
+  ],
     "create hospital marshall": [
       {"call_macro":"reset marshall guidance"},
       {"create_location":"marshall_guidance_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"hospital_user"}}}]},
@@ -112,6 +125,12 @@
       {"call_macro":"activate marshall guidance"}
     ],
     "create technical marshall front": [
+    {
+      "call_macro": "test tracker begin",
+      "params": {
+        "test_id": "manual_marshal"
+      }
+    },
       {"call_macro":"reset marshall guidance"},
       {"create_location":"marshall_guidance_location","zones":[{"zone":{"location":"$USER"}}]},
       {"create_location":"technical_marshall_icon_location","zones":[{"zone":{"location":{"bearing":0,"dist":25,"object":"$USER"}}}]},
@@ -124,14 +143,22 @@
       {"set_map":{"remove":{"point":{"id":"technical_marshall"}}}},
       {"set_map":{"add":{"point":{"location":"technical_marshall_icon_location","icon":"injured_location","id":"technical_marshall","text":"MARSHAL"}}}},
       {"call_macro":"activate marshall guidance"}
-    ],
+    ,
+    {
+      "call_macro": "test tracker complete",
+      "params": {
+        "test_id": "manual_marshal"
+      }
+    }
+  ],
     "create technical marshall custom": [
       {"set_dispatch_dialog":0},
       {"set_briefing_dialog":0},
       {"set":{"local":"technical_marshall_accept"},"value":0},
+      {"create_location":"technical_marshall","zones":[{"zone":{"location":"$USER"}}]},
+      {"clear_user_poi":1},
       {"set_user_poi":"technical_marshall"},
       {"set_message":{"text":"Select the marshal landing point on the map, then accept or reject it."}},
-      {"clear_user_poi":1},
       {"create_user_action":{"id":"accept_technical_marshall","title":"Accept marshal location","show_condition":{"require":{"has_location":"$MISSION_SELECTED_POI_LOCATION"},"eq":1},"click_commands":[{"destroy_user_action":"accept_technical_marshall"},{"destroy_user_action":"reject_technical_marshall"},{"set":{"local":"technical_marshall_accept"},"value":1}]}},
       {"create_user_action":{"id":"reject_technical_marshall","title":"Reject marshal location","click_commands":[{"destroy_user_action":"accept_technical_marshall"},{"destroy_user_action":"reject_technical_marshall"},{"set":{"local":"technical_marshall_accept"},"value":2}]}},
       {"wait_for":{"has_user_action":"accept_technical_marshall"},"eq":0},
@@ -144,9 +171,22 @@
       {"if":{"local":"marshaller_animation_monitor_started"},"ne":1,"then":[{"set":{"local":"marshaller_animation_monitor_started"},"value":1},{"call_macro":"marshaller animation monitor"}]}
     ],
     "activate marshall guidance": [
+    {
+      "call_macro": "test tracker begin",
+      "params": {
+        "test_id": "marshal_guidance"
+      }
+    },
       {"call_macro":"ensure marshaller animation monitor"},
       {"set":{"local":"marshall_ground_ops_active"},"value":1},
       {"if":{"and":[{"require":{"has_location":"marshall_guidance_location"},"eq":1},{"require":{"location":"marshall_guidance_location","var":"distance:m","to":"$USER"},"lte":{"local":"ldg_spot_area_size"}}]},"eq":1,"then":[{"set":{"local":"marshall_engine_guard_active"},"value":1}],"else":[{"set":{"local":"marshall_engine_guard_active"},"value":0}]},
       {"if":{"has_object":"marshall"},"eq":1,"then":[{"if":{"local":"halloween"},"eq":1,"then":[{"set":{"object":"marshall","var":"VAR 1"},"value":100},{"set":{"local":"marshall_guidance_state"},"value":100}],"else":[{"set":{"object":"marshall","var":"VAR 1"},"value":1},{"set":{"local":"marshall_guidance_state"},"value":1}]}]}
-    ]
+    ,
+    {
+      "call_macro": "test tracker complete",
+      "params": {
+        "test_id": "marshal_guidance"
+      }
+    }
+  ]
   }

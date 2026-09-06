@@ -132,6 +132,8 @@ for (const required of [
   'DEVELOPMENT_RELEASE_CHECKLIST.md',
   'tools/mission-workspace.js',
   'tools/check-mission-scope.js',
+  'tools/release-contract.js',
+  'tools/release-workflow.js',
   'tools/assert-safe-push.js',
 ]) expect(exists(required), `required workspace contract is missing: ${required}`);
 

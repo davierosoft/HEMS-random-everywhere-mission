@@ -9,7 +9,36 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 3. Enter `121500` without pauses. Verify intermediate templates, ESC remains available, and automatic confirmation as MAN 121.500 AM after five seconds.
 4. Enter illegal prefix/grid values. They must show ILLEGAL, never tune, discard the invalid digit, and after 1.5 seconds return to EDT at that same digit; the accepted channel remains unchanged.
 5. Test IAD/MAD/MAR, UHF AM/FM, RTN/reopen persistence, normal/crash ELT, ambulance beacon, and doctor-pick flows.
-6. Confirm the tablet title matches the first `CHANGELOG.en.md` release heading.
+6. Start or reload a mission whose saved CARLS channel is 123.450. At objective1 startup, before opening the DF page, confirm the active DF receiver is immediately 123.450 with no intermediate 255.000 default. Open DF and confirm it remains 123.450.
+7. Confirm the tablet title matches the first CHANGELOG.en.md release heading.
+
+## Emergency DF beacons
+
+1. Start each PLB-labelled outdoor incident (paraglider, hiker/climber, skier, hunter, and fisherman). In AUTO, verify CARLS tunes 121.500 AM with source PLB and a bearing to injured_human; in MANUAL, the bearing appears only after tuning 121.500.
+2. Verify the normal SAR beacon, crash ELT, PLB, and doctor-pick ambulance beacon remain continuously available while inside their operational range. The Debug Center SUMMARY row must show the current emergency DF status and reception range.
+3. Hold at the reported range boundary for at least three update cycles. The current range must vary by up to 25 percent every 5 to 10 seconds; when outside it the bearing clears through frequency-only set_df, and when inside it returns to the correct emitting object.
+4. Rescue or remove the emitting object, then confirm the bearing clears and the emergency DF range row disappears. Reload and repeat one AUTO and one MANUAL case.
+
+## DF Stations database
+
+1. From the mission setup page open **ADD CUSTOM HOSPITALS TO DB**, then **ADD DF STATIONS TO DB**. On a new profile only station 1 is editable; SAVE it and verify station 2 becomes available, continuing progressively through station 15.
+2. Create a first custom station such as name TEST NAV, frequency 108.000, location 41.9000,12.5000, select FM deliberately, then press SAVE. Verify the result is accepted but forced to AM. Leave the page, reopen it, and reload the mission: name, frequency, modulation, location, and availability of the next slot must persist.
+3. Exercise the exact boundaries and gaps: accept 108.000/117.975, 118.000/136.975, 156.000/162.000, and 225.000/399.975; reject 107.975, 117.990, 137.000, 155.975, 162.025, 224.975, 400.000 and a valid-band off-grid channel such as 225.010. Confirm NAV/ATC force AM and maritime forces FM; only UHF retains the selected AM/FM choice.
+4. Confirm 121.500, 281.500, 282.575, and every displayed object frequency are rejected for a custom station. Save one valid custom channel, then try it again in another slot and confirm duplicate rejection. Invalid name or malformed/out-of-range coordinates must not enable SAVE.
+5. Use SET DF for a saved custom station and verify the CARLS radio shows DB, the saved frequency/modulation, and a bearing to the entered coordinates. DELETE it, reload, and confirm its data and bearing no longer exist.
+6. On a representative mission, turn ON a present object station, use SET DF, and verify a bearing to that object. Confirm OFF and unavailable objects cannot set a DF bearing. The row must read NAME: FREQUENCY MHz FM. Toggle ON/OFF, leave and reopen the page, then reload the mission: both selections must persist.
+7. Use SET DF on a saved station, then on an automatic object station, and confirm in both cases that the CARLS frequency exactly matches the set_df reference. Tune a manual channel with no matching object/location and confirm the old bearing is cleared.
+## CICERS provider fallback
+
+1. With CICERS unreachable, select each manual provider: Overpass DE (0), Mail.RU (1), and Kumi (2). Start the CICERS health check and confirm a failed check restores the same provider in both the selector and DATAQUERYSERVICE, even if the persisted endpoint was still CICERS.
+2. With CICERS selected or AUTO-TOGGLE active, make the health check fail. Confirm the result is AUTO-TOGGLE with endpoint 0 or 2, never an inactive manual provider.
+3. While a CICERS health check is in progress, request a second refresh. It must not start a second ping or replace the first request's saved provider. After the first result, confirm the selected provider is correct.
+4. With a valid CICERS key and a manual provider saved, restart twice: with **BYPASS CICERS OSM AUTO ACTIVATION = NO**, confirm CICERS is active but the saved provider remains unchanged; with **YES**, confirm the same manual provider is restored after the key check.
+
+## Default RTC scene startup
+
+1. Start a **default rtc** mission with MISSION_SCENE_VARIANT 3. During cabin preparation it must advance from 75% to 80%, then 85%, complete the scene setup, and continue to the normal 100% mission start without opening the DF page.
+2. In **Debug Center → Test Tracker**, verify **TEST DEFAULT RTC (VARIANT 3): SCENE SPAWN CONTINUES AFTER 80%** changes from IN PROGRESS to COMPLETED. Confirm civilians can spawn without leaving PUBLIC_SELECTOR_LOCK held.
 
 ## Crew LifeScore and emergency recovery
 
@@ -23,15 +52,33 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 ## Debug and persistence
 
 1. Open all Debug views before dispatch and during representative mission phases with and without ambulance, police, heli-rescuer, marshal, multiple patients, route failure, and query failure.
-2. Capture a snapshot, close/reopen Debug, reload the mission, and accept a second dispatch. The record stays frozen until Capture; Clear remains cleared after reload.
+2. Capture a snapshot, close/reopen Debug, reload the mission, and accept a second dispatch. The record stays frozen until Capture; Clear remains cleared after reload. Confirm the snapshot records local date and clock time, while its mission timer is shown separately.
 3. Compare INVENTORY with changed state machines and confirm new or renamed state is visible in the appropriate operational view.
+4. Capture during preflight, scene preparation, patient transfer, and mission end. Reopen the saved Debug_Table file and verify COMMON, SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE, and INVENTORY are present in that order, including values currently hidden by page conditions.
+
+## Release test tracker
+
+1. Open **Debug Center**, then **OPEN TEST TRACKER**. The page defaults to ALL and can be filtered by GROUND, MEDICAL, HOIST, GUIDANCE, SYSTEMS, or SETTINGS. Its rows follow mission order: setup, start, dispatch, scene, recovery, destination, and end.
+2. A not-yet-run test is white. Its first instrumented code execution persists **IN PROGRESS** in the Debug table and turns that row yellow. When its monitored sequence ends, the persisted state becomes **COMPLETED**. Tests with required choices stay yellow and list the choices still to test.
+3. For every completed row, select **SUCCESSFUL** after observing the expected result. Select **FAILED** when it does not meet the test; enter a comment and save it. The result and failed comment survive closing/reopening Debug and mission reload.
+4. Run only rows whose parenthesized conditions match the scenario, for example P2/P3, 3 CREW, ACTIVE crew health, or EU Firefighter addon installed. The tracker records code execution, while the tester remains responsible for judging the simulator result.
 
 ## Multi-patient, ambulance, and mission presets
 
 1. Run near/far ambulance transfer with 3-, 4-, and 5-person crews for `ambulance`, `ambudoc`, and `us`; ambulance-owned movement must not wait on unrelated HEMS state.
 2. In MANUAL mode with 1–3 casualties, verify the active-patient mutex and action ownership. In AUTO, the page follows the patient under assessment.
-3. Let ambulance1 assess a three-patient scene; every initial assessment precedes continuation. Let ambulance2 transport an eligible P2/P3 and verify frozen report plus HEMS exclusion.
-4. Edit two independent presets across both list pages, close/reopen, and reload. Test single toggles, partial-category confirmation, full-category disable, and ALL MISSIONS without cross-preset rewrites.
+3. Let ambulance1 approach each patient. Before its medic reaches the patient, no ambulance assessment or vital signs may appear. At arrival the clinic page must show INITIAL ASSESSMENT IN PROGRESS; only after the timer completes may vital signs and the completed assessment appear. Confirm all assessments complete before any treatment continuation.
+4. With 3, 4, and 5 crew, choose `us`, `ambulance`, and `ambudoc` transport. Before physical patient loading, the destination confirmation must open. Confirm a preselected hospital and verify FPL 8 plus the hospital route replace the scene FPL immediately; no second destination modal should be needed after boarding.
+5. With 3, 4, and 5 crew and an ambulance stretcher, wait for `ambustretcher_returning`. Before cargo_left/cargo_right close, `hoist_crew` must walk from the rear-left return point to its 185-degree cabin position.
+6. In a 3-, 4-, or 5-crew mission with a preselected hospital, select the patient transport owner. The hospital confirmation must open before patient loading. After confirmation, FPL 8 and the hospital route must be active before boarding; mark **TEST OF PRESELECTED HOSPITAL CONFIRMATION BEFORE LOADING AND FPL 8 ROUTING (3/4/5 CREW)** in the tracker.
+7. Edit two independent presets across both list pages, close/reopen, and reload. Test single toggles, partial-category confirmation, full-category disable, and ALL MISSIONS without cross-preset rewrites.
+
+## Aircraft Settings Profiles
+
+1. Select CUSTOM PRST 1, change one setting, leave the page, reopen it, and reload the mission. Confirm the selected custom set retains the change without a save action.
+2. From a factory profile, change one setting and verify CUSTOM DEFAULT receives the changed configuration. STORE PRESET ON FILE, switch to a custom slot, then use COPY SAVED PRESET TO ACTUAL SET. Confirm that the active custom slot now matches the stored configuration. The copy control must be hidden while a factory profile is active and disabled until a file copy exists.
+3. Link CUSTOM PRST 1 to each MSN LIST button in turn. Confirm reassignment moves the link, and pressing the currently selected MSN LIST button removes it.
+4. Confirm the linked aircraft profile loads after an interactive MSN LIST change, after a current-list reload, and after each livery-forced preset at startup.
 
 ## Release record
 

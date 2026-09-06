@@ -5,7 +5,8 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const mission = JSON.parse(fs.readFileSync(path.join(root, 'everywhere_all.json'), 'utf8'));
+const missionPath = path.resolve(process.env.HEMS_MISSION_FILE || path.join(root, 'everywhere_all.json'));
+const mission = JSON.parse(fs.readFileSync(missionPath, 'utf8'));
 const companionMission = JSON.parse(fs.readFileSync(path.join(root, 'train.json'), 'utf8'));
 const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.en.md'), 'utf8');
@@ -281,6 +282,155 @@ function scanGuardedWaits(value, guards, macroName, counts) {
   });
 }
 
+function checkCompleteDebugSnapshot(debugPage) {
+  const sections = ["COMMON", "SUMMARY", "MISSION", "MEDICAL", "GROUND", "GUIDANCE", "INVENTORY"];
+  const dispatch = (debugPage || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
+  const capture = dispatch
+    .flatMap((row) => row.buttonbar || [])
+    .find((button) => button.title === "CAPTURE SNAPSHOT")?.commands || [];
+  const skip = new Set(["commands", "click_commands", "then", "else", "do", "try", "catch"]);
+
+  const sectionForRow = (row) => {
+    const output = [];
+    const add = (value) => {
+      if (typeof value === "string" && sections.includes(value) && !output.includes(value)) output.push(value);
+    };
+    const scan = (value) => {
+      if (!value || typeof value !== "object") return;
+      if (Array.isArray(value)) {
+        value.forEach(scan);
+        return;
+      }
+      if (value.require?.local === "debug_page_section") add(value.eq);
+      if (value.local === "debug_page_section") add(value.eq);
+      Object.values(value).forEach(scan);
+    };
+    scan(row.show_condition);
+    return output;
+  };
+
+  const collectVariables = (value, output, seen) => {
+    if (value == null) return;
+    if (Array.isArray(value)) {
+      value.forEach((entry) => collectVariables(entry, output, seen));
+      return;
+    }
+    if (typeof value !== "object") return;
+    const add = (key, expression) => {
+      if (!seen.has(key)) {
+        seen.add(key);
+        output[key] = expression;
+      }
+    };
+    if (typeof value.local === "string") add("local:" + value.local, { local: value.local });
+    if (typeof value.global === "string") add("global:" + value.global, { global: value.global });
+    if (Array.isArray(value.var)) add("var:" + value.var[0], { var: value.var });
+    if (typeof value.param === "string") add("param:" + value.param, { param: value.param });
+    if (typeof value.object === "string" && typeof value.var === "string") add("object:" + value.object + ":" + value.var, { object: value.object, var: value.var });
+    if (typeof value.location === "string" && typeof value.var === "string") add("location:" + value.location + ":" + value.var, { location: value.location, var: value.var });
+    if (value.table && typeof value.key === "string") add("table:" + JSON.stringify(value.table) + ":" + value.key, { table: value.table, key: value.key });
+    Object.entries(value).forEach(([key, child]) => {
+      if (key === "text" && typeof child === "string") {
+        for (const match of child.matchAll(/\{(local|global):([^}]+)\}/g)) add(match[1] + ":" + match[2], { [match[1]]: match[2] });
+      }
+      if (!skip.has(key)) collectVariables(child, output, seen);
+    });
+  };
+
+  const tableSet = (key) => capture.find((command) => command.set?.table?.static === "Debug_Table" && command.set.key === key);
+  expectRegression(tableSet("snapshot_schema")?.value === 7, "debug snapshot schema must be version 7");
+  expectRegression(tableSet("snapshot_page_order")?.value === sections.join(","), "debug snapshot must preserve the Debug-page order");
+  sections.forEach((section) => {
+    const expected = {};
+    const seen = new Set();
+    dispatch.forEach((row) => {
+      const visibleIn = sectionForRow(row);
+      if ((section === "COMMON" && visibleIn.length === 0) || visibleIn.includes(section)) collectVariables(row, expected, seen);
+    });
+    const captured = tableSet("snapshot_" + section.toLowerCase());
+    expectRegression(!!captured && !!captured.value?.create_struct, "debug snapshot must contain ordered " + section + " values");
+    const missing = Object.keys(expected).filter((key) => !Object.prototype.hasOwnProperty.call(captured?.value?.create_struct || {}, key));
+    expectRegression(missing.length === 0, "debug snapshot " + section + " omits " + missing.join(", "));
+  });
+}
+
+function checkDynamicEltCoverage() {
+  const modes = new Set();
+  collect(mission.data?.accidents || [], (item) => typeof item?.ELT_mode === 'string').forEach((item) => modes.add(item.ELT_mode));
+  expectRegression(modes.size > 0, 'mission data must define at least one ELT mode');
+  modes.forEach((mode) => {
+    expectRegression(Array.isArray(mission.macros[`ELT ${mode}`]), `ELT mode ${mode} must resolve to its dynamic macro`);
+  });
+  const dynamicCalls = collect(mission, (item) => item.call_macro === 'ELT {local:ELT}');
+  expectRegression(dynamicCalls.length === 3, 'all three ELT launch paths must retain the dynamic ELT macro call');
+}
+
+function checkDebugSummaryLayout() {
+  const page = mission.macros['debug page'] || [];
+  const rows = page.find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
+  const summaryRows = rows.filter((row) => compact(row.show_condition || {}).includes('"debug_page_section"') && compact(row.show_condition || {}).includes('"eq":"SUMMARY"'));
+  const orderedPrimary = ['MISSION ID', 'LOAD STATUS', 'OSM | SAVED', 'VEHICLES ON SCENE', 'LOCATION', 'CREW', 'PATIENTS', 'MISSION PHASE', 'CURRENT OBJECTIVE'];
+  const positions = orderedPrimary.map((prefix) => summaryRows.findIndex((row) => typeof row.text === 'string' && row.text.startsWith(prefix)));
+  expectRegression(positions.every((position) => position >= 0) && positions.every((position, index) => index === 0 || position > positions[index - 1]), 'Summary must lead with mission ID, load, OSM, vehicles, location, crew, patients, phase, and objective in that order');
+  expectRegression(!summaryRows.some((row) => /^(SMOKE|DF STATIONS|EMERGENCY DF)/.test(String(row.text || ''))), 'Summary must not lead with smoke or DF diagnostics');
+  expectRegression(summaryRows.every((row) => !['green', 'orange', 'hotpink'].includes(row.color)), 'Summary colors must use the restrained operational palette');
+  const section = (row) => compact(row.show_condition || {});
+  expectRegression(rows.some((row) => row.text === 'SMOKE | MODE {0} | REALISTIC {1}' && section(row).includes('"INVENTORY"')), 'smoke diagnostics must be in Inventory');
+  expectRegression(rows.filter((row) => /^DF STATIONS|^EMERGENCY DF/.test(String(row.text || ''))).every((row) => section(row).includes('"GUIDANCE"')), 'DF diagnostics must be in Guidance');
+  expectRegression(rows.some((row) => row.text === 'CREW HEALTH | P:{0} M:{1} H:{2} | IMPACT:{3} | FATAL:{4}' && section(row).includes('"MEDICAL"')), 'crew health diagnostics must be in Medical');
+  const dateCapture = (key, variable) => collect(page, (command) => command.set?.table?.static === 'Debug_Table' && command.set.key === key && JSON.stringify(command.value) === JSON.stringify({ var: [variable, 'number'] }));
+  expectRegression(dateCapture('date_year', 'E:LOCAL YEAR').length === 1 && dateCapture('date_month', 'E:LOCAL MONTH OF YEAR').length === 1 && dateCapture('date_day', 'E:LOCAL DAY OF MONTH').length === 1, 'snapshot date must use simulator local year, month, and day');
+}
+
+function checkRuntimeStateInitialization() {
+  const objective1 = mission.macros.objective1 || [];
+  const selector = mission.macros["select unique public title"] || [];
+  const handover = mission.macros["ambulance clinical handover"] || [];
+  const dfUpdate = mission.macros["DF emergency beacon update"] || [];
+  const plbPersonal = mission.macros["ELT plb_person"] || [];
+  const trackerPage = mission.macros["test tracker page"] || [];
+  const trackerFailure = mission.macros["test tracker request failed comment"] || [];
+  const profileStore = mission.macros["store aircraft profile on file"] || [];
+  const findSet = (commands, name) => commands.findIndex((command) => command.set?.local === name);
+  const findSetValue = (commands, name, value) => commands.findIndex((command) => command.set?.local === name && JSON.stringify(command.value) === JSON.stringify(value));
+  const findVarSetValue = (commands, name, value) => commands.findIndex((command) => command.set?.var?.[0] === name && JSON.stringify(command.value) === JSON.stringify(value));
+
+  const releaseBuild = Number(/(\d+)\s*$/.exec(mission.title || '')?.[1]);
+  expectRegression(Number.isInteger(releaseBuild), 'mission title must end in a numeric build');
+  expectRegression(findVarSetValue(objective1, 'L:RELEASE_BUILD', releaseBuild) >= 0, 'objective1 must initialize L:RELEASE_BUILD from the mission title build');
+
+  [["PUBLIC_USED_TITLES", []], ["PUBLIC_SELECTOR_LOCK", 0], ["CARLS_DF_SAR_PLB_PERSON_ACTIVE", "no"], ["DF_EMERGENCY_RX_RANGE_M", 0], ["test_tracker_selected_id", null], ["test_tracker_selected_label", null], ["test_tracker_failure_comment", null]].forEach(([name, value]) => {
+    expectRegression(findSetValue(objective1, name, value) >= 0, "objective1 must initialize " + name);
+  });
+
+  const usedTitlesGuard = selector.findIndex((command) => command.if?.local === "PUBLIC_USED_TITLES" && command.eq === null);
+  const lockGuard = selector.findIndex((command) => command.if?.local === "PUBLIC_SELECTOR_LOCK" && command.eq === null);
+  const lockWait = selector.findIndex((command) => command.wait_for?.local === "PUBLIC_SELECTOR_LOCK");
+  const lockRelease = selector.findIndex((command) => command.set?.local === "PUBLIC_SELECTOR_LOCK" && command.value === 0);
+  const trackerComplete = selector.findIndex((command) => command.call_macro === "test tracker complete");
+  const resultReturn = selector.findIndex((command) => command.return?.param === "unique_public_candidate");
+  expectRegression(usedTitlesGuard >= 0 && lockGuard >= 0 && lockWait > lockGuard, "public-title selector must initialize its array and lock before waiting");
+  expectRegression(lockRelease > lockWait && trackerComplete > lockRelease && resultReturn > trackerComplete, "public-title selector must release lock and complete tracking before return");
+
+  ["ambulance_handover_p1_ready", "ambulance_handover_p2_ready", "ambulance_handover_p3_ready"].forEach((name) => {
+    const initial = findSetValue(handover, name, "pending");
+    const wait = handover.findIndex((command) => command.wait_for?.local === name);
+    expectRegression(initial >= 0 && wait > initial, "ambulance handover must initialize " + name + " before its wait");
+  });
+  const rangeSet = findSet(dfUpdate, "DF_EMERGENCY_RX_RANGE_M");
+  const rangeUse = dfUpdate.findIndex((command, index) => index > rangeSet && compact(command).includes("DF_EMERGENCY_RX_RANGE_M"));
+  expectRegression(rangeSet >= 0 && rangeUse > rangeSet, "DF emergency update must calculate its receive range before use");
+  expectRegression(findSetValue(plbPersonal, "CARLS_DF_SAR_PLB_PERSON_ACTIVE", "yes") >= 0, "ELT plb_person must set its active state before starting its thread");
+  ["AIRCRAFT_PROFILE_STORE_ACTIVE", "AIRCRAFT_PROFILE_STORE_SLOT", "AIRCRAFT_PROFILE_STORE_DISPLAY_NAME"].forEach((name, index) => {
+    expectRegression(findSet(profileStore, name) === index, "profile-store temporary " + name + " must be assigned before it is used");
+  });
+  const trackerValues = trackerPage.map((command, index) => ({ command, index })).filter(({ command }) => command.set?.local?.startsWith("test_tracker_") && (command.set.local.includes("_state_") || command.set.local.includes("_comment_")));
+  expectRegression(trackerValues.length === 72 && trackerValues.every(({ command, index }) => trackerPage[index + 1]?.if?.local === command.set.local && trackerPage[index + 1]?.eq === null), "Test Tracker must initialize every displayed state and comment before rendering it");
+  ["test_tracker_selected_id", "test_tracker_selected_label", "test_tracker_failure_comment"].forEach((name) => {
+    expectRegression(findSet(trackerFailure, name) >= 0, "failure-comment flow must initialize " + name);
+  });
+}
+
 function checkRelease91Regressions() {
 
   const allText = compact(mission);
@@ -332,10 +482,8 @@ function checkRelease91Regressions() {
   const handoverCalls = callsInOrder(mission.macros['ambulance clinical handover'] || []);
   const assessmentPositions = handoverCalls.map((name, index) => name === 'ambulance assess patient' ? index : -1).filter((index) => index >= 0);
   const continuationPositions = handoverCalls.map((name, index) => name === 'ambulance continue patient' ? index : -1).filter((index) => index >= 0);
-  expectRegression(assessmentPositions.length === 3, 'ambulance handover must assess all three supported patients');
+  expectRegression(assessmentPositions.length === 0, 'ambulance handover must not duplicate the synchronous medic-arrival assessments');
   expectRegression(continuationPositions.length === 3, 'ambulance handover must run all three continuation adapters');
-  expectRegression(Math.max(...assessmentPositions) < Math.min(...continuationPositions), 'all ambulance assessments must precede treatment continuation');
-
   [2, 3].forEach((patient) => {
     const macro = mission.macros[`ambulance2 secondary patient${patient}`];
     expectRegression(Array.isArray(macro), `secondary ambulance patient ${patient} macro must exist`);
@@ -354,6 +502,17 @@ function checkRelease91Regressions() {
       expectRegression(hasState(macro, 'P3_GROUND_TRANSPORTED'), `${name} must skip ground-transported patient 3`);
     }
   });
+
+  const ambulanceHandover = compact(mission.macros['ambulance clinical handover'] || []);
+  const sceneAssessmentMacros = ['ambustretcher full', 'ambustretcher close', 'ambustretcher far'].map((name) => compact(mission.macros[name] || []));
+  const countMatches = (value, needle) => value.split(needle).length - 1;
+  expectRegression(!ambulanceHandover.includes('"distance:m"') && !ambulanceHandover.includes('ambumedic7'), 'ambulance handover must wait for direct assessment completion, not a medic distance');
+  expectRegression(countMatches(sceneAssessmentMacros.join(''), '"call_macro":"ambulance assess patient"') === 14, 'every final ambulance-medic arrival must start its synchronous assessment');
+  const postStretcherWalk = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":2}';
+  const postStretcherStanding = postStretcherWalk.replace('"VAR1":3', '"VAR1":1');
+  expectRegression(countMatches(compact(mission.macros['3 crew ground ops'] || []), postStretcherWalk) === 1, '3 crew post-stretcher return must walk before cargo doors close');
+  expectRegression(countMatches(compact(mission.macros['4 or 5 crew ground ops'] || []), postStretcherWalk) === 1, '4/5 crew post-stretcher return must walk before cargo doors close');
+  expectRegression(!compact(mission.macros['3 crew ground ops'] || []).includes(postStretcherStanding) && !compact(mission.macros['4 or 5 crew ground ops'] || []).includes(postStretcherStanding), 'post-stretcher return must not use the standing animation');
 
   const flush = compact(mission.macros['flush mission preset'] || []);
   const switching = callsInOrder(mission.macros['switch mission preset'] || []);
@@ -388,6 +547,7 @@ function checkRelease91Regressions() {
   });
   expectRegression(debugText.includes('LIVE MISSION SUMMARY'), 'debug page must provide a consolidated live summary');
   expectRegression(debugText.includes('COMPLETE LOCAL INVENTORY') && debugText.includes('COMPLETE LVAR INVENTORY'), 'debug Inventory view must retain both complete inventories');
+  checkCompleteDebugSnapshot(debugPage);
 }
 
 function checkAircraftProfileRegression() {
@@ -396,6 +556,7 @@ function checkAircraftProfileRegression() {
     'ensure aircraft profile defaults', 'sync aircraft profile runtime',
     'apply aircraft factory profile', 'save custom aircraft profile',
     'load custom aircraft profile', 'apply linked aircraft profile',
+    'store aircraft profile on file', 'copy saved aircraft profile to actual set',
     'aircraft profiles page'
   ];
   requiredMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), `aircraft profile macro must exist: ${name}`));
@@ -409,7 +570,8 @@ function checkAircraftProfileRegression() {
     Aircraft_Profile_Table3: 'Andrews_custom_prst_2',
     Aircraft_Profile_Table4: 'Andrews_custom_prst_3',
     Aircraft_Profile_Table5: 'Andrews_custom_prst_4',
-    Aircraft_Profile_Table6: 'Andrews_custom_prst_5'
+    Aircraft_Profile_Table6: 'Andrews_custom_prst_5',
+    Aircraft_Profile_Saved_Preset: 'Andrews_saved_aircraft_profile'
   };
   Object.entries(expectedTables).forEach(([name, table]) => {
     expectRegression(mission.data[name] === table, `aircraft profile table must be registered: ${name}`);
@@ -427,17 +589,22 @@ function checkAircraftProfileRegression() {
 
   const profilePage = mission.macros['aircraft profiles page'] || [];
   const profileText = compact(profilePage);
-  ['CUSTOM DEFAULT', 'CUSTOM PRST 1', 'CUSTOM PRST 5', 'SAVE CUSTOM', 'RELOAD CUSTOM', 'UNLINK', 'LINK DEFAULT', 'LINK PRST 5'].forEach((token) => {
+  ['CUSTOM DEFAULT', 'CUSTOM PRST 1', 'CUSTOM PRST 5', 'STORE PRESET ON FILE', 'COPY SAVED PRESET TO ACTUAL SET', 'MSN LIST DFLT', 'MSN LIST 5'].forEach((token) => {
     expectRegression(profileText.includes(token), `aircraft profile page must expose ${token}`);
+  });
+  ['SAVE CUSTOM', 'RELOAD CUSTOM', 'UNLINK', 'LINK DEFAULT', 'LINK PRST'].forEach((token) => {
+    expectRegression(!profileText.includes(token), `aircraft profile page must not retain obsolete control ${token}`);
   });
   expectRegression(!profileText.includes('"static":{"global"'), 'aircraft profile page must not use unsupported static global table references');
   const profileDispatches = profilePage.filter((command) => Array.isArray(command.set_dispatch));
   expectRegression(profileDispatches.length === 1, 'aircraft profile page must render through exactly one set_dispatch command');
   expectRegression(profilePage.every((command) => !['image', 'title', 'link', 'text', 'buttonbar'].some((key) => Object.prototype.hasOwnProperty.call(command, key))), 'aircraft profile page must not execute renderer items as commands (HPG NotFound regression)');
-  expectRegression(compact(profileDispatches[0] || {}).includes('CUSTOM DEFAULT') && compact(profileDispatches[0] || {}).includes('LINK PRST 5'), 'aircraft profile set_dispatch must contain the complete profile UI');
+  expectRegression(compact(profileDispatches[0] || {}).includes('CUSTOM DEFAULT') && compact(profileDispatches[0] || {}).includes('MSN LIST 5'), 'aircraft profile set_dispatch must contain the complete profile UI');
   expectRegression(callsInOrder(profilePage).includes('ensure aircraft profile defaults') && callsInOrder(profilePage).includes('refresh aircraft profile page state'), 'aircraft profile page must initialize defaults and its current custom table before rendering');
-  const profileLinkButtons = collect(profileDispatches, (item) => typeof item.title === 'string' && /^LINK (?:DEFAULT|PRST )/.test(item.title));
-  expectRegression(profileLinkButtons.length === 6 && profileLinkButtons.every((item) => compact(item.disabled_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(item.disabled_condition || {}).includes('CUSTOM')), 'mission-preset link buttons must be disabled outside a CUSTOM settings profile');
+  const profileLinkButtons = collect(profileDispatches, (item) => typeof item.title === 'string' && /^MSN LIST (?:DFLT|[1-5])$/.test(item.title));
+  expectRegression(profileLinkButtons.length === 6 && profileLinkButtons.every((item) => compact(item.disabled_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(item.disabled_condition || {}).includes('CUSTOM')), 'MSN LIST link buttons must be disabled outside a CUSTOM settings profile');
+  const copyButtonRow = collect(profileDispatches, (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'COPY SAVED PRESET TO ACTUAL SET'))[0];
+  expectRegression(Boolean(copyButtonRow) && compact(copyButtonRow.show_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(copyButtonRow.show_condition || {}).includes('CUSTOM') && compact(copyButtonRow).includes('Aircraft_Profile_Saved_Preset'), 'saved preset copy must be available only for CUSTOM profiles and only after a stored file exists');
 
   const profileSettingsLink = collect(mission.macros.settings || [], (item) => item.link === 'AIRCRAFT SETTINGS PROFILES');
   expectRegression(profileSettingsLink.length === 1 && callsInOrder(profileSettingsLink[0].commands || []).includes('aircraft profiles page'), 'Settings profile link must call the profile page');
@@ -446,7 +613,7 @@ function checkAircraftProfileRegression() {
   expectRegression(flightAssistIndex > 0 && settingsDispatchForLayout[flightAssistIndex - 1]?.image === 'bar', 'Settings must separate Most Used Settings from Flight Assist with a bar');
 
   const settingsText = compact(mission.macros.settings || []);
-  ['FLIGHT ASSISTS', 'Engine failure simulation', 'Orange target smoke', 'Target guidance range', 'Hoist risk monitor', 'Hoist control profile', 'Flight-plan NAV source', 'Teleport assist'].forEach((token) => {
+  ['FLIGHT ASSISTS', 'Engine failure simulation', 'Orange target smoke', 'Target guidance range', 'Crew health simulation', 'Winch control mode', 'GTN(TDS) NAV SOURCE', 'Teleport assist'].forEach((token) => {
     expectRegression(settingsText.includes(token), `Settings must expose individual flight-assist option: ${token}`);
   });
   const linked = compact(mission.macros['apply linked aircraft profile'] || []);
@@ -455,7 +622,12 @@ function checkAircraftProfileRegression() {
   });
   expectRegression(!linked.includes('"key":{"local":"MSN_CONFIG_PRESET"}'), 'linked aircraft profile must use explicit supported mission-table keys');
   expectRegression(callsInOrder(mission.macros['switch mission preset'] || []).includes('apply linked aircraft profile'), 'mission preset switch must load its linked aircraft profile');
+  expectRegression(callsInOrder(mission.macros['load current mission preset'] || []).includes('apply linked aircraft profile'), 'current mission preset reload must load its linked aircraft profile');
   expectRegression(callsInOrder(mission.macros.objective1 || []).includes('apply linked aircraft profile'), 'livery-driven mission preset selection must load its linked aircraft profile');
+  const linkToggle = compact(mission.macros['link aircraft profile to mission'] || []);
+  expectRegression(linkToggle.includes('Aircraft_Profile_Links') && linkToggle.includes('"value":null') && linkToggle.includes('save_table'), 'selected MSN LIST link must toggle off and persist the link table');
+  const immediateSave = compact(mission.macros['mark aircraft profile custom'] || []);
+  expectRegression(immediateSave.includes('Aircraft_Profile_Table1') && immediateSave.includes('save custom aircraft profile'), 'profile changes must immediately persist to a custom slot');
 
   const profileKeys = new Set([
     'MISSION_ACCIDENT_MAX_RADIUS', 'MISSION_ACCIDENT_MIN_RADIUS', 'rangeautorandom', 'CREW', 'BOARDING_HOLD_GLOBAL',
@@ -488,8 +660,8 @@ function checkAircraftProfileRegression() {
   const vehiclePages = [mission.macros.variant_selection || [], mission.macros['HEMS mission_type'] || []];
   const vehicleControls = vehiclePages.flatMap((page) => collect(page, (item) => Array.isArray(item.commands) && item.commands.some((command) => command.set && ['ambu_force', 'poli_force', 'fire_force'].includes(command.set.global))));
   expectRegression(vehicleControls.length >= 24 && vehicleControls.every((item) => marksCustom(item.commands)), 'all Custom Mission vehicle preferences must mark CUSTOM');
-  const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUSTOM |LINK )/.test(item.title));
-  expectRegression(customIndicators.length === 12 && customIndicators.every((item) => compact(item.select_condition).includes('AIRCRAFT_PROFILE_ACTIVE')), 'only CUSTOM state may select a saved slot or its mission link');
+  const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUSTOM |MSN LIST )/.test(item.title));
+  expectRegression(customIndicators.length === 12 && customIndicators.every((item) => compact(item.select_condition).includes('AIRCRAFT_PROFILE_ACTIVE')), 'only CUSTOM state may select a saved slot or its MSN LIST link');
 }
 function checkRelease94Regressions() {
   const allText = compact(mission);
@@ -550,10 +722,28 @@ function checkRelease94Regressions() {
   const ping = compact(mission.macros['CICERS PING'] || []);
   const ensure = compact(mission.macros['ensure data query service selection'] || []);
   const cicersSuccess = compact(mission.macros['restore data query selection after CICERS success'] || []);
-  expectRegression(ping.includes('CICERS_PREVIOUS_ENDPOINT') && ping.includes('CICERS_PREVIOUS_DATAQUERY_MODE'), 'CICERS ping must snapshot both persisted endpoint and mode');
+  const cicersFailure = mission.macros['restore data query selection after CICERS failure'] || [];
+  const pingCommands = mission.macros['CICERS PING'] || [];
+  const pingInitializer = pingCommands.find((command) => command.if?.local === 'pingstart' && command.eq === null);
+  const pingGuard = pingCommands.find((command) => command.if?.local === 'pingstart' && command.ne === 1);
+  expectRegression(!ping.includes('CICERS_PREVIOUS_ENDPOINT') && ping.includes('CICERS_PREVIOUS_DATAQUERY_MODE'), 'CICERS ping must snapshot only the active data-query provider');
   expectRegression(ping.includes(endpointLvar) && ping.includes('restore data query selection after CICERS success') && ping.includes('restore data query selection after CICERS failure'), 'CICERS ping must restore the selection after either result');
+  expectRegression(pingInitializer?.then?.some((command) => command.set?.local === 'pingstart' && command.value === 0) && Array.isArray(pingGuard?.then) && pingGuard.then.some((command) => command.set?.local === 'pingstart' && command.value === 1) && pingGuard.then.some((command) => command.create_thread), 'CICERS ping must initialize pingstart and reject overlapping ping threads');
+  const cicersFailureGuard = cicersFailure[0];
+  const cicersFailureManualModes = (cicersFailureGuard?.if?.or || []).map((item) => item.eq).sort().join(',');
+  const cicersFailureManualRestore = (cicersFailureGuard?.then || []).some((command) => command.set?.var?.[0] === endpointLvar && command.value?.local === 'CICERS_PREVIOUS_DATAQUERY_MODE') && (cicersFailureGuard?.then || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value?.local === 'CICERS_PREVIOUS_DATAQUERY_MODE');
+  const cicersFailureAutoFallback = (cicersFailureGuard?.else || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value === 4) && (cicersFailureGuard?.else || []).some((command) => command.call_macro === 'DATAQUERYSERVICERANDOM');
+  expectRegression(cicersFailureManualModes === '0,1,2' && cicersFailureManualRestore && cicersFailureAutoFallback && !compact(cicersFailure).includes('CICERS_PREVIOUS_ENDPOINT'), 'CICERS failure must restore active manual provider 0/1/2 even when the persisted endpoint is stale, otherwise fall back to AUTO-TOGGLE');
   expectRegression(!ping.includes('DATAQUERYSERVICERANDOM'), 'CICERS ping must route expired keys through the same previous-provider fallback');
-  expectRegression(cicersSuccess.includes(endpointLvar) && cicersSuccess.includes('\"global\":\"DATAQUERYSERVICE\"') && cicersSuccess.includes('\"value\":3') && !cicersSuccess.includes('CICERS_PREVIOUS_ENDPOINT'), 'a valid CICERS key must make CICERS the active provider');
+  const cicersSuccessGuard = (mission.macros['restore data query selection after CICERS success'] || [])[0];
+  const cicersSuccessKeepsCicers = (cicersSuccessGuard?.else || []).some((command) => command.set?.var?.[0] === endpointLvar && command.value === 3) && (cicersSuccessGuard?.else || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value?.local === 'CICERS_PREVIOUS_DATAQUERY_MODE');
+  const cicersSuccessBypassesCicers = cicersSuccessGuard?.if?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersSuccessGuard.eq === 'YES' && (cicersSuccessGuard.then || []).some((command) => command.call_macro === 'restore data query selection after CICERS failure');
+  expectRegression(cicersSuccessKeepsCicers && cicersSuccessBypassesCicers && !cicersSuccess.includes('CICERS_PREVIOUS_ENDPOINT'), 'a valid CICERS key must preserve the saved provider, activate CICERS only when bypass is NO, and restore the saved choice when bypass is YES');
+  const cicersBypassSetting = settingsDispatch.find((row) => row.buttonbar?.[0]?.text === '(P)BYPASS CICERS OSM AUTO ACTIVATION');
+  const cicersBypassButtons = cicersBypassSetting?.buttonbar || [];
+  const cicersBypassYes = cicersBypassButtons.find((button) => button.title === 'YES');
+  const cicersBypassNo = cicersBypassButtons.find((button) => button.title === 'NO');
+  expectRegression(globals.CICERS_AUTO_ACTIVATION_BYPASS === 'NO' && ensure.includes('CICERS_AUTO_ACTIVATION_BYPASS') && cicersBypassYes?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassYes.select_condition.eq === 'YES' && cicersBypassNo?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassNo.select_condition.eq === 'NO', 'CICERS auto activation bypass must default to NO and provide persistent YES/NO Settings controls');
   expectRegression(ensure.includes('"call_macro":"CICERS PING"'), 'CICERS key validation must run at every startup');
   const profileMacros = ['ensure aircraft profile defaults', 'sync aircraft profile runtime', 'apply aircraft factory profile', 'save custom aircraft profile', 'load custom aircraft profile'];
   expectRegression(profileMacros.every((name) => !compact(mission.macros[name] || []).includes('DATAQUERYSERVICE')), 'aircraft profiles must not overwrite the independent endpoint selection');
@@ -616,6 +806,246 @@ function checkRelease94Regressions() {
   expectRegression(crewDebugText.includes('CREW SAFETY / EMERGENCY') && crewDebugText.includes('CREW_FATAL_OBJECT_REPLACED'), 'debug page must expose crew emergency and packaged-object state');
 
 }
+function checkRelease100TestTracker() {
+  const expectedTests = [
+    {
+      "id": "ambulance_spawn",
+      "label": "TEST AMBULANCE: CHECK IT SPAWNS AT THE SCENE AND ARRIVES",
+      "macro": "Ambulance1"
+    },
+    {
+      "id": "ambulance_secondary",
+      "label": "TEST SECOND AMBULANCE: WITH 2 OR 3 PATIENTS, CHECK IT HELPS ANOTHER PATIENT",
+      "macro": "ambulance2 secondary rescue"
+    },
+    {
+      "id": "vehicle_drive_recovery",
+      "label": "TEST EMERGENCY VEHICLES: CHECK THEY DRIVE AND STOP CORRECTLY",
+      "macro": "drive ambulance1 safe"
+    },
+    {
+      "id": "ambulance_handover",
+      "label": "TEST AMBULANCE CARE: CHECK ASSESSMENT STARTS BEFORE HELICOPTER CREW ARRIVES",
+      "macro": "ambulance clinical handover"
+    },
+    {
+      "id": "dispatch_lifecycle",
+      "label": "TEST END OF MISSION: COMPLETE HANDOVER AND CHECK RETURN TO BASE",
+      "macro": "dispatch cancellation evaluation"
+    },
+    {
+      "id": "dispatch_progress",
+      "label": "TEST DISPATCH: FLY TO THE SCENE AND CHECK MISSION PROGRESSES",
+      "macro": "on-site operations progress monitor"
+    },
+    {
+      "id": "residential_routes",
+      "label": "TEST ROAD SCENE: CHECK THE MAP POINT AND ROUTE REACH THE SCENE",
+      "macro": "random residential road nodes launcher"
+    },
+    {
+      "id": "scene_assets",
+      "label": "TEST SCENE: CHECK PEOPLE AND OBJECTS APPEAR AT THE SCENE",
+      "macro": "select unique public title"
+    },
+    {
+      "id": "manual_patient",
+      "label": "TEST MANUAL CARE: SELECT TREATMENT AND TRANSPORT FOR THE PATIENT",
+      "macro": "manual current patient treatment choice"
+    },
+    {
+      "id": "multipatient",
+      "label": "TEST MULTIPLE PATIENTS: CHECK CARE AND TRANSPORT ORDER",
+      "macro": "initialize multipatient clinical state"
+    },
+    {
+      "id": "patient_physiology",
+      "label": "TEST PATIENT CARE: CHECK VITAL SIGNS AND TREATMENT UPDATE",
+      "macro": "update patient1 physiology"
+    },
+    {
+      "id": "cpr_mcpr",
+      "label": "TEST RESUSCITATION: CHECK PATIENT RESPONSE TO CPR",
+      "macro": "CPR"
+    },
+    {
+      "id": "clinical_report",
+      "label": "TEST PATIENT REPORT: CHECK REPORT IS READY BEFORE TRANSFER",
+      "macro": "rescuetrack patient status summary"
+    },
+    {
+      "id": "pathology_fallback",
+      "label": "TEST PATIENT DETAILS: CHECK SAFE TEXT WHEN INFORMATION IS MISSING",
+      "macro": "ensure pathology1 fallback"
+    },
+    {
+      "id": "preflight",
+      "label": "TEST PRE-FLIGHT: COMPLETE CHECKS AND START THE MISSION",
+      "macro": "beforetockl"
+    },
+    {
+      "id": "three_crew_helirescuer",
+      "label": "TEST RESCUER PICKUP: 3 CREW, CHECK RESCUER BOARDS",
+      "macro": "3 crew SKID LDG"
+    },
+    {
+      "id": "hoist_control",
+      "label": "TEST WINCH: CHECK CONTROLS AND SAFE HEIGHT DURING HOIST",
+      "macro": "HOISTING"
+    },
+    {
+      "id": "crew_health",
+      "label": "TEST CREW HEALTH: WITH CREW HEALTH ACTIVE, CHECK THE CREW ON SCENE",
+      "macro": "apply crew lifescore impact"
+    },
+    {
+      "id": "crew_emergency",
+      "label": "TEST INJURED CREW: CHECK HOSPITAL ROUTE AND MISSION ENDS",
+      "macro": "crew emergency response"
+    },
+    {
+      "id": "helirescuer_drop",
+      "label": "TEST RESCUER DROP: 3 CREW, CHECK RESCUER LEAVES AND RETURNS",
+      "macro": "drop heli rescuer"
+    },
+    {
+      "id": "ground_ops",
+      "label": "TEST GROUND CREW: CHECK STRETCHER, WALKING AND CARGO DOORS",
+      "macro": "ground ops"
+    },
+    {
+      "id": "manual_marshal",
+      "label": "TEST MANUAL MARSHAL: START IT FROM TECHNICAL PAGE AND CHECK GUIDANCE",
+      "macro": "create technical marshall front"
+    },
+    {
+      "id": "marshal_guidance",
+      "label": "TEST LANDING GUIDANCE: CHECK MARSHAL GUIDES ARRIVAL AND DEPARTURE",
+      "macro": "activate marshall guidance"
+    },
+    {
+      "id": "base_marshal_reload",
+      "label": "TEST BASE GUIDANCE: RESTART THE FLIGHT AND CHECK LANDING GUIDANCE",
+      "macro": "restore reloaded base marshall"
+    },
+    {
+      "id": "route_guidance",
+      "label": "TEST HOSPITAL ROUTE: AFTER BOARDING, CHECK THE ROUTE CHANGES TO HOSPITAL",
+      "macro": "routeupdate"
+    },
+    {
+      "id": "carls_df",
+      "label": "TEST RADIO BEACON: TUNE IT AND CHECK THE DIRECTION INDICATION",
+      "macro": "CARLS DF open"
+    },
+    {
+      "id": "df_stations",
+      "label": "TEST RADIO BEACON SETTINGS: SAVE A STATION, REOPEN IT, CHECK IT REMAINS",
+      "macro": "DF stations save"
+    },
+    {
+      "id": "emergency_df",
+      "label": "TEST EMERGENCY BEACON: MOVE NEAR AND FAR, CHECK SIGNAL APPEARS AND CLEARS",
+      "macro": "DF emergency beacon update"
+    },
+    {
+      "id": "orange_smoke",
+      "label": "TEST ORANGE SMOKE: TRY AUTO, ALWAYS, REALISTIC AND DISABLED",
+      "macro": "create orange smoke marker"
+    },
+    {
+      "id": "tablet_5g",
+      "label": "TEST TABLET CONNECTION: CHECK MESSAGES AND CONNECTION STATUS",
+      "macro": "Mission dispatch"
+    },
+    {
+      "id": "cicers_endpoint",
+      "label": "TEST ONLINE MAP DATA: CHECK THE SELECTED OSM SERVICE CONNECTS",
+      "macro": "CICERS PING"
+    },
+    {
+      "id": "failure_engine",
+      "label": "TEST STARTUP FAILURE: SELECT A FAILURE AND CHECK IT APPEARS",
+      "macro": "failure engine"
+    },
+    {
+      "id": "aircraft_profiles",
+      "label": "TEST AIRCRAFT SETTINGS: CHANGE AN OPTION, REOPEN SETTINGS, CHECK IT IS SAVED",
+      "macro": "aircraft profiles page"
+    },
+    {
+      "id": "mission_presets",
+      "label": "TEST MISSION LIST: CHANGE A MISSION, REOPEN THE LIST, CHECK IT IS SAVED",
+      "macro": "toggle mission preset category"
+    },
+    {
+      "id": "settings_layout",
+      "label": "TEST SETTINGS PAGE: OPEN EACH SECTION AND CHECK ITS OPTIONS",
+      "macro": "settings"
+    },
+    {
+      "id": "destination_preload_fpl8",
+      "label": "TEST HOSPITAL CHOICE: WITH 3, 4 AND 5 CREW, CHOOSE DESTINATION BEFORE LOADING",
+      "begin_macro": "objective7 HEMS",
+      "complete_macro": "User predestination"
+    }
+  ];
+  const requiredMacros = ['test tracker begin', 'test tracker complete', 'test tracker reset', 'test tracker record successful', 'test tracker request failed comment', 'test tracker record failed', 'test tracker page'];
+  requiredMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), 'test tracker macro must exist: ' + name));
+  const trackerPageCommands = mission.macros['test tracker page'] || [];
+  const page = compact(trackerPageCommands);
+  const trackerRows = trackerPageCommands.find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
+  const trackerRenderer = compact(trackerRows);
+  ['RELEASE 0.997 TEST TRACKER', 'IN PROGRESS', 'SUCCESSFUL', 'FAILED', 'test_tracker_failure_comment', 'Debug_Table'].forEach((token) => {
+    expectRegression(page.includes(token), 'test tracker page must expose ' + token);
+  });
+  expectRegression(!page.includes('test_tracker_section') && !trackerRenderer.includes('\"table\":{\"static\":\"Debug_Table\"}'), 'Test Tracker renderer must use one preloaded local state per test, not direct table conditions');
+  const trackerTerminalRows = trackerRows.filter((row) => typeof row.text === 'string' && row.text.endsWith(' FAILED: {0}'));
+  const trackerResetRows = trackerRows.filter((row) => Array.isArray(row.buttonbar) && row.buttonbar.some((button) => button.title === 'RESET'));
+  expectRegression(trackerTerminalRows.length === expectedTests.length && trackerTerminalRows.every((row) => trackerRows[trackerRows.indexOf(row) + 1]?.buttonbar?.[0]?.title === 'RESET' && trackerRows[trackerRows.indexOf(row) + 2]?.text === ' '), 'Test Tracker must include one RESET and one blank separator after each test item');
+  const completedActionBars = trackerRows.filter((row) => row.show_condition?.require?.local?.startsWith('test_tracker_state_') && row.show_condition.eq === 'COMPLETED' && Array.isArray(row.buttonbar));
+  expectRegression(completedActionBars.length === expectedTests.length && completedActionBars.every((row) => ['SUCCESSFUL', 'FAILED', 'RESET'].every((title) => row.buttonbar.some((button) => button.title === title))), 'each completed test must place SUCCESSFUL, FAILED, and RESET on one action row');
+  expectRegression(trackerResetRows.length === expectedTests.length * 2 && trackerResetRows.every((row) => compact(row).includes('test tracker reset')), 'each test item must expose RESET at result selection and after a recorded result');
+  expectRegression(trackerResetRows.filter((row) => !row.show_condition?.require?.local).every((row) => compact(row.show_condition).includes('"ne":"PENDING"') && compact(row.show_condition).includes('"ne":"COMPLETED"')), 'post-result RESET must remain hidden while SUCCESSFUL and FAILED are offered');
+  const debugPage = compact(mission.macros['debug page'] || []);
+  expectRegression(debugPage.includes('OPEN TEST TRACKER') && debugPage.includes('test tracker page'), 'Debug Center must link to the Test Tracker');
+  const begin = compact(mission.macros['test tracker begin'] || []);
+  const complete = compact(mission.macros['test tracker complete'] || []);
+  const successful = compact(mission.macros['test tracker record successful'] || []);
+  const failed = compact(mission.macros['test tracker record failed'] || []);
+  const reset = compact(mission.macros['test tracker reset'] || []);
+  expectRegression(reset.includes('PENDING') && reset.includes('test_{0}_comment') && reset.includes('save_table'), 'RESET must restore not-tested state and clear its saved failed comment');
+  expectRegression(begin.includes('test_{0}_state') && begin.includes('IN PROGRESS') && begin.includes('save_table'), 'first execution must persist IN PROGRESS');
+  expectRegression(complete.includes('IN PROGRESS') && complete.includes('COMPLETED') && complete.includes('save_table'), 'sequence completion must persist COMPLETED');
+  expectRegression(successful.includes('SUCCESSFUL') && successful.includes('save_table'), 'successful test result must persist');
+  expectRegression(failed.includes('FAILED') && failed.includes('test_{0}_comment') && failed.includes('save_table'), 'failed test result and comment must persist');
+  expectRegression(complete.includes('test_{0}_option_{1}') && complete.includes('test_tracker_missing_options') && complete.includes('"param":"option"'), 'multi-option tests must remain IN PROGRESS until every required option has been recorded');
+  const orangeMissing = trackerRows.filter((row) => typeof row.text === 'string' && row.text.startsWith('STILL TO TEST:') && compact(row).includes('test_tracker_state_orange_smoke'));
+  const destinationMissing = trackerRows.filter((row) => typeof row.text === 'string' && row.text.startsWith('STILL TO TEST:') && compact(row).includes('test_tracker_state_destination_preload_fpl8'));
+  expectRegression(orangeMissing.length === 4 && destinationMissing.length === 3 && reset.includes('test_{0}_option_{1}'), 'Orange Smoke and hospital choice must list every remaining required condition and clear it on RESET');
+  expectRegression(!page.includes('custom_sar_handoff') && !compact(mission.macros['msn preset loading'] || []).includes('custom_sar_handoff'), 'mission preset loading must never create a false Custom SAR test result');
+  expectRegression(debugPage.includes('MISSION ID {0}-{1}-{2}') && debugPage.includes('CREW {0} | PATIENT TRANSPORT') && debugPage.includes('E:LOCAL YEAR') && debugPage.includes('SNAPSHOT DATE') && debugPage.includes('MISSION TIMER AT SNAPSHOT: {0}h {1}m'), 'Summary and snapshot must expose mission identity, crew, transport, date, time, and an hours-and-minutes mission timer');
+  const customMarshal = compact(mission.macros['create technical marshall custom'] || []);
+  expectRegression(customMarshal.includes('"create_location":"technical_marshall"') && customMarshal.indexOf('"create_location":"technical_marshall"') < customMarshal.indexOf('"set_user_poi":"technical_marshall"'), 'custom marshal map must be centered on the helicopter before it opens');
+  expectedTests.forEach((test) => {
+    const stateRows = trackerRows.filter((row) => typeof row.text === 'string' && row.show_condition?.require?.local === 'test_tracker_state_' + test.id);
+    const states = ['PENDING', 'IN PROGRESS', 'COMPLETED', 'SUCCESSFUL', 'FAILED'];
+    const expectedText = {
+      'PENDING': test.label,
+      'IN PROGRESS': test.label + ' - IN PROGRESS',
+      'COMPLETED': test.label + ' - READY: SELECT RESULT',
+      'SUCCESSFUL': test.label + ' - SUCCESSFUL',
+      'FAILED': test.label + ' - FAILED: {0}'
+    };
+    expectRegression(stateRows.length === states.length && states.every((state) => stateRows.filter((row) => row.show_condition?.eq === state && row.text === expectedText[state]).length === 1), 'test tracker page must render one clear human-readable current-state row for ' + test.id);
+    const beginMacro = test.begin_macro || test.macro;
+    const completeMacro = test.complete_macro || test.macro;
+    const begun = compact(mission.macros[beginMacro] || []);
+    const completed = compact(mission.macros[completeMacro] || []);
+    expectRegression(begun.includes('test tracker begin') && begun.includes('"test_id":"' + test.id + '"') && completed.includes('test tracker complete') && completed.includes('"test_id":"' + test.id + '"'), 'test tracker must monitor ' + beginMacro + ' and ' + completeMacro + ' for ' + test.id);
+  });
+}
+
 checkRootShape();
 Object.entries(mission.macros).forEach(([name, commands]) => {
   if (!Array.isArray(commands)) errors.push(`macro must be a command array: ${name}`);
@@ -626,9 +1056,13 @@ checkTopLevelRendererCommands(companionMission, 'companion');
 walk(mission);
 scanLogical(mission, '$');
 checkCompanionMission();
+checkDynamicEltCoverage();
+checkDebugSummaryLayout();
+checkRuntimeStateInitialization();
 checkRelease91Regressions();
 checkAircraftProfileRegression();
 checkRelease94Regressions();
+checkRelease100TestTracker();
 const dfReleaseGate = validateDfRelease(mission, changelog);
 errors.push(...dfReleaseGate.errors);
 regressionChecks += dfReleaseGate.checks;

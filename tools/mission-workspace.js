@@ -5,6 +5,7 @@
 const fs = require('fs');
 const path = require('path');
 const { assertCicersBranch } = require('./assert-cicers-branch');
+const { assertBuildIntent, markBuildConsumed } = require('./release-contract');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '..');
 const ARTIFACT_PATH = path.join(REPOSITORY_ROOT, 'everywhere_all.json');
@@ -26,6 +27,16 @@ const MACRO_MODULES = [
     file: 'macros/03-aircraft-crew-checklists.json',
     description: 'Aircraft setup, boarding, engines, fuel, weights, audio, crew configuration, and checklists.',
     matches: (name) => /boarding|COMM CHECK|preflight|^engine[12]$|quickstart|refuel|fuel truck|^kit |^weights$|aircraft factory|aircraft profile|crew vol|chk vol|volume update|checkliste|checklist|ckl$|^Ground time$/i.test(name),
+  },
+  {
+    file: 'macros/16-release-test-tracker.json',
+    description: 'Release Test Tracker page, persistent execution states, and tester result workflow.',
+    matches: (name) => /^test tracker/.test(name),
+  },
+  {
+    file: 'macros/15-debug-and-df-ui.json',
+    description: 'Debug Center plus CARLS Direction Finder controls, renderer, and persistent DF-station database UI.',
+    matches: (name) => /^debug page$|^CARLS|^DF stations/.test(name),
   },
   {
     file: 'macros/04-dispatch-tablet-ui.json',
@@ -87,7 +98,7 @@ const MACRO_MODULES = [
 const DATA_MODULES = [
   {
     file: 'data/01-persistence-tables.json',
-    description: 'Debug, mission preset, and aircraft profile persistent table mappings.',
+    description: 'Debug, mission preset, aircraft profile, and DF-station persistent table mappings.',
     matches: (name) => /^(Debug_Table|Config_Table|Aircraft_Profile)/.test(name),
   },
   {
@@ -421,12 +432,15 @@ function check() {
 function build() {
   assertCicersBranch(REPOSITORY_ROOT);
   const { artifact, result } = compose();
+  const intent = assertBuildIntent(REPOSITORY_ROOT, result, { purpose: 'build' });
   if (artifact === result) {
-    console.log('Mission artifact already matches the modular sources byte-for-byte.');
+    markBuildConsumed(REPOSITORY_ROOT, artifact);
+    console.log(`Mission artifact already matches the modular sources byte-for-byte; consumed local build ${intent.release}.`);
     return;
   }
   writeFileAtomic(ARTIFACT_PATH, result);
-  console.log('Rebuilt everywhere_all.json from mission-src; review the semantic scope before continuing.');
+  markBuildConsumed(REPOSITORY_ROOT, result);
+  console.log(`Rebuilt everywhere_all.json from mission-src as local build ${intent.release}; review the semantic scope before continuing.`);
 }
 
 function locate(query) {

@@ -35,370 +35,119 @@
       {"set":{"local":"MISSION_PHASE"},"value":4}
     ],
     "ELT normal": [
-  {
-    "set": {
-      "local": "CARLS_DF_SAR_NORMAL_ACTIVE"
-    },
-    "value": "yes"
-  },
-  {
-    "if": {
-      "global": "CARLS_DF_TUNING_MODE"
-    },
-    "ne": "manual",
-    "then": [
       {
         "set": {
-          "var": [
-            "L:CARLS_DF_FREQUENCY",
-            "number"
-          ]
+          "local": "CARLS_DF_SAR_NORMAL_ACTIVE"
         },
-        "value": 282575
+        "value": "yes"
       },
       {
-        "set": {
-          "global": "CARLS_DF_FREQUENCY"
-        },
-        "value": 282575
-      },
-      {
-        "set": {
-          "var": [
-            "L:CARLS_DF_ACTIVE_VALID",
-            "number"
-          ]
-        },
-        "value": 1
-      },
-      {
-        "set": {
-          "global": "CARLS_DF_SOURCE"
-        },
-        "value": "SAR"
-      },
-      {
-        "set": {
-          "global": "CARLS_DF_MODULATION"
-        },
-        "value": "AM"
-      },
-      {
-        "set_df": {
-          "location": [
-            0,
-            0
-          ],
-          "freq": 282.575
-        }
-      }
-    ]
-  },
-  {
-    "create_thread": {
-      "commands": [
-        {
-          "while": {
-            "var": [
-              "L:HOISTED",
-              "number"
-            ]
-          },
-          "eq": 0,
-          "do": [
+        "create_thread": {
+          "commands": [
             {
-              "wait_for": {
-                "has_object": "injured_human"
+              "while": {
+                "var": [
+                  "L:HOISTED",
+                  "number"
+                ]
               },
-              "eq": 1
-            },
-            {
-              "wait_for": {
-                "object": "injured_human",
-                "var": "distance:m"
-              },
-              "lt": 25001
-            },
-            {
-              "if": {
-                "global": "CARLS_DF_TUNING_MODE"
-              },
-              "ne": "manual",
-              "then": [
+              "eq": 0,
+              "do": [
                 {
-                  "set_df": {
-                    "location": {
-                      "bearing": 0,
-                      "dist": 5,
-                      "object": "injured_human"
-                    },
-                    "freq": 282.575
-                  }
-                }
-              ],
-              "else": [
-                {
-                  "if": {
-                    "and": [
-                      {
-                        "require": {
-                          "var": [
-                            "L:CARLS_DF_ACTIVE_VALID",
-                            "number"
-                          ]
-                        },
-                        "eq": 1
-                      },
-                      {
-                        "require": {
-                          "var": [
-                            "L:CARLS_DF_FREQUENCY",
-                            "number"
-                          ]
-                        },
-                        "eq": 282575
-                      }
-                    ]
-                  },
-                  "eq": 1,
-                  "then": [
-                    {
-                      "set_df": {
-                        "location": {
-                          "bearing": 0,
-                          "dist": 5,
-                          "object": "injured_human"
-                        },
-                        "freq": 282.575
-                      }
-                    }
-                  ]
-                }
-              ]
-            },
-            {
-              "or": [
-                {
-                  "wait_for": {
+                  "call_macro": "DF emergency beacon update",
+                  "params": {
                     "object": "injured_human",
-                    "var": "distance:m"
-                  },
-                  "gt": 25500
+                    "frequency": 282575,
+                    "frequency_mhz": 282.575,
+                    "offset_m": 5,
+                    "range_m": 25000,
+                    "source": "SAR",
+                    "status": "SAR BEACON"
+                  }
                 },
                 {
-                  "wait_for": {
-                    "has_object": "injured_human"
-                  },
-                  "eq": 0
-                }
-              ]
-            },
-            {
-              "set_df": {
-                "location": [
-                  0,
-                  0
-                ],
-                "freq": 282.575
-              }
-            }
-          ]
-        },
-        {
-          "set": {
-            "local": "CARLS_DF_SAR_NORMAL_ACTIVE"
-          },
-          "value": "no"
-        }
-      ]
-    }
-  }
-],
-    "ELT crash": [
-  {
-    "set": {
-      "local": "CARLS_DF_SAR_CRASH_ACTIVE"
-    },
-    "value": "yes"
-  },
-  {
-    "if": {
-      "global": "CARLS_DF_TUNING_MODE"
-    },
-    "ne": "manual",
-    "then": [
-      {
-        "set": {
-          "var": [
-            "L:CARLS_DF_FREQUENCY",
-            "number"
-          ]
-        },
-        "value": 121500
-      },
-      {
-        "set": {
-          "global": "CARLS_DF_FREQUENCY"
-        },
-        "value": 121500
-      },
-      {
-        "set": {
-          "var": [
-            "L:CARLS_DF_ACTIVE_VALID",
-            "number"
-          ]
-        },
-        "value": 1
-      },
-      {
-        "set": {
-          "global": "CARLS_DF_SOURCE"
-        },
-        "value": "SAR"
-      },
-      {
-        "set": {
-          "global": "CARLS_DF_MODULATION"
-        },
-        "value": "AM"
-      },
-      {
-        "set_df": {
-          "location": [
-            0,
-            0
-          ],
-          "freq": 121.5
-        }
-      }
-    ]
-  },
-  {
-    "create_thread": {
-      "commands": [
-        {
-          "while": {
-            "var": [
-              "L:HOISTED",
-              "number"
-            ]
-          },
-          "eq": 0,
-          "do": [
-            {
-              "wait_for": {
-                "object": "ADELT",
-                "var": "distance:m"
-              },
-              "lt": 25001
-            },
-            {
-              "if": {
-                "global": "CARLS_DF_TUNING_MODE"
-              },
-              "ne": "manual",
-              "then": [
-                {
-                  "set_df": {
-                    "location": {
-                      "bearing": 0,
-                      "dist": 0.1,
-                      "object": "ADELT"
-                    },
-                    "freq": 121.5
-                  }
-                }
-              ],
-              "else": [
-                {
-                  "if": {
-                    "and": [
-                      {
-                        "require": {
-                          "var": [
-                            "L:CARLS_DF_ACTIVE_VALID",
-                            "number"
-                          ]
-                        },
-                        "eq": 1
-                      },
-                      {
-                        "require": {
-                          "var": [
-                            "L:CARLS_DF_FREQUENCY",
-                            "number"
-                          ]
-                        },
-                        "eq": 121500
-                      }
-                    ]
-                  },
-                  "eq": 1,
-                  "then": [
-                    {
-                      "set_df": {
-                        "location": {
-                          "bearing": 0,
-                          "dist": 0.1,
-                          "object": "ADELT"
-                        },
-                        "freq": 121.5
-                      }
-                    }
+                  "sleep": [
+                    5,
+                    10
                   ]
                 }
               ]
             },
             {
-              "set": {
-                "var": [
-                  "H:{local:HXX}_SDK_ELT_SWITCH_ON",
-                  "number"
-                ]
-              },
-              "value": 0
-            },
-            {
-              "sleep": 5
-            },
-            {
-              "set": {
-                "var": [
-                  "H:{local:HXX}_SDK_ELT_SWITCH_ARM",
-                  "number"
-                ]
-              },
-              "value": 0
-            },
-            {
-              "wait_for": {
-                "object": "ADELT",
-                "var": "distance:m"
-              },
-              "gt": 25500
-            },
-            {
-              "set_df": {
-                "location": [
-                  0,
-                  0
-                ],
-                "freq": 121.5
+              "call_macro": "DF emergency beacon clear",
+              "params": {
+                "frequency": 282575,
+                "frequency_mhz": 282.575,
+                "reset_range": "yes"
               }
+            },
+            {
+              "set": {
+                "local": "CARLS_DF_SAR_NORMAL_ACTIVE"
+              },
+              "value": "no"
             }
           ]
-        },
-        {
-          "set": {
-            "local": "CARLS_DF_SAR_CRASH_ACTIVE"
-          },
-          "value": "no"
         }
-      ]
-    }
-  }
-],
+      }
+    ],
+    "ELT crash": [
+      {
+        "set": {
+          "local": "CARLS_DF_SAR_CRASH_ACTIVE"
+        },
+        "value": "yes"
+      },
+      {
+        "create_thread": {
+          "commands": [
+            {
+              "while": {
+                "var": [
+                  "L:HOISTED",
+                  "number"
+                ]
+              },
+              "eq": 0,
+              "do": [
+                {
+                  "call_macro": "DF emergency beacon update",
+                  "params": {
+                    "object": "ADELT",
+                    "frequency": 121500,
+                    "frequency_mhz": 121.5,
+                    "offset_m": 0.1,
+                    "range_m": 40000,
+                    "source": "SAR",
+                    "status": "SAR ELT"
+                  }
+                },
+                {
+                  "sleep": [
+                    5,
+                    10
+                  ]
+                }
+              ]
+            },
+            {
+              "call_macro": "DF emergency beacon clear",
+              "params": {
+                "frequency": 121500,
+                "frequency_mhz": 121.5,
+                "reset_range": "yes"
+              }
+            },
+            {
+              "set": {
+                "local": "CARLS_DF_SAR_CRASH_ACTIVE"
+              },
+              "value": "no"
+            }
+          ]
+        }
+      }
+    ],
     "crash site approach": [
       {"if":{"var":["L:MOUNTAIN","number"]},"eq":1,"then":[{"wait_for":{"local":"HRBOARDED"},"eq":"yes"}]},
       {"wait_for":{"location":"landing_spot","var":"distance"},"lt":0.8},
@@ -421,9 +170,22 @@
       {"set":{"var":["L:WAVING_CIVILIAN_STOP","number"]},"value":1}
     ],
     "on-site operations progress monitor": [
+    {
+      "call_macro": "test tracker begin",
+      "params": {
+        "test_id": "dispatch_progress"
+      }
+    },
       {"#comment":"ON-SITE OPERATIONS PROGRESS MONITOR - TIMERGND PACES VISITS ONLY; ACTUAL MILESTONES CONTROL COMPLETION"},
       {"if":{"local":"ops_progress_monitor"},"ne":"running","then":[{"set":{"local":"ops_progress_monitor"},"value":"running"},{"create_thread":{"commands":[{"while":{"local":"ops_progress_monitor"},"eq":"running","do":[{"if":{"or":[{"require":{"var":["L:HOISTED","number"]},"eq":1},{"require":{"var":["L:DISPATCH_ENDED","number"]},"ne":0}]},"eq":1,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":100},{"set":{"local":"ops_progress_stage"},"value":"ON-SITE OPERATIONS COMPLETE"},{"set":{"local":"ops_progress_warning"},"value":0},{"set":{"local":"ops_progress_stalled_seconds"},"value":0},{"set":{"local":"ops_progress_monitor"},"value":"complete"},{"sleep":3},{"set":{"local":"ops_progress_active"},"value":0}],"else":[{"if":{"or":[{"require":{"var":["L:CPR","number"]},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2}]},"eq":1,"then":[{"set":{"local":"ops_progress_stage"},"value":"CPR IN PROGRESS"},{"if":{"var":["L:SATISFACTION","number"]},"lt":65,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},0.35]},0,65]}}]}],"else":[{"if":{"local":"crewpatientloaded"},"eq":"yes","then":[{"set":{"local":"ops_progress_stage"},"value":"FINAL CREW RETURN"},{"if":{"var":["L:SATISFACTION","number"]},"lt":95,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},0.75]},0,95]}}]}],"else":[{"if":{"or":[{"require":{"local":"crewgoforstretcherload"},"eq":"yes"},{"require":{"local":"crewpatientonstretcher"},"eq":"yes"},{"require":{"local":"crewvisitended"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"ops_progress_stage"},"value":"PATIENT LOADING / CREW RETURN"},{"if":{"var":["L:SATISFACTION","number"]},"lt":88,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},0.9]},0,88]}}]}],"else":[{"if":{"local":"crewvisiting1"},"eq":"yes","then":[{"if":{"local":"ops_progress_visit_plan"},"ne":1,"then":[{"set":{"local":"ops_progress_visit_plan"},"value":1},{"set":{"local":"ops_progress_visit_start"},"value":{"var":["L:SATISFACTION","number"]}},{"set":{"local":"ops_progress_visit_end"},"value":55},{"set":{"local":"ops_progress_visit_duration"},"value":{"clamp":[{"local":"TIMERGND"},45,3600]}},{"set":{"local":"ops_progress_stage"},"value":"PATIENT ASSESSMENT AND TREATMENT"}]},{"if":{"var":["L:SATISFACTION","number"]},"lt":{"local":"ops_progress_visit_end"},"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},{"divide":[{"multiply":[{"subtract":[{"local":"ops_progress_visit_end"},{"local":"ops_progress_visit_start"}]},2]},{"local":"ops_progress_visit_duration"}]}]},0,{"local":"ops_progress_visit_end"}]}}]}],"else":[{"set":{"local":"ops_progress_stage"},"value":"CREW DEPLOYMENT"},{"if":{"var":["L:SATISFACTION","number"]},"lt":18,"then":[{"set":{"var":["L:SATISFACTION","number"]},"value":{"clamp":[{"add":[{"var":["L:SATISFACTION","number"]},1.5]},0,18]}}]}]}]}]}]},{"if":{"var":["L:SATISFACTION","number"]},"gt":{"local":"ops_progress_last"},"then":[{"set":{"local":"ops_progress_last"},"value":{"var":["L:SATISFACTION","number"]}},{"set":{"local":"ops_progress_stalled_seconds"},"value":0},{"set":{"local":"ops_progress_warning"},"value":0}],"else":[{"set":{"local":"ops_progress_stalled_seconds"},"value":{"add":[{"local":"ops_progress_stalled_seconds"},2]}},{"if":{"and":[{"require":{"local":"ops_progress_stalled_seconds"},"gte":120},{"require":{"local":"ops_progress_warning"},"ne":1}]},"eq":1,"then":[{"set":{"local":"ops_progress_warning"},"value":1}]}]}]},{"sleep":2}]}]}}]}
-    ],
+    ,
+    {
+      "call_macro": "test tracker complete",
+      "params": {
+        "test_id": "dispatch_progress"
+      }
+    }
+  ],
     "user destination menu": [
       {"sleep":[1,5]},
       {"set":{"local":"cambuchoice"},"value":"no"},
@@ -1096,4 +858,326 @@
       {"set_message":{"text":"Pick-up completed"}},
       {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}}
     ]
-  }
+  ,
+  "DF emergency beacon update": [
+    {
+      "call_macro": "test tracker begin",
+      "params": {
+        "test_id": "emergency_df"
+      }
+    },
+    {
+      "set": {
+        "local": "DF_EMERGENCY_RX_RANGE_M"
+      },
+      "value": {
+        "floor": {
+          "divide": [
+            {
+              "multiply": [
+                {
+                  "param": "range_m"
+                },
+                {
+                  "rand": [
+                    75,
+                    125
+                  ]
+                }
+              ]
+            },
+            100
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "and": [
+          {
+            "require": {
+              "has_object": "{param:object}"
+            },
+            "eq": 1
+          },
+          {
+            "require": {
+              "object": "{param:object}",
+              "var": "distance:m"
+            },
+            "lte": {
+              "local": "DF_EMERGENCY_RX_RANGE_M"
+            }
+          }
+        ]
+      },
+      "eq": 1,
+      "then": [
+        {
+          "if": {
+            "global": "CARLS_DF_TUNING_MODE"
+          },
+          "ne": "manual",
+          "then": [
+            {
+              "call_macro": "CARLS DF set active channel",
+              "params": {
+                "frequency": {
+                  "param": "frequency"
+                },
+                "source": {
+                  "param": "source"
+                },
+                "modulation": "AM"
+              }
+            },
+            {
+              "set_df": {
+                "location": {
+                  "bearing": 0,
+                  "dist": {
+                    "param": "offset_m"
+                  },
+                  "object": "{param:object}"
+                },
+                "freq": {
+                  "param": "frequency_mhz"
+                }
+              }
+            },
+            {
+              "set": {
+                "local": "CARLS_DF_REFERENCE_STATUS"
+              },
+              "value": {
+                "param": "status"
+              }
+            }
+          ],
+          "else": [
+            {
+              "if": {
+                "and": [
+                  {
+                    "require": {
+                      "var": [
+                        "L:CARLS_DF_ACTIVE_VALID",
+                        "number"
+                      ]
+                    },
+                    "eq": 1
+                  },
+                  {
+                    "require": {
+                      "var": [
+                        "L:CARLS_DF_FREQUENCY",
+                        "number"
+                      ]
+                    },
+                    "eq": {
+                      "param": "frequency"
+                    }
+                  },
+                  {
+                    "require": {
+                      "global": "CARLS_DF_FREQUENCY"
+                    },
+                    "eq": {
+                      "param": "frequency"
+                    }
+                  }
+                ]
+              },
+              "eq": 1,
+              "then": [
+                {
+                  "set_df": {
+                    "location": {
+                      "bearing": 0,
+                      "dist": {
+                        "param": "offset_m"
+                      },
+                      "object": "{param:object}"
+                    },
+                    "freq": {
+                      "param": "frequency_mhz"
+                    }
+                  }
+                },
+                {
+                  "set": {
+                    "local": "CARLS_DF_REFERENCE_STATUS"
+                  },
+                  "value": {
+                    "param": "status"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "else": [
+        {
+          "call_macro": "DF emergency beacon clear",
+          "params": {
+            "frequency": {
+              "param": "frequency"
+            },
+            "frequency_mhz": {
+              "param": "frequency_mhz"
+            },
+            "reset_range": "no"
+          }
+        }
+      ]
+    }
+  ,
+    {
+      "call_macro": "test tracker complete",
+      "params": {
+        "test_id": "emergency_df"
+      }
+    }
+  ],
+  "DF emergency beacon clear": [
+    {
+      "if": {
+        "global": "CARLS_DF_TUNING_MODE"
+      },
+      "ne": "manual",
+      "then": [
+        {
+          "set_df": {
+            "freq": {
+              "param": "frequency_mhz"
+            }
+          }
+        }
+      ],
+      "else": [
+        {
+          "if": {
+            "and": [
+              {
+                "require": {
+                  "var": [
+                    "L:CARLS_DF_ACTIVE_VALID",
+                    "number"
+                  ]
+                },
+                "eq": 1
+              },
+              {
+                "require": {
+                  "var": [
+                    "L:CARLS_DF_FREQUENCY",
+                    "number"
+                  ]
+                },
+                "eq": {
+                  "param": "frequency"
+                }
+              },
+              {
+                "require": {
+                  "global": "CARLS_DF_FREQUENCY"
+                },
+                "eq": {
+                  "param": "frequency"
+                }
+              }
+            ]
+          },
+          "eq": 1,
+          "then": [
+            {
+              "set_df": {
+                "freq": {
+                  "param": "frequency_mhz"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "set": {
+        "local": "CARLS_DF_REFERENCE_STATUS"
+      },
+      "value": "NO MISSION BEACON"
+    },
+    {
+      "if": {
+        "param": "reset_range"
+      },
+      "eq": "yes",
+      "then": [
+        {
+          "set": {
+            "local": "DF_EMERGENCY_RX_RANGE_M"
+          },
+          "value": null
+        }
+      ]
+    }
+  ],
+  "ELT plb_person": [
+    {
+      "set": {
+        "local": "CARLS_DF_SAR_PLB_PERSON_ACTIVE"
+      },
+      "value": "yes"
+    },
+    {
+      "create_thread": {
+        "commands": [
+          {
+            "while": {
+              "var": [
+                "L:HOISTED",
+                "number"
+              ]
+            },
+            "eq": 0,
+            "do": [
+              {
+                "call_macro": "DF emergency beacon update",
+                "params": {
+                  "object": "injured_human",
+                  "frequency": 121500,
+                  "frequency_mhz": 121.5,
+                  "offset_m": 5,
+                  "range_m": 12000,
+                  "source": "PLB",
+                  "status": "PLB PERSON"
+                }
+              },
+              {
+                "sleep": [
+                  5,
+                  10
+                ]
+              }
+            ]
+          },
+          {
+            "call_macro": "DF emergency beacon clear",
+            "params": {
+              "frequency": 121500,
+              "frequency_mhz": 121.5,
+              "reset_range": "yes"
+            }
+          },
+          {
+            "set": {
+              "local": "CARLS_DF_SAR_PLB_PERSON_ACTIVE"
+            },
+            "value": "no"
+          }
+        ]
+      }
+    }
+  ]
+}

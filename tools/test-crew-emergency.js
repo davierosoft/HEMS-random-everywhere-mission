@@ -7,6 +7,7 @@ function evaluate(value, context) {
   if (value === null || typeof value === 'number' || typeof value === 'string' || typeof value === 'boolean') return value;
   if (Array.isArray(value)) return value.map((item) => evaluate(item, context));
   if (value.local) return context.locals[value.local];
+  if (value.global) return context.globals[value.global];
   if (value.param) return context.params[value.param];
   if (value.has_object) return context.objects.has(value.has_object) ? 1 : 0;
   if (value.and) return value.and.every((item) => Boolean(evaluateCondition(item, context))) ? 1 : 0;
@@ -72,7 +73,12 @@ function initialState(memberScore) {
     locals[`CREW_LIFESCORE_${member}`] = member === 3 ? memberScore : 100;
     locals[`CREW_LIFESCORE_ALERT_${member}`] = 0;
   }
-  return { locals, params: {}, objects: new Set(['pax3']) };
+  return {
+    globals: { HOIST_SAFETY_MONITOR: 'active' },
+    locals,
+    params: {},
+    objects: new Set(['pax3']),
+  };
 }
 
 function apply(state, score) {
@@ -86,8 +92,12 @@ function assert(condition, message) {
 
 const monitorJson = JSON.stringify(mission.macros['start crew lifescore monitor']);
 const hoistJson = JSON.stringify(mission.macros['apply hoist crew lifescore impact']);
+const hoistRiskJson = JSON.stringify(mission.macros['start hoist out risk monitor']);
+const hoistFatalJson = JSON.stringify(mission.macros['hoist out fatal failure']);
 assert(monitorJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');
 assert(hoistJson.includes('"member":3') && !hoistJson.includes('"member":4') && !hoistJson.includes('"member":5'), 'hoist_crew impact is not mapped exclusively to hoist operator member 3');
+assert(hoistRiskJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistRiskJson.includes('"eq":"active"'), 'hoist-out LifeScore monitoring is not gated by ACTIVE');
+assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"eq":"active"'), 'fatal hoist loss is not gated by ACTIVE');
 
 const ordinary = initialState(100);
 apply(ordinary, 1);
@@ -95,6 +105,21 @@ assert(ordinary.locals.CREW_LIFESCORE_3 === 99, 'ordinary impact did not reduce 
 assert([1, 2, 4, 5].every((member) => ordinary.locals[`CREW_LIFESCORE_${member}`] === 100), 'ordinary impact changed a non-target member');
 assert(ordinary.locals.CREW_EMERGENCY_ACTIVE === 'no', 'ordinary impact incorrectly triggered an emergency');
 assert(ordinary.locals.CREW_LIFESCORE_ALERT_3 === 1, 'first injury/exposure warning was not recorded');
+
+const disabled = initialState(100);
+disabled.globals.HOIST_SAFETY_MONITOR = 'disabled';
+apply(disabled, 100);
+assert(disabled.locals.CREW_LIFESCORE_3 === 100, 'disabled crew-health simulation changed the hoist operator LifeScore');
+assert(disabled.locals.CREW_EMERGENCY_ACTIVE === 'no', 'disabled crew-health simulation triggered a crew emergency');
+
+const disabledHoistFatal = initialState(100);
+disabledHoistFatal.globals.HOIST_SAFETY_MONITOR = 'disabled';
+execute(mission.macros['hoist out fatal failure'], disabledHoistFatal);
+assert(disabledHoistFatal.locals.CREW_LIFESCORE_3 === 100, 'disabled crew-health simulation lost the hoist operator');
+
+const activeHoistFatal = initialState(100);
+execute(mission.macros['hoist out fatal failure'], activeHoistFatal);
+assert(activeHoistFatal.locals.CREW_LIFESCORE_3 === 0, 'active crew-health simulation did not apply fatal hoist loss');
 
 const critical = initialState(11);
 apply(critical, 1);
@@ -116,4 +141,4 @@ survivorBoarding.objects = new Set(['pax3', 'pax1', 'pax2', 'hoist_crew']);
 execute(mission.macros['board crew after emergency'], survivorBoarding);
 assert(survivorBoarding.objects.size === 1 && survivorBoarding.objects.has('pax3'), 'fatal recovery did not leave only the packaged deceased object on scene');
 
-console.log(JSON.stringify({ result: 'PASS', scenarios: ['role-mapping', 'targeted-impact', 'critical-at-10', 'fatal-at-0', 'fatal-survivor-boarding'] }, null, 2));
+console.log(JSON.stringify({ result: 'PASS', scenarios: ['role-mapping', 'targeted-impact', 'disabled-no-impact', 'disabled-no-hoist-loss', 'active-fatal-hoist-loss', 'critical-at-10', 'fatal-at-0', 'fatal-survivor-boarding'] }, null, 2));
