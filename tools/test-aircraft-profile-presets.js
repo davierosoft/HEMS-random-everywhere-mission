@@ -35,6 +35,16 @@ const copy = presets['copy saved aircraft profile to actual set'];
 requireTrue(Array.isArray(store) && hasCall(store, 'save custom aircraft profile'), 'file-store macro is missing');
 requireTrue(contains(store, (entry) => entry && entry.call_macro === 'save custom aircraft profile' && entry.params && entry.params.PROFILE_TABLE === 'Aircraft_Profile_Saved_Preset'), 'file-store macro does not target the independent backup');
 requireTrue(Array.isArray(copy) && hasCall(copy, 'load custom aircraft profile') && hasCall(copy, 'save custom aircraft profile'), 'saved preset is not copied through the existing profile schema');
+const profileSlots = ['Aircraft_Profile_Table1', 'Aircraft_Profile_Table2', 'Aircraft_Profile_Table3', 'Aircraft_Profile_Table4', 'Aircraft_Profile_Table5', 'Aircraft_Profile_Table6'];
+const savedCopy = copy.find((entry) => entry && entry.if && entry.if.table && entry.if.table.static === 'Aircraft_Profile_Saved_Preset' && entry.if.key === 'valid');
+requireTrue(savedCopy && Array.isArray(savedCopy.then), 'saved-preset copy has no valid-table branch');
+for (const slot of profileSlots) {
+  const branch = savedCopy.then.find((entry) => entry && entry.if && entry.if.global === 'AIRCRAFT_PROFILE_SLOT' && entry.eq === slot);
+  requireTrue(branch, `saved-preset copy does not support ${slot}`);
+  requireTrue(contains(branch, (entry) => entry && entry.call_macro === 'save custom aircraft profile' && entry.params && entry.params.PROFILE_TABLE === slot), `saved-preset copy does not save to static ${slot}`);
+  requireTrue(contains(branch, (entry) => entry && entry.call_macro === 'load custom aircraft profile' && entry.params && entry.params.PROFILE_TABLE === slot), `saved-preset copy does not reload static ${slot}`);
+}
+requireTrue(!contains(copy, (entry) => entry && entry.params && entry.params.PROFILE_TABLE && entry.params.PROFILE_TABLE.param === 'PROFILE_TABLE'), 'saved-preset copy passes a dynamic table into static table commands');
 
 const renderer = profiles['aircraft profiles page'].find((entry) => Array.isArray(entry.set_dispatch));
 requireTrue(renderer, 'aircraft profile renderer is missing');
@@ -47,6 +57,8 @@ requireTrue(!titles.includes('SAVE CUSTOM') && !titles.includes('RELOAD CUSTOM')
 const copyControl = buttons.find(({ button }) => button.title === 'COPY SAVED PRESET TO ACTUAL SET');
 requireTrue(copyControl && copyControl.row.show_condition && copyControl.row.show_condition.require && copyControl.row.show_condition.require.global === 'AIRCRAFT_PROFILE_ACTIVE' && copyControl.row.show_condition.eq === 'CUSTOM', 'copy control is not hidden for factory profiles');
 requireTrue(copyControl.button.disabled_condition && copyControl.button.disabled_condition.ne === 'yes', 'copy control is not gated on an available saved preset');
+const copyCommand = copyControl.button.commands && copyControl.button.commands[0];
+requireTrue(copyCommand && copyCommand.call_macro === 'copy saved aircraft profile to actual set' && !copyCommand.params, 'copy control passes a dynamic destination table');
 for (const label of ['MSN LIST DFLT', 'MSN LIST 1', 'MSN LIST 2', 'MSN LIST 3', 'MSN LIST 4', 'MSN LIST 5']) requireTrue(titles.includes(label), `missing link label ${label}`);
 
 const missionTables = ['Config_Table1', 'Config_Table3', 'Config_Table4', 'Config_Table5', 'Config_Table6', 'Config_Table7'];
