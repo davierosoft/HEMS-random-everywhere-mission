@@ -32,7 +32,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 2. Run `node tools/mission-workspace.js check` after every mission build, then `node tools/release-workflow.js static`. Static verification always creates `outputs/<release>-local-test/everywhere_all.json`.
 3. Unless the user explicitly asks not to receive it, provide that local-test artifact after every mission update, even when publication has not been requested. A local test copy is not a published or runtime-validated release.
 4. Run `node tools/check-mission-scope.js check --strict` with one `--allow-macro`, `--allow-data`, or `--allow-root` flag for every intended semantic change.
-5. Run the smallest targeted gate during implementation, then `npm test` once when stable. `npm test` is branch-neutral for CI; write protection is enforced separately by the branch guard and pre-commit hook.
+5. Run the smallest targeted gate during implementation, then `npm test` once when stable (`node tools/check-workspace.js` is the identical fallback when npm is unavailable). Tests are branch-neutral for CI; write protection is enforced by the branch guard and pre-commit hook.
 6. Run `git diff --check` and inspect `git diff --stat`, `git status --short`, and the staged diff before commit.
 7. Use `docs/testing/RUNTIME_VALIDATION.md` for affected HPG/MSFS scenarios. Static PASS never proves simulator behavior; package only after actual simulator sign-off.
 
@@ -43,3 +43,5 @@ These instructions protect the deployable mission while keeping coding-agent con
 - Update `CHANGELOG.en.md` only for a mission release or externally visible technical change. Change `CHANGELOG_USER.en.md` only when explicitly requested.
 - When the user changelog is requested, compare every technical release after its stated coverage version with the user changelog. Add every final user-facing change, omit superseded/internal cumulative details, and never advance the coverage version while any intervening release is unaccounted for.
 - Keep commits on `CICERS/*`. For every future user request to publish a completed change, automatically push the named CICERS branch after its commit and required checks succeed. Never bypass branch protection or claim runtime validation that was not performed.
+- When explicitly asked to sync code while simulator testing continues, publish a development checkpoint with runtime status marked PENDING. This is not permission to package, tag, or announce a validated mission release. Update `main` only through a normal PR merge after its required checks; never direct-push, force, or use an admin bypass.
+- Keep completed architecture separate from the remaining-work list. Remove implemented tasks from that list, but retain incomplete integration and unverified simulator scenarios. Consult `docs/architecture/DEVELOPMENT_WORKFLOW.md` and `docs/testing/VALIDATION_STATUS.md`; do not restart completed SDK-only work.

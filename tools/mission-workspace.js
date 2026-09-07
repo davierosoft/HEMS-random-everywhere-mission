@@ -14,6 +14,11 @@ const MANIFEST_PATH = path.join(SOURCE_ROOT, 'manifest.json');
 
 const MACRO_MODULES = [
   {
+    file: 'macros/17-multipatient-runtime.json',
+    description: 'Generic patient registry, triage, exclusive transport reservations, CPR leases, and scene access paths.',
+    matches: (name) => /^multipatient registry /.test(name),
+  },
+  {
     file: 'macros/01-bootstrap-settings.json',
     description: 'Version checks, custom settings, CICERS integration, service selection, and startup fallbacks.',
     matches: (name) => /version check|custom settings|CICERS|DATAQUERY|addon check|^TEST$|ensure pathology|voice pack fallback|nation autoselect|normalize orange target|ensure data query|restore data query/i.test(name),

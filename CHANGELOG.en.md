@@ -1,3 +1,48 @@
+## Release 0.997 127
+
+- Keep medical detail feeds open while any manual visit still owns the active-patient mutex, including final review and transport confirmation. Completes the local tablet-telemetry guard from build 126; full five-patient transport remains pending.
+- Development checkpoint documentation and CI: distinguish code synchronization from runtime-validated releases, trim completed registry work from the integration backlog, add pinned read-only Windows/Linux checks, and exclude generated local outputs. No mission bytes or build identity changed by this workflow update; simulator sign-off remains pending.
+
+## Release 0.997 126
+
+- Close ground-patient tablet detail updates only after every visit and confirmed ground handover; preserve closing reports in Debug snapshots. Active adapter remains P1-P3; full five-patient scene and transport conversion is pending.
+
+## Release 0.997 125
+
+- Allocate fresh mutable arrays in the inactive patient registry and replace the ambiguous SDK check with five repeatable probes recording before/after values in Debug snapshots. Reproduce the old first-pass/later-fail pattern under retained-literal semantics; simulator confirmation remains required.
+
+## Release 0.997 124
+
+- Fix registry Debug rendering outside macro call context, autosave SDK check results, and save the main snapshot before the failure-isolated registry extension. Continue inactive waypoint and physiology adapters with regression tests; five-patient scenes remain unactivated.
+
+## Release 0.997 123
+
+- Add an inactive five-slot registry foundation with single-writer reservations, CPR leases, production-command regression tests, and non-destructive Debug diagnostics. Scene and transport conversion is not yet activated.
+
+## Release 0.997 122
+
+- Correct workspace macro count after watchdog registration.
+
+## Release 0.997 121
+
+- Add crew creation and NR gate watchdog diagnostics.
+
+## Release 0.997 120
+
+- Make three-crew ground deployment deterministic and verify cargo doors.
+
+## Release 0.997 119
+
+- Verify cargo door closure before releasing boarding hold for scene crew deployment.
+
+## Release 0.997 118
+
+- Verify both cargo doors close during base boarding with bounded retries.
+
+## Release 0.997 117
+
+- Fix local save timestamps, verified aircraft-profile reloads, clinician action start, and second police officer return.
+
 ## Release 0.997 116
 
 - Fix saved aircraft profile copy with static slot dispatch

@@ -338,7 +338,7 @@ function checkCompleteDebugSnapshot(debugPage) {
   };
 
   const tableSet = (key) => capture.find((command) => command.set?.table?.static === "Debug_Table" && command.set.key === key);
-  expectRegression(tableSet("snapshot_schema")?.value === 7, "debug snapshot schema must be version 7");
+  expectRegression(tableSet("snapshot_schema")?.value === 8, "debug snapshot schema must be version 8");
   expectRegression(tableSet("snapshot_page_order")?.value === sections.join(","), "debug snapshot must preserve the Debug-page order");
   sections.forEach((section) => {
     const expected = {};
@@ -604,7 +604,7 @@ function checkAircraftProfileRegression() {
   const profileLinkButtons = collect(profileDispatches, (item) => typeof item.title === 'string' && /^MSN LIST (?:DFLT|[1-5])$/.test(item.title));
   expectRegression(profileLinkButtons.length === 6 && profileLinkButtons.every((item) => compact(item.disabled_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(item.disabled_condition || {}).includes('CUSTOM')), 'MSN LIST link buttons must be disabled outside a CUSTOM settings profile');
   const copyButtonRow = collect(profileDispatches, (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'COPY SAVED PRESET TO ACTUAL SET'))[0];
-  expectRegression(Boolean(copyButtonRow) && compact(copyButtonRow.show_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(copyButtonRow.show_condition || {}).includes('CUSTOM') && compact(copyButtonRow).includes('Aircraft_Profile_Saved_Preset'), 'saved preset copy must be available only for CUSTOM profiles and only after a stored file exists');
+  expectRegression(Boolean(copyButtonRow) && compact(copyButtonRow.show_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(copyButtonRow.show_condition || {}).includes('CUSTOM') && compact(copyButtonRow).includes('AIRCRAFT_PROFILE_SAVED_PRESET_VALID'), 'saved preset copy must be available only for CUSTOM profiles and only after a stored file exists');
 
   const profileSettingsLink = collect(mission.macros.settings || [], (item) => item.link === 'AIRCRAFT SETTINGS PROFILES');
   expectRegression(profileSettingsLink.length === 1 && callsInOrder(profileSettingsLink[0].commands || []).includes('aircraft profiles page'), 'Settings profile link must call the profile page');
@@ -970,8 +970,9 @@ function checkRelease100TestTracker() {
     },
     {
       "id": "aircraft_profiles",
-      "label": "TEST AIRCRAFT SETTINGS: CHANGE AN OPTION, REOPEN SETTINGS, CHECK IT IS SAVED",
-      "macro": "aircraft profiles page"
+      "label": "TEST AIRCRAFT PROFILES: SELECT CUSTOM PRST 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUSTOM PRST 1",
+      "begin_macro": "settings",
+      "complete_macro": "select custom aircraft profile"
     },
     {
       "id": "mission_presets",
@@ -1030,7 +1031,13 @@ function checkRelease100TestTracker() {
   expectedTests.forEach((test) => {
     const stateRows = trackerRows.filter((row) => typeof row.text === 'string' && row.show_condition?.require?.local === 'test_tracker_state_' + test.id);
     const states = ['PENDING', 'IN PROGRESS', 'COMPLETED', 'SUCCESSFUL', 'FAILED'];
-    const expectedText = {
+    const expectedText = test.id === 'aircraft_profiles' ? {
+      'PENDING': test.label,
+      'IN PROGRESS': 'TEST AIRCRAFT PROFILES: SWITCH MODE, THEN REOPEN THE SAME CUSTOM PRESET - IN PROGRESS',
+      'COMPLETED': 'TEST AIRCRAFT PROFILES: SAME MODE RESTORED - READY: SELECT RESULT',
+      'SUCCESSFUL': 'TEST AIRCRAFT PROFILES: SAME MODE RESTORED - SUCCESSFUL',
+      'FAILED': 'TEST AIRCRAFT PROFILES: MODE NOT RESTORED - FAILED: {0}'
+    } : {
       'PENDING': test.label,
       'IN PROGRESS': test.label + ' - IN PROGRESS',
       'COMPLETED': test.label + ' - READY: SELECT RESULT',
@@ -1066,6 +1073,13 @@ checkRelease100TestTracker();
 const dfReleaseGate = validateDfRelease(mission, changelog);
 errors.push(...dfReleaseGate.errors);
 regressionChecks += dfReleaseGate.checks;
+
+const tabletDiagnostics = JSON.stringify(mission.macros['multipatient registry diagnostics'] || []);
+for (const key of ['tablet_policy', 'tablet_reports', 'tablet_report_archive', 'tablet_enabled', 'tablet_visits']) {
+  expectRegression(tabletDiagnostics.includes('"' + key + '"'), 'Patient tablet closure must expose ' + key + ' in Debug snapshots');
+}
+expectRegression(mission.macros['patient health']?.[0]?.call_macro === 'multipatient registry tablet refresh',
+  'Patient medical page must check completed-visit/ground-handover policy before rendering vitals');
 
 if (errors.length) {
   console.error(JSON.stringify({ result: 'FAIL', errors }, null, 2));

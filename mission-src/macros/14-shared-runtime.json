@@ -35,6 +35,26 @@
       {"set":{"var":["L:INHIBVAR","number"]},"value":1},
       {"set":{"var":["L:TESTTRK","number"]},"value":0}
     ],
+    "crew spawn launch": [
+      {"set":{"local":"crew_spawn_log"},"value":{"text":"LAUNCH: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+      {"if":{"has_object":{"param":"crew_name"}},"eq":1,"then":[{"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0} already exists; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},{"set_message":{"text":"ERROR: crew object {0} already exists. Waiting for cleanup before creation.","params":[{"param":"crew_name"}],"color":"red"}},{"wait_for":{"has_object":{"param":"crew_name"}},"eq":0}]}
+    ],
+    "crew spawn wait": [
+      {"set":{"param":"crew_spawn_wait_seconds"},"value":0},
+      {"set":{"param":"crew_spawn_state"},"value":"pending"},
+      {"while":{"param":"crew_spawn_wait_seconds"},"lt":20,"do":[{"if":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1,"then":[{"set":{"param":"crew_spawn_state"},"value":"created"},{"set":{"param":"crew_spawn_wait_seconds"},"value":20}]},{"if":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":-1}]},"eq":1,"then":[{"set":{"param":"crew_spawn_state"},"value":"failed"},{"set":{"param":"crew_spawn_wait_seconds"},"value":20}]},{"if":{"param":"crew_spawn_state"},"eq":"pending","then":[{"sleep":0.5},{"set":{"param":"crew_spawn_wait_seconds"},"value":{"add":[{"param":"crew_spawn_wait_seconds"},0.5]}}]}]},
+      {"if":{"param":"crew_spawn_state"},"eq":"created","then":[{"set":{"local":"crew_spawn_log"},"value":{"text":"CREATED: {0}","params":[{"param":"crew_name"}]}}],"else":[{"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},{"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},{"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}]}
+    ],
+    "crew spawn failure": [
+      {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; error={1}; title={2}; fallback={3}","params":[{"param":"crew_name"},{"param":"error"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+      {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
+      {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
+    ],
+    "ground ops NR gate": [
+      {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"WAITING: {0}; NR < {1}","params":[{"param":"source"},{"local":"gndopsNR"}]}},
+      {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}},
+      {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; NR < {1}","params":[{"param":"source"},{"local":"gndopsNR"}]}}
+    ],
     "HELOVICTIMS refinement": [
       {"if":{"global":"HELOVICTIMS_CUSTOM"},"eq":0,"then":[{"if":{"local":"max_injured"},"lte":2,"then":[{"set":{"local":"HELOVICTIMS"},"value":1}]},{"if":{"local":"max_injured"},"gt":2,"then":[{"set":{"local":"HELOVICTIMS"},"value":{"floor":{"rand":[1,{"local":"max_injured"}]}}}]}],"else":[{"call_macro":"HELOVICTIMS custom"}]}
     ],
@@ -328,7 +348,7 @@
     ],
     "shared repeated block 047": [
       {"open_door":"pax_right"},
-      {"create_object":{"name":"pax2","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"rpaxdoor"}},
+      {"call_macro":"crew spawn launch","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},{"try":[{"create_object":{"name":"pax2","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"rpaxdoor"}}],"catch":[{"call_macro":"crew spawn failure","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}]},{"call_macro":"crew spawn wait","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
       {"set":{"object":"pax2","var":"VAR 1"},"value":0},
       {"trigger":["H:{local:HXX}_SDK_PAX_2_OFF"]},
       {"set":{"var":["H:{local:HXX}_SDK_PAX_2_OFF","number"]},"value":0},
@@ -364,7 +384,7 @@
     ],
     "shared repeated block 051": [
       {"open_door":"pax_left"},
-      {"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":45,"dist":8}}},
+      {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},{"try":[{"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":45,"dist":8}}}],"catch":[{"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}]},{"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
       {"set":{"object":"pax1","var":"VAR 1"},"value":0},
       {"sleep":1},
       {"drive_object":{"name":"pax1","to":[{"bearing":330,"dist":7},"lpaxdoor"],"VAR1":2,"speed":5}},
@@ -458,7 +478,69 @@
     },{"return":{"param":"unique_public_candidate"}}
   ],
     "patient1 clinical visit gate": [
-      {"call_macro":"patient clinical visit gate","params":{"patient":1,"short_wait":{"local":"TIME1SHORT"}}}
+      {
+        "if": {
+          "global": "P1_MANUAL_MEDICAL_MODE"
+        },
+        "eq": "manual",
+        "then": [
+          {"call_macro":"patient clinical visit gate","params":{"patient":1,"short_wait":{"local":"TIME1SHORT"}}}
+        ],
+        "else": [
+          {
+            "if": {
+              "local": "P1_MEDICAL_ACTIONS_STARTED"
+            },
+            "ne": 1,
+            "then": [
+              {"set":{"local":"P1_CLINICAL_OWNER"},"value":"HEMS"},
+              {"set":{"local":"P1_MEDICAL_ACTIONS_STARTED"},"value":1},
+              {"set":{"local":"P1_MEDICAL_ACTIONS_VISIBLE"},"value":"yes"},
+              {"set":{"local":"P1_MEDICAL_ACTIONS_CURRENT_STEP"},"value":1},
+              {"set":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"value":0},
+              {"set":{"local":"medical_actions_started"},"value":1},
+              {"set":{"local":"medical_actions_visible"},"value":"yes"},
+              {"set":{"local":"medical_actions_current_step"},"value":1},
+              {"set":{"local":"medical_actions_completed"},"value":0},
+              {"set":{"local":"medical_display_patient"},"value":1},
+              {"call_macro":"sync medical patient display"},
+              {
+                "create_thread": {
+                  "commands": [
+                    {
+                      "while": {
+                        "local": "medical_actions_current_step"
+                      },
+                      "lte": {
+                        "local": "P1_MEDICAL_ACTION_COUNT"
+                      },
+                      "do": [
+                        {"sleep":{"local":"TIME1SHORT"}},
+                        {"set":{"local":"medical_action_effect_profile"},"value":null},
+                        {"if":{"local":"medical_actions_current_step"},"eq":1,"then":[{"set":{"local":"medical_action_effect_profile"},"value":{"local":"P1_MEDICAL_ACTION_1_PROFILE"}}]},
+                        {"if":{"local":"medical_actions_current_step"},"eq":2,"then":[{"set":{"local":"medical_action_effect_profile"},"value":{"local":"P1_MEDICAL_ACTION_2_PROFILE"}}]},
+                        {"if":{"local":"medical_actions_current_step"},"eq":3,"then":[{"set":{"local":"medical_action_effect_profile"},"value":{"local":"P1_MEDICAL_ACTION_3_PROFILE"}}]},
+                        {"if":{"local":"medical_actions_current_step"},"eq":4,"then":[{"set":{"local":"medical_action_effect_profile"},"value":{"local":"P1_MEDICAL_ACTION_4_PROFILE"}}]},
+                        {"if":{"local":"medical_actions_current_step"},"eq":5,"then":[{"set":{"local":"medical_action_effect_profile"},"value":{"local":"P1_MEDICAL_ACTION_5_PROFILE"}}]},
+                        {"if":{"local":"medical_actions_current_step"},"eq":6,"then":[{"set":{"local":"medical_action_effect_profile"},"value":{"local":"P1_MEDICAL_ACTION_6_PROFILE"}}]},
+                        {"set":{"local":"medical_action_effect_step"},"value":{"local":"medical_actions_current_step"}},
+                        {"call_macro":"apply patient1 medical action effect"},
+                        {"if":{"local":"medical_actions_current_step"},"eq":1,"then":[{"set":{"local":"medical_assessment_complete"},"value":"yes"},{"set":{"local":"P1_MEDICAL_ASSESSMENT_COMPLETE"},"value":"yes"}]},
+                        {"set":{"local":"medical_actions_current_step"},"value":{"add":[{"local":"medical_actions_current_step"},1]}},
+                        {"set":{"local":"P1_MEDICAL_ACTIONS_CURRENT_STEP"},"value":{"local":"medical_actions_current_step"}},
+                        {"call_macro":"sync medical patient display"}
+                      ]
+                    },
+                    {"set":{"local":"medical_actions_completed"},"value":1},
+                    {"set":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"value":1},
+                    {"call_macro":"sync medical patient display"}
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      }
     ],
     "create orange smoke marker": [
       {"if":{"has_object":"flare_accident"},"eq":0,"then":[{"if":{"local":"30West2024_installed"},"eq":"OK","then":[{"create_object":{"name":"flare_accident","title":"30West smoke","fallback_title":"Smoke Effects","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},{"set":{"object":"flare_accident","var":"VAR 1"},"value":3},{"set":{"object":"flare_accident","var":"VAR 2"},"value":0},{"set":{"object":"flare_accident","var":"COUPLED"},"value":0}],"else":[{"create_object":{"name":"flare_accident","title":"Airbus H145 Flare","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},{"set":{"object":"flare_accident","var":"VAR 1"},"value":1}]},{"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"yes"}]},

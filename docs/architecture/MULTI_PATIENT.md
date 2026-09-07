@@ -2,11 +2,27 @@
 
 ## Status
 
-Partially implemented as of release 0.997 91; the original target architecture below remains authoritative only for the still-open stages.
+The working tree contains an **inactive allocation/physiology registry foundation** in `17-multipatient-runtime.json`, exercised by `tools/test-multipatient-registry.js`. It is not a completed five-patient implementation. The same module now supplies an active P1-P3 tablet-telemetry adapter; scene capacity and physical transport workflows remain unchanged. Debug exposes a non-destructive HPG compatibility check for record-reference mutation and captures registry and tablet diagnostics in the existing snapshot table.
 
-Implemented: P1-P3 manual/AUTO display adapters, one active-patient mutex, canonical `manual_pN_*` state, pathology-driven P2/P3 vitals, ambulance pre-assessment of all present patients, ground-care eligibility, independent ambulance ownership and frozen transport reports.
+### Medical telemetry after completed visits
 
-Still open: the generic five-slot `PATIENT_CAPACITY` registry, one data-driven medical monitor, atomic resource allocator/reservations, projected-priority policy, a single CPR lease, generic physical-slot adapters for P4/P5 and capacity tests through five patients. Do not create P4/P5 by copying the P2/P3 implementation.
+All patient visits must finish before any ground patient's medical detail feed closes. A confirmed death resolves that patient's otherwise impossible visit. An initial assessment, a crew-return flag, a provisional reservation, or choosing GROUND is not enough. The live compatibility adapter records completion after `patient clinical visit gate` returns, and also recognizes completed medical actions or completed ambulance treatment. It closes a ground patient's detail page only after P1 is secured in its ambulance transfer sequence or P2/P3 is marked ground transported. It never delays ambulance movement while waiting for other visits.
+
+The pure decision macro accepts one through five records; the current legacy reader supplies only P1-P3 and fails open for unsupported counts. Closed patients receive a summary page with patient navigation, not stale vital signs or treatment controls. The display-copy macro bypasses detailed copying for that selected patient. This stops tablet detail work, not the underlying clinical simulation. H145 and unassigned patients keep their medical pages.
+
+At the first qualifying refresh, a deep-copied closing report and mission time are retained in `patient_tablet_reports`. Later clinical changes cannot rewrite it. Debug and Capture Snapshot expose `tablet_policy`, `tablet_reports`, `tablet_report_archive`, `tablet_enabled`, and `tablet_visits`. A fresh dispatch clears these transient records; saved Debug snapshots remain available through the existing table. The legacy More casualties flow renames/promotes physical identities: archive the previous closing reports (up to 15) and fail open for tablet closure on that repeat rescue until stable-slot transport replaces promotion. Do not hide a new patient using an old slot's flags.
+
+The registry uses a single-writer request queue. Crew workers must submit requests; only the lifecycle-owned service may run reservation, transition, death, and CPR mutations. A transport ticket contains slot, resource, and reservation generation so a timed-out worker cannot advance a newer assignment. Only unstarted reservations may be automatically released; a failure after physical loading begins requires recovery before reassignment. Tests cover capacities one through five, projected decline, competing requests, stale tickets, frozen reports, CPR exclusion/timeout, and one-shot deaths. These tests execute the production HPG command lists in a limited interpreter; they do not validate HPG scheduling, object creation, or simulator choreography.
+
+Activation requires completing the scene/clinical/physical adapters, graph-based patient access and return routes, UI and save/reload integration, and the runtime matrix. P4/P5 are explicitly required for the final conversion; do not mark that work complete based on registry tests or the diagnostic page alone.
+
+The inactive foundation also includes a waypoint-graph path planner and slot-independent physiology/profile intake adapters. The planner never invents proximity edges and rejects disconnected graphs; scene-specific geometry and movement callers still need integration. Physiology tests compare all five slots against the existing P2 formulas with identical random sequences, and exercise the primary pathology catalog. These adapters do not yet replace live medical workers.
+
+Mutable arrays use `create_array: 0`, including per-patient history, registry resets, request queues, path buffers and SDK probes. Do not rely on the interpreter cloning a literal `[]` for every invocation. The old smoke test combined scalar assignment and history length into one misleading error: retaining its literal history reproduces first-call PASS and subsequent FAIL despite a successful scalar assignment. This is a reproduced compatibility risk, not proof of HPG's internal implementation. Regression tests cover both copied and retained literals; the simulator probe now runs five calls and saves individual before/after values in `sdk_samples` so runtime evidence can distinguish the cases.
+
+Status baseline: **0.997 127**. Registry primitives, projected-priority selection, reservation generations, CPR leases, the path planner, generic physiology helpers, capacities 1-5 command tests, SDK diagnostics and the P1-P3 tablet adapter are implemented. Do not keep their creation on the remaining-work list. Except for the live tablet adapter, these helpers are still not connected to the physical mission.
+
+The successful five-sample simulator SDK check is recorded in [VALIDATION_STATUS.md](../testing/VALIDATION_STATUS.md). It does not validate the full clinical or transport workflow. In particular, the existing P2/P3 deterioration loops still share legacy state and depend on primary rescue; that issue was identified but has not been changed.
 
 The requested objective is to support up to five interchangeable casualties, while retaining an extension path for a later sixth or higher slot. H145 carries one patient at a time. Each available ambulance carries one patient at a time. The H145 should receive the highest-priority eligible patient; ambulances receive the next eligible patients by medical priority.
 
@@ -102,25 +118,16 @@ Create a scene-profile table instead of random high victim counts:
 
 The current generic crash branch must not independently force a count that contradicts the profile table.
 
-## Recommended staged delivery
+## Remaining implementation only
 
-1. Registry foundation and compatibility audit:
-   - Introduce the patient registry, states, score/decrease model, and aggregated messages.
-   - Keep physical capacity at three while mirroring existing behavior.
-   - Validate save/reload boundaries and no duplicate worker threads.
+1. Connect real scene identities and profiles to the registry. Replace the independent legacy deterioration loops with the lifecycle-owned monitor, without duplicate workers or primary-rescue gating. Define dispatch generation, reload and object-loss recovery.
+2. Route clinical actions, visit ownership, deaths, CPR and RescueTrack through the existing generic records. Preserve full AUTO/MANUAL medical behavior and the completed-visit tablet policy.
+3. Connect every H145/ambulance worker to existing reservation tickets and transitions. Replace primary-object promotion in More casualties with stable slot identities and preserve reports during repeated rescue.
+4. Author scene-specific waypoint graphs around actual wreck geometry; integrate both unladen crew approach and loaded-stretcher return. The existing path algorithm is not evidence that authored edges avoid real obstacles.
+5. Add P4/P5 physical adapters, eligible mass-casualty scene profiles, generic five-slot selectors and transport/report UI. Do not copy P2/P3 clinical engines or treat five synthetic registry records as five operational scene patients.
+6. Complete registry save/reload and persistent report integration, then execute the physical/runtime matrix for each crew configuration, no/one/two ambulances, H145-only, CPR, death, timeout/release, hoist/skid, transfer, custom locations and mass-casualty profiles.
 
-2. Allocation and treatment:
-   - Implement atomic H145/ambulance assignment.
-   - Convert health, death, CPR, RescueTrack, and debug to registry data.
-   - Preserve existing physical routes through static slot adapters.
-
-3. Capacity expansion:
-   - Add slots 4 and 5.
-   - Add mass-casualty scene profiles.
-   - Add corresponding ambulance/crew choreography only after the allocator is stable.
-
-4. Regression and runtime test:
-   - Test each crew configuration, no ambulance, one ambulance, two ambulances, H145-only, CPR, death during transport, timeout/release, reload, hoist, transfer, custom locations, and every mass-casualty profile.
+Keep simulator sign-off separate from implemented code; update only the remaining items as integration actually lands. Preserve the original NR/skid gates and crew-creation synchronization.
 
 ## Decisions required before implementation
 
