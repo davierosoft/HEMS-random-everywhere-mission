@@ -27,6 +27,8 @@ See [validation status](../testing/VALIDATION_STATUS.md) for the current candida
 
 `.github/workflows/workspace-checks.yml` runs the same dependency-free Node gate on Windows and Linux for PRs and branch pushes. Actions are pinned, permissions are read-only, credentials are not persisted, stale runs are cancelled, and no build or package is generated. The CI-contract test catches missing platforms/gates and privilege escalation.
 
+Compare the tracked-file diff before and after the suite: legacy CRLF blobs can already differ from the checkout's LF policy before tests run. Such baseline differences are not test writes. Do not suppress a filename from the comparison or normalize user content merely to make CI clean.
+
 ## Documentation maintenance
 
 Keep delivered contracts in architecture, unfinished integration in its remaining-work list, and simulator observations in testing. Remove completed tasks from the queue, not the evidence needed to understand them. Audit each intervening technical release before extending user-changelog coverage; explicitly distinguish development coverage from the public stable baseline.
