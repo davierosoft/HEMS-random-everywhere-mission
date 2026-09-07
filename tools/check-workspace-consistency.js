@@ -112,7 +112,7 @@ for (const chain of chains) {
 const markdownFiles = [];
 function collectMarkdown(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
-    if (entry.name === '.git' || entry.name === '.workspace-state') continue;
+    if (['.git', '.workspace-state', '.codex-log', 'outputs', 'node_modules'].includes(entry.name)) continue;
     const absolute = path.join(directory, entry.name);
     if (entry.isDirectory()) collectMarkdown(absolute);
     else if (entry.name.endsWith('.md')) markdownFiles.push(absolute);
@@ -128,6 +128,9 @@ for (const retired of retiredNames) {
 
 for (const required of [
   'docs/WORKSPACE_MAP.md',
+  'docs/architecture/DEVELOPMENT_WORKFLOW.md',
+  'docs/testing/VALIDATION_STATUS.md',
+  '.github/workflows/workspace-checks.yml',
   'docs/testing/RUNTIME_VALIDATION.md',
   'DEVELOPMENT_RELEASE_CHECKLIST.md',
   'tools/mission-workspace.js',

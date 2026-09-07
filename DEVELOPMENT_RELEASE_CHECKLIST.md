@@ -1,6 +1,6 @@
 # Mission release safety checklist
 
-This is a blocking checklist. Read it before changing `everywhere_all.json`, run the automated gate after every change, then complete the relevant in-simulator checks before publishing. Do not describe an audit as complete if a required runtime test has not been run.
+This is a blocking checklist. Read it before changing `everywhere_all.json`, run the automated gate after every change, then complete the relevant in-simulator checks before a validated mission release. An explicitly requested development-code checkpoint may be synchronized while simulator testing is pending; it must carry that status and must not create a package, release tag, or runtime sign-off.
 
 ## 0. Release identity — blocking before every local build and package
 
@@ -105,7 +105,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 3. Run `git diff --check` and inspect the staged file list.
 4. Record static checks separately from runtime checks; static checks cannot prove HPG/MSFS behavior.
 5. Execute the feature-specific in-simulator test matrix, including a reload when persistent state is involved.
-6. Update mission build number, technical changelog, and affected runtime scenarios. The validator must compare the displayed mission title with the current changelog heading. Commit and push only after the above is complete.
+6. Update mission build number, technical changelog, and affected runtime scenarios. The validator must compare the displayed mission title with the current changelog heading. Publish a validated release only after the above is complete. For an explicitly requested development checkpoint, pass every static gate, record the still-pending runtime scenarios, commit/push only CICERS, and use a normal checked PR to update main. Never bypass hooks or branch rules; packaging still requires actual runtime sign-off.
 
 ## Known regressions this checklist prevents
 

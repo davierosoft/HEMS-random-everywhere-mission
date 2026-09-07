@@ -2,6 +2,14 @@
 
 These are maintained manual scenarios whose object choreography, UI timing, simulator assets, or HPG execution cannot be proven by static validators. Run only the sections affected by a change and record the result with the release.
 
+## Inactive multi-patient registry compatibility check
+
+- Setup: open Debug Center, then MULTI-PATIENT REGISTRY DIAGNOSTICS. This preparatory build leaves the live P1-P3 scene and transport logic unchanged; it does not enable five patients.
+- Run RUN NON-DESTRUCTIVE SDK CHECK. A single press now runs five separate probe calls and expects `PASS: 5/5 fresh-record and history checks`. Press again without reloading: it must again pass five checks, not accumulate history from the previous invocation. No casualty, crew object, door, rotor wait, clinical record, or mission phase may change.
+- The saved `patient_registry.sdk_samples` array (inside the JSON string) must contain exactly five samples numbered 1-5. Each must report `value_before=0`, `value_after=1`, `history_before=0`, `history_after=1`, `other_history=0`, and `passed=1`. A failed comparison retains its actual values; an exception retains the error text. Do not infer a simulator-side cause from the old combined FAIL message alone.
+- The SDK check saves its result automatically: the page must show both SDK CHECK and REGISTRY SNAPSHOT without `no call_site but used param`. Reopen the page to confirm the result remains readable.
+- Return to Debug and capture a snapshot. Close/reopen Debug and inspect `Andrews_debug_snapshots`: the main snapshot must remain valid and the `patient_registry` key must contain the SDK result and registry diagnostics. The main snapshot is committed before this optional extension; a registry failure must not stop or invalidate it. Clear Snapshot and verify that key is cleared as well. The diagnostic check is not a five-patient simulator sign-off.
+
 ## CARLS direction finder
 
 1. Open DF on a remembered preset, press `1` once, and verify ESC plus `EDT: 1_#.###` appear immediately.
@@ -67,18 +75,34 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 
 1. Run near/far ambulance transfer with 3-, 4-, and 5-person crews for `ambulance`, `ambudoc`, and `us`; ambulance-owned movement must not wait on unrelated HEMS state.
 2. In MANUAL mode with 1–3 casualties, verify the active-patient mutex and action ownership. In AUTO, the page follows the patient under assessment.
-3. Let ambulance1 approach each patient. Before its medic reaches the patient, no ambulance assessment or vital signs may appear. At arrival the clinic page must show INITIAL ASSESSMENT IN PROGRESS; only after the timer completes may vital signs and the completed assessment appear. Confirm all assessments complete before any treatment continuation.
-4. With 3, 4, and 5 crew, choose `us`, `ambulance`, and `ambudoc` transport. Before physical patient loading, the destination confirmation must open. Confirm a preselected hospital and verify FPL 8 plus the hospital route replace the scene FPL immediately; no second destination modal should be needed after boarding.
-5. With 3, 4, and 5 crew and an ambulance stretcher, wait for `ambustretcher_returning`. Before cargo_left/cargo_right close, `hoist_crew` must walk from the rear-left return point to its 185-degree cabin position.
-6. In a 3-, 4-, or 5-crew mission with a preselected hospital, select the patient transport owner. The hospital confirmation must open before patient loading. After confirmation, FPL 8 and the hospital route must be active before boarding; mark **TEST OF PRESELECTED HOSPITAL CONFIRMATION BEFORE LOADING AND FPL 8 ROUTING (3/4/5 CREW)** in the tracker.
-7. Edit two independent presets across both list pages, close/reopen, and reload. Test single toggles, partial-category confirmation, full-category disable, and ALL MISSIONS without cross-preset rewrites.
+3. With the helicopter still airborne or hovering, put the HEMS clinician beside patient 1. In AUTO, MEDICAL ACTIONS must show the first automatic action immediately and advance through the configured actions; in MANUAL, the first procedure choices must appear immediately. Neither path requires SIM ON GROUND.
+4. Let ambulance1 approach each patient. Before its medic reaches the patient, no ambulance assessment or vital signs may appear. At arrival the clinic page must show INITIAL ASSESSMENT IN PROGRESS; only after the timer completes may vital signs and the completed assessment appear. Confirm all assessments complete before any treatment continuation.
+5. With 3, 4, and 5 crew, choose `us`, `ambulance`, and `ambudoc` transport. Before physical patient loading, the destination confirmation must open. Confirm a preselected hospital and verify FPL 8 plus the hospital route replace the scene FPL immediately; no second destination modal should be needed after boarding.
+6. With 3, 4, and 5 crew and an ambulance stretcher, wait for `ambustretcher_returning`. Before cargo_left/cargo_right close, `hoist_crew` must walk from the rear-left return point to its 185-degree cabin position.
+7. In a 3-, 4-, or 5-crew mission with a preselected hospital, select the patient transport owner. The hospital confirmation must open before patient loading. After confirmation, FPL 8 and the hospital route must be active before boarding; mark **TEST OF PRESELECTED HOSPITAL CONFIRMATION BEFORE LOADING AND FPL 8 ROUTING (3/4/5 CREW)** in the tracker.
+8. After police returns from the landing-spot crew pickup, confirm both officers are at their POLMAN scene posts and facing the incident. The second officer must not remain beside the police vehicle.
+9. Edit two independent presets across both list pages, close/reopen, and reload. Test single toggles, partial-category confirmation, full-category disable, and ALL MISSIONS without cross-preset rewrites.
+10. With a three-person crew at base, observe the cargo loading portion of `boarding`. After the normal cargo close commands, verify both cargo doors are fully closed before pax33 continues to the passenger door. If either cargo LVAR stays nonzero, confirm the mission retries that door up to three times without blocking indefinitely.
+11. With three crew, land inside the displayed green landing circle and bring NR to its normal idle value. After RESCUE OPERATION IN PROGRESS appears, confirm hoist_crew and pax3 are created and begin deboarding without a second user action.
+12. In Debug Center SUMMARY, confirm the NR gate changes from `WAITING` to `PASSED` for the active ground-operation macro. Confirm `CREW SPAWN` records `LAUNCH` followed by `CREATED` for every object needed by that sequence.
+13. Capture a Debug snapshot during the NR wait and again after crew creation. Reopen Debug Center SUMMARY and verify `SNAPSHOT | CREW SPAWN` and `NR GATE` retain the captured values.
+14. In a developer-only test with an unavailable crew title or fallback, confirm the mission remains blocked, Debug records `FAILED` with the requested title/fallback, and the user sees `ERROR: crew creation failed`. Restore valid object titles before a normal mission test.
+
+## Patient tablet telemetry
+
+1. In AUTO and MANUAL with three patients, complete P1/P2 visits and let an ambulance take P2 while P3 is still being visited. P2 medical details must remain available until P3's visit finishes. This UI condition must not block the ambulance itself.
+2. After every visit finishes, select a ground-transported patient: show a transport summary and patient-navigation buttons, without live vitals or treatment controls. Select the helicopter patient and confirm its complete medical page still works.
+3. Choose GROUND before physical handover, including a failed/cancelled loading attempt. The medical page must remain detailed. Missing data must also leave details enabled.
+4. Capture a snapshot after closure, allow the underlying clinical values to change, and capture again. The closing report and its closing time must remain unchanged. Verify tablet_policy, tablet_reports, tablet_report_archive, tablet_enabled and tablet_visits in the patient_registry field.
+5. Run a second dispatch and confirm previous visit/closure state is cleared. On legacy More casualties, confirm prior reports are archived and the newly promoted patient retains full details; stable-slot repeat-rescue conversion remains pending.
 
 ## Aircraft Settings Profiles
 
-1. Select CUSTOM PRST 1, change one setting, leave the page, reopen it, and reload the mission. Confirm the selected custom set retains the change without a save action.
+1. Select CUSTOM PRST 1. In SETTINGS, open MEDICAL OPTIONS and switch PATIENT CLINICAL TREATMENT MODE between AUTOMATIC and MANUAL. Reopen CUSTOM PRST 1. The Test Tracker becomes COMPLETED only if that same mode is restored. Reload the mission and confirm the selected custom set retains the change without a save action.
 2. From a factory profile, change one setting and verify CUSTOM DEFAULT receives the changed configuration. STORE PRESET ON FILE, switch to a custom slot, then use COPY SAVED PRESET TO ACTUAL SET. Confirm that the active custom slot now matches the stored configuration. The copy control must be hidden while a factory profile is active and disabled until a file copy exists.
-3. Link CUSTOM PRST 1 to each MSN LIST button in turn. Confirm reassignment moves the link, and pressing the currently selected MSN LIST button removes it.
-4. Confirm the linked aircraft profile loads after an interactive MSN LIST change, after a current-list reload, and after each livery-forced preset at startup.
+3. Save each mission slot and confirm its visible timestamp and the STORE PRESET ON FILE timestamp use local PC time with a DD-MM-YYYY date. Delete a slot and confirm its timestamp clears.
+4. Link CUSTOM PRST 1 to each MSN LIST button in turn. Confirm reassignment moves the link, and pressing the currently selected MSN LIST button removes it.
+5. Confirm the linked aircraft profile loads after an interactive MSN LIST change, after a current-list reload, and after each livery-forced preset at startup.
 
 ## Release record
 

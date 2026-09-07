@@ -344,6 +344,28 @@
       }
     },
     {
+      "set": {
+        "local": "debug_snapshot_crew_spawn_log"
+      },
+      "value": {
+        "table": {
+          "static": "Debug_Table"
+        },
+        "key": "crew_spawn_log"
+      }
+    },
+    {
+      "set": {
+        "local": "debug_snapshot_gndops_nr_gate_log"
+      },
+      "value": {
+        "table": {
+          "static": "Debug_Table"
+        },
+        "key": "gndops_nr_gate_log"
+      }
+    },
+    {
       "if": {
         "local": "debug_page_section"
       },
@@ -965,6 +987,10 @@
           ]
         },
         {
+          "link": "MULTI-PATIENT REGISTRY DIAGNOSTICS",
+          "commands": [{"call_macro": "multipatient registry page"}]
+        },
+        {
           "text": "ACTIVE VIEW: {0}",
           "color": "cyan",
           "align": "center",
@@ -1233,6 +1259,24 @@
             },
             {
               "local": "whobringpatient"
+            }
+          ],
+          "show_condition": {
+            "require": {
+              "local": "debug_page_section"
+            },
+            "eq": "SUMMARY"
+          }
+        },
+        {
+          "text": "CREW SPAWN {0} | NR GATE {1}",
+          "color": "yellow",
+          "params": [
+            {
+              "local": "crew_spawn_log"
+            },
+            {
+              "local": "gndops_nr_gate_log"
             }
           ],
           "show_condition": {
@@ -2208,9 +2252,31 @@
                     "table": {
                       "static": "Debug_Table"
                     },
+                    "key": "crew_spawn_log"
+                  },
+                  "value": {
+                    "local": "crew_spawn_log"
+                  }
+                },
+                {
+                  "set": {
+                    "table": {
+                      "static": "Debug_Table"
+                    },
+                    "key": "gndops_nr_gate_log"
+                  },
+                  "value": {
+                    "local": "gndops_nr_gate_log"
+                  }
+                },
+                {
+                  "set": {
+                    "table": {
+                      "static": "Debug_Table"
+                    },
                     "key": "snapshot_schema"
                   },
-                  "value": 7
+                  "value": 8
                 },
                 {
                   "set": {
@@ -2331,6 +2397,12 @@
                       },
                       "local:CREW": {
                         "local": "CREW"
+                      },
+                      "local:crew_spawn_log": {
+                        "local": "crew_spawn_log"
+                      },
+                      "local:gndops_nr_gate_log": {
+                        "local": "gndops_nr_gate_log"
                       },
                       "local:HELOVICTIMS": {
                         "local": "HELOVICTIMS"
@@ -2481,6 +2553,12 @@
                       },
                       "local:debug_snapshot_preset": {
                         "local": "debug_snapshot_preset"
+                      },
+                      "local:debug_snapshot_crew_spawn_log": {
+                        "local": "debug_snapshot_crew_spawn_log"
+                      },
+                      "local:debug_snapshot_gndops_nr_gate_log": {
+                        "local": "debug_snapshot_gndops_nr_gate_log"
                       },
                       "local:debug_snapshot_date_year": {
                         "local": "debug_snapshot_date_year"
@@ -6182,6 +6260,9 @@
                   }
                 },
                 {
+                  "call_macro": "multipatient registry capture"
+                },
+                {
                   "call_macro": "debug page"
                 }
               ]
@@ -6196,6 +6277,10 @@
                     },
                     "key": "valid"
                   },
+                  "value": null
+                },
+                {
+                  "set": {"table": {"static": "Debug_Table"}, "key": "patient_registry"},
                   "value": null
                 },
                 {
@@ -6427,6 +6512,35 @@
             },
             {
               "local": "debug_snapshot_preset"
+            }
+          ],
+          "show_condition": {
+            "and": [
+              {
+                "require": {
+                  "local": "debug_page_section"
+                },
+                "eq": "SUMMARY"
+              },
+              {
+                "require": {
+                  "local": "debug_snapshot_valid"
+                },
+                "eq": "yes"
+              }
+            ],
+            "eq": 1
+          }
+        },
+        {
+          "text": "SNAPSHOT | CREW SPAWN {0} | NR GATE {1}",
+          "color": "gray",
+          "params": [
+            {
+              "local": "debug_snapshot_crew_spawn_log"
+            },
+            {
+              "local": "debug_snapshot_gndops_nr_gate_log"
             }
           ],
           "show_condition": {

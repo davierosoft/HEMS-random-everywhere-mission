@@ -8,7 +8,24 @@ It describes the final behavior that a user receives after upgrading from the pu
 
 Release coverage after 0.997 91: **0.997 92** adds Debug Center and saved snapshots; **0.997 93** adds crew-safety, marker, persistence, and Settings changes; **0.997 94–95** complete the CARLS DF editor refresh and entry behavior.
 
-## What’s New
+## Development changes through 0.997 127 - simulator validation pending
+
+This section accounts for technical builds 96-127 without advancing the public stable coverage above. GitHub code synchronization is not a validated simulator release.
+
+- **DF stations and tuning (96-98, 103, 105).** Store up to 15 named frequency/location stations, enable individual object stations, and synchronize CARLS tuning with the selected bearing. The final form uses NAME, FREQUENCY and LAT/LON with SAVE validation. Saved tuning is restored after startup/profile initialization.
+- **Emergency beacons (99, 115).** PLB support follows eligible outdoor casualties at 121.500 AM; ELT, PLB and doctor-pick ambulance beacons transmit continuously with varying effective range. Dynamic beacon targets and Debug source/range reporting are checked.
+- **Test Tracker (100-101, 107, 110).** Persistent, mission-ordered test instructions show one current status, support RESET, and retain failed-test comments. Multi-option tests list the options still to try; code-path completion remains distinct from a successful simulator test.
+- **Aircraft profiles and saved time (102, 116-117).** Custom profile edits save immediately; STORE PRESET ON FILE keeps an independent backup and restores it through the selected static slot. Mission-list links toggle consistently. Local save date/time and profile-reload checks were corrected.
+- **Medical/ground flow (104, 106-117 where applicable).** Destination confirmation precedes patient loading and updates FPL 8; ambulance observations become available after assessment at the patient. The doctor completes the return approach before cargo closure. AUTO clinician actions can start at the patient while the helicopter is airborne; the second police officer returns to the scene.
+- **Debug snapshots (108, 110, 112, 115).** Snapshots preserve ordered mission, medical, ground, guidance and inventory sections, mission/build identity and local date/time separately from the mission timer. Technical marshal creation opens the map at the aircraft.
+- **Default RTC and CICERS (109, 111, 113-114).** RTC title selection releases its runtime lock. Failed CICERS checks restore the previous manual provider, overlapping pings are serialized, and a persistent opt-out controls automatic CICERS OSM activation.
+- **Boarding and blocked-crew diagnostics (118-122).** Rear cargo door closure is verified with bounded retries using the aircraft-specific LVAR prefix. Crew creation records launch/success/failure and shows a creation error instead of silently proceeding. NR waits log waiting/passed without changing the rotor threshold. Build 122 is internal count maintenance, not another feature.
+- **Registry diagnostics (123-125).** SDK checks and registry snapshots avoid the macro-context renderer failure; five repeatable probes save individual results. The user confirmed that probe passes. The registry, generic physiology and waypoint helpers are scaffolding, not completed five-patient scene/transport support.
+- **Medical tablet handover (126-127).** Only after all visits finish and ground handover is confirmed does a ground patient's medical page become a transport summary. Open manual review/confirmation keeps medical details visible. The helicopter patient retains its full page; Debug snapshots retain the closing report. The active scene limit remains three, and legacy repeat rescue conservatively keeps details visible.
+
+Superseded intermediate fixes are consolidated above. Full interchangeable P4/P5 scenes, clinical simulation and transport remain unfinished; see the remaining-work list in the multi-patient architecture document.
+
+## What’s New in the public baseline
 
 ### HEMS crew, patients, and rescue operations
 

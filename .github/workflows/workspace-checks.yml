@@ -1,0 +1,36 @@
+name: Workspace checks
+
+on:
+  push:
+    branches: ["main", "CICERS/**"]
+  pull_request:
+    branches: ["main", "CICERS/**"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: workspace-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  static:
+    name: Static checks (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "24"
+      - name: Verify committed source and artifact without rebuilding
+        run: node tools/check-workspace.js
+      - name: Verify checks did not modify tracked files
+        run: git diff --exit-code

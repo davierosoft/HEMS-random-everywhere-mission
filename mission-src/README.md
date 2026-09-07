@@ -2,7 +2,7 @@
 
 `everywhere_all.json` must remain a single HPG deployment artifact, but it is too large for safe routine editing. This directory exposes its two actively maintained object sections as focused, valid JSON modules:
 
-- `macros/`: 16 subsystem files containing all 650 command macros.
+- `macros/`: 17 subsystem files containing all 685 command macros.
 - `data/`: 6 files containing all 185 persistent tables, content pools, assets, and message catalogs.
 - `manifest.json`: stable key order, module descriptions, and original formatting metadata used for byte-preserving assembly.
 
