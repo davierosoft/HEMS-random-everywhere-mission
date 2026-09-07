@@ -1,3 +1,7 @@
+## Release 0.997 116
+
+- Fix saved aircraft profile copy with static slot dispatch
+
 ## Release 0.997 115
 
 - Declare the retired PLB personal macro name as part of the ELT dynamic-target rename.
