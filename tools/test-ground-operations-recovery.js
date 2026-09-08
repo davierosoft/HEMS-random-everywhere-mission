@@ -114,6 +114,10 @@ for (const [name, transition] of [['avionic', transitionBefore], ['before take-o
   requireTrue(serialized.includes('"sleep":20') && serialized.includes('CONTINUE NOW') && serialized.includes('"wait_for"'), `${name} transition lacks the 20-second/button gate`);
 }
 requireTrue(takeoff.some((entry) => entry.set_dispatch?.some((row) => row.text === 'SLOPE TAKE-OFF PROCEDURE' && row.show_condition?.or)), 'take-off checklist does not place conditional slope guidance first');
+const takeoffText = JSON.stringify(takeoff);
+requireTrue(takeoffText.includes('PLANE PITCH DEGREES","Radians') && takeoffText.includes('PLANE BANK DEGREES","Radians') && takeoffText.includes('0.20944'), 'slope guidance does not use the 12-degree radians threshold');
+requireTrue(takeoffText.includes('"param":"L:FLI"') || takeoffText.includes('L:FLI'), 'take-off FLI gate is missing');
+requireTrue(takeoffText.includes('SDK_ENG_1_TRQ') && takeoffText.includes('SDK_ENG_2_TRQ') && takeoffText.includes('takeoff_torque_delta'), 'take-off AEO torque comparison is missing');
 requireTrue(takeoff.at(-1)?.call_macro === 'Mission dispatch' && takeoff.at(-2)?.sleep === 10, 'take-off checklist does not return to dispatch after ten seconds');
 
 const boardingCargoClose = checklists['verify boarding cargo doors closed'];

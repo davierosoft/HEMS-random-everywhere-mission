@@ -1,12 +1,12 @@
+## Release 0.997 136
+
+- Use simulator-provided radians slope variables, FLI LVAR, and torque-based AEO validation in take-off checklist.
+
 ## Release 0.997 135
 
 - Align checklist completion markers and add automatic avionic to before take-off and before take-off to take-off transitions with timed/button advance.
 - Add the take-off checklist with automatic checks, conditional slope guidance above the normal rows, and return to dispatch after ten seconds.
 - Add regression coverage for checklist transitions, slope ordering, marker alignment, and dispatch return.
-
-## Release 0.997 131
-
-- Align checklist completion markers; add automatic avionic to before take-off and before take-off to take-off transitions with timed/button advance and slope procedure.
 
 ## Release 0.997 130
 
