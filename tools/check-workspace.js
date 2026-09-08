@@ -16,6 +16,7 @@ require('./test-crew-emergency');
 require('./test-ground-operations-recovery');
 require('./test-multipatient-registry');
 require('./test-aircraft-profile-presets');
+require('./validate-user-changelog');
 require('./test-workspace-tools');
 
 console.log('\nWorkspace verification PASS. Run git diff --check separately; runtime HPG/MSFS tests remain required for behavior changes.');

@@ -36,3 +36,5 @@ Compare the tracked-file diff before and after the suite: legacy CRLF blobs can 
 ## Documentation maintenance
 
 Keep delivered contracts in architecture, unfinished integration in its remaining-work list, and simulator observations in testing. Remove completed tasks from the queue, not the evidence needed to understand them. Audit each intervening technical release before extending user-changelog coverage; explicitly distinguish development coverage from the public stable baseline.
+
+For an explicitly requested user changelog, the required display order is **FIXES**, **UI**, then **NEW FUNCTIONS**. Each final behavior belongs to one category only, has a build-history reference and a concise runtime test, and must not be repeated in another section. Before publishing, account for every build in the requested coverage interval in the changelog coverage ledger and run `node tools/validate-user-changelog.js`; related later work never authorizes omitting an earlier completed user function.
