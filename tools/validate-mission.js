@@ -453,7 +453,22 @@ function checkRelease91Regressions() {
       const condition = compact(button.show_condition || {});
       expectRegression(condition.includes('medical_display_manual_active'), 'manual treatment button must require the displayed active patient');
     });
+    const patientSelectors = collect(medicalPage, (item) => Array.isArray(item.buttonbar) && item.buttonbar.map((button) => button.title).join(',') === 'Patient 1,Patient 2,Patient 3');
+    expectRegression(patientSelectors.length >= 2, 'Medical page must expose Patient 1/2/3 selectors in both live and closed views');
+    patientSelectors.forEach((selector) => {
+      expectRegression(!selector.show_condition, 'patient selector must remain available outside manual-treatment mode');
+      selector.buttonbar.forEach((button, index) => {
+        expectRegression(compact(button.commands || []).includes('select medical patient page'), `patient selector Patient ${index + 1} must select the requested clinical record`);
+      });
+    });
   }
+
+  const selectedPatient = mission.macros['select medical patient page'];
+  const selectedPatientText = compact(selectedPatient || []);
+  expectRegression(selectedPatientText.includes('"medical_display_patient"') && selectedPatientText.includes('"param":"patient"') && selectedPatientText.includes('sync medical patient display'), 'patient selector must retain the requested patient and refresh that clinical record');
+  expectRegression(!selectedPatientText.includes('crewvisiting'), 'manual patient selection must not be overwritten by an active HEMS visit');
+  const visitGate = compact(mission.macros['patient clinical visit gate'] || []);
+  expectRegression(visitGate.includes('"medical_display_patient"') && visitGate.includes('"param":"patient"') && visitGate.includes('sync medical patient display'), 'an HEMS clinical visit must automatically focus its patient record');
 
   const debugPage = mission.macros['debug page'];
   expectRegression(Array.isArray(debugPage), 'debug page macro must exist');
@@ -492,7 +507,37 @@ function checkRelease91Regressions() {
     expectRegression(text.includes(`P${patient}_AMBULANCE_STAGE`) && text.includes('ground_transport_ready'), `secondary ambulance patient ${patient} requires ground-transport clearance`);
     expectRegression(text.includes(`P${patient}_GROUND_TRANSPORTED`) && text.includes('"value":"yes"'), `secondary ambulance patient ${patient} records transport`);
     expectRegression(text.includes(`"destroy_object":"injured_human${patient}"`), `secondary ambulance patient ${patient} removes the transported scene casualty`);
+    expectRegression(text.includes(`from_any_injured${patient}_to_ready_for_transport`), `secondary ambulance patient ${patient} must normalize the casualty before stretcher loading`);
+    expectRegression(!text.includes(`"drive_object":{"name":"injured_human${patient}"`), `secondary ambulance patient ${patient} must not drag the casualty to the ambulance`);
+    expectRegression(text.includes('"object":"ambustretcher2","var":"VAR 2"},"value":3'), `secondary ambulance patient ${patient} must show the casualty on the ambulance stretcher`);
   });
+
+  const previsitLoad = compact(mission.macros['ambulance previsit load'] || []);
+  expectRegression(previsitLoad.includes('from_any_injured_to_ready_for_transport'), 'previsit loading must normalize a non-standard casualty');
+  expectRegression(!previsitLoad.includes('"move_object":"injured_human"'), 'previsit loading must not move a casualty directly into the ambulance');
+  expectRegression(previsitLoad.includes('"object":"ambustretcher7","var":"VAR 2"},"value":3'), 'previsit loading must show the casualty on the ambulance stretcher');
+
+  ['from_any_injured_to_ready_for_transport', 'from_any_injured2_to_ready_for_transport', 'from_any_injured3_to_ready_for_transport'].forEach((name) => {
+    const helper = compact(mission.macros[name] || []);
+    expectRegression(helper.includes('"var":"VAR 1"},"value":1'), `${name} must set packed VAR 1 before stretcher transfer`);
+  });
+
+  const residential = mission.macros.residential;
+  const residentialThreePatients = residential?.find((command) => command.if?.local === 'HELOVICTIMS' && command.eq === 3);
+  expectRegression(Array.isArray(residentialThreePatients?.then), 'residential three-patient rescue-point branch must exist');
+  if (Array.isArray(residentialThreePatients?.then)) {
+    ['RUP', 'RDWN', 'LDWN', 'LUP', 'INJU12', 'INJU13', 'INJU23'].forEach((name) => {
+      const waypoint = residentialThreePatients.then.find((command) => command.create_location === name);
+      expectRegression(waypoint?.zones?.[0]?.zone?.location?.object === 'rescue_location', `residential fire scene ${name} waypoint must use the external rescue point`);
+    });
+    expectRegression(residentialThreePatients.then.some((command) => command.call_macro === 'fence road'), 'residential fire scene must fence the external rescue point');
+  }
+  const residentialFire = residential?.find((command) => command.if?.local === 'HELOVICTIMS' && command.eq === 3 && compact(command).includes('random_fire'));
+  const residentialFireText = compact(residentialFire || []);
+  expectRegression(residentialFireText.includes('"local":"random_fire"},"value":"forced"') && residentialFireText.includes('"local":"VFX"},"value":8'), 'the residential fire branch must force the random-VFX fire state');
+  expectRegression(!residentialFireText.includes('VFXB') && residentialFireText.includes('"has_object":"VFXA"') && residentialFireText.includes('"move_object":"VFXA","to":"FIRE"'), 'the residential fire must relocate the extinguishable random-VFX object instead of creating an isolated fire');
+  const firstFiretruck = compact(mission.macros.Firetruck1 || []);
+  expectRegression(firstFiretruck.includes('"local":"VFX"},"gte":5') && firstFiretruck.includes('"local":"VFX"},"lte":15') && firstFiretruck.includes('"call_macro":"Firetruck2"'), 'fire intensity 8 must retain the two-firetruck response');
 
   ['3 crew ground ops', '4 or 5 crew ground ops', 'HOISTING', '3 crew SKID LDG', '4 crew SKID LDG', '5 crew SKID LDG'].forEach((name) => {
     const macro = mission.macros[name];
@@ -507,7 +552,10 @@ function checkRelease91Regressions() {
   const sceneAssessmentMacros = ['ambustretcher full', 'ambustretcher close', 'ambustretcher far'].map((name) => compact(mission.macros[name] || []));
   const countMatches = (value, needle) => value.split(needle).length - 1;
   expectRegression(!ambulanceHandover.includes('"distance:m"') && !ambulanceHandover.includes('ambumedic7'), 'ambulance handover must wait for direct assessment completion, not a medic distance');
-  expectRegression(countMatches(sceneAssessmentMacros.join(''), '"call_macro":"ambulance assess patient"') === 14, 'every final ambulance-medic arrival must start its synchronous assessment');
+  const assessmentCalls = sceneAssessmentMacros.map((macro) => countMatches(macro, '"call_macro":"ambulance assess patient"'));
+  expectRegression(assessmentCalls[0] === 8, 'full ambulance response must assess every available patient before HEMS handover');
+  expectRegression(assessmentCalls[1] === 5 && assessmentCalls[2] === 4, 'partial ambulance responses must retain every final medic-arrival assessment');
+  expectRegression(assessmentCalls.reduce((total, count) => total + count, 0) === 17, 'every final ambulance-medic arrival must start its synchronous assessment');
   const postStretcherWalk = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":2}';
   const postStretcherStanding = postStretcherWalk.replace('"VAR1":3', '"VAR1":1');
   expectRegression(countMatches(compact(mission.macros['3 crew ground ops'] || []), postStretcherWalk) === 1, '3 crew post-stretcher return must walk before cargo doors close');
@@ -1080,6 +1128,27 @@ for (const key of ['tablet_policy', 'tablet_reports', 'tablet_report_archive', '
 }
 expectRegression(mission.macros['patient health']?.[0]?.call_macro === 'multipatient registry tablet refresh',
   'Patient medical page must check completed-visit/ground-handover policy before rendering vitals');
+
+const marshalWaypointRows = [...(mission.data['hospitals wps'] || []), ...(mission.data['hangar wps'] || [])];
+expectRegression(marshalWaypointRows.length > 0 && marshalWaypointRows.every((row) => (row.marshal_present === 'no' && row.WPMarshalLAT === null && row.WPMarshalLON === null) || (row.marshal_present === 'yes' && Number.isFinite(row.WPMarshalLAT) && Number.isFinite(row.WPMarshalLON))),
+  'Every hospital and hangar waypoint must declare a complete disabled or coordinate-backed local marshal override');
+const hospitalWaypointResolver = compact(mission.macros['user hospital WP'] || []);
+const hangarWaypointResolver = compact(mission.macros['user hangar WP'] || []);
+expectRegression(hospitalWaypointResolver.includes('hospital_marshal_present') && hospitalWaypointResolver.includes('hospital_marshal_location') && hospitalWaypointResolver.includes('hospital_wp_ready'),
+  'Hospital waypoint resolution must expose its local marshal override, coordinates, and completion state');
+expectRegression(hangarWaypointResolver.includes('hangar_marshal_present') && hangarWaypointResolver.includes('hangar_marshal_location') && hangarWaypointResolver.includes('hangar_wp_match'),
+  'Hangar waypoint resolution must expose its local marshal override and coordinates');
+const baseMarshal = compact(mission.macros['create base marshall'] || []);
+const hospitalMarshal = compact(mission.macros['create hospital marshall'] || []);
+expectRegression(baseMarshal.includes('hangar_marshal_location') && baseMarshal.includes('hangar_marshal_present') && baseMarshal.includes('"to":"$USER"'),
+  'A custom base marshal must spawn at its waypoint coordinates and face the helicopter');
+expectRegression(hospitalMarshal.includes('hospital_marshal_location') && hospitalMarshal.includes('hospital_marshal_present') && hospitalMarshal.includes('"to":"$USER"') && hospitalMarshal.includes('hospital_marshall_wind_bearing') && hospitalMarshal.includes('"gt":150'),
+  'A destination marshal must keep generic wind alignment only outside the 150m no-movement radius while custom coordinates stay fixed');
+for (const macroName of ['User destination1', 'Ambulance destination1', 'midway patient load1', 'transfer patient load1']) {
+  const branch = compact(mission.macros[macroName] || []);
+  expectRegression(branch.includes('PILOT_FO_OFF') && branch.includes('$TITLE Crew') && branch.includes('Airbus H145 ADAC Crew') && branch.includes('"VAR1":16') && branch.includes('"var":"VAR 1"},"value":14') && !branch.includes('$TITLE Pilot') && !branch.includes('Airbus H145 ADAC Pilot'),
+    'Three-crew destination deboarding must use documented Crew VAR 1 pilot states in ' + macroName);
+}
 
 if (errors.length) {
   console.error(JSON.stringify({ result: 'FAIL', errors }, null, 2));

@@ -117,12 +117,35 @@ function beginRelease(repositoryRoot, release, note, scope) {
   writeTextAtomic(path.join(repositoryRoot, 'everywhere_all.json'), updatedArtifact);
   const intent = {
     schema: 1,
+    kind: 'release',
     release,
     status: 'prepared',
     createdAt: new Date().toISOString(),
     scope,
     note,
     preparedArtifactSha256: sha256(updatedArtifact),
+  };
+  writeIntent(repositoryRoot, intent);
+  return intent;
+}
+
+function beginDraft(repositoryRoot, note, scope) {
+  const currentIntentPath = intentPath(repositoryRoot);
+  if (fs.existsSync(currentIntentPath) && readIntent(repositoryRoot).status === 'prepared') {
+    throw new Error('a build intent is still prepared; build it or intentionally retire it before starting a draft');
+  }
+  const artifact = fs.readFileSync(path.join(repositoryRoot, 'everywhere_all.json'), 'utf8');
+  const identity = assertReleaseIdentity(repositoryRoot, artifact);
+  const intent = {
+    schema: 1,
+    kind: 'draft',
+    draftId: `draft-${Date.now()}`,
+    release: identity.release,
+    status: 'prepared',
+    createdAt: new Date().toISOString(),
+    scope: { ...scope, macros: [...new Set(['objective1', ...scope.macros])] },
+    note,
+    preparedArtifactSha256: sha256(artifact),
   };
   writeIntent(repositoryRoot, intent);
   return intent;
@@ -151,7 +174,9 @@ function amendPreparedRelease(repositoryRoot, note, scope) {
 }
 
 function createLocalTestArtifact(repositoryRoot, intent, artifact) {
-  const outputDirectory = path.join(repositoryRoot, 'outputs', `${intent.release.replace(' ', '-')}-local-test`);
+  const outputDirectory = intent.kind === 'draft'
+    ? path.join(repositoryRoot, 'outputs', 'drafts', intent.draftId)
+    : path.join(repositoryRoot, 'outputs', `${intent.release.replace(' ', '-')}-local-test`);
   const artifactPath = path.join(outputDirectory, 'everywhere_all.json');
   const receiptPath = path.join(outputDirectory, 'test-receipt.json');
   if (fs.existsSync(outputDirectory)) {
@@ -164,7 +189,7 @@ function createLocalTestArtifact(repositoryRoot, intent, artifact) {
   }
   writeTextAtomic(receiptPath, `${JSON.stringify({
     schema: 1,
-    kind: 'LOCAL_TEST',
+    kind: intent.kind === 'draft' ? 'DRAFT_TEST' : 'LOCAL_TEST',
     release: intent.release,
     artifact: 'everywhere_all.json',
     artifactSha256: sha256(artifact),
@@ -227,14 +252,17 @@ function packageRelease(repositoryRoot, runtimeSignoff) {
 }
 
 function printHelp() {
-  console.log('Usage:\n  node tools/release-workflow.js begin --release "0.997 112" --note "ASCII release note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js amend --note "ASCII amendment note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/mission-workspace.js build\n  node tools/release-workflow.js static (creates the mandatory local-test everywhere_all.json)\n  node tools/release-workflow.js package --runtime-signoff "User-confirmed simulator scenarios"\n  node tools/release-workflow.js status');
+  console.log('Usage:\n  node tools/release-workflow.js draft --note "ASCII draft note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js begin --release "0.997 112" --note "ASCII delivery note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js amend --note "ASCII amendment note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/mission-workspace.js build\n  node tools/release-workflow.js static (drafts remain under outputs/drafts; releases create the local-test artifact)\n  node tools/release-workflow.js package --runtime-signoff "User-confirmed simulator scenarios"\n  node tools/release-workflow.js status');
 }
 
 function main(argv = process.argv.slice(2)) {
   const command = argv[0];
   if (!command || command === '--help' || command === '-h') return printHelp();
   assertCicersBranch(ROOT);
-  if (command === 'begin') {
+  if (command === 'draft') {
+    const intent = beginDraft(ROOT, ascii(oneValue(argv, '--note'), 'draft note'), releaseScope(argv));
+    console.log(JSON.stringify({ result: 'DRAFT PREPARED', release: intent.release, draftId: intent.draftId, scope: intent.scope }, null, 2));
+  } else if (command === 'begin') {
     const intent = beginRelease(ROOT, oneValue(argv, '--release'), ascii(oneValue(argv, '--note'), 'release note'), releaseScope(argv));
     console.log(JSON.stringify({ result: 'PREPARED', release: intent.release, scope: intent.scope }, null, 2));
   } else if (command === 'amend') {
@@ -254,7 +282,7 @@ function main(argv = process.argv.slice(2)) {
   }
 }
 
-module.exports = { amendPreparedRelease, beginRelease, createLocalTestArtifact, packageRelease, releaseScope, replaceArtifactTitle, runNodeGate, updateRuntimeReleaseBuild, verifyStatic };
+module.exports = { amendPreparedRelease, beginDraft, beginRelease, createLocalTestArtifact, packageRelease, releaseScope, replaceArtifactTitle, runNodeGate, updateRuntimeReleaseBuild, verifyStatic };
 
 if (require.main === module) {
   try {
