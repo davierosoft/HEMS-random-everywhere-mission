@@ -107,12 +107,13 @@ const beforeTakeoff = checklistDefinitions.beforetockl;
 const takeoff = checklistDefinitions.takeoffckl;
 const transitionBefore = checklistDefinitions['checklist transition before takeoff'];
 const transitionTakeoff = checklistDefinitions['checklist transition takeoff'];
-requireTrue(avionic.at(-1)?.call_macro === 'checklist transition before takeoff', 'avionic/preflight checklist does not advance to before take-off');
-requireTrue(beforeTakeoff.some((entry) => entry.call_macro === 'checklist transition takeoff'), 'before take-off checklist does not advance to take-off');
-for (const [name, transition] of [['avionic', transitionBefore], ['before take-off', transitionTakeoff]]) {
-  const serialized = JSON.stringify(transition);
-  requireTrue(serialized.includes('"sleep":20') && serialized.includes('CONTINUE NOW') && serialized.includes('"wait_for"'), `${name} transition lacks the 20-second/button gate`);
+requireTrue(avionic.find((entry) => entry.set_dispatch)?.set_dispatch.some((row) => row.link === 'PROCEED WITH TAKE OFF CHECKLIST' && row.commands?.some((command) => command.if?.local === 'checklist_avionic_advanced')), 'avionic/preflight page lacks a working proceed button');
+requireTrue(beforeTakeoff.find((entry) => entry.set_dispatch)?.set_dispatch.some((row) => row.link === 'PROCEED WITH TAKE OFF CHECKLIST' && row.commands?.some((command) => command.if?.local === 'checklist_beforetakeoff_advanced')), 'before take-off page lacks a working proceed button');
+for (const [name, checklist, next] of [['avionic', avionic, 'beforetockl'], ['before take-off', beforeTakeoff, 'takeoffckl']]) {
+  const serialized = JSON.stringify(checklist);
+  requireTrue(serialized.includes('"sleep":20') && serialized.includes(`"call_macro":"${next}"`), `${name} checklist lacks the 20-second automatic continuation`);
 }
+requireTrue(transitionBefore && transitionTakeoff, 'legacy transition helpers are missing');
 requireTrue(takeoff.some((entry) => entry.set_dispatch?.some((row) => row.text === 'SLOPE TAKE-OFF PROCEDURE' && row.show_condition?.or)), 'take-off checklist does not place conditional slope guidance first');
 const takeoffText = JSON.stringify(takeoff);
 requireTrue(takeoffText.includes('PLANE PITCH DEGREES","Radians') && takeoffText.includes('PLANE BANK DEGREES","Radians') && takeoffText.includes('0.20944'), 'slope guidance does not use the 12-degree radians threshold');

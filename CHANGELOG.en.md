@@ -1,3 +1,7 @@
+## Release 0.997 137
+
+- Place working proceed buttons on the current checklist pages and expose take-off checklist from checklist home.
+
 ## Release 0.997 136
 
 - Use simulator-provided radians slope variables, FLI LVAR, and torque-based AEO validation in take-off checklist.
