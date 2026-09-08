@@ -54,7 +54,9 @@ requireTrue(contains(profileSave, (entry) => entry && entry.set && entry.set.loc
 requireTrue(contains(profileSave, (entry) => entry && entry.set && entry.set.table && entry.set.key === 'saved_at' && entry.value && entry.value.local === 'SAVE_LOCAL_TIMESTAMP'), 'profile save does not store the local timestamp');
 for (const [macro, slot] of [['savetemp', 0], ['save1', 1], ['save2', 2], ['save3', 3]]) {
   const commands = presets[macro];
-  requireTrue(JSON.stringify(commands).includes('toLocaleDateString') && JSON.stringify(commands).includes('toLocaleTimeString'), `${macro} does not format a local date and time`);
+  const serialized = JSON.stringify(commands);
+  requireTrue(serialized.includes('toLocaleDateString') && serialized.includes('toLocaleTimeString'), `${macro} does not format a local date and time`);
+  requireTrue(!serialized.match(/toLocaleTimeString[^}]*params[^\]]*,\s*\{/), `${macro} passes unsupported locale options to toLocaleTimeString`);
   requireTrue(contains(commands, (entry) => entry && entry.set && entry.set.global === `SAVE_TIMESTAMP${slot}` && entry.value && entry.value.local === 'SAVE_LOCAL_TIMESTAMP'), `${macro} does not store its local timestamp`);
 }
 for (const slot of [1, 2, 3]) requireTrue(contains(presets[`delete${slot}`], (entry) => entry && entry.set && entry.set.global === `SAVE_TIMESTAMP${slot}` && entry.value === null), `delete${slot} does not clear its timestamp`);

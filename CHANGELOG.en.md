@@ -1,3 +1,11 @@
+## Release 0.997 130
+
+- Guard OSM railway scene bearings when node arrays are empty; fix local save time query compatibility.
+
+## Release 0.997 128
+
+- Fix local save time formatting for HPG by using the supported locale-only toLocaleTimeString query; add regression coverage against unsupported option objects.
+
 ## Release 0.997 127
 
 - Keep medical detail feeds open while any manual visit still owns the active-patient mutex, including final review and transport confirmation. Completes the local tablet-telemetry guard from build 126; full five-patient transport remains pending.
