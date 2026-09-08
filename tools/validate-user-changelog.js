@@ -32,6 +32,9 @@ for (let build = 1; build <= 142; build += 1) {
   if (!coveredBuilds.has(build)) fail(`build 0.997 ${build} is absent from the coverage ledger`);
 }
 
+const technicalTerms = /\b(?:ambustretcher|drive_object|wait_for|lvar|var ?1|macro|renderer|query|sdk|json|hpg|object identifier|source file|internal state)\b/i;
+if (technicalTerms.test(text)) fail('must use final-user language, not code or internal mission terminology');
+
 const entries = [...text.matchAll(/^### (.+)$/gm)];
 if (entries.length < 40) fail('must list detailed final-user behaviors, not a short thematic summary');
 const names = new Set();
