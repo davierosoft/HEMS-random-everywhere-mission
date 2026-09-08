@@ -1,3 +1,23 @@
+## GitHub development checkpoint after 0.997 142 - runtime validation pending
+
+- Consolidate P1-P3 ambulance assessment so one medic reaches every available casualty, and ensure a secondary ambulance medic is physically created and moved before P2/P3 assessment.
+- Restore packed ambulance-stretcher transfer for P2/P3 and retain the final clinical record after ground transport.
+- Let HEMS focus the patient it starts visiting while `Patient 1/2/3` selectors remain manual choices instead of being overwritten by the first active visit.
+- Convert the residential three-casualty fire to the standard `random VFX` fire at the authored FIRE point. Intensity 8 retains the existing two-firetruck response and VAR 1 extinguishing sequence.
+- Add structural and runtime-validation coverage for the consolidated medical, fire, and record-selection behavior. This checkpoint does not create a new downloadable mission build.
+
+## Release 0.997 142
+
+- Use the documented Crew VAR 1 pilot states while preserving generic marshal wind alignment until 150m.
+
+## Release 0.997 139
+
+- Harden ambulance report rendering against missing provider names.
+
+## Release 0.997 138
+
+- Fix patient selector, ambulance stretcher loading, and residential fire rescue-point routes.
+
 ## Release 0.997 137
 
 - Place working proceed buttons on the current checklist pages and expose take-off checklist from checklist home.

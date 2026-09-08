@@ -11,9 +11,13 @@ See [validation status](../testing/VALIDATION_STATUS.md) for the current candida
 
 1. Check branch, hooks, ownership and dirty files. Read the workspace map and affected subsystem only.
 2. Use the remaining-work list in the relevant architecture document. Reuse implemented helpers; do not repeat SDK smoke tests as a substitute for integration.
-3. Snapshot semantic scope before mission edits. Edit the owning source, run focused tests, then prepare one higher revision and build once when coherent.
+3. Snapshot semantic scope before mission edits. Edit the owning source and run focused tests. Use a one-use draft intent for any intermediate build; it retains the last supplied version and writes only an internal draft artifact. Prepare one higher release only immediately before the user-requested downloadable delivery.
 4. Reindex only when entry names change. Run byte-exact check, strict scope and the complete static gate. Use Node directly if npm is absent.
 5. Supply the generated local test file. Record its exact title/hash and pending simulator scenarios. Documentation-only or CI updates do not rebuild or renumber an unchanged mission.
+
+## HPG object-state rule
+
+Before editing any AI object choreography, read [HPG dynamic-object state contract](HPG_DYNAMIC_OBJECT_STATES.md). Use only the documented title and `VAR 1`/`VAR 2` state for the requested visual role; do not invent alternative object titles. Add a structural regression check for every new state-dependent path.
 
 ## Requested GitHub synchronization
 

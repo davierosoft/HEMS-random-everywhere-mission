@@ -74,19 +74,21 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 ## Multi-patient, ambulance, and mission presets
 
 1. Run near/far ambulance transfer with 3-, 4-, and 5-person crews for `ambulance`, `ambudoc`, and `us`; ambulance-owned movement must not wait on unrelated HEMS state.
-2. In MANUAL mode with 1–3 casualties, verify the active-patient mutex and action ownership. In AUTO, the page follows the patient under assessment.
+2. In MANUAL mode with 1-3 casualties, verify the active-patient mutex and action ownership. In AUTO, the page automatically follows the patient when HEMS starts that visit.
 3. With the helicopter still airborne or hovering, put the HEMS clinician beside patient 1. In AUTO, MEDICAL ACTIONS must show the first automatic action immediately and advance through the configured actions; in MANUAL, the first procedure choices must appear immediately. Neither path requires SIM ON GROUND.
-4. Let ambulance1 approach each patient. Before its medic reaches the patient, no ambulance assessment or vital signs may appear. At arrival the clinic page must show INITIAL ASSESSMENT IN PROGRESS; only after the timer completes may vital signs and the completed assessment appear. Confirm all assessments complete before any treatment continuation.
+4. Let ambulance1 approach each patient. Before its medic reaches the patient, no ambulance assessment or vital signs may appear. At arrival the clinic page must show INITIAL ASSESSMENT IN PROGRESS; only after the timer completes may vital signs and the completed assessment appear. With one medic and three casualties, confirm P1, P2, and P3 are assessed in sequence. With two ambulance crews, confirm the second medic is physically created and reaches P2/P3 before its assessment. Confirm all assessments complete before any treatment continuation.
 5. With 3, 4, and 5 crew, choose `us`, `ambulance`, and `ambudoc` transport. Before physical patient loading, the destination confirmation must open. Confirm a preselected hospital and verify FPL 8 plus the hospital route replace the scene FPL immediately; no second destination modal should be needed after boarding.
 6. With 3, 4, and 5 crew and an ambulance stretcher, wait for `ambustretcher_returning`. Before cargo_left/cargo_right close, `hoist_crew` must walk from the rear-left return point to its 185-degree cabin position.
 7. In a 3-, 4-, or 5-crew mission with a preselected hospital, select the patient transport owner. The hospital confirmation must open before patient loading. After confirmation, FPL 8 and the hospital route must be active before boarding; mark **TEST OF PRESELECTED HOSPITAL CONFIRMATION BEFORE LOADING AND FPL 8 ROUTING (3/4/5 CREW)** in the tracker.
 8. After police returns from the landing-spot crew pickup, confirm both officers are at their POLMAN scene posts and facing the incident. The second officer must not remain beside the police vehicle.
 9. Edit two independent presets across both list pages, close/reopen, and reload. Test single toggles, partial-category confirmation, full-category disable, and ALL MISSIONS without cross-preset rewrites.
 10. With a three-person crew at base, observe the cargo loading portion of `boarding`. After the normal cargo close commands, verify both cargo doors are fully closed before pax33 continues to the passenger door. If either cargo LVAR stays nonzero, confirm the mission retries that door up to three times without blocking indefinitely.
-11. With three crew, land inside the displayed green landing circle and bring NR to its normal idle value. After RESCUE OPERATION IN PROGRESS appears, confirm hoist_crew and pax3 are created and begin deboarding without a second user action.
-12. In Debug Center SUMMARY, confirm the NR gate changes from `WAITING` to `PASSED` for the active ground-operation macro. Confirm `CREW SPAWN` records `LAUNCH` followed by `CREATED` for every object needed by that sequence.
-13. Capture a Debug snapshot during the NR wait and again after crew creation. Reopen Debug Center SUMMARY and verify `SNAPSHOT | CREW SPAWN` and `NR GATE` retain the captured values.
-14. In a developer-only test with an unavailable crew title or fallback, confirm the mission remains blocked, Debug records `FAILED` with the requested title/fallback, and the user sees `ERROR: crew creation failed`. Restore valid object titles before a normal mission test.
+11. During ground transport for P1, P2, and P3, confirm `ambustretcher` reaches the casualty, the casualty changes to packed state, disappears, and then appears on the stretcher before it returns to the ambulance. The casualty must never be driven or moved directly to the ambulance.
+12. In the three-casualty residential fire variant, verify every casualty and HEMS medical waypoint is at `rescue_location`, the fire remains at the incident, and a fence encloses the external rescue point. Confirm both fire trucks respond and the fire object's `VAR 1` decreases until the scene is cleared.
+13. With three crew, land inside the displayed green landing circle and bring NR to its normal idle value. After RESCUE OPERATION IN PROGRESS appears, confirm hoist_crew and pax3 are created and begin deboarding without a second user action.
+14. In Debug Center SUMMARY, confirm the NR gate changes from `WAITING` to `PASSED` for the active ground-operation macro. Confirm `CREW SPAWN` records `LAUNCH` followed by `CREATED` for every object needed by that sequence.
+15. Capture a Debug snapshot during the NR wait and again after crew creation. Reopen Debug Center SUMMARY and verify `SNAPSHOT | CREW SPAWN` and `NR GATE` retain the captured values.
+16. In a developer-only test with an unavailable crew title or fallback, confirm the mission remains blocked, Debug records `FAILED` with the requested title/fallback, and the user sees `ERROR: crew creation failed`. Restore valid object titles before a normal mission test.
 
 ## Patient tablet telemetry
 
@@ -95,6 +97,7 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 3. Choose GROUND before physical handover, including a failed/cancelled loading attempt. The medical page must remain detailed. Missing data must also leave details enabled.
 4. Capture a snapshot after closure, allow the underlying clinical values to change, and capture again. The closing report and its closing time must remain unchanged. Verify tablet_policy, tablet_reports, tablet_report_archive, tablet_enabled and tablet_visits in the patient_registry field.
 5. Run a second dispatch and confirm previous visit/closure state is cleared. On legacy More casualties, confirm prior reports are archived and the newly promoted patient retains full details; stable-slot repeat-rescue conversion remains pending.
+6. With three casualties and no active HEMS visit, use `Patient 1`, `Patient 2`, and `Patient 3` to switch records. When HEMS starts a new visit, the page must focus that patient automatically. Afterwards, selecting another patient must keep that record open until the next HEMS visit. An incomplete ambulance provider must display AMBULANCE rather than undefined.
 
 ## Aircraft Settings Profiles
 
@@ -103,6 +106,13 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 3. Save each mission slot and confirm its visible timestamp and the STORE PRESET ON FILE timestamp use local PC time with a DD-MM-YYYY date. Delete a slot and confirm its timestamp clears.
 4. Link CUSTOM PRST 1 to each MSN LIST button in turn. Confirm reassignment moves the link, and pressing the currently selected MSN LIST button removes it.
 5. Confirm the linked aircraft profile loads after an interactive MSN LIST change, after a current-list reload, and after each livery-forced preset at startup.
+
+## Marshal waypoint overrides and three-crew destination deboarding
+
+1. With a generic destination hospital and the global destination marshal setting enabled, approach from more than 150 m and then land inside the guidance area. The marshal must keep its wind alignment while farther than 150 m, then must not be repositioned by wind inside 150 m.
+2. Set a hospital waypoint `marshal_present` to `yes` and provide `WPMarshalLAT` and `WPMarshalLON`. With the global setting disabled, verify that one marshal spawns at those coordinates, faces the helicopter, and the global setting remains disabled after the mission.
+3. Repeat for a custom hangar waypoint. With local `no`, no base marshal may spawn even if the global base setting is enabled. With local `yes`, it must spawn at the configured coordinates and face the helicopter.
+4. At every hospital destination branch with three crew, follow the complete patient deboarding sequence. The object leaving `cockpit_left` must retain the pilot appearance until it returns to that door. Repeat with four and five crew and confirm the cabin crew appearance remains unchanged.
 
 ## Release record
 

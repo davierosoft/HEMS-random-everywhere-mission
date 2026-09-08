@@ -10,7 +10,7 @@ const { assertCicersBranch, currentBranch } = require('./assert-cicers-branch');
 const { pushedBranchTargets, unsafePushTargets } = require('./assert-safe-push');
 const { analyzeScope, createBaselineRecord, scopeViolations, validateBaselineRecord } = require('./check-mission-scope');
 const { assertBuildIntent, compareRelease, markBuildConsumed, readIntent } = require('./release-contract');
-const { amendPreparedRelease, beginRelease, createLocalTestArtifact } = require('./release-workflow');
+const { amendPreparedRelease, beginDraft, beginRelease, createLocalTestArtifact } = require('./release-workflow');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -100,6 +100,13 @@ try {
   const localTestArtifact = createLocalTestArtifact(releaseRoot, { ...releaseIntent, status: 'static_pass', staticVerifiedAt: '2026-01-01T00:00:00.000Z' }, builtArtifact);
   assert(path.basename(localTestArtifact) === 'everywhere_all.json' && fs.readFileSync(localTestArtifact, 'utf8') === builtArtifact, 'static verification did not create the local test artifact');
   assert(fs.readFileSync(path.join(path.dirname(localTestArtifact), 'test-receipt.json'), 'utf8').includes('LOCAL_TEST'), 'local test artifact is missing its non-runtime receipt');
+  const draftIntent = beginDraft(releaseRoot, 'Internal correction.', { roots: [], macros: ['example macro'], data: [] });
+  assert(draftIntent.kind === 'draft' && draftIntent.release === '0.997 112', 'draft build changed the supplied release identity');
+  assert(fs.readFileSync(path.join(releaseRoot, 'CHANGELOG.en.md'), 'utf8').startsWith('## Release 0.997 112'), 'draft build changed the release changelog');
+  assert(assertBuildIntent(releaseRoot, builtArtifact, { purpose: 'build' }).kind === 'draft', 'draft intent did not authorize its build');
+  markBuildConsumed(releaseRoot, builtArtifact);
+  const draftArtifact = createLocalTestArtifact(releaseRoot, { ...draftIntent, status: 'static_pass', staticVerifiedAt: '2026-01-01T00:00:00.000Z' }, builtArtifact);
+  assert(draftArtifact.includes(`${path.sep}outputs${path.sep}drafts${path.sep}`) && fs.readFileSync(path.join(path.dirname(draftArtifact), 'test-receipt.json'), 'utf8').includes('DRAFT_TEST'), 'draft verification created a numbered local-test artifact');
   const nextIntent = beginRelease(releaseRoot, '0.997 113', 'Next local build.', { roots: ['title'], macros: ['example macro'], data: [] });
   assert(nextIntent.status === 'prepared' && nextIntent.release === '0.997 113', 'higher local build did not supersede the consumed build');
   assert(fs.readFileSync(path.join(releaseRoot, 'mission-src', 'macros', '11-mission-lifecycle.json'), 'utf8').includes('"value": 113'), 'higher local build did not update the runtime build LVAR source');
@@ -118,5 +125,5 @@ try {
 
 console.log(JSON.stringify({
   result: 'PASS',
-  scenarios: ['main-branch-block', 'CICERS-branch-allow', 'detached-head-block', 'scope-detection', 'scope-allowlist', 'baseline-branch-binding', 'baseline-integrity', 'safe-push-target', 'main-push-block', 'non-CICERS-push-block', 'malformed-push-input', 'release-begin', 'runtime-build-lvar-update', 'stale-runtime-build-rejection', 'mandatory-local-test-artifact', 'release-intent-build-authorisation', 'prepared-release-scope-amendment', 'local-build-intent-consumption', 'next-local-build-progression', 'release-identity-rejection'],
+  scenarios: ['main-branch-block', 'CICERS-branch-allow', 'detached-head-block', 'scope-detection', 'scope-allowlist', 'baseline-branch-binding', 'baseline-integrity', 'safe-push-target', 'main-push-block', 'non-CICERS-push-block', 'malformed-push-input', 'release-begin', 'runtime-build-lvar-update', 'stale-runtime-build-rejection', 'mandatory-local-test-artifact', 'release-intent-build-authorisation', 'prepared-release-scope-amendment', 'local-build-intent-consumption', 'draft-preserves-delivered-version', 'draft-artifact-isolation', 'next-local-build-progression', 'release-identity-rejection'],
 }, null, 2));

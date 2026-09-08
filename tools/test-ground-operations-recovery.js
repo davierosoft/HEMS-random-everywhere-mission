@@ -13,6 +13,8 @@ const hoist = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/09-
 const debug = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/15-debug-and-df-ui.json'), 'utf8'));
 const scene = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/06-scene-generation.json'), 'utf8'));
 const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
+const navigation = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/05-navigation-queries.json'), 'utf8'));
+const transfer = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/10-transfer-special-missions.json'), 'utf8'));
 
 function fail(message) { throw new Error(`Ground operations recovery: ${message}`); }
 function requireTrue(condition, message) { if (!condition) fail(message); }
@@ -94,13 +96,60 @@ crewObjectFiles.forEach((file) => {
   const module = JSON.parse(fs.readFileSync(path.join(macroDirectory, file), 'utf8'));
   Object.entries(module).forEach(([macro, commands]) => inspectMacro(commands, file, macro));
 });
-requireTrue(crewObjectCount === 75 && crewWrapperCount === crewObjectCount, 'every packaged $TITLE Crew creation must have one synchronous watchdog wrapper');
+requireTrue(crewObjectCount === 77 && crewWrapperCount === crewObjectCount, 'every packaged $TITLE Crew creation must have one synchronous watchdog wrapper');
 requireTrue(nrGateCalls === 24, 'every standalone NR < gndopsNR gate must use the watchdog');
+
+const threeCrewDestinationMacros = [
+  navigation['User destination1'],
+  navigation['Ambulance destination1'],
+  transfer['midway patient load1'],
+  transfer['transfer patient load1']
+];
+threeCrewDestinationMacros.forEach((macro, index) => {
+  const serialized = JSON.stringify(macro);
+  requireTrue(serialized.includes('"crew_title":"$TITLE Crew"') && serialized.includes('"crew_fallback":"Airbus H145 ADAC Crew"'), `three-crew destination branch ${index + 1} no longer creates the livery Crew object`);
+  requireTrue(!serialized.includes('$TITLE Pilot') && !serialized.includes('Airbus H145 ADAC Pilot'), `three-crew destination branch ${index + 1} incorrectly uses a Pilot title instead of Crew VAR 1 states`);
+  requireTrue(serialized.includes('"VAR1":16') && serialized.includes('"var":"VAR 1"},"value":14'), `three-crew destination branch ${index + 1} does not preserve pilot walking and standing VAR 1 states`);
+});
 
 const railwayScene = scene.train;
 const railwaySceneText = JSON.stringify(railwayScene);
 requireTrue(railwaySceneText.includes('"param":"railway_nodes","path":"length"') && railwaySceneText.includes('"param":"highway_nodes","path":"length"'), 'railway crossing must guard empty OSM node arrays');
 requireTrue(railwaySceneText.includes('"param":"train_brg"},"value":{"rand":[0,359]') && railwaySceneText.includes('"param":"crash_brg"},"value":{"rand":[0,359]'), 'railway crossing must provide bearing fallbacks when OSM nodes are unavailable');
+
+const primaryAmbulanceAssessment = scene['ambustretcher full']?.[4]?.create_thread?.commands?.[10];
+requireTrue(primaryAmbulanceAssessment?.if?.var?.[0] === 'L:RESCUED' && primaryAmbulanceAssessment.eq === 0, 'primary ambulance assessment branch is missing');
+for (const [count, expectedPatients] of [[1, [1]], [2, [1, 2]], [3, [1, 2, 3]]]) {
+  const branch = primaryAmbulanceAssessment.then.find((entry) => entry.if?.local === 'HELOVICTIMS' && entry.eq === count);
+  const assessed = [];
+  const collectAssessments = (value) => {
+    if (Array.isArray(value)) value.forEach(collectAssessments);
+    else if (value && typeof value === 'object') {
+      if (value.call_macro === 'ambulance assess patient') assessed.push(value.params?.patient);
+      Object.values(value).forEach(collectAssessments);
+    }
+  };
+  collectAssessments(branch?.then);
+  requireTrue(JSON.stringify(assessed) === JSON.stringify(expectedPatients), `primary ambulance must assess patients ${expectedPatients.join(', ')} when ${count} casualties exist`);
+}
+
+const secondaryAmbulance = ground['ambulance2 secondary rescue']?.[1]?.then;
+requireTrue(Array.isArray(secondaryAmbulance), 'secondary ambulance assessment sequence is missing');
+const patient2Assessment = secondaryAmbulance.findIndex((entry) => entry.call_macro === 'ambulance assess patient' && entry.params?.patient === 2);
+requireTrue(patient2Assessment > 0 && contains(secondaryAmbulance.slice(0, patient2Assessment), (entry) => entry?.create_object?.name === 'ambumedic2') && contains(secondaryAmbulance.slice(0, patient2Assessment), (entry) => entry?.drive_object?.name === 'ambumedic2'), 'secondary ambulance must create and move its medic before assessing patient 2');
+const patient3AssessmentBranch = secondaryAmbulance.find((entry) => entry.if?.local === 'HELOVICTIMS' && entry.gte === 3);
+requireTrue(patient3AssessmentBranch?.then?.some((entry) => entry.drive_object?.name === 'ambumedic2') && patient3AssessmentBranch.then?.some((entry) => entry.call_macro === 'ambulance assess patient' && entry.params?.patient === 3), 'secondary ambulance must move its medic before assessing patient 3');
+
+const residential = scene.residential;
+const finalResidentialPlacement = residential.at(-1)?.if?.local === 'HELOVICTIMS' && residential.at(-1)?.eq === 3 ? residential.at(-1) : residential.at(-2);
+const finalResidentialText = JSON.stringify(finalResidentialPlacement);
+requireTrue(finalResidentialText.includes('"has_location":"rescue_location"') && finalResidentialText.includes('"move_object":"injured_human"') && finalResidentialText.includes('"move_object":"injured_human2"') && finalResidentialText.includes('"move_object":"injured_human3"'), 'residential three-casualty scene must reassert every casualty at the rescue point after scene creation');
+const residentialFire = residential.find((entry) => entry.if?.local === 'HELOVICTIMS' && entry.eq === 3 && JSON.stringify(entry).includes('random_fire'));
+const residentialFireText = JSON.stringify(residentialFire);
+requireTrue(residentialFireText.includes('"local":"random_fire"},"value":"forced"') && residentialFireText.includes('"local":"VFX"},"value":8'), 'only the residential fire branch must force a random-VFX fire intensity');
+requireTrue(!residentialFireText.includes('VFXB') && residentialFireText.includes('"wait_for":{"has_object":"VFXA"}') && residentialFireText.includes('"move_object":"VFXA","to":"FIRE"'), 'residential fire must use the random-VFX object at the authored fire location');
+const firetruck1Text = JSON.stringify(ground.Firetruck1);
+requireTrue(firetruck1Text.includes('"local":"VFX"},"gte":5') && firetruck1Text.includes('"local":"VFX"},"lte":15') && firetruck1Text.includes('"call_macro":"Firetruck2"'), 'a forced residential fire must retain the existing two-firetruck response');
 
 const avionic = checklistDefinitions.aviopftckl;
 const beforeTakeoff = checklistDefinitions.beforetockl;

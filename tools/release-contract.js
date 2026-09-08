@@ -56,8 +56,11 @@ function readIntent(repositoryRoot) {
   if (intent.schema !== INTENT_SCHEMA || typeof intent.release !== 'string' || !intent.scope) {
     throw new Error('release intent is missing required fields');
   }
+  if (intent.kind !== undefined && intent.kind !== 'release' && intent.kind !== 'draft') {
+    throw new Error(`release intent has an invalid kind: ${JSON.stringify(intent.kind)}`);
+  }
   parseRelease(intent.release);
-  return intent;
+  return { ...intent, kind: intent.kind || 'release' };
 }
 
 function writeIntent(repositoryRoot, intent) {
@@ -93,6 +96,9 @@ function assertBuildIntent(repositoryRoot, artifactText, options = {}) {
   const identity = assertReleaseIdentity(repositoryRoot, artifactText);
   if (intent.release !== identity.release) {
     throw new Error(`release intent ${intent.release} does not match mission/changelog ${identity.release}`);
+  }
+  if (purpose === 'package' && intent.kind !== 'release') {
+    throw new Error('a draft build cannot be packaged or supplied as a numbered release');
   }
   const allowedStatuses = {
     build: ['prepared'],

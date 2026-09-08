@@ -28,9 +28,9 @@ These instructions protect the deployable mission while keeping coding-agent con
 
 ## Required verification
 
-1. Before every local build, prepare one higher revision with `node tools/release-workflow.js begin ...`; `mission-workspace.js build` consumes that revision exactly once. A correction after any build requires a new higher revision.
-2. Run `node tools/mission-workspace.js check` after every mission build, then `node tools/release-workflow.js static`. Static verification always creates `outputs/<release>-local-test/everywhere_all.json`.
-3. Unless the user explicitly asks not to receive it, provide that local-test artifact after every mission update, even when publication has not been requested. A local test copy is not a published or runtime-validated release.
+1. Before every local build, prepare one one-use intent. Use `node tools/release-workflow.js draft ...` for intermediate verification; it must not change the mission version, runtime build, changelog, or create a numbered delivery artifact. Use `begin --release ...` only when preparing the next artifact the user will actually receive; that release must be higher than the last supplied release. Corrections before delivery use drafts, never consume release numbers.
+2. Run `node tools/mission-workspace.js check` after every mission build, then `node tools/release-workflow.js static`. Draft verification writes only under `outputs/drafts/`; a delivery intent creates `outputs/<release>-local-test/everywhere_all.json`.
+3. Supply a numbered local-test artifact only for a user-requested delivery. A draft artifact is internal verification only and must never be described as a release, supplied as a download, or added to the changelog.
 4. Run `node tools/check-mission-scope.js check --strict` with one `--allow-macro`, `--allow-data`, or `--allow-root` flag for every intended semantic change.
 5. Run the smallest targeted gate during implementation, then `npm test` once when stable (`node tools/check-workspace.js` is the identical fallback when npm is unavailable). Tests are branch-neutral for CI; write protection is enforced by the branch guard and pre-commit hook.
 6. Run `git diff --check` and inspect `git diff --stat`, `git status --short`, and the staged diff before commit.
@@ -39,7 +39,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 ## Documentation and delivery
 
 - Durable architecture belongs in `docs/architecture/`; current manual runtime checks belong in `docs/testing/`. Do not create model-to-model handoff files.
-- Every supplied mission artifact, including an unpublished local copy, must be named exactly `everywhere_all.json`. Before supplying it, increment the release/build number shown in the mission title; never reuse a prior supplied number. After every mission update, supply the mandatory local-test artifact unless the user explicitly opts out; publication remains separate.
+- Every supplied mission artifact, including an unpublished local copy, must be named exactly `everywhere_all.json`. Increment the mission title/build exactly once immediately before supplying the next user-requested artifact; never reuse a prior supplied number. Internal drafts are not deliveries and retain the last supplied identity. Publication remains separate.
 - Update `CHANGELOG.en.md` only for a mission release or externally visible technical change. Change `CHANGELOG_USER.en.md` only when explicitly requested.
 - When the user changelog is requested, compare every technical release after its stated coverage version with the user changelog. Add every final user-facing change, omit superseded/internal cumulative details, and never advance the coverage version while any intervening release is unaccounted for.
 - Keep commits on `CICERS/*`. For every future user request to publish a completed change, automatically push the named CICERS branch after its commit and required checks succeed. Never bypass branch protection or claim runtime validation that was not performed.

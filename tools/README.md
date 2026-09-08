@@ -9,9 +9,10 @@ All commands run with the Node runtime already required by the repository. No pa
 | `node tools/check-workspace-consistency.js` | Verifies manifest/module/docs/scripts/AGENTS consistency and retired-handoff cleanup. | No |
 | `node tools/mission-workspace.js locate "text"` | Finds the owning macro/data module without loading the monolith into agent context. | No |
 | `node tools/mission-workspace.js check` | Proves modular sources rebuild the deployment artifact byte-for-byte. | No |
-| `node tools/release-workflow.js begin --release "0.997 N" ...` | Requires the strictly next local revision, aligns title/changelog, and records the declared scope for one build. | `everywhere_all.json`, `CHANGELOG.en.md`, `.workspace-state/` |
-| `node tools/mission-workspace.js build` | Reassembles `macros` and `data` into `everywhere_all.json`; consumes the prepared local revision exactly once. | `everywhere_all.json`, `.workspace-state/` |
-| `node tools/release-workflow.js static` | Verifies scope, modular equality, and all static gates after a consumed build; always creates the local offline-test artifact. | `outputs/<release>-local-test/`, `.workspace-state/` |
+| `node tools/release-workflow.js draft --note "..." ...` | Creates a one-use internal build intent; it preserves the supplied release identity and changelog. | `.workspace-state/` |
+| `node tools/release-workflow.js begin --release "0.997 N" ...` | Prepares the strictly next user-delivery revision, aligns title/changelog, and records the declared scope for one build. | `everywhere_all.json`, `CHANGELOG.en.md`, `.workspace-state/` |
+| `node tools/mission-workspace.js build` | Reassembles `macros` and `data` into `everywhere_all.json`; consumes one prepared draft or delivery intent exactly once. | `everywhere_all.json`, `.workspace-state/` |
+| `node tools/release-workflow.js static` | Verifies scope, modular equality, and all static gates. Drafts create internal artifacts only; deliveries create `outputs/<release>-local-test/`. | `outputs/`, `.workspace-state/` |
 | `node tools/release-workflow.js package --runtime-signoff "..."` | Creates a delivery copy only after static checks and named simulator runtime sign-off. | `outputs/`, `.workspace-state/` |
 | `node tools/mission-workspace.js extract` | Initial migration only; splits the artifact and refuses an existing source tree unless `--force` is explicit. | `mission-src/` |
 | `node tools/mission-workspace.js reindex` | Updates manifest order/format metadata after an intentional macro/data add, rename, or removal. | `mission-src/manifest.json` |
