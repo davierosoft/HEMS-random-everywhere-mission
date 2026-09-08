@@ -5,6 +5,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 ## 0. Release identity — blocking before every local build and package
 
 - The release number in the first `CHANGELOG.en.md` heading and the static `everywhere_all.json.title` displayed in the tablet must be identical.
+- Treat the number as a delivery candidate until the complete checklist and simulator checks are finished. Do not present intermediate local checkpoints as separate user-facing releases; advance the public delivery revision once, at the end of the completed checks.
 - Before every local build, run `node tools/release-workflow.js begin --release "0.997 N"` with a strictly higher build number and declared scope. `node tools/mission-workspace.js build` consumes that number once, including a byte-identical build. A later correction must begin a higher number.
 - Run `node tools/release-workflow.js static` only after the build. It always creates `outputs/<release>-local-test/everywhere_all.json`, which must be supplied for offline testing unless the user explicitly opts out. `package` is allowed only after that static gate and an actual named simulator runtime sign-off; a static pass is never runtime evidence.
 - The validator must fail on a stale displayed build or a missing/mismatched runtime `L:RELEASE_BUILD`, even when every JSON and HPG syntax check passes.
