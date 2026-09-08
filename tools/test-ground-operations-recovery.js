@@ -6,12 +6,13 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
+const checklistDefinitions = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
 const runtime = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/14-shared-runtime.json'), 'utf8'));
 const ground = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/08-ground-response.json'), 'utf8'));
 const hoist = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/09-hoist-ground-ops.json'), 'utf8'));
 const debug = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/15-debug-and-df-ui.json'), 'utf8'));
 const scene = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/06-scene-generation.json'), 'utf8'));
+const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
 
 function fail(message) { throw new Error(`Ground operations recovery: ${message}`); }
 function requireTrue(condition, message) { if (!condition) fail(message); }
@@ -100,6 +101,20 @@ const railwayScene = scene.train;
 const railwaySceneText = JSON.stringify(railwayScene);
 requireTrue(railwaySceneText.includes('"param":"railway_nodes","path":"length"') && railwaySceneText.includes('"param":"highway_nodes","path":"length"'), 'railway crossing must guard empty OSM node arrays');
 requireTrue(railwaySceneText.includes('"param":"train_brg"},"value":{"rand":[0,359]') && railwaySceneText.includes('"param":"crash_brg"},"value":{"rand":[0,359]'), 'railway crossing must provide bearing fallbacks when OSM nodes are unavailable');
+
+const avionic = checklistDefinitions.aviopftckl;
+const beforeTakeoff = checklistDefinitions.beforetockl;
+const takeoff = checklistDefinitions.takeoffckl;
+const transitionBefore = checklistDefinitions['checklist transition before takeoff'];
+const transitionTakeoff = checklistDefinitions['checklist transition takeoff'];
+requireTrue(avionic.at(-1)?.call_macro === 'checklist transition before takeoff', 'avionic/preflight checklist does not advance to before take-off');
+requireTrue(beforeTakeoff.some((entry) => entry.call_macro === 'checklist transition takeoff'), 'before take-off checklist does not advance to take-off');
+for (const [name, transition] of [['avionic', transitionBefore], ['before take-off', transitionTakeoff]]) {
+  const serialized = JSON.stringify(transition);
+  requireTrue(serialized.includes('"sleep":20') && serialized.includes('CONTINUE NOW') && serialized.includes('"wait_for"'), `${name} transition lacks the 20-second/button gate`);
+}
+requireTrue(takeoff.some((entry) => entry.set_dispatch?.some((row) => row.text === 'SLOPE TAKE-OFF PROCEDURE' && row.show_condition?.or)), 'take-off checklist does not place conditional slope guidance first');
+requireTrue(takeoff.at(-1)?.call_macro === 'Mission dispatch' && takeoff.at(-2)?.sleep === 10, 'take-off checklist does not return to dispatch after ten seconds');
 
 const boardingCargoClose = checklists['verify boarding cargo doors closed'];
 requireTrue(Array.isArray(boardingCargoClose) && boardingCargoClose.length === 2, 'boarding cargo-door close verification is missing');
