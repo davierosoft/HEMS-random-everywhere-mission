@@ -8,7 +8,6 @@ const root = path.resolve(__dirname, '..');
 const missionPath = path.resolve(process.env.HEMS_MISSION_FILE || path.join(root, 'everywhere_all.json'));
 const mission = JSON.parse(fs.readFileSync(missionPath, 'utf8'));
 const companionMission = JSON.parse(fs.readFileSync(path.join(root, 'train.json'), 'utf8'));
-const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.en.md'), 'utf8');
 const validateDfRelease = require('./validate-df-release');
 
@@ -230,6 +229,18 @@ function expectRegression(condition, message) {
 
 function compact(value) {
   return JSON.stringify(value);
+}
+
+function hasGlobalValue(macroName, globalName, expectedValue) {
+  let found = false;
+  const scan = (value) => {
+    if (found || !value || typeof value !== 'object') return;
+    if (Array.isArray(value)) return value.forEach(scan);
+    if (value.set?.global === globalName && JSON.stringify(value.value) === JSON.stringify(expectedValue)) found = true;
+    Object.values(value).forEach(scan);
+  };
+  scan(mission.macros[macroName] || []);
+  return found;
 }
 
 function hasState(value, name) {
@@ -619,7 +630,7 @@ function checkAircraftProfileRegression() {
   ];
   requiredMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), `aircraft profile macro must exist: ${name}`));
   expectRegression(!allText.includes('"DIFFICULTY"'), 'legacy difficulty state must be fully migrated');
-  expectRegression(!Object.prototype.hasOwnProperty.call(globals, 'DIFFICULTY'), 'global defaults must not retain legacy Difficulty');
+  expectRegression(!hasState(mission, 'DIFFICULTY'), 'mission must not retain legacy Difficulty state');
 
   const expectedTables = {
     Aircraft_Profile_Links: 'Andrews_aircraft_profile_links',
@@ -642,7 +653,8 @@ function checkAircraftProfileRegression() {
     TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100
   };
   Object.entries(firstRun).forEach(([key, value]) => {
-    expectRegression(globals[key] === value, `first-run DEFAULT profile must set ${key}=${value}`);
+    const owner = key === 'AIRCRAFT_PROFILE_ACTIVE' || key === 'AIRCRAFT_PROFILE_SLOT' ? 'ensure aircraft profile defaults' : 'aircraft factory DEFAULT';
+    expectRegression(hasGlobalValue(owner, key, value), `first-run DEFAULT profile must set ${key}=${value} through set: global`);
   });
 
   const profilePage = mission.macros['aircraft profiles page'] || [];
@@ -729,7 +741,7 @@ function checkRelease94Regressions() {
   });
   const smokeControls = collect(mission.macros.settings || [], (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'NEVER'));
   expectRegression(smokeControls.length === 1 && compact(smokeControls[0]).includes('AUTO') && compact(smokeControls[0]).includes('REALISTIC') && compact(smokeControls[0]).includes('ALWAYS'), 'orange smoke settings must expose NEVER/AUTO/REALISTIC/ALWAYS');
-  expectRegression(globals.ORANGE_TARGET_SMOKE === 'auto', 'first-run orange smoke setting must be AUTO');
+  expectRegression(hasGlobalValue('normalize orange target smoke setting', 'ORANGE_TARGET_SMOKE', 'auto'), 'first-run orange smoke setting must be AUTO');
   const smokeFactoryValues = {
     DEFAULT: 'auto',
     'ROOKIE PILOT': 'always',
@@ -801,7 +813,7 @@ function checkRelease94Regressions() {
   const cicersBypassButtons = cicersBypassSetting?.buttonbar || [];
   const cicersBypassYes = cicersBypassButtons.find((button) => button.title === 'YES');
   const cicersBypassNo = cicersBypassButtons.find((button) => button.title === 'NO');
-  expectRegression(globals.CICERS_AUTO_ACTIVATION_BYPASS === 'NO' && ensure.includes('CICERS_AUTO_ACTIVATION_BYPASS') && cicersBypassYes?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassYes.select_condition.eq === 'YES' && cicersBypassNo?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassNo.select_condition.eq === 'NO', 'CICERS auto activation bypass must default to NO and provide persistent YES/NO Settings controls');
+  expectRegression(hasGlobalValue('ensure data query service selection', 'CICERS_AUTO_ACTIVATION_BYPASS', 'NO') && ensure.includes('CICERS_AUTO_ACTIVATION_BYPASS') && cicersBypassYes?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassYes.select_condition.eq === 'YES' && cicersBypassNo?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassNo.select_condition.eq === 'NO', 'CICERS auto activation bypass must default to NO and provide persistent YES/NO Settings controls');
   expectRegression(ensure.includes('"call_macro":"CICERS PING"'), 'CICERS key validation must run at every startup');
   const profileMacros = ['ensure aircraft profile defaults', 'sync aircraft profile runtime', 'apply aircraft factory profile', 'save custom aircraft profile', 'load custom aircraft profile'];
   expectRegression(profileMacros.every((name) => !compact(mission.macros[name] || []).includes('DATAQUERYSERVICE')), 'aircraft profiles must not overwrite the independent endpoint selection');

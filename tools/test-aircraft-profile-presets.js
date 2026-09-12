@@ -12,7 +12,6 @@ const settings = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/
 const tracker = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/16-release-test-tracker.json'), 'utf8'));
 const lifecycle = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/11-mission-lifecycle.json'), 'utf8'));
 const tables = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/data/01-persistence-tables.json'), 'utf8'));
-const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 
 function fail(message) { throw new Error(`Aircraft profile preset gate: ${message}`); }
 function requireTrue(condition, message) { if (!condition) fail(message); }
@@ -28,7 +27,7 @@ function hasSetTable(value, table, key, expectedValue) {
 }
 
 requireTrue(tables.Aircraft_Profile_Saved_Preset === 'Andrews_saved_aircraft_profile', 'independent saved-preset table is missing');
-for (const slot of [0, 1, 2, 3]) requireTrue(globals[`SAVE_TIMESTAMP${slot}`] === 'NOT SAVED', `save timestamp ${slot} lacks its first-run default`);
+requireTrue(contains(lifecycle.objective1, (entry) => entry?.if?.global === 'SAVENAME' && entry.eq === null && entry.then?.some((command) => command.set?.global === 'SAVENAME')), 'mission startup must initialize saved-profile state through set: global');
 
 const marker = profiles['mark aircraft profile custom'];
 requireTrue(hasCall(marker, 'save custom aircraft profile'), 'settings changes do not persist immediately');

@@ -16,7 +16,6 @@ const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macro
 const navigation = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/05-navigation-queries.json'), 'utf8'));
 const transfer = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/10-transfer-special-missions.json'), 'utf8'));
 const tablet = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/04-dispatch-tablet-ui.json'), 'utf8'));
-const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 
 function fail(message) { throw new Error(`Ground operations recovery: ${message}`); }
 function requireTrue(condition, message) { if (!condition) fail(message); }
@@ -56,7 +55,7 @@ requireTrue(Array.isArray(nrGate) && nrGateText.includes('WAITING:') && nrGateTe
 requireTrue(nrGateText.includes('gndops_nr_bypass_seconds') && nrGateText.includes('gndops_idle_bypass_seconds') && nrGateText.includes('"lt":84') && nrGateText.includes('"gt":30'), 'NR gate safety bypass must require more than 30 continuous seconds below 84 percent');
 requireTrue(nrGateText.includes('SDK_ECP_MAIN_1') && nrGateText.includes('SDK_ECP_MAIN_2') && nrGateText.includes('"eq":1'), 'NR gate safety bypass must detect both engine MAIN switches in IDLE');
 requireTrue(nrGateText.includes('NR below 84 percent for over 30 seconds') && nrGateText.includes('both engine MAIN switches IDLE for over 30 seconds'), 'NR gate passed log must identify its safety-bypass reason');
-requireTrue(globals.GNDOPS_NR_THRESHOLD === 80, 'the persistent ground-operations NR threshold must default to 80');
+requireTrue(contains(checklistDefinitions['aircraft factory DEFAULT'], (entry) => entry?.set?.global === 'GNDOPS_NR_THRESHOLD' && entry.value === 80), 'the persistent ground-operations NR threshold must default to 80 through set: global');
 requireTrue(contains(tablet, (entry) => entry?.slider?.global === 'GNDOPS_NR_THRESHOLD' && entry.slider.min === 79 && entry.slider.max === 83 && entry.slider.commands?.some((command) => command.set?.local === 'gndopsNR')), 'Settings must expose a 79-83 persistent NR threshold slider that updates the active local');
 requireTrue(contains(tablet, (entry) => entry?.text === '(P)Ground operations NR threshold: {0}%' && entry.params?.[0]?.tofixed?.global === 'GNDOPS_NR_THRESHOLD' && entry.params?.[0]?.digits === 1), 'Settings must show the NR threshold rounded to one decimal place');
 

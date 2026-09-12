@@ -13,7 +13,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 
 - `mission-src/` is the editable source for the `macros` and `data` sections of `everywhere_all.json`.
 - `everywhere_all.json` is the generated deployment artifact. Do not patch or reformat it directly; edit one focused module and run `node tools/mission-workspace.js build`.
-- `global.json` and `train.json` remain independent deployable inputs.
+- `train.json` remains an independent deployable input. HPG owns the local global-state container; it is not a repository or delivery artifact.
 - Use `node tools/mission-workspace.js locate "<name>"` to find a macro or data owner. Do not search or load the 8.7 MB artifact when a module is available.
 - Follow nested `AGENTS.md` files inside `mission-src/`, `tools/`, and `docs/` when working there.
 
@@ -25,7 +25,7 @@ These instructions protect the deployable mission while keeping coding-agent con
 - A watchdog for a moving object must derive its timeout from the planned route or movement distance and the effective speed or speed multiplier, plus an explicit safety delta. A fixed timeout is forbidden for route travel. Its recovery fallback must be a verified location, never a route identifier; add or update a regression gate that rejects fixed route-watchdog timeouts.
 - Location angles: `bearing` is the helicopter-relative azimuth and is valid only for offsets relative to the helicopter. Every non-helicopter ground-object offset uses `bearing2` and only the cardinal values `0`, `90`, `180`, or `270`. Ambulance and stretcher rear ingress or egress is always `bearing2: 180`; do not substitute `bearing` or a non-cardinal angle.
 - User-facing mission strings added or changed by a task must be ASCII-only. Do not use Unicode punctuation, typographic quotes, dashes, symbols, or non-ASCII letters unless the user explicitly requests that exact character and the target HPG surface supports it.
-- `global.json` is immutable mission input under this contract: never edit, regenerate, format, restore, or otherwise write it. New persistent options must use an existing compatible global/default path or pause for explicit user direction; do not create a new default in `global.json`.
+- `global.json` is not a repo or delivery file. Initialize each required global in the mission with null-guarded `set: global`; never overwrite local HPG state.
 - Mission root keys, command spelling, renderer placement, and state-machine rules are defined in `DEVELOPMENT_RELEASE_CHECKLIST.md`; read the relevant section before changing runtime behavior.
 
 ## Required verification
