@@ -38,7 +38,7 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 7. Use SET DF on a saved station, then on an automatic object station, and confirm in both cases that the CARLS frequency exactly matches the set_df reference. Tune a manual channel with no matching object/location and confirm the old bearing is cleared.
 ## CICERS provider fallback
 
-1. With CICERS unreachable, select each manual provider: Overpass DE (0), Mail.RU (1), and Kumi (2). Start the CICERS health check and confirm a failed check restores the same provider in both the selector and DATAQUERYSERVICE, even if the persisted endpoint was still CICERS.
+1. With CICERS unreachable, select each manual provider: Overpass DE (0), Mail.RU (1), Kumi (2), and RATUOM OFFLINE (4). Start the CICERS health check and confirm a failed check restores the same provider in both the selector and DATAQUERYSERVICE, even if the persisted endpoint was still CICERS.
 2. With CICERS selected or AUTO-TOGGLE active, make the health check fail. Confirm the result is AUTO-TOGGLE with endpoint 0 or 2, never an inactive manual provider.
 3. While a CICERS health check is in progress, request a second refresh. It must not start a second ping or replace the first request's saved provider. After the first result, confirm the selected provider is correct.
 4. With a valid CICERS key and a manual provider saved, restart twice: with **BYPASS CICERS OSM AUTO ACTIVATION = NO**, confirm CICERS is active but the saved provider remains unchanged; with **YES**, confirm the same manual provider is restored after the key check.
@@ -73,6 +73,23 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 
 ## Multi-patient, ambulance, and mission presets
 
+### Shared crew visits and P1-P3 transport (PENDING)
+
+- With three present unassigned patients, try each arrival order of ambulance1, ambulance2 and HEMS. Every arriving team must approach P1, P2 and P3; prior assessment by another team must not suppress its observation.
+- Assign one patient before arrival, then another while the crew is walking. Confirm no assessment starts for the assigned patient; inspect the per-crew state in Debug.
+- Repeat in AUTO and MANUAL, with 3/4/5 crew, ordinary ground operations, skid and hoist. Check that assistants walk with the correct HEMS/pilot role and stop on the opposite cardinal side of the patient.
+- Preserve already completed treatment steps during a later crew's timed reassessment. Confirm no duplicate treatment effects or reset procedure counts.
+- Remove or block an actor during a visit in a developer scenario. No completed assessment may be reported without physical arrival. Reset the dispatch during a busy observation and verify the previous worker does not visit a new scene.
+- Cross the three patient slots with ambulance1, ambulance2 and HEMS. For each of the nine combinations, arrange the target as the only unassigned suitable patient. Confirm the chosen object is packed, its own record closes, and neither other patient's score nor identity changes. Repeat HEMS loading with 3/4/5 crew in ground, skid and hoist operations; retain rotor, door and crew-role checks.
+- In MANUAL, let the ambulance finish its initial actions, then visit with HEMS. Resume at the next untreated phase. Attempt confirmation while an action is in progress: allocation must remain blocked. Finish the last action for each slot, including P1, and confirm that the transport choice becomes usable.
+- With fewer ambulances than casualties and one patient outside the existing ground criteria, verify that shortage does not make that patient ground-suitable. Let both ambulances request the same last eligible patient; only one may load it. Re-enter the HEMS selector during loading and verify its ticket stays on the same patient.
+- Temporarily shelter P1 in ambulance1 before HEMS arrival. Follow the real stretcher return, then verify HEMS can physically assess the sheltered patient and subsequently assign either suitable vehicle. Shelter alone must not close the clinical record or claim transport.
+- Fail movement before loading, then interrupt an active load in a developer scenario. Confirm recovery at the scene before reassignment, and rejection of the previous worker's ticket. If physical recovery cannot be completed, retain the pending state and capture the failure; never count it as delivery.
+- Transport P1 first while P2/P3 remain on scene. Continue monitoring both remaining scores, perform the next rescue with their original names and objects, and finish only after all required transfers. Also repeat with P2 or P3 as the first HEMS patient and with ground transfers still travelling when HEMS reaches hospital.
+- For each slot, run scene CPR and onboard mCPR with the configured equipment. Verify effects, controls and messages refer to that patient, other patients continue their own deterioration, and a reset cannot resume an old procedure. Compare Code/LifeScore progression across equivalent profiles.
+- Save and reload in each preset slot during visits, reservation, loading and after delivery. Check names, pathology, completed actions and reports. Interrupted transfers must return to scene allocation with fresh tickets and visits; delivered patients must not respawn as pending casualties. Reload a different scene to verify stale patient state is rejected.
+- Capture and reopen Debug during each transition. Check visit records, tour barriers, selected HEMS target, all resource tickets, pending counts and CPR slot against the visible scene. These cases require actual HPG/MSFS sign-off; static PASS is insufficient.
+
 1. Run near/far ambulance transfer with 3-, 4-, and 5-person crews for `ambulance`, `ambudoc`, and `us`; ambulance-owned movement must not wait on unrelated HEMS state.
 2. In MANUAL mode with 1-3 casualties, verify the active-patient mutex and action ownership. In AUTO, the page automatically follows the patient when HEMS starts that visit.
 3. With the helicopter still airborne or hovering, put the HEMS clinician beside patient 1. In AUTO, MEDICAL ACTIONS must show the first automatic action immediately and advance through the configured actions; in MANUAL, the first procedure choices must appear immediately. Neither path requires SIM ON GROUND.
@@ -89,6 +106,7 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 14. In Debug Center SUMMARY, confirm the NR gate changes from `WAITING` to `PASSED` for the active ground-operation macro. Confirm `CREW SPAWN` records `LAUNCH` followed by `CREATED` for every object needed by that sequence.
 15. Capture a Debug snapshot during the NR wait and again after crew creation. Reopen Debug Center SUMMARY and verify `SNAPSHOT | CREW SPAWN` and `NR GATE` retain the captured values.
 16. In a developer-only test with an unavailable crew title or fallback, confirm the mission remains blocked, Debug records `FAILED` with the requested title/fallback, and the user sees `ERROR: crew creation failed`. Restore valid object titles before a normal mission test.
+17. On long road-response routes to the scene, a hospital, and a midway location, record the displayed ambulance, police, and fire-engine ETA. Each vehicle must remain on its route through that ETA and may enter watchdog recovery only after ETA plus two minutes. Suppress road nodes for each destination in a developer test: recovery must use its authored approach location, stop 30 m before a hospital or 55 m before a scene, and never overlap a scene object, disappear, or jump to map coordinates 0,0. With random civilians enabled, no command error may be raised while they orient toward the primary patient.
 
 ## Patient tablet telemetry
 
@@ -106,6 +124,13 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 3. Save each mission slot and confirm its visible timestamp and the STORE PRESET ON FILE timestamp use local PC time with a DD-MM-YYYY date. Delete a slot and confirm its timestamp clears.
 4. Link CUSTOM PRST 1 to each MSN LIST button in turn. Confirm reassignment moves the link, and pressing the currently selected MSN LIST button removes it.
 5. Confirm the linked aircraft profile loads after an interactive MSN LIST change, after a current-list reload, and after each livery-forced preset at startup.
+
+## Ground operations NR threshold and safety bypass
+
+1. In SETTINGS, next to the engine-switch requirement control, move **Ground operations NR threshold** to 79.0, 80.0, and 83.0. Confirm the displayed value always has one decimal place, survives closing/reopening SETTINGS, a mission reload, and saving/loading an aircraft profile.
+2. At a ground-operations wait, verify NR below the configured threshold passes immediately. Then set a value above the current NR and hold NR below 84 percent for more than 30 continuous seconds: the operation must pass without changing the configured threshold.
+3. Separately hold both `ECP MAIN` switches in IDLE for more than 30 continuous seconds. The operation must pass even if NR has not met the configured threshold. Interrupt either the NR-below-84 or both-IDLE condition before 30 seconds and confirm its timer restarts rather than passing early.
+4. In Debug Center SUMMARY and a captured snapshot, verify the NR gate shows one `WAITING` entry followed by `PASSED`. For a safety bypass, the PASSED entry must state whether it was the below-84-percent or both-IDLE path.
 
 ## Marshal waypoint overrides and three-crew destination deboarding
 
