@@ -1,89 +1,358 @@
-# HEMS Random Everywhere - User Changelog
+# HEMS Random Everywhere Missions - User Changelog
 
-## Coverage and release status
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus the development checkpoint made after build 142. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-This changelog consolidates final user-visible behavior from the July `0.997` baseline through technical build `0.997 142`.
+The checks below are simulator checks. The changes recorded after build 142 still need final simulator confirmation.
 
-It intentionally records a function or fix once, in its final form. Intermediate attempts, reverted fixes, and internal-only maintenance are not separate user changes. The build history on each item identifies where the behavior started and where it was consolidated.
+## FIXES
 
-The latest supplied mission identity remains `0.997 142`. The current GitHub checkpoint contains further source changes after that build, is statically checked, and remains **simulator validation pending**. It is not a new downloadable mission release.
+### Reliable mission start
 
-## Consolidated changes since the July baseline
+- A mission now either starts with a valid patient and scene, or shows a clear problem. It no longer searches forever or leaves an unusable call on the tablet.
+- **Build history:** 0.997 1-18.
+- **Test:** Disable all calls, then start a new dispatch and verify that the tablet reports the problem without freezing.
 
-### Direction Finder, beacons, and CARLS
+### Safer arrival of emergency vehicles
 
-**Final behavior.** CARLS has a complete Direction Finder page with safe keypad editing, retained valid tuning, automatic/manual tuning, aviation-band and 25 kHz validation, emergency beacons, and saved custom/object stations. The display refreshes all rows in every state and no longer keeps stale edit keys, sources, or frequencies.
+- Ambulances, police and fire engines now report arrival only after they have stopped in a safe place beside the incident. They avoid patients, other vehicles and world-origin spawns.
+- **Build history:** 0.997 1-13, 46, 75, 130.
+- **Test:** Run road, closest-service and custom landing-zone calls; each vehicle must park safely before its crew acts.
 
-**Build history.** Introduced in 92 and 94-96; station validation and tuning synchronization consolidated in 97-99, 103, and 105.
+### Stable route and map selection
 
-**Runtime test.** Open the DF page, enter a valid and an invalid channel, use ENT and ESC, restart/reopen, test IAD/MAD/MAR and UHF modulation, then verify automatic ELT, PLB, ambulance, and doctor-pick bearings.
+- Declining a proposed landing point or destination now leaves the accepted route and map marker untouched. A missing destination no longer interrupts the mission.
+- **Build history:** 0.997 15, 75, 130.
+- **Test:** Accept a landing point, open the selector again, choose Reject and verify the original route remains.
 
-### Debug Center, snapshots, and Test Tracker
+### Correct use of a distant ambulance
 
-**Final behavior.** Debug Center provides ordered SUMMARY, MISSION, MEDICAL, GROUND, GUIDANCE, and INVENTORY views. Persistent snapshots retain mission/build identity, local date/time, live operational diagnostics, registry diagnostics, and immutable closing medical reports. Test Tracker stores execution, tester outcome, and failed-test notes without confusing code-path completion with simulator success.
+- A distant ambulance now follows the appropriate ground-transfer path instead of attempting an unrealistic pickup. A second ambulance waits for its own patient work before leaving.
+- **Build history:** 0.997 10, 65, post-142 checkpoint.
+- **Test:** Start a three-patient call with two ambulances at different distances and follow both transport outcomes.
 
-**Build history.** Debug snapshots started in 92 and were expanded in 100-112 and 115. Crew-creation, NR, and registry diagnostics were consolidated in 121-125.
+### Complete ambulance assessments
 
-**Runtime test.** Capture a snapshot during setup, NR wait, patient work, and mission end; close/reopen Debug and reload the mission. Verify the saved fields remain frozen until a new capture, and mark Test Tracker results only after observing them in the simulator.
+- Ground medics can assess every patient when time allows. When HEMS arrives late, it begins with the most urgent already assessed patient instead of missing records or showing an empty ambulance status.
+- **Build history:** 0.997 67, 77, 91, 104, 106, 127, 138, post-142 checkpoint.
+- **Test:** Land late at a multi-patient incident with one medic; check that each patient has an assessment or receives priority from HEMS.
 
-### Crew creation, doors, and ground-operation safety
+### Realistic ambulance loading
 
-**Final behavior.** Boarding confirms both rear cargo doors with bounded retries. Critical crew creation is synchronously watched and reports a clear creation failure instead of silently advancing. The normal NR threshold is unchanged; its wait now records WAITING and PASSED diagnostics. Ground/hoist/ambulance choreography retains the required walking, stretcher, return, and door-close order.
+- A patient selected for road transport is now prepared and moved as a stretcher patient. They no longer slide across the scene as if pulled by an invisible force.
+- **Build history:** 0.997 65, 91, 138, post-142 checkpoint.
+- **Test:** Let an ambulance take a non-HEMS patient and watch the complete loading sequence before departure.
 
-**Build history.** Crew safety originated in 93. Ambulance/crew sequencing was consolidated in 104, 106, 117, and 120. Cargo-door verification and watchdog diagnostics were added in 118-121.
+### Correct three-crew roles
 
-**Runtime test.** Run boarding with delayed cargo-door closure, then start three-, four-, and five-crew ground operations at normal idle NR. Confirm the crew deploys without another action, the Debug records progress, and the cargo doors never close before the required return walk completes.
+- In a three-crew operation, the copilot remains the pilot throughout hospital unloading and only returns to the cockpit role when actually going back to the cockpit.
+- **Build history:** 0.997 20, 27, 40-42, 118-122, 142.
+- **Test:** Complete a hospital arrival with three crew and verify the copilot's role during unloading and reboarding.
 
-### Medical records, ambulance assessment, and ground transport
+### Reliable rear-door closure
 
-**Final behavior.** The clinical record shows ambulance work only after a medic reaches and assesses the casualty. One available medic can assess every present casualty; a second ambulance medic is created and moved physically before its own P2/P3 assessments. Ground transport uses the ambulance stretcher and packed casualty states rather than dragging a casualty object. Missing ambulance-provider data falls back to `AMBULANCE` instead of `undefined`.
+- Boarding no longer continues until both rear cargo doors have actually closed. A door problem is recorded for troubleshooting instead of being ignored.
+- **Build history:** 0.997 118-121.
+- **Test:** Repeat boarding with delayed rear doors and confirm the next step waits for both doors.
 
-**Build history.** Initial clinical handover and destination sequencing came in 104 and 106. Medical/ground corrections continued in 117 and 126-127. Multi-casualty assessment, stretcher normalization, and report rendering were consolidated in 138-139 and the GitHub checkpoint after 142.
+### Clear crew and rotor-wait errors
 
-**Runtime test.** In a three-casualty scene, test one and two ambulance-medics. Confirm each assessment begins only after the relevant medic arrives, every casualty is assessed before treatment continuation when time permits, and a ground casualty appears packed on the ambulance stretcher before departure.
+- If essential crew cannot appear, the mission now stops with a clear error record. Normal ground-operation rotor waiting remains unchanged but is visible in troubleshooting information.
+- **Build history:** 0.997 119-121.
+- **Test:** Capture troubleshooting information while preparing ground operations and verify crew and rotor progress are reported.
 
-### Patient record navigation and completed-visit telemetry
+### No blocked patient objective
 
-**Final behavior.** Medical pages provide `Patient 1`, `Patient 2`, and `Patient 3` selectors. HEMS automatically focuses the record it starts visiting, while the user can still open another record manually. A ground patient's live detail feed closes only after every visit is complete and actual ground handover is confirmed; the retained summary remains available. The helicopter patient's full clinical record remains available.
+- A critical patient's condition can develop while the mission objective activates normally. Scene preparation no longer blocks the rest of the call.
+- **Build history:** 0.997 61-62.
+- **Test:** Start a critical call and remain en route; mission objectives and patient changes must both continue.
 
-**Build history.** The P1-P3 telemetry adapter and closing reports were introduced in 123-127. Selector, report, and focus behavior were consolidated in 138-139 and the GitHub checkpoint after 142.
+### Consistent clinical observations
 
-**Runtime test.** During an active HEMS visit, verify the page changes to that patient. Then select another patient and confirm the selection remains until a new HEMS visit begins. After all visits, move one patient by ambulance and confirm only that patient's page changes to a frozen summary.
+- Living patients no longer display impossible observations. Blood pressure, breathing, temperature, consciousness and Life Score appear consistently after assessment.
+- **Build history:** 0.997 52-57, 64-65, 81.
+- **Test:** Inspect normal, critical and intubated patients after assessment; all displayed observations must be plausible and populated.
 
-### Residential fire scene and responder placement
+### Stable CPR outcomes
 
-**Final behavior.** In the residential three-casualty fire variant, casualties and HEMS access waypoints are at the external rescue point and the point is fenced. The incident fire uses the standard extinguishable VFX object at the authored fire location, with fire intensity reduced through `VAR 1`. The existing intensity-8 response activates two fire trucks.
+- CPR uses one coherent rescue sequence, with correct crew involvement, recovery/failure outcomes and a reliable Stop CPR choice when available.
+- **Build history:** 0.997 58, 64.
+- **Test:** Start CPR on scene and in flight where enabled; verify one procedure runs and Stop CPR ends it for that call.
 
-**Build history.** Rescue-point positioning was consolidated in 138. The standard fire/VFX integration and two-truck confirmation are in the GitHub checkpoint after 142.
+### Correct fence and patient placement
 
-**Runtime test.** Start the three-casualty residential fire variant. Confirm casualties are at the rescue point, the fence surrounds it, the fire remains at the incident, both fire trucks arrive, and the fire VFX `VAR 1` decreases until clearance is reported.
+- Indoor calls no longer receive an outdoor privacy fence. In residential fire calls, patients and the rescue fence are placed at the external rescue point rather than at the fire itself.
+- **Build history:** 0.997 58, 65, 138, post-142 checkpoint.
+- **Test:** Compare an indoor call with a residential fire call; only the external rescue point should receive the fence.
 
-### Take-off checklists
+### Residential fire is now handled by fire crews
 
-**Final behavior.** Avionic/preflight advances to BEFORE TAKE-OFF, and BEFORE TAKE-OFF advances to TAKE-OFF after valid checks and a 20-second delay or the working proceed button. TAKE-OFF is available from checklist home, returns to Dispatch after completion, aligns completion markers, checks FLI and engine torque AEO status, and shows slope procedure guidance first only above 12 degrees pitch or roll.
+- Residential fire scenes use an extinguishable fire and can call two fire engines. The fire now reduces after the response instead of remaining permanently active.
+- **Build history:** 0.997 18, 138, post-142 checkpoint.
+- **Test:** Run a residential fire call and verify both fire engines respond and the fire visibly reduces.
 
-**Build history.** The monitored transition and TAKE-OFF flow were introduced in 135, simulator-variable validation in 136, and working current-page proceed controls in 137.
+### Reliable Direction Finder
 
-**Runtime test.** Complete each checklist with valid conditions, use both automatic and button progression, test an invalid FLI/AEO condition, and test pitch/roll below and above 12 degrees. Confirm the final page returns to Dispatch after ten seconds.
+- The Direction Finder no longer opens with missing values, accepts invalid channels or points at an unrelated target. It keeps the chosen valid frequency after reopening.
+- **Build history:** 0.997 79, 83, 85, 88-89, 95, 99.
+- **Test:** Reopen Direction Finder after a reload, enter an invalid channel, then use a valid emergency preset.
 
-### Marshal configuration and destination crew roles
+### Immediate tablet connectivity refresh
 
-**Final behavior.** Hospital and hangar waypoints can override marshal presence and coordinates. A local YES setting spawns the marshal at the authored coordinates facing the helicopter; a local NO suppresses it even when the global setting is enabled. Generic marshals retain wind alignment at distance and stop being wind-repositioned inside the short-range area. With three crew, the pilot remains represented by the documented Crew object VAR 1 states through destination patient deboarding.
+- Changing Tablet 5G now refreshes the current tablet page immediately. Outdated Wi-Fi buttons cannot remain on screen after the setting changes.
+- **Build history:** 0.997 71, 76, 80-81, 84.
+- **Test:** Switch Tablet 5G on and off from Settings while Dispatch is open.
 
-**Build history.** Custom waypoint overrides and wind-range behavior were consolidated in 142.
+### Reliable medical-page availability
 
-**Runtime test.** Test generic and coordinate-based hospital/hangar marshals with global settings both enabled and disabled. At a three-crew destination, follow the entire patient deboarding/reboarding sequence and confirm the pilot does not appear as ordinary cabin crew.
+- The Medical page now follows the selected operating mode correctly and keeps a completed ambulance handover as a readable final record instead of a live, broken page.
+- **Build history:** 0.997 81, 86, 126-127.
+- **Test:** Complete an ambulance handover in both medical modes and reopen the record.
 
-### Settings, profiles, persistence, and local time
+### Presets retain personal choices
 
-**Final behavior.** Aircraft profiles, mission-list links, saved presets, CICERS endpoint choice, and persistent settings survive their intended reload paths. Save timestamps use local PC date/time in `DD-MM-YYYY` form. Failed CICERS checks restore the previous usable provider rather than leaving an invalid endpoint.
+- Changing a mission preset no longer overwrites an individual mission that the pilot manually enabled or disabled.
+- **Build history:** 0.997 82, 84, 102-103.
+- **Test:** Change one mission manually, switch presets and return; the personal choice must remain.
 
-**Build history.** Profile and endpoint behavior was consolidated in 93, 102, 111, 113-117. HPG-compatible local time and railway-query safeguards were finalized in 128 and 130.
+### Stable marshal guidance
 
-**Runtime test.** Save and reload an aircraft profile and mission preset, change the CICERS availability state, then save/delete a mission slot. Confirm the visible date/time is local, the date format is correct, and the former valid provider is restored after a failed CICERS check.
+- Marshal guidance now remains stable during approach, touchdown, restart and departure. It no longer keeps giving side calls on the centreline or moving incorrectly after landing.
+- **Build history:** 0.997 14, 19, 22, 32, 34-36, 43-45, 49-50, 55, 66, 68, 78, 142.
+- **Test:** Follow a full marshal approach, land, restart and depart; confirm neutral centreline guidance and no movement after landing.
 
-## Important limits and pending validation
+### Correct marshal location behavior
 
-- The active physical scene/transport implementation remains P1-P3. The five-slot registry, P4/P5 adapters, and five-patient transport are not presented as complete features.
-- A static PASS proves source structure and regression checks, not HPG/MSFS behavior. Run the listed runtime tests before treating a GitHub checkpoint as a validated mission release.
-- Build numbers advance only when a new downloadable mission artifact is delivered. GitHub checkpoints after build 142 do not consume a new build number.
+- A marshal configured for a fixed base or hospital position now appears at that position, faces the helicopter and remains stable nearby. Standard wind behavior remains for normal locations.
+- **Build history:** 0.997 47-51, 70, 142.
+- **Test:** Enable a fixed marshal location at a custom base or hospital and compare it with a normal location.
+
+### Reliable local saves and generated scenes
+
+- Saving now records local time correctly, and affected road/railway scenes no longer fail with a command error while being created.
+- **Build history:** 0.997 45, 130.
+- **Test:** Save a mission and start a railway or roadside incident; no error banner should appear.
+
+### Working take-off checklist flow
+
+- The Avionics, Before Take-off and Take-off checklists now lead into each other correctly. Their buttons and waiting periods work, and the final checklist returns to Dispatch.
+- **Build history:** 0.997 87-88, 135-137.
+- **Test:** Complete the three checklists in order, using both the waiting period and the proceed button.
+
+### Accurate take-off checks
+
+- Take-off preparation now reads aircraft attitude, collective and engine balance correctly. Slope instructions appear first only when the helicopter is genuinely on a steep slope.
+- **Build history:** 0.997 87, 135-136.
+- **Test:** Compare a level take-off with a steep-slope take-off while changing collective and engine power.
+
+## UI
+
+### Persistent troubleshooting snapshots
+
+- Troubleshooting now saves a clear snapshot of the current mission, route, crew progress, rotor progress and patient information. It can be reopened later or cleared deliberately.
+- **Build history:** 0.997 92, 108, 110-112, 123-125.
+- **Test:** Save a snapshot before and during ground operations, then reopen it from the troubleshooting page.
+
+### Multi-patient diagnostic page
+
+- The troubleshooting page includes a safe multi-patient readiness check. It reports the result without changing the active incident.
+- **Build history:** 0.997 123-125.
+- **Test:** Run the readiness check and save a snapshot; the active mission must remain unchanged.
+
+### Patient record buttons and automatic focus
+
+- Medical records now use clear `Patient 1`, `Patient 2` and `Patient 3` buttons. The page follows the patient currently visited by HEMS while still allowing the pilot to inspect another patient.
+- **Build history:** 0.997 91, 127, 138, post-142 checkpoint.
+- **Test:** Visit two patients and use all record buttons during the visit.
+
+### Clear clinical record layout
+
+- The Medical page now shows assessment, ambulance handover, HEMS actions, observations and Life Score as one readable vertical clinical record. Active work is yellow and completed work is green.
+- **Build history:** 0.997 54-57, 65, 67-68, 77, 81.
+- **Test:** Open the page before assessment, during handover and after treatment.
+
+### Easier reading of observations
+
+- Consciousness, vital signs and emergency information are arranged in readable lines. A value that cannot be tested is shown clearly instead of as a misleading number.
+- **Build history:** 0.997 52-57, 81.
+- **Test:** Compare the records of a stable, critical and intubated patient.
+
+### Dedicated Direction Finder page
+
+- CARLS now has a dedicated Direction Finder page with a clear frequency display, direct entry, emergency presets and the appropriate radio-mode choice.
+- **Build history:** 0.997 79, 83, 85, 88-89, 95, 99.
+- **Test:** Open the page, enter a valid frequency, select each emergency preset and return to CARLS.
+
+### Tablet 5G presentation
+
+- When Tablet 5G is enabled, the tablet shows a dedicated 5G status and home bar. When disabled, the normal Wi-Fi controls return.
+- **Build history:** 0.997 71, 76, 80-81, 84.
+- **Test:** Toggle 5G and inspect Dispatch, Briefing and an ordinary tablet page.
+
+### Organized persistent settings
+
+- Settings now group flight, medical, radio, marshal and mission-profile choices more clearly. Selected options survive a normal mission reload.
+- **Build history:** 0.997 39, 47, 58, 71, 74, 83, 102-104, 113-117.
+- **Test:** Change several settings, start another dispatch and confirm that the choices remain.
+
+### Dispatch progress and end-of-shift view
+
+- Dispatch now shows visible rescue progress, a clear warning if operations stop advancing, and an unambiguous End Shift choice after return to base.
+- **Build history:** 0.997 21, 59, 71-73, 100, 110.
+- **Test:** Run a ground operation, pause it briefly and complete the return-to-base flow.
+
+### Clean checklist pages
+
+- Checklist marks align at the right edge of the tablet. Every checklist page has a full-width Back link and title, and the checklist menu includes Take-off.
+- **Build history:** 0.997 87-88, 135-137.
+- **Test:** Open every checklist page and verify alignment, Back navigation and the Take-off entry.
+
+### Clear marshal controls and map feedback
+
+- The Technical page now presents clear marshal creation choices and matching map feedback. Troubleshooting shows the related operational progress.
+- **Build history:** 0.997 47-51, 110.
+- **Test:** Create a marshal in front of the helicopter and at a selected location, then inspect the map.
+
+### Better RescueTrack alerts
+
+- RescueTrack gives one sound for each new operational update after the first dispatch call, without duplicate alerts.
+- **Build history:** 0.997 68-69, 73, 77.
+- **Test:** Start a realistic dispatch and wait for ambulance, police or cancellation updates.
+
+## NEW FUNCTIONS
+
+### Three-crew skid operations
+
+- A three-person HEMS crew can complete skid-landed work for one, two or three patients, including assessment, treatment, helicopter transport, road handover and reboarding.
+- **Build history:** 0.997 1-13, 19-20, 40-42.
+- **Test:** Run three-crew skid calls with one, two and three patients and complete both helicopter and road outcomes.
+
+### Heli-rescuer destination drop
+
+- A grounded helicopter can leave heli-rescuers at a compatible base, hospital or selected destination. The crew later returns from that chosen place.
+- **Build history:** 0.997 1-13.
+- **Test:** Use the drop action at each supported destination, then recover the crew.
+
+### Configurable HEMS cancellation
+
+- When ground services can safely manage a suitable incident, HEMS may be cancelled after a realistic delay. The outcome appears in statistics and continues to return-to-base.
+- **Build history:** 0.997 1-13.
+- **Test:** Use a stable patient with sufficient ground services and wait for the cancellation decision.
+
+### Ambulance care before HEMS arrival
+
+- In suitable calls, ambulance and police can begin patient care before HEMS lands. HEMS receives the completed ground handover and continues from the right point.
+- **Build history:** 0.997 1-13, 10, 67, 91, 138, post-142 checkpoint.
+- **Test:** Delay HEMS arrival in a suitable call and inspect the ambulance handover after landing.
+
+### Diagnosis-based patient condition
+
+- Each patient's diagnosis shapes their starting condition and how it changes during care, rather than using one generic patient profile.
+- **Build history:** 0.997 52-58, 74, 81.
+- **Test:** Compare patients with different diagnoses through a complete visit.
+
+### Optional manual medical treatment
+
+- Manual treatment mode offers staged choices for the patient under HEMS care, with visible consequences and an explicit decision to complete the visit and choose transport.
+- **Build history:** 0.997 74, 81.
+- **Test:** Enable Manual mode, complete a full patient visit and compare it with Automatic mode.
+
+### Mechanical CPR option
+
+- The mechanical CPR setting allows eligible CPR to continue in flight. With it disabled, CPR waits for a landing.
+- **Build history:** 0.997 58.
+- **Test:** Repeat the same critical-patient scenario with the setting on and off.
+
+### Distant custom landing-zone police support
+
+- Police can prepare a distant custom landing zone, bring crew when appropriate, wait for the helicopter and return the crew toward the scene.
+- **Build history:** 0.997 1-13, 10.
+- **Test:** Compare a nearby and a distant custom landing zone with police available.
+
+### Base and hospital marshal choices
+
+- Separate settings can enable marshals at the home base and destination hospital. Custom locations can use their own local marshal choice.
+- **Build history:** 0.997 47, 70, 142.
+- **Test:** Enable each choice, return to base and land at both standard and custom hospitals.
+
+### Custom hangar marshal support
+
+- Custom hangars can choose whether a marshal is present and, when used, can give that marshal a fixed location. OATMC Flugrettung Cristophorus 14 is included with its requested marshal position.
+- **Build history:** 0.997 142.
+- **Test:** Select that base and verify the marshal appears only when the local choice is enabled.
+
+### Automatic or manual Direction Finder tuning
+
+- Direction Finder can automatically follow the active emergency source or allow the pilot to tune manually and obtain a bearing only for the matching emergency signal.
+- **Build history:** 0.997 83, 89, 95, 99.
+- **Test:** Switch modes during ambulance, search-and-rescue and distress-beacon missions.
+
+### Higher hoist operating range
+
+- Hoist guidance and readiness support the 40 to 160 ft operating range across patient and heli-rescuer work.
+- **Build history:** 0.997 84-85.
+- **Test:** Try hoist work below, inside and above the permitted range.
+
+### Ground-patient report continuity
+
+- Patient records remain available during the required care and handover sequence, then close live details only after a completed road transfer while retaining a final summary.
+- **Build history:** 0.997 74, 81, 126-127, 138.
+- **Test:** Complete road transfers for multiple patients and inspect the final record for each.
+
+### Smarter residential incident generation
+
+- Residential calls select suitable nearby roads, avoid unnecessary repeated people where possible and keep an accepted landing choice stable.
+- **Build history:** 0.997 72, 75.
+- **Test:** Generate several residential calls and accept/reject proposed landing points.
+
+### Improved saved missions and custom search-and-rescue
+
+- Saved missions retain their patient and scene identity more reliably, while custom search-and-rescue calls use their own correct mission details after loading.
+- **Build history:** 0.997 17, 31.
+- **Test:** Save/reload a mission, then start a custom search-and-rescue mission and compare the incident details.
+
+### Optional firefighter marshal
+
+- When the compatible firefighter add-on is installed, fire calls can use its firefighter marshal. The normal marshal remains available when it is not installed.
+- **Build history:** 0.997 14, 19, 32-36, 43.
+- **Test:** Run a fire call with and without the add-on installed.
+
+### Mission profiles and reload choices
+
+- Mission profiles and supported personal choices can carry through the normal reload path, including audio preferences and selected operating options.
+- **Build history:** 0.997 39, 102-104, 115-117.
+- **Test:** Choose a profile and settings, start another dispatch and verify they remain selected.
+
+### Continued availability after return
+
+- After a completed return, the crew can remain available for another dispatch. End Shift closes that availability cleanly.
+- **Build history:** 0.997 71.
+- **Test:** Return to base, wait for another call, then repeat and choose End Shift.
+
+## Build coverage ledger
+
+Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
+
+- **0.997 1-9:** Initial rescue, crew, vehicle, dispatch, map and heli-rescuer improvements.
+- **0.997 10-16:** Ambulance distance, vehicle reliability, custom landing-zone support, firefighter marshal, routing and patient-data improvements.
+- **0.997 17-22:** Saved-patient details, scene effects, crew roles, marshal behavior and statistics.
+- **0.997 23-26:** Reviewed consolidation builds; no separate final pilot-facing change remains.
+- **0.997 27-31:** Crew routes, engine-start safety and saved/custom search-and-rescue recovery.
+- **0.997 32-39:** Marshal improvements, troubleshooting cleanup and persistent settings.
+- **0.997 40-46:** Crew-role corrections, marshal stability and rescue-vehicle arrival reliability.
+- **0.997 47-51:** Marshal settings, custom marshal controls, base return and map feedback.
+- **0.997 52-60:** Patient observations, CPR, privacy, dispatch progress and layout correction.
+- **0.997 61-70:** Objective reliability, ambulance handover, RescueTrack and base marshal persistence.
+- **0.997 71-80:** Tablet 5G, audio, manual treatment, residential calls and Direction Finder.
+- **0.997 81-90:** Final road-transport records, presets, Direction Finder refinements and Before Take-off.
+- **0.997 91-100:** Independent Patient 1-3 flow, saved troubleshooting and dispatch feedback.
+- **0.997 101-110:** Profiles, ambulance/medical improvements, crew operations and troubleshooting summary.
+- **0.997 111-117:** Settings, profile reload and stable mission preferences.
+- **0.997 118-122:** Rear-door protection plus crew and rotor-progress reporting.
+- **0.997 123-127:** Multi-patient readiness display and completed-patient records.
+- **0.997 128-130:** Save-time and scene-creation reliability.
+- **0.997 131-134:** Reviewed consolidation builds; no separate final pilot-facing change remains.
+- **0.997 135-137:** Full take-off checklist flow and presentation.
+- **0.997 138-139:** Multi-patient ground care, patient records and residential fire response.
+- **0.997 140-141:** Reviewed delivery builds; their final pilot-facing outcome is included in build 142.
+- **0.997 142:** Three-crew role correction and custom fixed-location marshal support.
+- **Post-142 checkpoint:** Cumulative ground assessment, patient-record focus, ambulance loading and residential fire response remain to be confirmed in the simulator.

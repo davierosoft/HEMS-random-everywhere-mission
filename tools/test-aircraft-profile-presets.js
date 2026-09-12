@@ -32,7 +32,7 @@ for (const slot of [0, 1, 2, 3]) requireTrue(globals[`SAVE_TIMESTAMP${slot}`] ==
 
 const marker = profiles['mark aircraft profile custom'];
 requireTrue(hasCall(marker, 'save custom aircraft profile'), 'settings changes do not persist immediately');
-requireTrue(contains(marker, (entry) => entry && entry.set && entry.set.global === 'AIRCRAFT_PROFILE_SLOT' && entry.value === 'Aircraft_Profile_Table1'), 'factory changes do not seed CUSTOM DEFAULT');
+requireTrue(contains(marker, (entry) => entry && entry.set && entry.set.global === 'AIRCRAFT_PROFILE_SLOT' && entry.value === 'Aircraft_Profile_Table1'), 'factory changes do not seed CUS.PROFILE 0');
 
 const store = presets['store aircraft profile on file'];
 const copy = presets['copy saved aircraft profile to actual set'];
@@ -72,17 +72,17 @@ const rows = renderer.set_dispatch;
 const buttonRows = rows.filter((row) => Array.isArray(row.buttonbar));
 const buttons = buttonRows.flatMap((row) => row.buttonbar.map((button) => ({ row, button })));
 const titles = buttons.map(({ button }) => button.title);
-requireTrue(titles.includes('STORE PRESET ON FILE'), 'file-store button is missing');
+requireTrue(titles.includes('SAVE ACTUAL CONFIG TO FILE'), 'file-store button is missing');
 requireTrue(buttons.some(({ button }) => button.text === 'LAST FILE SAVE: {0}' && button.params && button.params[0] && button.params[0].local === 'AIRCRAFT_PROFILE_SAVED_PRESET_AT'), 'file-store timestamp is not displayed beside its button');
 requireTrue(!titles.includes('SAVE CUSTOM') && !titles.includes('RELOAD CUSTOM') && !titles.includes('UNLINK'), 'legacy save/reload/unlink controls remain');
-const copyControl = buttons.find(({ button }) => button.title === 'COPY SAVED PRESET TO ACTUAL SET');
+const copyControl = buttons.find(({ button }) => button.title === 'COPY SAVED CONFIG IN SELECTED PROFILE');
 requireTrue(copyControl && copyControl.row.show_condition && copyControl.row.show_condition.require && copyControl.row.show_condition.require.global === 'AIRCRAFT_PROFILE_ACTIVE' && copyControl.row.show_condition.eq === 'CUSTOM', 'copy control is not hidden for factory profiles');
 requireTrue(copyControl.button.disabled_condition && copyControl.button.disabled_condition.require && copyControl.button.disabled_condition.require.local === 'AIRCRAFT_PROFILE_SAVED_PRESET_VALID' && copyControl.button.disabled_condition.ne === 'yes', 'copy control is not gated on the opened saved preset state');
 const copyCommand = copyControl.button.commands && copyControl.button.commands[0];
 requireTrue(copyCommand && copyCommand.call_macro === 'copy saved aircraft profile to actual set' && !copyCommand.params, 'copy control passes a dynamic destination table');
 for (const label of ['MSN LIST DFLT', 'MSN LIST 1', 'MSN LIST 2', 'MSN LIST 3', 'MSN LIST 4', 'MSN LIST 5']) requireTrue(titles.includes(label), `missing link label ${label}`);
 
-const trackerLabel = 'TEST AIRCRAFT PROFILES: SELECT CUSTOM PRST 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUSTOM PRST 1';
+const trackerLabel = 'TEST AIRCRAFT PROFILES: SELECT CUS.PROFILE 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUS.PROFILE 1';
 requireTrue(JSON.stringify(tracker['test tracker page']).includes(trackerLabel), 'Test Tracker does not state the exact aircraft-profile test flow');
 requireTrue(!hasCall(profilePage, 'test tracker begin') && !hasCall(profilePage, 'test tracker complete'), 'opening the profile page changes the test result without verification');
 requireTrue(contains(settings.settings, (entry) => entry && entry.call_macro === 'test tracker begin' && entry.params && entry.params.test_id === 'aircraft_profiles'), 'Medical Options mode switch does not begin the aircraft-profile test');

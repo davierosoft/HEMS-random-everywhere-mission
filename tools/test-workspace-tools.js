@@ -95,6 +95,8 @@ try {
   expectThrow(() => beginRelease(releaseRoot, '0.997 112', 'Duplicate release.', { roots: ['title'], macros: ['example macro'], data: [] }), /still prepared/, 'active release intent');
   markBuildConsumed(releaseRoot, builtArtifact);
   assert(readIntent(releaseRoot).status === 'built', 'local build did not consume the release intent');
+  const builtAmendedIntent = amendPreparedRelease(releaseRoot, 'Declare a late built macro.', { roots: ['title'], macros: ['late built macro'], data: [] });
+  assert(builtAmendedIntent.status === 'built' && builtAmendedIntent.scope.macros.includes('late built macro'), 'unverified built release amendment did not merge declared scope');
   expectThrow(() => assertBuildIntent(releaseRoot, builtArtifact, { purpose: 'build' }), /is built/, 'reused local build intent');
   assert(assertBuildIntent(releaseRoot, builtArtifact, { purpose: 'static' }).release === '0.997 112', 'built release intent did not authorize static checks');
   const localTestArtifact = createLocalTestArtifact(releaseRoot, { ...releaseIntent, status: 'static_pass', staticVerifiedAt: '2026-01-01T00:00:00.000Z' }, builtArtifact);

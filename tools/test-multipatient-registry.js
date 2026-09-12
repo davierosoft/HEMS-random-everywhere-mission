@@ -288,6 +288,7 @@ for (let count = 1; count <= 5; count++) {
 {
   const legacySource = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/07-patient-medical.json'), 'utf8'));
   const legacyMacros = {
+    consciousness: [],
     'initialize patient2 physiology': legacySource['initialize patient2 physiology'].filter(c => !c.create_thread),
     'update patient2 physiology': legacySource['update patient2 physiology'].slice(0, -1),
     'apply patient2 medical action effect': legacySource['apply patient2 medical action effect'],
@@ -372,7 +373,7 @@ for (let count = 1; count <= 5; count++) {
     assert.equal(decision(), 1);
     for (const other of records) {
       other.visit_complete = 0;
-      assert.equal(decision(), 0, 'ANY unfinished visit prevents telemetry closure');
+      assert.equal(decision(), 1, 'An unfinished visit for another patient cannot reopen this confirmed handover');
       other.visit_complete = 1;
     }
     records[0].visit_complete = 0; records[0].dead = 1;
@@ -384,15 +385,15 @@ for (let count = 1; count <= 5; count++) {
   Object.assign(h.locals, {HELOVICTIMS: 3, medical_display_patient: 2, crewvisitended: 'yes',
     P2_GROUND_TRANSPORTED: 'yes', P2_SPO2: 96, 'L:MISSION_TIME': 120});
   const refresh = slot => h.call('multipatient registry tablet refresh', {slot});
-  assert.equal(refresh(2), 0, 'Crew return alone is NOT completion of every patient visit');
+  assert.equal(refresh(2), 1, 'A confirmed ground handover freezes this patient immediately');
   for (const patient of [1, 2]) h.call('multipatient registry tablet mark visit', {patient});
-  assert.equal(refresh(2), 0, 'The third visit remains open');
+  assert.equal(refresh(2), 1, 'The third visit cannot delay the completed patient report');
   h.call('multipatient registry tablet mark visit', {patient: 3});
   h.call('multipatient registry tablet mark visit', {patient: 3});
   assert.deepEqual(h.locals.patient_tablet_visits, [1, 2, 3], 'Visit completion is idempotent');
   assert.equal(refresh(2), 1);
   h.locals.manual_active_patient = 3;
-  assert.equal(refresh(2), 0, 'Review/transport confirmation is still an open manual visit');
+  assert.equal(refresh(2), 0, 'An active manual-treatment screen temporarily owns the shared tablet display');
   h.locals.manual_active_patient = 0;
   assert.equal(refresh(1), 0, 'Helicopter patient remains live');
   assert.equal(refresh(3), 0, 'Not yet assigned to ground transport');
@@ -422,18 +423,15 @@ for (let count = 1; count <= 5; count++) {
 
   const medical = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/07-patient-medical.json'), 'utf8'));
   const ui = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/04-dispatch-tablet-ui.json'), 'utf8'));
-  for (const list of [medical['patient health'], ui['sync medical patient display']]) {
-    assert.equal(list[0].call_macro, 'multipatient registry tablet refresh');
-    assert.equal(list[1].if.param, 'tablet_closed');
-    assert.deepEqual(list[1].then.at(-1), {return: 0}, 'Closed telemetry must bypass detailed display work');
-  }
+  assert.equal(medical['patient health'][0].call_macro, 'multipatient registry tablet refresh');
+  assert.equal(medical['patient health'][1].if.param, 'tablet_closed');
+  assert.equal(medical['patient health'][1].eq, 2, 'Frozen handovers must continue to the final-report renderer');
+  assert.equal(ui['sync medical patient display'][0].call_macro, 'multipatient registry tablet refresh');
+  assert.equal(ui['sync medical patient display'].some(command => command.if?.param === 'tablet_closed'), false, 'Display synchronization must not bypass frozen final values');
   assertRendererHasNoCallParams(medical['patient health'][1].then[0].set_dispatch);
   assert.equal(medical['patient clinical visit gate'].at(-1).call_macro, 'multipatient registry tablet mark visit');
-  const broken = structuredClone(source);
-  broken['multipatient registry tablet decision'][3].do.splice(1, 1);
-  const unsafe = new HpgRegistry(broken);
-  assert.equal(unsafe.call('multipatient registry tablet decision', {
-    records: [{slot: 1, dead: 0, visit_complete: 0, ground_confirmed: 1}], expected_count: 1, slot: 1
-  }), 1, 'Negative control: removing the all-visits guard reproduces premature closure');
+  const tabletDecision = JSON.stringify(source['multipatient registry tablet decision']);
+  assert.match(tabletDecision, /"ground_confirmed"/, 'Closure remains tied to a physical ground handover');
+  assert.doesNotMatch(tabletDecision, /"visit_complete"/, 'Closure must never depend on unrelated unfinished visits');
 }
-console.log('Multi-patient registry PASS: capacities 1-5, reservations, stale-worker fencing, transport, CPR, one-shot death, waypoint paths, physiology parity, tablet closure after ALL visits, immutable closing reports, renderer lifetime, snapshots and 200 SDK probes. HPG/MSFS integration remains a separate gate.');
+console.log('Multi-patient registry PASS: capacities 1-5, reservations, stale-worker fencing, transport, CPR, one-shot death, waypoint paths, physiology parity, per-patient tablet closure, immutable closing reports, renderer lifetime, snapshots and 200 SDK probes. HPG/MSFS integration remains a separate gate.');
