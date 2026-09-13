@@ -21,6 +21,8 @@ All commands run with the Node runtime already required by the repository. No pa
 | `node tools/check-mission-scope.js snapshot` | Saves an ignored compressed baseline before a mission edit. | `.workspace-state/` |
 | `node tools/check-mission-scope.js check --strict ...` | Lists changed root/macro/data keys and rejects anything outside explicit allow flags. | No |
 | `node tools/test-workspace-tools.js` | Exercises negative branch, detached-HEAD, scope, allowlist, and baseline-integrity cases. | Temporary OS directory only |
+| `node tools/test-crew-patient-visits.js` | Executes physical visit sequencing for all three crews and patients, assignment exclusion, reassessment, lock contention and failure handling. | No |
+| `node tools/test-live-patient-transport.js` | Executes live tour barriers, queued assignment, all nine P1-P3/resource combinations, physical-recovery guards, independent deterioration, real MANUAL/CPR worker commands and save/restore. Simulator behavior remains a separate gate. | No |
 | `npm test` | Runs modular-source, consistency, mission, DF, crew-emergency, and workspace-tool gates on any branch/CI checkout. | No |
 
 Existing focused validators remain available: `validate-mission.js`, `validate-df-regression.js`, and `test-crew-emergency.js`.

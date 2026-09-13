@@ -54,8 +54,7 @@ function sameList(left, right) {
 function checkInventory(name, actual, expected) {
   requireTrue(Number.isInteger(expected?.callCount) && typeof expected?.sha256 === 'string' && Array.isArray(expected?.commands), `${name} inventory is incomplete`);
   requireTrue(actual.callCount === expected.callCount, `${name} call count changed from ${expected.callCount} to ${actual.callCount}`);
-  // Array indexes are not stable when an unrelated command is inserted into a macro.
-  // The contract is about HPG command forms and inventory counts, not JSON coordinates.
+  requireTrue(actual.sha256 === expected.sha256, `${name} call sites changed; preserve their form or update the documented HPG contract deliberately`);
   requireTrue(sameList(actual.commands, expected.commands), `${name} HVAR command list changed; document the HPG command form before updating this contract`);
 }
 

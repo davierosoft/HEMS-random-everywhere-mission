@@ -16,6 +16,7 @@ const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macro
 const navigation = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/05-navigation-queries.json'), 'utf8'));
 const transfer = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/10-transfer-special-missions.json'), 'utf8'));
 const tablet = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/04-dispatch-tablet-ui.json'), 'utf8'));
+const lifecycle = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/11-mission-lifecycle.json'), 'utf8'));
 
 function fail(message) { throw new Error(`Ground operations recovery: ${message}`); }
 function requireTrue(condition, message) { if (!condition) fail(message); }
@@ -27,11 +28,13 @@ function contains(value, predicate) {
 }
 
 const clinical = runtime['patient1 clinical visit gate'];
-requireTrue(Array.isArray(clinical) && clinical.length === 1, 'patient 1 clinical visit gate is missing');
-requireTrue(contains(clinical, (entry) => entry && entry.if && entry.if.global === 'P1_MANUAL_MEDICAL_MODE' && entry.eq === 'manual'), 'manual medical mode no longer uses its clinical gate');
-requireTrue(contains(clinical, (entry) => entry && entry.set && entry.set.local === 'medical_actions_started' && entry.value === 1), 'automatic clinical treatment does not start when the clinician arrives');
-requireTrue(contains(clinical, (entry) => entry && entry.set && entry.set.local === 'medical_actions_visible' && entry.value === 'yes'), 'automatic clinical treatment is not shown to the user');
-requireTrue(contains(clinical, (entry) => entry && entry.call_macro === 'apply patient1 medical action effect'), 'automatic clinical treatment does not apply the configured actions');
+const completedTreatment = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/17-multipatient-runtime.json'), 'utf8'))['multipatient registry crew clinical completion'];
+requireTrue(Array.isArray(clinical) && clinical.some(entry => entry.call_macro === 'multipatient registry crew record'), 'patient 1 legacy gate must read the physical visit record');
+requireTrue(!contains(clinical, entry => entry?.create_thread), 'legacy gate must not restart an asynchronous treatment worker');
+requireTrue(contains(completedTreatment, entry => entry?.call_macro === 'request manual patient visit'), 'manual medical mode no longer uses its clinical gate');
+requireTrue(contains(completedTreatment, entry => entry?.set?.local === 'medical_actions_started' && entry.value === 1), 'automatic clinical treatment does not start when the clinician arrives');
+requireTrue(contains(completedTreatment, entry => entry?.set?.local === 'P1_MEDICAL_ACTIONS_VISIBLE' && entry.value === 'yes'), 'automatic clinical treatment is not shown to the user');
+requireTrue(contains(completedTreatment, entry => entry?.call_macro === 'apply patient1 medical action effect'), 'automatic clinical treatment does not apply the configured actions');
 requireTrue(!JSON.stringify(clinical).includes('SIM ON GROUND'), 'patient 1 clinical treatment is incorrectly gated by ground state');
 requireTrue(contains(hoist, (entry) => entry && entry.call_macro === 'patient1 clinical visit gate'), 'the HEMS clinician arrival path does not invoke the patient 1 clinical gate');
 
@@ -53,7 +56,7 @@ requireTrue(Array.isArray(nrGate) && nrGateText.includes('WAITING:') && nrGateTe
 requireTrue(nrGateText.includes('gndops_nr_bypass_seconds') && nrGateText.includes('gndops_idle_bypass_seconds') && nrGateText.includes('"lt":84') && nrGateText.includes('"gt":30'), 'NR gate safety bypass must require more than 30 continuous seconds below 84 percent');
 requireTrue(nrGateText.includes('SDK_ECP_MAIN_1') && nrGateText.includes('SDK_ECP_MAIN_2') && nrGateText.includes('"eq":1'), 'NR gate safety bypass must detect both engine MAIN switches in IDLE');
 requireTrue(nrGateText.includes('NR below 84 percent for over 30 seconds') && nrGateText.includes('both engine MAIN switches IDLE for over 30 seconds'), 'NR gate passed log must identify its safety-bypass reason');
-requireTrue(contains(checklistDefinitions['aircraft factory DEFAULT'], (entry) => entry?.set?.global === 'GNDOPS_NR_THRESHOLD' && entry.value === 80), 'the persistent ground-operations NR threshold must default to 80 through set: global');
+requireTrue(contains(lifecycle, (entry) => entry?.set?.global === 'GNDOPS_NR_THRESHOLD' && entry.value === 80), 'the mission must initialize the ground-operations NR threshold to 80 without reading global.json');
 requireTrue(contains(tablet, (entry) => entry?.slider?.global === 'GNDOPS_NR_THRESHOLD' && entry.slider.min === 79 && entry.slider.max === 83 && entry.slider.commands?.some((command) => command.set?.local === 'gndopsNR')), 'Settings must expose a 79-83 persistent NR threshold slider that updates the active local');
 requireTrue(contains(tablet, (entry) => entry?.text === '(P)Ground operations NR threshold: {0}%' && entry.params?.[0]?.tofixed?.global === 'GNDOPS_NR_THRESHOLD' && entry.params?.[0]?.digits === 1), 'Settings must show the NR threshold rounded to one decimal place');
 
@@ -224,37 +227,19 @@ for (const [name, target, distance] of [
   requireTrue(location?.object === target && location.dist === distance, `${name} must remain an authored approach location before ${target}`);
 }
 
-const primaryAmbulanceAssessment = scene['ambustretcher full']?.find((entry) => entry.create_thread)?.create_thread?.commands?.find((entry) => entry.if?.var?.[0] === 'L:RESCUED' && entry.eq === 0);
-requireTrue(primaryAmbulanceAssessment?.if?.var?.[0] === 'L:RESCUED' && primaryAmbulanceAssessment.eq === 0, 'primary ambulance assessment branch is missing');
-for (const [count, expectedPatients] of [[1, [1]], [2, [1, 2]], [3, [1, 2, 3]]]) {
-  const branch = primaryAmbulanceAssessment.then.find((entry) => entry.if?.local === 'HELOVICTIMS' && entry.eq === count);
-  const assessed = [];
-  const collectAssessments = (value) => {
-    if (Array.isArray(value)) value.forEach(collectAssessments);
-    else if (value && typeof value === 'object') {
-      if (value.call_macro === 'ambulance assess patient') assessed.push(value.params?.patient);
-      Object.values(value).forEach(collectAssessments);
-    }
-  };
-  collectAssessments(branch?.then);
-  requireTrue(JSON.stringify(assessed) === JSON.stringify(expectedPatients), `primary ambulance must assess patients ${expectedPatients.join(', ')} when ${count} casualties exist`);
-}
+const crewVisits = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/17-multipatient-runtime.json'), 'utf8'));
+const primaryCrewCommands = scene['ambustretcher full']?.find(entry => entry.create_thread)?.create_thread?.commands || [];
+const primaryTourIndex = primaryCrewCommands.findIndex(entry => entry.call_macro === 'multipatient registry crew tour');
+requireTrue(primaryTourIndex > 0 && contains(primaryCrewCommands.slice(0, primaryTourIndex), entry => entry?.create_object?.name === 'ambumedic7'), 'primary ambulance must create its medic before the physical tour');
+const visitTourText = JSON.stringify(crewVisits['multipatient registry crew tour']);
+requireTrue(visitTourText.includes('"patient":1') && visitTourText.includes('"patient":2') && visitTourText.includes('"patient":3'), 'the common ambulance/HEMS tour must include all three patient slots');
+const physicalMove = crewVisits['multipatient registry crew move'];
+requireTrue(contains(physicalMove, entry => entry?.drive_object?.name === '{param:actor}') && contains(physicalMove, entry => entry?.if?.location?.param === 'actor' && entry.if.var === 'distance:m'), 'the common visit must move its own actor and verify actual arrival');
 
 const secondaryAmbulance = ground['ambulance2 secondary rescue']?.find((entry) => entry.if?.and?.some((part) => part.require?.local === 'ambulance2_secondary_started'))?.then;
 requireTrue(Array.isArray(secondaryAmbulance), 'secondary ambulance assessment sequence is missing');
-const secondaryAssessmentOrder = [];
-function collectSecondaryAssessments(value) {
-  if (Array.isArray(value)) return value.forEach(collectSecondaryAssessments);
-  if (!value || typeof value !== 'object') return;
-  if (value.call_macro === 'ambulance assess patient') secondaryAssessmentOrder.push(value.params?.patient);
-  Object.values(value).forEach(collectSecondaryAssessments);
-}
-collectSecondaryAssessments(secondaryAmbulance);
-requireTrue(JSON.stringify(secondaryAssessmentOrder.slice(0, 3)) === JSON.stringify([3, 2, 1]), 'secondary ambulance must assess patients in reverse order P3, P2, P1');
-for (const patient of [3, 2, 1]) {
-  const patientBranch = secondaryAmbulance.find((entry) => entry.if?.local === `P${patient}_CLINICAL_OWNER` && entry.eq === null);
-  requireTrue(patientBranch?.then?.some((entry) => entry.drive_object?.name === 'ambumedic2') && patientBranch.then?.some((entry) => entry.call_macro === 'ambulance assess patient' && entry.params?.patient === patient), `secondary ambulance must move its medic before assessing patient ${patient}`);
-}
+const secondaryTourIndex = secondaryAmbulance.findIndex(entry => entry.call_macro === 'multipatient registry crew tour' && entry.params?.actor === 'ambumedic2');
+requireTrue(secondaryTourIndex > 0 && contains(secondaryAmbulance.slice(0, secondaryTourIndex), entry => entry?.create_object?.name === 'ambumedic2'), 'secondary ambulance must create its medic before the same P1/P2/P3 physical tour');
 for (const slot of [2, 3]) {
   const secondaryTransport = ground[`ambulance2 secondary patient${slot}`];
   const transportText = JSON.stringify(secondaryTransport);
@@ -284,8 +269,8 @@ requireTrue(firetruck1Text.includes('"local":"VFX"},"gte":5') && firetruck1Text.
 const threeCrewText = JSON.stringify(hoist['3 crew ground ops']);
 const stretcherPatientCommand = 'H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT';
 const stretcherNoPatientCommand = 'H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT';
-requireTrue(threeCrewText.includes(stretcherPatientCommand) && threeCrewText.includes('"local":"P1_HEMS_LOADING_CONFIRMED"},"value":"yes"'), 'three-crew ground loading never confirms the HPG patient-on-stretcher command');
-requireTrue(threeCrewText.includes('"call_macro":"from_any_injured_to_ready_for_transport"},{"wait_for":{"has_object":"injured_human"},"eq":1}') && threeCrewText.includes('"wait_for":{"local":"crewpatientloaded"},"eq":"yes"}'), 'three-crew loading may return the crew before a patient is ready and loaded');
+requireTrue(threeCrewText.includes(stretcherPatientCommand) && threeCrewText.includes('"call_macro":"multipatient registry live hems loaded"'), 'three-crew ground loading must commit the selected ticket after the HPG patient-on-stretcher sequence');
+requireTrue(threeCrewText.includes('"call_macro":"prepare selected HEMS patient","result":"prepared"') && threeCrewText.includes('"wait_for":{"has_object":"{local:HEMS_PATIENT_OBJECT}"},"eq":1}') && threeCrewText.includes('"wait_for":{"local":"crewpatientloaded"},"eq":"yes"}'), 'three-crew loading may return the crew before the selected patient is ready and loaded');
 
 const stretcherCommandSources = [
   ['navigation', navigation],

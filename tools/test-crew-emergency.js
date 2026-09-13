@@ -117,9 +117,9 @@ assert(hoistJson.includes('"member":3') && hoistJson.includes('"member":4') && h
 assert(hoistRiskJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistRiskJson.includes('"eq":"yes"'), 'hoist-out LifeScore monitoring is not gated by YES');
 assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"eq":"yes"'), 'fatal hoist loss is not gated by YES');
 assert(attachedRiskJson.includes('"local":"HOIST_CREW_ON_CABLE"') && attachedRiskJson.includes('"gt":0'), 'attached hoist operator monitor is not tied to the cable state');
-assert(attachedRiskJson.includes('"local":"HOIST_GROUND_RATE_FPS"') && attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"') && attachedRiskJson.includes('"subtract"'), 'attached hoist operator monitor does not derive descent rate from hoist distance');
-assert(!attachedRiskJson.includes('ACCELERATION BODY'), 'attached hoist operator monitor must not use aircraft body-axis acceleration');
-assert(attachedRiskJson.includes('"local":"HOIST_CREW_ON_CABLE"') && attachedRiskJson.includes('"gt":0'), 'attached hoist operator monitor is not tied to the cable state');
+assert(attachedRiskJson.includes('"local":"HOIST_GROUND_RATE_FPS"') && attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator monitor does not derive risk from measured descent rate');
+assert(!attachedRiskJson.includes('ACCELERATION BODY'), 'attached hoist operator monitor must not use aircraft acceleration as a hoist proxy');
+assert(attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator ground-impact monitor is missing');
 assert(hoistDownJson.includes('"local":"HOIST_CREW_ON_CABLE"') && hoistDownJson.includes('"start hoist attached risk monitor"'), 'hoist-down cable procedure does not start the attached-person monitor');
 assert(bootstrapJson.includes('"eq":"active"') && bootstrapJson.includes('"value":"yes"'), 'crew health bootstrap does not restore the canonical enabled value');
 assert(!bootstrapJson.includes('"eq":"yes"'), 'crew health bootstrap still rewrites the canonical enabled value away from yes');

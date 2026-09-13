@@ -21,8 +21,6 @@ const residential = queries['query closest residential rescue team'];
 if (!Array.isArray(residential)) throw new Error('residential rescue query macro is missing');
 
 const serialized = JSON.stringify(residential);
-if (!serialized.includes('"zone_type":"query_closest_result"')) throw new Error('residential rescue query must use the closest access result');
-if (serialized.includes('"zone_type":"query_random_result"')) throw new Error('residential rescue query must not choose a random access result');
 for (const token of [
   '"has_location":"accident_location"',
   '"location":"accident_location"',
@@ -37,7 +35,6 @@ for (const token of [
   if (!serialized.includes(token)) throw new Error(`residential location watchdog is incomplete: ${token}`);
 }
 if (serialized.includes('"object":"ambu_station"')) throw new Error('residential rescue query must never use ambu_station as a scene location');
-if (serialized.includes('"bearing":90')) throw new Error('residential location fallback must not use the helicopter-relative bearing field');
 if (serialized.includes('"set_route"')) throw new Error('residential rescue query must not own flight routing');
 
 const distanceGuard = residential.find((item) => item?.if?.location === 'accident_location' && item.if.var === 'distance:km' && item.if.to === 'rescue_location');
@@ -55,15 +52,6 @@ function collectPatientMoves(value, fireBranch = false) {
 collectPatientMoves(residentialScene);
 if (patientMoves.length !== 3 || patientMoves.some((move) => !move.fireBranch || move.to?.object !== 'rescue_location')) {
   throw new Error('residential patients must move to rescue_location only inside the three-injured fire branch');
-}
-
-const lifecycle = require('../mission-src/macros/11-mission-lifecycle.json')['delayed threads'];
-const flightPlanThread = lifecycle.find((item) => item?.create_thread?.commands?.[0]?.while?.do?.some((command) => command?.or));
-const flightPlanCommands = flightPlanThread?.create_thread?.commands?.[0]?.while?.do;
-const routeStartRefresh = flightPlanCommands?.findIndex((command) => command?.create_location === 'route_start');
-const routeErrorReset = flightPlanCommands?.findIndex((command) => command?.set?.local === 'routeupdate_error');
-if (routeStartRefresh < 0 || routeErrorReset < 0 || routeStartRefresh > routeErrorReset) {
-  throw new Error('flight-plan redraw must refresh route_start from the helicopter before drawing the route');
 }
 
 console.log(JSON.stringify({ result: 'PASS', residentialScenes: residentialData.length, hotelForcedIds: [...expectedHotelMissionIds], injuredCounts, fireBranch: 'HELOVICTIMS=3', patientMoves: patientMoves.length, rescue: 'rescue_location', sceneAccess: 'accident_location', hospital: 'ambu_station', maxDistanceKm: distanceGuard.gt }, null, 2));

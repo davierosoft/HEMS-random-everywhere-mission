@@ -423,11 +423,11 @@ function checkRuntimeStateInitialization() {
   expectRegression(usedTitlesGuard >= 0 && lockGuard >= 0 && lockWait > lockGuard, "public-title selector must initialize its array and lock before waiting");
   expectRegression(lockRelease > lockWait && trackerComplete > lockRelease && resultReturn > trackerComplete, "public-title selector must release lock and complete tracking before return");
 
-  ["ambulance_handover_p1_ready", "ambulance_handover_p2_ready", "ambulance_handover_p3_ready"].forEach((name) => {
-    const initial = findSetValue(handover, name, "pending");
-    const wait = handover.findIndex((command) => command.wait_for?.local === name);
-    expectRegression(initial >= 0 && wait > initial, "ambulance handover must initialize " + name + " before its wait");
-  });
+  const liveReserve = mission.macros['multipatient registry live reserve'] || [];
+  const barrierIndex = liveReserve.findIndex(command => command.call_macro === 'multipatient registry crew barrier');
+  const reserveIndex = liveReserve.findIndex(command => command.call_macro === 'multipatient registry reserve');
+  expectRegression(barrierIndex >= 0 && reserveIndex > barrierIndex, 'live assignment must check the physical tour barrier before reserving');
+  expectRegression(!compact(mission.macros['multipatient registry crew barrier']).includes('L:RESCUED'), 'rescue flags cannot substitute for completed physical visits');
   const rangeSet = findSet(dfUpdate, "DF_EMERGENCY_RX_RANGE_M");
   const rangeUse = dfUpdate.findIndex((command, index) => index > rangeSet && compact(command).includes("DF_EMERGENCY_RX_RANGE_M"));
   expectRegression(rangeSet >= 0 && rangeUse > rangeSet, "DF emergency update must calculate its receive range before use");
@@ -509,7 +509,8 @@ function checkRelease91Regressions() {
   const assessmentPositions = handoverCalls.map((name, index) => name === 'ambulance assess patient' ? index : -1).filter((index) => index >= 0);
   const continuationPositions = handoverCalls.map((name, index) => name === 'ambulance continue patient' ? index : -1).filter((index) => index >= 0);
   expectRegression(assessmentPositions.length === 0, 'ambulance handover must not duplicate the synchronous medic-arrival assessments');
-  expectRegression(continuationPositions.length === 3, 'ambulance handover must run all three continuation adapters');
+  expectRegression(continuationPositions.length === 0, 'legacy handover must not start competing treatment or assignment workers');
+  expectRegression(compact(mission.macros['multipatient registry live ground dispatch']).includes('multipatient registry live ground load'), 'ambulance dispatch must use the ticket-bound shared loader');
   [2, 3].forEach((patient) => {
     const macro = mission.macros[`ambulance2 secondary patient${patient}`];
     expectRegression(Array.isArray(macro), `secondary ambulance patient ${patient} macro must exist`);
@@ -554,8 +555,11 @@ function checkRelease91Regressions() {
     const macro = mission.macros[name];
     expectRegression(Array.isArray(macro), `${name} macro must exist`);
     if (macro) {
-      expectRegression(hasState(macro, 'P2_GROUND_TRANSPORTED'), `${name} must skip ground-transported patient 2`);
-      expectRegression(hasState(macro, 'P3_GROUND_TRANSPORTED'), `${name} must skip ground-transported patient 3`);
+      expectRegression(compact(macro).includes('"call_macro":"multipatient registry crew tour"'), `${name} must use the shared physical visit tour`);
+      const eligibility = mission.macros['multipatient registry crew eligibility'] || [];
+      for (const slot of [1, 2, 3]) {
+        expectRegression(hasState(eligibility, `P${slot}_GROUND_TRANSPORTED`) && hasState(eligibility, `P${slot}_GROUND_PROVIDER`), `${name} shared tour must exclude assigned/transported patient ${slot}`);
+      }
     }
   });
 
@@ -563,10 +567,17 @@ function checkRelease91Regressions() {
   const sceneAssessmentMacros = ['ambustretcher full', 'ambustretcher close', 'ambustretcher far'].map((name) => compact(mission.macros[name] || []));
   const countMatches = (value, needle) => value.split(needle).length - 1;
   expectRegression(!ambulanceHandover.includes('"distance:m"') && !ambulanceHandover.includes('ambumedic7'), 'ambulance handover must wait for direct assessment completion, not a medic distance');
-  const assessmentCalls = sceneAssessmentMacros.map((macro) => countMatches(macro, '"call_macro":"ambulance assess patient"'));
-  expectRegression(assessmentCalls[0] === 8, 'full ambulance response must assess every available patient before HEMS handover');
-  expectRegression(assessmentCalls[1] === 5 && assessmentCalls[2] === 4, 'partial ambulance responses must retain every final medic-arrival assessment');
-  expectRegression(assessmentCalls.reduce((total, count) => total + count, 0) === 17, 'every final ambulance-medic arrival must start its synchronous assessment');
+  expectRegression(countMatches(sceneAssessmentMacros[0], '"call_macro":"multipatient registry crew tour"') === 1, 'ambulance1 must perform one shared physical visit tour');
+  expectRegression(compact(mission.macros['ambulance2 secondary rescue'] || []).includes('"call_macro":"multipatient registry crew tour"'), 'ambulance2 must perform the same physical visit tour');
+  expectRegression(sceneAssessmentMacros.every(macro => !macro.includes('"call_macro":"ambulance assess patient"')), 'legacy transfer choreography must not restart clinical assessment outside the visit coordinator');
+  const tour = mission.macros['multipatient registry crew tour'] || [];
+  const tourVisits = collect(tour, (command) => command.call_macro === 'multipatient registry crew visit').map((command) => command.params?.patient);
+  for (const slot of [1, 2, 3]) expectRegression(tourVisits.includes(slot), `shared tour must visit patient ${slot}`);
+  const visit = mission.macros['multipatient registry crew visit'] || [];
+  const movementIndex = visit.findIndex(command => command.call_macro === 'multipatient registry crew move');
+  const acquireIndex = visit.findIndex(command => command.call_macro === 'multipatient registry crew acquire');
+  const assessmentIndex = visit.findIndex(command => command.try && compact(command).includes('"call_macro":"ambulance assess patient"'));
+  expectRegression(movementIndex >= 0 && acquireIndex > movementIndex && assessmentIndex > acquireIndex, 'physical movement and post-arrival ownership check must precede assessment');
   const postStretcherWalk = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":2}';
   const postStretcherStanding = postStretcherWalk.replace('"VAR1":3', '"VAR1":1');
   expectRegression(countMatches(compact(mission.macros['3 crew ground ops'] || []), postStretcherWalk) === 1, '3 crew post-stretcher return must walk before cargo doors close');
@@ -894,7 +905,7 @@ function checkRelease100TestTracker() {
     {
       "id": "ambulance_handover",
       "label": "TEST AMBULANCE CARE: CHECK ASSESSMENT STARTS BEFORE HELICOPTER CREW ARRIVES",
-      "macro": "ambulance clinical handover"
+      "macro": "multipatient registry live ground load"
     },
     {
       "id": "dispatch_lifecycle",

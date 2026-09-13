@@ -15,6 +15,8 @@ require('./validate-df-stations');
 require('./test-crew-emergency');
 require('./test-ground-operations-recovery');
 require('./test-multipatient-registry');
+require('./test-crew-patient-visits');
+require('./test-live-patient-transport');
 require('./test-health-symptoms');
 require('./test-civilian-object-safety');
 require('./test-route-location-integrity');

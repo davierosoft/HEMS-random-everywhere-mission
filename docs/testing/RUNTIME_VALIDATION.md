@@ -73,6 +73,23 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 
 ## Multi-patient, ambulance, and mission presets
 
+### Shared crew visits and P1-P3 transport (PENDING)
+
+- With three present unassigned patients, try each arrival order of ambulance1, ambulance2 and HEMS. Every arriving team must approach P1, P2 and P3; prior assessment by another team must not suppress its observation.
+- Assign one patient before arrival, then another while the crew is walking. Confirm no assessment starts for the assigned patient; inspect the per-crew state in Debug.
+- Repeat in AUTO and MANUAL, with 3/4/5 crew, ordinary ground operations, skid and hoist. Check that assistants walk with the correct HEMS/pilot role and stop on the opposite cardinal side of the patient.
+- Preserve already completed treatment steps during a later crew's timed reassessment. Confirm no duplicate treatment effects or reset procedure counts.
+- Remove or block an actor during a visit in a developer scenario. No completed assessment may be reported without physical arrival. Reset the dispatch during a busy observation and verify the previous worker does not visit a new scene.
+- Cross the three patient slots with ambulance1, ambulance2 and HEMS. For each of the nine combinations, arrange the target as the only unassigned suitable patient. Confirm the chosen object is packed, its own record closes, and neither other patient's score nor identity changes. Repeat HEMS loading with 3/4/5 crew in ground, skid and hoist operations; retain rotor, door and crew-role checks.
+- In MANUAL, let the ambulance finish its initial actions, then visit with HEMS. Resume at the next untreated phase. Attempt confirmation while an action is in progress: allocation must remain blocked. Finish the last action for each slot, including P1, and confirm that the transport choice becomes usable.
+- With fewer ambulances than casualties and one patient outside the existing ground criteria, verify that shortage does not make that patient ground-suitable. Let both ambulances request the same last eligible patient; only one may load it. Re-enter the HEMS selector during loading and verify its ticket stays on the same patient.
+- Temporarily shelter P1 in ambulance1 before HEMS arrival. Follow the real stretcher return, then verify HEMS can physically assess the sheltered patient and subsequently assign either suitable vehicle. Shelter alone must not close the clinical record or claim transport.
+- Fail movement before loading, then interrupt an active load in a developer scenario. Confirm recovery at the scene before reassignment, and rejection of the previous worker's ticket. If physical recovery cannot be completed, retain the pending state and capture the failure; never count it as delivery.
+- Transport P1 first while P2/P3 remain on scene. Continue monitoring both remaining scores, perform the next rescue with their original names and objects, and finish only after all required transfers. Also repeat with P2 or P3 as the first HEMS patient and with ground transfers still travelling when HEMS reaches hospital.
+- For each slot, run scene CPR and onboard mCPR with the configured equipment. Verify effects, controls and messages refer to that patient, other patients continue their own deterioration, and a reset cannot resume an old procedure. Compare Code/LifeScore progression across equivalent profiles.
+- Save and reload in each preset slot during visits, reservation, loading and after delivery. Check names, pathology, completed actions and reports. Interrupted transfers must return to scene allocation with fresh tickets and visits; delivered patients must not respawn as pending casualties. Reload a different scene to verify stale patient state is rejected.
+- Capture and reopen Debug during each transition. Check visit records, tour barriers, selected HEMS target, all resource tickets, pending counts and CPR slot against the visible scene. These cases require actual HPG/MSFS sign-off; static PASS is insufficient.
+
 1. Run near/far ambulance transfer with 3-, 4-, and 5-person crews for `ambulance`, `ambudoc`, and `us`; ambulance-owned movement must not wait on unrelated HEMS state.
 2. In MANUAL mode with 1-3 casualties, verify the active-patient mutex and action ownership. In AUTO, the page automatically follows the patient when HEMS starts that visit.
 3. With the helicopter still airborne or hovering, put the HEMS clinician beside patient 1. In AUTO, MEDICAL ACTIONS must show the first automatic action immediately and advance through the configured actions; in MANUAL, the first procedure choices must appear immediately. Neither path requires SIM ON GROUND.

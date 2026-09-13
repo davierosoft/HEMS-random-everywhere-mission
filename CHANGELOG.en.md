@@ -1,5 +1,10 @@
 ## Release 0.997 167
 
+- Declare reviewed runtime monitor and snapshot macros
+- Include remaining reviewed mission macros in semantic scope
+- Allow all macros in the reviewed semantic merge
+- Add location diagnostics macro to manifest and preserve merged mission changes
+- Verify complete semantic merge of Astra 159 and supplied 167
 - finalize location history source attribution
 - include existing crew spawn diagnostics in draft scope
 - validate separate manual and automatic snapshot tables
@@ -36,6 +41,12 @@
 
 - Include the existing crew emergency response scope required by the generated artifact.
 - Fix hoist fatal detection by using measured descent rate, stop fatal hoist flows, switch HOIST_OBJ controls OFF, and place the deceased crew asset at the last object location.
+
+## Development checkpoint - P1-P3 crew and transport integration (runtime PENDING)
+
+- Connect independent crew visits and completed-treatment barriers to exclusive ambulance/HEMS tickets, stable selection, shared loading and verified recovery.
+- Preserve shelter, independent physiology, CPR ownership, stable repeated rescue and versioned saves; test all nine patient/resource combinations.
+- Add the requested debug handoff in `docs/architecture/DEBUG_HANDOFF_2026-09-12.md`. No numbered delivery or simulator sign-off accompanies this checkpoint.
 
 ## Release 0.997 159
 
