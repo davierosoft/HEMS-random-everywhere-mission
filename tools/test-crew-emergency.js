@@ -68,13 +68,15 @@ function initialState(memberScore) {
     CREW_EMERGENCY_ACTIVE: 'no',
     CREW_LIFESCORE_TOTAL_IMPACT: 0,
     CREW_IMPACT_OBJECT: 'pax3',
+    HELIRESCUER_BOARDED: 0,
+    HOIST_CABLE_PERSON_TYPE: 'crew',
   };
   for (let member = 1; member <= 5; member += 1) {
     locals[`CREW_LIFESCORE_${member}`] = member === 3 ? memberScore : 100;
     locals[`CREW_LIFESCORE_ALERT_${member}`] = 0;
   }
   return {
-    globals: { HOIST_SAFETY_MONITOR: 'active' },
+    globals: { HOIST_SAFETY_MONITOR: 'yes' },
     locals,
     params: {},
     objects: new Set(['pax3']),
@@ -91,13 +93,36 @@ function assert(condition, message) {
 }
 
 const monitorJson = JSON.stringify(mission.macros['start crew lifescore monitor']);
+const recorderJson = JSON.stringify(mission.macros['record crew acceleration maxima']);
 const hoistJson = JSON.stringify(mission.macros['apply hoist crew lifescore impact']);
+const hoistDownJson = JSON.stringify(mission.macros['hoist down']);
 const hoistRiskJson = JSON.stringify(mission.macros['start hoist out risk monitor']);
 const hoistFatalJson = JSON.stringify(mission.macros['hoist out fatal failure']);
-assert(monitorJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');
-assert(hoistJson.includes('"member":3') && !hoistJson.includes('"member":4') && !hoistJson.includes('"member":5'), 'hoist_crew impact is not mapped exclusively to hoist operator member 3');
-assert(hoistRiskJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistRiskJson.includes('"eq":"active"'), 'hoist-out LifeScore monitoring is not gated by ACTIVE');
-assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"eq":"active"'), 'fatal hoist loss is not gated by ACTIVE');
+const accelerationJson = JSON.stringify(mission.macros['apply aircraft acceleration lifescore impact']);
+const attachedRiskJson = JSON.stringify(mission.macros['start hoist attached risk monitor']);
+const bootstrapJson = JSON.stringify(mission.macros['normalize crew health simulation setting']);
+assert(monitorJson.includes('"call_macro":"record crew acceleration maxima"'), 'crew monitor does not retain acceleration maxima recording');
+assert((monitorJson.match(/"while":1/g) || []).length === 3, 'crew acceleration monitor does not have three independent wait_for threads');
+assert((monitorJson.match(/"wait_for":/g) || []).length >= 18, 'crew acceleration monitor does not use wait_for thresholds');
+assert(monitorJson.includes('"global":"HOIST_SAFETY_MONITOR"') && monitorJson.includes('"eq":"yes"'), 'crew acceleration monitor is not gated by HOIST_SAFETY_MONITOR YES');
+assert(!monitorJson.includes('"local":"MISSION_PHASE"'), 'crew monitor is still coupled to mission phase');
+assert(accelerationJson.includes('"ACCELERATION BODY X"') && accelerationJson.includes('"ACCELERATION BODY Y"') && accelerationJson.includes('"ACCELERATION BODY Z"'), 'aircraft acceleration monitor does not read the simulator body-axis simvars');
+assert(!accelerationJson.includes('SDK_ACCELERATION_BODY_'), 'aircraft acceleration monitor still uses non-simulator SDK acceleration aliases');
+assert(accelerationJson.includes('SDK_PILOT_CAPT_ON') && accelerationJson.includes('SDK_PAX_1_ON') && accelerationJson.includes('SDK_PAX_2_ON') && accelerationJson.includes('SDK_PAX_3_ON'), 'aircraft acceleration monitor does not restrict impacts to onboard crew seats');
+assert(accelerationJson.includes('"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]') && accelerationJson.includes('"eq":1'), 'aircraft acceleration monitor does not restrict member 3 to the onboard seat HVAR');
+assert(!accelerationJson.includes('"local":"HOIST_OUT"'), 'aircraft acceleration monitor still uses HOIST_OUT as a proxy for onboard member 3');
+assert(accelerationJson.includes('"member":3') && accelerationJson.includes('"cause":"ABRUPT AIRCRAFT ACCELERATION"'), 'non-hoist-out winch operator is not covered by aircraft acceleration LifeScore monitoring');
+assert(recorderJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');
+assert(hoistJson.includes('"member":3') && hoistJson.includes('"member":4') && hoistJson.includes('"member":5'), 'hoist impact is not mapped to operator and helirescuer LifeScores 3, 4, and 5');
+assert(hoistRiskJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistRiskJson.includes('"eq":"yes"'), 'hoist-out LifeScore monitoring is not gated by YES');
+assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"eq":"yes"'), 'fatal hoist loss is not gated by YES');
+assert(attachedRiskJson.includes('"local":"HOIST_CREW_ON_CABLE"') && attachedRiskJson.includes('"gt":0'), 'attached hoist operator monitor is not tied to the cable state');
+assert(attachedRiskJson.includes('"local":"HOIST_GROUND_RATE_FPS"') && attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"') && attachedRiskJson.includes('"subtract"'), 'attached hoist operator monitor does not derive descent rate from hoist distance');
+assert(!attachedRiskJson.includes('ACCELERATION BODY'), 'attached hoist operator monitor must not use aircraft body-axis acceleration');
+assert(attachedRiskJson.includes('"local":"HOIST_CREW_ON_CABLE"') && attachedRiskJson.includes('"gt":0'), 'attached hoist operator monitor is not tied to the cable state');
+assert(hoistDownJson.includes('"local":"HOIST_CREW_ON_CABLE"') && hoistDownJson.includes('"start hoist attached risk monitor"'), 'hoist-down cable procedure does not start the attached-person monitor');
+assert(bootstrapJson.includes('"eq":"active"') && bootstrapJson.includes('"value":"yes"'), 'crew health bootstrap does not restore the canonical enabled value');
+assert(!bootstrapJson.includes('"eq":"yes"'), 'crew health bootstrap still rewrites the canonical enabled value away from yes');
 
 const ordinary = initialState(100);
 apply(ordinary, 1);
@@ -105,6 +130,20 @@ assert(ordinary.locals.CREW_LIFESCORE_3 === 99, 'ordinary impact did not reduce 
 assert([1, 2, 4, 5].every((member) => ordinary.locals[`CREW_LIFESCORE_${member}`] === 100), 'ordinary impact changed a non-target member');
 assert(ordinary.locals.CREW_EMERGENCY_ACTIVE === 'no', 'ordinary impact incorrectly triggered an emergency');
 assert(ordinary.locals.CREW_LIFESCORE_ALERT_3 === 1, 'first injury/exposure warning was not recorded');
+
+const helirescuerOne = initialState(100);
+helirescuerOne.locals.HELIRESCUER_BOARDED = 1;
+helirescuerOne.locals.HOIST_CABLE_PERSON_TYPE = 'helirescuer';
+helirescuerOne.params = { score: 1, cause: 'TEST HELIRESCUER IMPACT' };
+execute(mission.macros['apply hoist crew lifescore impact'], helirescuerOne);
+assert(helirescuerOne.locals.CREW_LIFESCORE_4 === 99 && helirescuerOne.locals.CREW_LIFESCORE_3 === 100, 'first helirescuer impact was not assigned to member 4');
+
+const helirescuerTwo = initialState(100);
+helirescuerTwo.locals.HELIRESCUER_BOARDED = 2;
+helirescuerTwo.locals.HOIST_CABLE_PERSON_TYPE = 'helirescuer';
+helirescuerTwo.params = { score: 1, cause: 'TEST HELIRESCUER IMPACT' };
+execute(mission.macros['apply hoist crew lifescore impact'], helirescuerTwo);
+assert(helirescuerTwo.locals.CREW_LIFESCORE_5 === 99 && helirescuerTwo.locals.CREW_LIFESCORE_3 === 100, 'second helirescuer impact was not assigned to member 5');
 
 const disabled = initialState(100);
 disabled.globals.HOIST_SAFETY_MONITOR = 'disabled';
@@ -141,4 +180,4 @@ survivorBoarding.objects = new Set(['pax3', 'pax1', 'pax2', 'hoist_crew']);
 execute(mission.macros['board crew after emergency'], survivorBoarding);
 assert(survivorBoarding.objects.size === 1 && survivorBoarding.objects.has('pax3'), 'fatal recovery did not leave only the packaged deceased object on scene');
 
-console.log(JSON.stringify({ result: 'PASS', scenarios: ['role-mapping', 'targeted-impact', 'disabled-no-impact', 'disabled-no-hoist-loss', 'active-fatal-hoist-loss', 'critical-at-10', 'fatal-at-0', 'fatal-survivor-boarding'] }, null, 2));
+console.log(JSON.stringify({ result: 'PASS', scenarios: ['role-mapping', 'targeted-impact', 'helirescuer-member-4', 'helirescuer-member-5', 'disabled-no-impact', 'disabled-no-hoist-loss', 'active-fatal-hoist-loss', 'critical-at-10', 'fatal-at-0', 'fatal-survivor-boarding'] }, null, 2));

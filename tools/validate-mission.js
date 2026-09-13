@@ -8,7 +8,6 @@ const root = path.resolve(__dirname, '..');
 const missionPath = path.resolve(process.env.HEMS_MISSION_FILE || path.join(root, 'everywhere_all.json'));
 const mission = JSON.parse(fs.readFileSync(missionPath, 'utf8'));
 const companionMission = JSON.parse(fs.readFileSync(path.join(root, 'train.json'), 'utf8'));
-const globals = JSON.parse(fs.readFileSync(path.join(root, 'global.json'), 'utf8'));
 const changelog = fs.readFileSync(path.join(root, 'CHANGELOG.en.md'), 'utf8');
 const validateDfRelease = require('./validate-df-release');
 
@@ -55,7 +54,7 @@ function checkRootShape() {
     if (!Object.prototype.hasOwnProperty.call(mission, key)) errors.push(`missing required root key: ${key}`);
   });
   if (!mission.data || typeof mission.data !== 'object' || Array.isArray(mission.data)) errors.push('root data must be an object');
-  if (mission.data?.Debug_Table !== 'Andrews_debug_snapshots') errors.push('Debug_Table must remain under root data');
+  if (mission.data?.Debug_Table !== 'Andrews_debug_manual_snapshots' || mission.data?.Debug_Auto_Table !== 'Andrews_debug_automatic_snapshots') errors.push('debug snapshot tables must remain under root data');
   if (Object.prototype.hasOwnProperty.call(mission.macros || {}, 'Debug_Table')) errors.push('root data entries must not be absorbed into macros');
 }
 
@@ -232,6 +231,18 @@ function compact(value) {
   return JSON.stringify(value);
 }
 
+function hasGlobalValue(macroName, globalName, expectedValue) {
+  let found = false;
+  const scan = (value) => {
+    if (found || !value || typeof value !== 'object') return;
+    if (Array.isArray(value)) return value.forEach(scan);
+    if (value.set?.global === globalName && JSON.stringify(value.value) === JSON.stringify(expectedValue)) found = true;
+    Object.values(value).forEach(scan);
+  };
+  scan(mission.macros[macroName] || []);
+  return found;
+}
+
 function hasState(value, name) {
   const text = compact(value);
   return text.includes(`"local":"${name}"`) || text.includes(`"global":"${name}"`) || text.includes(`"var":["L:${name}"`);
@@ -283,7 +294,7 @@ function scanGuardedWaits(value, guards, macroName, counts) {
 }
 
 function checkCompleteDebugSnapshot(debugPage) {
-  const sections = ["COMMON", "SUMMARY", "MISSION", "MEDICAL", "GROUND", "GUIDANCE", "INVENTORY"];
+  const sections = ["COMMON", "SUMMARY", "MISSION", "MEDICAL", "GROUND", "GUIDANCE", "INVENTORY", "LOCATIONS", "PATIENTS", "SCENE", "FLOW"];
   const dispatch = (debugPage || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
   const capture = dispatch
     .flatMap((row) => row.buttonbar || [])
@@ -588,7 +599,7 @@ function checkRelease91Regressions() {
   ['CAPTURE SNAPSHOT', 'CLEAR SNAPSHOT'].forEach((title) => {
     expectRegression(debugText.includes(`"title":"${title}"`), `debug page must expose ${title}`);
   });
-  expectRegression(mission.data?.Debug_Table === 'Andrews_debug_snapshots', 'debug snapshot must use a persistent HPG table');
+  expectRegression(mission.data?.Debug_Table === 'Andrews_debug_manual_snapshots' && mission.data?.Debug_Auto_Table === 'Andrews_debug_automatic_snapshots', 'debug snapshots must use persistent HPG tables');
   expectRegression(debugText.includes('"open_table":{"static":"Debug_Table"}') && debugText.includes('"save_table":{"static":"Debug_Table"}'), 'debug snapshot table must be opened and saved');
   ['valid', 'time', 'mission_id', 'phase', 'route_error', 'query_error', 'transport', 'transfer_state', 'active_patient', 'display_patient', 'preset'].forEach((key) => {
     expectRegression(debugText.includes('"key":"' + key + '"'), 'debug snapshot table must persist ' + key);
@@ -609,7 +620,7 @@ function checkAircraftProfileRegression() {
   ];
   requiredMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), `aircraft profile macro must exist: ${name}`));
   expectRegression(!allText.includes('"DIFFICULTY"'), 'legacy difficulty state must be fully migrated');
-  expectRegression(!Object.prototype.hasOwnProperty.call(globals, 'DIFFICULTY'), 'global defaults must not retain legacy Difficulty');
+  expectRegression(!hasState(mission, 'DIFFICULTY'), 'mission must not retain legacy Difficulty state');
 
   const expectedTables = {
     Aircraft_Profile_Links: 'Andrews_aircraft_profile_links',
@@ -632,12 +643,13 @@ function checkAircraftProfileRegression() {
     TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100
   };
   Object.entries(firstRun).forEach(([key, value]) => {
-    expectRegression(globals[key] === value, `first-run DEFAULT profile must set ${key}=${value}`);
+    const owner = key === 'AIRCRAFT_PROFILE_ACTIVE' || key === 'AIRCRAFT_PROFILE_SLOT' ? 'ensure aircraft profile defaults' : 'aircraft factory DEFAULT';
+    expectRegression(hasGlobalValue(owner, key, value), `first-run DEFAULT profile must set ${key}=${value} through set: global`);
   });
 
   const profilePage = mission.macros['aircraft profiles page'] || [];
   const profileText = compact(profilePage);
-  ['CUSTOM DEFAULT', 'CUSTOM PRST 1', 'CUSTOM PRST 5', 'STORE PRESET ON FILE', 'COPY SAVED PRESET TO ACTUAL SET', 'MSN LIST DFLT', 'MSN LIST 5'].forEach((token) => {
+  ['CUS.PROFILE 0', 'CUS.PROFILE 1', 'CUS.PROFILE 5', 'SAVE ACTUAL CONFIG TO FILE', 'COPY SAVED CONFIG IN SELECTED PROFILE', 'MSN LIST DFLT', 'MSN LIST 5'].forEach((token) => {
     expectRegression(profileText.includes(token), `aircraft profile page must expose ${token}`);
   });
   ['SAVE CUSTOM', 'RELOAD CUSTOM', 'UNLINK', 'LINK DEFAULT', 'LINK PRST'].forEach((token) => {
@@ -647,21 +659,21 @@ function checkAircraftProfileRegression() {
   const profileDispatches = profilePage.filter((command) => Array.isArray(command.set_dispatch));
   expectRegression(profileDispatches.length === 1, 'aircraft profile page must render through exactly one set_dispatch command');
   expectRegression(profilePage.every((command) => !['image', 'title', 'link', 'text', 'buttonbar'].some((key) => Object.prototype.hasOwnProperty.call(command, key))), 'aircraft profile page must not execute renderer items as commands (HPG NotFound regression)');
-  expectRegression(compact(profileDispatches[0] || {}).includes('CUSTOM DEFAULT') && compact(profileDispatches[0] || {}).includes('MSN LIST 5'), 'aircraft profile set_dispatch must contain the complete profile UI');
+  expectRegression(compact(profileDispatches[0] || {}).includes('CUS.PROFILE 0') && compact(profileDispatches[0] || {}).includes('MSN LIST 5'), 'aircraft profile set_dispatch must contain the complete profile UI');
   expectRegression(callsInOrder(profilePage).includes('ensure aircraft profile defaults') && callsInOrder(profilePage).includes('refresh aircraft profile page state'), 'aircraft profile page must initialize defaults and its current custom table before rendering');
   const profileLinkButtons = collect(profileDispatches, (item) => typeof item.title === 'string' && /^MSN LIST (?:DFLT|[1-5])$/.test(item.title));
   expectRegression(profileLinkButtons.length === 6 && profileLinkButtons.every((item) => compact(item.disabled_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(item.disabled_condition || {}).includes('CUSTOM')), 'MSN LIST link buttons must be disabled outside a CUSTOM settings profile');
-  const copyButtonRow = collect(profileDispatches, (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'COPY SAVED PRESET TO ACTUAL SET'))[0];
+  const copyButtonRow = collect(profileDispatches, (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'COPY SAVED CONFIG IN SELECTED PROFILE'))[0];
   expectRegression(Boolean(copyButtonRow) && compact(copyButtonRow.show_condition || {}).includes('AIRCRAFT_PROFILE_ACTIVE') && compact(copyButtonRow.show_condition || {}).includes('CUSTOM') && compact(copyButtonRow).includes('AIRCRAFT_PROFILE_SAVED_PRESET_VALID'), 'saved preset copy must be available only for CUSTOM profiles and only after a stored file exists');
 
-  const profileSettingsLink = collect(mission.macros.settings || [], (item) => item.link === 'AIRCRAFT SETTINGS PROFILES');
-  expectRegression(profileSettingsLink.length === 1 && callsInOrder(profileSettingsLink[0].commands || []).includes('aircraft profiles page'), 'Settings profile link must call the profile page');
+  const profileSettingsLink = collect(mission.macros.settings || [], (item) => item.buttonbar?.some((button) => button.title === 'USER SETTINGS PROFILES'));
+  expectRegression(profileSettingsLink.length === 1 && callsInOrder(profileSettingsLink[0].buttonbar?.[0]?.commands || []).includes('aircraft profiles page'), 'Settings profile button must call the profile page');
   const settingsDispatchForLayout = (mission.macros.settings || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
   const flightAssistIndex = settingsDispatchForLayout.findIndex((item) => item.link === '+ FLIGHT ASSISTS');
   expectRegression(flightAssistIndex > 0 && settingsDispatchForLayout[flightAssistIndex - 1]?.image === 'bar', 'Settings must separate Most Used Settings from Flight Assist with a bar');
 
   const settingsText = compact(mission.macros.settings || []);
-  ['FLIGHT ASSISTS', 'Engine failure simulation', 'Orange target smoke', 'Target guidance range', 'Crew health simulation', 'Winch control mode', 'GTN(TDS) NAV SOURCE', 'Teleport assist'].forEach((token) => {
+  ['FLIGHT ASSISTS', 'Helicopter failures', 'Orange smoke marker', 'Target Position window on tablet', 'Crew health simulation', 'Winch control mode', 'GTN(TDS) NAV SOURCE', 'Teleport assist'].forEach((token) => {
     expectRegression(settingsText.includes(token), `Settings must expose individual flight-assist option: ${token}`);
   });
   const linked = compact(mission.macros['apply linked aircraft profile'] || []);
@@ -708,7 +720,7 @@ function checkAircraftProfileRegression() {
   const vehiclePages = [mission.macros.variant_selection || [], mission.macros['HEMS mission_type'] || []];
   const vehicleControls = vehiclePages.flatMap((page) => collect(page, (item) => Array.isArray(item.commands) && item.commands.some((command) => command.set && ['ambu_force', 'poli_force', 'fire_force'].includes(command.set.global))));
   expectRegression(vehicleControls.length >= 24 && vehicleControls.every((item) => marksCustom(item.commands)), 'all Custom Mission vehicle preferences must mark CUSTOM');
-  const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUSTOM |MSN LIST )/.test(item.title));
+  const customIndicators = collect(profilePage, (item) => typeof item.title === 'string' && /^(CUS\.PROFILE |MSN LIST )/.test(item.title));
   expectRegression(customIndicators.length === 12 && customIndicators.every((item) => compact(item.select_condition).includes('AIRCRAFT_PROFILE_ACTIVE')), 'only CUSTOM state may select a saved slot or its MSN LIST link');
 }
 function checkRelease94Regressions() {
@@ -719,7 +731,7 @@ function checkRelease94Regressions() {
   });
   const smokeControls = collect(mission.macros.settings || [], (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'NEVER'));
   expectRegression(smokeControls.length === 1 && compact(smokeControls[0]).includes('AUTO') && compact(smokeControls[0]).includes('REALISTIC') && compact(smokeControls[0]).includes('ALWAYS'), 'orange smoke settings must expose NEVER/AUTO/REALISTIC/ALWAYS');
-  expectRegression(globals.ORANGE_TARGET_SMOKE === 'auto', 'first-run orange smoke setting must be AUTO');
+  expectRegression(hasGlobalValue('normalize orange target smoke setting', 'ORANGE_TARGET_SMOKE', 'auto'), 'first-run orange smoke setting must be AUTO');
   const smokeFactoryValues = {
     DEFAULT: 'auto',
     'ROOKIE PILOT': 'always',
@@ -780,8 +792,8 @@ function checkRelease94Regressions() {
   const cicersFailureGuard = cicersFailure[0];
   const cicersFailureManualModes = (cicersFailureGuard?.if?.or || []).map((item) => item.eq).sort().join(',');
   const cicersFailureManualRestore = (cicersFailureGuard?.then || []).some((command) => command.set?.var?.[0] === endpointLvar && command.value?.local === 'CICERS_PREVIOUS_DATAQUERY_MODE') && (cicersFailureGuard?.then || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value?.local === 'CICERS_PREVIOUS_DATAQUERY_MODE');
-  const cicersFailureAutoFallback = (cicersFailureGuard?.else || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value === 4) && (cicersFailureGuard?.else || []).some((command) => command.call_macro === 'DATAQUERYSERVICERANDOM');
-  expectRegression(cicersFailureManualModes === '0,1,2' && cicersFailureManualRestore && cicersFailureAutoFallback && !compact(cicersFailure).includes('CICERS_PREVIOUS_ENDPOINT'), 'CICERS failure must restore active manual provider 0/1/2 even when the persisted endpoint is stale, otherwise fall back to AUTO-TOGGLE');
+  const cicersFailureAutoFallback = (cicersFailureGuard?.else || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value === 10) && (cicersFailureGuard?.else || []).some((command) => command.call_macro === 'DATAQUERYSERVICERANDOM');
+  expectRegression(cicersFailureManualModes === '0,1,2,4' && cicersFailureManualRestore && cicersFailureAutoFallback && !compact(cicersFailure).includes('CICERS_PREVIOUS_ENDPOINT'), 'CICERS failure must restore active manual provider 0/1/2/4 even when the persisted endpoint is stale, otherwise fall back to AUTO-TOGGLE');
   expectRegression(!ping.includes('DATAQUERYSERVICERANDOM'), 'CICERS ping must route expired keys through the same previous-provider fallback');
   const cicersSuccessGuard = (mission.macros['restore data query selection after CICERS success'] || [])[0];
   const cicersSuccessKeepsCicers = (cicersSuccessGuard?.else || []).some((command) => command.set?.var?.[0] === endpointLvar && command.value === 3) && (cicersSuccessGuard?.else || []).some((command) => command.set?.global === 'DATAQUERYSERVICE' && command.value?.local === 'CICERS_PREVIOUS_DATAQUERY_MODE');
@@ -791,7 +803,7 @@ function checkRelease94Regressions() {
   const cicersBypassButtons = cicersBypassSetting?.buttonbar || [];
   const cicersBypassYes = cicersBypassButtons.find((button) => button.title === 'YES');
   const cicersBypassNo = cicersBypassButtons.find((button) => button.title === 'NO');
-  expectRegression(globals.CICERS_AUTO_ACTIVATION_BYPASS === 'NO' && ensure.includes('CICERS_AUTO_ACTIVATION_BYPASS') && cicersBypassYes?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassYes.select_condition.eq === 'YES' && cicersBypassNo?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassNo.select_condition.eq === 'NO', 'CICERS auto activation bypass must default to NO and provide persistent YES/NO Settings controls');
+  expectRegression(hasGlobalValue('ensure data query service selection', 'CICERS_AUTO_ACTIVATION_BYPASS', 'NO') && ensure.includes('CICERS_AUTO_ACTIVATION_BYPASS') && cicersBypassYes?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassYes.select_condition.eq === 'YES' && cicersBypassNo?.select_condition?.require?.global === 'CICERS_AUTO_ACTIVATION_BYPASS' && cicersBypassNo.select_condition.eq === 'NO', 'CICERS auto activation bypass must default to NO and provide persistent YES/NO Settings controls');
   expectRegression(ensure.includes('"call_macro":"CICERS PING"'), 'CICERS key validation must run at every startup');
   const profileMacros = ['ensure aircraft profile defaults', 'sync aircraft profile runtime', 'apply aircraft factory profile', 'save custom aircraft profile', 'load custom aircraft profile'];
   expectRegression(profileMacros.every((name) => !compact(mission.macros[name] || []).includes('DATAQUERYSERVICE')), 'aircraft profiles must not overwrite the independent endpoint selection');
@@ -807,9 +819,11 @@ function checkRelease94Regressions() {
   const crewImpact = compact(mission.macros['apply crew lifescore impact'] || []);
   expectRegression(crewImpact.includes('"param":"member"') && crewImpact.includes('"local":"CREW_LIFESCORE_CURRENT"'), 'crew impact must target one explicit member and evaluate the resulting score');
   const crewMonitor = compact(mission.macros['start crew lifescore monitor'] || []);
-  expectRegression(crewMonitor.includes('"object":"pax3","var":"distance:m","to":"VFXA"') && crewMonitor.includes('"object":"hoist_crew","var":"distance:m","to":"VFXA"'), 'scene exposure must use each ground operator distance to the active hazard');
-  expectRegression(crewMonitor.includes('"object":"pax3","member":2') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":3') && !compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":4'), 'crew role mapping must keep pax3 as medical crew 2 and hoist_crew as hoist operator 3');
-  expectRegression(!crewMonitor.includes('"object":"VFXA","var":"distance:m"'), 'scene exposure must never use helicopter-to-smoke distance as crew exposure');
+  const crewRecorder = compact(mission.macros['record crew acceleration maxima'] || []);
+  const crewMonitorAndRecorder = `${crewMonitor}${crewRecorder}`;
+  expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","var":"distance:m","to":"VFXA"') && crewMonitorAndRecorder.includes('"object":"hoist_crew","var":"distance:m","to":"VFXA"'), 'scene exposure must use each ground operator distance to the active hazard');
+  expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","member":2') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":3') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":4') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":5'), 'crew role mapping must preserve medical crew 2, hoist operator 3, and helirescuer members 4/5');
+  expectRegression(!crewMonitorAndRecorder.includes('"object":"VFXA","var":"distance:m"'), 'scene exposure must never use helicopter-to-smoke distance as crew exposure');
   const crewPost = compact(mission.macros['post crew safety message'] || []);
   expectRegression(crewPost.includes('"set_message"') && crewPost.includes('Dispatcher_Messages') && crewPost.includes('UpdateRescueTrack'), 'crew safety alerts must reach tablet, dispatch messages, and RescueTrack');
   const crewEvaluate = compact(mission.macros['evaluate crew lifescore state'] || []);
@@ -818,8 +832,14 @@ function checkRelease94Regressions() {
   expectRegression(crewResponse.includes('"value":"CREW_FATAL"') && crewResponse.includes('"value":"CREW_CRITICAL"') && crewResponse.includes('replace deceased crew object'), 'crew death and critical injury must both fail the mission through the emergency response');
   const fatalReplacement = compact(mission.macros['replace deceased crew object'] || []);
   ['pax3', 'pax1', 'pax2', 'hoist_crew'].forEach((name) => {
-    expectRegression(fatalReplacement.includes(`"destroy_object":"${name}"`) && fatalReplacement.includes(`"name":"${name}","title":"Airbus H145 Medic Stretcher"`), `deceased ground object ${name} must be replaced in place with the packaged casualty asset under the same name`);
+    expectRegression(fatalReplacement.includes(`"destroy_object":"${name}"`) && fatalReplacement.includes(`"name":"${name}"`) && fatalReplacement.includes('"static":"deadmen"') && !fatalReplacement.includes('Airbus H145 Medic Stretcher'), `deceased ground object ${name} must be replaced in place with a dead asset under the same name`);
   });
+  const fatalStop = compact(mission.macros['stop fatal hoist operation'] || []);
+  expectRegression(fatalStop.includes('HOIST_OBJ_HUMAN_1_OFF') && fatalStop.includes('HOIST_OBJ_HUMAN_1_BAG_OFF') && fatalStop.includes('HOIST_OBJ_STRETCHER_OFF') && fatalStop.includes('set_dispatch_dialog') && fatalStop.includes('set_briefing_dialog') && fatalStop.includes('END MISSION'), 'fatal hoist handling must switch hoist objects off, close mission dialogs, and offer END MISSION');
+  const hoistOutMonitor = compact(mission.macros['start hoist out risk monitor'] || []);
+  const hoistAttachedMonitor = compact(mission.macros['start hoist attached risk monitor'] || []);
+  expectRegression(hoistOutMonitor.includes('HOIST_GROUND_RATE_FPS') && hoistOutMonitor.includes('hoist_get_distance_from_ground:ft') && !hoistOutMonitor.includes('ACCELERATION BODY'), 'hoist-out monitor must use measured descent rate instead of aircraft acceleration');
+  expectRegression(hoistAttachedMonitor.includes('HOIST_GROUND_RATE_FPS') && hoistAttachedMonitor.includes('hoist_get_distance_from_ground:ft') && !hoistAttachedMonitor.includes('ACCELERATION BODY'), 'attached hoist monitor must use measured descent rate instead of aircraft acceleration');
   const emergencyBoarding = compact(mission.macros['board crew after emergency'] || []);
   ['SDK_PAX_1_ON', 'SDK_PAX_2_ON', 'SDK_PAX_3_ON'].forEach((trigger) => expectRegression(emergencyBoarding.includes(trigger), `emergency boarding must restore ${trigger}`));
   expectRegression(emergencyBoarding.includes('CREW_EMERGENCY_FATAL') && emergencyBoarding.includes('CREW_IMPACT_OBJECT'), 'fatal boarding must leave only the deceased packaged object on scene while boarding survivors');
@@ -1018,7 +1038,7 @@ function checkRelease100TestTracker() {
     },
     {
       "id": "aircraft_profiles",
-      "label": "TEST AIRCRAFT PROFILES: SELECT CUSTOM PRST 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUSTOM PRST 1",
+      "label": "TEST AIRCRAFT PROFILES: SELECT CUS.PROFILE 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUS.PROFILE 1",
       "begin_macro": "settings",
       "complete_macro": "select custom aircraft profile"
     },
@@ -1081,10 +1101,10 @@ function checkRelease100TestTracker() {
     const states = ['PENDING', 'IN PROGRESS', 'COMPLETED', 'SUCCESSFUL', 'FAILED'];
     const expectedText = test.id === 'aircraft_profiles' ? {
       'PENDING': test.label,
-      'IN PROGRESS': 'TEST AIRCRAFT PROFILES: SWITCH MODE, THEN REOPEN THE SAME CUSTOM PRESET - IN PROGRESS',
-      'COMPLETED': 'TEST AIRCRAFT PROFILES: SAME MODE RESTORED - READY: SELECT RESULT',
-      'SUCCESSFUL': 'TEST AIRCRAFT PROFILES: SAME MODE RESTORED - SUCCESSFUL',
-      'FAILED': 'TEST AIRCRAFT PROFILES: MODE NOT RESTORED - FAILED: {0}'
+      'IN PROGRESS': 'TEST AIRCRAFT PROFILES: SWITCH MODE, THEN REOPEN THE SAME CUS.PROFILE - IN PROGRESS',
+      'COMPLETED': 'TEST AIRCRAFT PROFILES: SAME CUS.PROFILE RESTORED - READY: SELECT RESULT',
+      'SUCCESSFUL': 'TEST AIRCRAFT PROFILES: SAME CUS.PROFILE RESTORED - SUCCESSFUL',
+      'FAILED': 'TEST AIRCRAFT PROFILES: CUS.PROFILE NOT RESTORED - FAILED: {0}'
     } : {
       'PENDING': test.label,
       'IN PROGRESS': test.label + ' - IN PROGRESS',

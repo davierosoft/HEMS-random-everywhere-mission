@@ -3,7 +3,6 @@ const path = require('path');
 
 const missionPath = process.argv[2] || path.join(__dirname, '..', 'everywhere_all.json');
 const mission = JSON.parse(fs.readFileSync(missionPath, 'utf8'));
-const globalDefaults = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'global.json'), 'utf8'));
 const errors = [];
 const expect = (condition, message) => { if (!condition) errors.push(message); };
 const compact = (value) => JSON.stringify(value);
@@ -30,8 +29,6 @@ const objectStations = [
 const objectFrequencies = objectStations.map(([, , frequency]) => frequency);
 
 expect(mission.data?.[tableName] === tableId, 'DF Stations: missing persistent DF_Stations_Table data binding');
-for (const key of Object.keys(globalDefaults)) expect(!key.startsWith('DF_STATION') && !key.startsWith('DF_STATIONS'), `DF Stations: ${key} must not be a global default`);
-
 const macros = mission.macros || {};
 for (const name of ['DF stations page', 'DF stations validate', 'DF stations save', 'DF stations delete', 'DF stations tune custom', 'DF stations tune object', 'DF stations debug state', 'CARLS DF set active channel', 'CARLS DF clear bearing']) {
   expect(Array.isArray(macros[name]), `DF Stations: missing macro ${name}`);

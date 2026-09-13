@@ -12,8 +12,8 @@ These instructions protect the deployable mission while keeping coding-agent con
 ## Source ownership
 
 - `mission-src/` is the editable source for the `macros` and `data` sections of `everywhere_all.json`.
-- `everywhere_all.json` is the generated deployment artifact. Do not patch or reformat it directly; edit one focused module and run `node tools/mission-workspace.js build`.
-- `global.json` and `train.json` remain independent deployable inputs.
+- `everywhere_all.json` is generated; edit one focused module and run `node tools/mission-workspace.js build`.
+- `train.json` remains an independent deployable input. HPG owns the local global-state container; it is not a repository or delivery artifact.
 - Use `node tools/mission-workspace.js locate "<name>"` to find a macro or data owner. Do not search or load the 8.7 MB artifact when a module is available.
 - Follow nested `AGENTS.md` files inside `mission-src/`, `tools/`, and `docs/` when working there.
 
@@ -21,14 +21,17 @@ These instructions protect the deployable mission while keeping coding-agent con
 
 - Use `apply_patch` for direct edits. Do not serialize or reformat large unaffected blocks.
 - Inspect the diff after each logical patch. Shared-state changes require inspection of every affected caller.
-- No opportunistic refactors, renamed runtime state, UI changes, or release bumps outside the request.
+- No opportunistic refactors, renamed state, UI changes, or release bumps outside the request.
+- A watchdog for a moving object must derive its timeout from the planned route or movement distance and the effective speed or speed multiplier, plus an explicit safety delta. A fixed timeout is forbidden for route travel. Its recovery fallback must be a verified location, never a route identifier; add or update a regression gate that rejects fixed route-watchdog timeouts.
+- Location angles: `bearing` is the helicopter-relative azimuth and is valid only for offsets relative to the helicopter. Every non-helicopter ground-object offset uses `bearing2` and only the cardinal values `0`, `90`, `180`, or `270`. Ambulance and stretcher rear ingress or egress is always `bearing2: 180`; do not substitute `bearing` or a non-cardinal angle.
 - User-facing mission strings added or changed by a task must be ASCII-only. Do not use Unicode punctuation, typographic quotes, dashes, symbols, or non-ASCII letters unless the user explicitly requests that exact character and the target HPG surface supports it.
-- Every new option added to Settings or the technical page is persistent by default: use a named global, initialize its first-run default in global.json, and prefix its user-facing description with (P). Depart from this only when the user explicitly requests a non-persistent option.
+- `global.json` is not repo/delivery. Initialize required globals with null-guarded `set: global`; never overwrite local HPG state.
+- `:LOCATION` is permitted only in HPG text-box formatter parameters. Never use it in values, initialization, conditions, structs, tables, snapshots, or debug state. Runtime logging uses dedicated mission LVARs populated by the documented coordinate mechanism; snapshots may read those LVARs only.
 - Mission root keys, command spelling, renderer placement, and state-machine rules are defined in `DEVELOPMENT_RELEASE_CHECKLIST.md`; read the relevant section before changing runtime behavior.
 
 ## Required verification
 
-1. Before every local build, prepare one one-use intent. Use `node tools/release-workflow.js draft ...` for intermediate verification; it must not change the mission version, runtime build, changelog, or create a numbered delivery artifact. Use `begin --release ...` only when preparing the next artifact the user will actually receive; that release must be higher than the last supplied release. Corrections before delivery use drafts, never consume release numbers.
+1. Before every local build, prepare one one-use intent. Use `node tools/release-workflow.js draft ...` for intermediate verification; it must not change the mission version, runtime build, changelog, or create a numbered delivery artifact. Use `begin --release ...` only after the user explicitly orders publication of the next artifact; that release must be higher than the last supplied release. Corrections before explicit delivery use drafts, never consume release numbers.
 2. Run `node tools/mission-workspace.js check` after every mission build, then `node tools/release-workflow.js static`. Draft verification writes only under `outputs/drafts/`; a delivery intent creates `outputs/<release>-local-test/everywhere_all.json`.
 3. Supply a numbered local-test artifact only for a user-requested delivery. A draft artifact is internal verification only and must never be described as a release, supplied as a download, or added to the changelog.
 4. Run `node tools/check-mission-scope.js check --strict` with one `--allow-macro`, `--allow-data`, or `--allow-root` flag for every intended semantic change.
@@ -39,7 +42,8 @@ These instructions protect the deployable mission while keeping coding-agent con
 ## Documentation and delivery
 
 - Durable architecture belongs in `docs/architecture/`; current manual runtime checks belong in `docs/testing/`. Do not create model-to-model handoff files.
-- Every supplied mission artifact, including an unpublished local copy, must be named exactly `everywhere_all.json`. Increment the mission title/build exactly once immediately before supplying the next user-requested artifact; never reuse a prior supplied number. Internal drafts are not deliveries and retain the last supplied identity. Publication remains separate.
+- Every supplied mission artifact, including an unpublished local copy, must be named exactly `everywhere_all.json`. The only durable release counter is the last artifact explicitly supplied to the user; drafts, prepared intents, builds, and unsupplied local-test artifacts do not advance it. Increment the mission title/build exactly once immediately before an explicitly ordered publication, never skip ahead based on internal work, and never reuse a supplied number.
+- A mission change may use an internal draft, but publish/link a local-test artifact only when explicitly ordered. Otherwise do not advance or consume a release number.
 - Update `CHANGELOG.en.md` only for a mission release or externally visible technical change. Change `CHANGELOG_USER.en.md` only when explicitly requested.
 - When the user changelog is requested, compare every technical release after its stated coverage version with the user changelog. Add every final user-facing change, omit superseded/internal cumulative details, and never advance the coverage version while any intervening release is unaccounted for.
 - User-changelog hard contract: when it is requested, `CHANGELOG_USER.en.md` must use the sections `FIXES`, `UI`, then `NEW FUNCTIONS`, in exactly that order. Write only for a final user: describe visible screens, controls, mission behavior, and what the pilot can verify. Do not mention source files, macros, variables, object identifiers, queries, SDKs, internal states, implementation strategies, or code terminology. Put each final user-visible behavior in one category only (the most pertinent one), with one build-history reference and one short runtime test. Audit every build from the stated baseline through the target build, including post-target development checkpoints, and retain a coverage ledger that accounts for each build. A short thematic summary, duplicated behavior, omission of an earlier completed function because a related later function exists, or technical language is noncompliant. Run `node tools/validate-user-changelog.js` before committing the requested update.

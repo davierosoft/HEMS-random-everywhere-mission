@@ -8,7 +8,6 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | --- | --- |
 | `everywhere_all.json` | Generated HPG deployment artifact. Contains metadata, macros, tables, threads, locations, objectives, briefing, and embedded icons. Do not edit directly. |
 | `mission-src/` | Editable modular source for the artifact's `macros` and `data` sections. |
-| `global.json` | Persistent global defaults used across mission reloads. |
 | `train.json` | Companion/custom loader with its own executable and renderer contract. |
 | `starting point/everywhere_all.json` | Historical starting baseline; never treat it as the active build. |
 | `DEVELOPMENT_RELEASE_CHECKLIST.md` | Blocking HPG syntax, state, subsystem, and release constraints. |
@@ -42,7 +41,9 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `12-marshalling.json` | Base/hospital/technical marshaller state and animation. |
 | `13-crew-emergency.json` | Crew LifeScore, fatal replacement, emergency recovery and routing. |
 | `14-shared-runtime.json` | Shared repeated blocks and uncoupled runtime helpers. |
+| `19-location-diagnostics.json` | Automatic location history and rescue fallback diagnostics. |
 | `17-multipatient-runtime.json` | Generic five-patient registry, single-writer allocation queue, transport tickets, CPR leases, and clinical event history. |
+| `18-hems-patient-selection.json` | HEMS patient selection by lowest current LifeScore among patients not already transported by ground. |
 
 ## Data modules
 

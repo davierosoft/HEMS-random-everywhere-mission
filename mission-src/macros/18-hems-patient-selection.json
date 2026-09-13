@@ -1,0 +1,44 @@
+{
+  "select HEMS patient": [
+    {"if":{"local":"crewvisitended"},"ne":"yes","then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":999},{"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},{"set":{"local":"HEMS_GROUND_READY_COUNT"},"value":0},{"set":{"local":"P1_HEMS_URGENT"},"value":"no"},{"set":{"local":"P2_HEMS_URGENT"},"value":"no"},{"set":{"local":"P3_HEMS_URGENT"},"value":"no"},{"return":0}]},
+    {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},
+    {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null},
+    {"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":999},
+    {"if":{"and":[{"require":{"has_object":"injured_human"},"eq":1},{"require":{"local":"P1_AMBULANCE_STAGE"},"ne":"ground_transport_ready"},{"require":{"local":"ambulance_handover_status"},"ne":"ground_transport_ready"}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":1},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE"}}]},
+    {"if":{"and":[{"require":{"has_object":"injured_human2"},"eq":1},{"require":{"local":"P2_GROUND_TRANSPORTED"},"ne":"yes"}]},"eq":1,"then":[{"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":0,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":2},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}],"else":[{"if":{"local":"LIFESCORE2"},"lt":{"local":"HEMS_PATIENT_LIFESCORE"},"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":2},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}]}]}]},
+    {"if":{"and":[{"require":{"has_object":"injured_human3"},"eq":1},{"require":{"local":"P3_GROUND_TRANSPORTED"},"ne":"yes"}]},"eq":1,"then":[{"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":0,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":3},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}],"else":[{"if":{"local":"LIFESCORE3"},"lt":{"local":"HEMS_PATIENT_LIFESCORE"},"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":3},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}]}]}]},
+    {"if":{"local":"HEMS_PATIENT_NUMBER"},"gt":0,"then":[]},
+    {"call_macro":"hems patient decision after visits"}
+  ],
+  "hems patient decision after visits": [
+    {"#comment":"Astra decides only after the physical HEMS visit gate. Ground readiness means clinical assessment plus ground_transport_ready, never arrival distance or hospital phase."},
+    {"set":{"local":"HEMS_DECISION_STATE"},"value":"deciding"},
+    {"set":{"local":"HEMS_GROUND_READY_COUNT"},"value":0},
+    {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},
+    {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null},
+    {"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":999},
+    {"if":{"or":[{"require":{"local":"P1_AMBULANCE_STAGE"},"eq":"ground_transport_ready"},{"require":{"local":"ambulance_handover_status"},"eq":"ground_transport_ready"},{"require":{"local":"P1_GROUND_TRANSPORTED"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"HEMS_GROUND_READY_COUNT"},"value":{"add":[{"local":"HEMS_GROUND_READY_COUNT"},1]}}]},
+    {"if":{"or":[{"require":{"local":"P2_AMBULANCE_STAGE"},"eq":"ground_transport_ready"},{"require":{"local":"P2_GROUND_TRANSPORTED"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"HEMS_GROUND_READY_COUNT"},"value":{"add":[{"local":"HEMS_GROUND_READY_COUNT"},1]}}]},
+    {"if":{"or":[{"require":{"local":"P3_AMBULANCE_STAGE"},"eq":"ground_transport_ready"},{"require":{"local":"P3_GROUND_TRANSPORTED"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"HEMS_GROUND_READY_COUNT"},"value":{"add":[{"local":"HEMS_GROUND_READY_COUNT"},1]}}]},
+    {"if":{"local":"manual_p1_transport_choice"},"eq":"helicopter","then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":1},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE"}}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"P1_HEMS_URGENT"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":1},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE"}}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"manual_p2_transport_choice"},"eq":"helicopter"}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":2},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"P2_HEMS_URGENT"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":2},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"manual_p3_transport_choice"},"eq":"helicopter"}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":3},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"P3_HEMS_URGENT"},"eq":"yes"}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":3},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"HEMS_GROUND_READY_COUNT"},"eq":{"subtract":[{"local":"HELOVICTIMS"},1]}}]},"eq":1,"then":[{"call_macro":"select worst unassigned HEMS patient"}]},
+    {"if":{"and":[{"require":{"local":"HEMS_PATIENT_NUMBER"},"eq":0},{"require":{"local":"HEMS_GROUND_READY_COUNT"},"eq":0},{"require":{"local":"AMBU_AVAIL"},"eq":0}]},"eq":1,"then":[{"call_macro":"select worst unassigned HEMS patient"}]},
+    {"if":{"local":"HEMS_PATIENT_NUMBER"},"gt":0,"then":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"hems_selected"},{"set":{"local":"whobringpatient"},"value":"us"}],"else":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"ground_or_no_transport"},{"if":{"local":"HEMS_GROUND_READY_COUNT"},"gt":0,"then":[{"set":{"local":"whobringpatient"},"value":"ambulance"}]}]},
+    {"set":{"local":"HEMS_DECISION_SUMMARY"},"value":"Astra decision: HEMS P{local:HEMS_PATIENT_NUMBER}; ground-ready {local:HEMS_GROUND_READY_COUNT}/{local:HELOVICTIMS}; state {local:HEMS_DECISION_STATE}"}
+  ],
+  "select worst unassigned HEMS patient": [
+    {"if":{"and":[{"require":{"has_object":"injured_human"},"eq":1},{"require":{"local":"P1_AMBULANCE_STAGE"},"ne":"ground_transport_ready"},{"require":{"local":"LIFESCORE"},"lt":{"local":"HEMS_PATIENT_LIFESCORE"}}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":1},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE"}}]},
+    {"if":{"and":[{"require":{"has_object":"injured_human2"},"eq":1},{"require":{"local":"P2_AMBULANCE_STAGE"},"ne":"ground_transport_ready"},{"require":{"local":"LIFESCORE2"},"lt":{"local":"HEMS_PATIENT_LIFESCORE"}}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":2},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}]},
+    {"if":{"and":[{"require":{"has_object":"injured_human3"},"eq":1},{"require":{"local":"P3_AMBULANCE_STAGE"},"ne":"ground_transport_ready"},{"require":{"local":"LIFESCORE3"},"lt":{"local":"HEMS_PATIENT_LIFESCORE"}}]},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":3},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}]}
+  ],
+  "prepare selected HEMS patient": [
+    {"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":1,"then":[{"call_macro":"from_any_injured_to_ready_for_transport"}]},
+    {"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":2,"then":[{"call_macro":"from_any_injured2_to_ready_for_transport"}]},
+    {"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":3,"then":[{"call_macro":"from_any_injured3_to_ready_for_transport"}]}
+  ]
+}

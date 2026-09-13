@@ -101,10 +101,33 @@
       {"set":{"local":"68pony_installed"},"value":"WAIT"},
       {"set":{"local":"batteroulio_installed"},"value":"WAIT"},
       {"create_thread":{"commands":[{"create_object":{"name":"test1","title":"Female_lying","location":{"bearing":330,"dist":20,"heading":290}}},{"set":{"local":"68pony_installed"},"value":"OK"},{"sleep":3},{"set":{"local":"testobj"},"value":"DONE"}]}},
-      {"create_thread":{"commands":[{"sleep":0.5},{"create_object":{"name":"test2","title":"Airbus H145 FR Crash VTT DOWN","location":{"bearing":30,"dist":20,"heading":0}}},{"set":{"local":"batteroulio_installed"},"value":"OK"},{"set":{"local":"testobj"},"value":"DONE"}]}},
+      {"create_thread":{"commands":[{"sleep":0.5},{"create_object":{"name":"test2","title":"Airbus H145 FR Crash VTT DOWN","location":{"bearing":20,"dist":20,"heading":0}}},{"set":{"local":"batteroulio_installed"},"value":"OK"},{"set":{"local":"testobj"},"value":"DONE"}]}},
       {"sleep":15},
       {"if":{"has_object":"test1"},"eq":1,"then":[{"destroy_object":"test1"},{"set":{"local":"testobj"},"value":"NONE"}]},
       {"if":{"has_object":"test2"},"eq":1,"then":[{"destroy_object":"test2"},{"set":{"local":"testobj"},"value":"NONE"}]}
+    ],
+    "CREW SPAWN TEST": [
+      {"set":{"local":"crewtest"},"value":"IN PROGR."},
+      {"call_macro":"crew spawn launch","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+      {"try":[{"create_object":{"name":"crewtest","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":10,"heading":0}}}],"catch":[{"call_macro":"crew spawn failure","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}},{"set":{"local":"crewtest"},"value":"FAILED"},{"set_message":{"text":"CREW SPAWN TEST FAILED: {0}","params":[{"param":"$ERROR"}],"color":"red"}}]},
+      {"call_macro":"crew spawn wait","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+      {"if":{"has_object":"crewtest"},"eq":1,"then":[
+        {"set":{"local":"crewtest"},"value":"SUCCESS"},
+        {"set":{"local":"CREW_TEST_VAR1"},"value":0},
+        {"set":{"local":"CREW_TEST_VAR2"},"value":0},
+        {"create_thread":{"commands":[
+          {"while":{"local":"CREW_TEST_VAR1"},"lt":17,"do":[
+            {"set":{"object":"crewtest","var":"VAR 1"},"value":{"local":"CREW_TEST_VAR1"}},
+            {"set":{"object":"crewtest","var":"VAR 2"},"value":{"local":"CREW_TEST_VAR2"}},
+            {"sleep":1},
+            {"if":{"local":"CREW_TEST_VAR1"},"gte":14,"then":[
+              {"set":{"local":"CREW_TEST_VAR2"},"value":{"add":[{"local":"CREW_TEST_VAR2"},1]}},
+              {"if":{"local":"CREW_TEST_VAR2"},"gt":3,"then":[{"set":{"local":"CREW_TEST_VAR2"},"value":0},{"set":{"local":"CREW_TEST_VAR1"},"value":{"add":[{"local":"CREW_TEST_VAR1"},1]}}]}
+            ],"else":[{"set":{"local":"CREW_TEST_VAR1"},"value":{"add":[{"local":"CREW_TEST_VAR1"},1]}}]}
+          ]},
+          {"set":{"local":"crewtest"},"value":"DONE"},{"sleep":1},{"if":{"has_object":"crewtest"},"eq":1,"then":[{"destroy_object":"crewtest"},{"set":{"local":"crewtest"},"value":"CLEANED"}]}
+        ]}}
+      ]}
     ],
     "ensure pathology1 fallback": [
     {
@@ -130,11 +153,11 @@
       {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
     ],
     "nation autoselect": [
-      {"if":{"and":[{"require":{"global":"NATION_BYPASS"},"eq":100},{"require":{"var":["L:SKIP_QUERY","number"]},"ne":1}]},"eq":1,"then":[{"create_thread":{"commands":[{"query_country":{"United States of America":[{"set":{"local":"NATION"},"value":1}],"United Kingdom":[{"set":{"local":"NATION"},"value":2}],"Guernsey":[{"set":{"local":"NATION"},"value":2}],"Jersey":[{"set":{"local":"NATION"},"value":2}],"Isle of Man":[{"set":{"local":"NATION"},"value":2}],"France":[{"set":{"local":"NATION"},"value":3}],"Germany":[{"set":{"local":"NATION"},"value":4}],"Nederland":[{"set":{"local":"NATION"},"value":5}],"Netherlands":[{"set":{"local":"NATION"},"value":5}],"Italia":[{"set":{"local":"NATION"},"value":6}],"Italy":[{"set":{"local":"NATION"},"value":6}],"Polska":[{"set":{"local":"NATION"},"value":7}],"Poland":[{"set":{"local":"NATION"},"value":7}],"Other":[{"set":{"local":"NATION"},"value":{"global":"NATION_OTHERS"}}]},"location":"$USER"},{"set":{"local":"start_nation"},"value":"$COUNTRY"}]}}],"else":[{"set":{"local":"start_nation"},"value":"SKIPPED/MANUAL"},{"if":{"global":"NATION_BYPASS"},"ne":100,"then":[{"set":{"local":"NATION"},"value":{"global":"NATION_BYPASS"}}],"else":[{"set":{"local":"NATION"},"value":0}]}]}
+      {"if":{"and":[{"require":{"global":"NATION_BYPASS"},"eq":100},{"require":{"var":["L:SKIP_QUERY","number"]},"ne":1}]},"eq":1,"then":[{"create_thread":{"commands":[{"query_country":{"United States of America":[{"set":{"local":"NATION"},"value":1}],"United Kingdom":[{"set":{"local":"NATION"},"value":2}],"Guernsey":[{"set":{"local":"NATION"},"value":2}],"Jersey":[{"set":{"local":"NATION"},"value":2}],"Isle of Man":[{"set":{"local":"NATION"},"value":2}],"France":[{"set":{"local":"NATION"},"value":3}],"Germany":[{"set":{"local":"NATION"},"value":4}],"Nederland":[{"set":{"local":"NATION"},"value":5}],"Netherlands":[{"set":{"local":"NATION"},"value":5}],"Italia":[{"set":{"local":"NATION"},"value":6}],"Italy":[{"set":{"local":"NATION"},"value":6}],"Polska":[{"set":{"local":"NATION"},"value":7}],"Poland":[{"set":{"local":"NATION"},"value":7}],"Other":[{"set":{"local":"NATION"},"value":{"global":"NATION_OTHERS"}}]},"location":"$USER"},{"set":{"local":"start_nation"},"value":"$COUNTRY"},{"if":{"local":"NATION"},"eq":1,"then":[{"set":{"local":"start_nation"},"value":"United States of America"}]},{"if":{"local":"NATION"},"eq":2,"then":[{"set":{"local":"start_nation"},"value":"United Kingdom"}]},{"if":{"local":"NATION"},"eq":3,"then":[{"set":{"local":"start_nation"},"value":"France"}]},{"if":{"local":"NATION"},"eq":4,"then":[{"set":{"local":"start_nation"},"value":"Germany"}]},{"if":{"local":"NATION"},"eq":5,"then":[{"set":{"local":"start_nation"},"value":"Netherlands"}]},{"if":{"local":"NATION"},"eq":6,"then":[{"set":{"local":"start_nation"},"value":"Italy"}]},{"if":{"local":"NATION"},"eq":7,"then":[{"set":{"local":"start_nation"},"value":"Poland"}]}]}}],"else":[{"set":{"local":"start_nation"},"value":"SKIPPED/MANUAL"},{"if":{"global":"NATION_BYPASS"},"ne":100,"then":[{"set":{"local":"NATION"},"value":{"global":"NATION_BYPASS"}}],"else":[{"set":{"local":"NATION"},"value":0}]}]}
     ],
     "normalize orange target smoke setting": [{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":null,"then":[{"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"auto"}]},{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"no","then":[{"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"auto"}]},{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"yes","then":[{"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"always"}]}],
-    "normalize crew health simulation setting": [{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":null,"then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"active"}]},{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":"yes","then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"active"}]},{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":"no","then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"disabled"}]}],
-    "ensure data query service selection": [{"if":{"global":"DATAQUERYSERVICE"},"eq":null,"then":[{"set":{"global":"DATAQUERYSERVICE"},"value":4}]},{"if":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"eq":null,"then":[{"set":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"value":"NO"}]},{"call_macro":"CICERS PING"}],
+    "normalize crew health simulation setting": [{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":null,"then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}]},{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":"active","then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}]},{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":"no","then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"disabled"}]}],
+    "ensure data query service selection": [{"if":{"global":"DATAQUERYSERVICE"},"eq":null,"then":[{"set":{"global":"DATAQUERYSERVICE"},"value":10}]},{"if":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"eq":null,"then":[{"set":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"value":"NO"}]},{"call_macro":"CICERS PING"}],
     "restore data query selection after CICERS success": [{"if":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"eq":"YES","then":[{"call_macro":"restore data query selection after CICERS failure"}],"else":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},{"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}]}],
-    "restore data query selection after CICERS failure": [{"if":{"or":[{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":0},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":1},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":2}]},"eq":1,"then":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}},{"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}],"else":[{"set":{"global":"DATAQUERYSERVICE"},"value":4},{"call_macro":"DATAQUERYSERVICERANDOM"}]}]
+    "restore data query selection after CICERS failure": [{"if":{"or":[{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":0},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":1},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":2},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":4}]},"eq":1,"then":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}},{"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}],"else":[{"set":{"global":"DATAQUERYSERVICE"},"value":10},{"call_macro":"DATAQUERYSERVICERANDOM"}]}]
   }

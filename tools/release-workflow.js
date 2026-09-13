@@ -101,6 +101,14 @@ function beginRelease(repositoryRoot, release, note, scope) {
 
   const artifact = fs.readFileSync(path.join(repositoryRoot, 'everywhere_all.json'), 'utf8');
   const identity = assertReleaseIdentity(repositoryRoot, artifact);
+  const ledgerPath = path.join(repositoryRoot, 'tools', 'release-ledger.json');
+  if (fs.existsSync(ledgerPath)) {
+    const ledger = JSON.parse(fs.readFileSync(ledgerPath, 'utf8'));
+    if (ledger.schema !== 1 || typeof ledger.lastSuppliedRelease !== 'string') throw new Error('invalid release ledger');
+    if (compareRelease(release, ledger.lastSuppliedRelease) <= 0) {
+      throw new Error(`release ${release} must be higher than last supplied release ${ledger.lastSuppliedRelease}`);
+    }
+  }
   if (compareRelease(release, identity.release) <= 0) throw new Error(`release ${release} must be higher than current ${identity.release}`);
 
   const newTitle = identity.mission.title.replace(/\d+\.\d+\s+\d+\s*$/, release);
@@ -153,7 +161,7 @@ function beginDraft(repositoryRoot, note, scope) {
 
 function amendPreparedRelease(repositoryRoot, note, scope) {
   const intent = readIntent(repositoryRoot);
-  if (intent.status !== 'prepared') throw new Error(`release ${intent.release} is ${intent.status}; only a prepared release can be amended`);
+  if (!['prepared', 'built'].includes(intent.status)) throw new Error(`release ${intent.release} is ${intent.status}; only a prepared or unverified built release can be amended`);
   const amendment = ascii(note, 'amendment note');
   const mergedScope = {
     roots: [...new Set([...(intent.scope.roots || []), ...scope.roots])],

@@ -312,6 +312,51 @@
     ]},
     {"return":1}
   ],
+  "multipatient registry acceleration impact": [
+    {"for_each":{"local":"patients"},"do":[
+      {"set":{"param":"patient"},"value":{"param":"$item"}},
+      {"if":{"and":[{"require":{"param":"patient","path":"active"},"eq":1},{"require":{"param":"patient","path":"transport_state"},"eq":"loaded"},{"require":{"param":"patient","path":"death_recorded"},"eq":0}]} ,"eq":1,"then":[
+        {"set":{"param":"score"},"value":{"clamp":[{"subtract":[{"param":"patient","path":"lifescore"},{"param":"damage"}]},0,100]}},
+        {"set":{"param":"medical"},"value":{"param":"patient","path":"medical"}},
+        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"param":"score"}}}]}},
+        {
+          "set": {"param": "mutation"},
+          "value": {
+            "struct": {"js:get": "Object"},
+            "function": "assign",
+            "params": [
+              {"param": "medical"},
+              {"create_struct": {
+                "SPO2": {"clamp": [{"subtract": [{"param": "medical", "path": "SPO2"}, {"multiply": [{"param": "damage"}, 0.4]}]}, 0, 100]},
+                "BPM": {"clamp": [{"add": [{"param": "medical", "path": "BPM"}, {"multiply": [{"param": "damage"}, 4]}]}, 0, 220]},
+                "BP_SYS": {"clamp": [{"subtract": [{"param": "medical", "path": "BP_SYS"}, {"multiply": [{"param": "damage"}, 2]}]}, 0, 220]},
+                "RR": {"clamp": [{"add": [{"param": "medical", "path": "RR"}, {"multiply": [{"param": "damage"}, 2]}]}, 0, 60]}
+              }}
+            ]
+          }
+        },
+        {"if":{"param":"score"},"lt":18,"then":[
+          {"if":{"param":"medical","path":"GCS_EYE"},"gt":1,"then":[{"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_EYE":{"subtract":[{"param":"medical","path":"GCS_EYE"},1]}}}]}}]},
+          {"if":{"param":"medical","path":"GCS_VERBAL"},"gt":1,"then":[{"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_VERBAL":{"subtract":[{"param":"medical","path":"GCS_VERBAL"},1]}}}]}}]},
+          {"if":{"param":"medical","path":"GCS_MOTOR"},"gt":1,"then":[{"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_MOTOR":{"subtract":[{"param":"medical","path":"GCS_MOTOR"},1]}}}]}}]}
+        ]},
+        {"call_macro":"multipatient registry physiology update","params":{"patient":{"param":"patient"}}}
+      ]}
+    ]},
+    {"call_macro":"multipatient registry summary"}
+  ],
+  "multipatient registry manual lifescore override": [
+    {"call_macro":"multipatient registry get","params":{"slot":{"param":"slot"}},"result":"patient"},
+    {"if":{"param":"patient"},"eq":null,"then":[{"return":0}]},
+    {"set":{"param":"score"},"value":{"clamp":[{"param":"score"},0,100]}},
+    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"param":"score"},"manual_lifescore_override":1}}]}},
+    {"call_macro":"multipatient registry physiology update","params":{"patient":{"param":"patient"}}},
+    {"if":{"param":"slot"},"eq":1,"then":[{"set":{"local":"LIFESCORE"},"value":{"param":"score"}}]},
+    {"if":{"param":"slot"},"eq":2,"then":[{"set":{"local":"LIFESCORE2"},"value":{"param":"score"}}]},
+    {"if":{"param":"slot"},"eq":3,"then":[{"set":{"local":"LIFESCORE3"},"value":{"param":"score"}}]},
+    {"call_macro":"multipatient registry event","params":{"patient":{"param":"patient"},"event":"MANUAL LIFESCORE OVERRIDE"}},
+    {"return":1}
+  ],
   "multipatient registry tick": [
     {"set":{"local":"patient_registry_clock"},"value":{"add":[{"local":"patient_registry_clock"},{"param":"seconds"}]}},
     {"for_each":{"local":"patients"},"do":[
@@ -351,9 +396,8 @@
   "multipatient registry tablet decision": [
     {"if":{"param":"records","path":"length"},"ne":{"param":"expected_count"},"then":[{"return":0}]},
     {"if":{"param":"expected_count"},"lt":1,"then":[{"return":0}]},
-    {"set":{"param":"closed"},"value":0},
-    {"for_each":{"param":"records"},"do":[{"set":{"param":"candidate"},"value":{"param":"$item"}},{"if":{"and":[{"require":{"param":"candidate","path":"dead"},"ne":1},{"require":{"param":"candidate","path":"visit_complete"},"ne":1}]},"eq":1,"then":[{"return":0}]},{"if":{"and":[{"require":{"param":"candidate","path":"slot"},"eq":{"param":"slot"}},{"require":{"param":"candidate","path":"ground_confirmed"},"eq":1}]},"eq":1,"then":[{"set":{"param":"closed"},"value":1}]}]},
-    {"return":{"param":"closed"}}
+    {"for_each":{"param":"records"},"do":[{"if":{"and":[{"require":{"param":"$item","path":"slot"},"eq":{"param":"slot"}},{"require":{"param":"$item","path":"ground_confirmed"},"eq":1}]},"eq":1,"then":[{"return":1}]}]},
+    {"return":0}
   ],
   "multipatient registry legacy tablet records": [
     {"set":{"param":"visit_done_1"},"value":0},

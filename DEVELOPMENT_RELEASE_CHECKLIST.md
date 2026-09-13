@@ -24,8 +24,8 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 ## 2. State and persistence
 
 - Any value displayed after a mission reload must have an explicit fallback. Local variables are not persistence.
-- A persistent user choice must use a named `global` and have a first-run default in `global.json`.
-- Every new option added to Settings or the technical page is persistent by default: it must use a named `global`, have a first-run default in `global.json`, and prefix its user-facing description with `(P)`. Depart from this only when the user explicitly requests a non-persistent option.
+- A persistent user choice must use a named `global` and have a first-run default in the mission through `set: global` guarded by a null check.
+- Every new option added to Settings or the technical page is persistent by default: it must use a named `global`, have a guarded first-run default in the mission, and prefix its user-facing description with `(P)`. Never add or modify a repository-side global-state file.
 - Normalise values before formatting them. A renderer must not print an optional local directly when `undefined` is possible.
 - When an automatic action changes the user-visible state, update the same persistent state used by its manual counterpart.
 
@@ -100,7 +100,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 ## 10. Required release gate
 
-1. Parse `everywhere_all.json`, `global.json`, and every shipped companion/custom-loader JSON such as `train.json`.
+1. Parse `everywhere_all.json` and every shipped companion/custom-loader JSON such as `train.json`. The HPG global-state container is local runtime state and is intentionally absent from the repository.
    - Parsing is insufficient: verify the required root shape (`macros`, `aircraft`, `applicable`, `api_version`, `data`, `threads`, `locations`, `objects`, `userActions`, `objectives`, `briefing`, `icons`) and confirm `Debug_Table` remains under root `data`, never inside `macros`.
 2. Run `node tools/validate-mission.js`; companion loaders must have explicit contract assertions and cannot be silently skipped.
 3. Run `git diff --check` and inspect the staged file list.

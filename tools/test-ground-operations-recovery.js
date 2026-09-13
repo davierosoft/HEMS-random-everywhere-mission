@@ -15,6 +15,7 @@ const scene = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/06-
 const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
 const navigation = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/05-navigation-queries.json'), 'utf8'));
 const transfer = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/10-transfer-special-missions.json'), 'utf8'));
+const tablet = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/04-dispatch-tablet-ui.json'), 'utf8'));
 
 function fail(message) { throw new Error(`Ground operations recovery: ${message}`); }
 function requireTrue(condition, message) { if (!condition) fail(message); }
@@ -47,7 +48,14 @@ const nrGate = runtime['ground ops NR gate'];
 requireTrue(Array.isArray(crewSpawnLaunch) && JSON.stringify(crewSpawnLaunch).includes('LAUNCH:') && JSON.stringify(crewSpawnLaunch).includes('crew_spawn_log'), 'crew spawn launch does not log the requested title and fallback');
 requireTrue(Array.isArray(crewSpawnWait) && JSON.stringify(crewSpawnWait).includes('"CREATED"') && JSON.stringify(crewSpawnWait).includes('"eq":-1') && JSON.stringify(crewSpawnWait).includes('"value":20'), 'crew spawn wait does not confirm CREATED or detect failed creation');
 requireTrue(Array.isArray(crewSpawnFailure) && JSON.stringify(crewSpawnFailure).includes('"param":"error"') && JSON.stringify(crewSpawnFailure).includes('ERROR: crew creation failed'), 'crew spawn failure does not preserve the command error and show an error message');
-requireTrue(Array.isArray(nrGate) && JSON.stringify(nrGate).includes('WAITING:') && JSON.stringify(nrGate).includes('PASSED:') && JSON.stringify(nrGate).includes('gndops_nr_gate_log'), 'NR gate watchdog must log waiting and passed states');
+const nrGateText = JSON.stringify(nrGate);
+requireTrue(Array.isArray(nrGate) && nrGateText.includes('WAITING:') && nrGateText.includes('PASSED:') && nrGateText.includes('gndops_nr_gate_log'), 'NR gate watchdog must log waiting and passed states');
+requireTrue(nrGateText.includes('gndops_nr_bypass_seconds') && nrGateText.includes('gndops_idle_bypass_seconds') && nrGateText.includes('"lt":84') && nrGateText.includes('"gt":30'), 'NR gate safety bypass must require more than 30 continuous seconds below 84 percent');
+requireTrue(nrGateText.includes('SDK_ECP_MAIN_1') && nrGateText.includes('SDK_ECP_MAIN_2') && nrGateText.includes('"eq":1'), 'NR gate safety bypass must detect both engine MAIN switches in IDLE');
+requireTrue(nrGateText.includes('NR below 84 percent for over 30 seconds') && nrGateText.includes('both engine MAIN switches IDLE for over 30 seconds'), 'NR gate passed log must identify its safety-bypass reason');
+requireTrue(contains(checklistDefinitions['aircraft factory DEFAULT'], (entry) => entry?.set?.global === 'GNDOPS_NR_THRESHOLD' && entry.value === 80), 'the persistent ground-operations NR threshold must default to 80 through set: global');
+requireTrue(contains(tablet, (entry) => entry?.slider?.global === 'GNDOPS_NR_THRESHOLD' && entry.slider.min === 79 && entry.slider.max === 83 && entry.slider.commands?.some((command) => command.set?.local === 'gndopsNR')), 'Settings must expose a 79-83 persistent NR threshold slider that updates the active local');
+requireTrue(contains(tablet, (entry) => entry?.text === '(P)Ground operations NR threshold: {0}%' && entry.params?.[0]?.tofixed?.global === 'GNDOPS_NR_THRESHOLD' && entry.params?.[0]?.digits === 1), 'Settings must show the NR threshold rounded to one decimal place');
 
 const debugRows = debug['debug page'].find((command) => Array.isArray(command.set_dispatch)).set_dispatch;
 const debugCapture = debugRows.flatMap((row) => row.buttonbar || []).find((button) => button.title === 'CAPTURE SNAPSHOT').commands;
@@ -96,7 +104,7 @@ crewObjectFiles.forEach((file) => {
   const module = JSON.parse(fs.readFileSync(path.join(macroDirectory, file), 'utf8'));
   Object.entries(module).forEach(([macro, commands]) => inspectMacro(commands, file, macro));
 });
-requireTrue(crewObjectCount === 77 && crewWrapperCount === crewObjectCount, 'every packaged $TITLE Crew creation must have one synchronous watchdog wrapper');
+requireTrue(crewObjectCount === 78 && crewWrapperCount === crewObjectCount, 'every packaged $TITLE Crew creation must have one synchronous watchdog wrapper');
 requireTrue(nrGateCalls === 24, 'every standalone NR < gndopsNR gate must use the watchdog');
 
 const threeCrewDestinationMacros = [
@@ -117,7 +125,106 @@ const railwaySceneText = JSON.stringify(railwayScene);
 requireTrue(railwaySceneText.includes('"param":"railway_nodes","path":"length"') && railwaySceneText.includes('"param":"highway_nodes","path":"length"'), 'railway crossing must guard empty OSM node arrays');
 requireTrue(railwaySceneText.includes('"param":"train_brg"},"value":{"rand":[0,359]') && railwaySceneText.includes('"param":"crash_brg"},"value":{"rand":[0,359]'), 'railway crossing must provide bearing fallbacks when OSM nodes are unavailable');
 
-const primaryAmbulanceAssessment = scene['ambustretcher full']?.[4]?.create_thread?.commands?.[10];
+const randomPeopleCommands = scene['random people']?.[0]?.then?.[0]?.create_thread?.commands;
+requireTrue(randomPeopleCommands?.[1]?.wait_for?.has_object === 'injured_human' && randomPeopleCommands[1].eq === 1, 'random civilians must wait for the primary patient before pointing objects at it');
+
+for (const [macro, driveMacro, eta] of [
+  [ground.Ambulance1, 'drive ambulance1 safe multiplier', 'ambu_adjusted_time'],
+  [ground.Ambulance2, 'drive ambulance2 safe multiplier', 'ambu_adjusted_time'],
+  [ground.Police1, 'drive police safe multiplier', 'poli_adjusted_time'],
+  [ground.Firetruck1, 'drive firetruck1 safe multiplier', 'fire_adjusted_time'],
+  [ground.Firetruck2, 'drive firetruck2 safe multiplier', 'fire_adjusted_time'],
+  [navigation['closest ambulance'], 'drive ambulance1 safe multiplier', 'ambu_adjusted_time'],
+  [navigation['closest ambulance'], 'drive police7 safe multiplier', 'poli_adjusted_time']
+]) {
+  requireTrue(contains(macro, (entry) => entry?.call_macro === driveMacro && entry.params?.timeout?.add?.some((value) => value?.local === eta) && entry.params.timeout.add.includes(120)), `${driveMacro} must use route ETA plus a two-minute watchdog margin`);
+}
+
+for (const [name, macro] of Object.entries(ground)) {
+  if (!name.startsWith('drive ') || !name.includes(' safe')) continue;
+  const serialized = JSON.stringify(macro);
+  if (serialized.includes('"to":{"param":"fallback"}')) {
+    requireTrue(serialized.includes('"has_location":{"param":"fallback"}'), `${name} may only teleport to a verified fallback location, never a route name`);
+  }
+}
+
+const routeNames = new Set();
+const routeWatchdogs = [];
+for (const file of crewObjectFiles) {
+  const module = JSON.parse(fs.readFileSync(path.join(macroDirectory, file), 'utf8'));
+  for (const [macroName, macro] of Object.entries(module)) {
+    const inspectRoutes = (value) => {
+      if (Array.isArray(value)) return value.forEach(inspectRoutes);
+      if (!value || typeof value !== 'object') return;
+      if (typeof value.create_route?.name === 'string') routeNames.add(value.create_route.name);
+      Object.values(value).forEach(inspectRoutes);
+    };
+    inspectRoutes(macro);
+  }
+}
+for (const file of crewObjectFiles) {
+  const module = JSON.parse(fs.readFileSync(path.join(macroDirectory, file), 'utf8'));
+  for (const [macroName, macro] of Object.entries(module)) {
+    const inspectRouteWatchdogs = (value) => {
+      if (Array.isArray(value)) return value.forEach(inspectRouteWatchdogs);
+      if (!value || typeof value !== 'object') return;
+      if (typeof value.call_macro === 'string' && value.call_macro.includes(' safe') && typeof value.params?.to === 'string' && routeNames.has(value.params.to)) {
+        routeWatchdogs.push({ file, macroName, call: value });
+      }
+      Object.values(value).forEach(inspectRouteWatchdogs);
+    };
+    inspectRouteWatchdogs(macro);
+  }
+}
+requireTrue(routeWatchdogs.length > 0, 'no route watchdog calls were found');
+function routeWatchdogViolations(watchdogs, names) {
+  const violations = [];
+  for (const { file, macroName, call } of watchdogs) {
+    const serializedTimeout = JSON.stringify(call.params.timeout);
+    if (typeof call.params.timeout === 'number' || !serializedTimeout.includes('120')) violations.push(`${file}:${macroName} does not derive its route watchdog from duration plus a two-minute margin`);
+    if (typeof call.params.fallback === 'string' && names.has(call.params.fallback)) violations.push(`${file}:${macroName} passes route ${call.params.fallback} as a recovery location`);
+  }
+  return violations;
+}
+const routeWatchdogErrors = routeWatchdogViolations(routeWatchdogs, routeNames);
+requireTrue(routeWatchdogErrors.length === 0, routeWatchdogErrors.join('; '));
+const syntheticRouteWatchdog = { call_macro: 'drive ambulance1 safe multiplier', params: { to: 'synthetic_route', fallback: 'synthetic_route', timeout: 420 } };
+const syntheticRouteNames = new Set(['synthetic_route']);
+requireTrue(routeWatchdogViolations([{ file: 'synthetic', macroName: 'synthetic', call: syntheticRouteWatchdog }], syntheticRouteNames).length === 2, 'route-watchdog regression gate synthetic failure is not detected');
+
+const approachLocations = new Map();
+for (const file of crewObjectFiles) {
+  const module = JSON.parse(fs.readFileSync(path.join(macroDirectory, file), 'utf8'));
+  const inspectLocations = (value) => {
+    if (Array.isArray(value)) return value.forEach(inspectLocations);
+    if (!value || typeof value !== 'object') return;
+    if (typeof value.create_location === 'string') approachLocations.set(value.create_location, value.zones?.[0]?.zone?.location);
+    Object.values(value).forEach(inspectLocations);
+  };
+  inspectLocations(module);
+}
+for (const [name, target, distance] of [
+  ['watchdog_ambulance1_scene_approach', 'accident_location', 55],
+  ['watchdog_ambulance2_scene_approach', 'accident_location', 55],
+  ['watchdog_police_scene_approach', 'accident_location', 55],
+  ['watchdog_firetruck1_scene_approach', 'accident_location', 55],
+  ['watchdog_firetruck2_scene_approach', 'accident_location', 55],
+  ['watchdog_ambulance1_unhospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance1_hospital_approach', 'hospital', 30],
+  ['watchdog_ambulance1_close_hospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance1_far_hospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance5_hospital_approach', 'hospital', 30],
+  ['watchdog_ambulance2_patient2_hospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance2_patient3_hospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance6_patient1_hospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance6_patient2_hospital_approach', 'unhospital', 30],
+  ['watchdog_ambulance1_shared_hospital_approach', 'unhospital', 30]
+]) {
+  const location = approachLocations.get(name);
+  requireTrue(location?.object === target && location.dist === distance, `${name} must remain an authored approach location before ${target}`);
+}
+
+const primaryAmbulanceAssessment = scene['ambustretcher full']?.find((entry) => entry.create_thread)?.create_thread?.commands?.find((entry) => entry.if?.var?.[0] === 'L:RESCUED' && entry.eq === 0);
 requireTrue(primaryAmbulanceAssessment?.if?.var?.[0] === 'L:RESCUED' && primaryAmbulanceAssessment.eq === 0, 'primary ambulance assessment branch is missing');
 for (const [count, expectedPatients] of [[1, [1]], [2, [1, 2]], [3, [1, 2, 3]]]) {
   const branch = primaryAmbulanceAssessment.then.find((entry) => entry.if?.local === 'HELOVICTIMS' && entry.eq === count);
@@ -133,12 +240,29 @@ for (const [count, expectedPatients] of [[1, [1]], [2, [1, 2]], [3, [1, 2, 3]]])
   requireTrue(JSON.stringify(assessed) === JSON.stringify(expectedPatients), `primary ambulance must assess patients ${expectedPatients.join(', ')} when ${count} casualties exist`);
 }
 
-const secondaryAmbulance = ground['ambulance2 secondary rescue']?.[1]?.then;
+const secondaryAmbulance = ground['ambulance2 secondary rescue']?.find((entry) => entry.if?.and?.some((part) => part.require?.local === 'ambulance2_secondary_started'))?.then;
 requireTrue(Array.isArray(secondaryAmbulance), 'secondary ambulance assessment sequence is missing');
-const patient2Assessment = secondaryAmbulance.findIndex((entry) => entry.call_macro === 'ambulance assess patient' && entry.params?.patient === 2);
-requireTrue(patient2Assessment > 0 && contains(secondaryAmbulance.slice(0, patient2Assessment), (entry) => entry?.create_object?.name === 'ambumedic2') && contains(secondaryAmbulance.slice(0, patient2Assessment), (entry) => entry?.drive_object?.name === 'ambumedic2'), 'secondary ambulance must create and move its medic before assessing patient 2');
-const patient3AssessmentBranch = secondaryAmbulance.find((entry) => entry.if?.local === 'HELOVICTIMS' && entry.gte === 3);
-requireTrue(patient3AssessmentBranch?.then?.some((entry) => entry.drive_object?.name === 'ambumedic2') && patient3AssessmentBranch.then?.some((entry) => entry.call_macro === 'ambulance assess patient' && entry.params?.patient === 3), 'secondary ambulance must move its medic before assessing patient 3');
+const secondaryAssessmentOrder = [];
+function collectSecondaryAssessments(value) {
+  if (Array.isArray(value)) return value.forEach(collectSecondaryAssessments);
+  if (!value || typeof value !== 'object') return;
+  if (value.call_macro === 'ambulance assess patient') secondaryAssessmentOrder.push(value.params?.patient);
+  Object.values(value).forEach(collectSecondaryAssessments);
+}
+collectSecondaryAssessments(secondaryAmbulance);
+requireTrue(JSON.stringify(secondaryAssessmentOrder.slice(0, 3)) === JSON.stringify([3, 2, 1]), 'secondary ambulance must assess patients in reverse order P3, P2, P1');
+for (const patient of [3, 2, 1]) {
+  const patientBranch = secondaryAmbulance.find((entry) => entry.if?.local === `P${patient}_CLINICAL_OWNER` && entry.eq === null);
+  requireTrue(patientBranch?.then?.some((entry) => entry.drive_object?.name === 'ambumedic2') && patientBranch.then?.some((entry) => entry.call_macro === 'ambulance assess patient' && entry.params?.patient === patient), `secondary ambulance must move its medic before assessing patient ${patient}`);
+}
+for (const slot of [2, 3]) {
+  const secondaryTransport = ground[`ambulance2 secondary patient${slot}`];
+  const transportText = JSON.stringify(secondaryTransport);
+  requireTrue(transportText.includes(`"call_macro":"Query closest hospital unrelated for stretcher"`) && transportText.includes(`"to":"unhospital"`), `secondary ambulance patient ${slot} does not independently query a ground destination`);
+  requireTrue(!transportText.includes('ambulance1_departure_started') && !transportText.includes('ambulance1_destination_ready') && !transportText.includes('hospital_user'), `secondary ambulance patient ${slot} still waits for Ambulance 1 or its hospital`);
+  requireTrue(transportText.includes(`ambulance2_patient${slot}_rear_entry`) && transportText.includes('"bearing2":180'), `secondary ambulance patient ${slot} has no rear loading approach`);
+  requireTrue(transportText.includes(`"call_macro":"capture patient${slot} ground handover"`), `secondary ambulance patient ${slot} does not freeze the handover record before departure`);
+}
 
 const residential = scene.residential;
 const finalResidentialPlacement = residential.at(-1)?.if?.local === 'HELOVICTIMS' && residential.at(-1)?.eq === 3 ? residential.at(-1) : residential.at(-2);
@@ -148,8 +272,48 @@ const residentialFire = residential.find((entry) => entry.if?.local === 'HELOVIC
 const residentialFireText = JSON.stringify(residentialFire);
 requireTrue(residentialFireText.includes('"local":"random_fire"},"value":"forced"') && residentialFireText.includes('"local":"VFX"},"value":8'), 'only the residential fire branch must force a random-VFX fire intensity');
 requireTrue(!residentialFireText.includes('VFXB') && residentialFireText.includes('"wait_for":{"has_object":"VFXA"}') && residentialFireText.includes('"move_object":"VFXA","to":"FIRE"'), 'residential fire must use the random-VFX object at the authored fire location');
+const residentialText = JSON.stringify(residential);
+requireTrue(residentialText.includes('"create_location":"ambulance_scene_destination"') && residentialText.includes('"dist":18') && residentialText.includes('"object":"rescue_location"'), 'residential scenes need an ambulance destination clear of casualties and the fire');
+requireTrue(!residentialText.includes('"create_location":"AMBWP","zones":[{"zone":{"location":{"bearing":280,"dist":4.5,"object":"accident_location"}}}]') && residentialText.includes('"create_location":"AMBWP","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"ambulance_scene_destination"}}}]'), 'residential ambulance equipment must stage at the clear rescue destination instead of the fire');
+const residentialAmbulanceText = JSON.stringify(ground.Ambulance1);
+requireTrue(residentialAmbulanceText.includes('ambulance1_residential_scene_route') && residentialAmbulanceText.includes('"to":"ambulance_scene_destination"'), 'residential ambulances do not route to the external rescue destination');
+requireTrue(residentialAmbulanceText.includes('"param":"$CREATE_ROUTE:DURATION"') && residentialAmbulanceText.includes('"fallback":"watchdog_ambulance1_scene_approach"'), 'residential ambulance route watchdog must use route ETA and a verified recovery point');
 const firetruck1Text = JSON.stringify(ground.Firetruck1);
 requireTrue(firetruck1Text.includes('"local":"VFX"},"gte":5') && firetruck1Text.includes('"local":"VFX"},"lte":15') && firetruck1Text.includes('"call_macro":"Firetruck2"'), 'a forced residential fire must retain the existing two-firetruck response');
+
+const threeCrewText = JSON.stringify(hoist['3 crew ground ops']);
+const stretcherPatientCommand = 'H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT';
+const stretcherNoPatientCommand = 'H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT';
+requireTrue(threeCrewText.includes(stretcherPatientCommand) && threeCrewText.includes('"local":"P1_HEMS_LOADING_CONFIRMED"},"value":"yes"'), 'three-crew ground loading never confirms the HPG patient-on-stretcher command');
+requireTrue(threeCrewText.includes('"call_macro":"from_any_injured_to_ready_for_transport"},{"wait_for":{"has_object":"injured_human"},"eq":1}') && threeCrewText.includes('"wait_for":{"local":"crewpatientloaded"},"eq":"yes"}'), 'three-crew loading may return the crew before a patient is ready and loaded');
+
+const stretcherCommandSources = [
+  ['navigation', navigation],
+  ['hoist', hoist],
+  ['transfer', transfer]
+];
+for (const [name, source] of stretcherCommandSources) {
+  requireTrue(!contains(source, (entry) => entry?.set?.var?.[0] === stretcherPatientCommand || entry?.set?.var?.[0] === stretcherNoPatientCommand), `${name} assigns a value to an HPG stretcher command instead of triggering it`);
+  requireTrue(contains(source, (entry) => entry?.trigger === stretcherPatientCommand), `${name} has no HPG patient-on-stretcher trigger`);
+}
+let pax4LoadSequences = 0;
+let pax4LoadOrderingFailures = 0;
+function inspectPax4LoadOrder(value) {
+  if (Array.isArray(value)) {
+    const pax4Index = value.findIndex((entry) => entry?.set?.var?.[0] === 'H:{local:HXX}_SDK_PAX_4_ON');
+    const patientIndex = value.findIndex((entry) => entry?.trigger === stretcherPatientCommand);
+    if (pax4Index !== -1 && patientIndex !== -1) {
+      pax4LoadSequences += 1;
+      if (patientIndex < pax4Index) pax4LoadOrderingFailures += 1;
+    }
+    value.forEach(inspectPax4LoadOrder);
+    return;
+  }
+  if (value && typeof value === 'object') Object.values(value).forEach(inspectPax4LoadOrder);
+}
+inspectPax4LoadOrder(hoist);
+inspectPax4LoadOrder(transfer);
+requireTrue(pax4LoadSequences === 5 && pax4LoadOrderingFailures === 0, 'the patient-on-stretcher trigger must follow PAX 4 boarding in every direct loading sequence');
 
 const avionic = checklistDefinitions.aviopftckl;
 const beforeTakeoff = checklistDefinitions.beforetockl;

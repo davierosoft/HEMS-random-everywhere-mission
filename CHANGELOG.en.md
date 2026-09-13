@@ -1,3 +1,146 @@
+## Release 0.997 167
+
+- finalize location history source attribution
+- include existing crew spawn diagnostics in draft scope
+- validate separate manual and automatic snapshot tables
+- location diagnostics plus existing mission debug and persistence changes
+- Run the road query asynchronously with a pre-started watchdog and clear stale result state before node processing
+
+## Release 0.997 166
+
+- Capture accident, rescue, and landing coordinates through documented location/var queries before Debug snapshot serialization
+
+## Release 0.997 165
+
+- Exclude legacy difficulty state from operational global snapshot while retaining all supported globals and acceleration diagnostics
+
+## Release 0.997 164
+
+- Capture all operational mission globals and raw acceleration diagnostics in Debug snapshot; retain bounded location-query recovery
+- Capture all operational mission globals and raw acceleration diagnostics in Debug snapshot
+
+## Release 0.997 163
+
+- Bound road-node query wait and preserve direct location-token snapshot diagnostics
+
+## Release 0.997 162
+
+- Use direct HPG location tokens in debug snapshots and prevent residential road-node loading from hanging on empty query results
+
+## Release 0.997 161
+
+- Preserve compact focused mission module formatting
+- Fix ambulance visit order and guard null HEMS ground operations
+
+## Release 0.997 160
+
+- Include the existing crew emergency response scope required by the generated artifact.
+- Fix hoist fatal detection by using measured descent rate, stop fatal hoist flows, switch HOIST_OBJ controls OFF, and place the deceased crew asset at the last object location.
+
+## Release 0.997 159
+
+- Use wait_for acceleration bands for crew lifescore monitoring
+- Use wait_for acceleration bands for crew lifescore monitoring
+- Complete fixed-scene runtime diagnostics for both ambulances HEMS loading Astra and crew monitoring
+
+## Release 0.997 158
+
+- Add symmetric ambulance and HEMS trace states; preserve fixed scene
+- Instrument ambulance1 ambulance2 and HEMS patient loading for fixed-scene runtime validation
+
+## Release 0.997 157
+
+- Local update: per-vehicle ambulance assessment and patient transport ownership
+
+## Release 0.997 156
+
+- Internal verification scope: ambulance two reassessment entry points
+- Internal verification scope: patient transport decision integration
+- Show country names instead of numeric country codes in user-facing mission messages
+
+## Release 0.997 155
+
+- Repair default landing spot circle and icon after injured relocation; deliver local test copy
+
+## Release 0.997 154
+
+- Verify and repair default landing spot after savetemp
+- Include landing spot creation and manual edit ownership
+- Keep objective save integration and debug snapshot in final draft
+- Include debug and objective save integration in query safety draft
+- Include savetemp guard ownership in query safety draft
+- Include async savetemp caller and runtime wrapper in draft scope
+- Run savetemp asynchronously and record runtime save markers in debug
+- Normalize HOIST_SAFETY_MONITOR to yes/no and correct crew acceleration member mapping
+- Include rescue-location wording correction in the same unreleased draft
+- Declare dispatch target local selection in existing startup flow
+- Declare existing nation local fix and dispatch message update
+- Local test release: HVAR contract and 45 percent caller-reported health symptom coverage
+
+## Release 0.997 153
+
+- Include previously implemented crew hoist and acceleration runtime scope with health symptom data
+- Include prior clinical handover scope in current verification
+- Finalize clinical handover flags and synchronize the current HVAR call-site contract
+- Exclude patient 1 when ground ambulance transport is already ready
+- Add selector module metadata and validate all HEMS variants
+- Include dependent existing mission macro changes in verification scope
+- Include dependent mission macros for third-point verification
+- Complete route location separation, civilian safety, clinical overrides, crew acceleration monitoring, and requested UI corrections
+
+## Release 0.997 152
+
+- Align profile names and tracker text with CUS.PROFILE labels
+- Add crew spawn diagnostics and onboard acceleration impact handling
+
+## Release 0.997 151
+
+- Include settings page button placement
+- Declare integrated UI and civilian safety changes already present in generated build
+- Finalize acceleration monitor condition schema
+
+## Release 0.997 150
+
+- Correct acceleration monitor condition schema
+
+## Release 0.997 149
+
+- Add aircraft acceleration and deceleration LifeScore impacts
+
+## Release 0.997 148
+
+- Include all renamed profile-entry pages and settings validator contract
+- ASCII UI labels, civilian spawn guards, and settings layout corrections
+
+## Release 0.997 147
+
+- Keep completed patient reports available during other active visits
+- Declare related crew and stretcher recovery changes
+- Restore mandatory stretcher transfer and freeze patient one ground handover
+- Fix residential rescue placement, ambulance recovery, and OSM provider selection
+
+## Release 0.997 146
+
+- Keep the multipatient registry harness aware of the patient consciousness dependency.
+- Register the new clinical and handover macros in the workspace manifest and source inventory.
+- Declare the full clinical save display and HPG command scope before static verification.
+- Initialize and preserve the clinical identity, assessment, vital signs, and final ground handover for every patient.
+- Route residential ambulances and their equipment to a clear rescue staging point, with independent secondary transport and rear loading.
+- Restore HPG stretcher and affected crew commands as triggers, with PAX 4 boarding before the patient command.
+- Render save dates as text and hide empty-slot timestamp separators.
+
+## Release 0.997 145
+
+- Recover every road-response watchdog at a verified approach location for scene, hospital, and midway destinations.
+
+## Release 0.997 144
+
+- Use route ETA plus safety margin for mobile-object watchdogs and prevent invalid route fallbacks.
+
+## Release 0.997 143
+
+- Add configurable ground operations NR threshold and 30-second safety bypasses.
+
 ## GitHub development checkpoint after 0.997 142 - runtime validation pending
 
 - Consolidate P1-P3 ambulance assessment so one medic reaches every available casualty, and ensure a secondary ambulance medic is physically created and moved before P2/P3 assessment.

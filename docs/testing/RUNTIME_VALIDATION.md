@@ -38,7 +38,7 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 7. Use SET DF on a saved station, then on an automatic object station, and confirm in both cases that the CARLS frequency exactly matches the set_df reference. Tune a manual channel with no matching object/location and confirm the old bearing is cleared.
 ## CICERS provider fallback
 
-1. With CICERS unreachable, select each manual provider: Overpass DE (0), Mail.RU (1), and Kumi (2). Start the CICERS health check and confirm a failed check restores the same provider in both the selector and DATAQUERYSERVICE, even if the persisted endpoint was still CICERS.
+1. With CICERS unreachable, select each manual provider: Overpass DE (0), Mail.RU (1), Kumi (2), and RATUOM OFFLINE (4). Start the CICERS health check and confirm a failed check restores the same provider in both the selector and DATAQUERYSERVICE, even if the persisted endpoint was still CICERS.
 2. With CICERS selected or AUTO-TOGGLE active, make the health check fail. Confirm the result is AUTO-TOGGLE with endpoint 0 or 2, never an inactive manual provider.
 3. While a CICERS health check is in progress, request a second refresh. It must not start a second ping or replace the first request's saved provider. After the first result, confirm the selected provider is correct.
 4. With a valid CICERS key and a manual provider saved, restart twice: with **BYPASS CICERS OSM AUTO ACTIVATION = NO**, confirm CICERS is active but the saved provider remains unchanged; with **YES**, confirm the same manual provider is restored after the key check.
@@ -89,6 +89,7 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 14. In Debug Center SUMMARY, confirm the NR gate changes from `WAITING` to `PASSED` for the active ground-operation macro. Confirm `CREW SPAWN` records `LAUNCH` followed by `CREATED` for every object needed by that sequence.
 15. Capture a Debug snapshot during the NR wait and again after crew creation. Reopen Debug Center SUMMARY and verify `SNAPSHOT | CREW SPAWN` and `NR GATE` retain the captured values.
 16. In a developer-only test with an unavailable crew title or fallback, confirm the mission remains blocked, Debug records `FAILED` with the requested title/fallback, and the user sees `ERROR: crew creation failed`. Restore valid object titles before a normal mission test.
+17. On long road-response routes to the scene, a hospital, and a midway location, record the displayed ambulance, police, and fire-engine ETA. Each vehicle must remain on its route through that ETA and may enter watchdog recovery only after ETA plus two minutes. Suppress road nodes for each destination in a developer test: recovery must use its authored approach location, stop 30 m before a hospital or 55 m before a scene, and never overlap a scene object, disappear, or jump to map coordinates 0,0. With random civilians enabled, no command error may be raised while they orient toward the primary patient.
 
 ## Patient tablet telemetry
 
@@ -106,6 +107,13 @@ These are maintained manual scenarios whose object choreography, UI timing, simu
 3. Save each mission slot and confirm its visible timestamp and the STORE PRESET ON FILE timestamp use local PC time with a DD-MM-YYYY date. Delete a slot and confirm its timestamp clears.
 4. Link CUSTOM PRST 1 to each MSN LIST button in turn. Confirm reassignment moves the link, and pressing the currently selected MSN LIST button removes it.
 5. Confirm the linked aircraft profile loads after an interactive MSN LIST change, after a current-list reload, and after each livery-forced preset at startup.
+
+## Ground operations NR threshold and safety bypass
+
+1. In SETTINGS, next to the engine-switch requirement control, move **Ground operations NR threshold** to 79.0, 80.0, and 83.0. Confirm the displayed value always has one decimal place, survives closing/reopening SETTINGS, a mission reload, and saving/loading an aircraft profile.
+2. At a ground-operations wait, verify NR below the configured threshold passes immediately. Then set a value above the current NR and hold NR below 84 percent for more than 30 continuous seconds: the operation must pass without changing the configured threshold.
+3. Separately hold both `ECP MAIN` switches in IDLE for more than 30 continuous seconds. The operation must pass even if NR has not met the configured threshold. Interrupt either the NR-below-84 or both-IDLE condition before 30 seconds and confirm its timer restarts rather than passing early.
+4. In Debug Center SUMMARY and a captured snapshot, verify the NR gate shows one `WAITING` entry followed by `PASSED`. For a safety bypass, the PASSED entry must state whether it was the below-84-percent or both-IDLE path.
 
 ## Marshal waypoint overrides and three-crew destination deboarding
 

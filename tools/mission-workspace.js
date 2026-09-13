@@ -91,7 +91,7 @@ const MACRO_MODULES = [
   {
     file: 'macros/13-crew-emergency.json',
     description: 'Crew LifeScore, environmental impact, fatal replacement, emergency recovery, and care routing.',
-    matches: (name) => /crew lifescore|crew safety|crew emergency|deceased crew|post crew|object crew|hoist crew lifescore/i.test(name),
+    matches: (name) => /crew lifescore|crew safety|crew emergency|deceased crew|post crew|object crew|hoist crew lifescore|stop fatal hoist/i.test(name),
   },
   {
     file: 'macros/14-shared-runtime.json',

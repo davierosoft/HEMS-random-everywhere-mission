@@ -1,10 +1,10 @@
 # Current development validation
 
-- Candidate: **0.997 142**, local static candidate. The GitHub development checkpoint after this supplied build also contains the consolidated P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
+- Candidate: **0.997 155**, local static candidate. This is the latest supplied local-test copy and includes the default landing-spot circle/icon regeneration fix plus the consolidated P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
 - Artifact: repository-root `everywhere_all.json`.
-- SHA-256: `f34c12abc6972b663f88247fd67f6c5ad4885a59f56297a41db9315178deeae3`.
+- SHA-256: `f605e3b54cb78400fd2e460b37c8dbb4531c3c181df95ebd90b7669a34d6c20f`.
 - Local source/artifact byte equality, semantic scope and complete static suite: PASS.
-- HPG/MSFS validation of the complete 142 candidate: **PENDING - user testing in progress**.
+- HPG/MSFS validation of the complete 155 candidate: **PENDING - user testing in progress**.
 - Packaging / validated release: NOT AUTHORIZED by a static pass or a code-sync request.
 
 ## Confirmed narrow simulator evidence
