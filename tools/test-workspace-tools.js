@@ -108,7 +108,9 @@ try {
   assert(assertBuildIntent(releaseRoot, builtArtifact, { purpose: 'build' }).kind === 'draft', 'draft intent did not authorize its build');
   markBuildConsumed(releaseRoot, builtArtifact);
   const draftArtifact = createLocalTestArtifact(releaseRoot, { ...draftIntent, status: 'static_pass', staticVerifiedAt: '2026-01-01T00:00:00.000Z' }, builtArtifact);
-  assert(draftArtifact.includes(`${path.sep}outputs${path.sep}drafts${path.sep}`) && fs.readFileSync(path.join(path.dirname(draftArtifact), 'test-receipt.json'), 'utf8').includes('DRAFT_TEST'), 'draft verification created a numbered local-test artifact');
+  assert(draftArtifact === path.join(releaseRoot, 'everywhere_all.json'), 'draft verification must reference the canonical artifact');
+  assert(!fs.existsSync(path.join(releaseRoot, 'outputs', 'drafts')), 'draft verification must not accumulate mission copies');
+  expectThrow(() => createLocalTestArtifact(releaseRoot, draftIntent, `${builtArtifact} `), /canonical artifact/, 'draft receipt rejects content different from the canonical artifact');
   const nextIntent = beginRelease(releaseRoot, '0.997 113', 'Next local build.', { roots: ['title'], macros: ['example macro'], data: [] });
   assert(nextIntent.status === 'prepared' && nextIntent.release === '0.997 113', 'higher local build did not supersede the consumed build');
   assert(fs.readFileSync(path.join(releaseRoot, 'mission-src', 'macros', '11-mission-lifecycle.json'), 'utf8').includes('"value": 113'), 'higher local build did not update the runtime build LVAR source');

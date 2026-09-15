@@ -1,3 +1,8 @@
+## Development maintenance - 2026-09-15 (no mission release)
+
+- Draft verification now checks the canonical mission in place instead of accumulating deployable copies. One-use build intents, static gates and delivery numbering remain enforced.
+- Removed the materialized starting baseline, retired redundant worktrees and closed the superseded global-state PR. Historical mission behavior still requires the recovery audit and simulator validation.
+
 ## Release 0.997 167
 
 - Declare reviewed runtime monitor and snapshot macros

@@ -7,4 +7,4 @@
 - Keep validation commands branch-neutral; enforce write protection only in write commands and the pre-commit hook so CI can validate merged code on `main`.
 - When changing a validator, demonstrate one passing baseline and one focused failure mode or explain why a safe synthetic failure is unavailable.
 - Tool changes must not weaken the mission release gates in `DEVELOPMENT_RELEASE_CHECKLIST.md`.
-- A local mission build must require a one-use, strictly higher release intent. Test the permitted first build, rejected reuse, and higher-number follow-up path whenever that gate changes.
+- A local mission build requires a one-use intent: drafts preserve the supplied version; only explicitly requested deliveries advance it. Draft verification references the canonical artifact without copying it. Test allowed builds, rejected reuse and delivery progression whenever the gate changes.

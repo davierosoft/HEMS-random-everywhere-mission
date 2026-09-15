@@ -32,7 +32,7 @@ These instructions protect the deployable mission and user state.
 ## Required verification
 
 1. Before every local build, prepare one one-use intent with `node tools/release-workflow.js draft ...`; it must not change version, changelog, or create a numbered artifact. Use `begin --release ...` only after explicit publication of the next higher release. Corrections use drafts.
-2. Run `node tools/mission-workspace.js check` after every build, then `node tools/release-workflow.js static`. Drafts write only under `outputs/drafts/`; delivery creates `outputs/<release>-local-test/everywhere_all.json`.
+2. Run `node tools/mission-workspace.js check` after every build, then `node tools/release-workflow.js static`. Drafts verify the canonical artifact without copying it; requested delivery creates `outputs/<release>-local-test/everywhere_all.json`.
 3. Supply a numbered local-test artifact only for a user-requested delivery. A draft artifact is internal verification only and must never be described as a release, supplied as a download, or added to the changelog.
 4. Run `node tools/check-mission-scope.js check --strict` with one `--allow-macro`, `--allow-data`, or `--allow-root` flag for every intended semantic change.
 5. Run the smallest targeted gate during implementation, then `npm test` once when stable (`node tools/check-workspace.js` is the identical fallback when npm is unavailable). Tests are branch-neutral for CI; write protection is enforced by the branch guard and pre-commit hook.

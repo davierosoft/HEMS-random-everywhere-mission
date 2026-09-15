@@ -9,7 +9,6 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `everywhere_all.json` | Generated HPG deployment artifact. Contains metadata, macros, tables, threads, locations, objectives, briefing, and embedded icons. Do not edit directly. |
 | `mission-src/` | Editable modular source for the artifact's `macros` and `data` sections. |
 | `train.json` | Companion/custom loader with its own executable and renderer contract. |
-| `starting point/everywhere_all.json` | Historical starting baseline; never treat it as the active build. |
 | `DEVELOPMENT_RELEASE_CHECKLIST.md` | Blocking HPG syntax, state, subsystem, and release constraints. |
 | `CHANGELOG.en.md` | Canonical technical release history. |
 | `CHANGELOG_USER.en.md` | Public-facing changelog; update only on explicit request. |
