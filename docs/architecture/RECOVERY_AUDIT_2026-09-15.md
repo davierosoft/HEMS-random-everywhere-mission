@@ -12,6 +12,10 @@ I draft ora verificano il file canonico senza copiarlo. Allineate le istruzioni 
 
 Su successiva istruzione esplicita dell'utente e' stato eliminato anche `global.json` residuo nel worktree 6982; il contenitore vuoto e' stato rimosso. Questa autorizzazione di pulizia supera la precedente conservazione di quel file, senza introdurre un nuovo global-state artifact.
 
+Con ulteriore conferma esplicita sono stati eliminati 75 file missione/esportazione e 12 global.json nelle vecchie cartelle dei task del 11, 22 e 27 agosto e del 2, 5 e 7 settembre. Prima della rimozione sono stati verificati gli hash e salvati i diff dei quattro checkout storici in `.workspace-state/retired-checkout-1.patch` fino a `retired-checkout-4.patch`. L'inventario di soli percorsi, titoli e hash e' in `.workspace-state/cleanup-copy-inventory.json`. La ricerca finale sotto Documents/Codex e .codex/worktrees trova soltanto il file canonico del progetto: da 185 corrispondenze a una. Nessun global.json resta in queste due radici fuori dai metadati Git. I file installati nel simulatore non fanno parte di questa eliminazione.
+
+Le modifiche di pulizia sono sincronizzate sul branch operativo; CI Windows e Linux PASS. La formattazione preesistente dei JSON resta locale per la prossima consegna, come richiesto: il contenuto funzionale del file locale coincide con il branch, ma i byte non coincidono ancora. Il recupero funzionale e la validazione HPG restano aperti.
+
 Le sezioni seguenti descrivono lo stato osservato prima della pulizia e i problemi funzionali ancora da recuperare. La pulizia non costituisce la soluzione di R1-R7.
 
 La missione attuale non e' pronta per essere dichiarata corretta. Il merge `e065c022af6eca83cb13ce8466261ed7cd8cddfc` conserva l'integrazione multipaziente, ma perde parti delle correzioni successive. Esistono inoltre incompatibilita' fra comportamenti storici e adattatori multipaziente. I controlli generali passano pur in presenza dei difetti documentati sotto.
