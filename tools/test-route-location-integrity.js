@@ -27,19 +27,18 @@ for (const token of [
   '"object":"accident_location"',
   '"location_name"',
   '"distance:km"',
-  '"bearing":90',
-  '"dist":60',
+  '"bearing2":0',
+  '"dist":25',
   '"radius":150',
-  '"minRadius":35'
+  '"minRadius":10'
 ]) {
   if (!serialized.includes(token)) throw new Error(`residential location watchdog is incomplete: ${token}`);
 }
 if (serialized.includes('"object":"ambu_station"')) throw new Error('residential rescue query must never use ambu_station as a scene location');
-if (serialized.includes('"bearing2"')) throw new Error('residential location fallback must use bearing, not bearing2');
 if (serialized.includes('"set_route"')) throw new Error('residential rescue query must not own flight routing');
 
 const distanceGuard = residential.find((item) => item?.if?.location === 'accident_location' && item.if.var === 'distance:km' && item.if.to === 'rescue_location');
-if (!distanceGuard || distanceGuard.gt > 0.8 || distanceGuard.gt <= 0) throw new Error('residential rescue distance watchdog must reject distances above 0.8 km');
+if (!distanceGuard || distanceGuard.gt > 0.3 || distanceGuard.gt <= 0) throw new Error('residential rescue distance watchdog must reject distances above 0.3 km');
 
 const residentialScene = scenes.residential;
 const patientMoves = [];

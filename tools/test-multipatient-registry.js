@@ -182,6 +182,14 @@ assert.throws(() => assertFreshMutableArrays({set: {param: 'record'}, value: {cr
   assert.equal(isolated.savedTables.Andrews_debug_snapshots.valid, 'yes');
   assert.match(isolated.locals.patient_registry_capture_status, /^FAILED:/);
 }
+{
+  const locationDiagnostics = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/19-location-diagnostics.json'), 'utf8'))['location diagnostics monitor'];
+  assert.deepEqual(locationDiagnostics[0], {open_table: {static: 'Debug_Auto_Table'}}, 'Automatic location diagnostics must open its persistent table before reading or writing');
+  const hasCommand = (value, predicate) => Array.isArray(value) ? value.some((entry) => hasCommand(entry, predicate)) : value && typeof value === 'object' ? predicate(value) || Object.values(value).some((entry) => hasCommand(entry, predicate)) : false;
+  assert.equal(hasCommand(locationDiagnostics, command => command.set?.table?.static === 'Debug_Auto_Table' && command.save_table?.static === 'Debug_Auto_Table'), false, 'Automatic diagnostics must use separate set and save commands');
+  assert.ok(hasCommand(locationDiagnostics, command => command.set?.table?.static === 'Debug_Auto_Table'), 'Automatic location diagnostics must write the opened table');
+  assert.ok(hasCommand(locationDiagnostics, command => command.save_table?.static === 'Debug_Auto_Table'), 'Automatic location diagnostics must save the opened table');
+}
 
 // Literal-array retention is an adversarial SDK model, not a claim that we
 // have inspected HPG's interpreter. It reproduces the observed first-PASS /

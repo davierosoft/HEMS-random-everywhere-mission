@@ -96,6 +96,12 @@ for (const order of resources.flatMap(first => resources.filter(x => x !== first
   assert.equal(h.tour(order[0]), 1);
   assert.equal(h.events.filter(e => e[0] === 'assessment').length, 9, 'Duplicate entry must not repeat visits');
 }
+for (const [resource, expected] of [['ambulance1', [1, 2, 3]], ['ambulance2', [3, 2, 1]], ['hems', [1, 2, 3]]]) {
+  const h = new Scene();
+  assert.equal(h.tour(resource), 1);
+  assert.deepEqual(h.events.filter(e => e[0] === 'assessment' && e[1] === h.currentActor).map(e => e[2]), expected,
+    `${resource} must visit patients in its assigned order`);
+}
 for (const count of [1, 2]) {
   const h = new Scene();
   for (let slot = count + 1; slot <= 3; slot++) h.objects.delete(patientObject(slot));

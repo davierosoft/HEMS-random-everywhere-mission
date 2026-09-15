@@ -6,8 +6,8 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - The release number in the first `CHANGELOG.en.md` heading and the static `everywhere_all.json.title` displayed in the tablet must be identical.
 - Treat the number as a delivery candidate until the complete checklist and simulator checks are finished. Do not present intermediate local checkpoints as separate user-facing releases; advance the public delivery revision once, at the end of the completed checks.
-- Before every local build, run `node tools/release-workflow.js begin --release "0.997 N"` with a strictly higher build number and declared scope. `node tools/mission-workspace.js build` consumes that number once, including a byte-identical build. A later correction must begin a higher number.
-- Run `node tools/release-workflow.js static` only after the build. It always creates `outputs/<release>-local-test/everywhere_all.json`, which must be supplied for offline testing unless the user explicitly opts out. `package` is allowed only after that static gate and an actual named simulator runtime sign-off; a static pass is never runtime evidence.
+- Before every local build, prepare a one-use `node tools/release-workflow.js draft` intent with declared scope. Corrections preserve the last supplied version. Use `begin --release "0.997 N"` only immediately before an explicitly requested higher delivery; never reuse a supplied number.
+- Run `node tools/release-workflow.js static` only after the build. Drafts verify the canonical artifact without creating mission copies. Only a requested delivery creates `outputs/<release>-local-test/everywhere_all.json`. `package` requires the static gate and actual named simulator runtime sign-off; a static pass is never runtime evidence.
 - The validator must fail on a stale displayed build or a missing/mismatched runtime `L:RELEASE_BUILD`, even when every JSON and HPG syntax check passes.
 - Inspect the actual staged title before commit; never infer the displayed release from the changelog or commit message.
 
@@ -24,8 +24,8 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 ## 2. State and persistence
 
 - Any value displayed after a mission reload must have an explicit fallback. Local variables are not persistence.
-- A persistent user choice must use a named `global` and have a first-run default in `global.json`.
-- Every new option added to Settings or the technical page is persistent by default: it must use a named `global`, have a first-run default in `global.json`, and prefix its user-facing description with `(P)`. Depart from this only when the user explicitly requests a non-persistent option.
+- A persistent user choice must use a named `global` and have a first-run default in the mission through `set: global` guarded by a null check.
+- Every new option added to Settings or the technical page is persistent by default: it must use a named `global`, have a guarded first-run default in the mission, and prefix its user-facing description with `(P)`. Never add or modify a repository-side global-state file.
 - Normalise values before formatting them. A renderer must not print an optional local directly when `undefined` is possible.
 - When an automatic action changes the user-visible state, update the same persistent state used by its manual counterpart.
 
@@ -100,7 +100,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 ## 10. Required release gate
 
-1. Parse `everywhere_all.json`, `global.json`, and every shipped companion/custom-loader JSON such as `train.json`.
+1. Parse `everywhere_all.json` and every shipped companion/custom-loader JSON such as `train.json`. The HPG global-state container is local runtime state and is intentionally absent from the repository.
    - Parsing is insufficient: verify the required root shape (`macros`, `aircraft`, `applicable`, `api_version`, `data`, `threads`, `locations`, `objects`, `userActions`, `objectives`, `briefing`, `icons`) and confirm `Debug_Table` remains under root `data`, never inside `macros`.
 2. Run `node tools/validate-mission.js`; companion loaders must have explicit contract assertions and cannot be silently skipped.
 3. Run `git diff --check` and inspect the staged file list.

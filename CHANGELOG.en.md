@@ -1,3 +1,52 @@
+## Development maintenance - 2026-09-15 (no mission release)
+
+- Draft verification now checks the canonical mission in place instead of accumulating deployable copies. One-use build intents, static gates and delivery numbering remain enforced.
+- Removed the materialized starting baseline, retired redundant worktrees and closed the superseded global-state PR. Historical mission behavior still requires the recovery audit and simulator validation.
+
+## Release 0.997 167
+
+- Declare reviewed runtime monitor and snapshot macros
+- Include remaining reviewed mission macros in semantic scope
+- Allow all macros in the reviewed semantic merge
+- Add location diagnostics macro to manifest and preserve merged mission changes
+- Verify complete semantic merge of Astra 159 and supplied 167
+- finalize location history source attribution
+- include existing crew spawn diagnostics in draft scope
+- validate separate manual and automatic snapshot tables
+- location diagnostics plus existing mission debug and persistence changes
+- Run the road query asynchronously with a pre-started watchdog and clear stale result state before node processing
+
+## Release 0.997 166
+
+- Capture accident, rescue, and landing coordinates through documented location/var queries before Debug snapshot serialization
+
+## Release 0.997 165
+
+- Exclude legacy difficulty state from operational global snapshot while retaining all supported globals and acceleration diagnostics
+
+## Release 0.997 164
+
+- Capture all operational mission globals and raw acceleration diagnostics in Debug snapshot; retain bounded location-query recovery
+- Capture all operational mission globals and raw acceleration diagnostics in Debug snapshot
+
+## Release 0.997 163
+
+- Bound road-node query wait and preserve direct location-token snapshot diagnostics
+
+## Release 0.997 162
+
+- Use direct HPG location tokens in debug snapshots and prevent residential road-node loading from hanging on empty query results
+
+## Release 0.997 161
+
+- Preserve compact focused mission module formatting
+- Fix ambulance visit order and guard null HEMS ground operations
+
+## Release 0.997 160
+
+- Include the existing crew emergency response scope required by the generated artifact.
+- Fix hoist fatal detection by using measured descent rate, stop fatal hoist flows, switch HOIST_OBJ controls OFF, and place the deceased crew asset at the last object location.
+
 ## Development checkpoint - P1-P3 crew and transport integration (runtime PENDING)
 
 - Connect independent crew visits and completed-treatment barriers to exclusive ambulance/HEMS tickets, stable selection, shared loading and verified recovery.

@@ -7,6 +7,7 @@ const { check: checkMissionWorkspace } = require('./mission-workspace');
 
 console.log(`Workspace branch: ${currentBranch() || '(detached HEAD)'}. Write protection is checked separately.`);
 checkMissionWorkspace();
+require('./check-canonical-artifact').check();
 require('./check-workspace-consistency');
 require('./test-ci-workflow');
 require('./validate-mission');

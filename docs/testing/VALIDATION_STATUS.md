@@ -8,11 +8,11 @@ No newly numbered delivery, publication or simulator sign-off was produced. The 
 
 ## Previously recorded candidate
 
-- Candidate: **0.997 155**, local static candidate. This is the latest supplied local-test copy and includes the default landing-spot circle/icon regeneration fix plus the consolidated P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
+- Candidate: **0.997 167**, local static candidate. This is the latest supplied local-test copy and includes the location diagnostics, bounded residential road-node recovery, separate manual and automatic snapshots, and the preceding P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
 - Historical artifact name: `everywhere_all.json`; the current repository-root file is the internal draft described above.
-- SHA-256: `f605e3b54cb78400fd2e460b37c8dbb4531c3c181df95ebd90b7669a34d6c20f`.
+- SHA-256: `283b21e46f4988187abe6776a7f130a029a2abaefc166f84fa2efdccf614e391`.
 - Local source/artifact byte equality, semantic scope and complete static suite: PASS.
-- HPG/MSFS validation of the complete 155 candidate: **PENDING - user testing in progress**.
+- HPG/MSFS validation of the complete 167 candidate: **PENDING - user testing in progress**.
 - Packaging / validated release: NOT AUTHORIZED by a static pass or a code-sync request.
 
 ## Confirmed narrow simulator evidence

@@ -182,9 +182,14 @@ function amendPreparedRelease(repositoryRoot, note, scope) {
 }
 
 function createLocalTestArtifact(repositoryRoot, intent, artifact) {
-  const outputDirectory = intent.kind === 'draft'
-    ? path.join(repositoryRoot, 'outputs', 'drafts', intent.draftId)
-    : path.join(repositoryRoot, 'outputs', `${intent.release.replace(' ', '-')}-local-test`);
+  if (intent.kind === 'draft') {
+    const canonical = path.join(repositoryRoot, 'everywhere_all.json');
+    if (fs.readFileSync(canonical, 'utf8') !== artifact) {
+      throw new Error('draft verification must reference the current canonical artifact');
+    }
+    return canonical;
+  }
+  const outputDirectory = path.join(repositoryRoot, 'outputs', `${intent.release.replace(' ', '-')}-local-test`);
   const artifactPath = path.join(outputDirectory, 'everywhere_all.json');
   const receiptPath = path.join(outputDirectory, 'test-receipt.json');
   if (fs.existsSync(outputDirectory)) {
@@ -197,7 +202,7 @@ function createLocalTestArtifact(repositoryRoot, intent, artifact) {
   }
   writeTextAtomic(receiptPath, `${JSON.stringify({
     schema: 1,
-    kind: intent.kind === 'draft' ? 'DRAFT_TEST' : 'LOCAL_TEST',
+    kind: 'LOCAL_TEST',
     release: intent.release,
     artifact: 'everywhere_all.json',
     artifactSha256: sha256(artifact),
@@ -260,7 +265,7 @@ function packageRelease(repositoryRoot, runtimeSignoff) {
 }
 
 function printHelp() {
-  console.log('Usage:\n  node tools/release-workflow.js draft --note "ASCII draft note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js begin --release "0.997 112" --note "ASCII delivery note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js amend --note "ASCII amendment note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/mission-workspace.js build\n  node tools/release-workflow.js static (drafts remain under outputs/drafts; releases create the local-test artifact)\n  node tools/release-workflow.js package --runtime-signoff "User-confirmed simulator scenarios"\n  node tools/release-workflow.js status');
+  console.log('Usage:\n  node tools/release-workflow.js draft --note "ASCII draft note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js begin --release "0.997 112" --note "ASCII delivery note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/release-workflow.js amend --note "ASCII amendment note" --allow-macro "name" [--allow-data "name"] [--allow-root "name"]\n  node tools/mission-workspace.js build\n  node tools/release-workflow.js static (drafts verify the canonical file without copying; releases create the requested local-test artifact)\n  node tools/release-workflow.js package --runtime-signoff "User-confirmed simulator scenarios"\n  node tools/release-workflow.js status');
 }
 
 function main(argv = process.argv.slice(2)) {

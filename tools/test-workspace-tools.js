@@ -11,6 +11,7 @@ const { pushedBranchTargets, unsafePushTargets } = require('./assert-safe-push')
 const { analyzeScope, createBaselineRecord, scopeViolations, validateBaselineRecord } = require('./check-mission-scope');
 const { assertBuildIntent, compareRelease, markBuildConsumed, readIntent } = require('./release-contract');
 const { amendPreparedRelease, beginDraft, beginRelease, createLocalTestArtifact } = require('./release-workflow');
+const { violations: canonicalViolations, fileViolation } = require('./check-canonical-artifact');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -76,6 +77,12 @@ try {
   fs.mkdirSync(path.join(releaseRoot, 'mission-src', 'macros'), { recursive: true });
   fs.writeFileSync(path.join(releaseRoot, '.git', 'HEAD'), 'ref: refs/heads/CICERS/release-test\n');
   fs.writeFileSync(path.join(releaseRoot, 'everywhere_all.json'), releaseArtifact(111));
+  assert(canonicalViolations(releaseRoot).length === 0, 'canonical artifact rejected the single-file baseline');
+  fs.mkdirSync(path.join(releaseRoot, 'old-copy'));
+  fs.writeFileSync(path.join(releaseRoot, 'old-copy', 'everywhere_all.json'), '{}');
+  assert(canonicalViolations(releaseRoot).some(message => message.includes('parallel mission')), 'parallel mission copy was not rejected');
+  fs.unlinkSync(path.join(releaseRoot, 'old-copy', 'everywhere_all.json'));
+  assert(fileViolation('global.json').includes('global state'), 'repository global state was not rejected');
   fs.writeFileSync(path.join(releaseRoot, 'mission-src', 'macros', '11-mission-lifecycle.json'), releaseSource(111));
   fs.writeFileSync(path.join(releaseRoot, 'CHANGELOG.en.md'), '## Release 0.997 111\n\n- Previous release.\n');
   const releaseIntent = beginRelease(releaseRoot, '0.997 112', 'Release workflow gate test.', { roots: ['title'], macros: ['example macro'], data: [] });
@@ -108,7 +115,9 @@ try {
   assert(assertBuildIntent(releaseRoot, builtArtifact, { purpose: 'build' }).kind === 'draft', 'draft intent did not authorize its build');
   markBuildConsumed(releaseRoot, builtArtifact);
   const draftArtifact = createLocalTestArtifact(releaseRoot, { ...draftIntent, status: 'static_pass', staticVerifiedAt: '2026-01-01T00:00:00.000Z' }, builtArtifact);
-  assert(draftArtifact.includes(`${path.sep}outputs${path.sep}drafts${path.sep}`) && fs.readFileSync(path.join(path.dirname(draftArtifact), 'test-receipt.json'), 'utf8').includes('DRAFT_TEST'), 'draft verification created a numbered local-test artifact');
+  assert(draftArtifact === path.join(releaseRoot, 'everywhere_all.json'), 'draft verification must reference the canonical artifact');
+  assert(!fs.existsSync(path.join(releaseRoot, 'outputs', 'drafts')), 'draft verification must not accumulate mission copies');
+  expectThrow(() => createLocalTestArtifact(releaseRoot, draftIntent, `${builtArtifact} `), /canonical artifact/, 'draft receipt rejects content different from the canonical artifact');
   const nextIntent = beginRelease(releaseRoot, '0.997 113', 'Next local build.', { roots: ['title'], macros: ['example macro'], data: [] });
   assert(nextIntent.status === 'prepared' && nextIntent.release === '0.997 113', 'higher local build did not supersede the consumed build');
   assert(fs.readFileSync(path.join(releaseRoot, 'mission-src', 'macros', '11-mission-lifecycle.json'), 'utf8').includes('"value": 113'), 'higher local build did not update the runtime build LVAR source');
