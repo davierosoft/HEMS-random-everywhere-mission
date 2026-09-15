@@ -8,7 +8,7 @@ HPG/MSFS validation remains **PENDING**. On 2026-09-15 the user explicitly autho
 
 - Canonical local and repository artifact: `everywhere_all.json`.
 - SHA-256: `a05c874a9a8c96125003af9d954b205df1a540e2e40be1d21a10227d0a131423`.
-- The workflow's local-test output has the same bytes; the repository-root file remains the sole official local source-workspace artifact.
+- The workflow verified a local-test output with identical bytes. That temporary output is removed after comparison so the repository-root file is the single official local mission.
 
 See [recovery audit](../architecture/RECOVERY_AUDIT_2026-09-15.md) for requirement coverage and pending runtime evidence.
 
@@ -20,7 +20,7 @@ This integration is retained in candidate 168 above. Follow the P1-P3 transport 
 
 ## Previously recorded candidate
 
-- Candidate: **0.997 167**, local static candidate. This is the latest supplied local-test copy and includes the location diagnostics, bounded residential road-node recovery, separate manual and automatic snapshots, and the preceding P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
+- Previous candidate: **0.997 167**, superseded by 168. Its recorded scope included location diagnostics, bounded residential road-node recovery, separate manual and automatic snapshots, and the preceding P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
 - Historical artifact name: `everywhere_all.json`; the current repository-root file is candidate 168 described above.
 - SHA-256: `283b21e46f4988187abe6776a7f130a029a2abaefc166f84fa2efdccf614e391`.
 - Local source/artifact byte equality, semantic scope and complete static suite: PASS.
