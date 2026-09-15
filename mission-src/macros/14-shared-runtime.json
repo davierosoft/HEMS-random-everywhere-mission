@@ -1,543 +1,2056 @@
-{
-    "savetemp async": [
-      {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
-      {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
-      {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
-      {"set":{"global":"SAVETEMP_START_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
-      {"set":{"global":"SAVETEMP_START_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
-      {"call_macro":"savetemp"},
-      {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
-      {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
-      {"set":{"global":"SAVETEMP_END_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
-      {"set":{"global":"SAVETEMP_END_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
-      {"set":{"global":"SAVETEMP_STATUS"},"value":"completed"}
-    ],
-    "landing spot watchdog": [
-      {"set":{"local":"landing_spot_watchdog_status"},"value":"monitoring"},
-      {"while":{"local":"landing_spot_watchdog_active"},"eq":"yes","do":[
-        {"if":{"local":"customLZ"},"eq":"yes","then":[{"set":{"local":"landing_spot_watchdog_active"},"value":"no"},{"set":{"local":"landing_spot_watchdog_status"},"value":"disabled_manual"}]},
-        {"if":{"and":[{"require":{"local":"landing_spot_watchdog_active"},"eq":"yes"},{"require":{"has_location":"landing_spot"},"eq":1},{"require":{"has_object":"injured_human"},"eq":1}]} ,"eq":1,"then":[
-          {"set":{"local":"landing_spot_watchdog_distance_m"},"value":{"location":"landing_spot","var":"distance:m","to":"injured_human"}},
-          {"if":{"local":"landing_spot_watchdog_distance_m"},"gt":0.5,"then":[
-            {"set":{"local":"landing_spot_watchdog_discrepancy"},"value":"yes"},
-            {"set":{"local":"landing_spot_watchdog_status"},"value":"correcting"},
-            {"set":{"local":"landing_spot_watchdog_fix_count"},"value":{"add":[{"local":"landing_spot_watchdog_fix_count"},1]}},
-            {"set_map":{"remove":{"point":{"id":"ring1"}}}},
-            {"set_map":{"remove":{"point":{"id":"landing_spot"}}}},
-            {"create_location":"landing_spot","zones":[{"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}]},
-            {"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},
-            {"set_map":{"add":{"point":{"location":"landing_spot","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAgCAYAAAHiVIEmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIGSURBVEhL1Zc/T8JAFMDbgjQkJJjGhWDCZEJSd5xwAmPCwoyfAEcXU+MncDc4yFdycnRgV2cWU+8d78r9a+84SqO/5HHvvd77c3dtAc+GFD4Cqm6gDoVer3dCBv1FhnA1N2eKufaHT5tb+y8DTbPGed1uAbpJwjYAMEl2+jhSarXa9jocDTseXhdoNptyRqWsQLvdTjudzjeaAqT8exAExQlcGY3GIaoZutaZ8BT5xR3kkCfrUGJtDhuCmBRSyq2fJMk1qhXR7/f5DU+73VObvTwcRdWr68ylkhIjO8BmQsEHWvAh1Gb3lPHmK4DG6l5GLqSQDRLJHZmSK/NLeVwA64eYbPbGygESyW264LOOnDe8Xq/TWG03/DfDarX6hFHnqwybZSpzTBstB5RxMFvCMIQCgkRRpPhw3sFIk+ThDHUnSPwRGQ7aZCmQRu9RNZK3muxYJFGQXqu86FD82StlPL56Isl+iFruDWjGHw4vP+L4XGxuMpkcNxqNvJUw2GplUdhxpyitVutrMLh4RpNSGIDIBZgouDSF0DnsqMDY9T3jgk0Nf++m5vNb1LYsl6/eer1GS8CqqY1KjNns5g71PCBAJwr7Hh+PKYhPzouCY1PZdf5XBmxbOp1OHzdmpUBDpqM1rqosqqpTIYvFS0QGWBn8c36jTgNxHMM8GkO+52Lq/J943i9NtsTiAlnwAgAAAABJRU5ErkJggg==","id":"landing_spot"}}}},
-            {"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}},
-            {"set":{"local":"landing_spot_watchdog_status"},"value":"corrected"}
-          ]}
+{"savetemp async": [
+    {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
+    {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
+    {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
+    {"set":{"global":"SAVETEMP_START_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
+    {"set":{"global":"SAVETEMP_START_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
+    {"call_macro":"savetemp"},
+    {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
+    {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
+    {"set":{"global":"SAVETEMP_END_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
+    {"set":{"global":"SAVETEMP_END_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
+    {"set":{"global":"SAVETEMP_STATUS"},"value":"completed"}
+  ],
+  "landing spot watchdog": [
+    {"set":{"local":"landing_spot_watchdog_status"},"value":"monitoring"},
+    {"while": {"local":"landing_spot_watchdog_active"}, "eq": "yes",
+      "do": [
+        {"if": {"local":"customLZ"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"landing_spot_watchdog_active"},"value":"no"},
+            {"set":{"local":"landing_spot_watchdog_status"},"value":"disabled_manual"}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"landing_spot_watchdog_active"},"eq":"yes"},
+            {"require":{"has_location":"landing_spot"},"eq":1},
+            {"require":{"has_object":"injured_human"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"landing_spot_watchdog_distance_m"},"value":{"location":"landing_spot","var":"distance:m","to":"injured_human"}},
+            {"if": {"local":"landing_spot_watchdog_distance_m"}, "gt": 0.5,
+              "then": [
+                {"set":{"local":"landing_spot_watchdog_discrepancy"},"value":"yes"},
+                {"set":{"local":"landing_spot_watchdog_status"},"value":"correcting"},
+                {"set":{"local":"landing_spot_watchdog_fix_count"},"value":{"add":[{"local":"landing_spot_watchdog_fix_count"},1]}},
+                {"set_map":{"remove":{"point":{"id":"ring1"}}}},
+                {"set_map":{"remove":{"point":{"id":"landing_spot"}}}},
+                {"create_location": "landing_spot",
+                  "zones": [
+                    {"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}
+                ]},
+                {"set":{"local":"location_diagnostic_source_macro"},"value":"landing spot watchdog"},
+                {"set":{"local":"location_diagnostic_writer_landing_spot"},"value":"landing spot watchdog"},
+                {"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},
+                {"set_map":{"add":{"point":{"location":"landing_spot","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAgCAYAAAHiVIEmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIGSURBVEhL1Zc/T8JAFMDbgjQkJJjGhWDCZEJSd5xwAmPCwoyfAEcXU+MncDc4yFdycnRgV2cWU+8d78r9a+84SqO/5HHvvd77c3dtAc+GFD4Cqm6gDoVer3dCBv1FhnA1N2eKufaHT5tb+y8DTbPGed1uAbpJwjYAMEl2+jhSarXa9jocDTseXhdoNptyRqWsQLvdTjudzjeaAqT8exAExQlcGY3GIaoZutaZ8BT5xR3kkCfrUGJtDhuCmBRSyq2fJMk1qhXR7/f5DU+73VObvTwcRdWr68ylkhIjO8BmQsEHWvAh1Gb3lPHmK4DG6l5GLqSQDRLJHZmSK/NLeVwA64eYbPbGygESyW264LOOnDe8Xq/TWG03/DfDarX6hFHnqwybZSpzTBstB5RxMFvCMIQCgkRRpPhw3sFIk+ThDHUnSPwRGQ7aZCmQRu9RNZK3muxYJFGQXqu86FD82StlPL56Isl+iFruDWjGHw4vP+L4XGxuMpkcNxqNvJUw2GplUdhxpyitVutrMLh4RpNSGIDIBZgouDSF0DnsqMDY9T3jgk0Nf++m5vNb1LYsl6/eer1GS8CqqY1KjNns5g71PCBAJwr7Hh+PKYhPzouCY1PZdf5XBmxbOp1OHzdmpUBDpqM1rqosqqpTIYvFS0QGWBn8c36jTgNxHMM8GkO+52Lq/J943i9NtsTiAlnwAgAAAABJRU5ErkJggg==","id":"landing_spot"}}}},
+                {"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}},
+                {"set":{"local":"landing_spot_watchdog_status"},"value":"corrected"}
+            ]}
         ]},
         {"sleep":1}
-      ]}
-    ],
-    "custom separate settings": [
-      {"#comment":"THESE SETTINGS APPLY ALWAYS, EVEN IF THE CUSTOM SETTINGS ARE DISABLED."},
-      {"#comment":"Defines the hangar to helicopter distance threshold for crew boarding. Default value is 0.08 (NM) "},
-      {"#comment":"Above preset value (in nautical miles) the crew will arrive transported by a van."},
-      {"#comment":"Below (or at) preset value (in nautical miles) the crew will arrive walking."},
-      {"set":{"var":["L:VANACTION","number"]},"value":0.08},
-      {"#comment":"Defines if checklist voices are played or not and the priority over other mission voices. Default is 0 (checklist+mission audio)"},
-      {"#comment":"0 - Checklist & mission audio are both played at the same volume"},
-      {"#comment":"1 - Checklist audio enabled, mission audio momentarily reduced"},
-      {"#comment":"2 - Checklist audio disabled"},
-      {"set":{"var":["L:AUDIO_CHK_DECLUT","number"]},"value":0},
-      {"#comment":"Defines if the hospital crew appears before landing at destination helipad or after landing"},
-      {"#comment":"0 Crew is generated in front of helicopter after landing"},
-      {"#comment":"1 (DEFAULT) Crew is generated at landing coordinates few NM before reaching the landing spot."},
-      {"set":{"local":"DESTPRST"},"value":1},
-      {"#comment":"Defines the hospital crew distance from the landing spot center. Default value medic 21, stretcher 19"},
-      {"#comment":"Reduce in case of rooftop landing spots"},
-      {"#comment":"Keep/increase if needed"},
-      {"set":{"var":["L:HMEDDISTANCE","number"]},"value":21},
-      {"set":{"var":["L:HSTRCDISTANCE","number"]},"value":19},
-      {"#comment":"Defines the distance from accident site to the helicopter, in meters, above which the ambulance will be considered far. Default: 100 meters"},
-      {"set":{"local":"ambu_bring_crew_min_dist"},"value":100},
-      {"#comment":"Defines if the hospital crew walks to hospital with the patient (after unloading) or disappears few seconds after unloading completed. It applies to every ambulance crew (patient transfer or load unload from to ambulance and also for crew boarding and deboarding"},
-      {"#comment":"0 Crew disappears (no hospital query executed, no risk of query or mission lock)"},
-      {"#comment":"1 (DEFAULT)Crew moves to the hospital following straight path from loading spot to hospital. (Valid only if Load to ambulance has not been selected)"},
-      {"set":{"var":["L:BACK_TO_HOSPITAL","number"]},"value":1},
-      {"#comment":"Defines the speed multiplier (based on road limits) for police and ambulance on scene. Default: 1.5"},
-      {"set":{"local":"poli_multiplier"},"value":1.5},
-      {"set":{"local":"amburadius"},"value":25000},
-      {"set":{"local":"train_range"},"value":5},
-      {"set":{"local":"timemultiplier"},"value":0.05},
-      {"set":{"var":["L:INHIBVAR","number"]},"value":1},
-      {"set":{"var":["L:TESTTRK","number"]},"value":0}
-    ],
-    "crew spawn launch": [
-      {"set":{"local":"crew_spawn_log"},"value":{"text":"LAUNCH: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
-      {"if":{"has_object":{"param":"crew_name"}},"eq":1,"then":[{"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0} already exists; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},{"set_message":{"text":"ERROR: crew object {0} already exists. Waiting for cleanup before creation.","params":[{"param":"crew_name"}],"color":"red"}},{"wait_for":{"has_object":{"param":"crew_name"}},"eq":0}]}
-    ],
-    "crew spawn wait": [
-      {"set":{"param":"crew_spawn_wait_seconds"},"value":0},
-      {"set":{"param":"crew_spawn_state"},"value":"pending"},
-      {"while":{"param":"crew_spawn_wait_seconds"},"lt":20,"do":[{"if":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1,"then":[{"set":{"param":"crew_spawn_state"},"value":"created"},{"set":{"param":"crew_spawn_wait_seconds"},"value":20}]},{"if":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":-1}]},"eq":1,"then":[{"set":{"param":"crew_spawn_state"},"value":"failed"},{"set":{"param":"crew_spawn_wait_seconds"},"value":20}]},{"if":{"param":"crew_spawn_state"},"eq":"pending","then":[{"sleep":0.5},{"set":{"param":"crew_spawn_wait_seconds"},"value":{"add":[{"param":"crew_spawn_wait_seconds"},0.5]}}]}]},
-      {"if":{"param":"crew_spawn_state"},"eq":"created","then":[{"set":{"local":"crew_spawn_log"},"value":{"text":"CREATED: {0}","params":[{"param":"crew_name"}]}}],"else":[{"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},{"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},{"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}]}
-    ],
-    "crew spawn failure": [
-      {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; error={1}; title={2}; fallback={3}","params":[{"param":"crew_name"},{"param":"error"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
-      {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
-      {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
-    ],
-    "ground ops NR gate": [
-      {"set":{"local":"gndops_nr_gate_state"},"value":"waiting"},
-      {"set":{"local":"gndops_nr_bypass_seconds"},"value":0},
-      {"set":{"local":"gndops_idle_bypass_seconds"},"value":0},
-      {"set":{"local":"gndops_nr_gate_reason"},"value":null},
-      {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"WAITING: {0}; NR < {1}; safety bypass after 30s","params":[{"param":"source"},{"local":"gndopsNR"}]}},
-      {"while":{"local":"gndops_nr_gate_state"},"ne":"passed","do":[
-        {"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"},"then":[{"set":{"local":"gndops_nr_gate_state"},"value":"passed"},{"set":{"local":"gndops_nr_gate_reason"},"value":"NR threshold"}]},
-        {"if":{"local":"gndops_nr_gate_state"},"ne":"passed","then":[
-          {"if":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":84,"then":[{"set":{"local":"gndops_nr_bypass_seconds"},"value":{"add":[{"local":"gndops_nr_bypass_seconds"},1]}}],"else":[{"set":{"local":"gndops_nr_bypass_seconds"},"value":0}]},
-          {"if":{"and":[{"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]},"eq":1},{"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]},"eq":1}]},"eq":1,"then":[{"set":{"local":"gndops_idle_bypass_seconds"},"value":{"add":[{"local":"gndops_idle_bypass_seconds"},1]}}],"else":[{"set":{"local":"gndops_idle_bypass_seconds"},"value":0}]},
-          {"if":{"local":"gndops_nr_bypass_seconds"},"gt":30,"then":[{"set":{"local":"gndops_nr_gate_state"},"value":"passed"},{"set":{"local":"gndops_nr_gate_reason"},"value":"NR below 84 percent for over 30 seconds"}]},
-          {"if":{"local":"gndops_idle_bypass_seconds"},"gt":30,"then":[{"set":{"local":"gndops_nr_gate_state"},"value":"passed"},{"set":{"local":"gndops_nr_gate_reason"},"value":"both engine MAIN switches IDLE for over 30 seconds"}]}
-        ]},
-        {"if":{"local":"gndops_nr_gate_state"},"ne":"passed","then":[{"sleep":1}]}
-      ]},
-      {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}}
-    ],
-    "HELOVICTIMS refinement": [
-      {"if":{"global":"HELOVICTIMS_CUSTOM"},"eq":0,"then":[{"if":{"local":"max_injured"},"lte":2,"then":[{"set":{"local":"HELOVICTIMS"},"value":1}]},{"if":{"local":"max_injured"},"gt":2,"then":[{"set":{"local":"HELOVICTIMS"},"value":{"floor":{"rand":[1,{"local":"max_injured"}]}}}]}],"else":[{"call_macro":"HELOVICTIMS custom"}]}
-    ],
-    "HELOVICTIMS custom": [
-      {"set":{"local":"max_inju_real"},"value":{"subtract":[{"local":"max_injured"},1]}},
-      {"set":{"local":"HELOVICTIMS"},"value":{"clamp":[{"global":"HELOVICTIMS_CUSTOM"},1,{"local":"max_inju_real"}]}}
-    ],
-    "CUSTOM HOSPITAL DB map update": [
-      {"set_map":{"remove":{"point":{"id":"h1"}}}},
-      {"set_map":{"remove":{"point":{"id":"h2"}}}},
-      {"set_map":{"remove":{"point":{"id":"h3"}}}},
-      {"set_map":{"remove":{"point":{"id":"h4"}}}},
-      {"set_map":{"remove":{"point":{"id":"h5"}}}},
-      {"create_location":"h1","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos1_lat"},{"global":"cushos1_lon"}]}}}}]},
-      {"create_location":"h2","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos2_lat"},{"global":"cushos2_lon"}]}}}}]},
-      {"create_location":"h3","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos3_lat"},{"global":"cushos3_lon"}]}}}}]},
-      {"create_location":"h4","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos4_lat"},{"global":"cushos4_lon"}]}}}}]},
-      {"create_location":"h5","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos5_lat"},{"global":"cushos5_lon"}]}}}}]},
-      {"set_map":{"add":{"point":{"location":"h1","icon":"cus_hospital","id":"h1"}}}},
-      {"set_map":{"add":{"point":{"location":"h2","icon":"cus_hospital","id":"h2"}}}},
-      {"set_map":{"add":{"point":{"location":"h3","icon":"cus_hospital","id":"h3"}}}},
-      {"set_map":{"add":{"point":{"location":"h4","icon":"cus_hospital","id":"h4"}}}},
-      {"set_map":{"add":{"point":{"location":"h5","icon":"cus_hospital","id":"h5"}}}}
-    ],
-    "multiplayer": [
-      {"create_thread":{"commands":[{"set":{"local":"prelocation"},"value":"yes"},{"set":{"local":"location_engine"},"value":"never executed"},{"call_macro":"multiplayer ping"},{"and":[{"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},{"wait_for":{"var":["L:MISSION_NUMBER","number"]},"ne":0},{"wait_for":{"var":["L:MISSION_SCENE_VARIANT","number"]},"ne":0},{"wait_for":{"var":["L:MISSION_SCENE_TYPE","number"]},"ne":0},{"wait_for":{"var":["L:CRASH_VARIABLE","number"]},"ne":0},{"wait_for":{"var":["L:CAMPING_VARIABLE","number"]},"ne":0}],"eq":1},{"set":{"local":"DISPATCHER_AUTO"},"value":1},{"create_thread":{"commands":[{"while":{"var":["L:VAR_SEND_DISPATCH","number"]},"ne":1,"do":[{"or":[{"wait_for":{"var":["L:MISSION_NUMBER","number"]},"ne":{"local":"MISSION_NUMBER"}},{"wait_for":{"var":["L:MISSION_SCENE_VARIANT","number"]},"ne":{"local":"MISSION_SCENE_VARIANT"}},{"wait_for":{"var":["L:MISSION_SCENE_TYPE","number"]},"ne":{"local":"MISSION_SCENE_TYPE"}},{"wait_for":{"var":["L:CRASH_VARIABLE","number"]},"ne":{"local":"CRASH_VARIABLE"}},{"wait_for":{"var":["L:CAMPING_VARIABLE","number"]},"ne":{"local":"CAMPING_VARIABLE"}}],"eq":1},{"if":{"var":["L:VAR_SEND_DISPATCH","number"]},"ne":1,"then":[{"call_macro":"mission LVAR to local"},{"if":{"var":["L:VAR_MISSION_NUMBER","number"]},"eq":0,"then":[{"call_macro":"missionupdatemultiplayer"}],"else":[{"call_macro":"missionupdate"}]}]},{"sleep":1}]}]}},{"create_thread":{"commands":[{"while":{"var":["L:VAR_SEND_DISPATCH","number"]},"ne":1,"do":[{"and":[{"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSED LAT","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSED LON","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSED_RNG_M","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"eq":1}],"eq":1},{"set":{"global":"backuplocation_ref"},"value":{"global":"location_ref"}},{"if":{"local":"backuprngmin"},"eq":null,"then":[{"set":{"local":"backuprngmin"},"value":{"global":"MISSION_ACCIDENT_MIN_RADIUS"}}]},{"if":{"local":"backuprngmax"},"eq":null,"then":[{"set":{"local":"backuprngmax"},"value":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}]},{"if":{"local":"backupspecialrngmax"},"eq":null,"then":[{"set":{"local":"backupspecialrngmax"},"value":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]}}]},{"set":{"global":"location_ref"},"value":"custom_center_location"},{"set":{"local":"location_engine"},"value":"starting"},{"call_macro":"accident location pregenerator multiplayer"},{"wait_for":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"eq":0},{"set":{"var":["L:VAR_PROPOSED LAT","number"]},"value":0},{"set":{"var":["L:VAR_PROPOSED LON","number"]},"value":0},{"set":{"var":["L:VAR_PROPOSED_RNG_M","number"]},"value":0},{"set":{"global":"MISSION_ACCIDENT_MIN_RADIUS"},"value":{"local":"backuprngmin"}},{"set":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"value":{"local":"backuprngmax"}},{"set":{"global":"location_ref"},"value":{"global":"backuplocation_ref"}},{"set":{"local":"location_engine"},"value":"executed"}]}]}},{"wait_for":{"var":["L:VAR_SEND_DISPATCH","number"]},"ne":0},{"call_macro":"accident location pregenerator multiplayer map"},{"set":{"var":["L:VAR_MISSION_NUMBER","number"]},"value":0},{"call_macro":"Mission dispatch"},{"sleep":0.5},{"set_dispatch_dialog":0},{"set_briefing_dialog":1}]}},
-      {"call_macro":"multiplayer resveh"}
-    ],
-    "multiplayer ping": [
-      {"create_thread":{"commands":[{"while":1,"gt":0,"do":[{"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},{"sleep":8},{"set":{"var":["L:SERVICE_CONNECTED","number"]},"value":2},{"sleep":8},{"if":{"var":["L:SERVICE_CONNECTED","number"]},"ne":1,"then":[{"sleep":8}]},{"if":{"var":["L:SERVICE_CONNECTED","number"]},"ne":1,"then":[{"sleep":8}]},{"if":{"var":["L:SERVICE_CONNECTED","number"]},"ne":1,"then":[{"set":{"var":["L:SERVICE_CONNECTED","number"]},"value":0}]}]}]}}
-    ],
-    "multiplayer resveh": [
-      {"create_thread":{"commands":[{"wait_for":{"var":["L:VARAMBUAVAIL","number"]},"ne":0},{"wait_for":{"local":"MISSION_PHASE"},"gte":4},{"set":{"local":"AMBU_AVAIL"},"value":{"var":["L:VARAMBUAVAIL","number"]}},{"call_macro":"Ambulance1"}]}},
-      {"create_thread":{"commands":[{"wait_for":{"var":["L:VARFIREAVAIL","number"]},"ne":0},{"wait_for":{"local":"MISSION_PHASE"},"gte":4},{"set":{"local":"FIREENGINE_AVAIL"},"value":{"var":["L:VARFIREAVAIL","number"]}},{"call_macro":"Firetruck1"}]}},
-      {"create_thread":{"commands":[{"wait_for":{"var":["L:VARPOLICEAVAIL","number"]},"ne":0},{"wait_for":{"local":"MISSION_PHASE"},"gte":4},{"set":{"local":"POLICE_AVAIL"},"value":{"var":["L:VARPOLICEAVAIL","number"]}},{"call_macro":"Police1"}]}}
-    ],
-    "min max rng check": [
-      {"if":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"lte":{"global":"MISSION_ACCIDENT_MIN_RADIUS"},"then":[{"set":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"value":{"add":[{"global":"MISSION_ACCIDENT_MIN_RADIUS"},1500]}}]},
-      {"if":{"global":"MOUNT_AUTO_RNG"},"ne":"yes","then":[{"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}]},
-      {"set_map":{"remove":{"point":{"id":"BASE_inner"}}}},
-      {"set_map":{"remove":{"point":{"id":"BASE_outer"}}}},
-      {"set_map":{"remove":{"point":{"id":"BASE_special"}}}},
-      {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_outer","stroke":{"width":1,"color":"green"},"fill":{"color":"rgba(0, 255, 0, 0.05)"},"range":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}}}},
-      {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_inner","stroke":{"width":1,"color":"red"},"fill":{"color":"rgba(255, 0, 0, 0.05)"},"range":{"global":"MISSION_ACCIDENT_MIN_RADIUS"}}}}},
-      {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_special","stroke":{"width":0.3,"color":"blue"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]}}}}}
-    ],
-    "min max poli ambu loading": [
-      {"set_map":{"remove":{"point":{"id":"poli_min"}}}},
-      {"set_map":{"remove":{"point":{"id":"ambu_min"}}}},
-      {"if":{"and":[{"require":{"global":"POLI_RNG_VISIBLE"},"eq":"yes"},{"require":{"has_object":"injured_human"},"eq":1}]},"eq":1,"then":[{"set_map":{"add":{"point":{"location":"injured_human","id":"poli_min","stroke":{"width":0.5,"color":"cyan"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"local":"police_bring_crew_min_dist"}}}}}]},
-      {"if":{"and":[{"require":{"global":"AMBU_RNG_VISIBLE"},"eq":"yes"},{"require":{"has_object":"injured_human"},"eq":1}]},"eq":1,"then":[{"set_map":{"add":{"point":{"location":"injured_human","id":"ambu_min","stroke":{"width":0.5,"color":"white"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"local":"ambulance_return_crew_min_dist"}}}}}]}
-    ],
-    "afterengstartckl2": [
-      {"if":{"var":["L:AUDIO_CHK_DECLUT","number"]},"eq":2,"then":[{"call_macro":"crew_vs_checklist_volume_update_engine"}]},
-      {"if":{"var":["L:AUDIO_CHK_DECLUT","number"]},"eq":1,"then":[{"call_macro":"checkliste_volume_update_engine"}]},
-      {"if":{"var":["L:AUDIO_CHK_DECLUT","number"]},"eq":0,"then":[{"call_macro":"volume update engine"}]},
-      {"set":{"var":["L:CPLTCHKA12","number"]},"value":{"add":[{"var":["L:CPLTCHKA12","number"]},1]}},
-      {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":100},
-      {"set_dispatch":[{"link":"< BACK >  - - - - - AVIONIC/PREFLIGHT TEST - - - - - - - -","commands":[{"call_macro":"checklist home"}]},{"text":"1.AP1+AP2+BKUP _ _ _ _ _ _ Engage(Cyclic or APCP)","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":101}},{"text":"1.AP1+AP2+BKUP _ _ _ _ _ _ Engage(Cyclic or APCP)","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":101}},{"text":"1.AP1+AP2+BKUP _ _ _ _ _ _ Engage(Cyclic or APCP)","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":101}},{"text":"FND AFCS Strip:3x Green rectangles [ ]","align":"right","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":101}},{"text":"FND AFCS Strip:3x Green rectangles [ ]","align":"right","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":101}},{"text":"FND AFCS Strip:3x Green rectangles [ ]","align":"right","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":101}},{"text":" "},{"text":"2.Collective _ _ _ _ _ _ _ _Latch if required [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":102}},{"text":"2.Collective _ _ _ _ _ _ _ _Latch if required [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":102}},{"text":"2.Collective _ _ _ _ _ _ _ _Latch if required [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":102}},{"text":" "},{"link":"Click here for: - PREPARATION FOR NIGHT FLIGHT - - - -","commands":[{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":103}],"align":"center","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":102}},{"text":"3.MFDs _ _ _ _ _ _ _ _ _ _ _ Adjust luminance [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":103}},{"text":"3.MFDs _ _ _ _ _ _ _ _ _ _ _ Adjust luminance [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":103}},{"text":"3.MFDs _ _ _ _ _ _ _ _ _ _ _ Adjust luminance [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":103}},{"text":" "},{"text":"4.Cockpit illumination _ _ _ _ _Adjust as rqd [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":104}},{"text":"4.Cockpit illumination _ _ _ _ _Adjust as rqd [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":104}},{"text":"4.Cockpit illumination _ _ _ _ _Adjust as rqd [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":104}},{"text":" "},{"text":"5.Fixed & S/L ldg lts _ _ _ _Chk & set as rqd [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":105}},{"text":"5.Fixed & S/L ldg lts _ _ _ _Chk & set as rqd [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":105}},{"text":"5.Fixed & S/L ldg lts _ _ _ _Chk & set as rqd [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":105}},{"text":" "},{"text":"6.Fabric glare shield _ _ _ _ _ _ _ installed [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":106}},{"text":"6.Fabric glare shield _ _ _ _ _ _ _ installed [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":106}},{"text":"6.Fabric glare shield _ _ _ _ _ _ _ installed [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":106}},{"text":"- - - - - - - - - - - - - - - - - - - - - - - - - - - ","align":"center"},{"text":"7.ENG 1/2 MAIN sws _ _ _ FLIGHT,guards closed [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":107}},{"text":"7.ENG 1/2 MAIN sws _ _ _ FLIGHT,guards closed [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":107}},{"text":"7.ENG 1/2 MAIN sws _ _ _ FLIGHT,guards closed [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":107}}]},
-      {"sleep":2},
-      {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":101},
-      {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":101},
-      {"create_thread":{"commands":[{"set":{"var":["L:CPLTCHKC12","number"]},"value":{"add":[{"var":["L:CPLTCHKC12","number"]},1]}},{"wait_for":{"var":["L:{local:HXX}_SDK_APCP_BKUP","number"]},"eq":1},{"wait_for":{"var":["L:{local:HXX}_SDK_APCP_AP1","number"]},"eq":1},{"wait_for":{"var":["L:{local:HXX}_SDK_APCP_AP2","number"]},"eq":1},{"sleep":5},{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":102}]}},
-      {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":102},
-      {"create_thread":{"commands":[{"set":{"var":["L:CPLTCHKC10","number"]},"value":{"add":[{"var":["L:CPLTCHKC10","number"]},1]}},{"wait_for":{"var":["L:Collective","number"]},"lt":1},{"sleep":5},{"if":{"var":["L:CHECKLIST_STEP","number"]},"eq":102,"then":[{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":107}]}]}},
-      {"if":{"var":["L:CHECKLIST_STEP","number"]},"eq":103,"then":[{"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":103},{"create_thread":{"commands":[{"sleep":8},{"if":{"var":["L:CHECKLIST_STEP","number"]},"eq":103,"then":[{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":104}]}]}},{"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":104},{"create_thread":{"commands":[{"sleep":8},{"if":{"var":["L:CHECKLIST_STEP","number"]},"eq":104,"then":[{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":105}]}]}},{"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":105},{"create_thread":{"commands":[{"set":{"var":["L:CPLTCHKC12","number"]},"value":{"add":[{"var":["L:CPLTCHKC12","number"]},1]}},{"wait_for":{"var":["LIGHT LANDING","number"]},"eq":1},{"sleep":5},{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":106}]}},{"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":106},{"create_thread":{"commands":[{"sleep":8},{"if":{"var":["L:CHECKLIST_STEP","number"]},"eq":106,"then":[{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":107}]}]}}]},
-      {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":107},
-      {"create_thread":{"commands":[{"set":{"var":["L:CPLTCHKC12","number"]},"value":{"add":[{"var":["L:CPLTCHKC12","number"]},1]}},{"wait_for":{"var":["L:{local:HXX}_SDK_ECP_MAIN_LATCH_1","number"]},"eq":1},{"wait_for":{"var":["L:{local:HXX}_SDK_ECP_MAIN_LATCH_2","number"]},"eq":1},{"sleep":5},{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":108}]}},
-      {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":108},
-      {"sleep":5},
-      {"set":{"global":"VOLUME_CREW"},"value":{"local":"VOLUME_CREW_TMP"}},
-      {"set":{"global":"VOLUME_CHK"},"value":{"local":"VOLUME_CHK_TMP"}},
-      {"call_macro":"crew vol"},
-      {"call_macro":"chk vol"},
-      {"call_macro":"checklist home"}
-    ],
-    "clear_unaccepted_dispatch_map": [
-      {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
-      {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
-      {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
-      {"set_map":{"remove":{"point":{"id":"SAR_start_location_icon"}}}},
-      {"set_map":{"remove":{"point":{"id":"SAR_start_location"}}}},
-      {"set_map":{"remove":{"point":{"id":"location_temp_icon"}}}},
-      {"set_map":{"remove":{"point":{"id":"ringSAR"}}}}
-    ],
-    "refresh_unaccepted_dispatch_map": [
-      {"create_thread":{"commands":[{"or":[{"wait_for":{"local":"has_location"},"eq":"yes"},{"wait_for":{"local":"queryfailed"},"ne":null},{"wait_for":{"local":"timer_location"},"eq":"expired"}]},{"if":{"param":"generation"},"eq":{"local":"map_preview_generation"},"then":[{"if":{"local":"SAR"},"ne":"yes","then":[{"call_macro":"clear_unaccepted_dispatch_map"},{"sleep":1},{"if":{"and":[{"require":{"local":"has_location"},"eq":"yes"},{"require":{"local":"location_name"},"eq":"accident_location"}]},"eq":1,"then":[{"set_map":{"add":{"point":{"location":"accident_location","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}},{"set":{"var":["L:PRE_ACCIDENT_LOCATION","number"]},"value":{"location":"accident_location"}}]},{"if":{"and":[{"require":{"local":"has_location"},"eq":"yes"},{"require":{"local":"location_name"},"eq":"rescue_location"}]},"eq":1,"then":[{"set_map":{"add":{"point":{"location":"rescue_location","icon":{"resolve_icon":"{local:Icon}"},"id":"rescue_location_icon"}}}},{"set":{"var":["L:PRE_RESCUE_LOCATION","number"]},"value":{"location":"rescue_location"}}]},{"if":{"and":[{"require":{"local":"has_location"},"eq":"yes"},{"require":{"local":"location_name"},"eq":"userA"}]},"eq":1,"then":[{"set_map":{"add":{"point":{"location":"userA","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}},{"set":{"var":["L:PRE_USERA","number"]},"value":{"location":"userA"}}]}]}]}]}}
-    ],
-    "timefororgantransport": [
-      {"set":{"local":"organexpiration"},"value":{"tofixed":{"add":[{"var":["E:LOCAL TIME","seconds"]},{"multiply":[{"object":"userA","var":"distance:m"},{"local":"timemultiplier"}]},{"multiply":[{"location":"hospital_user","var":"distance:m","to":"userA"},{"local":"timemultiplier"}]},{"rand":[300,1200]}]},"digits":0}}
-    ],
-    "road nodes generator": [
-      {"set":{"param":"selpost"},"value":{"struct":{"static":"marker posts"},"index":{"local":"NATION"}}},
-      {"set":{"local":"mkrpst"},"value":{"struct":{"param":"selpost"},"path":"title"}},
-      {"set":{"local":"roadqueryattempt"},"value":{"add":[{"local":"roadqueryattempt"},1]}},
-      {"osm_query_data":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|unclassified|residential|living_street|service|tertiary|(motorway|trunk|primary|secondary|tertiary|)_link)$\"];(._;>;);out;","location":"accident_location","size":{"local":"roadnodequerydistance"},"result":"my_data"},
-      {"wait_for":{"param":"my_data"},"ne":null},
-      {"sleep":1},
-      {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
-      {"osm_get_closest_nodes":"accident_location","data":{"param":"my_data"},"result":"my_closest_nodes"},
-      {"set":{"param":"closest_node"},"value":null},
-      {"for_each":{"param":"my_closest_nodes"},"do":[{"osm_get_parent_ways":{"struct":{"param":"$item"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},{"if":{"struct":{"param":"parents"},"path":"length"},"gt":1,"then":[{"set":{"param":"closest_node"},"value":{"param":"$item"}},{"break":1}]},{"sleep":0.0025}]},
-      {"set":{"param":"closest_location"},"value":{"create_array":[{"struct":{"param":"closest_node"},"path":"lat"},{"struct":{"param":"closest_node"},"path":"lon"}]}},
-      {"create_location":"wpc1","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"closest_node"},"path":"lat"},{"struct":{"param":"closest_node"},"path":"lon"}]}}}}]},
-      {"sleep":0.005},
-      {"osm_get_connected_nodes":{"struct":{"param":"closest_node"},"path":"id"},"data":{"param":"my_data"},"result":"my_nodes_connected_to_nearest_node"},
-      {"set":{"local":"roads"},"value":0},
-      {"for_each":{"param":"my_nodes_connected_to_nearest_node"},"do":[{"set":{"local":"roads"},"value":{"add":[{"local":"roads"},1]}},{"if":{"local":"roads"},"eq":1,"then":[{"create_location":"wpc1","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost1","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc1"}}],"else":[{"create_object":{"name":"markerpost1","title":"Airbus H145 Marker GREEN","location":"wpc1"}}]},{"point_object":"markerpost1","to":"accident_location"},{"move_object":"markerpost1","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost1"}},{"create_location":"wpt1","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost1"}}}]},{"point_object":"markerpost1","to":"accident_location"},{"move_object":"markerpost1","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost1"}},{"create_location":"wprescue1","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost1"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost1","to":"accident_location"},{"set":{"object":"markerpost1","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost1","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost1","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost1"}]},{"if":{"has_location":"wpc1"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":2,"then":[{"create_location":"wpc2","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost2","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc2"}}],"else":[{"create_object":{"name":"markerpost2","title":"Airbus H145 Marker GREEN","location":"wpc2"}}]},{"point_object":"markerpost2","to":"accident_location"},{"move_object":"markerpost2","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost2"}},{"create_location":"wpt2","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost2"}}}]},{"point_object":"markerpost2","to":"accident_location"},{"move_object":"markerpost2","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost2"}},{"create_location":"wprescue2","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost2"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost2","to":"accident_location"},{"set":{"object":"markerpost2","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost2","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost2","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost2"}]},{"if":{"has_location":"wpc2"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":3,"then":[{"create_location":"wpc3","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost3","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc3"}}],"else":[{"create_object":{"name":"markerpost3","title":"Airbus H145 Marker GREEN","location":"wpc3"}}]},{"point_object":"markerpost3","to":"accident_location"},{"move_object":"markerpost3","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost3"}},{"create_location":"wpt3","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost3"}}}]},{"point_object":"markerpost3","to":"accident_location"},{"move_object":"markerpost3","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost3"}},{"create_location":"wprescue3","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost3"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost3","to":"accident_location"},{"set":{"object":"markerpost3","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost3","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost3","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost3"}]},{"if":{"has_location":"wpc3"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":4,"then":[{"create_location":"wpc4","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost4","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc4"}}],"else":[{"create_object":{"name":"markerpost4","title":"Airbus H145 Marker GREEN","location":"wpc4"}}]},{"point_object":"markerpost4","to":"accident_location"},{"move_object":"markerpost4","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost4"}},{"create_location":"wpt4","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost4"}}}]},{"point_object":"markerpost4","to":"accident_location"},{"move_object":"markerpost4","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost4"}},{"create_location":"wprescue4","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost4"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost4","to":"accident_location"},{"set":{"object":"markerpost4","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost4","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost4","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost4"}]},{"if":{"has_location":"wpc4"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":5,"then":[{"create_location":"wpc5","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost5","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc5"}}],"else":[{"create_object":{"name":"markerpost5","title":"Airbus H145 Marker GREEN","location":"wpc5"}}]},{"point_object":"markerpost5","to":"accident_location"},{"move_object":"markerpost5","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost5"}},{"create_location":"wpt5","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost5"}}}]},{"point_object":"markerpost5","to":"accident_location"},{"move_object":"markerpost5","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost5"}},{"create_location":"wprescue5","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost5"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost5","to":"accident_location"},{"set":{"object":"markerpost5","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost5","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost5","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost5"}]},{"if":{"has_location":"wpc5"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":6,"then":[{"create_location":"wpc6","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost6","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc6"}}],"else":[{"create_object":{"name":"markerpost6","title":"Airbus H145 Marker GREEN","location":"wpc6"}}]},{"point_object":"markerpost6","to":"accident_location"},{"move_object":"markerpost6","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost6"}},{"create_location":"wpt6","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost6"}}}]},{"point_object":"markerpost6","to":"accident_location"},{"move_object":"markerpost6","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost6"}},{"create_location":"wprescue6","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost6"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost6","to":"accident_location"},{"set":{"object":"markerpost6","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost6","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost6","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost6"}]},{"if":{"has_location":"wpc6"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":7,"then":[{"create_location":"wpc7","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost7","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc7"}}],"else":[{"create_object":{"name":"markerpost7","title":"Airbus H145 Marker GREEN","location":"wpc7"}},{"point_object":"markerpost7","to":"accident_location"}]},{"move_object":"markerpost7","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost7"}},{"create_location":"wpt7","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost7"}}}]},{"point_object":"markerpost7","to":"accident_location"},{"move_object":"markerpost7","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost7"}},{"create_location":"wprescue7","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost7"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost7","to":"accident_location"},{"set":{"object":"markerpost7","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost7","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost7","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost7"}]},{"if":{"has_location":"wpc7"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":8,"then":[{"create_location":"wpc8","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost8","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc8"}}],"else":[{"create_object":{"name":"markerpost8","title":"Airbus H145 Marker GREEN","location":"wpc8"}},{"point_object":"markerpost8","to":"accident_location"}]},{"move_object":"markerpost8","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost8"}},{"create_location":"wpt8","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost8"}}}]},{"point_object":"markerpost8","to":"accident_location"},{"move_object":"markerpost8","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost8"}},{"create_location":"wprescue8","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost8"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost8","to":"accident_location"},{"set":{"object":"markerpost8","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost8","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost8","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost8"}]},{"if":{"has_location":"wpc8"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"roads"},"eq":9,"then":[{"create_location":"wpc9","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"create_object":{"name":"markerpost9","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc9"}}],"else":[{"create_object":{"name":"markerpost9","title":"Airbus H145 Marker GREEN","location":"wpc9"}},{"point_object":"markerpost9","to":"accident_location"}]},{"move_object":"markerpost9","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost9"}},{"create_location":"wpt9","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost9"}}}]},{"point_object":"markerpost9","to":"accident_location"},{"move_object":"markerpost9","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost9"}},{"create_location":"wprescue9","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost9"}}}]},{"if":{"local":"30West_installed"},"eq":"OK","then":[{"point_object":"markerpost9","to":"accident_location"},{"set":{"object":"markerpost9","var":"VELOCITY Z"},"value":25},{"wait_for":{"object":"markerpost9","var":"distance:m","to":"accident_location"},"lte":13},{"set":{"object":"markerpost9","var":"VELOCITY Z"},"value":0}],"else":[{"destroy_object":"markerpost9"}]},{"if":{"has_location":"wpc9"},"eq":1,"then":[{"set":{"local":"has_accident_location"},"value":"yes"}],"else":[{"set":{"local":"has_accident_location"},"value":"no"}]}]},{"if":{"local":"has_accident_location"},"eq":"no","then":[{"set":{"local":"has_accident_location"},"value":"failed"}]}]},
-      {"if":{"local":"has_accident_location"},"ne":"yes","then":[{"if":{"local":"roadqueryattempt"},"eq":1,"then":[{"if":{"local":"roadnodequerydistance"},"lt":121,"then":[{"set":{"local":"has_accident_location"},"value":"no"},{"set":{"local":"roadnodequerydistance"},"value":250},{"call_macro":"road nodes generator"}],"else":[{"set":{"local":"has_accident_location"},"value":"failed"}]}],"else":[{"set":{"local":"has_accident_location"},"value":"failed"}]}]}
-    ],
-    "default rtc": [
-      {"if":{"local":"MISSION_SCENE_VARIANT"},"eq":1,"then":[{"set":{"var":["L:LOAD","number"]},"value":55},{"set_message":{"text":"Cabin preparation, 55% completed... please wait, it can take a while"}},{"call_macro":"random scene 1"}]},
-      {"if":{"local":"MISSION_SCENE_VARIANT"},"eq":2,"then":[{"set":{"var":["L:LOAD","number"]},"value":55},{"set_message":{"text":"Cabin preparation, 55% completed... please wait, it can take a while"}},{"call_macro":"random scene 2"}]},
-      {"if":{"local":"MISSION_SCENE_VARIANT"},"eq":3,"then":[{"set":{"var":["L:LOAD","number"]},"value":55},{"set_message":{"text":"Cabin preparation, 55% completed... please wait, it can take a while"}},{"call_macro":"random scene 3"}]}
-    ],
-    "Choose manual type modal": [
-      {"set_message":{"text":""}},
-      {"wait_modal":{"title":"CHOOSE MANUAL TYPE","text":"Select which type of manual destination","options":[{"text":"Manually from map/list","style":"","commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]},{"text":"Manually from custom DB","style":"","commands":[{"set":{"local":"modalwait"},"value":"wait"},{"call_macro":"additional hospitals page"},{"set_dispatch_dialog":1},{"wait_for":{"local":"modalwait"},"eq":"go"},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"sleep":1},{"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"call_macro":"user destination menu"},{"set_dispatch_dialog":0}]}]}}
-    ],
-    "hospital_creation_from_unhospital": [
-      {"call_macro":"Query closest hospital unrelated for stretcher"},
-      {"sleep":1},
-      {"create_location":"hospital","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"unhospital"}}}]}
-    ],
-    "shared repeated block 021": [
-      {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
-      {"sleep":1.8},
-      {"if":{"local":"patientlife"},"ne":"died","then":[{"set":{"local":"patientlife"},"value":"died"},{"create_thread":{"commands":[{"wait_for":{"local":"crewvisiting1"},"eq":"yes"},{"set":{"var":["L:PAX3{local:VCP}7","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}7","number"]},1]}}]}}]}
-    ],
-    "shared repeated block 022": [
-      {"sleep":3},
-      {"wait_for":{"object":"ambumedic","var":"VELOCITY Z"},"eq":0},
-      {"if":{"local":"hospital_wptot"},"eq":1,"then":[{"drive_object":{"name":"ambumedic","to":["hospital_wp1"],"VAR1":1,"speed":6}},{"set":{"object":"ambumedic","var":"VAR 1"},"value":0}]},
-      {"if":{"local":"hospital_wptot"},"eq":2,"then":[{"drive_object":{"name":"ambumedic","to":["hospital_wp1","hospital_wp2"],"VAR1":1,"speed":6}},{"set":{"object":"ambumedic","var":"VAR 1"},"value":0}]},
-      {"if":{"local":"hospital_wptot"},"eq":3,"then":[{"drive_object":{"name":"ambumedic","to":["hospital_wp1","hospital_wp2","hospital_wp3"],"VAR1":1,"speed":6}},{"set":{"object":"ambumedic","var":"VAR 1"},"value":0}]},
-      {"drive_object":{"name":"ambumedic","to":["hospital_door","hospital"],"VAR1":1,"speed":6}},
-      {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
-    ],
-    "shared repeated block 023": [
-      {"call_macro":"Mission dispatch"},
-      {"sleep":0.2},
-      {"set_dispatch_dialog":0},
-      {"sleep":0.2},
-      {"set_briefing_dialog":1}
-    ],
-    "shared repeated block 024": [
-      {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"global":"STATION_1"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"global":"STATION_2"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
-      {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
-    ],
-    "shared repeated block 025": [
-      {"call_macro":{"local":"prev_page2"}},
-      {"set_dispatch_dialog":1},
-      {"set":{"local":"prev_page2"},"value":"none"}
-    ],
-    "shared repeated block 026": [
-      {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"global":"STATION_1"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"global":"STATION_2"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":0},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
-      {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
-    ],
-    "shared repeated block 027": [
-      {"set":{"local":"landing_spot_watchdog_active"},"value":"yes"},
-      {"set":{"local":"landing_spot_watchdog_status"},"value":"armed_default"},
-      {"set":{"local":"landing_spot_watchdog_discrepancy"},"value":"no"},
-      {"set":{"local":"landing_spot_watchdog_distance_m"},"value":0},
-      {"set":{"local":"landing_spot_watchdog_fix_count"},"value":0},
-      {"set":{"local":"landing_spot_watchdog_reference"},"value":"injured_human"},
-      {"create_location":"landing_spot","zones":[{"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}]},
-      {"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},
-      {"set_map":{"add":{"point":{"location":"landing_spot","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAgCAYAAAHiVIEmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIGSURBVEhL1Zc/T8JAFMDbgjQkJJjGhWDCZEJSd5xwAmPCwoyfAEcXU+MncDc4yFdycnRgV2cWU+8d78r9a+84SqO/5HHvvd77c3dtAc+GFD4Cqm6gDoVer3dCBv1FhnA1N2eKufaHT5tb+y8DTbPGed1uAbpJwjYAMEl2+jhSarXa9jocDTseXhdoNptyRqWsQLvdTjudzjeaAqT8exAExQlcGY3GIaoZutaZ8BT5xR3kkCfrUGJtDhuCmBRSyq2fJMk1qhXR7/f5DU+73VObvTwcRdWr68ylkhIjO8BmQsEHWvAh1Gb3lPHmK4DG6l5GLqSQDRLJHZmSK/NLeVwA64eYbPbGygESyW264LOOnDe8Xq/TWG03/DfDarX6hFHnqwybZSpzTBstB5RxMFvCMIQCgkRRpPhw3sFIk+ThDHUnSPwRGQ7aZCmQRu9RNZK3muxYJFGQXqu86FD82StlPL56Isl+iFruDWjGHw4vP+L4XGxuMpkcNxqNvJUw2GplUdhxpyitVutrMLh4RpNSGIDIBZgouDSF0DnsqMDY9T3jgk0Nf++m5vNb1LYsl6/eer1GS8CqqY1KjNns5g71PCBAJwr7Hh+PKYhPzouCY1PZdf5XBmxbOp1OHzdmpUBDpqM1rqosqqpTIYvFS0QGWBn8c36jTgNxHMM8GkO+52Lq/J943i9NtsTiAlnwAgAAAABJRU5ErkJggg==","id":"landing_spot"}}}},
-      {"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}}
-    ],
-    "shared repeated block 028": [
-      {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"global":"STATION_1"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"global":"STATION_2"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":0},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
-      {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_OFF","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
-    ],
-    "shared repeated block 029": [
-      {"if":{"local":"prev_page"},"eq":"briefing","then":[{"call_macro":"Mission dispatch"},{"set_dispatch_dialog":0},{"set_briefing_dialog":1}]},
-      {"if":{"local":"prev_page"},"eq":"homepage","then":[{"call_macro":"homepage"},{"set_dispatch_dialog":1}]},
-      {"if":{"local":"prev_page"},"eq":"Mission dispatch","then":[{"call_macro":"Mission dispatch"},{"set_dispatch_dialog":1}]}
-    ],
-    "shared repeated block 030": [
-      {"sleep":[2,10]},
-      {"set":{"object":"pax3","var":"VAR 1"},"value":5},
-      {"sleep":[2,4]},
-      {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-      {"create_thread":{"commands":[{"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":1},{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":230,"dist":3,"object":"injured_human"},{"bearing2":310,"dist":3,"object":"injured_human"}],"to":"pax3"}],"VAR1":3,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":1},{"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":230,"dist":0.4,"object":"injured_human"},{"bearing2":310,"dist":0.4,"object":"injured_human"}],"to":"pax3"}],"VAR1":3,"speed":5}},{"set":{"object":"pax3","var":"VAR 1"},"value":1},{"sleep":1},{"set":{"object":"pax3","var":"VAR 1"},"value":5},{"sleep":1},{"set":{"object":"pax3","var":"VAR 1"},"value":6}]}}
-    ],
-    "shared repeated block 031": [
-      {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":90,"dist":2,"object":"police"},{"bearing2":270,"dist":2,"object":"police"}],"to":"hoist_crew"}],"VAR1":3,"speed":6}},
-      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-      {"sleep":2},
-      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
-      {"set":{"local":"hoistcrewonpolice"},"value":"yes"}
-    ],
-    "shared repeated block 032": [
-      {"wait_for":{"local":"stretcheronambulance"},"eq":"return"},
-      {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
-      {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
-      {"if":{"location":"AMBWP","var":"distance:m","to":"ambulance1"},"gt":2,"then":[{"call_macro":"drive ambulance1 safe","params":{"to":["AMBWP","Ambuloc"],"fallback":"Ambuloc","speed":{"location":"AMBWP","var":"distance:m","to":"ambulance1"},"var1":1,"timeout":420}}],"else":[{"call_macro":"drive ambulance1 safe","params":{"to":["Ambuloc"],"fallback":"Ambuloc","speed":{"location":"Ambuloc","var":"distance:m","to":"ambulance1"},"var1":1,"timeout":420}}]},
-      {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
-      {"set":{"local":"stretcheronambulance"},"value":"arrived"}
-    ],
-    "shared repeated block 033": [
-      {"sleep":[2,5]},
-      {"drive_object":{"name":"hoist_crew","to":[{"closest":["INJU12","INJU13"],"to":"hoist_crew"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
-      {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-      {"set":{"var":["L:STEP","number"]},"value":7},
-      {"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"destroy_object":"hoist_crew"}]},
-      {"set":{"local":"crewdoconboard"},"value":"yes"}
-    ],
-    "shared repeated block 034": [
-      {"sleep":1.2},
-      {"drive_object":{"name":"hpax1","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hpax1"}],"VAR1":3,"speed":4}},
-      {"set":{"object":"hpax1","var":"VAR 1"},"value":1},
-      {"drive_object":{"name":"hpax1","to":[{"closest":[{"bearing":150,"dist":8},{"bearing":270,"dist":8},{"bearing":320,"dist":8}],"to":"hpax1"}],"VAR1":3,"speed":4}},
-      {"set":{"object":"hpax1","var":"VAR 1"},"value":1},
-      {"drive_object":{"name":"hpax1","to":["lpaxdoor"],"VAR1":3,"speed":4}},
-      {"set":{"object":"hpax1","var":"VAR 1"},"value":1},
-      {"sleep":1},
-      {"open_door":"pax_left"},
-      {"sleep":0.5},
-      {"destroy_object":"hpax1"},
-      {"trigger":["H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON"]},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
-      {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
-      {"sleep":0.5},
-      {"close_door":"pax_left"}
-    ],
-    "shared repeated block 035": [
-      {"if":{"has_location":"accident_location"},"eq":1,"then":[{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}]},
-      {"if":{"and":[{"require":{"has_location":"rescue_location"},"eq":1},{"require":{"has_location":"accident_location"},"eq":0}]},"eq":1,"then":[{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"rescue_location"}}}}]}
-    ],
-    "shared repeated block 036": [
-      {"wait_for":{"object":"accident_location","var":"distance"},"lt":0.5},
-      {"set":{"object":"airplanewrecked","var":"VAR 4"},"value":0},
-      {"sleep":1},
-      {"set":{"object":"airplanewrecked","var":"VAR 4"},"value":1}
-    ],
-    "shared repeated block 037": [{"call_macro":"restore data query selection after CICERS failure"}],
-    "shared repeated block 038": [
-      {"set":{"local":"patientmessages"},"value":"Ground operations are lasting more than usual, patient needs to be stabilized for transport"},
-      {"set_message":{"text":"{local:patientmessages}"}},
-      {"set":{"var":["L:PAX3{local:VCP}22","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}22","number"]},1]}}
-    ],
-    "shared repeated block 041": [
-      {"set":{"local":"LIFEFROZEN"},"value":1},
-      {"sleep":{"local":"TIME3LONG"}},
-      {"set":{"local":"LIFEFROZEN"},"value":0}
-    ],
-    "shared repeated block 042": [
-      {"create_object":{"name":"VFXA","title":"Smoke Effects","fallback_title":"Airbus H145 VFX Object","location":"accident_location"}},
-      {"set":{"object":"VFXA","var":"VAR 1"},"value":1},
-      {"set":{"object":"VFXA","var":"VAR 2"},"value":0},
-      {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
-    ],
-    "shared repeated block 043": [
-      {"set":{"local":"LINK0"},"value":"https://dl.cicers.eu/download/latest"},
-      {"set":{"local":"LINK1"},"value":"https://dl.cicers.eu/download/latestMG"},
-      {"set":{"local":"LINK2"},"value":"https://delivery.cicers.eu/changelog?bucket=BETA"},
-      {"set":{"local":"LINK3"},"value":"https://map.cicers.eu/"},
-      {"set":{"local":"LINK4"},"value":"https://status.cicers.eu/"},
-      {"set":{"local":"LINK5"},"value":"https://status.cicers.eu/announcements-feed"},
-      {"set":{"local":"LINK6"},"value":"https://discord.gg/kRV4SZY78t"},
-      {"set":{"local":"LINK7"},"value":"mailto:support@cicers.eu"}
-    ],
-    "shared repeated block 044": [
-      {"create_object":{"name":"VFXA","title":"30West smoke","fallback_title":"Smoke Effects","location":"accident_location"}},
-      {"set":{"object":"VFXA","var":"VAR 1"},"value":4},
-      {"set":{"object":"VFXA","var":"VAR 2"},"value":0},
-      {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
-    ],
-    "shared repeated block 045": [
-      {"create_object":{"name":"VFXA","title":"30West smoke","fallback_title":"Smoke Effects","location":"accident_location"}},
-      {"set":{"object":"VFXA","var":"VAR 1"},"value":5},
-      {"set":{"object":"VFXA","var":"VAR 2"},"value":0},
-      {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
-    ],
-    "shared repeated block 046": [
-      {"set":{"local":"MISSION_PHASE"},"value":10},
-      {"set":{"var":["L:RTB","number"]},"value":1},
-      {"set_message":{"text":"LOADING..."}},
-      {"sleep":1},
-      {"call_macro":"return to base menu"}
-    ],
-    "shared repeated block 047": [
-      {"open_door":"pax_right"},
-      {"call_macro":"crew spawn launch","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},{"try":[{"create_object":{"name":"pax2","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"rpaxdoor"}}],"catch":[{"call_macro":"crew spawn failure","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}]},{"call_macro":"crew spawn wait","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-      {"set":{"object":"pax2","var":"VAR 1"},"value":0},
-      {"trigger":["H:{local:HXX}_SDK_PAX_2_OFF"]},
-      {"set":{"var":["H:{local:HXX}_SDK_PAX_2_OFF","number"]},"value":0},
-      {"sleep":0.5},
-      {"close_door":"pax_right"},
-      {"drive_object":{"name":"pax2","to":[{"bearing":45,"dist":8}],"VAR1":2,"speed":5}},
-      {"set":{"object":"pax2","var":"VAR 1"},"value":0},
-      {"destroy_object":"pax2"}
-    ],
-    "shared repeated block 048": [
-      {"set":{"local":"newdispatch"},"value":"yes"},
-      {"sleep":0.2},
-      {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
-      {"call_macro":"Update_raw from dispatchphase"}
-    ],
-    "shared repeated block 049": [
-      {"set":{"local":"queryfailed"},"value":null},
-      {"set":{"local":"lock_random_dispatch"},"value":1},
-      {"set":{"var":["L:NEOFLY","number"]},"value":1},
-      {"if":{"global":"BOARDING_HOLD_GLOBAL"},"eq":0,"then":[{"set":{"local":"BOARDING_HOLD"},"value":0}]},
-      {"set_message":{"text":"A custom scene will be created in custom or random location as soon as START SEL.MISSION@CUSTOM LOCATION or INJURED ONLY is selected"}},
-      {"sleep":0.5},
-      {"set_briefing_dialog":0},
-      {"call_macro":"HEMS mission_type"}
-    ],
-    "shared repeated block 050": [
-      {"call_macro":"Query hospital user country"},
-      {"set":{"local":"location_name"},"value":"hospital_user"},
-      {"sleep":0.1},
-      {"set":{"local":"FPL_NMBR"},"value":8},
-      {"call_macro":"routeupdate"},
-      {"call_macro":"Query closest hospital for stretcher"}
-    ],
-    "shared repeated block 051": [
-      {"open_door":"pax_left"},
-      {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},{"try":[{"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":45,"dist":8}}}],"catch":[{"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}]},{"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-      {"set":{"object":"pax1","var":"VAR 1"},"value":0},
-      {"sleep":1},
-      {"drive_object":{"name":"pax1","to":[{"bearing":330,"dist":7},"lpaxdoor"],"VAR1":2,"speed":5}},
-      {"set":{"object":"pax1","var":"VAR 1"},"value":0},
-      {"open_door":"pax_left"},
-      {"sleep":0.5},
-      {"trigger":["H:{local:HXX}_SDK_PAX_1_ON"]},
-      {"destroy_object":"pax1"},
-      {"sleep":0.5},
-      {"close_door":"pax_left"}
-    ],
-    "shared repeated block 052": [
-      {"and":[{"wait_for":{"var":["L:Collective","number"]},"gt":37},{"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},{"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},{"wait_for":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},
-      {"set":{"local":"HOLDHOISTED"},"value":1},
-      {"set_message":{"text":"Keep the position until helirescuer is deboarded and ready"}}
-    ],
-    "shared repeated block 053": [
-      {"move_object":"policeman","to":{"bearing2":270,"dist":1.5,"heading":100,"object":"police"}},
-      {"sleep":[2,5]},
-      {"drive_object":{"name":"policeman","to":["POLMAN1"],"VAR1":1,"speed":5}},
-      {"set":{"object":"policeman","var":"VAR 1"},"value":0},
-      {"point_object":"policeman","to":"accident_location"},
-      {"if":{"has_object":"civilian1"},"eq":1,"then":[{"point_object":"policeman","to":"civilian1"},{"point_object":"civilian1","to":"policeman"}]}
-    ],
-    "shared repeated block 054": [
-      {"set":{"local":"prev_page3"},"value":null},
-      {"set":{"local":"prev_page2"},"value":"none"},
-      {"call_macro":"mission dispatched by custom menu"}
-    ],
-    "shared repeated block 055": [
-      {"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"if":{"local":"DESTPRST"},"eq":1,"then":[{"call_macro":"transfer patient load scene predefined1"}]},{"call_macro":"transfer patient load1"}]},
-      {"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"if":{"local":"DESTPRST"},"eq":1,"then":[{"call_macro":"transfer patient load scene predefined2"}]},{"call_macro":"transfer patient load2"}]}
-    ],
-    "shared repeated block 056": [
-      {"set":{"global":"DATAQUERYSERVICE"},"value":3},
-      {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},
-      {"call_macro":"CICERS PING"},
-      {"set":{"local":"timeOSM"},"value":15},
-      {"create_thread":{"commands":[{"while":{"local":"timeOSM"},"gte":1,"do":[{"sleep":1},{"set":{"local":"timeOSM"},"value":{"subtract":[{"local":"timeOSM"},1]}}]}]}}
-    ],
-    "shared repeated block 057": [
-      {"set":{"var":["L:HEALTH","number"]},"value":1},
-      {"if":{"var":["L:HEALTHLOCK","number"]},"eq":0,"then":[{"set":{"var":["L:PAX3{local:VCP}8","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}8","number"]},1]}}]},
-      {"set":{"var":["L:HEALTHLOCK","number"]},"value":1}
-    ],
-    "shared repeated block 058": [
-      {"wait_for":{"var":["L:HOLD","number"]},"ne":1},
-      {"set":{"local":"CREW"},"value":3},
-      {"set":{"global":"CREW"},"value":3}
-    ],
-    "shared repeated block 059": [
-      {"wait_for":{"var":["L:HOLD","number"]},"ne":1},
-      {"set":{"local":"CREW"},"value":4},
-      {"set":{"global":"CREW"},"value":4}
-    ],
-    "shared repeated block 060": [
-      {"wait_for":{"var":["L:HOLD","number"]},"ne":1},
-      {"set":{"local":"CREW"},"value":5},
-      {"set":{"global":"CREW"},"value":5}
-    ],
-    "shared repeated block 061": [
-      {"set":{"local":"fuel truck arrived"},"value":null},
-      {"sleep":3},
-      {"set":{"local":"fuel msg"},"value":null}
-    ],
-    "shared repeated block 064": [
-      {"call_macro":"Query closest hospital unrelated for stretcher"},
-      {"sleep":20},
-      {"create_location":"watchdog_ambulance1_shared_hospital_approach","zones":[{"zone":{"location":{"bearing":225,"dist":30,"object":"unhospital"}}}]},{"create_route":{"name":"ambu7","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
-      {"draw_route":"ambu7","stroke":{"width":2,"color":"#9A9A9A"}},
-      {"sleep":1},
-      {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
-      {"create_thread":{"commands":[{"call_macro":"ambulance_restart_at_slow_speed"}]}},
-      {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu7","fallback":"watchdog_ambulance1_shared_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
-      {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
-      {"sleep":60},
-      {"destroy_object":"ambulance1"}
-    ],
-    "select unique public title": [
-    {
-      "call_macro": "test tracker begin",
-      "params": {
-        "test_id": "scene_assets"
-      }
-    },{"if":{"local":"PUBLIC_USED_TITLES"},"eq":null,"then":[{"set":{"local":"PUBLIC_USED_TITLES"},"value":[]}]},{"if":{"local":"PUBLIC_SELECTOR_LOCK"},"eq":null,"then":[{"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0}]},{"wait_for":{"local":"PUBLIC_SELECTOR_LOCK"},"eq":0},{"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":1},{"set":{"param":"unique_public_remaining"},"value":0},{"for_each":{"static":{"param":"source"}},"do":[{"set":{"param":"unique_public_source_item"},"value":{"param":"$item"}},{"set":{"param":"unique_public_item_used"},"value":false},{"for_each":{"local":"PUBLIC_USED_TITLES"},"do":[{"if":{"param":"$item"},"eq":{"param":"unique_public_source_item"},"then":[{"set":{"param":"unique_public_item_used"},"value":true}]}]},{"if":{"param":"unique_public_item_used"},"eq":false,"then":[{"set":{"param":"unique_public_remaining"},"value":{"add":[{"param":"unique_public_remaining"},1]}}]}]},{"set":{"param":"unique_public_candidate"},"value":null},{"if":{"param":"unique_public_remaining"},"gt":0,"then":[{"set":{"param":"unique_public_selected"},"value":false},{"while":{"param":"unique_public_selected"},"eq":false,"do":[{"set":{"param":"unique_public_candidate"},"value":{"struct":{"static":{"param":"source"}},"index":{"floor":{"rand":[0,{"struct":{"static":{"param":"source"}},"path":"length"}]}}}},{"set":{"param":"unique_public_item_used"},"value":false},{"for_each":{"local":"PUBLIC_USED_TITLES"},"do":[{"if":{"param":"$item"},"eq":{"param":"unique_public_candidate"},"then":[{"set":{"param":"unique_public_item_used"},"value":true}]}]},{"if":{"param":"unique_public_item_used"},"eq":false,"then":[{"modify_array":{"local":"PUBLIC_USED_TITLES"},"append":{"param":"unique_public_candidate"}},{"set":{"param":"unique_public_selected"},"value":true}]},{"sleep":0.01}]}],"else":[{"set":{"param":"unique_public_candidate"},"value":{"struct":{"static":{"param":"source"}},"index":{"floor":{"rand":[0,{"struct":{"static":{"param":"source"}},"path":"length"}]}}}}]},{"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0},
-    {
-      "call_macro": "test tracker complete",
-      "params": {
-        "test_id": "scene_assets"
-      }
-    },{"return":{"param":"unique_public_candidate"}}
+    ]}
   ],
-    "patient1 clinical visit gate": [{"call_macro":"multipatient registry crew record","params":{"patient":1},"result":"visit"},{"if":{"param":"visit","path":"hems"},"eq":"completed","then":[{"return":1}]},{"return":0}],
-    "create orange smoke marker": [
-      {"if":{"has_object":"flare_accident"},"eq":0,"then":[{"if":{"local":"30West2024_installed"},"eq":"OK","then":[{"create_object":{"name":"flare_accident","title":"30West smoke","fallback_title":"Smoke Effects","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},{"set":{"object":"flare_accident","var":"VAR 1"},"value":3},{"set":{"object":"flare_accident","var":"VAR 2"},"value":0},{"set":{"object":"flare_accident","var":"COUPLED"},"value":0}],"else":[{"create_object":{"name":"flare_accident","title":"Airbus H145 Flare","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},{"set":{"object":"flare_accident","var":"VAR 1"},"value":1}]},{"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"yes"}]},
-      {"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"auto","then":[{"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},{"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"auto","options":["auto","always","realistic","disabled"]}}]},
-      {"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"always","then":[{"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},{"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"always","options":["auto","always","realistic","disabled"]}}]},
-      {"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"realistic","then":[{"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},{"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"realistic","options":["auto","always","realistic","disabled"]}}]}
-    ],
-    "evaluate realistic orange smoke scene": [{"set":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"value":"no"},{"if":{"or":[{"require":{"local":"VAR_MISSION_NUMBER"},"eq":1},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":2},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":3},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":4},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":5},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":6},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":7},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":8},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":9},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":10},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":12},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":17},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":37},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":38},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":39},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":41},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":45},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":47},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":50},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":62}]},"eq":1,"then":[{"set":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"value":"yes"}]}],
-    "arm realistic orange smoke": [{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"realistic","then":[{"call_macro":"evaluate realistic orange smoke scene"},{"create_thread":{"commands":[{"wait_for":{"has_location":"accident_location"},"eq":1},{"wait_for":{"location":"accident_location","var":"distance"},"lte":2},{"sleep":0.5},{"if":{"and":[{"require":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"eq":"yes"},{"or":[{"require":{"local":"AMBU_AVAIL"},"gt":0},{"require":{"local":"POLICE_AVAIL"},"gt":0},{"require":{"local":"FIREENGINE_AVAIL"},"gt":0}],"eq":1},{"require":{"has_object":"VFXA"},"eq":0},{"require":{"has_object":"flare_accident"},"eq":0}]},"eq":1,"then":[{"call_macro":"create orange smoke marker"},{"sleep":300},{"if":{"has_object":"flare_accident"},"eq":1,"then":[{"destroy_object":"flare_accident"},{"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"no"}]}]}]}}]}],
-    "board crew after emergency": [{"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"no"},{"if":{"and":[{"require":{"has_object":"pax3"},"eq":1},{"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"pax3"}],"eq":1}]},"eq":1,"then":[{"drive_object":{"name":"pax3","to":["rpaxdoor"],"VAR1":2,"speed":3}},{"open_door":"pax_right"},{"sleep":0.5},{"destroy_object":"pax3"},{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"},{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}}]},{"if":{"and":[{"require":{"has_object":"pax1"},"eq":1},{"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"pax1"}],"eq":1}]},"eq":1,"then":[{"drive_object":{"name":"pax1","to":["lpaxdoor"],"VAR1":2,"speed":3}},{"open_door":"pax_left"},{"sleep":0.5},{"destroy_object":"pax1"},{"trigger":"H:{local:HXX}_SDK_PAX_1_ON"},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}}]},{"if":{"and":[{"require":{"has_object":"pax2"},"eq":1},{"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"pax2"}],"eq":1}]},"eq":1,"then":[{"drive_object":{"name":"pax2","to":["rpaxdoor"],"VAR1":2,"speed":3}},{"open_door":"pax_right"},{"sleep":0.5},{"destroy_object":"pax2"},{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}}]},{"if":{"and":[{"require":{"has_object":"hoist_crew"},"eq":1},{"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"hoist_crew"}],"eq":1}]},"eq":1,"then":[{"drive_object":{"name":"hoist_crew","to":["rpaxdoor"],"VAR1":3,"speed":3}},{"open_door":"pax_right"},{"sleep":0.5},{"destroy_object":"hoist_crew"},{"if":{"local":"CREW"},"lte":3,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"},{"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}}]},{"if":{"local":"CREW"},"eq":4,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_1_ON"},{"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}}]},{"if":{"local":"CREW"},"gte":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},{"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}}]}]},{"if":{"and":[{"require":{"local":"CREW_IMPACT_OBJECT"},"eq":"hoist_crew"},{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"has_object":"hoist_crew"},"eq":0}]},"eq":1,"then":[{"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},{"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},{"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},{"if":{"local":"CREW"},"lte":3,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}]},{"if":{"local":"CREW"},"eq":4,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_1_ON"}]},{"if":{"local":"CREW"},"gte":5,"then":[{"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}]}]},{"close_door":"pax_left"},{"close_door":"pax_right"},{"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"yes"}]
-  }
+  "custom separate settings": [
+    {"#comment":"THESE SETTINGS APPLY ALWAYS, EVEN IF THE CUSTOM SETTINGS ARE DISABLED."},
+    {"#comment":"Defines the hangar to helicopter distance threshold for crew boarding. Default value is 0.08 (NM) "},
+    {"#comment":"Above preset value (in nautical miles) the crew will arrive transported by a van."},
+    {"#comment":"Below (or at) preset value (in nautical miles) the crew will arrive walking."},
+    {"set":{"var":["L:VANACTION","number"]},"value":0.08},
+    {"#comment":"Defines if checklist voices are played or not and the priority over other mission voices. Default is 0 (checklist+mission audio)"},
+    {"#comment":"0 - Checklist & mission audio are both played at the same volume"},
+    {"#comment":"1 - Checklist audio enabled, mission audio momentarily reduced"},
+    {"#comment":"2 - Checklist audio disabled"},
+    {"set":{"var":["L:AUDIO_CHK_DECLUT","number"]},"value":0},
+    {"#comment":"Defines if the hospital crew appears before landing at destination helipad or after landing"},
+    {"#comment":"0 Crew is generated in front of helicopter after landing"},
+    {"#comment":"1 (DEFAULT) Crew is generated at landing coordinates few NM before reaching the landing spot."},
+    {"set":{"local":"DESTPRST"},"value":1},
+    {"#comment":"Defines the hospital crew distance from the landing spot center. Default value medic 21, stretcher 19"},
+    {"#comment":"Reduce in case of rooftop landing spots"},
+    {"#comment":"Keep/increase if needed"},
+    {"set":{"var":["L:HMEDDISTANCE","number"]},"value":21},
+    {"set":{"var":["L:HSTRCDISTANCE","number"]},"value":19},
+    {"#comment":"Defines the distance from accident site to the helicopter, in meters, above which the ambulance will be considered far. Default: 100 meters"},
+    {"set":{"local":"ambu_bring_crew_min_dist"},"value":100},
+    {"#comment":"Defines if the hospital crew walks to hospital with the patient (after unloading) or disappears few seconds after unloading completed. It applies to every ambulance crew (patient transfer or load unload from to ambulance and also for crew boarding and deboarding"},
+    {"#comment":"0 Crew disappears (no hospital query executed, no risk of query or mission lock)"},
+    {"#comment":"1 (DEFAULT)Crew moves to the hospital following straight path from loading spot to hospital. (Valid only if Load to ambulance has not been selected)"},
+    {"set":{"var":["L:BACK_TO_HOSPITAL","number"]},"value":1},
+    {"#comment":"Defines the speed multiplier (based on road limits) for police and ambulance on scene. Default: 1.5"},
+    {"set":{"local":"poli_multiplier"},"value":1.5},
+    {"set":{"local":"amburadius"},"value":25000},
+    {"set":{"local":"train_range"},"value":5},
+    {"set":{"local":"timemultiplier"},"value":0.05},
+    {"set":{"var":["L:INHIBVAR","number"]},"value":1},
+    {"set":{"var":["L:TESTTRK","number"]},"value":0}
+  ],
+  "crew spawn launch": [
+    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"launch_requested"},
+    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":0},
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":-1},
+    {"set":{"local":"crew_spawn_log"},"value":{"text":"LAUNCH: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+    {"if": {"has_object":{"param":"crew_name"}}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0} already exists; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+        {"set_message":{"text":"ERROR: crew object {0} already exists. Waiting for cleanup before creation.","params":[{"param":"crew_name"}],"color":"red"}},
+        {"wait_for":{"has_object":{"param":"crew_name"}},"eq":0}
+    ]}
+  ],
+  "crew spawn wait": [
+    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"waiting_created_flag"},
+    {"set":{"param":"crew_spawn_wait_seconds"},"value":0},
+    {"set":{"param":"crew_spawn_state"},"value":"pending"},
+    {"while": {"param":"crew_spawn_wait_seconds"}, "lt": 20,
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"has_object":{"param":"crew_name"}},"eq":1},
+            {"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"crew_spawn_state"},"value":"created"},
+            {"set":{"param":"crew_spawn_wait_seconds"},"value":20},
+            {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
+            {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"has_object":{"param":"crew_name"}},"eq":1},
+            {"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":-1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"crew_spawn_state"},"value":"failed"},
+            {"set":{"param":"crew_spawn_wait_seconds"},"value":20},
+            {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
+            {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+        ]},
+        {"if": {"param":"crew_spawn_state"}, "eq": "pending",
+          "then": [
+            {"sleep":0.5},
+            {"set":{"param":"crew_spawn_wait_seconds"},"value":{"add":[{"param":"crew_spawn_wait_seconds"},0.5]}}
+        ]}
+    ]},
+    {"if": {"param":"crew_spawn_state"}, "eq": "created",
+      "then": [
+        {"set":{"local":"crew_spawn_log"},"value":{"text":"CREATED: {0}","params":[{"param":"crew_name"}]}}
+      ],"else": [
+        {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"failed","then":"create_object_failed","else":"created_flag_timeout"}},
+        {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+        {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
+        {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
+    ]},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"created","then":"created","else":"recovered_created"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+  ],
+  "crew spawn failure": [
+    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"create_object_failed"},
+    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":0},
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":-1},
+    {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; error={1}; title={2}; fallback={3}","params":[{"param":"crew_name"},{"param":"error"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+    {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
+    {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
+  ],
+  "ground ops NR gate": [
+    {"set":{"local":"gndops_nr_gate_state"},"value":"waiting"},
+    {"set":{"local":"gndops_nr_bypass_seconds"},"value":0},
+    {"set":{"local":"gndops_idle_bypass_seconds"},"value":0},
+    {"set":{"local":"gndops_nr_gate_reason"},"value":null},
+    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"WAITING: {0}; NR < {1}; safety bypass after 30s","params":[{"param":"source"},{"local":"gndopsNR"}]}},
+    {"while": {"local":"gndops_nr_gate_state"}, "ne": "passed",
+      "do": [
+        {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": {"local":"gndopsNR"},
+          "then": [
+            {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
+            {"set":{"local":"gndops_nr_gate_reason"},"value":"NR threshold"}
+        ]},
+        {"if": {"local":"gndops_nr_gate_state"}, "ne": "passed",
+          "then": [
+            {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": 84,
+              "then": [
+                {"set":{"local":"gndops_nr_bypass_seconds"},"value":{"add":[{"local":"gndops_nr_bypass_seconds"},1]}}
+              ],"else": [
+                {"set":{"local":"gndops_nr_bypass_seconds"},"value":0}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]},"eq":1},
+                {"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"gndops_idle_bypass_seconds"},"value":{"add":[{"local":"gndops_idle_bypass_seconds"},1]}}
+              ],"else": [
+                {"set":{"local":"gndops_idle_bypass_seconds"},"value":0}
+            ]},
+            {"if": {"local":"gndops_nr_bypass_seconds"}, "gt": 30,
+              "then": [
+                {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
+                {"set":{"local":"gndops_nr_gate_reason"},"value":"NR below 84 percent for over 30 seconds"}
+            ]},
+            {"if": {"local":"gndops_idle_bypass_seconds"}, "gt": 30,
+              "then": [
+                {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
+                {"set":{"local":"gndops_nr_gate_reason"},"value":"both engine MAIN switches IDLE for over 30 seconds"}
+            ]}
+        ]},
+        {"if": {"local":"gndops_nr_gate_state"}, "ne": "passed",
+          "then": [
+            {"sleep":1}
+        ]}
+    ]},
+    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}}
+  ],
+  "HELOVICTIMS refinement": [
+    {"if": {"global":"HELOVICTIMS_CUSTOM"}, "eq": 0,
+      "then": [
+        {"if": {"local":"max_injured"}, "lte": 2,
+          "then": [
+            {"set":{"local":"HELOVICTIMS"},"value":1}
+        ]},
+        {"if": {"local":"max_injured"}, "gt": 2,
+          "then": [
+            {"set":{"local":"HELOVICTIMS"},"value":{"floor":{"rand":[1,{"local":"max_injured"}]}}}
+        ]}
+      ],"else": [
+        {"call_macro":"HELOVICTIMS custom"}
+    ]}
+  ],
+  "HELOVICTIMS custom": [
+    {"set":{"local":"max_inju_real"},"value":{"subtract":[{"local":"max_injured"},1]}},
+    {"set":{"local":"HELOVICTIMS"},"value":{"clamp":[{"global":"HELOVICTIMS_CUSTOM"},1,{"local":"max_inju_real"}]}}
+  ],
+  "CUSTOM HOSPITAL DB map update": [
+    {"set_map":{"remove":{"point":{"id":"h1"}}}},
+    {"set_map":{"remove":{"point":{"id":"h2"}}}},
+    {"set_map":{"remove":{"point":{"id":"h3"}}}},
+    {"set_map":{"remove":{"point":{"id":"h4"}}}},
+    {"set_map":{"remove":{"point":{"id":"h5"}}}},
+    {"create_location": "h1",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos1_lat"},{"global":"cushos1_lon"}]}}}}
+    ]},
+    {"create_location": "h2",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos2_lat"},{"global":"cushos2_lon"}]}}}}
+    ]},
+    {"create_location": "h3",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos3_lat"},{"global":"cushos3_lon"}]}}}}
+    ]},
+    {"create_location": "h4",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos4_lat"},{"global":"cushos4_lon"}]}}}}
+    ]},
+    {"create_location": "h5",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos5_lat"},{"global":"cushos5_lon"}]}}}}
+    ]},
+    {"set_map":{"add":{"point":{"location":"h1","icon":"cus_hospital","id":"h1"}}}},
+    {"set_map":{"add":{"point":{"location":"h2","icon":"cus_hospital","id":"h2"}}}},
+    {"set_map":{"add":{"point":{"location":"h3","icon":"cus_hospital","id":"h3"}}}},
+    {"set_map":{"add":{"point":{"location":"h4","icon":"cus_hospital","id":"h4"}}}},
+    {"set_map":{"add":{"point":{"location":"h5","icon":"cus_hospital","id":"h5"}}}}
+  ],
+  "multiplayer": [
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"prelocation"},"value":"yes"},
+        {"set":{"local":"location_engine"},"value":"never executed"},
+        {"call_macro":"multiplayer ping"},
+        {"and":[{"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},{"wait_for":{"var":["L:MISSION_NUMBER","number"]},"ne":0},{"wait_for":{"var":["L:MISSION_SCENE_VARIANT","number"]},"ne":0},{"wait_for":{"var":["L:MISSION_SCENE_TYPE","number"]},"ne":0},{"wait_for":{"var":["L:CRASH_VARIABLE","number"]},"ne":0},{"wait_for":{"var":["L:CAMPING_VARIABLE","number"]},"ne":0}],"eq":1},
+        {"set":{"local":"DISPATCHER_AUTO"},"value":1},
+        {"create_thread": {
+          "commands": [
+            {"while": {"var":["L:VAR_SEND_DISPATCH","number"]}, "ne": 1,
+              "do": [
+                {"or":[{"wait_for":{"var":["L:MISSION_NUMBER","number"]},"ne":{"local":"MISSION_NUMBER"}},{"wait_for":{"var":["L:MISSION_SCENE_VARIANT","number"]},"ne":{"local":"MISSION_SCENE_VARIANT"}},{"wait_for":{"var":["L:MISSION_SCENE_TYPE","number"]},"ne":{"local":"MISSION_SCENE_TYPE"}},{"wait_for":{"var":["L:CRASH_VARIABLE","number"]},"ne":{"local":"CRASH_VARIABLE"}},{"wait_for":{"var":["L:CAMPING_VARIABLE","number"]},"ne":{"local":"CAMPING_VARIABLE"}}],"eq":1},
+                {"if": {"var":["L:VAR_SEND_DISPATCH","number"]}, "ne": 1,
+                  "then": [
+                    {"call_macro":"mission LVAR to local"},
+                    {"if": {"var":["L:VAR_MISSION_NUMBER","number"]}, "eq": 0,
+                      "then": [
+                        {"call_macro":"missionupdatemultiplayer"}
+                      ],"else": [
+                        {"call_macro":"missionupdate"}
+                    ]}
+                ]},
+                {"sleep":1}
+            ]}
+        ]}},
+        {"create_thread": {
+          "commands": [
+            {"while": {"var":["L:VAR_SEND_DISPATCH","number"]}, "ne": 1,
+              "do": [
+                {"and":[{"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSED LAT","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSED LON","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSED_RNG_M","number"]},"ne":0},{"wait_for":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"eq":1}],"eq":1},
+                {"set":{"global":"backuplocation_ref"},"value":{"global":"location_ref"}},
+                {"if": {"local":"backuprngmin"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"backuprngmin"},"value":{"global":"MISSION_ACCIDENT_MIN_RADIUS"}}
+                ]},
+                {"if": {"local":"backuprngmax"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"backuprngmax"},"value":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}
+                ]},
+                {"if": {"local":"backupspecialrngmax"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"backupspecialrngmax"},"value":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]}}
+                ]},
+                {"set":{"global":"location_ref"},"value":"custom_center_location"},
+                {"set":{"local":"location_engine"},"value":"starting"},
+                {"call_macro":"accident location pregenerator multiplayer"},
+                {"wait_for":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"eq":0},
+                {"set":{"var":["L:VAR_PROPOSED LAT","number"]},"value":0},
+                {"set":{"var":["L:VAR_PROPOSED LON","number"]},"value":0},
+                {"set":{"var":["L:VAR_PROPOSED_RNG_M","number"]},"value":0},
+                {"set":{"global":"MISSION_ACCIDENT_MIN_RADIUS"},"value":{"local":"backuprngmin"}},
+                {"set":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"value":{"local":"backuprngmax"}},
+                {"set":{"global":"location_ref"},"value":{"global":"backuplocation_ref"}},
+                {"set":{"local":"location_engine"},"value":"executed"}
+            ]}
+        ]}},
+        {"wait_for":{"var":["L:VAR_SEND_DISPATCH","number"]},"ne":0},
+        {"call_macro":"accident location pregenerator multiplayer map"},
+        {"set":{"var":["L:VAR_MISSION_NUMBER","number"]},"value":0},
+        {"call_macro":"Mission dispatch"},
+        {"sleep":0.5},
+        {"set_dispatch_dialog":0},
+        {"set_briefing_dialog":1}
+    ]}},
+    {"call_macro":"multiplayer resveh"}
+  ],
+  "multiplayer ping": [
+    {"create_thread": {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},
+            {"sleep":8},
+            {"set":{"var":["L:SERVICE_CONNECTED","number"]},"value":2},
+            {"sleep":8},
+            {"if": {"var":["L:SERVICE_CONNECTED","number"]}, "ne": 1,
+              "then": [
+                {"sleep":8}
+            ]},
+            {"if": {"var":["L:SERVICE_CONNECTED","number"]}, "ne": 1,
+              "then": [
+                {"sleep":8}
+            ]},
+            {"if": {"var":["L:SERVICE_CONNECTED","number"]}, "ne": 1,
+              "then": [
+                {"set":{"var":["L:SERVICE_CONNECTED","number"]},"value":0}
+            ]}
+        ]}
+    ]}}
+  ],
+  "multiplayer resveh": [
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"var":["L:VARAMBUAVAIL","number"]},"ne":0},
+        {"wait_for":{"local":"MISSION_PHASE"},"gte":4},
+        {"set":{"local":"AMBU_AVAIL"},"value":{"var":["L:VARAMBUAVAIL","number"]}},
+        {"call_macro":"Ambulance1"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"var":["L:VARFIREAVAIL","number"]},"ne":0},
+        {"wait_for":{"local":"MISSION_PHASE"},"gte":4},
+        {"set":{"local":"FIREENGINE_AVAIL"},"value":{"var":["L:VARFIREAVAIL","number"]}},
+        {"call_macro":"Firetruck1"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"var":["L:VARPOLICEAVAIL","number"]},"ne":0},
+        {"wait_for":{"local":"MISSION_PHASE"},"gte":4},
+        {"set":{"local":"POLICE_AVAIL"},"value":{"var":["L:VARPOLICEAVAIL","number"]}},
+        {"call_macro":"Police1"}
+    ]}}
+  ],
+  "min max rng check": [
+    {"if": {"global":"MISSION_ACCIDENT_MAX_RADIUS"}, "lte": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+      "then": [
+        {"set":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"value":{"add":[{"global":"MISSION_ACCIDENT_MIN_RADIUS"},1500]}}
+    ]},
+    {"if": {"global":"MOUNT_AUTO_RNG"}, "ne": "yes",
+      "then": [
+        {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}
+    ]},
+    {"set_map":{"remove":{"point":{"id":"BASE_inner"}}}},
+    {"set_map":{"remove":{"point":{"id":"BASE_outer"}}}},
+    {"set_map":{"remove":{"point":{"id":"BASE_special"}}}},
+    {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_outer","stroke":{"width":1,"color":"green"},"fill":{"color":"rgba(0, 255, 0, 0.05)"},"range":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}}}},
+    {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_inner","stroke":{"width":1,"color":"red"},"fill":{"color":"rgba(255, 0, 0, 0.05)"},"range":{"global":"MISSION_ACCIDENT_MIN_RADIUS"}}}}},
+    {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_special","stroke":{"width":0.3,"color":"blue"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]}}}}}
+  ],
+  "min max poli ambu loading": [
+    {"set_map":{"remove":{"point":{"id":"poli_min"}}}},
+    {"set_map":{"remove":{"point":{"id":"ambu_min"}}}},
+    {"if": {
+      "and": [
+        {"require":{"global":"POLI_RNG_VISIBLE"},"eq":"yes"},
+        {"require":{"has_object":"injured_human"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set_map":{"add":{"point":{"location":"injured_human","id":"poli_min","stroke":{"width":0.5,"color":"cyan"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"local":"police_bring_crew_min_dist"}}}}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"global":"AMBU_RNG_VISIBLE"},"eq":"yes"},
+        {"require":{"has_object":"injured_human"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set_map":{"add":{"point":{"location":"injured_human","id":"ambu_min","stroke":{"width":0.5,"color":"white"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"local":"ambulance_return_crew_min_dist"}}}}}
+    ]}
+  ],
+  "afterengstartckl2": [
+    {"if": {"var":["L:AUDIO_CHK_DECLUT","number"]}, "eq": 2,
+      "then": [
+        {"call_macro":"crew_vs_checklist_volume_update_engine"}
+    ]},
+    {"if": {"var":["L:AUDIO_CHK_DECLUT","number"]}, "eq": 1,
+      "then": [
+        {"call_macro":"checkliste_volume_update_engine"}
+    ]},
+    {"if": {"var":["L:AUDIO_CHK_DECLUT","number"]}, "eq": 0,
+      "then": [
+        {"call_macro":"volume update engine"}
+    ]},
+    {"set":{"var":["L:CPLTCHKA12","number"]},"value":{"add":[{"var":["L:CPLTCHKA12","number"]},1]}},
+    {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":100},
+    {"set_dispatch": [
+        {"link":"< BACK >  - - - - - AVIONIC/PREFLIGHT TEST - - - - - - - -","commands":[{"call_macro":"checklist home"}]},
+        {"text":"1.AP1+AP2+BKUP _ _ _ _ _ _ Engage(Cyclic or APCP)","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":101}},
+        {"text":"1.AP1+AP2+BKUP _ _ _ _ _ _ Engage(Cyclic or APCP)","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":101}},
+        {"text":"1.AP1+AP2+BKUP _ _ _ _ _ _ Engage(Cyclic or APCP)","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":101}},
+        {"text":"FND AFCS Strip:3x Green rectangles [ ]","align":"right","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":101}},
+        {"text":"FND AFCS Strip:3x Green rectangles [ ]","align":"right","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":101}},
+        {"text":"FND AFCS Strip:3x Green rectangles [ ]","align":"right","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":101}},
+        {"text":" "},
+        {"text":"2.Collective _ _ _ _ _ _ _ _Latch if required [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":102}},
+        {"text":"2.Collective _ _ _ _ _ _ _ _Latch if required [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":102}},
+        {"text":"2.Collective _ _ _ _ _ _ _ _Latch if required [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":102}},
+        {"text":" "},
+        {"link":"Click here for: - PREPARATION FOR NIGHT FLIGHT - - - -","commands":[{"set":{"var":["L:CHECKLIST_STEP","number"]},"value":103}],"align":"center","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":102}},
+        {"text":"3.MFDs _ _ _ _ _ _ _ _ _ _ _ Adjust luminance [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":103}},
+        {"text":"3.MFDs _ _ _ _ _ _ _ _ _ _ _ Adjust luminance [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":103}},
+        {"text":"3.MFDs _ _ _ _ _ _ _ _ _ _ _ Adjust luminance [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":103}},
+        {"text":" "},
+        {"text":"4.Cockpit illumination _ _ _ _ _Adjust as rqd [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":104}},
+        {"text":"4.Cockpit illumination _ _ _ _ _Adjust as rqd [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":104}},
+        {"text":"4.Cockpit illumination _ _ _ _ _Adjust as rqd [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":104}},
+        {"text":" "},
+        {"text":"5.Fixed & S/L ldg lts _ _ _ _Chk & set as rqd [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":105}},
+        {"text":"5.Fixed & S/L ldg lts _ _ _ _Chk & set as rqd [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":105}},
+        {"text":"5.Fixed & S/L ldg lts _ _ _ _Chk & set as rqd [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":105}},
+        {"text":" "},
+        {"text":"6.Fabric glare shield _ _ _ _ _ _ _ installed [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":106}},
+        {"text":"6.Fabric glare shield _ _ _ _ _ _ _ installed [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":106}},
+        {"text":"6.Fabric glare shield _ _ _ _ _ _ _ installed [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":106}},
+        {"text":"- - - - - - - - - - - - - - - - - - - - - - - - - - - ","align":"center"},
+        {"text":"7.ENG 1/2 MAIN sws _ _ _ FLIGHT,guards closed [ ]","monospace":1,"show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"lt":107}},
+        {"text":"7.ENG 1/2 MAIN sws _ _ _ FLIGHT,guards closed [ ]","monospace":1,"color":"yellow","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"eq":107}},
+        {"text":"7.ENG 1/2 MAIN sws _ _ _ FLIGHT,guards closed [V]","monospace":1,"color":"gray","show_condition":{"require":{"var":["L:CHECKLIST_STEP","number"]},"gt":107}}
+    ]},
+    {"sleep":2},
+    {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":101},
+    {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":101},
+    {"create_thread": {
+      "commands": [
+        {"set":{"var":["L:CPLTCHKC12","number"]},"value":{"add":[{"var":["L:CPLTCHKC12","number"]},1]}},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_APCP_BKUP","number"]},"eq":1},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_APCP_AP1","number"]},"eq":1},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_APCP_AP2","number"]},"eq":1},
+        {"sleep":5},
+        {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":102}
+    ]}},
+    {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":102},
+    {"create_thread": {
+      "commands": [
+        {"set":{"var":["L:CPLTCHKC10","number"]},"value":{"add":[{"var":["L:CPLTCHKC10","number"]},1]}},
+        {"wait_for":{"var":["L:Collective","number"]},"lt":1},
+        {"sleep":5},
+        {"if": {"var":["L:CHECKLIST_STEP","number"]}, "eq": 102,
+          "then": [
+            {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":107}
+        ]}
+    ]}},
+    {"if": {"var":["L:CHECKLIST_STEP","number"]}, "eq": 103,
+      "then": [
+        {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":103},
+        {"create_thread": {
+          "commands": [
+            {"sleep":8},
+            {"if": {"var":["L:CHECKLIST_STEP","number"]}, "eq": 103,
+              "then": [
+                {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":104}
+            ]}
+        ]}},
+        {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":104},
+        {"create_thread": {
+          "commands": [
+            {"sleep":8},
+            {"if": {"var":["L:CHECKLIST_STEP","number"]}, "eq": 104,
+              "then": [
+                {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":105}
+            ]}
+        ]}},
+        {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":105},
+        {"create_thread": {
+          "commands": [
+            {"set":{"var":["L:CPLTCHKC12","number"]},"value":{"add":[{"var":["L:CPLTCHKC12","number"]},1]}},
+            {"wait_for":{"var":["LIGHT LANDING","number"]},"eq":1},
+            {"sleep":5},
+            {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":106}
+        ]}},
+        {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":106},
+        {"create_thread": {
+          "commands": [
+            {"sleep":8},
+            {"if": {"var":["L:CHECKLIST_STEP","number"]}, "eq": 106,
+              "then": [
+                {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":107}
+            ]}
+        ]}}
+    ]},
+    {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":107},
+    {"create_thread": {
+      "commands": [
+        {"set":{"var":["L:CPLTCHKC12","number"]},"value":{"add":[{"var":["L:CPLTCHKC12","number"]},1]}},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_ECP_MAIN_LATCH_1","number"]},"eq":1},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_ECP_MAIN_LATCH_2","number"]},"eq":1},
+        {"sleep":5},
+        {"set":{"var":["L:CHECKLIST_STEP","number"]},"value":108}
+    ]}},
+    {"wait_for":{"var":["L:CHECKLIST_STEP","number"]},"eq":108},
+    {"sleep":5},
+    {"set":{"global":"VOLUME_CREW"},"value":{"local":"VOLUME_CREW_TMP"}},
+    {"set":{"global":"VOLUME_CHK"},"value":{"local":"VOLUME_CHK_TMP"}},
+    {"call_macro":"crew vol"},
+    {"call_macro":"chk vol"},
+    {"call_macro":"checklist home"}
+  ],
+  "clear_unaccepted_dispatch_map": [
+    {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"SAR_start_location_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"SAR_start_location"}}}},
+    {"set_map":{"remove":{"point":{"id":"location_temp_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"ringSAR"}}}}
+  ],
+  "refresh_unaccepted_dispatch_map": [
+    {"create_thread": {
+      "commands": [
+        {"or": [
+          {"wait_for":{"local":"has_location"},"eq":"yes"},
+          {"wait_for":{"local":"queryfailed"},"ne":null},
+          {"wait_for":{"local":"timer_location"},"eq":"expired"}
+        ]},
+        {"if": {"param":"generation"}, "eq": {"local":"map_preview_generation"},
+          "then": [
+            {"if": {"local":"SAR"}, "ne": "yes",
+              "then": [
+                {"call_macro":"clear_unaccepted_dispatch_map"},
+                {"sleep":1},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"has_location"},"eq":"yes"},
+                    {"require":{"local":"location_name"},"eq":"accident_location"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set_map":{"add":{"point":{"location":"accident_location","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}},
+                    {"set":{"var":["L:PRE_ACCIDENT_LOCATION","number"]},"value":{"location":"accident_location"}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"has_location"},"eq":"yes"},
+                    {"require":{"local":"location_name"},"eq":"rescue_location"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set_map":{"add":{"point":{"location":"rescue_location","icon":{"resolve_icon":"{local:Icon}"},"id":"rescue_location_icon"}}}},
+                    {"set":{"var":["L:PRE_RESCUE_LOCATION","number"]},"value":{"location":"rescue_location"}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"has_location"},"eq":"yes"},
+                    {"require":{"local":"location_name"},"eq":"userA"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set_map":{"add":{"point":{"location":"userA","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}},
+                    {"set":{"var":["L:PRE_USERA","number"]},"value":{"location":"userA"}}
+                ]}
+            ]}
+        ]}
+    ]}}
+  ],
+  "timefororgantransport": [
+    {"set":{"local":"organexpiration"},"value":{"tofixed":{"add":[{"var":["E:LOCAL TIME","seconds"]},{"multiply":[{"object":"userA","var":"distance:m"},{"local":"timemultiplier"}]},{"multiply":[{"location":"hospital_user","var":"distance:m","to":"userA"},{"local":"timemultiplier"}]},{"rand":[300,1200]}]},"digits":0}}
+  ],
+  "road nodes generator": [
+    {"set":{"local":"roadnode_query_status"},"value":"query_requested"},
+    {"set":{"param":"selpost"},"value":{"struct":{"static":"marker posts"},"index":{"local":"NATION"}}},
+    {"set":{"local":"mkrpst"},"value":{"struct":{"param":"selpost"},"path":"title"}},
+    {"set":{"local":"roadqueryattempt"},"value":{"add":[{"local":"roadqueryattempt"},1]}},
+    {"set":{"param":"my_data"},"value":null},
+    {"osm_query_data":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|unclassified|residential|living_street|service|tertiary|(motorway|trunk|primary|secondary|tertiary|)_link)$\"];(._;>;);out;","location":"accident_location","size":{"local":"roadnodequerydistance"},"result":"my_data"},
+    {"set":{"param":"query_wait"},"value":0},
+    {"while": {
+      "and": [
+        {"require":{"param":"my_data"},"eq":null},
+        {"require":{"param":"query_wait"},"lt":120}
+      ]}, "eq": 1,
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"param":"road_generation"},"ne":null},
+            {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+          ]}, "eq": 1,
+          "then": [
+            {"return":0}
+        ]},
+        {"sleep":0.5},
+        {"if": {
+          "and": [
+            {"require":{"param":"road_generation"},"ne":null},
+            {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+          ]}, "eq": 1,
+          "then": [
+            {"return":0}
+        ]},
+        {"set":{"param":"query_wait"},"value":{"add":[{"param":"query_wait"},0.5]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"road_generation"},"ne":null},
+        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"param":"my_data"}, "eq": null,
+      "then": [
+        {"set":{"local":"roadnode_query_status"},"value":"query_timeout"},
+        {"set":{"local":"has_accident_location"},"value":"failed"},
+        {"return":0}
+    ]},
+    {"set":{"local":"roadnode_query_status"},"value":"query_received"},
+    {"sleep":1},
+    {"if": {
+      "and": [
+        {"require":{"param":"road_generation"},"ne":null},
+        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
+    {"osm_get_closest_nodes":"accident_location","data":{"param":"my_data"},"result":"my_closest_nodes"},
+    {"set":{"param":"closest_node"},"value":null},
+    {"for_each": {"param":"my_closest_nodes"},
+      "do": [
+        {"osm_get_parent_ways":{"struct":{"param":"$item"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+        {"if": {"struct":{"param":"parents"},"path":"length"}, "gt": 1,
+          "then": [
+            {"set":{"param":"closest_node"},"value":{"param":"$item"}},
+            {"break":1}
+        ]},
+        {"sleep":0.0025},
+        {"if": {
+          "and": [
+            {"require":{"param":"road_generation"},"ne":null},
+            {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+          ]}, "eq": 1,
+          "then": [
+            {"return":0}
+        ]}
+    ]},
+    {"if": {"param":"closest_node"}, "eq": null,
+      "then": [
+        {"set":{"local":"roadnode_query_status"},"value":"no_usable_nodes"},
+        {"set":{"local":"has_accident_location"},"value":"failed"},
+        {"return":0}
+    ]},
+    {"set":{"param":"closest_location"},"value":{"create_array":[{"struct":{"param":"closest_node"},"path":"lat"},{"struct":{"param":"closest_node"},"path":"lon"}]}},
+    {"create_location": "wpc1",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"closest_node"},"path":"lat"},{"struct":{"param":"closest_node"},"path":"lon"}]}}}}
+    ]},
+    {"sleep":0.005},
+    {"if": {
+      "and": [
+        {"require":{"param":"road_generation"},"ne":null},
+        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"osm_get_connected_nodes":{"struct":{"param":"closest_node"},"path":"id"},"data":{"param":"my_data"},"result":"my_nodes_connected_to_nearest_node"},
+    {"set":{"local":"roads"},"value":0},
+    {"for_each": {"param":"my_nodes_connected_to_nearest_node"},
+      "do": [
+        {"set":{"local":"roads"},"value":{"add":[{"local":"roads"},1]}},
+        {"if": {"local":"roads"}, "eq": 1,
+          "then": [
+            {"create_location": "wpc1",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost1","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc1"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost1","title":"Airbus H145 Marker GREEN","location":"wpc1"}}
+            ]},
+            {"point_object":"markerpost1","to":"accident_location"},
+            {"move_object":"markerpost1","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost1"}},
+            {"create_location": "wpt1",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost1"}}}
+            ]},
+            {"point_object":"markerpost1","to":"accident_location"},
+            {"move_object":"markerpost1","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost1"}},
+            {"create_location": "wprescue1",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost1"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost1","to":"accident_location"},
+                {"set":{"object":"markerpost1","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost1","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost1","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost1"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost1","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost1","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost1"}
+            ]},
+            {"if": {"has_location":"wpc1"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 2,
+          "then": [
+            {"create_location": "wpc2",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost2","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc2"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost2","title":"Airbus H145 Marker GREEN","location":"wpc2"}}
+            ]},
+            {"point_object":"markerpost2","to":"accident_location"},
+            {"move_object":"markerpost2","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost2"}},
+            {"create_location": "wpt2",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost2"}}}
+            ]},
+            {"point_object":"markerpost2","to":"accident_location"},
+            {"move_object":"markerpost2","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost2"}},
+            {"create_location": "wprescue2",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost2"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost2","to":"accident_location"},
+                {"set":{"object":"markerpost2","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost2","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost2","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost2"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost2","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost2","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost2"}
+            ]},
+            {"if": {"has_location":"wpc2"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 3,
+          "then": [
+            {"create_location": "wpc3",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost3","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc3"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost3","title":"Airbus H145 Marker GREEN","location":"wpc3"}}
+            ]},
+            {"point_object":"markerpost3","to":"accident_location"},
+            {"move_object":"markerpost3","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost3"}},
+            {"create_location": "wpt3",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost3"}}}
+            ]},
+            {"point_object":"markerpost3","to":"accident_location"},
+            {"move_object":"markerpost3","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost3"}},
+            {"create_location": "wprescue3",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost3"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost3","to":"accident_location"},
+                {"set":{"object":"markerpost3","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost3","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost3","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost3"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost3","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost3","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost3"}
+            ]},
+            {"if": {"has_location":"wpc3"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 4,
+          "then": [
+            {"create_location": "wpc4",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost4","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc4"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost4","title":"Airbus H145 Marker GREEN","location":"wpc4"}}
+            ]},
+            {"point_object":"markerpost4","to":"accident_location"},
+            {"move_object":"markerpost4","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost4"}},
+            {"create_location": "wpt4",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost4"}}}
+            ]},
+            {"point_object":"markerpost4","to":"accident_location"},
+            {"move_object":"markerpost4","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost4"}},
+            {"create_location": "wprescue4",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost4"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost4","to":"accident_location"},
+                {"set":{"object":"markerpost4","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost4","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost4","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost4"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost4","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost4","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost4"}
+            ]},
+            {"if": {"has_location":"wpc4"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 5,
+          "then": [
+            {"create_location": "wpc5",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost5","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc5"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost5","title":"Airbus H145 Marker GREEN","location":"wpc5"}}
+            ]},
+            {"point_object":"markerpost5","to":"accident_location"},
+            {"move_object":"markerpost5","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost5"}},
+            {"create_location": "wpt5",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost5"}}}
+            ]},
+            {"point_object":"markerpost5","to":"accident_location"},
+            {"move_object":"markerpost5","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost5"}},
+            {"create_location": "wprescue5",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost5"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost5","to":"accident_location"},
+                {"set":{"object":"markerpost5","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost5","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost5","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost5"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost5","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost5","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost5"}
+            ]},
+            {"if": {"has_location":"wpc5"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 6,
+          "then": [
+            {"create_location": "wpc6",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost6","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc6"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost6","title":"Airbus H145 Marker GREEN","location":"wpc6"}}
+            ]},
+            {"point_object":"markerpost6","to":"accident_location"},
+            {"move_object":"markerpost6","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost6"}},
+            {"create_location": "wpt6",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost6"}}}
+            ]},
+            {"point_object":"markerpost6","to":"accident_location"},
+            {"move_object":"markerpost6","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost6"}},
+            {"create_location": "wprescue6",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost6"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost6","to":"accident_location"},
+                {"set":{"object":"markerpost6","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost6","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost6","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost6"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost6","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost6","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost6"}
+            ]},
+            {"if": {"has_location":"wpc6"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 7,
+          "then": [
+            {"create_location": "wpc7",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost7","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc7"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost7","title":"Airbus H145 Marker GREEN","location":"wpc7"}},
+                {"point_object":"markerpost7","to":"accident_location"}
+            ]},
+            {"move_object":"markerpost7","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost7"}},
+            {"create_location": "wpt7",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost7"}}}
+            ]},
+            {"point_object":"markerpost7","to":"accident_location"},
+            {"move_object":"markerpost7","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost7"}},
+            {"create_location": "wprescue7",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost7"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost7","to":"accident_location"},
+                {"set":{"object":"markerpost7","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost7","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost7","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost7"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost7","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost7","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost7"}
+            ]},
+            {"if": {"has_location":"wpc7"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 8,
+          "then": [
+            {"create_location": "wpc8",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost8","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc8"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost8","title":"Airbus H145 Marker GREEN","location":"wpc8"}},
+                {"point_object":"markerpost8","to":"accident_location"}
+            ]},
+            {"move_object":"markerpost8","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost8"}},
+            {"create_location": "wpt8",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost8"}}}
+            ]},
+            {"point_object":"markerpost8","to":"accident_location"},
+            {"move_object":"markerpost8","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost8"}},
+            {"create_location": "wprescue8",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost8"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost8","to":"accident_location"},
+                {"set":{"object":"markerpost8","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost8","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost8","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost8"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost8","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost8","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost8"}
+            ]},
+            {"if": {"has_location":"wpc8"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"roads"}, "eq": 9,
+          "then": [
+            {"create_location": "wpc9",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"create_object":{"name":"markerpost9","title":{"local":"mkrpst"},"fallback_title":"Airbus H145 Marker GREEN","location":"wpc9"}}
+              ],"else": [
+                {"create_object":{"name":"markerpost9","title":"Airbus H145 Marker GREEN","location":"wpc9"}},
+                {"point_object":"markerpost9","to":"accident_location"}
+            ]},
+            {"move_object":"markerpost9","to":{"bearing2":180,"dist":400,"heading":0,"object":"markerpost9"}},
+            {"create_location": "wpt9",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost9"}}}
+            ]},
+            {"point_object":"markerpost9","to":"accident_location"},
+            {"move_object":"markerpost9","to":{"bearing2":0,"dist":340,"heading":0,"object":"markerpost9"}},
+            {"create_location": "wprescue9",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"markerpost9"}}}
+            ]},
+            {"if": {"local":"30West_installed"}, "eq": "OK",
+              "then": [
+                {"point_object":"markerpost9","to":"accident_location"},
+                {"set":{"object":"markerpost9","var":"VELOCITY Z"},"value":25},
+                {"set":{"param":"marker_timeout"},"value":{"add":[{"divide":[{"object":"markerpost9","var":"distance:m","to":"accident_location"},25]},5]}},
+                {"set":{"param":"marker_elapsed"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"object":"markerpost9","var":"distance:m","to":"accident_location"},"gt":13},
+                    {"require":{"param":"marker_elapsed"},"lt":{"param":"marker_timeout"}}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"if": {
+                      "and": [
+                        {"require":{"param":"road_generation"},"ne":null},
+                        {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"if": {"has_object":"markerpost9"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"markerpost9","var":"VELOCITY Z"},"value":0}
+                        ]},
+                        {"return":0}
+                    ]},
+                    {"sleep":0.5},
+                    {"set":{"param":"marker_elapsed"},"value":{"add":[{"param":"marker_elapsed"},0.5]}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"road_generation"},"ne":null},
+                    {"require":{"param":"road_generation"},"ne":{"local":"roadnode_query_generation"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"markerpost9","var":"VELOCITY Z"},"value":0}
+              ],"else": [
+                {"destroy_object":"markerpost9"}
+            ]},
+            {"if": {"has_location":"wpc9"}, "eq": 1,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"yes"}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"no"}
+            ]}
+        ]},
+        {"if": {"local":"has_accident_location"}, "eq": "no",
+          "then": [
+            {"set":{"local":"has_accident_location"},"value":"failed"}
+        ]}
+    ]},
+    {"if": {"local":"has_accident_location"}, "ne": "yes",
+      "then": [
+        {"if": {"local":"roadqueryattempt"}, "eq": 1,
+          "then": [
+            {"if": {"local":"roadnodequerydistance"}, "lt": 121,
+              "then": [
+                {"set":{"local":"has_accident_location"},"value":"no"},
+                {"set":{"local":"roadnodequerydistance"},"value":250},
+                {"call_macro":"road nodes generator","params":{"road_generation":{"param":"road_generation"}}}
+              ],"else": [
+                {"set":{"local":"has_accident_location"},"value":"failed"}
+            ]}
+          ],"else": [
+            {"set":{"local":"has_accident_location"},"value":"failed"}
+        ]}
+    ]},
+    {"set":{"local":"roadnode_query_status"},"value":{"if":{"local":"has_accident_location"},"eq":"yes","then":"nodes_ready","else":"no_usable_nodes"}}
+  ],
+  "default rtc": [
+    {"if": {"local":"MISSION_SCENE_VARIANT"}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:LOAD","number"]},"value":55},
+        {"set_message":{"text":"Cabin preparation, 55% completed... please wait, it can take a while"}},
+        {"call_macro":"random scene 1"}
+    ]},
+    {"if": {"local":"MISSION_SCENE_VARIANT"}, "eq": 2,
+      "then": [
+        {"set":{"var":["L:LOAD","number"]},"value":55},
+        {"set_message":{"text":"Cabin preparation, 55% completed... please wait, it can take a while"}},
+        {"call_macro":"random scene 2"}
+    ]},
+    {"if": {"local":"MISSION_SCENE_VARIANT"}, "eq": 3,
+      "then": [
+        {"set":{"var":["L:LOAD","number"]},"value":55},
+        {"set_message":{"text":"Cabin preparation, 55% completed... please wait, it can take a while"}},
+        {"call_macro":"random scene 3"}
+    ]}
+  ],
+  "Choose manual type modal": [
+    {"set_message":{"text":""}},
+    {"wait_modal": {
+        "title": "CHOOSE MANUAL TYPE",
+        "text": "Select which type of manual destination",
+        "options": [
+          {"text":"Manually from map/list","style":"","commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]},
+          {"text":"Manually from custom DB","style":"","commands":[{"set":{"local":"modalwait"},"value":"wait"},{"call_macro":"additional hospitals page"},{"set_dispatch_dialog":1},{"wait_for":{"local":"modalwait"},"eq":"go"},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"sleep":1},{"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"call_macro":"user destination menu"},{"set_dispatch_dialog":0}]}
+      ]}
+    }
+  ],
+  "hospital_creation_from_unhospital": [
+    {"call_macro":"Query closest hospital unrelated for stretcher"},
+    {"sleep":1},
+    {"create_location": "hospital",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"unhospital"}}}
+    ]}
+  ],
+  "shared repeated block 021": [
+    {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
+    {"sleep":1.8},
+    {"if": {"local":"patientlife"}, "ne": "died",
+      "then": [
+        {"set":{"local":"patientlife"},"value":"died"},
+        {"create_thread": {
+          "commands": [
+            {"wait_for":{"local":"crewvisiting1"},"eq":"yes"},
+            {"set":{"var":["L:PAX3{local:VCP}7","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}7","number"]},1]}}
+        ]}}
+    ]}
+  ],
+  "shared repeated block 022": [
+    {"sleep":3},
+    {"wait_for":{"object":"ambumedic","var":"VELOCITY Z"},"eq":0},
+    {"if": {"local":"hospital_wptot"}, "eq": 1,
+      "then": [
+        {"drive_object":{"name":"ambumedic","to":["hospital_wp1"],"VAR1":1,"speed":6}},
+        {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
+    ]},
+    {"if": {"local":"hospital_wptot"}, "eq": 2,
+      "then": [
+        {"drive_object":{"name":"ambumedic","to":["hospital_wp1","hospital_wp2"],"VAR1":1,"speed":6}},
+        {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
+    ]},
+    {"if": {"local":"hospital_wptot"}, "eq": 3,
+      "then": [
+        {"drive_object":{"name":"ambumedic","to":["hospital_wp1","hospital_wp2","hospital_wp3"],"VAR1":1,"speed":6}},
+        {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
+    ]},
+    {"drive_object":{"name":"ambumedic","to":["hospital_door","hospital"],"VAR1":1,"speed":6}},
+    {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
+  ],
+  "shared repeated block 023": [
+    {"call_macro":"Mission dispatch"},
+    {"sleep":0.2},
+    {"set_dispatch_dialog":0},
+    {"sleep":0.2},
+    {"set_briefing_dialog":1}
+  ],
+  "shared repeated block 024": [
+    {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"global":"STATION_1"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"global":"STATION_2"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
+    {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
+  ],
+  "shared repeated block 025": [
+    {"call_macro":{"local":"prev_page2"}},
+    {"set_dispatch_dialog":1},
+    {"set":{"local":"prev_page2"},"value":"none"}
+  ],
+  "shared repeated block 026": [
+    {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"global":"STATION_1"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"global":"STATION_2"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":0},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
+    {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
+  ],
+  "shared repeated block 027": [
+    {"set":{"local":"landing_spot_watchdog_active"},"value":"yes"},
+    {"set":{"local":"landing_spot_watchdog_status"},"value":"armed_default"},
+    {"set":{"local":"landing_spot_watchdog_discrepancy"},"value":"no"},
+    {"set":{"local":"landing_spot_watchdog_distance_m"},"value":0},
+    {"set":{"local":"landing_spot_watchdog_fix_count"},"value":0},
+    {"set":{"local":"landing_spot_watchdog_reference"},"value":"injured_human"},
+    {"create_location": "landing_spot",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}
+    ]},
+    {"set":{"local":"location_diagnostic_source_macro"},"value":"shared repeated block 027"},
+    {"set":{"local":"location_diagnostic_writer_landing_spot"},"value":"shared repeated block 027"},
+    {"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},
+    {"set_map":{"add":{"point":{"location":"landing_spot","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAgCAYAAAHiVIEmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIGSURBVEhL1Zc/T8JAFMDbgjQkJJjGhWDCZEJSd5xwAmPCwoyfAEcXU+MncDc4yFdycnRgV2cWU+8d78r9a+84SqO/5HHvvd77c3dtAc+GFD4Cqm6gDoVer3dCBv1FhnA1N2eKufaHT5tb+y8DTbPGed1uAbpJwjYAMEl2+jhSarXa9jocDTseXhdoNptyRqWsQLvdTjudzjeaAqT8exAExQlcGY3GIaoZutaZ8BT5xR3kkCfrUGJtDhuCmBRSyq2fJMk1qhXR7/f5DU+73VObvTwcRdWr68ylkhIjO8BmQsEHWvAh1Gb3lPHmK4DG6l5GLqSQDRLJHZmSK/NLeVwA64eYbPbGygESyW264LOOnDe8Xq/TWG03/DfDarX6hFHnqwybZSpzTBstB5RxMFvCMIQCgkRRpPhw3sFIk+ThDHUnSPwRGQ7aZCmQRu9RNZK3muxYJFGQXqu86FD82StlPL56Isl+iFruDWjGHw4vP+L4XGxuMpkcNxqNvJUw2GplUdhxpyitVutrMLh4RpNSGIDIBZgouDSF0DnsqMDY9T3jgk0Nf++m5vNb1LYsl6/eer1GS8CqqY1KjNns5g71PCBAJwr7Hh+PKYhPzouCY1PZdf5XBmxbOp1OHzdmpUBDpqM1rqosqqpTIYvFS0QGWBn8c36jTgNxHMM8GkO+52Lq/J943i9NtsTiAlnwAgAAAABJRU5ErkJggg==","id":"landing_spot"}}}},
+    {"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}}
+  ],
+  "shared repeated block 028": [
+    {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"global":"STATION_1"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"global":"STATION_2"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":0},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
+    {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_OFF","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
+  ],
+  "shared repeated block 029": [
+    {"if": {"local":"prev_page"}, "eq": "briefing",
+      "then": [
+        {"call_macro":"Mission dispatch"},
+        {"set_dispatch_dialog":0},
+        {"set_briefing_dialog":1}
+    ]},
+    {"if": {"local":"prev_page"}, "eq": "homepage",
+      "then": [
+        {"call_macro":"homepage"},
+        {"set_dispatch_dialog":1}
+    ]},
+    {"if": {"local":"prev_page"}, "eq": "Mission dispatch",
+      "then": [
+        {"call_macro":"Mission dispatch"},
+        {"set_dispatch_dialog":1}
+    ]}
+  ],
+  "shared repeated block 030": [
+    {"sleep":[2,10]},
+    {"set":{"object":"pax3","var":"VAR 1"},"value":5},
+    {"sleep":[2,4]},
+    {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":5}},
+        {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":230,"dist":3,"object":"injured_human"},{"bearing2":310,"dist":3,"object":"injured_human"}],"to":"pax3"}],"VAR1":3,"speed":5}},
+        {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":230,"dist":0.4,"object":"injured_human"},{"bearing2":310,"dist":0.4,"object":"injured_human"}],"to":"pax3"}],"VAR1":3,"speed":5}},
+        {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+        {"sleep":1},
+        {"set":{"object":"pax3","var":"VAR 1"},"value":5},
+        {"sleep":1},
+        {"set":{"object":"pax3","var":"VAR 1"},"value":6}
+    ]}}
+  ],
+  "shared repeated block 031": [
+    {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":90,"dist":2,"object":"police"},{"bearing2":270,"dist":2,"object":"police"}],"to":"hoist_crew"}],"VAR1":3,"speed":6}},
+    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+    {"sleep":2},
+    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
+    {"set":{"local":"hoistcrewonpolice"},"value":"yes"}
+  ],
+  "shared repeated block 032": [
+    {"wait_for":{"local":"stretcheronambulance"},"eq":"return"},
+    {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
+    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+    {"if": {"location":"AMBWP","var":"distance:m","to":"ambulance1"}, "gt": 2,
+      "then": [
+        {"call_macro":"drive ambulance1 safe","params":{"to":["AMBWP","Ambuloc"],"fallback":"Ambuloc","speed":{"location":"AMBWP","var":"distance:m","to":"ambulance1"},"var1":1,"timeout":420}}
+      ],"else": [
+        {"call_macro":"drive ambulance1 safe","params":{"to":["Ambuloc"],"fallback":"Ambuloc","speed":{"location":"Ambuloc","var":"distance:m","to":"ambulance1"},"var1":1,"timeout":420}}
+    ]},
+    {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
+    {"set":{"local":"stretcheronambulance"},"value":"arrived"}
+  ],
+  "shared repeated block 033": [
+    {"sleep":[2,5]},
+    {"drive_object":{"name":"hoist_crew","to":[{"closest":["INJU12","INJU13"],"to":"hoist_crew"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+    {"set":{"var":["L:STEP","number"]},"value":7},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"destroy_object":"hoist_crew"}
+    ]},
+    {"set":{"local":"crewdoconboard"},"value":"yes"}
+  ],
+  "shared repeated block 034": [
+    {"sleep":1.2},
+    {"drive_object":{"name":"hpax1","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hpax1"}],"VAR1":3,"speed":4}},
+    {"set":{"object":"hpax1","var":"VAR 1"},"value":1},
+    {"drive_object":{"name":"hpax1","to":[{"closest":[{"bearing":150,"dist":8},{"bearing":270,"dist":8},{"bearing":320,"dist":8}],"to":"hpax1"}],"VAR1":3,"speed":4}},
+    {"set":{"object":"hpax1","var":"VAR 1"},"value":1},
+    {"drive_object":{"name":"hpax1","to":["lpaxdoor"],"VAR1":3,"speed":4}},
+    {"set":{"object":"hpax1","var":"VAR 1"},"value":1},
+    {"sleep":1},
+    {"open_door":"pax_left"},
+    {"sleep":0.5},
+    {"destroy_object":"hpax1"},
+    {"trigger":["H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON"]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
+    {"sleep":0.5},
+    {"close_door":"pax_left"}
+  ],
+  "shared repeated block 035": [
+    {"if": {"has_location":"accident_location"}, "eq": 1,
+      "then": [
+        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"has_location":"rescue_location"},"eq":1},
+        {"require":{"has_location":"accident_location"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"rescue_location"}}}}
+    ]}
+  ],
+  "shared repeated block 036": [
+    {"wait_for":{"object":"accident_location","var":"distance"},"lt":0.5},
+    {"set":{"object":"airplanewrecked","var":"VAR 4"},"value":0},
+    {"sleep":1},
+    {"set":{"object":"airplanewrecked","var":"VAR 4"},"value":1}
+  ],
+  "shared repeated block 037": [
+    {"call_macro":"restore data query selection after CICERS failure"}
+  ],
+  "shared repeated block 038": [
+    {"set":{"local":"patientmessages"},"value":"Ground operations are lasting more than usual, patient needs to be stabilized for transport"},
+    {"set_message":{"text":"{local:patientmessages}"}},
+    {"set":{"var":["L:PAX3{local:VCP}22","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}22","number"]},1]}}
+  ],
+  "shared repeated block 041": [
+    {"set":{"local":"LIFEFROZEN"},"value":1},
+    {"sleep":{"local":"TIME3LONG"}},
+    {"set":{"local":"LIFEFROZEN"},"value":0}
+  ],
+  "shared repeated block 042": [
+    {"create_object":{"name":"VFXA","title":"Smoke Effects","fallback_title":"Airbus H145 VFX Object","location":"accident_location"}},
+    {"set":{"object":"VFXA","var":"VAR 1"},"value":1},
+    {"set":{"object":"VFXA","var":"VAR 2"},"value":0},
+    {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
+  ],
+  "shared repeated block 043": [
+    {"set":{"local":"LINK0"},"value":"https://dl.cicers.eu/download/latest"},
+    {"set":{"local":"LINK1"},"value":"https://dl.cicers.eu/download/latestMG"},
+    {"set":{"local":"LINK2"},"value":"https://delivery.cicers.eu/changelog?bucket=BETA"},
+    {"set":{"local":"LINK3"},"value":"https://map.cicers.eu/"},
+    {"set":{"local":"LINK4"},"value":"https://status.cicers.eu/"},
+    {"set":{"local":"LINK5"},"value":"https://status.cicers.eu/announcements-feed"},
+    {"set":{"local":"LINK6"},"value":"https://discord.gg/kRV4SZY78t"},
+    {"set":{"local":"LINK7"},"value":"mailto:support@cicers.eu"}
+  ],
+  "shared repeated block 044": [
+    {"create_object":{"name":"VFXA","title":"30West smoke","fallback_title":"Smoke Effects","location":"accident_location"}},
+    {"set":{"object":"VFXA","var":"VAR 1"},"value":4},
+    {"set":{"object":"VFXA","var":"VAR 2"},"value":0},
+    {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
+  ],
+  "shared repeated block 045": [
+    {"create_object":{"name":"VFXA","title":"30West smoke","fallback_title":"Smoke Effects","location":"accident_location"}},
+    {"set":{"object":"VFXA","var":"VAR 1"},"value":5},
+    {"set":{"object":"VFXA","var":"VAR 2"},"value":0},
+    {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
+  ],
+  "shared repeated block 046": [
+    {"set":{"local":"MISSION_PHASE"},"value":10},
+    {"set":{"var":["L:RTB","number"]},"value":1},
+    {"set_message":{"text":"LOADING..."}},
+    {"sleep":1},
+    {"call_macro":"return to base menu"}
+  ],
+  "shared repeated block 047": [
+    {"open_door":"pax_right"},
+    {"call_macro":"crew spawn launch","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+    {"try": [
+        {"create_object":{"name":"pax2","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"rpaxdoor"}}
+      ],
+      "catch": [
+        {"call_macro":"crew spawn failure","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}
+    ]},
+    {"call_macro":"crew spawn wait","params":{"crew_name":"pax2","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+    {"set":{"object":"pax2","var":"VAR 1"},"value":0},
+    {"trigger":["H:{local:HXX}_SDK_PAX_2_OFF"]},
+    {"set":{"var":["H:{local:HXX}_SDK_PAX_2_OFF","number"]},"value":0},
+    {"sleep":0.5},
+    {"close_door":"pax_right"},
+    {"drive_object":{"name":"pax2","to":[{"bearing":45,"dist":8}],"VAR1":2,"speed":5}},
+    {"set":{"object":"pax2","var":"VAR 1"},"value":0},
+    {"destroy_object":"pax2"}
+  ],
+  "shared repeated block 048": [
+    {"set":{"local":"newdispatch"},"value":"yes"},
+    {"sleep":0.2},
+    {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
+    {"call_macro":"Update_raw from dispatchphase"}
+  ],
+  "shared repeated block 049": [
+    {"set":{"local":"queryfailed"},"value":null},
+    {"set":{"local":"lock_random_dispatch"},"value":1},
+    {"set":{"var":["L:NEOFLY","number"]},"value":1},
+    {"if": {"global":"BOARDING_HOLD_GLOBAL"}, "eq": 0,
+      "then": [
+        {"set":{"local":"BOARDING_HOLD"},"value":0}
+    ]},
+    {"set_message":{"text":"A custom scene will be created in custom or random location as soon as START SEL.MISSION@CUSTOM LOCATION or INJURED ONLY is selected"}},
+    {"sleep":0.5},
+    {"set_briefing_dialog":0},
+    {"call_macro":"HEMS mission_type"}
+  ],
+  "shared repeated block 050": [
+    {"call_macro":"Query hospital user country"},
+    {"set":{"local":"location_name"},"value":"hospital_user"},
+    {"sleep":0.1},
+    {"set":{"local":"FPL_NMBR"},"value":8},
+    {"call_macro":"routeupdate"},
+    {"call_macro":"Query closest hospital for stretcher"}
+  ],
+  "shared repeated block 051": [
+    {"open_door":"pax_left"},
+    {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+    {"try": [
+        {"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":45,"dist":8}}}
+      ],
+      "catch": [
+        {"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}
+    ]},
+    {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+    {"set":{"object":"pax1","var":"VAR 1"},"value":0},
+    {"sleep":1},
+    {"drive_object":{"name":"pax1","to":[{"bearing":330,"dist":7},"lpaxdoor"],"VAR1":2,"speed":5}},
+    {"set":{"object":"pax1","var":"VAR 1"},"value":0},
+    {"open_door":"pax_left"},
+    {"sleep":0.5},
+    {"trigger":["H:{local:HXX}_SDK_PAX_1_ON"]},
+    {"destroy_object":"pax1"},
+    {"sleep":0.5},
+    {"close_door":"pax_left"}
+  ],
+  "shared repeated block 052": [
+    {"and": [
+      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
+      {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
+      {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
+      {"wait_for":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}
+    ]},
+    {"set":{"local":"HOLDHOISTED"},"value":1},
+    {"set_message":{"text":"Keep the position until helirescuer is deboarded and ready"}}
+  ],
+  "shared repeated block 053": [
+    {"move_object":"policeman","to":{"bearing2":270,"dist":1.5,"heading":100,"object":"police"}},
+    {"sleep":[2,5]},
+    {"drive_object":{"name":"policeman","to":["POLMAN1"],"VAR1":1,"speed":5}},
+    {"set":{"object":"policeman","var":"VAR 1"},"value":0},
+    {"point_object":"policeman","to":"accident_location"},
+    {"if": {"has_object":"civilian1"}, "eq": 1,
+      "then": [
+        {"point_object":"policeman","to":"civilian1"},
+        {"point_object":"civilian1","to":"policeman"}
+    ]}
+  ],
+  "shared repeated block 054": [
+    {"set":{"local":"prev_page3"},"value":null},
+    {"set":{"local":"prev_page2"},"value":"none"},
+    {"call_macro":"mission dispatched by custom menu"}
+  ],
+  "shared repeated block 055": [
+    {"if": {"var":["L:DEBOARD","number"]}, "lt": 6,
+      "then": [
+        {"if": {"local":"DESTPRST"}, "eq": 1,
+          "then": [
+            {"call_macro":"transfer patient load scene predefined1"}
+        ]},
+        {"call_macro":"transfer patient load1"}
+    ]},
+    {"if": {"var":["L:DEBOARD","number"]}, "gt": 5,
+      "then": [
+        {"if": {"local":"DESTPRST"}, "eq": 1,
+          "then": [
+            {"call_macro":"transfer patient load scene predefined2"}
+        ]},
+        {"call_macro":"transfer patient load2"}
+    ]}
+  ],
+  "shared repeated block 056": [
+    {"set":{"global":"DATAQUERYSERVICE"},"value":3},
+    {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},
+    {"call_macro":"CICERS PING"},
+    {"set":{"local":"timeOSM"},"value":15},
+    {"create_thread": {
+      "commands": [
+        {"while": {"local":"timeOSM"}, "gte": 1,
+          "do": [
+            {"sleep":1},
+            {"set":{"local":"timeOSM"},"value":{"subtract":[{"local":"timeOSM"},1]}}
+        ]}
+    ]}}
+  ],
+  "shared repeated block 057": [
+    {"set":{"var":["L:HEALTH","number"]},"value":1},
+    {"if": {"var":["L:HEALTHLOCK","number"]}, "eq": 0,
+      "then": [
+        {"set":{"var":["L:PAX3{local:VCP}8","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}8","number"]},1]}}
+    ]},
+    {"set":{"var":["L:HEALTHLOCK","number"]},"value":1}
+  ],
+  "shared repeated block 058": [
+    {"wait_for":{"var":["L:HOLD","number"]},"ne":1},
+    {"set":{"local":"CREW"},"value":3},
+    {"set":{"global":"CREW"},"value":3}
+  ],
+  "shared repeated block 059": [
+    {"wait_for":{"var":["L:HOLD","number"]},"ne":1},
+    {"set":{"local":"CREW"},"value":4},
+    {"set":{"global":"CREW"},"value":4}
+  ],
+  "shared repeated block 060": [
+    {"wait_for":{"var":["L:HOLD","number"]},"ne":1},
+    {"set":{"local":"CREW"},"value":5},
+    {"set":{"global":"CREW"},"value":5}
+  ],
+  "shared repeated block 061": [
+    {"set":{"local":"fuel truck arrived"},"value":null},
+    {"sleep":3},
+    {"set":{"local":"fuel msg"},"value":null}
+  ],
+  "shared repeated block 064": [
+    {"call_macro":"Query closest hospital unrelated for stretcher"},
+    {"sleep":20},
+    {"create_location": "watchdog_ambulance1_shared_hospital_approach",
+      "zones": [
+        {"zone":{"location":{"bearing":225,"dist":30,"object":"unhospital"}}}
+    ]},
+    {"create_route":{"name":"ambu7","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
+    {"draw_route":"ambu7","stroke":{"width":2,"color":"#9A9A9A"}},
+    {"sleep":1},
+    {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"ambulance_restart_at_slow_speed"}
+    ]}},
+    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu7","fallback":"watchdog_ambulance1_shared_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
+    {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
+    {"sleep":60},
+    {"destroy_object":"ambulance1"}
+  ],
+  "select unique public title": [
+    {"call_macro":"test tracker begin","params":{"test_id":"scene_assets"}},
+    {"if": {"local":"PUBLIC_USED_TITLES"}, "eq": null,
+      "then": [
+        {"set":{"local":"PUBLIC_USED_TITLES"},"value":[]}
+    ]},
+    {"if": {"local":"PUBLIC_SELECTOR_LOCK"}, "eq": null,
+      "then": [
+        {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0}
+    ]},
+    {"wait_for":{"local":"PUBLIC_SELECTOR_LOCK"},"eq":0},
+    {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":1},
+    {"set":{"param":"unique_public_remaining"},"value":0},
+    {"for_each": {"static":{"param":"source"}},
+      "do": [
+        {"set":{"param":"unique_public_source_item"},"value":{"param":"$item"}},
+        {"set":{"param":"unique_public_item_used"},"value":false},
+        {"for_each": {"local":"PUBLIC_USED_TITLES"},
+          "do": [
+            {"if": {"param":"$item"}, "eq": {"param":"unique_public_source_item"},
+              "then": [
+                {"set":{"param":"unique_public_item_used"},"value":true}
+            ]}
+        ]},
+        {"if": {"param":"unique_public_item_used"}, "eq": false,
+          "then": [
+            {"set":{"param":"unique_public_remaining"},"value":{"add":[{"param":"unique_public_remaining"},1]}}
+        ]}
+    ]},
+    {"set":{"param":"unique_public_candidate"},"value":null},
+    {"if": {"param":"unique_public_remaining"}, "gt": 0,
+      "then": [
+        {"set":{"param":"unique_public_selected"},"value":false},
+        {"while": {"param":"unique_public_selected"}, "eq": false,
+          "do": [
+            {"set":{"param":"unique_public_candidate"},"value":{"struct":{"static":{"param":"source"}},"index":{"floor":{"rand":[0,{"struct":{"static":{"param":"source"}},"path":"length"}]}}}},
+            {"set":{"param":"unique_public_item_used"},"value":false},
+            {"for_each": {"local":"PUBLIC_USED_TITLES"},
+              "do": [
+                {"if": {"param":"$item"}, "eq": {"param":"unique_public_candidate"},
+                  "then": [
+                    {"set":{"param":"unique_public_item_used"},"value":true}
+                ]}
+            ]},
+            {"if": {"param":"unique_public_item_used"}, "eq": false,
+              "then": [
+                {"modify_array":{"local":"PUBLIC_USED_TITLES"},"append":{"param":"unique_public_candidate"}},
+                {"set":{"param":"unique_public_selected"},"value":true}
+            ]},
+            {"sleep":0.01}
+        ]}
+      ],"else": [
+        {"set":{"param":"unique_public_candidate"},"value":{"struct":{"static":{"param":"source"}},"index":{"floor":{"rand":[0,{"struct":{"static":{"param":"source"}},"path":"length"}]}}}}
+    ]},
+    {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0},
+    {"call_macro":"test tracker complete","params":{"test_id":"scene_assets"}},
+    {"return":{"param":"unique_public_candidate"}}
+  ],
+  "patient1 clinical visit gate": [
+    {"call_macro":"multipatient registry crew record","params":{"patient":1},"result":"visit"},
+    {"if": {"param":"visit","path":"hems"}, "eq": "completed",
+      "then": [
+        {"return":1}
+    ]},
+    {"return":0}
+  ],
+  "create orange smoke marker": [
+    {"if": {"has_object":"flare_accident"}, "eq": 0,
+      "then": [
+        {"if": {"local":"30West2024_installed"}, "eq": "OK",
+          "then": [
+            {"create_object":{"name":"flare_accident","title":"30West smoke","fallback_title":"Smoke Effects","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+            {"set":{"object":"flare_accident","var":"VAR 1"},"value":3},
+            {"set":{"object":"flare_accident","var":"VAR 2"},"value":0},
+            {"set":{"object":"flare_accident","var":"COUPLED"},"value":0}
+          ],"else": [
+            {"create_object":{"name":"flare_accident","title":"Airbus H145 Flare","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+            {"set":{"object":"flare_accident","var":"VAR 1"},"value":1}
+        ]},
+        {"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"yes"}
+    ]},
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "auto",
+      "then": [
+        {"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},
+        {"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"auto","options":["auto","always","realistic","disabled"]}}
+    ]},
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "always",
+      "then": [
+        {"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},
+        {"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"always","options":["auto","always","realistic","disabled"]}}
+    ]},
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "realistic",
+      "then": [
+        {"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},
+        {"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"realistic","options":["auto","always","realistic","disabled"]}}
+    ]}
+  ],
+  "evaluate realistic orange smoke scene": [
+    {"set":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"value":"no"},
+    {"if": {
+      "or": [
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":1},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":2},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":3},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":4},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":5},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":6},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":7},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":8},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":9},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":10},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":12},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":17},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":37},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":38},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":39},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":41},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":45},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":47},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":50},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":62}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"value":"yes"}
+    ]}
+  ],
+  "arm realistic orange smoke": [
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "realistic",
+      "then": [
+        {"call_macro":"evaluate realistic orange smoke scene"},
+        {"create_thread": {
+          "commands": [
+            {"wait_for":{"has_location":"accident_location"},"eq":1},
+            {"wait_for":{"location":"accident_location","var":"distance"},"lte":2},
+            {"sleep":0.5},
+            {"if": {
+              "and": [
+                {"require":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"eq":"yes"},
+                {"or":[{"require":{"local":"AMBU_AVAIL"},"gt":0},{"require":{"local":"POLICE_AVAIL"},"gt":0},{"require":{"local":"FIREENGINE_AVAIL"},"gt":0}],"eq":1},
+                {"require":{"has_object":"VFXA"},"eq":0},
+                {"require":{"has_object":"flare_accident"},"eq":0}
+              ]}, "eq": 1,
+              "then": [
+                {"call_macro":"create orange smoke marker"},
+                {"sleep":300},
+                {"if": {"has_object":"flare_accident"}, "eq": 1,
+                  "then": [
+                    {"destroy_object":"flare_accident"},
+                    {"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"no"}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "board crew after emergency": [
+    {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"no"},
+    {"if": {
+      "and": [
+        {"require":{"has_object":"pax3"},"eq":1},
+        {"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"pax3"}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"drive_object":{"name":"pax3","to":["rpaxdoor"],"VAR1":2,"speed":3}},
+        {"open_door":"pax_right"},
+        {"sleep":0.5},
+        {"destroy_object":"pax3"},
+        {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"},
+        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"has_object":"pax1"},"eq":1},
+        {"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"pax1"}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"drive_object":{"name":"pax1","to":["lpaxdoor"],"VAR1":2,"speed":3}},
+        {"open_door":"pax_left"},
+        {"sleep":0.5},
+        {"destroy_object":"pax1"},
+        {"trigger":"H:{local:HXX}_SDK_PAX_1_ON"},
+        {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"has_object":"pax2"},"eq":1},
+        {"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"pax2"}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"drive_object":{"name":"pax2","to":["rpaxdoor"],"VAR1":2,"speed":3}},
+        {"open_door":"pax_right"},
+        {"sleep":0.5},
+        {"destroy_object":"pax2"},
+        {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},
+        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"has_object":"hoist_crew"},"eq":1},
+        {"or":[{"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},{"require":{"local":"CREW_IMPACT_OBJECT"},"ne":"hoist_crew"}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"drive_object":{"name":"hoist_crew","to":["rpaxdoor"],"VAR1":3,"speed":3}},
+        {"open_door":"pax_right"},
+        {"sleep":0.5},
+        {"destroy_object":"hoist_crew"},
+        {"if": {"local":"CREW"}, "lte": 3,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"},
+            {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}}
+        ]},
+        {"if": {"local":"CREW"}, "eq": 4,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_1_ON"},
+            {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}}
+        ]},
+        {"if": {"local":"CREW"}, "gte": 5,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},
+            {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_IMPACT_OBJECT"},"eq":"hoist_crew"},
+        {"require":{"local":"CREW_EMERGENCY_FATAL"},"ne":"yes"},
+        {"require":{"has_object":"hoist_crew"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
+        {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
+        {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
+        {"if": {"local":"CREW"}, "lte": 3,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
+        ]},
+        {"if": {"local":"CREW"}, "eq": 4,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_1_ON"}
+        ]},
+        {"if": {"local":"CREW"}, "gte": 5,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
+        ]}
+    ]},
+    {"close_door":"pax_left"},
+    {"close_door":"pax_right"},
+    {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"yes"}
+  ]
+}

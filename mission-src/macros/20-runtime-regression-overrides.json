@@ -1,56 +1,43 @@
-{
-  "start hoist out risk monitor": [
-    {
-      "if": { "global": "HOIST_SAFETY_MONITOR" },
-      "eq": "yes",
+{"start hoist out risk monitor": [
+    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
       "then": [
-        {
-          "create_thread": {
-            "commands": [
-              { "set": { "local": "HOIST_OUT_RISK_MONITOR_STARTED" }, "value": "yes" },
-              { "set": { "local": "HOIST_PREVIOUS_GROUND_FT" }, "value": { "fn": "hoist_get_distance_from_ground:ft" } },
-              {
-                "while": { "local": "HOIST_OUT" },
-                "gt": 0,
-                "do": [
-                  { "set": { "local": "HOIST_CURRENT_GROUND_FT" }, "value": { "fn": "hoist_get_distance_from_ground:ft" } },
-                  { "set": { "local": "HOIST_GROUND_RATE_FPS" }, "value": { "subtract": [ { "local": "HOIST_PREVIOUS_GROUND_FT" }, { "local": "HOIST_CURRENT_GROUND_FT" } ] } },
-                  { "set": { "local": "HOIST_PREVIOUS_GROUND_FT" }, "value": { "local": "HOIST_CURRENT_GROUND_FT" } },
-                  { "if": { "local": "HOIST_GROUND_RATE_FPS" }, "gt": 6, "then": [ { "call_macro": "apply hoist crew lifescore impact", "params": { "score": 5, "cause": "EXCESSIVE HOIST DESCENT RATE" } } ] },
-                  { "sleep": 1 }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }
+        {"create_thread": {
+          "commands": [
+            {"set":{"local":"HOIST_OUT_RISK_MONITOR_STARTED"},"value":"yes"},
+            {"set":{"local":"HOIST_PREVIOUS_GROUND_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+            {"while": {"local":"HOIST_OUT"}, "gt": 0,
+              "do": [
+                {"set":{"local":"HOIST_CURRENT_GROUND_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+                {"set":{"local":"HOIST_GROUND_RATE_FPS"},"value":{"subtract":[{"local":"HOIST_PREVIOUS_GROUND_FT"},{"local":"HOIST_CURRENT_GROUND_FT"}]}},
+                {"set":{"local":"HOIST_PREVIOUS_GROUND_FT"},"value":{"local":"HOIST_CURRENT_GROUND_FT"}},
+                {"if": {"local":"HOIST_GROUND_RATE_FPS"}, "gt": 6,
+                  "then": [
+                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"EXCESSIVE HOIST DESCENT RATE"}}
+                ]},
+                {"sleep":1}
+            ]}
+        ]}}
+    ]}
   ],
   "start hoist attached risk monitor": [
-    {
-      "if": { "global": "HOIST_SAFETY_MONITOR" },
-      "eq": "yes",
+    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
       "then": [
-        {
-          "create_thread": {
-            "commands": [
-              { "set": { "local": "HOIST_ATTACHED_RISK_MONITOR_STARTED" }, "value": "yes" },
-              { "set": { "local": "HOIST_PREVIOUS_GROUND_FT" }, "value": { "fn": "hoist_get_distance_from_ground:ft" } },
-              {
-                "while": { "local": "HOIST_CREW_ON_CABLE" },
-                "gt": 0,
-                "do": [
-                  { "set": { "local": "HOIST_CURRENT_GROUND_FT" }, "value": { "fn": "hoist_get_distance_from_ground:ft" } },
-                  { "set": { "local": "HOIST_GROUND_RATE_FPS" }, "value": { "subtract": [ { "local": "HOIST_PREVIOUS_GROUND_FT" }, { "local": "HOIST_CURRENT_GROUND_FT" } ] } },
-                  { "set": { "local": "HOIST_PREVIOUS_GROUND_FT" }, "value": { "local": "HOIST_CURRENT_GROUND_FT" } },
-                  { "if": { "local": "HOIST_GROUND_RATE_FPS" }, "gt": 6, "then": [ { "call_macro": "apply hoist crew lifescore impact", "params": { "score": 5, "cause": "EXCESSIVE HOIST DESCENT RATE" } } ] },
-                  { "sleep": 1 }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }
+        {"create_thread": {
+          "commands": [
+            {"set":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"value":"yes"},
+            {"set":{"local":"HOIST_PREVIOUS_GROUND_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+            {"while": {"local":"HOIST_CREW_ON_CABLE"}, "gt": 0,
+              "do": [
+                {"set":{"local":"HOIST_CURRENT_GROUND_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+                {"set":{"local":"HOIST_GROUND_RATE_FPS"},"value":{"subtract":[{"local":"HOIST_PREVIOUS_GROUND_FT"},{"local":"HOIST_CURRENT_GROUND_FT"}]}},
+                {"set":{"local":"HOIST_PREVIOUS_GROUND_FT"},"value":{"local":"HOIST_CURRENT_GROUND_FT"}},
+                {"if": {"local":"HOIST_GROUND_RATE_FPS"}, "gt": 6,
+                  "then": [
+                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"EXCESSIVE HOIST DESCENT RATE"}}
+                ]},
+                {"sleep":1}
+            ]}
+        ]}}
+    ]}
   ]
 }

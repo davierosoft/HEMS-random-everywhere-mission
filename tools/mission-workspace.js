@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { assertCicersBranch } = require('./assert-cicers-branch');
 const { assertBuildIntent, markBuildConsumed } = require('./release-contract');
+const { formatJsonText } = require('./mission-formatter');
 
 const REPOSITORY_ROOT = path.resolve(__dirname, '..');
 const ARTIFACT_PATH = path.join(REPOSITORY_ROOT, 'everywhere_all.json');
@@ -402,21 +403,13 @@ function reindex() {
 function compose() {
   const manifest = loadManifest();
   const artifact = fs.readFileSync(ARTIFACT_PATH, 'utf8');
-  const eol = artifact.includes('\r\n') ? '\r\n' : '\n';
-  JSON.parse(artifact);
-  const rootEntries = objectMembers(artifact);
-  const root = new Map(rootEntries.map((entry) => [entry.key, entry]));
+  const artifactObject = JSON.parse(artifact);
   const macros = loadModules(manifest.modules.macros, manifest.macroOrder, 'macros');
   const data = loadModules(manifest.modules.data, manifest.dataOrder, 'data');
-  const replacements = [
-    { entry: root.get('macros'), value: renderCapturedObject(macros.entries, manifest.format.macros, eol) },
-    { entry: root.get('data'), value: renderCapturedObject(data.entries, manifest.format.data, eol) },
-  ].sort((left, right) => right.entry.valueStart - left.entry.valueStart);
-
-  let result = artifact;
-  for (const replacement of replacements) {
-    result = result.slice(0, replacement.entry.valueStart) + replacement.value + result.slice(replacement.entry.valueEnd);
-  }
+  const resultObject = { ...artifactObject };
+  resultObject.macros = Object.fromEntries(macros.entries.map((entry) => [entry.key, JSON.parse(entry.value)]));
+  resultObject.data = Object.fromEntries(data.entries.map((entry) => [entry.key, JSON.parse(entry.value)]));
+  const result = formatJsonText(JSON.stringify(resultObject));
   JSON.parse(result);
   return { artifact, result, manifest, macros, data };
 }

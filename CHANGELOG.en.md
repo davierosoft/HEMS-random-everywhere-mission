@@ -1,4 +1,15 @@
+## Release 0.997 168
+
+- Candidate delivery, not simulator-validated. The user explicitly authorized local/GitHub delivery and deferred the HPG/MSFS recovery and P1-P3 integration matrix; runtime status is PENDING.
+- Restore complete separate manual/automatic snapshots, per-dispatch reset, location coordinates and writer attribution, and a 200-event history that writes only when state changes.
+- Restore crew creation/failure/recovery diagnostics and road-query status. Bound and cancel late road queries; place all residential fallback points around the rescue point using cardinal offsets.
+- Stabilize only the selected loaded HEMS patient; cancel delayed treatment after patient/context changes.
+- Keep CPR alive beyond five minutes through renewable generation-bound ownership. Manual CPR waits for landing without freezing deterioration; mCPR remains available in flight.
+- Retain startup recognition from NR 20% in both marshaller controllers when prime pumps are switched off.
+- Apply and enforce the requested formatting in build and CI. Preserve P1-P3 visits, exclusive transport tickets, patient reports, save/reload and all existing HVAR command forms/counts.
+
 ## Development maintenance - 2026-09-15 (no mission release)
+
 
 - Draft verification now checks the canonical mission in place instead of accumulating deployable copies. One-use build intents, static gates and delivery numbering remain enforced.
 - Removed the materialized starting baseline, retired redundant worktrees and closed the superseded global-state PR. Historical mission behavior still requires the recovery audit and simulator validation.

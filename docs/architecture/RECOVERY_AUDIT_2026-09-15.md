@@ -2,6 +2,28 @@
 
 ## Esito e limiti
 
+### Recupero funzionale successivo all'audit
+
+I riscontri R1-R7 riportati sotto descrivono la baseline esaminata. Le correzioni sono ora implementate nella candidata 0.997 168; la suite statica completa passa. La validazione HPG/MSFS rimane PENDING per tutte le aree interessate: il recupero non e' ancora una release validata.
+
+Il 15 settembre l'utente ha autorizzato la consegna della candidata 168 con i test pendenti. Il consenso rinvia esplicitamente snapshot/secondo dispatch, creazione crew, fallback stradale, stabilizzazione P1-P3, CPR oltre cinque minuti e manuale/mCPR, marshaller e integrazione multipaziente (carico, report, hoist/skid, save/reload). Nessuna funzione richiesta viene omessa; sono rinviate le verifiche nel simulatore. Identita' e hash sono registrati in docs/testing/VALIDATION_STATUS.md.
+
+| Requisito | Correzione implementata | Evidenza automatica |
+| --- | --- | --- |
+| R1 | Cattura comune completa per snapshot manuale/automatico, reset automatico al dispatch, generazione del monitor, coordinate in LVAR dedicate, proprietario di ogni scrittura e cronologia limitata a 200 cambiamenti. | Cattura reale di entrambi i tipi, conservazione manuale, nessuna riscrittura a stato invariato, reset e arresto monitor vecchio; gate di copertura di tutte le sezioni Debug. |
+| R2 | Nome/stato/esistenza/CREATED della crew in lancio, fallimento, attesa e recupero; stati della query stradale. | Creazione normale e fallita con successivo recupero; query senza risposta e cancellazione. |
+| R3 | Sei offset cardinali riferiti a rescue_location, solo skip esplicito; dati di query azzerati, attesa limitata e invalidazione del worker tardivo quando subentra il fallback. Attesa marker derivata da distanza/velocita' piu' margine. | Skip yes/no/null, sei punti sul riferimento corretto, timeout e cancellazione; gate di integrita' residenziale e percorsi. |
+| R4 | Stabilizzazione legata al paziente visualizzato e ricontrollata dopo l'attesa. | P1/P2/P3 senza modifica degli altri; cambio pagina durante l'attesa annulla l'azione. |
+| R5 | Generazione CPR separata dalla scadenza e rinnovo del worker; rilascio e scritture protetti dalla generazione. | CPR oltre 300 secondi per tutti i pazienti, un solo worker e rifiuto di rinnovo scaduto; test registry per worker fermo. |
+| R6 | Acquisizione del paziente HEMS caricato anche senza mCPR; in volo la procedura manuale attende l'atterraggio senza fermare il deterioramento. | Attesa/atterraggio per P1/P2/P3, mCPR in volo e nessun incremento del tempo di compressione durante l'attesa. |
+| R7 | Entrambi i reset con prime pump spente usano NR<20. | Esecuzione dei due rami a NR 19/20/40/79/80. |
+| Formattazione | Formatter condiviso obbligatorio in build e CI; confronto semantico e idempotenza su tutti i moduli e gli artefatti. Nessuna scrittura di global.json consentita dal formatter. | Suite test-mission-formatting e check-workspace. |
+| Conservazione multipaziente | Nessun rollback della conversione P1-P3, delle visite, dei ticket, dei report o del save/reload. | Suite preesistenti complete; invariati 186 data entry e comandi HVAR: 582 trigger e 242 set, stessi conteggi per macro e comando. |
+
+Lo scope funzionale contiene 79 macro: 55 cambiano solo per registrare il proprietario delle location; 24 comprendono i percorsi corretti e sei nuovi helper. I data restano invariati; il titolo root avanza alla consegna 168 richiesta. L'ampio diff testuale applica la formattazione richiesta e viene controllato separatamente dalla semantica. Il changelog utente non viene modificato.
+
+La matrice residua e' in docs/testing/RUNTIME_VALIDATION.md; le prove statiche non dimostrano posizionamento, animazioni o scheduling nel simulatore. P4/P5 restano il lavoro separato gia' identificato nell'architettura, non una funzione rimossa dal recupero. La pubblicazione validata richiede le prove della matrice oppure un consenso esplicito che identifichi la consegna come candidata non validata e rinvii quei controlli.
+
 ### Esecuzione della pulizia autorizzata
 
 Il 15 settembre la pulizia e' stata autorizzata. Rimossi 99 file missione dagli output, la baseline materializzata e i due worktree ridondanti. Rimane un solo worktree Git e un solo file missione nel progetto principale. La modifica train del worktree PR43 e' stata conservata nello stash Git `41a08a4a9138ff5cd2356fc6bdbba7b99b1d53f4` e nella patch locale `.workspace-state/pr43-train-formatting.patch`; quella dell'altro worktree era identica byte per byte al train principale.

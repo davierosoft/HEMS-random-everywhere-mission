@@ -45,7 +45,7 @@ class Scene extends Base {
       else if (c.while) {
         let ticks = 0;
         while (this.compare(this.query(c.while, p), c, p)) {
-          assert.ok(++ticks < 20, 'Visit lock must be released or cancelled'); this.commands(c.do, p);
+          assert.ok(++ticks < (this.maxLoopTicks || 20), 'Visit lock must be released or cancelled'); this.commands(c.do, p);
         }
       } else if (c.drive_object) {
         const actor = this.text(c.drive_object.name, p); const route = c.drive_object.to;

@@ -1,163 +1,446 @@
-{
-    "version check": [
-      {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-      {"set":{"local":"DEV_VERSION"},"value":"1.2"},
-      {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
-      {"set":{"local":"MINIMUM_VERSION"},"value":479}
-    ],
-    "custom settings enable": [
-      {"#comment":"WARNING WARNING WARNING - THE ONLY MODIFIABLE FIELDS ARE THE NUMBERS LISTED BELOW WITHIN THE GIVEN RANGE. ANY CHANGE OUTSIDE WILL RESULT IN POTENTIAL MISSION CORRUPTION. BEFORE PROCEEDING, MAKE A BACKUP OF THIS FILE."},
-      {"#comment":"WARNING WARNING WARNING - MAKE SURE TO UPDATE THE MISSION INDEX EVERYTIME YOU CHANGE A PRESET AND SAVE THE FILE. IF YOU DON'T UPDATE THE MISSION INDEX, CHANGES WILL NOT BE APPLIED."},
-      {"#comment":"Set CUSTOMSETUP_ACTIVATION value number to 1 to bypass the default mission settings and load the customized settings that follow. WARNING: Allowed numbers are 0 or 1"},
-      {"#comment":"0 (default) runs the default configuration (custom settings are saved in the mission and may be reactivated later)"},
-      {"#comment":"1 bypasses the default configuration and applies the following custom settings values"},
-      {"set":{"var":["L:CUSTOMSETUP_ACTIVATION","number"]},"value":0}
-    ],
-    "custom settings": [
-      {"#comment":"ADVANCED SETTINGS (CHANGE TO IMPROVE LOCATION SEARCH RESULTS)"},
-      {"#comment":"Decide if the list of destination helipads has to be limited to Hospital helipads or to all Helipads. Allowed values are 0 or 1"},
-      {"#comment":"0 (DEFAULT) only hospital helipads (helipads close to hospitals) are listed"},
-      {"#comment":"1 All helipads are displayed, either if they are close or not to an hospital (some hospital helipads may fail to be listed)"},
-      {"set":{"local":"HOSPITAL_HELIPAD"},"value":0}
-    ],
-    "CICERS LINKS": [
-      {"sleep":2.5},
-      {"create_thread":{"commands":[{"wait_for":{"local":"pingstart"},"ne":1},{"if":{"var":["L:CICERSCHK LAT","number"]},"eq":90,"then":[{"sleep":0.5},{"create_location":"CICERSCHK","no_results_commands":[{"set":{"local":"LINK0"},"value":"https://dl.cicers.eu/download/latest"},{"set":{"local":"LINK1"},"value":"https://dl.cicers.eu/download/latestMG"},{"set":{"local":"LINK2"},"value":"https://delivery.cicers.eu/changelog?bucket=BETA"},{"set":{"local":"LINK3"},"value":"https://map.cicers.eu/"},{"set":{"local":"LINK4"},"value":"https://status.cicers.eu/"},{"set":{"local":"LINK5"},"value":"https://status.cicers.eu/announcements-feed"},{"set":{"local":"LINK6"},"value":"https://discord.gg/kRV4SZY78t"},{"set":{"local":"LINK7"},"value":"mailto:support@cicers.eu"}],"zones":[{"zone":{"zone_type":"query_random_result","query":"[out:json];nwr({{bbox}})[link=bro];out center;","location":"$USER","radius":50,"commands":[{"set":{"var":["L:CICERSCHK","number"]},"value":{"location":"CICERSCHK"}},{"sleep":0.5},{"if":{"var":["L:CICERSCHK LAT","number"]},"eq":90,"then":[{"set":{"local":"LINKALL"},"value":{"param":"$LOCATION:ID"}},{"#comment":"0:Standard DL; 1:MGsound DL; 2:Changelog; 3:Landing page; 4:Announcemets; 5:Discord Invite; 6:Support email"},{"set":{"local":"LINK0"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":0}},{"set":{"local":"LINK1"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":1}},{"set":{"local":"LINK2"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":2}},{"set":{"local":"LINK3"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":3}},{"set":{"local":"LINK4"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":4}},{"set":{"local":"LINK5"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":5}},{"set":{"local":"LINK6"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":6}},{"set":{"local":"LINK7"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":7}}],"else":[{"call_macro":"shared repeated block 043"}]}]}}]}],"else":[{"call_macro":"shared repeated block 043"}]}]}}
-    ],
-    "CICERS PING": [
-    {
-      "if": {
-        "local": "pingstart"
-      },
-      "eq": null,
-      "then": [{"set":{"local":"pingstart"},"value":0}]
-    },
-    {
-      "if": {
-        "local": "pingstart"
-      },
-      "ne": 1,
-      "then": [
-    {
-      "call_macro": "test tracker begin",
-      "params": {
-        "test_id": "cicers_endpoint"
-      }
-    },{"set":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"value":{"global":"DATAQUERYSERVICE"}},{"set":{"local":"pingstart"},"value":1},{"create_thread":{"commands":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},{"sleep":0.5},{"create_location":"CICERSCHK","no_results_commands":[{"set":{"local":"CICERS_USERID"},"value":"Unknown"},{"set":{"local":"CICERS_APISTATUS"},"value":"Unable to reach server/No API key"},{"set":{"local":"APIIDALL"},"value":0},{"set":{"local":"CICERS_APISTATUS"},"value":"No key"},{"set":{"local":"CICERS_EXPIRATIONDATE"},"value":"No key"},{"set":{"local":"CICERS_REMAINING_HM"},"value":"No key"},{"set":{"local":"CICERS_REMAINING_S"},"value":0},{"call_macro":"restore data query selection after CICERS failure"}],"zones":[{"zone":{"zone_type":"query_random_result","query":"[out:json];nwr({{bbox}})[cisei=bro];out center;","location":"$USER","radius":50,"commands":[{"set":{"var":["L:CICERSCHK","number"]},"value":{"location":"CICERSCHK"}},{"sleep":0.5},{"set_message":{"text":"{0}","params":[{"var":["L:CICERSCHK LAT","number"]}]}},{"if":{"var":["L:CICERSCHK LAT","number"]},"eq":90,"then":[{"set":{"local":"APIIDALL"},"value":{"param":"$LOCATION:ID"}},{"set":{"local":"CICERS_USERID"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":0}},{"if":{"local":"CICERS_USERID"},"ne":"No key","then":[{"set":{"local":"CICERS_APISTATUS"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":1}},{"set":{"local":"CICERS_EXPIRATIONDATE"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":2}},{"set":{"local":"CICERS_REMAINING_HM"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":3}},{"if":{"local":"CICERS_REMAINING_HM"},"eq":"Infinite","then":[{"set":{"local":"CICERS_REMAINING_HM"},"value":"8759h 59m"}]},{"set":{"local":"CICERS_SERVICESTUS"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":4}},{"set":{"local":"CICERS_RE_VERSION"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":5}},{"set":{"local":"LATEST_RE_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":0}},{"set":{"local":"LATEST_DEV_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":1}},{"set":{"local":"LATEST_DEV_TYPE"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":2}},{"if":{"local":"CICERS_REMAINING_HM"},"ne":"Unknown","then":[{"set":{"local":"CICERS_REMAINING_H"},"value":{"string:split":{"local":"CICERS_REMAINING_HM"},"delimiter":"h","index":0}},{"set":{"param":"cicers_remaining_m"},"value":{"string:split":{"local":"CICERS_REMAINING_HM"},"delimiter":" ","index":1}},{"set":{"local":"CICERS_REMAINING_M"},"value":{"string:split":{"param":"cicers_remaining_m"},"delimiter":"m","index":0}},{"set":{"local":"CICERS_REMAINING_S"},"value":{"add":[{"multiply":[{"local":"CICERS_REMAINING_H"},3600]},{"multiply":[{"local":"CICERS_REMAINING_M"},60]}]}}],"else":[{"set":{"local":"CICERS_REMAINING_HM"},"value":"No key"}]},{"if":{"local":"CICERS_REMAINING_S"},"lt":1,"then":[{"call_macro":"restore data query selection after CICERS failure"}],"else":[{"call_macro":"restore data query selection after CICERS success"}]},{"set_message":{"text":"WELCOME {0}! LOGGED IN TO CICERS OSM, API KEY IS {1}","params":[{"local":"CICERS_USERID"},{"local":"CICERS_APISTATUS"}]}}],"else":[{"call_macro":"restore data query selection after CICERS failure"}]}],"else":[{"call_macro":"restore data query selection after CICERS failure"}]}]}}]},{"set":{"local":"pingstart"},"value":0}]}},
-    {
-      "call_macro": "test tracker complete",
-      "params": {
-        "test_id": "cicers_endpoint"
-      }
-    }
-      ]
-    }
+{"version check": [
+    {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
+    {"set":{"local":"DEV_VERSION"},"value":"1.2"},
+    {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
+    {"set":{"local":"MINIMUM_VERSION"},"value":479}
   ],
-    "DATAQUERYSERVICERANDOM": [
-      {"if":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"ne":0,"then":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":0}],"else":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":2}]}
-    ],
-    "addon check": [
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/TBOOM.wav"}},
-      {"set":{"local":"MGsounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/AND.Sarah.bye.wav"}},
-      {"set":{"local":"mysounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/KEK.Sarah.bye.wav"}},
-      {"set":{"local":"keksounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/KEKR.KEK.Sarah.bye.wav"}},
-      {"set":{"local":"kersounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/DUS.Sarah.bye.wav"}},
-      {"set":{"local":"dussounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/ITA.Sarah.bye.wav"}},
-      {"set":{"local":"itasounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_30WestHumans/aircraft.cfg"}},
-      {"set":{"local":"68pony_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/30West_Organcooler/aircraft.cfg"}},
-      {"fetch":{"url":"/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg"}},
-      {"set":{"local":"68pony_marshal"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"set":{"local":"30West_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/smoke/aircraft.cfg"}},
-      {"set":{"local":"30West2024_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-fr-crash-vtt-down/aircraft.cfg"}},
-      {"set":{"local":"batteroulio_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_DE_Ambulance1_LP/aircraft.cfg"}},
-      {"set":{"local":"68pony_DE_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_IT_Ambulance1_LP/aircraft.cfg"}},
-      {"set":{"local":"68pony_IT_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_NL_Ambulance1_LP/aircraft.cfg"}},
-      {"set":{"local":"68pony_NL_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_UK_Ambulance1_LP/aircraft.cfg"}},
-      {"set":{"local":"68pony_UK_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_US_Ambulance1_LP/aircraft.cfg"}},
-      {"set":{"local":"68pony_US_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/westereq_PL/aircraft.cfg"}},
-      {"set":{"local":"Westereq_PL_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/Lifepak/aircraft.cfg"}},
-      {"set":{"local":"rotorops_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
-      {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/TV2toV1.wav"}},
-      {"set":{"local":"mgonzalez_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}}
-    ],
-    "TEST": [
-      {"set":{"local":"testobj"},"value":"IN PROGR."},
-      {"set":{"local":"68pony_installed"},"value":"WAIT"},
-      {"set":{"local":"batteroulio_installed"},"value":"WAIT"},
-      {"create_thread":{"commands":[{"create_object":{"name":"test1","title":"Female_lying","location":{"bearing":330,"dist":20,"heading":290}}},{"set":{"local":"68pony_installed"},"value":"OK"},{"sleep":3},{"set":{"local":"testobj"},"value":"DONE"}]}},
-      {"create_thread":{"commands":[{"sleep":0.5},{"create_object":{"name":"test2","title":"Airbus H145 FR Crash VTT DOWN","location":{"bearing":20,"dist":20,"heading":0}}},{"set":{"local":"batteroulio_installed"},"value":"OK"},{"set":{"local":"testobj"},"value":"DONE"}]}},
-      {"sleep":15},
-      {"if":{"has_object":"test1"},"eq":1,"then":[{"destroy_object":"test1"},{"set":{"local":"testobj"},"value":"NONE"}]},
-      {"if":{"has_object":"test2"},"eq":1,"then":[{"destroy_object":"test2"},{"set":{"local":"testobj"},"value":"NONE"}]}
-    ],
-    "CREW SPAWN TEST": [
-      {"set":{"local":"crewtest"},"value":"IN PROGR."},
-      {"call_macro":"crew spawn launch","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-      {"try":[{"create_object":{"name":"crewtest","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":10,"heading":0}}}],"catch":[{"call_macro":"crew spawn failure","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}},{"set":{"local":"crewtest"},"value":"FAILED"},{"set_message":{"text":"CREW SPAWN TEST FAILED: {0}","params":[{"param":"$ERROR"}],"color":"red"}}]},
-      {"call_macro":"crew spawn wait","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-      {"if":{"has_object":"crewtest"},"eq":1,"then":[
+  "custom settings enable": [
+    {"#comment":"WARNING WARNING WARNING - THE ONLY MODIFIABLE FIELDS ARE THE NUMBERS LISTED BELOW WITHIN THE GIVEN RANGE. ANY CHANGE OUTSIDE WILL RESULT IN POTENTIAL MISSION CORRUPTION. BEFORE PROCEEDING, MAKE A BACKUP OF THIS FILE."},
+    {"#comment":"WARNING WARNING WARNING - MAKE SURE TO UPDATE THE MISSION INDEX EVERYTIME YOU CHANGE A PRESET AND SAVE THE FILE. IF YOU DON'T UPDATE THE MISSION INDEX, CHANGES WILL NOT BE APPLIED."},
+    {"#comment":"Set CUSTOMSETUP_ACTIVATION value number to 1 to bypass the default mission settings and load the customized settings that follow. WARNING: Allowed numbers are 0 or 1"},
+    {"#comment":"0 (default) runs the default configuration (custom settings are saved in the mission and may be reactivated later)"},
+    {"#comment":"1 bypasses the default configuration and applies the following custom settings values"},
+    {"set":{"var":["L:CUSTOMSETUP_ACTIVATION","number"]},"value":0}
+  ],
+  "custom settings": [
+    {"#comment":"ADVANCED SETTINGS (CHANGE TO IMPROVE LOCATION SEARCH RESULTS)"},
+    {"#comment":"Decide if the list of destination helipads has to be limited to Hospital helipads or to all Helipads. Allowed values are 0 or 1"},
+    {"#comment":"0 (DEFAULT) only hospital helipads (helipads close to hospitals) are listed"},
+    {"#comment":"1 All helipads are displayed, either if they are close or not to an hospital (some hospital helipads may fail to be listed)"},
+    {"set":{"local":"HOSPITAL_HELIPAD"},"value":0}
+  ],
+  "CICERS LINKS": [
+    {"sleep":2.5},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"local":"pingstart"},"ne":1},
+        {"if": {"var":["L:CICERSCHK LAT","number"]}, "eq": 90,
+          "then": [
+            {"sleep":0.5},
+            {"create_location": "CICERSCHK",
+              "no_results_commands": [
+                {"set":{"local":"LINK0"},"value":"https://dl.cicers.eu/download/latest"},
+                {"set":{"local":"LINK1"},"value":"https://dl.cicers.eu/download/latestMG"},
+                {"set":{"local":"LINK2"},"value":"https://delivery.cicers.eu/changelog?bucket=BETA"},
+                {"set":{"local":"LINK3"},"value":"https://map.cicers.eu/"},
+                {"set":{"local":"LINK4"},"value":"https://status.cicers.eu/"},
+                {"set":{"local":"LINK5"},"value":"https://status.cicers.eu/announcements-feed"},
+                {"set":{"local":"LINK6"},"value":"https://discord.gg/kRV4SZY78t"},
+                {"set":{"local":"LINK7"},"value":"mailto:support@cicers.eu"}
+              ],
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_random_result",
+                    "query": "[out:json];nwr({{bbox}})[link=bro];out center;",
+                    "location": "$USER",
+                    "radius": 50,
+                    "commands": [
+                      {"set":{"var":["L:CICERSCHK","number"]},"value":{"location":"CICERSCHK"}},
+                      {"sleep":0.5},
+                      {"if": {"var":["L:CICERSCHK LAT","number"]}, "eq": 90,
+                        "then": [
+                          {"set":{"local":"LINKALL"},"value":{"param":"$LOCATION:ID"}},
+                          {"#comment":"0:Standard DL; 1:MGsound DL; 2:Changelog; 3:Landing page; 4:Announcemets; 5:Discord Invite; 6:Support email"},
+                          {"set":{"local":"LINK0"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":0}},
+                          {"set":{"local":"LINK1"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":1}},
+                          {"set":{"local":"LINK2"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":2}},
+                          {"set":{"local":"LINK3"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":3}},
+                          {"set":{"local":"LINK4"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":4}},
+                          {"set":{"local":"LINK5"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":5}},
+                          {"set":{"local":"LINK6"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":6}},
+                          {"set":{"local":"LINK7"},"value":{"string:split":{"local":"LINKALL"},"delimiter":",","index":7}}
+                        ],"else": [
+                          {"call_macro":"shared repeated block 043"}
+                      ]}
+                  ]}
+                }
+            ]}
+          ],"else": [
+            {"call_macro":"shared repeated block 043"}
+        ]}
+    ]}}
+  ],
+  "CICERS PING": [
+    {"if": {"local":"pingstart"}, "eq": null,
+      "then": [
+        {"set":{"local":"pingstart"},"value":0}
+    ]},
+    {"if": {"local":"pingstart"}, "ne": 1,
+      "then": [
+        {"call_macro":"test tracker begin","params":{"test_id":"cicers_endpoint"}},
+        {"set":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"value":{"global":"DATAQUERYSERVICE"}},
+        {"set":{"local":"pingstart"},"value":1},
+        {"create_thread": {
+          "commands": [
+            {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},
+            {"sleep":0.5},
+            {"create_location": "CICERSCHK",
+              "no_results_commands": [
+                {"set":{"local":"CICERS_USERID"},"value":"Unknown"},
+                {"set":{"local":"CICERS_APISTATUS"},"value":"Unable to reach server/No API key"},
+                {"set":{"local":"APIIDALL"},"value":0},
+                {"set":{"local":"CICERS_APISTATUS"},"value":"No key"},
+                {"set":{"local":"CICERS_EXPIRATIONDATE"},"value":"No key"},
+                {"set":{"local":"CICERS_REMAINING_HM"},"value":"No key"},
+                {"set":{"local":"CICERS_REMAINING_S"},"value":0},
+                {"call_macro":"restore data query selection after CICERS failure"}
+              ],
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_random_result",
+                    "query": "[out:json];nwr({{bbox}})[cisei=bro];out center;",
+                    "location": "$USER",
+                    "radius": 50,
+                    "commands": [
+                      {"set":{"var":["L:CICERSCHK","number"]},"value":{"location":"CICERSCHK"}},
+                      {"sleep":0.5},
+                      {"set_message":{"text":"{0}","params":[{"var":["L:CICERSCHK LAT","number"]}]}},
+                      {"if": {"var":["L:CICERSCHK LAT","number"]}, "eq": 90,
+                        "then": [
+                          {"set":{"local":"APIIDALL"},"value":{"param":"$LOCATION:ID"}},
+                          {"set":{"local":"CICERS_USERID"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":0}},
+                          {"if": {"local":"CICERS_USERID"}, "ne": "No key",
+                            "then": [
+                              {"set":{"local":"CICERS_APISTATUS"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":1}},
+                              {"set":{"local":"CICERS_EXPIRATIONDATE"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":2}},
+                              {"set":{"local":"CICERS_REMAINING_HM"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":3}},
+                              {"if": {"local":"CICERS_REMAINING_HM"}, "eq": "Infinite",
+                                "then": [
+                                  {"set":{"local":"CICERS_REMAINING_HM"},"value":"8759h 59m"}
+                              ]},
+                              {"set":{"local":"CICERS_SERVICESTUS"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":4}},
+                              {"set":{"local":"CICERS_RE_VERSION"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":5}},
+                              {"set":{"local":"LATEST_RE_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":0}},
+                              {"set":{"local":"LATEST_DEV_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":1}},
+                              {"set":{"local":"LATEST_DEV_TYPE"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":2}},
+                              {"if": {"local":"CICERS_REMAINING_HM"}, "ne": "Unknown",
+                                "then": [
+                                  {"set":{"local":"CICERS_REMAINING_H"},"value":{"string:split":{"local":"CICERS_REMAINING_HM"},"delimiter":"h","index":0}},
+                                  {"set":{"param":"cicers_remaining_m"},"value":{"string:split":{"local":"CICERS_REMAINING_HM"},"delimiter":" ","index":1}},
+                                  {"set":{"local":"CICERS_REMAINING_M"},"value":{"string:split":{"param":"cicers_remaining_m"},"delimiter":"m","index":0}},
+                                  {"set":{"local":"CICERS_REMAINING_S"},"value":{"add":[{"multiply":[{"local":"CICERS_REMAINING_H"},3600]},{"multiply":[{"local":"CICERS_REMAINING_M"},60]}]}}
+                                ],"else": [
+                                  {"set":{"local":"CICERS_REMAINING_HM"},"value":"No key"}
+                              ]},
+                              {"if": {"local":"CICERS_REMAINING_S"}, "lt": 1,
+                                "then": [
+                                  {"call_macro":"restore data query selection after CICERS failure"}
+                                ],"else": [
+                                  {"call_macro":"restore data query selection after CICERS success"}
+                              ]},
+                              {"set_message":{"text":"WELCOME {0}! LOGGED IN TO CICERS OSM, API KEY IS {1}","params":[{"local":"CICERS_USERID"},{"local":"CICERS_APISTATUS"}]}}
+                            ],"else": [
+                              {"call_macro":"restore data query selection after CICERS failure"}
+                          ]}
+                        ],"else": [
+                          {"call_macro":"restore data query selection after CICERS failure"}
+                      ]}
+                  ]}
+                }
+            ]},
+            {"set":{"local":"pingstart"},"value":0}
+        ]}},
+        {"call_macro":"test tracker complete","params":{"test_id":"cicers_endpoint"}}
+    ]}
+  ],
+  "DATAQUERYSERVICERANDOM": [
+    {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]}, "ne": 0,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":0}
+      ],"else": [
+        {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":2}
+    ]}
+  ],
+  "addon check": [
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/TBOOM.wav"}},
+    {"set":{"local":"MGsounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/AND.Sarah.bye.wav"}},
+    {"set":{"local":"mysounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/KEK.Sarah.bye.wav"}},
+    {"set":{"local":"keksounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/KEKR.KEK.Sarah.bye.wav"}},
+    {"set":{"local":"kersounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/DUS.Sarah.bye.wav"}},
+    {"set":{"local":"dussounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/ITA.Sarah.bye.wav"}},
+    {"set":{"local":"itasounds_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_30WestHumans/aircraft.cfg"}},
+    {"set":{"local":"68pony_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/30West_Organcooler/aircraft.cfg"}},
+    {"fetch":{"url":"/VFS/SimObjects/Airplanes/68ponyGT_EU_Firefighter1/aircraft.cfg"}},
+    {"set":{"local":"68pony_marshal"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"set":{"local":"30West_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/smoke/aircraft.cfg"}},
+    {"set":{"local":"30West2024_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-fr-crash-vtt-down/aircraft.cfg"}},
+    {"set":{"local":"batteroulio_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_DE_Ambulance1_LP/aircraft.cfg"}},
+    {"set":{"local":"68pony_DE_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_IT_Ambulance1_LP/aircraft.cfg"}},
+    {"set":{"local":"68pony_IT_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_NL_Ambulance1_LP/aircraft.cfg"}},
+    {"set":{"local":"68pony_NL_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_UK_Ambulance1_LP/aircraft.cfg"}},
+    {"set":{"local":"68pony_UK_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/68ponyGT_US_Ambulance1_LP/aircraft.cfg"}},
+    {"set":{"local":"68pony_US_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/westereq_PL/aircraft.cfg"}},
+    {"set":{"local":"Westereq_PL_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/Lifepak/aircraft.cfg"}},
+    {"set":{"local":"rotorops_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}},
+    {"fetch":{"url":"/VFS/Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/TV2toV1.wav"}},
+    {"set":{"local":"mgonzalez_installed"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":"OK","else":"NO"}}
+  ],
+  "TEST": [
+    {"set":{"local":"testobj"},"value":"IN PROGR."},
+    {"set":{"local":"68pony_installed"},"value":"WAIT"},
+    {"set":{"local":"batteroulio_installed"},"value":"WAIT"},
+    {"create_thread": {
+      "commands": [
+        {"create_object":{"name":"test1","title":"Female_lying","location":{"bearing":330,"dist":20,"heading":290}}},
+        {"set":{"local":"68pony_installed"},"value":"OK"},
+        {"sleep":3},
+        {"set":{"local":"testobj"},"value":"DONE"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"sleep":0.5},
+        {"create_object":{"name":"test2","title":"Airbus H145 FR Crash VTT DOWN","location":{"bearing":20,"dist":20,"heading":0}}},
+        {"set":{"local":"batteroulio_installed"},"value":"OK"},
+        {"set":{"local":"testobj"},"value":"DONE"}
+    ]}},
+    {"sleep":15},
+    {"if": {"has_object":"test1"}, "eq": 1,
+      "then": [
+        {"destroy_object":"test1"},
+        {"set":{"local":"testobj"},"value":"NONE"}
+    ]},
+    {"if": {"has_object":"test2"}, "eq": 1,
+      "then": [
+        {"destroy_object":"test2"},
+        {"set":{"local":"testobj"},"value":"NONE"}
+    ]}
+  ],
+  "CREW SPAWN TEST": [
+    {"set":{"local":"crewtest"},"value":"IN PROGR."},
+    {"call_macro":"crew spawn launch","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+    {"try": [
+        {"create_object":{"name":"crewtest","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":20,"dist":10,"heading":0}}}
+      ],
+      "catch": [
+        {"call_macro":"crew spawn failure","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}},
+        {"set":{"local":"crewtest"},"value":"FAILED"},
+        {"set_message":{"text":"CREW SPAWN TEST FAILED: {0}","params":[{"param":"$ERROR"}],"color":"red"}}
+    ]},
+    {"call_macro":"crew spawn wait","params":{"crew_name":"crewtest","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+    {"if": {"has_object":"crewtest"}, "eq": 1,
+      "then": [
         {"set":{"local":"crewtest"},"value":"SUCCESS"},
         {"set":{"local":"CREW_TEST_VAR1"},"value":0},
         {"set":{"local":"CREW_TEST_VAR2"},"value":0},
-        {"create_thread":{"commands":[
-          {"while":{"local":"CREW_TEST_VAR1"},"lt":17,"do":[
-            {"set":{"object":"crewtest","var":"VAR 1"},"value":{"local":"CREW_TEST_VAR1"}},
-            {"set":{"object":"crewtest","var":"VAR 2"},"value":{"local":"CREW_TEST_VAR2"}},
+        {"create_thread": {
+          "commands": [
+            {"while": {"local":"CREW_TEST_VAR1"}, "lt": 17,
+              "do": [
+                {"set":{"object":"crewtest","var":"VAR 1"},"value":{"local":"CREW_TEST_VAR1"}},
+                {"set":{"object":"crewtest","var":"VAR 2"},"value":{"local":"CREW_TEST_VAR2"}},
+                {"sleep":1},
+                {"if": {"local":"CREW_TEST_VAR1"}, "gte": 14,
+                  "then": [
+                    {"set":{"local":"CREW_TEST_VAR2"},"value":{"add":[{"local":"CREW_TEST_VAR2"},1]}},
+                    {"if": {"local":"CREW_TEST_VAR2"}, "gt": 3,
+                      "then": [
+                        {"set":{"local":"CREW_TEST_VAR2"},"value":0},
+                        {"set":{"local":"CREW_TEST_VAR1"},"value":{"add":[{"local":"CREW_TEST_VAR1"},1]}}
+                    ]}
+                  ],"else": [
+                    {"set":{"local":"CREW_TEST_VAR1"},"value":{"add":[{"local":"CREW_TEST_VAR1"},1]}}
+                ]}
+            ]},
+            {"set":{"local":"crewtest"},"value":"DONE"},
             {"sleep":1},
-            {"if":{"local":"CREW_TEST_VAR1"},"gte":14,"then":[
-              {"set":{"local":"CREW_TEST_VAR2"},"value":{"add":[{"local":"CREW_TEST_VAR2"},1]}},
-              {"if":{"local":"CREW_TEST_VAR2"},"gt":3,"then":[{"set":{"local":"CREW_TEST_VAR2"},"value":0},{"set":{"local":"CREW_TEST_VAR1"},"value":{"add":[{"local":"CREW_TEST_VAR1"},1]}}]}
-            ],"else":[{"set":{"local":"CREW_TEST_VAR1"},"value":{"add":[{"local":"CREW_TEST_VAR1"},1]}}]}
-          ]},
-          {"set":{"local":"crewtest"},"value":"DONE"},{"sleep":1},{"if":{"has_object":"crewtest"},"eq":1,"then":[{"destroy_object":"crewtest"},{"set":{"local":"crewtest"},"value":"CLEANED"}]}
+            {"if": {"has_object":"crewtest"}, "eq": 1,
+              "then": [
+                {"destroy_object":"crewtest"},
+                {"set":{"local":"crewtest"},"value":"CLEANED"}
+            ]}
         ]}}
-      ]}
-    ],
-    "ensure pathology1 fallback": [
-    {
-      "call_macro": "test tracker begin",
-      "params": {
-        "test_id": "pathology_fallback"
-      }
-    },
-      {"if":{"local":"generic_pathology1"},"eq":null,"then":[{"set":{"local":"randomhealth1"},"value":"fallback"},{"set":{"local":"generic_pathology1"},"value":"No info received"},{"set":{"local":"medical_symptoms1"},"value":"No info received"},{"set":{"local":"diagnosis1"},"value":"Undetermined"},{"set":{"local":"LIFESCORE"},"value":{"rand":[30,90]}},{"set":{"local":"SPO2"},"value":97},{"set":{"local":"BPM"},"value":70},{"set":{"local":"decr_rate"},"value":1},{"set":{"local":"AGEMIN"},"value":null},{"set":{"local":"AGEMAX"},"value":null}]}
-    ,
-    {
-      "call_macro": "test tracker complete",
-      "params": {
-        "test_id": "pathology_fallback"
-      }
-    }
+    ]}
   ],
-    "voice pack fallback": [
-      {"if":{"and":[{"require":{"global":"VOICEPACK"},"eq":"KEKKERU"},{"require":{"local":"keksounds_installed"},"eq":"NO"}]},"eq":1,"then":[{"set":{"global":"VOICEPACK"},"value":"ANDREW"}]},
-      {"if":{"and":[{"require":{"global":"VOICEPACK"},"eq":"KEKRADIO"},{"require":{"local":"kersounds_installed"},"eq":"NO"}]},"eq":1,"then":[{"set":{"global":"VOICEPACK"},"value":"ANDREW"}]},
-      {"if":{"and":[{"require":{"global":"VOICEPACK"},"eq":"ITALIAN"},{"require":{"local":"itasounds_installed"},"eq":"NO"}]},"eq":1,"then":[{"set":{"global":"VOICEPACK"},"value":"ANDREW"}]},
-      {"if":{"and":[{"require":{"global":"VOICEPACK"},"eq":"DUSTIN"},{"require":{"local":"dussounds_installed"},"eq":"NO"}]},"eq":1,"then":[{"set":{"global":"VOICEPACK"},"value":"ANDREW"}]},
-      {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
-    ],
-    "nation autoselect": [
-      {"if":{"and":[{"require":{"global":"NATION_BYPASS"},"eq":100},{"require":{"var":["L:SKIP_QUERY","number"]},"ne":1}]},"eq":1,"then":[{"create_thread":{"commands":[{"query_country":{"United States of America":[{"set":{"local":"NATION"},"value":1}],"United Kingdom":[{"set":{"local":"NATION"},"value":2}],"Guernsey":[{"set":{"local":"NATION"},"value":2}],"Jersey":[{"set":{"local":"NATION"},"value":2}],"Isle of Man":[{"set":{"local":"NATION"},"value":2}],"France":[{"set":{"local":"NATION"},"value":3}],"Germany":[{"set":{"local":"NATION"},"value":4}],"Nederland":[{"set":{"local":"NATION"},"value":5}],"Netherlands":[{"set":{"local":"NATION"},"value":5}],"Italia":[{"set":{"local":"NATION"},"value":6}],"Italy":[{"set":{"local":"NATION"},"value":6}],"Polska":[{"set":{"local":"NATION"},"value":7}],"Poland":[{"set":{"local":"NATION"},"value":7}],"Other":[{"set":{"local":"NATION"},"value":{"global":"NATION_OTHERS"}}]},"location":"$USER"},{"set":{"local":"start_nation"},"value":"$COUNTRY"},{"if":{"local":"NATION"},"eq":1,"then":[{"set":{"local":"start_nation"},"value":"United States of America"}]},{"if":{"local":"NATION"},"eq":2,"then":[{"set":{"local":"start_nation"},"value":"United Kingdom"}]},{"if":{"local":"NATION"},"eq":3,"then":[{"set":{"local":"start_nation"},"value":"France"}]},{"if":{"local":"NATION"},"eq":4,"then":[{"set":{"local":"start_nation"},"value":"Germany"}]},{"if":{"local":"NATION"},"eq":5,"then":[{"set":{"local":"start_nation"},"value":"Netherlands"}]},{"if":{"local":"NATION"},"eq":6,"then":[{"set":{"local":"start_nation"},"value":"Italy"}]},{"if":{"local":"NATION"},"eq":7,"then":[{"set":{"local":"start_nation"},"value":"Poland"}]}]}}],"else":[{"set":{"local":"start_nation"},"value":"SKIPPED/MANUAL"},{"if":{"global":"NATION_BYPASS"},"ne":100,"then":[{"set":{"local":"NATION"},"value":{"global":"NATION_BYPASS"}}],"else":[{"set":{"local":"NATION"},"value":0}]}]}
-    ],
-    "normalize orange target smoke setting": [{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":null,"then":[{"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"auto"}]},{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"no","then":[{"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"auto"}]},{"if":{"global":"ORANGE_TARGET_SMOKE"},"eq":"yes","then":[{"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"always"}]}],
-    "normalize crew health simulation setting": [{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":null,"then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}]},{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":"active","then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}]},{"if":{"global":"HOIST_SAFETY_MONITOR"},"eq":"no","then":[{"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"disabled"}]}],
-    "ensure data query service selection": [{"if":{"global":"DATAQUERYSERVICE"},"eq":null,"then":[{"set":{"global":"DATAQUERYSERVICE"},"value":10}]},{"if":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"eq":null,"then":[{"set":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"value":"NO"}]},{"call_macro":"CICERS PING"}],
-    "restore data query selection after CICERS success": [{"if":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"eq":"YES","then":[{"call_macro":"restore data query selection after CICERS failure"}],"else":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},{"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}]}],
-    "restore data query selection after CICERS failure": [{"if":{"or":[{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":0},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":1},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":2},{"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":4}]},"eq":1,"then":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}},{"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}],"else":[{"set":{"global":"DATAQUERYSERVICE"},"value":10},{"call_macro":"DATAQUERYSERVICERANDOM"}]}]
-  }
+  "ensure pathology1 fallback": [
+    {"call_macro":"test tracker begin","params":{"test_id":"pathology_fallback"}},
+    {"if": {"local":"generic_pathology1"}, "eq": null,
+      "then": [
+        {"set":{"local":"randomhealth1"},"value":"fallback"},
+        {"set":{"local":"generic_pathology1"},"value":"No info received"},
+        {"set":{"local":"medical_symptoms1"},"value":"No info received"},
+        {"set":{"local":"diagnosis1"},"value":"Undetermined"},
+        {"set":{"local":"LIFESCORE"},"value":{"rand":[30,90]}},
+        {"set":{"local":"SPO2"},"value":97},
+        {"set":{"local":"BPM"},"value":70},
+        {"set":{"local":"decr_rate"},"value":1},
+        {"set":{"local":"AGEMIN"},"value":null},
+        {"set":{"local":"AGEMAX"},"value":null}
+    ]},
+    {"call_macro":"test tracker complete","params":{"test_id":"pathology_fallback"}}
+  ],
+  "voice pack fallback": [
+    {"if": {
+      "and": [
+        {"require":{"global":"VOICEPACK"},"eq":"KEKKERU"},
+        {"require":{"local":"keksounds_installed"},"eq":"NO"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"global":"VOICEPACK"},"value":"ANDREW"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"global":"VOICEPACK"},"eq":"KEKRADIO"},
+        {"require":{"local":"kersounds_installed"},"eq":"NO"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"global":"VOICEPACK"},"value":"ANDREW"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"global":"VOICEPACK"},"eq":"ITALIAN"},
+        {"require":{"local":"itasounds_installed"},"eq":"NO"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"global":"VOICEPACK"},"value":"ANDREW"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"global":"VOICEPACK"},"eq":"DUSTIN"},
+        {"require":{"local":"dussounds_installed"},"eq":"NO"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"global":"VOICEPACK"},"value":"ANDREW"}
+    ]},
+    {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
+  ],
+  "nation autoselect": [
+    {"if": {
+      "and": [
+        {"require":{"global":"NATION_BYPASS"},"eq":100},
+        {"require":{"var":["L:SKIP_QUERY","number"]},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"create_thread": {
+          "commands": [
+            {"query_country":{"United States of America":[{"set":{"local":"NATION"},"value":1}],"United Kingdom":[{"set":{"local":"NATION"},"value":2}],"Guernsey":[{"set":{"local":"NATION"},"value":2}],"Jersey":[{"set":{"local":"NATION"},"value":2}],"Isle of Man":[{"set":{"local":"NATION"},"value":2}],"France":[{"set":{"local":"NATION"},"value":3}],"Germany":[{"set":{"local":"NATION"},"value":4}],"Nederland":[{"set":{"local":"NATION"},"value":5}],"Netherlands":[{"set":{"local":"NATION"},"value":5}],"Italia":[{"set":{"local":"NATION"},"value":6}],"Italy":[{"set":{"local":"NATION"},"value":6}],"Polska":[{"set":{"local":"NATION"},"value":7}],"Poland":[{"set":{"local":"NATION"},"value":7}],"Other":[{"set":{"local":"NATION"},"value":{"global":"NATION_OTHERS"}}]},"location":"$USER"},
+            {"set":{"local":"start_nation"},"value":"$COUNTRY"},
+            {"if": {"local":"NATION"}, "eq": 1,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"United States of America"}
+            ]},
+            {"if": {"local":"NATION"}, "eq": 2,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"United Kingdom"}
+            ]},
+            {"if": {"local":"NATION"}, "eq": 3,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"France"}
+            ]},
+            {"if": {"local":"NATION"}, "eq": 4,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"Germany"}
+            ]},
+            {"if": {"local":"NATION"}, "eq": 5,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"Netherlands"}
+            ]},
+            {"if": {"local":"NATION"}, "eq": 6,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"Italy"}
+            ]},
+            {"if": {"local":"NATION"}, "eq": 7,
+              "then": [
+                {"set":{"local":"start_nation"},"value":"Poland"}
+            ]}
+        ]}}
+      ],"else": [
+        {"set":{"local":"start_nation"},"value":"SKIPPED/MANUAL"},
+        {"if": {"global":"NATION_BYPASS"}, "ne": 100,
+          "then": [
+            {"set":{"local":"NATION"},"value":{"global":"NATION_BYPASS"}}
+          ],"else": [
+            {"set":{"local":"NATION"},"value":0}
+        ]}
+    ]}
+  ],
+  "normalize orange target smoke setting": [
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": null,
+      "then": [
+        {"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"auto"}
+    ]},
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "no",
+      "then": [
+        {"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"auto"}
+    ]},
+    {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "yes",
+      "then": [
+        {"set":{"global":"ORANGE_TARGET_SMOKE"},"value":"always"}
+    ]}
+  ],
+  "normalize crew health simulation setting": [
+    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": null,
+      "then": [
+        {"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}
+    ]},
+    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "active",
+      "then": [
+        {"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}
+    ]},
+    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "no",
+      "then": [
+        {"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"disabled"}
+    ]}
+  ],
+  "ensure data query service selection": [
+    {"if": {"global":"DATAQUERYSERVICE"}, "eq": null,
+      "then": [
+        {"set":{"global":"DATAQUERYSERVICE"},"value":10}
+    ]},
+    {"if": {"global":"CICERS_AUTO_ACTIVATION_BYPASS"}, "eq": null,
+      "then": [
+        {"set":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"value":"NO"}
+    ]},
+    {"call_macro":"CICERS PING"}
+  ],
+  "restore data query selection after CICERS success": [
+    {"if": {"global":"CICERS_AUTO_ACTIVATION_BYPASS"}, "eq": "YES",
+      "then": [
+        {"call_macro":"restore data query selection after CICERS failure"}
+      ],"else": [
+        {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":3},
+        {"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}
+    ]}
+  ],
+  "restore data query selection after CICERS failure": [
+    {"if": {
+      "or": [
+        {"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":0},
+        {"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":1},
+        {"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":2},
+        {"require":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"},"eq":4}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}},
+        {"set":{"global":"DATAQUERYSERVICE"},"value":{"local":"CICERS_PREVIOUS_DATAQUERY_MODE"}}
+      ],"else": [
+        {"set":{"global":"DATAQUERYSERVICE"},"value":10},
+        {"call_macro":"DATAQUERYSERVICERANDOM"}
+    ]}
+  ]
+}

@@ -61,7 +61,9 @@ requireTrue(contains(tablet, (entry) => entry?.slider?.global === 'GNDOPS_NR_THR
 requireTrue(contains(tablet, (entry) => entry?.text === '(P)Ground operations NR threshold: {0}%' && entry.params?.[0]?.tofixed?.global === 'GNDOPS_NR_THRESHOLD' && entry.params?.[0]?.digits === 1), 'Settings must show the NR threshold rounded to one decimal place');
 
 const debugRows = debug['debug page'].find((command) => Array.isArray(command.set_dispatch)).set_dispatch;
-const debugCapture = debugRows.flatMap((row) => row.buttonbar || []).find((button) => button.title === 'CAPTURE SNAPSHOT').commands;
+const debugCaptureButton = debugRows.flatMap((row) => row.buttonbar || []).find((button) => button.title === 'CAPTURE SNAPSHOT');
+requireTrue(debugCaptureButton.commands[0].call_macro === 'capture diagnostic snapshot' && debugCaptureButton.commands[0].params.snapshot_table.static === 'Debug_Table', 'Manual capture must use the shared snapshot and manual table');
+const debugCapture = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/19-location-diagnostics.json'), 'utf8'))['capture diagnostic snapshot'];
 const snapshotSummary = debugCapture.find((command) => command.set?.key === 'snapshot_summary').value.create_struct;
 requireTrue(debugRows.some((row) => row.text === 'CREW SPAWN {0} | NR GATE {1}' && row.params?.[0]?.local === 'crew_spawn_log' && row.params?.[1]?.local === 'gndops_nr_gate_log'), 'Debug Summary does not show the crew and NR watchdog logs');
 requireTrue(debugCapture.some((command) => command.set?.key === 'crew_spawn_log') && debugCapture.some((command) => command.set?.key === 'gndops_nr_gate_log'), 'CAPTURE SNAPSHOT does not persist the crew and NR watchdog logs');
