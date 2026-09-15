@@ -9,6 +9,8 @@ See [validation status](../testing/VALIDATION_STATUS.md) for the current candida
 
 ## Focused implementation
 
+Keep one operational CICERS branch and one worktree. The repository-root `everywhere_all.json` is the sole mission artifact in the source workspace. The canonical-artifact gate rejects parallel copies and repository `global.json`; explicit delivery outputs remain governed by the release workflow. Retire obsolete PRs and branches only after accounting for their unique changes.
+
 1. Check branch, hooks, ownership and dirty files. Read the workspace map and affected subsystem only.
 2. Use the remaining-work list in the relevant architecture document. Reuse implemented helpers; do not repeat SDK smoke tests as a substitute for integration.
 3. Snapshot semantic scope before mission edits. Edit the owning source and run focused tests. Use a one-use draft intent for any intermediate build; it retains the last supplied version and verifies the canonical artifact without creating copies. Prepare one higher release only immediately before the user-requested downloadable delivery.

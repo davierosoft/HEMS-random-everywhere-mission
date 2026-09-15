@@ -11,6 +11,7 @@ const { pushedBranchTargets, unsafePushTargets } = require('./assert-safe-push')
 const { analyzeScope, createBaselineRecord, scopeViolations, validateBaselineRecord } = require('./check-mission-scope');
 const { assertBuildIntent, compareRelease, markBuildConsumed, readIntent } = require('./release-contract');
 const { amendPreparedRelease, beginDraft, beginRelease, createLocalTestArtifact } = require('./release-workflow');
+const { violations: canonicalViolations, fileViolation } = require('./check-canonical-artifact');
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -76,6 +77,12 @@ try {
   fs.mkdirSync(path.join(releaseRoot, 'mission-src', 'macros'), { recursive: true });
   fs.writeFileSync(path.join(releaseRoot, '.git', 'HEAD'), 'ref: refs/heads/CICERS/release-test\n');
   fs.writeFileSync(path.join(releaseRoot, 'everywhere_all.json'), releaseArtifact(111));
+  assert(canonicalViolations(releaseRoot).length === 0, 'canonical artifact rejected the single-file baseline');
+  fs.mkdirSync(path.join(releaseRoot, 'old-copy'));
+  fs.writeFileSync(path.join(releaseRoot, 'old-copy', 'everywhere_all.json'), '{}');
+  assert(canonicalViolations(releaseRoot).some(message => message.includes('parallel mission')), 'parallel mission copy was not rejected');
+  fs.unlinkSync(path.join(releaseRoot, 'old-copy', 'everywhere_all.json'));
+  assert(fileViolation('global.json').includes('global state'), 'repository global state was not rejected');
   fs.writeFileSync(path.join(releaseRoot, 'mission-src', 'macros', '11-mission-lifecycle.json'), releaseSource(111));
   fs.writeFileSync(path.join(releaseRoot, 'CHANGELOG.en.md'), '## Release 0.997 111\n\n- Previous release.\n');
   const releaseIntent = beginRelease(releaseRoot, '0.997 112', 'Release workflow gate test.', { roots: ['title'], macros: ['example macro'], data: [] });
