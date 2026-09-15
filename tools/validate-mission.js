@@ -293,12 +293,19 @@ function scanGuardedWaits(value, guards, macroName, counts) {
   });
 }
 
+function manualSnapshotCommands() {
+  const buttons = collect(mission.macros['debug page'] || [], item => item.title === 'CAPTURE SNAPSHOT');
+  const call = buttons[0]?.commands?.[0];
+  expectRegression(buttons.length === 1 && call?.call_macro === 'capture diagnostic snapshot' && call.params?.snapshot_table?.static === 'Debug_Table', 'manual snapshot must call the shared capture with the manual table');
+  const commands = mission.macros['capture diagnostic snapshot'] || [];
+  // Resolve only the explicitly bound table parameter, preserving all other checks.
+  return JSON.parse(JSON.stringify(commands), (key, value) => value?.param === 'snapshot_table' && Object.keys(value).length === 1 ? {static: 'Debug_Table'} : value);
+}
+
 function checkCompleteDebugSnapshot(debugPage) {
   const sections = ["COMMON", "SUMMARY", "MISSION", "MEDICAL", "GROUND", "GUIDANCE", "INVENTORY", "LOCATIONS", "PATIENTS", "SCENE", "FLOW"];
   const dispatch = (debugPage || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
-  const capture = dispatch
-    .flatMap((row) => row.buttonbar || [])
-    .find((button) => button.title === "CAPTURE SNAPSHOT")?.commands || [];
+  const capture = manualSnapshotCommands();
   const skip = new Set(["commands", "click_commands", "then", "else", "do", "try", "catch"]);
 
   const sectionForRow = (row) => {
@@ -389,7 +396,7 @@ function checkDebugSummaryLayout() {
   expectRegression(rows.some((row) => row.text === 'SMOKE | MODE {0} | REALISTIC {1}' && section(row).includes('"INVENTORY"')), 'smoke diagnostics must be in Inventory');
   expectRegression(rows.filter((row) => /^DF STATIONS|^EMERGENCY DF/.test(String(row.text || ''))).every((row) => section(row).includes('"GUIDANCE"')), 'DF diagnostics must be in Guidance');
   expectRegression(rows.some((row) => row.text === 'CREW HEALTH | P:{0} M:{1} H:{2} | IMPACT:{3} | FATAL:{4}' && section(row).includes('"MEDICAL"')), 'crew health diagnostics must be in Medical');
-  const dateCapture = (key, variable) => collect(page, (command) => command.set?.table?.static === 'Debug_Table' && command.set.key === key && JSON.stringify(command.value) === JSON.stringify({ var: [variable, 'number'] }));
+  const dateCapture = (key, variable) => collect(manualSnapshotCommands(), (command) => command.set?.table?.static === 'Debug_Table' && command.set.key === key && JSON.stringify(command.value) === JSON.stringify({ var: [variable, 'number'] }));
   expectRegression(dateCapture('date_year', 'E:LOCAL YEAR').length === 1 && dateCapture('date_month', 'E:LOCAL MONTH OF YEAR').length === 1 && dateCapture('date_day', 'E:LOCAL DAY OF MONTH').length === 1, 'snapshot date must use simulator local year, month, and day');
 }
 
@@ -1087,7 +1094,7 @@ function checkRelease100TestTracker() {
   expectRegression(completedActionBars.length === expectedTests.length && completedActionBars.every((row) => ['SUCCESSFUL', 'FAILED', 'RESET'].every((title) => row.buttonbar.some((button) => button.title === title))), 'each completed test must place SUCCESSFUL, FAILED, and RESET on one action row');
   expectRegression(trackerResetRows.length === expectedTests.length * 2 && trackerResetRows.every((row) => compact(row).includes('test tracker reset')), 'each test item must expose RESET at result selection and after a recorded result');
   expectRegression(trackerResetRows.filter((row) => !row.show_condition?.require?.local).every((row) => compact(row.show_condition).includes('"ne":"PENDING"') && compact(row.show_condition).includes('"ne":"COMPLETED"')), 'post-result RESET must remain hidden while SUCCESSFUL and FAILED are offered');
-  const debugPage = compact(mission.macros['debug page'] || []);
+  const debugPage = compact([mission.macros['debug page'] || [], manualSnapshotCommands()]);
   expectRegression(debugPage.includes('OPEN TEST TRACKER') && debugPage.includes('test tracker page'), 'Debug Center must link to the Test Tracker');
   const begin = compact(mission.macros['test tracker begin'] || []);
   const complete = compact(mission.macros['test tracker complete'] || []);

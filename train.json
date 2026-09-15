@@ -1,1029 +1,897 @@
-{ 
+{
 "title": "TRAIN ACCIDENT AT BUSTO A.",
-"id":"prototype_3",
+
+"id": "prototype_3",
+
 "start_info": {
-    "icon_src": "",
-    "query": ["DB:H_CIVIL","DB:AIRPORT", "DB:AIRPORT-NOCODE"]
-  },
-
-
-
+  "icon_src": "",
+  "query": [
+      "DB:H_CIVIL",
+      "DB:AIRPORT",
+      "DB:AIRPORT-NOCODE"
+    ]
+},
 
 "locations": {
-    "START":[45.63250492218034, 8.740740291036019]   
+  "START": [
+      45.63250492218034,
+      8.740740291036019
+    ]
 },
 
-
-
-
-
-
-  "objectives": [
-
-  {"title": "LOADING... PLEASE WAIT...",
-    "commands": [
-    {"remote_notify": "mission_init_begin", "params": []},
-{"#comment": "THIS SCRIPT WORKS WITH MISSION VERSION EQUAL OR ABOVE TO THE FOLLOWING"},
-       {"set": {"local":"MIN_VERSION"}, "value":0.99634},
-       {"set_briefing_dialog": 0},
-       {"set": {"var": ["L:SECOND_DISPATCH_ACCEPTED", "number" ] }, "value":0},
-	   {"set": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "value": 0},
-       {"set": {"var": ["L:CUS_START", "number"]}, "value": {"location": "START"}},
-       {"set_objective_title": "APPLYING SETTINGS....."},
-
-
-
-
-
-
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "------------------------------------INSTRUCTIONS------------------------------------------------------"},
-{"#comment": "BASIC USERS MUST USE ONLY 'EDITABLE AREA STARTS HERE' AREA--------------------------------------------"},
-{"#comment": "0) CREATE A UNIQUE id OF THE SCRIPT (AT BEGINNING OF FILE, REPLACE 'Prototype_1' WITH SOMETHING ELSE--"},
-{"#comment": "1) PUT MISSION ID (AS PER CUSTOM MISSION LIST) IN L:CUS_ID_CARD value---------------------------------"},
-{"#comment": "2) PUT VARIANT (1 to 4) IN L:CUS_CRASH_VARIABLE value-------------------------------------------------"},
-{"#comment": "3) PUT SUBVARIANT (1 to 3, only effective on few accidents) IN L:CUS_MISSION_SCENE_VARIANT value------"},
-{"#comment": "NOTE: DISPATCH CODE DIGITS ARE AS FOLLOW: 1st:MISSION ID; 2nd:VARIANT; 3rd:SUBVARIANT (Step 1,2,3)----"},
-{"#comment": "4) PUT ACCIDENT LAT and LON (GOOGLE MAPS FORMAT) IN L:CUS_ACCIDENT LAT and L:CUS_ACCIDENT LON---------"},
-{"#comment": "5) PUT (OPTIONAL) STARTING LAT,LON (GOOGLE MAPS FORMAT) IN 'START' location at the top of file--------"},
-{"#comment": "6) SET (OPTIONAL) AMBULANCE/FIRE ENGINE TRUCK/POLICE PRESENCE AS FOLLOW:------------------------------"},
-{"#comment": "7) 0: VEHICLE NOT PRESENT; 1: VEHICLE ON SCENE; 2: VEHICLE ON THE ROAD--------------------------------"},
-{"#comment": "BASIC USERS JOB ENDS HERE-----------------------------------------------------------------------------"},
-
-
-
-
-{"#comment": "EDITABLE AREA STARTS HERE (BASIC USERS)--------------------------------------------------------------"},
-
-
-{"#comment": "MISSION SELECTION"},
-	{"set": {"var": ["L:CUS_ID_CARD", "number"]}, "value": 999},
-	{"set": {"var": ["L:CUS_CRASH_VARIABLE", "number"]}, "value": 2},
-	{"set": {"var": ["L:CUS_MISSION_SCENE_VARIANT", "number"]}, "value": 3},
-
-
-{"#comment": "ACCIDENT LOCATION"},
-	{"set": {"var": ["L:CUS_ACCIDENT LAT", "number"]}, "value": 45.61850278687255},
-	{"set": {"var": ["L:CUS_ACCIDENT LON", "number"]}, "value": 8.860937370231527},
-
-
-{"#comment": "RESCUE VEHICLE PRESENCE"},
-	{"set": {"var": ["L:VARAMBUAVAIL", "number"]}, "value": 2},
-	{"set": {"var": ["L:VARFIREAVAIL", "number"]}, "value": 2},
-	{"set": {"var": ["L:VARPOLICEAVAIL", "number"]}, "value": 2},
-
-
-{"#comment": "EDITABLE AREA ENDS HERE (BASIC USERS)-----------------------------------------------------------------"},
-
-
-
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "------------------------------------INSTRUCTIONS------------------------------------------------------"},
-{"#comment": "BASIC USERS MUST NOT USE THIS AREA--------------------------------------------------------------------"},
-{"#comment": "1) L:SKIP_QUERY allows to skip the location query. Values: 0:Query is executed, 1:Query is skipped----"},
-{"#comment": "2) L:CUS_CARLS_AUTOCONNECT autoconnection of CARLS radio at mission start. 1:Enabled 0:Normal---------"},
-{"#comment": "3) L:SKIPIFCLOSE allows skipping menu if this script is executed with H/C close to starting point-----"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-
-{"#comment": "EDITABLE AREA STARTS HERE (ADVANCED USERS)------------------------------------------------------------"},
-	   {"set": {"var": ["L:SKIP_QUERY", "number"]}, "value": 1},
-	   {"set": {"var": ["L:CUS_CARLS_AUTOCONNECT", "number"]}, "value": 1},
-       {"set": {"var": ["L:SKIPIFCLOSE", "number"]}, "value": 1},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-
-
-{"#comment": "------------------------------------INSTRUCTIONS------------------------------------------------------"},
-{"#comment": "BASIC USERS MUST NOT USE THIS AREA--------------------------------------------------------------------"},
-{"#comment": "1) local OBJECTx allows to add any object to the sim (name must be exactly the one in aircraft.cfg)---"},
-{"#comment": "2) L:OBJECTx LAT latitude of the object --------------------------------------------------------------"},
-{"#comment": "3) L:OBJECTx LON longitude of the object -------------------------------------------------------------"},
-{"#comment": "4) Unused local OBJECTx must be set to value: null, or the relative fields deleted, to disable it/them"},
-{"#comment": "5) L:CUSVFXA allows VFX (smoke/fire) to be moved out from default position if needed -----------------"},
-{"#comment": "NOTE:OBJETC1, 10, 15 will point towards accident location --------------------------------------------"},
-
-
-{"#comment": "OTHER OBJECTS (START WITH OBJECT1 AND UP TO OBJECT15) NO MORE THAN 15 OBJECTS ALLOWED ----------------"},
-{"#comment": "OBJECTS LVARS ARE ACTUALLY NOT SUPPORTED (THEY WILL BE SET TO 0) -------------------------------------"},
-
-	{"set": {"local":"OBJECT1"}, "value": "Airbus H145 FR Crash TGV"},
-	{"set": {"var": ["L:OBJECT1 LAT", "number"]}, "value": 45.618901833891535},
-	{"set": {"var": ["L:OBJECT1 LON", "number"]}, "value": 8.860246355512434},
-
-	{"set": {"local":"OBJECT2"}, "value": "Airbus H145 Injured Human"},
-	{"set": {"var": ["L:OBJECT2 LAT", "number"]}, "value": 45.61864289622672},
-	{"set": {"var": ["L:OBJECT2 LON", "number"]}, "value": 8.860587684955526},
-
-	{"set": {"local":"OBJECT3"}, "value": "Airbus H145 Injured Human 2"},
-	{"set": {"var": ["L:OBJECT3 LAT", "number"]}, "value": 45.618947603557835},
-	{"set": {"var": ["L:OBJECT3 LON", "number"]}, "value": 8.860298632660852},
-
-	{"set": {"local":"OBJECT4"}, "value": "30West dying bald"},
-	{"set": {"var": ["L:OBJECT4 LAT", "number"]}, "value": 45.61886524986985},
-	{"set": {"var": ["L:OBJECT4 LON", "number"]}, "value": 8.86025389212144},
-
-	{"set": {"local":"OBJECT5"}, "value": "30West dazed"},
-	{"set": {"var": ["L:OBJECT5 LAT", "number"]}, "value": 45.61915803582781},
-	{"set": {"var": ["L:OBJECT5 LON", "number"]}, "value": 8.86005045289945},
-
-	{"set": {"local":"OBJECT6"}, "value": "30West zomb1 death"},
-	{"set": {"var": ["L:OBJECT6 LAT", "number"]}, "value": 45.61905065463072},
-	{"set": {"var": ["L:OBJECT6 LON", "number"]}, "value": 8.860027658119193},
-
-	{"set": {"local":"OBJECT7"}, "value": "30West zomb2 death"},
-	{"set": {"var": ["L:OBJECT7 LAT", "number"]}, "value": 45.61891421679439},
-	{"set": {"var": ["L:OBJECT7 LON", "number"]}, "value": 8.860179878458597},
-
-	{"set": {"local":"OBJECT8"}, "value": "30West Mother"},
-	{"set": {"var": ["L:OBJECT8 LAT", "number"]}, "value": 45.61913127732502},
-	{"set": {"var": ["L:OBJECT8 LON", "number"]}, "value": 8.860004190354392},
-
-	{"set": {"local":"OBJECT9"}, "value": "Airbus H145 Civilian 3"},
-	{"set": {"var": ["L:OBJECT9 LAT", "number"]}, "value": 45.6188786676387},
-	{"set": {"var": ["L:OBJECT9 LON", "number"]}, "value": 8.860487461862894},
-
-	{"set": {"local":"OBJECT10"}, "value": "Airbus H145 Train"},
-	{"set": {"var": ["L:OBJECT10 LAT", "number"]}, "value": 45.617934603736146},
-	{"set": {"var": ["L:OBJECT10 LON", "number"]}, "value": 8.8620470389318},
-
-
-{"#comment": "VFX RELOCATION (IF VFX IS PRESENT). Keep it 0 to avoid relocation ------------------------------------"},
-
-	{"set": {"var": ["L:CUSVFXA LAT", "number"]}, "value": 45.618649575285154},
-	{"set": {"var": ["L:CUSVFXA LON", "number"]}, "value": 8.860695785959491},
-
-
-{"#comment": "EDITABLE AREA ENDS HERE (ADVANCED USERS)--------------------------------------------------------------"},
-{"#comment": "EDITABLE AREA ENDS HERE (ADVANCED USERS)--------------------------------------------------------------"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-
-
-
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "FOR SUPER ADVANCED USERS: You may go to 'data' section and customize the custom mission (ID 999)------"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-{"#comment": "------------------------------------------------------------------------------------------------------"},
-
-
-     {"set": {"local":"CRASH_VARIABLE"}, "value": {"var": ["L:CUS_CRASH_VARIABLE", "number"]}},
-     {"for_each":{"static":"accidents"},"do":[
-	   {"if":{"struct":{"param":"$item"}, "path":"ID_CARD"},"eq": {"var": ["L:CUS_ID_CARD", "number"]},"then":[
-        {"set": {"global":"accident_description"}, "value": {"struct": {"param":"$item"}, "path": "description{local:CRASH_VARIABLE}"}},
-        {"set": {"global":"accident_objective"}, "value": {"struct": {"param":"$item"}, "path": "objective"}},
-        {"set": {"global":"SAR"}, "value": {"struct": {"param":"$item"}, "path": "SAR"}},
-        {"set": {"global":"MOUNTAIN_RSC"}, "value": {"struct": {"param":"$item"}, "path": "mountain_helirescuers"}},
-
-	   {"if":{"var": ["L:CUS_ID_CARD", "number"]},"eq":999 ,"then":[
-        {"set": {"global":"accident_name"}, "value": {"struct": {"param":"$item"}, "path": "name"}},
-        {"set": {"global":"accident_general_description"}, "value": {"struct": {"param":"$item"}, "path": "general_description"}},
-        {"set": {"global":"accident_objective"}, "value": {"struct": {"param":"$item"}, "path": "objective"}},
-        {"set": {"global":"max_injured"}, "value": {"add":[{"struct": {"param":"$item"}, "path": "max_injured"},1]}},
-        {"set": {"global":"injured_type"}, "value": {"struct": {"param":"$item"}, "path": "injured_type"}},
-        {"set": {"global":"random_fire"}, "value": {"struct": {"param":"$item"}, "path": "random_fire"}},
-     {"if": {"global":"closestambu"}, "eq": "enabled",
-       "then": [
-        {"set": {"global":"closestambu"}, "value": {"struct": {"param":"$item"}, "path": "closest_ambu"}}
-	   ],"else":[
-        {"set": {"global":"closestambu"}, "value": "no"}
-      ]},
-        {"set": {"global":"scene_macro"}, "value": {"struct": {"param":"$item"}, "path": "scene_macro"}},
-        {"set": {"global":"location_name"}, "value": {"struct": {"param": "$item"}, "path": "location_name"}},
-        {"set": {"global":"Query"}, "value": {"struct": {"param":"$item"}, "path": "location_macro"}},
-        {"set": {"global":"Icon"}, "value": {"struct": {"param":"$item"}, "path": "icon"}},
-        {"set": {"global":"ELT"}, "value": {"struct": {"param":"$item"}, "path": "ELT_mode"}},
-	    {"set": {"global":"MISSION_NUMBER"}, "value": {"struct": {"param":"$item"}, "path": "mnumber"}},
-	    {"set": {"global":"VAR_MISSION_NUMBER"}, "value":{"var":["L:CUS_ID_CARD","number"]}},
-	    {"set": {"global":"CAMPING_VARIABLE"}, "value": {"struct": {"param":"$item"}, "path": "camping"}},
-		{"set": {"global":"MISSION_SCENE_TYPE"}, "value": {"struct": {"param":"$item"}, "path": "type"}},
-        {"set": {"global":"SAR"}, "value": {"struct": {"param":"$item"}, "path": "SAR"}},
-        {"set": {"global":"WAVINGMAN"}, "value": {"struct": {"param":"$item"}, "path": "waving_man"}},
-        {"set": {"global":"RANDOMPPL"}, "value": {"struct": {"param":"$item"}, "path": "random_people"}},
-        {"set": {"global":"MOUNTAIN_RSC"}, "value": {"struct": {"param":"$item"}, "path": "mountain_helirescuers"}},
-        {"set": {"global":"extra_crashed"}, "value": {"struct": {"param": "$item"}, "path": "extra_crashed"}},
-        {"set": {"global":"randomdeadenable"}, "value": {"struct": {"param": "$item"}, "path": "randomdead"}},
-
-        {"set": {"global":"accident_description1"}, "value": {"struct": {"param":"$item"}, "path": "description1"}},
-        {"set": {"global":"accident_description2"}, "value": {"struct": {"param":"$item"}, "path": "description2"}},
-        {"set": {"global":"accident_description3"}, "value": {"struct": {"param":"$item"}, "path": "description3"}},
-        {"set": {"global":"accident_description4"}, "value": {"struct": {"param":"$item"}, "path": "description4"}},
-        {"set": {"global":"accident_description"}, "value": {"struct": {"param":"$item"}, "path": "description{local:CRASH_VARIABLE}"}},
-		{"set":{"global": "ambu_allowed"},"value":{"struct": {"param":"$item"}, "path": "ambu_allowed"}},
-		{"set":{"global": "poli_allowed"},"value":{"struct": {"param":"$item"}, "path": "poli_allowed"}},
-		{"set":{"global": "fireng_allowed"},"value":{"struct": {"param":"$item"}, "path": "fireng_allowed"}},
-        {"set": {"global":"PATOLOGY_TYPE"}, "value": {"struct": {"param":"$item"}, "path": "pathologytype{local:CRASH_VARIABLE}"}}
-	   ]}
-       ]},
-       {"sleep": 0.01}
-     ]},
-     {"copy_location": [{"var": ["L:CUS_ACCIDENT LAT", "number"]}, {"var": ["L:CUS_ACCIDENT LON", "number"]}], "to": "accident_location"}, 
-     {"remote_notify": "mission_init_complete", "params": []},       
-	 {"if":{"or":[
-				{"require":{"location": "START", "var": "distance:nm", "to": "$USER"},"gt": 3},
-				{"require":{"var": ["L:SKIPIFCLOSE", "number"]},"eq": 1}
-	 ]},"eq":1,"then":[
-        {"set_briefing_dialog":1},
-	    {"wait_for": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "eq": 1}
-	 ]},
-     {"set": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "value":1},
-	 {"sleep":0.5},
-	 {"load_mission": "HEMSRandE",
-	   "on_error": [
-		 {"set_message": {"text": "Failed to retrieve mission file!"}}
-	 ]},
-     {"sleep":"forever"}
- ]}        
-],
+"objectives": [
+    {"title":"LOADING... PLEASE WAIT...","commands":[{"remote_notify":"mission_init_begin","params":[]},{"#comment":"THIS SCRIPT WORKS WITH MISSION VERSION EQUAL OR ABOVE TO THE FOLLOWING"},{"set":{"local":"MIN_VERSION"},"value":0.99634},{"set_briefing_dialog":0},{"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":0},{"set":{"var":["L:CUS_SEND_DISPATCH","number"]},"value":0},{"set":{"var":["L:CUS_START","number"]},"value":{"location":"START"}},{"set_objective_title":"APPLYING SETTINGS....."},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------INSTRUCTIONS------------------------------------------------------"},{"#comment":"BASIC USERS MUST USE ONLY 'EDITABLE AREA STARTS HERE' AREA--------------------------------------------"},{"#comment":"0) CREATE A UNIQUE id OF THE SCRIPT (AT BEGINNING OF FILE, REPLACE 'Prototype_1' WITH SOMETHING ELSE--"},{"#comment":"1) PUT MISSION ID (AS PER CUSTOM MISSION LIST) IN L:CUS_ID_CARD value---------------------------------"},{"#comment":"2) PUT VARIANT (1 to 4) IN L:CUS_CRASH_VARIABLE value-------------------------------------------------"},{"#comment":"3) PUT SUBVARIANT (1 to 3, only effective on few accidents) IN L:CUS_MISSION_SCENE_VARIANT value------"},{"#comment":"NOTE: DISPATCH CODE DIGITS ARE AS FOLLOW: 1st:MISSION ID; 2nd:VARIANT; 3rd:SUBVARIANT (Step 1,2,3)----"},{"#comment":"4) PUT ACCIDENT LAT and LON (GOOGLE MAPS FORMAT) IN L:CUS_ACCIDENT LAT and L:CUS_ACCIDENT LON---------"},{"#comment":"5) PUT (OPTIONAL) STARTING LAT,LON (GOOGLE MAPS FORMAT) IN 'START' location at the top of file--------"},{"#comment":"6) SET (OPTIONAL) AMBULANCE/FIRE ENGINE TRUCK/POLICE PRESENCE AS FOLLOW:------------------------------"},{"#comment":"7) 0: VEHICLE NOT PRESENT; 1: VEHICLE ON SCENE; 2: VEHICLE ON THE ROAD--------------------------------"},{"#comment":"BASIC USERS JOB ENDS HERE-----------------------------------------------------------------------------"},{"#comment":"EDITABLE AREA STARTS HERE (BASIC USERS)--------------------------------------------------------------"},{"#comment":"MISSION SELECTION"},{"set":{"var":["L:CUS_ID_CARD","number"]},"value":999},{"set":{"var":["L:CUS_CRASH_VARIABLE","number"]},"value":2},{"set":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]},"value":3},{"#comment":"ACCIDENT LOCATION"},{"set":{"var":["L:CUS_ACCIDENT LAT","number"]},"value":45.61850278687255},{"set":{"var":["L:CUS_ACCIDENT LON","number"]},"value":8.860937370231527},{"#comment":"RESCUE VEHICLE PRESENCE"},{"set":{"var":["L:VARAMBUAVAIL","number"]},"value":2},{"set":{"var":["L:VARFIREAVAIL","number"]},"value":2},{"set":{"var":["L:VARPOLICEAVAIL","number"]},"value":2},{"#comment":"EDITABLE AREA ENDS HERE (BASIC USERS)-----------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------INSTRUCTIONS------------------------------------------------------"},{"#comment":"BASIC USERS MUST NOT USE THIS AREA--------------------------------------------------------------------"},{"#comment":"1) L:SKIP_QUERY allows to skip the location query. Values: 0:Query is executed, 1:Query is skipped----"},{"#comment":"2) L:CUS_CARLS_AUTOCONNECT autoconnection of CARLS radio at mission start. 1:Enabled 0:Normal---------"},{"#comment":"3) L:SKIPIFCLOSE allows skipping menu if this script is executed with H/C close to starting point-----"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"EDITABLE AREA STARTS HERE (ADVANCED USERS)------------------------------------------------------------"},{"set":{"var":["L:SKIP_QUERY","number"]},"value":1},{"set":{"var":["L:CUS_CARLS_AUTOCONNECT","number"]},"value":1},{"set":{"var":["L:SKIPIFCLOSE","number"]},"value":1},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------INSTRUCTIONS------------------------------------------------------"},{"#comment":"BASIC USERS MUST NOT USE THIS AREA--------------------------------------------------------------------"},{"#comment":"1) local OBJECTx allows to add any object to the sim (name must be exactly the one in aircraft.cfg)---"},{"#comment":"2) L:OBJECTx LAT latitude of the object --------------------------------------------------------------"},{"#comment":"3) L:OBJECTx LON longitude of the object -------------------------------------------------------------"},{"#comment":"4) Unused local OBJECTx must be set to value: null, or the relative fields deleted, to disable it/them"},{"#comment":"5) L:CUSVFXA allows VFX (smoke/fire) to be moved out from default position if needed -----------------"},{"#comment":"NOTE:OBJETC1, 10, 15 will point towards accident location --------------------------------------------"},{"#comment":"OTHER OBJECTS (START WITH OBJECT1 AND UP TO OBJECT15) NO MORE THAN 15 OBJECTS ALLOWED ----------------"},{"#comment":"OBJECTS LVARS ARE ACTUALLY NOT SUPPORTED (THEY WILL BE SET TO 0) -------------------------------------"},{"set":{"local":"OBJECT1"},"value":"Airbus H145 FR Crash TGV"},{"set":{"var":["L:OBJECT1 LAT","number"]},"value":45.618901833891535},{"set":{"var":["L:OBJECT1 LON","number"]},"value":8.860246355512434},{"set":{"local":"OBJECT2"},"value":"Airbus H145 Injured Human"},{"set":{"var":["L:OBJECT2 LAT","number"]},"value":45.61864289622672},{"set":{"var":["L:OBJECT2 LON","number"]},"value":8.860587684955526},{"set":{"local":"OBJECT3"},"value":"Airbus H145 Injured Human 2"},{"set":{"var":["L:OBJECT3 LAT","number"]},"value":45.618947603557835},{"set":{"var":["L:OBJECT3 LON","number"]},"value":8.860298632660852},{"set":{"local":"OBJECT4"},"value":"30West dying bald"},{"set":{"var":["L:OBJECT4 LAT","number"]},"value":45.61886524986985},{"set":{"var":["L:OBJECT4 LON","number"]},"value":8.86025389212144},{"set":{"local":"OBJECT5"},"value":"30West dazed"},{"set":{"var":["L:OBJECT5 LAT","number"]},"value":45.61915803582781},{"set":{"var":["L:OBJECT5 LON","number"]},"value":8.86005045289945},{"set":{"local":"OBJECT6"},"value":"30West zomb1 death"},{"set":{"var":["L:OBJECT6 LAT","number"]},"value":45.61905065463072},{"set":{"var":["L:OBJECT6 LON","number"]},"value":8.860027658119193},{"set":{"local":"OBJECT7"},"value":"30West zomb2 death"},{"set":{"var":["L:OBJECT7 LAT","number"]},"value":45.61891421679439},{"set":{"var":["L:OBJECT7 LON","number"]},"value":8.860179878458597},{"set":{"local":"OBJECT8"},"value":"30West Mother"},{"set":{"var":["L:OBJECT8 LAT","number"]},"value":45.61913127732502},{"set":{"var":["L:OBJECT8 LON","number"]},"value":8.860004190354392},{"set":{"local":"OBJECT9"},"value":"Airbus H145 Civilian 3"},{"set":{"var":["L:OBJECT9 LAT","number"]},"value":45.6188786676387},{"set":{"var":["L:OBJECT9 LON","number"]},"value":8.860487461862894},{"set":{"local":"OBJECT10"},"value":"Airbus H145 Train"},{"set":{"var":["L:OBJECT10 LAT","number"]},"value":45.617934603736146},{"set":{"var":["L:OBJECT10 LON","number"]},"value":8.8620470389318},{"#comment":"VFX RELOCATION (IF VFX IS PRESENT). Keep it 0 to avoid relocation ------------------------------------"},{"set":{"var":["L:CUSVFXA LAT","number"]},"value":45.618649575285154},{"set":{"var":["L:CUSVFXA LON","number"]},"value":8.860695785959491},{"#comment":"EDITABLE AREA ENDS HERE (ADVANCED USERS)--------------------------------------------------------------"},{"#comment":"EDITABLE AREA ENDS HERE (ADVANCED USERS)--------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"FOR SUPER ADVANCED USERS: You may go to 'data' section and customize the custom mission (ID 999)------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"#comment":"------------------------------------------------------------------------------------------------------"},{"set":{"local":"CRASH_VARIABLE"},"value":{"var":["L:CUS_CRASH_VARIABLE","number"]}},{"for_each":{"static":"accidents"},"do":[{"if":{"struct":{"param":"$item"},"path":"ID_CARD"},"eq":{"var":["L:CUS_ID_CARD","number"]},"then":[{"set":{"global":"accident_description"},"value":{"struct":{"param":"$item"},"path":"description{local:CRASH_VARIABLE}"}},{"set":{"global":"accident_objective"},"value":{"struct":{"param":"$item"},"path":"objective"}},{"set":{"global":"SAR"},"value":{"struct":{"param":"$item"},"path":"SAR"}},{"set":{"global":"MOUNTAIN_RSC"},"value":{"struct":{"param":"$item"},"path":"mountain_helirescuers"}},{"if":{"var":["L:CUS_ID_CARD","number"]},"eq":999,"then":[{"set":{"global":"accident_name"},"value":{"struct":{"param":"$item"},"path":"name"}},{"set":{"global":"accident_general_description"},"value":{"struct":{"param":"$item"},"path":"general_description"}},{"set":{"global":"accident_objective"},"value":{"struct":{"param":"$item"},"path":"objective"}},{"set":{"global":"max_injured"},"value":{"add":[{"struct":{"param":"$item"},"path":"max_injured"},1]}},{"set":{"global":"injured_type"},"value":{"struct":{"param":"$item"},"path":"injured_type"}},{"set":{"global":"random_fire"},"value":{"struct":{"param":"$item"},"path":"random_fire"}},{"if":{"global":"closestambu"},"eq":"enabled","then":[{"set":{"global":"closestambu"},"value":{"struct":{"param":"$item"},"path":"closest_ambu"}}],"else":[{"set":{"global":"closestambu"},"value":"no"}]},{"set":{"global":"scene_macro"},"value":{"struct":{"param":"$item"},"path":"scene_macro"}},{"set":{"global":"location_name"},"value":{"struct":{"param":"$item"},"path":"location_name"}},{"set":{"global":"Query"},"value":{"struct":{"param":"$item"},"path":"location_macro"}},{"set":{"global":"Icon"},"value":{"struct":{"param":"$item"},"path":"icon"}},{"set":{"global":"ELT"},"value":{"struct":{"param":"$item"},"path":"ELT_mode"}},{"set":{"global":"MISSION_NUMBER"},"value":{"struct":{"param":"$item"},"path":"mnumber"}},{"set":{"global":"VAR_MISSION_NUMBER"},"value":{"var":["L:CUS_ID_CARD","number"]}},{"set":{"global":"CAMPING_VARIABLE"},"value":{"struct":{"param":"$item"},"path":"camping"}},{"set":{"global":"MISSION_SCENE_TYPE"},"value":{"struct":{"param":"$item"},"path":"type"}},{"set":{"global":"SAR"},"value":{"struct":{"param":"$item"},"path":"SAR"}},{"set":{"global":"WAVINGMAN"},"value":{"struct":{"param":"$item"},"path":"waving_man"}},{"set":{"global":"RANDOMPPL"},"value":{"struct":{"param":"$item"},"path":"random_people"}},{"set":{"global":"MOUNTAIN_RSC"},"value":{"struct":{"param":"$item"},"path":"mountain_helirescuers"}},{"set":{"global":"extra_crashed"},"value":{"struct":{"param":"$item"},"path":"extra_crashed"}},{"set":{"global":"randomdeadenable"},"value":{"struct":{"param":"$item"},"path":"randomdead"}},{"set":{"global":"accident_description1"},"value":{"struct":{"param":"$item"},"path":"description1"}},{"set":{"global":"accident_description2"},"value":{"struct":{"param":"$item"},"path":"description2"}},{"set":{"global":"accident_description3"},"value":{"struct":{"param":"$item"},"path":"description3"}},{"set":{"global":"accident_description4"},"value":{"struct":{"param":"$item"},"path":"description4"}},{"set":{"global":"accident_description"},"value":{"struct":{"param":"$item"},"path":"description{local:CRASH_VARIABLE}"}},{"set":{"global":"ambu_allowed"},"value":{"struct":{"param":"$item"},"path":"ambu_allowed"}},{"set":{"global":"poli_allowed"},"value":{"struct":{"param":"$item"},"path":"poli_allowed"}},{"set":{"global":"fireng_allowed"},"value":{"struct":{"param":"$item"},"path":"fireng_allowed"}},{"set":{"global":"PATOLOGY_TYPE"},"value":{"struct":{"param":"$item"},"path":"pathologytype{local:CRASH_VARIABLE}"}}]}]},{"sleep":0.01}]},{"copy_location":[{"var":["L:CUS_ACCIDENT LAT","number"]},{"var":["L:CUS_ACCIDENT LON","number"]}],"to":"accident_location"},{"remote_notify":"mission_init_complete","params":[]},{"if":{"or":[{"require":{"location":"START","var":"distance:nm","to":"$USER"},"gt":3},{"require":{"var":["L:SKIPIFCLOSE","number"]},"eq":1}]},"eq":1,"then":[{"set_briefing_dialog":1},{"wait_for":{"var":["L:CUS_SEND_DISPATCH","number"]},"eq":1}]},{"set":{"var":["L:CUS_SEND_DISPATCH","number"]},"value":1},{"sleep":0.5},{"load_mission":"HEMSRandE","on_error":[{"set_message":{"text":"Failed to retrieve mission file!"}}]},{"sleep":"forever"}]}
+  ],
 
 "macros": {
+
 },
 
-
-  "briefing": [
-
-    {"text": "H145 - HEMS RANDOM & EVERYWHERE build {0}","params":[{"global":"first_run"}], "size":"large", "align": "center"},
-    {"text": "Last time the mission was started your mission version was {0}. This script requires {1} as minimum requirement.","params":[{"global":"first_run"},{"local":"MIN_VERSION"}], "color":"yellow","show_condition": {"require":{"local":"MIN_VERSION"},"gt": {"global":"first_run"}}},
-
-   {"text": "Mission description:"},
-   {"text": "{0}","color":"yellow", "params":[{"global":"accident_description"}]},
-   {"text": "Mission objective:"},
-   {"text": "{0}","color":"yellow", "params":[{"global":"accident_objective"}]},
-
-    {"buttonbar": [
-
-        {"title":"TELEPORT AND START FROM PRESET LOCATION","size":"large", "color":"green", "commands":[
-          {"set_briefing_dialog":0},
- 		  {"set_message": {"text": "TELEPORTING, PLEASE WAIT..." }},
-		  {"sleep": 0.5},
-		  {"trigger":["K:SLEW_ON"]},
-		  {"sleep": 2},
-		  {"teleport_to": "START"},
-		  {"sleep": 10},
-		  {"trigger":["K:SLEW_RESET"]},
-          {"set":{"var":["A:PLANE HEADING DEGREES MAGNETIC", "degrees"]}, "value":10},
-          {"set":{"var":["A:PLANE ALT ABOVE GROUND", "feet"]}, "value":0},
-		  {"set_message": {"text": "DONE" }},
-		  {"sleep": 1},
-		  {"set_message": {"text": " " }},
-		  {"trigger":["K:SLEW_OFF"]},
-          {"set": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "value":1}
-      ],"show_condition": {"require":{"var":["L:CUS_START LAT","number"]},"ne": 0}}
-   ]},
-
-   {"buttonbar": [
-
-        {"title":"START MISSION FROM HERE","size":"large", "commands":[
-          {"set_briefing_dialog":0},
-          {"set": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "value":1}
-        ]}
-   ]},
-    {"text": "OR ENTER A CUSTOM LOCATION: Accepted format:42.10567,-12.3456 (decimal degrees)"},
+"briefing": [
+    {"text":"H145 - HEMS RANDOM & EVERYWHERE build {0}","params":[{"global":"first_run"}],"size":"large","align":"center"},
+    {"text":"Last time the mission was started your mission version was {0}. This script requires {1} as minimum requirement.","params":[{"global":"first_run"},{"local":"MIN_VERSION"}],"color":"yellow","show_condition":{"require":{"local":"MIN_VERSION"},"gt":{"global":"first_run"}}},
+    {"text":"Mission description:"},
+    {"text":"{0}","color":"yellow","params":[{"global":"accident_description"}]},
+    {"text":"Mission objective:"},
+    {"text":"{0}","color":"yellow","params":[{"global":"accident_objective"}]},
+    {"buttonbar":[{"title":"TELEPORT AND START FROM PRESET LOCATION","size":"large","color":"green","commands":[{"set_briefing_dialog":0},{"set_message":{"text":"TELEPORTING, PLEASE WAIT..."}},{"sleep":0.5},{"trigger":["K:SLEW_ON"]},{"sleep":2},{"teleport_to":"START"},{"sleep":10},{"trigger":["K:SLEW_RESET"]},{"set":{"var":["A:PLANE HEADING DEGREES MAGNETIC","degrees"]},"value":10},{"set":{"var":["A:PLANE ALT ABOVE GROUND","feet"]},"value":0},{"set_message":{"text":"DONE"}},{"sleep":1},{"set_message":{"text":" "}},{"trigger":["K:SLEW_OFF"]},{"set":{"var":["L:CUS_SEND_DISPATCH","number"]},"value":1}],"show_condition":{"require":{"var":["L:CUS_START LAT","number"]},"ne":0}}]},
+    {"buttonbar":[{"title":"START MISSION FROM HERE","size":"large","commands":[{"set_briefing_dialog":0},{"set":{"var":["L:CUS_SEND_DISPATCH","number"]},"value":1}]}]},
+    {"text":"OR ENTER A CUSTOM LOCATION: Accepted format:42.10567,-12.3456 (decimal degrees)"},
     {"textbox":"saveloc"},
-    {"text": "","show_condition": {"require":{"local":"ctab1"},"eq": 0}},
-    {"buttonbar": [
-        {"title":"CHANGE START TO TEXTBOX LOCATION", "disabled_condition": {"require": {"local":"saveloc"}, "eq":null}, "commands":[
+    {"text":"","show_condition":{"require":{"local":"ctab1"},"eq":0}},
+    {"buttonbar":[{"title":"CHANGE START TO TEXTBOX LOCATION","disabled_condition":{"require":{"local":"saveloc"},"eq":null},"commands":[{"set":{"var":["L:CUS_START LAT","number"]},"value":{"string:split":{"local":"saveloc"},"delimiter":",","index":0}},{"set":{"var":["L:CUS_START LON","number"]},"value":{"string:split":{"local":"saveloc"},"delimiter":",","index":1}},{"sleep":0.5},{"create_location":"START","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_START LAT","number"]},{"var":["L:CUS_START LON","number"]}]}}}}]}]}]},
+    {"text":" "},
+    {"text":"Mission details:"},
+    {"text":"SAR mission? {0}","params":[{"global":"SAR"}]},
+    {"text":"Mountain mission? {0}","params":[{"global":"MOUNTAIN_RSC"}]},
+    {"text":" "},
+    {"text":"Predefined starting location: {0:LOCATION}","params":["START"]},
+    {"buttonbar":[{"title":"Open on map","commands":[{"set_user_poi":"START"},{"set_briefing_dialog":0}]},{"title":"Open on PC","commands":[{"open_location":"START"}]}]},
+    {"text":""},
+    {"text":"Accident location: {0:LOCATION}","params":["accident_location"]},
+    {"buttonbar":[{"title":"Open on map","commands":[{"set_user_poi":"accident_location"},{"set_briefing_dialog":0}]},{"title":"Open on PC","commands":[{"open_location":"accident_location"}]}]},
+    {"text":"Mission distance: {0} NM","params":[{"tofixed":{"location":"START","var":"distance","to":"accident_location"},"digits":2}]},
+    {"text":"Actual distance to accident location: {0} NM","color":"orange","params":[{"tofixed":{"object":"accident_location","var":"distance"},"digits":2}]}
+  ],
 
-			{"set":{"var": ["L:CUS_START LAT", "number"]},"value":{"string:split": {"local": "saveloc"}, "delimiter":",", "index": 0}},
-			{"set":{"var": ["L:CUS_START LON", "number"]},"value":{"string:split": {"local": "saveloc"}, "delimiter":",", "index": 1}},
-			{"sleep": 0.5}  ,
-			{"create_location": "START", "zones": [{"zone": {"location": {"resolve_location":{"create_array":[{"var": ["L:CUS_START LAT", "number"]}, {"var": ["L:CUS_START LON", "number"]}]}}}}]}
-		]}
-	 ]},
+"data": {
+  "accidents": [
+    {
+      "id": "ID:CUSTOM (EDITABLE) / Train derailed, several injureds reported",
+      "name": "Train derailed",
+      "description1": "Train derailed, close to Busto Arsizio train station. Several injureds reported",
+      "description2": "Train derailed, multiple injureds reported. Location: close to Busto Arsizio",
+      "description3": "Train derailed, several injureds reported, rescue vehicles are on the way",
+      "description4": "Train derailed, Unknown number of injureds reported",
+      "objective": "Objective: Fly to the scene and rescue the survivors",
+      "max_injured": 3,
+      "injured_type": "injured",
+      "random_fire": "forced",
+      "closest_ambu": "N/A",
+      "ambu_allowed": "yes",
+      "poli_allowed": "yes",
+      "fireng_allowed": "yes",
+      "scene_macro": "CLIMBER",
+      "location_macro": "Query user position custom",
+      "location_name": "accident_location",
+      "icon": "injured_location",
+      "ELT_mode": "normal",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "waving_man": "yes",
+      "random_people": "yes",
+      "pathologytype1": 1,
+      "pathologytype2": 1,
+      "pathologytype3": 1,
+      "pathologytype4": 1,
+      "browse_category1": "IO",
+      "type": 99,
+      "camping": 3,
+      "mnumber": 1,
+      "is_random": "no",
+      "ID_CARD": 999
+    },
 
-   {"text": " "},
-   {"text": "Mission details:"},
-   {"text": "SAR mission? {0}", "params":[{"global":"SAR"}]},
-   {"text": "Mountain mission? {0}", "params":[{"global":"MOUNTAIN_RSC"}]},
-   {"text": " "},
-   {"text": "Predefined starting location: {0:LOCATION}", "params": [ "START" ]},
-   {"buttonbar": [
-	{"title": "Open on map", "commands": [{"set_user_poi": "START"}, {"set_briefing_dialog": 0}]}, 
-	{"title": "Open on PC", "commands": [{"open_location": "START"}]}
-   ]},
-   {"text": ""},
+    {
+      "id": "ID:1 / Road Traffic Collision (RTC)",
+      "description1": "Injured, collision of two cars. Situation unclear",
+      "description2": "Several vehicles have been involved in a collision, there are reported injured",
+      "description3": "Injured after car collision",
+      "description4": "Fire Control received a call reporting a fire caused by RTC. One or several vehicles have been involved, injured have been reported",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 1
+    },
 
-   {"text": "Accident location: {0:LOCATION}", "params": [ "accident_location" ]},
-   {"buttonbar": [
-	{"title": "Open on map", "commands": [{"set_user_poi": "accident_location"}, {"set_briefing_dialog": 0}]}, 
-	{"title": "Open on PC", "commands": [{"open_location": "accident_location"}]}
-   ]},
+    {
+      "id": "ID:2 / Road Traffic Collision (RTC)",
+      "description1": "Multiple injured reported in road traffic collision. Situation unclear.",
+      "description2": "Reported injured after vehicles collision.",
+      "description3": "RTC of more than two cars collided",
+      "description4": "RTC one or several vehicles have been involved",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 2
+    },
 
-   {"text": "Mission distance: {0} NM", "params": [ {"tofixed": {"location": "START", "var": "distance", "to": "accident_location"}, "digits": 2} ]},
-   {"text": "Actual distance to accident location: {0} NM","color":"orange", "params": [ {"tofixed": {"object":"accident_location", "var":"distance"}, "digits": 2} ]}
- ],
+    {
+      "id": "ID:3 / Road Traffic Collision (RTC)",
+      "description1": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on the mother",
+      "description2": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on the father",
+      "description3": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on child",
+      "description4": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on father",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 3
+    },
 
+    {
+      "id": "ID:4 / Road Traffic Collision (RTC)- motorbike",
+      "description1": "There are injured reported in road traffic collision involving a MOTORCYCLE. Situation unclear.",
+      "description2": "Reported injured after CAR vs MOTORCYCLE collision.",
+      "description3": "Motorcyclist collided at high speed with the driver's side of a left-turning car during an overtaking maneuver, was launched approximately 50 meters through the air, hit a tree, and slid another 50 meters on the road; currently undergoing CPR. Car driver also injured.",
+      "description4": "Car making a turn failed to yield to oncoming motorcyclist; motorcyclist collided unbraked and head-on with the car. Motorcyclist is lying on the road; car driver is walking around screaming. Scene is chaotic.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 4
+    },
 
-"data":{
+    {
+      "id": "ID:5 / A vehicle hit an animal while speeding",
+      "description1": "There are injured reported in road traffic collision involving an animal. Situation unclear",
+      "description2": "There are injured reported in road traffic collision - unclear situation",
+      "description3": "RTC at high speed",
+      "description4": "CAR crashed after breaking at high speed on open road",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 5
+    },
 
-  "accidents":[
-      {"id":"ID:CUSTOM (EDITABLE) / Train derailed, several injureds reported", 
-        "name":"Train derailed",
-        "description1": "Train derailed, close to Busto Arsizio train station. Several injureds reported",
-        "description2": "Train derailed, multiple injureds reported. Location: close to Busto Arsizio",
-        "description3": "Train derailed, several injureds reported, rescue vehicles are on the way",
-        "description4": "Train derailed, Unknown number of injureds reported",
-        "objective":"Objective: Fly to the scene and rescue the survivors",
-		"max_injured":3,
-		"injured_type":"injured",
-		"random_fire":"forced",
-		"closest_ambu":"N/A",
-		"ambu_allowed":"yes",
-		"poli_allowed":"yes",
-		"fireng_allowed":"yes",
-		"scene_macro":"CLIMBER",
-		"location_macro":"Query user position custom",
-		"location_name":"accident_location",
-		"icon":"injured_location",
-		"ELT_mode":"normal",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"waving_man":"yes",
-		"random_people":"yes",
-		"pathologytype1":1,
-		"pathologytype2":1,
-		"pathologytype3":1,
-		"pathologytype4":1,
-		"browse_category1":"IO",
-		"type":99,
-		"camping":3,
-		"mnumber":1,
-		"is_random":"no",
-		"ID_CARD":999
-      },
-      {"id":"ID:1 / Road Traffic Collision (RTC)", 
-        "description1": "Injured, collision of two cars. Situation unclear",
-        "description2": "Several vehicles have been involved in a collision, there are reported injured",
-        "description3": "Injured after car collision",
-        "description4": "Fire Control received a call reporting a fire caused by RTC. One or several vehicles have been involved, injured have been reported",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":1
-      },
-      {"id":"ID:2 / Road Traffic Collision (RTC)", 
-        "description1": "Multiple injured reported in road traffic collision. Situation unclear.",
-        "description2": "Reported injured after vehicles collision.",
-        "description3": "RTC of more than two cars collided",
-        "description4": "RTC one or several vehicles have been involved",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":2
-      },
-      {"id":"ID:3 / Road Traffic Collision (RTC)", 
-        "description1": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on the mother",
-        "description2": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on the father",
-        "description3": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on child",
-        "description4": "Car crash, vehicle, severe damage. Family of three involved; all category red, focus on father",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":3
-      },
-      {"id":"ID:4 / Road Traffic Collision (RTC)- motorbike", 
-        "description1": "There are injured reported in road traffic collision involving a MOTORCYCLE. Situation unclear.",
-        "description2": "Reported injured after CAR vs MOTORCYCLE collision.",
-        "description3": "Motorcyclist collided at high speed with the driver's side of a left-turning car during an overtaking maneuver, was launched approximately 50 meters through the air, hit a tree, and slid another 50 meters on the road; currently undergoing CPR. Car driver also injured.",
-        "description4": "Car making a turn failed to yield to oncoming motorcyclist; motorcyclist collided unbraked and head-on with the car. Motorcyclist is lying on the road; car driver is walking around screaming. Scene is chaotic.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":4
-      },
-      {"id":"ID:5 / A vehicle hit an animal while speeding", 
-        "description1": "There are injured reported in road traffic collision involving an animal. Situation unclear",
-        "description2": "There are injured reported in road traffic collision - unclear situation",
-        "description3": "RTC at high speed",
-        "description4": "CAR crashed after breaking at high speed on open road",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":5
-      },
-      {"id":"ID:6 / Road Traffic Collision involving a bicycle", 
-        "description1": "Race-Cyclist collided with a car. Cyclist hit a guardrail, was not wearing a helmet.",
-        "description2": "RTC bicycle",
-        "description3": "RTC CAR vs BICYCLE with injured presence have been reported",
-        "description4": "Reported CAR vs BICYLCE RTC with injured. ",
-        "objective":"Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
-		"mountain_helirescuers":"no",
-		"SAR":"no",
-		"ID_CARD":6
-      },
+    {
+      "id": "ID:6 / Road Traffic Collision involving a bicycle",
+      "description1": "Race-Cyclist collided with a car. Cyclist hit a guardrail, was not wearing a helmet.",
+      "description2": "RTC bicycle",
+      "description3": "RTC CAR vs BICYCLE with injured presence have been reported",
+      "description4": "Reported CAR vs BICYLCE RTC with injured. ",
+      "objective": "Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
+      "mountain_helirescuers": "no",
+      "SAR": "no",
+      "ID_CARD": 6
+    },
 
-      {"id":"ID:62 / Pedestrian on crosswalk hit by car", 
-        "description1": "Car hit a pedestrian causing injuries",
-        "description2": "RTC involving car and pedestrian",
-        "description3": "Pedestrian have been hit by vehicle driving at high speed. Injured presence have been reported",
-        "description4": "Pedestrian have been hit by a vehicle. Injured presence have been reported",
-        "objective":"Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":62
-      },
+    {
+      "id": "ID:62 / Pedestrian on crosswalk hit by car",
+      "description1": "Car hit a pedestrian causing injuries",
+      "description2": "RTC involving car and pedestrian",
+      "description3": "Pedestrian have been hit by vehicle driving at high speed. Injured presence have been reported",
+      "description4": "Pedestrian have been hit by a vehicle. Injured presence have been reported",
+      "objective": "Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 62
+    },
 
-      {"id":"ID:7 / Bycicle accident on a cycleway", 
-        "description1": "RTC BICYCLE with injured person",
-        "description2": "BICYCLE rider injured",
-        "description3": "A BICYCLE accident",
-        "description4": "Accident with BICYCLE involved",
-        "objective":"Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":7
-      },
-      {"id":"ID:8 / All Terrain Vehicle ATV (Quad) accident", 
-        "description1": "A rider lost control of his quad and has been injured.",
-        "description2": "A rider lost control of his quad and has been injured.",
-        "description3": "A rider lost control of his quad and has been injured.",
-        "description4": "A rider lost control of his quad and has been injured.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":8
-      },
-      {"id":"ID:9 / Road Traffic Collision (RTC) involving a bus", 
-        "description1": "RTC BUS involved",
-        "description2": "RTC BUS vs CAR - Injured reported",
-        "description3": "Multiple Injured reported in RTC involving a BUS",
-        "description4": "Received a call reporting RTC. One or several vehicles have been involved, including a BUS. Multiple injured reported",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":9
-      },
+    {
+      "id": "ID:7 / Bycicle accident on a cycleway",
+      "description1": "RTC BICYCLE with injured person",
+      "description2": "BICYCLE rider injured",
+      "description3": "A BICYCLE accident",
+      "description4": "Accident with BICYCLE involved",
+      "objective": "Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 7
+    },
 
-	  {"id":"ID:59/ Injured person in bus stop area", 
-        "description1": "Unconscious person in bus stop area.",
-        "description2": "Drug overdose, patient already obtunded. No further infos.",
-        "description3": "Person injured by a bus at bus stop",
-        "description4": "Person fallen in a bus during bus braking.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":59
-      },                  
+    {
+      "id": "ID:8 / All Terrain Vehicle ATV (Quad) accident",
+      "description1": "A rider lost control of his quad and has been injured.",
+      "description2": "A rider lost control of his quad and has been injured.",
+      "description3": "A rider lost control of his quad and has been injured.",
+      "description4": "A rider lost control of his quad and has been injured.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 8
+    },
 
-      {"id":"ID:10/ Road Traffic Collision (RTC) - Truck", 
-        "description1": "Some injured reported in road traffic collision involving a truck transporting chemical products. Situation unclear.",
-        "description2": "Reported injured after TRUCK vs CAR collision. Truck was transporting chemical products. Caught fire.",
-        "description3": "Multiple injured in CAR vs TRUCK RTC. Trailer with chemical products caught fire.",
-        "description4": "Collision involving a truck caused injured and chemical products leakage. Fire has been reported.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":10
-      },
-      {"id":"ID:11/ Tractor accident with injured farmer", 
-        "description1": "Farmer has been injuried when his tractor tipped over.",
-        "description2": "Farmer has been injuried when his tractor tipped over.",
-        "description3": "Farmer has been injuried falling from a tractor, with the tractor still moving.",
-        "description4": "Farmer has been badly injured by a harvester.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":11
-      },
-      {"id":"ID:12/ Road Traffic Collision (RTC) - Train", 
-        "description1": "Collision between vehicle and train at railroad crossing.There are reported injured.",
-        "description2": "Collision between vehicle and train at railroad crossing.There are reported injured.",
-        "description3": "Collision between vehicle and train at railroad crossing.There are reported injured.",
-        "description4": "Collision between vehicle and train at railroad crossing.There are reported injured.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":12
-      },
-      {"id":"ID:13/ Quarry accident with injured worker", 
-        "description1": "Worker has been injuried by a payloader in a quarry.Bucket hit him during manoeuvres.",
-        "description2": "Worker has been injuried by a payloader in a quarry.",
-        "description3": "Worker has been injuried falling from an excavator in a quarry.",
-        "description4": "Pallet fell from a crane in a quarry trapping and wounding a worker",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":13
-      },
-      {"id":"ID:14/ Worker injured in a construction site accident", 
-        "description1": "A worker has been injured by getting too close to a bulldozer. Their limbs are trapped between track wheels.",
-        "description2": "A worker has been seriously injured while working in a construction site. Situation unclear",
-        "description3": "Worker wounded by getting too close to a bulldozer.",
-        "description4": "Worker wounded by getting too close to a bulldozer.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":14
-      },
-      {"id":"ID:15/ Worker injured in a construction site accident", 
-        "description1": "A worker has been seriously injured while working in a construction site. Situation unclear",
-        "description2": "A worker has been seriously injured while working in a construction site. Situation unclear",
-        "description3": "A worker has been seriously injured while working in a construction site. Situation unclear",
-        "description4": "A worker has been seriously injured while working in a construction site. Situation unclear",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":15
-      },
-      {"id":"ID:16/ Forklift accident in a depot", 
-        "description1": "Worker injured by forklift in a depot",
-        "description2": "Forklift manoeuvres caused injuries to a worker.",
-        "description3": "Injured are reported after a forklift accident in a depot.",
-        "description4": "Worker injured by forklift in a depot.",
-        "objective":"Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":16
-      },
-      {"id":"ID:17/ Paraglider accident (SAR)", 
-        "description1": "A paraglider lost control making an emergency landing at unknown position.",
-        "description2": "A paraglider lost control making an emergency landing at unknown position.",
-        "description3": "A paraglider lost control making an emergency landing at unknown position.",
-        "description4": "A paraglider lost control making an emergency landing at unknown position.",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":17
-      },
-      {"id":"ID:18/ Lost contact with helicopter (SAR)", 
-        "description1": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "description2": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "description3": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "description4": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"no",
-		"ID_CARD":18
-      },
-      {"id":"ID:19/ Aircraft, loss of contact after mayday (SAR)", 
-        "description1": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "description2": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "description3": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "description4": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"no",
-		"ID_CARD":19
-      },
-      {"id":"ID:20/ An airliner performed an emergency landing", 
-        "description1": "A passenger airplane performed an emergency landing on runway. Ambulance, police and fire rescue teams  are on scene.",
-        "description2": "An airliner performed an emergency landing ended out of runway. Injured passengers have been reported.",
-        "description3": "An airliner performed an emergency landing ,caused by cabin smoke, which ended out of runway. Injured passengers have been reported.",
-        "description4": "An airliner performed an emergency landing ended out of runway. Injured passengers have been reported.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":20
-      },
-      {"id":"ID:21/ Small plane performed an emergency landing", 
-        "description1": "A general aviation airplane experienced heavy electrical failure on board and performed an emergency landing.",
-        "description2": "An executive airplane performed an emergency landing after engine(s) issues.",
-        "description3": "A general aviation airplane performed an emergency landing after fuel leakage.",
-        "description4": "An executive plane performed an emergency landing. Injured have been reported.",
-        "objective":"Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":21
-      },
-      {"id":"ID:22/ Camping accident in camping area", 
-        "description1": "Injured have been reported in a camping area.",
-        "description2": "Reported injured in a camping area. Situation unclear.",
-        "description3": "Injured have been reported in a camping area.",
-        "description4": "Reported injured in a camping area. Situation unclear.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"mountain_helirescuers":"no",
-		"SAR":"no",
-		"ID_CARD":22
-      },
-      {"id":"ID:23/ Camping accident at peak campsite", 
-        "description1": "Person stung by an insect, developed massive shortness of breath.",
-        "description2": "Reported injured in camping accident at peak campsite.",
-        "description3": "Reported injured close to peak campsite after a falling on rocky area.",
-        "description4": "Reported injured at peak campsite. Situation unclear.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"mountain_helirescuers":"no",
-		"SAR":"no",
-		"ID_CARD":23
-      },
-      {"id":"ID:24/ Apartment/house/hotel accident", 
-        "description1": "Hotel staff requests medical assistance after an accident. Situation is unclear",
-        "description2": "Patient complains of sudden severe abdominal pain after a fatty meal.",
-        "description3": "A person in apartment requires medical assistance. No info were given",
-        "description4": "A person in a building requires assistance. More info ASAP",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"mountain_helirescuers":"no",
-		"SAR":"no",
-		"ID_CARD":24
-      },
-      {"id":"ID:25/ Nursing home accident", 
-        "description1": "CA patient found unconscious.",
-        "description2": "Foreign body aspiration; Heimlich maneuver unsuccessful",
-        "description3": "Acute respiratory distress in a patient with known lung cancer.",
-        "description4": "Unresponsive patient with gray facial complexion, seated, exhibiting agonal, snoring respirations post-seizure.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"mountain_helirescuers":"no",
-		"SAR":"no",
-		"ID_CARD":25
-      },
-      {"id":"ID:26/ Injured person in apartment/hotel", 
-        "description1": "Hotel staff reports guest with cardiovascular emergency",
-        "description2": "An injured requires medical assistance.",
-        "description3": "An injured requires medical assistance.",
-        "description4": "Person requires urgent assistance",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":26
-      },
-      {"id":"ID:27/ Injured person in apartment/hotel", 
-        "description1": "medical emergency in hotel",
-        "description2": "Received a distress call with loud screaming; details unclear, address obtained with difficulty.",
-        "description3": "medical emergency.",
-        "description4": "patient experiencing respiratory distress",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"waving_man":"yes",
-		"ID_CARD":27
-      },
-      {"id":"ID:28/ Injured person in apartment", 
-        "description1": "Hotel staff declared a medical emergency",
-        "description2": "medical emergency.",
-        "description3": "medical emergency.",
-        "description4": "medical emergency.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":28
-      }, 
-      {"id":"ID:29/ Injured person in apartment", 
-        "description1": "medical emergency.",
-        "description2": "medical emergency..",
-        "description3": "medical emergency.",
-        "description4": "medical emergency.",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":29
-      },
-      {"id":"ID:30/ Injured person in apartment", 
-        "description1": "Cardiovascular",
-        "description2": "Cardiovascular",
-        "description3": "Cardiovascular",
-        "description4": "Cardiovascular",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":30
-      },
-      {"id":"ID:31/ Injured person in apartment", 
-        "description1": "Neurologic emergency",
-        "description2": "Neurologic emergency",
-        "description3": "Neurologic emergency",
-        "description4": "Cardiovascular",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":31
-      },
-      {"id":"ID:32/ Injured person in apartment", 
-        "description1": "acute coronary syndrome",
-        "description2": "acute coronary syndrome",
-        "description3": "ACS - acute coronary syndrome",
-        "description4": "ACS",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":32
-      },                          
-      {"id":"ID:33/ Injured person in his garden", 
-        "description1": "A person fallen from ladder in the garden. Medical assistance is required.",
-        "description2": "A person fallen from ladder while gardening. He requires urgent medical assistance.",
-        "description3": "A person has been injured while cooking with grill",
-        "description4": "A person has been injured while cooking with grill",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":33
-      },                          
-      {"id":"ID:34/ Student injured in a school", 
-        "description1": "Student injured in gym, suspicion of serious trauma.",
-        "description2": "Student unresponsive. No additional info provided",
-        "description3": "Student unresponsive but conscious.",
-        "description4": "Student unresponsive. No additional info provided",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":34
-      },
+    {
+      "id": "ID:9 / Road Traffic Collision (RTC) involving a bus",
+      "description1": "RTC BUS involved",
+      "description2": "RTC BUS vs CAR - Injured reported",
+      "description3": "Multiple Injured reported in RTC involving a BUS",
+      "description4": "Received a call reporting RTC. One or several vehicles have been involved, including a BUS. Multiple injured reported",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 9
+    },
 
-      {"id":"ID:61/ Students fight at school", 
-        "description1": "Argument between students ends with injuries",
-        "description2": "Student(s) injured after a fight at school. No additional info provided",
-        "description3": "Student(s) unresponsive but conscious.",
-        "description4": "Students brawl ended in stabbing",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":61
-      },
+    {
+      "id": "ID:59/ Injured person in bus stop area",
+      "description1": "Unconscious person in bus stop area.",
+      "description2": "Drug overdose, patient already obtunded. No further infos.",
+      "description3": "Person injured by a bus at bus stop",
+      "description4": "Person fallen in a bus during bus braking.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 59
+    },
 
-      {"id":"ID:35/ Quarrel injured", 
-        "description1": "Injured person after argument needs medical attention.",
-        "description2": "One or more people were injured in an argument in a parking lot.",
-        "description3": "An injured in apartment/house requires medical assistance.",
-        "description4": "An injured person after an argument.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":35
-      },
-      {"id":"ID:36/ Worker injured by power tranformer explosion", 
-        "description1": "High voltage power tranformer exploded with hot oil leak and fire/smoke. Injured have been reported",
-        "description2": "High voltage power tranformer exploded with hot oil leak and fire/smoke",
-        "description3": "Injured have been reported after high voltage power tranformer explosion",
-        "description4": "Injured have been reported after a power transformer malfunction. Smoke and fire are present on the scene",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":36
-      },
-      {"id":"ID:37/ Climber fallen from a rock", 
-        "description1": "A climber is trapped on a mountain side due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description2": "Reported climber trapped on a mountain side due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description3": "Reported climber trapped on a mountain side due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description4": "Climber injured after falling from mountain side. Rescue area may require specialized heli-rescuers",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":37
-      },
-      {"id":"ID:38/ Injured reported in chair lift accident", 
-        "description1": "A person has fallen from a chair lift, he is injured.",
-        "description2": "Reported injured after fall from chair lift.",
-        "description3": "Chairlift dolly fallen on ground. Injured have been reported.",
-        "description4": "Injured have been reported after a chairlift dolly fallen on ground.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":38
-      },
-      {"id":"ID:39/ Injured reported in cableway accident", 
-        "description1": "A gondola fallen from a cableway, Injured have been reported.",
-        "description2": "A gondola fallen from a cableway, Injured have been reported.",
-        "description3": "Cableway gondola fallen on ground. Injured have been reported.",
-        "description4": "Injured have been reported after a cableway gondola fallen on ground.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":39
-      },
-      {"id":"ID:40/ Missing hiker on mountain (SAR)", 
-        "description1": "A group of people reported missing person after hike. Exact position is unknown.",
-        "description2": "Reported missing person during hiking. Search and Rescue is required.",
-        "description3": "Search and Rescue, of a missing person after hike, has been requested.",
-        "description4": "Received a call about a missing hiker. Search and Rescue is required.",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"no",
-		"ID_CARD":40
-      },
-      {"id":"ID:41/ Hiker on mountain requires medical assistance", 
-        "description1": "Injured person during hiking. Urgent medical assistance has been requested.",
-        "description2": "Person has been injured during hiking. Situation is unclear",
-        "description3": "Injured person during hiking. Urgent medical assistance has been requested.",
-        "description4": "Received a call about sick hiker. Medical assistance is required.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":41
-      },
-      {"id":"ID:42/ Missing climber on glacier after avalanche (SAR)", 
-        "description1": "Person missing after avalanche on glacier. Exact position is unknown.",
-        "description2": "Reported missing climber on glacier after avalanche. Search and Rescue is required.",
-        "description3": "Search and Rescue, of a missing person after avalanche, has been requested.",
-        "description4": "Received a call about a missing climber on glacier after avalanche. Search and Rescue is required.",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":42
-      },
-      {"id":"ID:43/ Injured person in cemetery requires medical assistance", 
-        "description1": "medical emergency.",
-        "description2": "medical emergency.",
-        "description3": "medical emergency.",
-        "description4": "medical emergency.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":43
-      },
-      {"id":"ID:44/ A person fallen from a cliff (SAR)", 
-        "description1": "A person is trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description2": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description3": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description4": "A person is injured after falling from a cliff. Rescue operations may require specialized heli-rescuers",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":44
-      },
-      {"id":"ID:45/ A person fallen from a cliff", 
-        "description1": "A person is trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description2": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description3": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
-        "description4": "A person is injured after falling from a cliff. Rescue operations may require specialized heli-rescuers",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":45
-      },
-      {"id":"ID:46/ A missing person has been reported 2 days ago (SAR)", 
-        "description1": "A person is missing in a wood since 2 days ago. Rescue area may require specialized heli-rescuers and medical assistance",
-        "description2": "A missing person has been reported 2 days ago. Rescue area may require specialized heli-rescuers and medical assistance",
-        "description3": "SAR of a 2 days missing person has been requested.  Medical assistance and specialized heli-rescuers may be required",
-        "description4": "A person disappeared 2 days ago in a wood. Rescue operations may require specialized heli-rescuers",
-        "objective":"Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
-		"SAR":"yes",
-		"mountain_helirescuers":"yes",
-		"ID_CARD":46
-      },
-      {"id":"ID:47/ A skier fell while skiing and was injured", 
-        "description1": "Ski accident, skier collided with a tree after a fall, responsive, pain in arm and leg, unable to continue.",
-        "description2": "Ski accident. Two skiers skiing towards each other, each expecting the other to move aside. Now both are down and complaining.",
-        "description3": "Snowboarder misjudged a turn, then fell and landed on his back, initially unconscious",
-        "description4": "Skier swerved to avoid another skier, tangled his own feet, and severely twisted his right knee.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":47
-      },
+    {
+      "id": "ID:10/ Road Traffic Collision (RTC) - Truck",
+      "description1": "Some injured reported in road traffic collision involving a truck transporting chemical products. Situation unclear.",
+      "description2": "Reported injured after TRUCK vs CAR collision. Truck was transporting chemical products. Caught fire.",
+      "description3": "Multiple injured in CAR vs TRUCK RTC. Trailer with chemical products caught fire.",
+      "description4": "Collision involving a truck caused injured and chemical products leakage. Fire has been reported.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 10
+    },
 
-      {"id":"ID:50/ A skier fell while skiing and was injured", 
-        "description1": "Ski accident",
-        "description2": "Skier veered off course",
-        "description3": "Skier fell on an icy slope",
-        "description4": "Ski accident",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":50
-      },
+    {
+      "id": "ID:11/ Tractor accident with injured farmer",
+      "description1": "Farmer has been injuried when his tractor tipped over.",
+      "description2": "Farmer has been injuried when his tractor tipped over.",
+      "description3": "Farmer has been injuried falling from a tractor, with the tractor still moving.",
+      "description4": "Farmer has been badly injured by a harvester.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 11
+    },
 
-      {"id":"ID:48/ A worker in a factory requires medical assistance", 
-        "description1": "Worker collapsed after lifting a heavy load.",
-        "description2": "A worker has been injured during factory equipment operation",
-        "description3": "A factory worker fallen on ground during his job",
-        "description4": "A worker collapsed after chemical products inhalation",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":48
-      },
-      {"id":"ID:49/ General practitioner requests emergency medical assistance", 
-        "description1": "general practitioner requests emergency medical assistance.",
-        "description2": "dentist requests emergency medical assistance",
-        "description3": "general practitioner requests emergency medical assistance.",
-        "description4": "general practitioner requests emergency medical assistance.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":49
-      },
+    {
+      "id": "ID:12/ Road Traffic Collision (RTC) - Train",
+      "description1": "Collision between vehicle and train at railroad crossing.There are reported injured.",
+      "description2": "Collision between vehicle and train at railroad crossing.There are reported injured.",
+      "description3": "Collision between vehicle and train at railroad crossing.There are reported injured.",
+      "description4": "Collision between vehicle and train at railroad crossing.There are reported injured.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 12
+    },
 
-	  {"id":"ID:51/ Injured person in apartment", 
-        "description1": "Acute asthma attack",
-        "description2": "Acute pulmonary edema with crackles.",
-        "description3": "Pacemaker malfunction in a bypass patient.",
-        "description4": "Sudden, severe headache and collapse",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":51
-      },                  
-	  {"id":"ID:52/ Injured person in apartment", 
-        "description1": "Acute respiratory distress",
-        "description2": "Dialysis patient found at home with unclear alteration in consciousness",
-        "description3": "Patient found somnolent.",
-        "description4": "Person collapsed in the staircase, unresponsive",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":52
-      },            
-      {"id":"ID:53/ Injured person in apartment", 
-        "description1": "Severe wound in a patient with hemophilia.",
-        "description2": "Overdose of sleeping pills (benzodiazepines).",
-        "description3": "Acute respiratory distress in a patient with known coronary artery disease.",
-        "description4": "Patient experiencing acute heart failure symptoms.",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":53
-      },      
-	  {"id":"ID:54/ Injured person in apartment", 
-        "description1": "Acute psychosis",
-        "description2": "Patient presenting with classic signs of a heart attack.",
-        "description3": "Acute asthma attack",
-        "description4": "Lifeless person found in bed.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":54
-      },    
-	  {"id":"ID:55/ Injured person in apartment", 
-        "description1": "Patient has sustained scalding from hot water.",
-        "description2": "Collapse; shock response following a family member's death.",
-        "description3": "Acute respiratory distress in a patient with known silicosis.",
-        "description4": "Patient experiencing an allergic reaction to medication",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":55
-      },     
-	  {"id":"ID:56/ Injured person in apartment", 
-        "description1": "Person fallen from a ladder, further details unknown.",
-        "description2": "Elderly patient presenting with severe dehydration.",
-        "description3": "Husband is breathing very deeply and quickly, looks strenuous",
-        "description4": "Husband seems to be sleeping, but breathing is strange",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":56
-      }, 
-	  {"id":"ID:57/ Injured person in apartment", 
-        "description1": "Severe wound in a patient with hemophilia.",
-        "description2": "Overdose of sleeping pills (benzodiazepines).",
-        "description3": "Acute respiratory distress in a patient with known coronary artery disease.",
-        "description4": "Patient experiencing acute heart failure symptoms.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":57
-      },     
-	  {"id":"ID:58/ Injured person in train station", 
-        "description1": "Unconscious person in the restroom area.",
-        "description2": "Drug overdose, patient already obtunded. No further infos.",
-        "description3": "Epileptic seizure.",
-        "description4": "Sudden, severe headache and collapse",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":58
-      },                  
+    {
+      "id": "ID:13/ Quarry accident with injured worker",
+      "description1": "Worker has been injuried by a payloader in a quarry.Bucket hit him during manoeuvres.",
+      "description2": "Worker has been injuried by a payloader in a quarry.",
+      "description3": "Worker has been injuried falling from an excavator in a quarry.",
+      "description4": "Pallet fell from a crane in a quarry trapping and wounding a worker",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 13
+    },
 
-	  {"id":"ID:60/ Injured person in supermarket", 
-        "description1": "Unconscious person in the restroom area.",
-        "description2": "Saleswoman complaining of sharp chest pain.",
-        "description3": "Unresponsive, no pulse, sudden collaps",
-        "description4": "Sudden, severe headache and collapse",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":60
-      },                  
-	  {"id":"ID:63/ Injured person while hunting", 
-        "description1": "A hunter was injured in a hunting accident.",
-        "description2": "A hunting casualty occurred.",
-        "description3": "A hunter suffered hunting injuries",
-        "description4": "A hunter was injured by an animal while hunting.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":63
-      },                  
-      {"id":"ID:64/ Fisherman requires medical assistance", 
-        "description1": "Injured person during fishing. Urgent medical assistance has been requested.",
-        "description2": "Person has fallen while fishing. Situation is unclear",
-        "description3": "Fisherman getting Injured. Urgent medical assistance has been requested.",
-        "description4": "Received a call about sick fisherman. Medical assistance is required.",
-        "objective":"Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":64
-      },
+    {
+      "id": "ID:14/ Worker injured in a construction site accident",
+      "description1": "A worker has been injured by getting too close to a bulldozer. Their limbs are trapped between track wheels.",
+      "description2": "A worker has been seriously injured while working in a construction site. Situation unclear",
+      "description3": "Worker wounded by getting too close to a bulldozer.",
+      "description4": "Worker wounded by getting too close to a bulldozer.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 14
+    },
 
-      {"id":"ID:99/ Secondary mission: Patient transfer", 
-        "description1": "Secondary mission: Patient transfer has been requested.",
-        "description2": "Secondary mission: Patient relocation has been requested.",
-        "description3": "Secondary mission: Patient aerial transfer is in progress, an airplane is transporting the patient to the airport. Urgent final transportation to the destination hospital has been requested.",
-        "description4": "Secondary mission: Patient urgent air transportation has been requested, ambulance will wait at designated landing spot",
-        "objective":"Objective: Load patient at designed point, safely transfer them to destination.",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":99
-      },
-      {"id":"ID:100/ Secondary mission: Organ transportation", 
-        "description1": "Secondary mission: Organ transportation has been requested.",
-        "description2": "Secondary mission: Urgent organ transportation has been requested.",
-        "description3": "Secondary mission: Organ transportation has been requested",
-        "description4": "Secondary mission: Urgent aerial organ transportation is in progress, final delivery from airport to hospital has been requested.",
-        "objective":"Objective: Pick organ at designed point, safely transport it to destination within given time.",
-		"SAR":"no",
-		"mountain_helirescuers":"no",
-		"ID_CARD":100
-      }
-    ]
- },
-  "api_version": 0.1,
-  "aircraft": ["H145"],
-  "applicable": ["EMS"] 
+    {
+      "id": "ID:15/ Worker injured in a construction site accident",
+      "description1": "A worker has been seriously injured while working in a construction site. Situation unclear",
+      "description2": "A worker has been seriously injured while working in a construction site. Situation unclear",
+      "description3": "A worker has been seriously injured while working in a construction site. Situation unclear",
+      "description4": "A worker has been seriously injured while working in a construction site. Situation unclear",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 15
+    },
+
+    {
+      "id": "ID:16/ Forklift accident in a depot",
+      "description1": "Worker injured by forklift in a depot",
+      "description2": "Forklift manoeuvres caused injuries to a worker.",
+      "description3": "Injured are reported after a forklift accident in a depot.",
+      "description4": "Worker injured by forklift in a depot.",
+      "objective": "Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 16
+    },
+
+    {
+      "id": "ID:17/ Paraglider accident (SAR)",
+      "description1": "A paraglider lost control making an emergency landing at unknown position.",
+      "description2": "A paraglider lost control making an emergency landing at unknown position.",
+      "description3": "A paraglider lost control making an emergency landing at unknown position.",
+      "description4": "A paraglider lost control making an emergency landing at unknown position.",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 17
+    },
+
+    {
+      "id": "ID:18/ Lost contact with helicopter (SAR)",
+      "description1": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "description2": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "description3": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "description4": "Lost all contacts with a helicopter after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 18
+    },
+
+    {
+      "id": "ID:19/ Aircraft, loss of contact after mayday (SAR)",
+      "description1": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "description2": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "description3": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "description4": "Lost all contacts with a general aviation airplane after a MAYDAY. ELT (Emergency Locator Transmitter) has been activated.",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 19
+    },
+
+    {
+      "id": "ID:20/ An airliner performed an emergency landing",
+      "description1": "A passenger airplane performed an emergency landing on runway. Ambulance, police and fire rescue teams  are on scene.",
+      "description2": "An airliner performed an emergency landing ended out of runway. Injured passengers have been reported.",
+      "description3": "An airliner performed an emergency landing ,caused by cabin smoke, which ended out of runway. Injured passengers have been reported.",
+      "description4": "An airliner performed an emergency landing ended out of runway. Injured passengers have been reported.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 20
+    },
+
+    {
+      "id": "ID:21/ Small plane performed an emergency landing",
+      "description1": "A general aviation airplane experienced heavy electrical failure on board and performed an emergency landing.",
+      "description2": "An executive airplane performed an emergency landing after engine(s) issues.",
+      "description3": "A general aviation airplane performed an emergency landing after fuel leakage.",
+      "description4": "An executive plane performed an emergency landing. Injured have been reported.",
+      "objective": "Objective: Fly to the site and provide assistance Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 21
+    },
+
+    {
+      "id": "ID:22/ Camping accident in camping area",
+      "description1": "Injured have been reported in a camping area.",
+      "description2": "Reported injured in a camping area. Situation unclear.",
+      "description3": "Injured have been reported in a camping area.",
+      "description4": "Reported injured in a camping area. Situation unclear.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "mountain_helirescuers": "no",
+      "SAR": "no",
+      "ID_CARD": 22
+    },
+
+    {
+      "id": "ID:23/ Camping accident at peak campsite",
+      "description1": "Person stung by an insect, developed massive shortness of breath.",
+      "description2": "Reported injured in camping accident at peak campsite.",
+      "description3": "Reported injured close to peak campsite after a falling on rocky area.",
+      "description4": "Reported injured at peak campsite. Situation unclear.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "mountain_helirescuers": "no",
+      "SAR": "no",
+      "ID_CARD": 23
+    },
+
+    {
+      "id": "ID:24/ Apartment/house/hotel accident",
+      "description1": "Hotel staff requests medical assistance after an accident. Situation is unclear",
+      "description2": "Patient complains of sudden severe abdominal pain after a fatty meal.",
+      "description3": "A person in apartment requires medical assistance. No info were given",
+      "description4": "A person in a building requires assistance. More info ASAP",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "mountain_helirescuers": "no",
+      "SAR": "no",
+      "ID_CARD": 24
+    },
+
+    {
+      "id": "ID:25/ Nursing home accident",
+      "description1": "CA patient found unconscious.",
+      "description2": "Foreign body aspiration; Heimlich maneuver unsuccessful",
+      "description3": "Acute respiratory distress in a patient with known lung cancer.",
+      "description4": "Unresponsive patient with gray facial complexion, seated, exhibiting agonal, snoring respirations post-seizure.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "mountain_helirescuers": "no",
+      "SAR": "no",
+      "ID_CARD": 25
+    },
+
+    {
+      "id": "ID:26/ Injured person in apartment/hotel",
+      "description1": "Hotel staff reports guest with cardiovascular emergency",
+      "description2": "An injured requires medical assistance.",
+      "description3": "An injured requires medical assistance.",
+      "description4": "Person requires urgent assistance",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 26
+    },
+
+    {
+      "id": "ID:27/ Injured person in apartment/hotel",
+      "description1": "medical emergency in hotel",
+      "description2": "Received a distress call with loud screaming; details unclear, address obtained with difficulty.",
+      "description3": "medical emergency.",
+      "description4": "patient experiencing respiratory distress",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "waving_man": "yes",
+      "ID_CARD": 27
+    },
+
+    {
+      "id": "ID:28/ Injured person in apartment",
+      "description1": "Hotel staff declared a medical emergency",
+      "description2": "medical emergency.",
+      "description3": "medical emergency.",
+      "description4": "medical emergency.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 28
+    },
+
+    {
+      "id": "ID:29/ Injured person in apartment",
+      "description1": "medical emergency.",
+      "description2": "medical emergency..",
+      "description3": "medical emergency.",
+      "description4": "medical emergency.",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 29
+    },
+
+    {
+      "id": "ID:30/ Injured person in apartment",
+      "description1": "Cardiovascular",
+      "description2": "Cardiovascular",
+      "description3": "Cardiovascular",
+      "description4": "Cardiovascular",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 30
+    },
+
+    {
+      "id": "ID:31/ Injured person in apartment",
+      "description1": "Neurologic emergency",
+      "description2": "Neurologic emergency",
+      "description3": "Neurologic emergency",
+      "description4": "Cardiovascular",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 31
+    },
+
+    {
+      "id": "ID:32/ Injured person in apartment",
+      "description1": "acute coronary syndrome",
+      "description2": "acute coronary syndrome",
+      "description3": "ACS - acute coronary syndrome",
+      "description4": "ACS",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 32
+    },
+
+    {
+      "id": "ID:33/ Injured person in his garden",
+      "description1": "A person fallen from ladder in the garden. Medical assistance is required.",
+      "description2": "A person fallen from ladder while gardening. He requires urgent medical assistance.",
+      "description3": "A person has been injured while cooking with grill",
+      "description4": "A person has been injured while cooking with grill",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 33
+    },
+
+    {
+      "id": "ID:34/ Student injured in a school",
+      "description1": "Student injured in gym, suspicion of serious trauma.",
+      "description2": "Student unresponsive. No additional info provided",
+      "description3": "Student unresponsive but conscious.",
+      "description4": "Student unresponsive. No additional info provided",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 34
+    },
+
+    {
+      "id": "ID:61/ Students fight at school",
+      "description1": "Argument between students ends with injuries",
+      "description2": "Student(s) injured after a fight at school. No additional info provided",
+      "description3": "Student(s) unresponsive but conscious.",
+      "description4": "Students brawl ended in stabbing",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 61
+    },
+
+    {
+      "id": "ID:35/ Quarrel injured",
+      "description1": "Injured person after argument needs medical attention.",
+      "description2": "One or more people were injured in an argument in a parking lot.",
+      "description3": "An injured in apartment/house requires medical assistance.",
+      "description4": "An injured person after an argument.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 35
+    },
+
+    {
+      "id": "ID:36/ Worker injured by power tranformer explosion",
+      "description1": "High voltage power tranformer exploded with hot oil leak and fire/smoke. Injured have been reported",
+      "description2": "High voltage power tranformer exploded with hot oil leak and fire/smoke",
+      "description3": "Injured have been reported after high voltage power tranformer explosion",
+      "description4": "Injured have been reported after a power transformer malfunction. Smoke and fire are present on the scene",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 36
+    },
+
+    {
+      "id": "ID:37/ Climber fallen from a rock",
+      "description1": "A climber is trapped on a mountain side due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description2": "Reported climber trapped on a mountain side due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description3": "Reported climber trapped on a mountain side due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description4": "Climber injured after falling from mountain side. Rescue area may require specialized heli-rescuers",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 37
+    },
+
+    {
+      "id": "ID:38/ Injured reported in chair lift accident",
+      "description1": "A person has fallen from a chair lift, he is injured.",
+      "description2": "Reported injured after fall from chair lift.",
+      "description3": "Chairlift dolly fallen on ground. Injured have been reported.",
+      "description4": "Injured have been reported after a chairlift dolly fallen on ground.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 38
+    },
+
+    {
+      "id": "ID:39/ Injured reported in cableway accident",
+      "description1": "A gondola fallen from a cableway, Injured have been reported.",
+      "description2": "A gondola fallen from a cableway, Injured have been reported.",
+      "description3": "Cableway gondola fallen on ground. Injured have been reported.",
+      "description4": "Injured have been reported after a cableway gondola fallen on ground.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 39
+    },
+
+    {
+      "id": "ID:40/ Missing hiker on mountain (SAR)",
+      "description1": "A group of people reported missing person after hike. Exact position is unknown.",
+      "description2": "Reported missing person during hiking. Search and Rescue is required.",
+      "description3": "Search and Rescue, of a missing person after hike, has been requested.",
+      "description4": "Received a call about a missing hiker. Search and Rescue is required.",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 40
+    },
+
+    {
+      "id": "ID:41/ Hiker on mountain requires medical assistance",
+      "description1": "Injured person during hiking. Urgent medical assistance has been requested.",
+      "description2": "Person has been injured during hiking. Situation is unclear",
+      "description3": "Injured person during hiking. Urgent medical assistance has been requested.",
+      "description4": "Received a call about sick hiker. Medical assistance is required.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 41
+    },
+
+    {
+      "id": "ID:42/ Missing climber on glacier after avalanche (SAR)",
+      "description1": "Person missing after avalanche on glacier. Exact position is unknown.",
+      "description2": "Reported missing climber on glacier after avalanche. Search and Rescue is required.",
+      "description3": "Search and Rescue, of a missing person after avalanche, has been requested.",
+      "description4": "Received a call about a missing climber on glacier after avalanche. Search and Rescue is required.",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 42
+    },
+
+    {
+      "id": "ID:43/ Injured person in cemetery requires medical assistance",
+      "description1": "medical emergency.",
+      "description2": "medical emergency.",
+      "description3": "medical emergency.",
+      "description4": "medical emergency.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 43
+    },
+
+    {
+      "id": "ID:44/ A person fallen from a cliff (SAR)",
+      "description1": "A person is trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description2": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description3": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description4": "A person is injured after falling from a cliff. Rescue operations may require specialized heli-rescuers",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 44
+    },
+
+    {
+      "id": "ID:45/ A person fallen from a cliff",
+      "description1": "A person is trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description2": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description3": "Reported a person trapped on a cliff due to fall injureies. Rescue area may require specialized heli-rescuers",
+      "description4": "A person is injured after falling from a cliff. Rescue operations may require specialized heli-rescuers",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 45
+    },
+
+    {
+      "id": "ID:46/ A missing person has been reported 2 days ago (SAR)",
+      "description1": "A person is missing in a wood since 2 days ago. Rescue area may require specialized heli-rescuers and medical assistance",
+      "description2": "A missing person has been reported 2 days ago. Rescue area may require specialized heli-rescuers and medical assistance",
+      "description3": "SAR of a 2 days missing person has been requested.  Medical assistance and specialized heli-rescuers may be required",
+      "description4": "A person disappeared 2 days ago in a wood. Rescue operations may require specialized heli-rescuers",
+      "objective": "Objective: Fly to the last known position and start Search And Rescue operations. Find and rescue the person, deliver them to a nearby hospital",
+      "SAR": "yes",
+      "mountain_helirescuers": "yes",
+      "ID_CARD": 46
+    },
+
+    {
+      "id": "ID:47/ A skier fell while skiing and was injured",
+      "description1": "Ski accident, skier collided with a tree after a fall, responsive, pain in arm and leg, unable to continue.",
+      "description2": "Ski accident. Two skiers skiing towards each other, each expecting the other to move aside. Now both are down and complaining.",
+      "description3": "Snowboarder misjudged a turn, then fell and landed on his back, initially unconscious",
+      "description4": "Skier swerved to avoid another skier, tangled his own feet, and severely twisted his right knee.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 47
+    },
+
+    {
+      "id": "ID:50/ A skier fell while skiing and was injured",
+      "description1": "Ski accident",
+      "description2": "Skier veered off course",
+      "description3": "Skier fell on an icy slope",
+      "description4": "Ski accident",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 50
+    },
+
+    {
+      "id": "ID:48/ A worker in a factory requires medical assistance",
+      "description1": "Worker collapsed after lifting a heavy load.",
+      "description2": "A worker has been injured during factory equipment operation",
+      "description3": "A factory worker fallen on ground during his job",
+      "description4": "A worker collapsed after chemical products inhalation",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 48
+    },
+
+    {
+      "id": "ID:49/ General practitioner requests emergency medical assistance",
+      "description1": "general practitioner requests emergency medical assistance.",
+      "description2": "dentist requests emergency medical assistance",
+      "description3": "general practitioner requests emergency medical assistance.",
+      "description4": "general practitioner requests emergency medical assistance.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 49
+    },
+
+    {
+      "id": "ID:51/ Injured person in apartment",
+      "description1": "Acute asthma attack",
+      "description2": "Acute pulmonary edema with crackles.",
+      "description3": "Pacemaker malfunction in a bypass patient.",
+      "description4": "Sudden, severe headache and collapse",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 51
+    },
+
+    {
+      "id": "ID:52/ Injured person in apartment",
+      "description1": "Acute respiratory distress",
+      "description2": "Dialysis patient found at home with unclear alteration in consciousness",
+      "description3": "Patient found somnolent.",
+      "description4": "Person collapsed in the staircase, unresponsive",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 52
+    },
+
+    {
+      "id": "ID:53/ Injured person in apartment",
+      "description1": "Severe wound in a patient with hemophilia.",
+      "description2": "Overdose of sleeping pills (benzodiazepines).",
+      "description3": "Acute respiratory distress in a patient with known coronary artery disease.",
+      "description4": "Patient experiencing acute heart failure symptoms.",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 53
+    },
+
+    {
+      "id": "ID:54/ Injured person in apartment",
+      "description1": "Acute psychosis",
+      "description2": "Patient presenting with classic signs of a heart attack.",
+      "description3": "Acute asthma attack",
+      "description4": "Lifeless person found in bed.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 54
+    },
+
+    {
+      "id": "ID:55/ Injured person in apartment",
+      "description1": "Patient has sustained scalding from hot water.",
+      "description2": "Collapse; shock response following a family member's death.",
+      "description3": "Acute respiratory distress in a patient with known silicosis.",
+      "description4": "Patient experiencing an allergic reaction to medication",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 55
+    },
+
+    {
+      "id": "ID:56/ Injured person in apartment",
+      "description1": "Person fallen from a ladder, further details unknown.",
+      "description2": "Elderly patient presenting with severe dehydration.",
+      "description3": "Husband is breathing very deeply and quickly, looks strenuous",
+      "description4": "Husband seems to be sleeping, but breathing is strange",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 56
+    },
+
+    {
+      "id": "ID:57/ Injured person in apartment",
+      "description1": "Severe wound in a patient with hemophilia.",
+      "description2": "Overdose of sleeping pills (benzodiazepines).",
+      "description3": "Acute respiratory distress in a patient with known coronary artery disease.",
+      "description4": "Patient experiencing acute heart failure symptoms.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 57
+    },
+
+    {
+      "id": "ID:58/ Injured person in train station",
+      "description1": "Unconscious person in the restroom area.",
+      "description2": "Drug overdose, patient already obtunded. No further infos.",
+      "description3": "Epileptic seizure.",
+      "description4": "Sudden, severe headache and collapse",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 58
+    },
+
+    {
+      "id": "ID:60/ Injured person in supermarket",
+      "description1": "Unconscious person in the restroom area.",
+      "description2": "Saleswoman complaining of sharp chest pain.",
+      "description3": "Unresponsive, no pulse, sudden collaps",
+      "description4": "Sudden, severe headache and collapse",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 60
+    },
+
+    {
+      "id": "ID:63/ Injured person while hunting",
+      "description1": "A hunter was injured in a hunting accident.",
+      "description2": "A hunting casualty occurred.",
+      "description3": "A hunter suffered hunting injuries",
+      "description4": "A hunter was injured by an animal while hunting.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 63
+    },
+
+    {
+      "id": "ID:64/ Fisherman requires medical assistance",
+      "description1": "Injured person during fishing. Urgent medical assistance has been requested.",
+      "description2": "Person has fallen while fishing. Situation is unclear",
+      "description3": "Fisherman getting Injured. Urgent medical assistance has been requested.",
+      "description4": "Received a call about sick fisherman. Medical assistance is required.",
+      "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 64
+    },
+
+    {
+      "id": "ID:99/ Secondary mission: Patient transfer",
+      "description1": "Secondary mission: Patient transfer has been requested.",
+      "description2": "Secondary mission: Patient relocation has been requested.",
+      "description3": "Secondary mission: Patient aerial transfer is in progress, an airplane is transporting the patient to the airport. Urgent final transportation to the destination hospital has been requested.",
+      "description4": "Secondary mission: Patient urgent air transportation has been requested, ambulance will wait at designated landing spot",
+      "objective": "Objective: Load patient at designed point, safely transfer them to destination.",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 99
+    },
+
+    {
+      "id": "ID:100/ Secondary mission: Organ transportation",
+      "description1": "Secondary mission: Organ transportation has been requested.",
+      "description2": "Secondary mission: Urgent organ transportation has been requested.",
+      "description3": "Secondary mission: Organ transportation has been requested",
+      "description4": "Secondary mission: Urgent aerial organ transportation is in progress, final delivery from airport to hospital has been requested.",
+      "objective": "Objective: Pick organ at designed point, safely transport it to destination within given time.",
+      "SAR": "no",
+      "mountain_helirescuers": "no",
+      "ID_CARD": 100
+    }
+  ]
+},
+
+"api_version": 0.1,
+
+"aircraft": [
+    "H145"
+  ],
+
+"applicable": [
+    "EMS"
+  ]
 }

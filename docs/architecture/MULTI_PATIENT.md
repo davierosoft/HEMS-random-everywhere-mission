@@ -20,6 +20,10 @@ Saves use versioned `crew_transport_save0` through `crew_transport_save3` and `c
 
 ### Medical telemetry after completed visits
 
+CPR ownership uses a generation token independently of its watchdog deadline. The worker renews its lease every five seconds; releasing or reacquiring advances the generation, so an old worker cannot renew, release or overwrite a newer procedure. A stalled worker still expires. Manual CPR for a loaded HEMS patient pauses while airborne without mCPR, retains the landing-required state and allows deterioration; compressions, elapsed treatment time and the start announcement begin only when treatment is possible. Automatic and manual CPR remain restricted to one active patient.
+
+Delayed transport stabilization captures the displayed patient and live generation, then rechecks the displayed slot, clinical range, manual ownership, loaded HEMS record, ground state and report status before writing that slot. Changing patients during the delay cancels the operation. P2/P3 never write P1 physiology through this action.
+
 All patient visits must finish before any ground patient's medical detail feed closes. A confirmed death resolves that patient's otherwise impossible visit. An initial assessment, a crew-return flag, a provisional reservation, or choosing GROUND is not enough. The live compatibility adapter records completion after `patient clinical visit gate` returns, and also recognizes completed medical actions or completed ambulance treatment. It closes a ground patient's detail page only after P1 is secured in its ambulance transfer sequence or P2/P3 is marked ground transported. It never delays ambulance movement while waiting for other visits.
 
 The pure decision macro accepts one through five records; the current legacy reader supplies only P1-P3 and fails open for unsupported counts. Closed patients receive a summary page with patient navigation, not stale vital signs or treatment controls. The display-copy macro bypasses detailed copying for that selected patient. This stops tablet detail work, not the underlying clinical simulation. H145 and unassigned patients keep their medical pages.

@@ -163,28 +163,31 @@ assert.throws(() => assertFreshMutableArrays({set: {param: 'record'}, value: {cr
   const failed = new HpgRegistry(failedProbe); failed.call('multipatient registry compatibility check');
   assert.match(JSON.parse(failed.savedTables.Andrews_debug_snapshots.patient_registry).sdk_check, /^FAIL:/, 'Failure result is also saved without manual capture');
   const debug = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/15-debug-and-df-ui.json'), 'utf8'))['debug page'];
-  let captureCommands;
+  let captureCall;
   function findCapture(x) {
     if (Array.isArray(x)) {
-      if (x.some(c => c?.call_macro === 'multipatient registry capture')) captureCommands = x;
+      if (x.some(c => c?.call_macro === 'capture diagnostic snapshot')) captureCall = x.find(c => c.call_macro === 'capture diagnostic snapshot');
       x.forEach(findCapture);
     } else if (x && typeof x === 'object') Object.values(x).forEach(findCapture);
   }
   findCapture(debug);
-  const extensionIndex = captureCommands.findIndex(c => c.call_macro === 'multipatient registry capture');
+  assert.equal(captureCall.params.snapshot_table.static, 'Debug_Table');
+  const captureCommands = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/19-location-diagnostics.json'), 'utf8'))['capture diagnostic snapshot'];
+  const extensionIndex = captureCommands.findIndex(c => c.try?.some(command => command.call_macro === 'multipatient registry diagnostics'));
   assert.ok(captureCommands[extensionIndex - 1].save_table, 'Commit the main snapshot before calling the optional registry extension');
   const snapshotFailure = structuredClone(source);
   snapshotFailure['multipatient registry diagnostics'] = [{set: {param: 'broken'}, value: {unsupported_test_query: 1}}];
   const isolated = new HpgRegistry(snapshotFailure);
   isolated.tables.Andrews_debug_snapshots = {valid: 'yes', snapshot_medical: {preserved: true}};
-  isolated.commands(captureCommands.slice(extensionIndex - 1, extensionIndex + 1), {});
+  isolated.commands(captureCommands.slice(extensionIndex - 1, extensionIndex + 1), {snapshot_table: 'Andrews_debug_snapshots'});
   assert.deepEqual(isolated.savedTables.Andrews_debug_snapshots.snapshot_medical, {preserved: true});
   assert.equal(isolated.savedTables.Andrews_debug_snapshots.valid, 'yes');
   assert.match(isolated.locals.patient_registry_capture_status, /^FAILED:/);
 }
 {
-  const locationDiagnostics = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/19-location-diagnostics.json'), 'utf8'))['location diagnostics monitor'];
-  assert.deepEqual(locationDiagnostics[0], {open_table: {static: 'Debug_Auto_Table'}}, 'Automatic location diagnostics must open its persistent table before reading or writing');
+  const diagnostics = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/19-location-diagnostics.json'), 'utf8'));
+  const locationDiagnostics = diagnostics['start location diagnostics'];
+  assert.ok(locationDiagnostics.findIndex(c => c.open_table?.static === 'Debug_Auto_Table') < locationDiagnostics.findIndex(c => c.set?.table), 'Automatic diagnostics must open its table before writing');
   const hasCommand = (value, predicate) => Array.isArray(value) ? value.some((entry) => hasCommand(entry, predicate)) : value && typeof value === 'object' ? predicate(value) || Object.values(value).some((entry) => hasCommand(entry, predicate)) : false;
   assert.equal(hasCommand(locationDiagnostics, command => command.set?.table?.static === 'Debug_Auto_Table' && command.save_table?.static === 'Debug_Auto_Table'), false, 'Automatic diagnostics must use separate set and save commands');
   assert.ok(hasCommand(locationDiagnostics, command => command.set?.table?.static === 'Debug_Auto_Table'), 'Automatic location diagnostics must write the opened table');

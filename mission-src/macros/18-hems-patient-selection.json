@@ -1,6 +1,85 @@
-{
-  "select HEMS patient": [{"if":{"local":"HEMS_TRANSPORT_TICKET"},"ne":null,"then":[{"call_macro":"multipatient registry live ticket valid","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"valid"},{"if":{"param":"valid"},"eq":1,"then":[{"set":{"local":"whobringpatient"},"value":"us"},{"return":{"local":"HEMS_PATIENT_NUMBER"}}]},{"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":null},{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null}]},{"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},{"if":{"param":"ready"},"ne":1,"then":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},{"return":0}]},{"call_macro":"hems patient decision after visits"},{"while":{"local":"HEMS_DECISION_STATE"},"eq":"awaiting_transport_resource","do":[{"sleep":1},{"call_macro":"hems patient decision after visits"}]},{"return":{"local":"HEMS_PATIENT_NUMBER"}}],
-  "hems patient decision after visits": [{"if":{"local":"HEMS_TRANSPORT_TICKET"},"ne":null,"then":[{"return":{"local":"HEMS_PATIENT_NUMBER"}}]},{"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},{"if":{"param":"ready"},"ne":1,"then":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},{"return":0}]},{"call_macro":"multipatient registry submit","params":{"operation":"live_reserve","arguments":{"create_struct":{"resource":"hems"}}},"result":"ticket"},{"if":{"param":"ticket"},"ne":null,"then":[{"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":{"param":"ticket"}},{"set":{"local":"HEMS_PATIENT_NUMBER"},"value":{"param":"ticket","path":"slot"}},{"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":1,"then":[{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE"}}]},{"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":2,"then":[{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}]},{"if":{"local":"HEMS_PATIENT_NUMBER"},"eq":3,"then":[{"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},{"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}]},{"set":{"local":"HEMS_DECISION_STATE"},"value":"hems_selected"},{"set":{"local":"whobringpatient"},"value":"us"}],"else":[{"call_macro":"multipatient registry live pending"},{"if":{"local":"patient_unassigned_transport"},"gt":0,"then":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"awaiting_transport_resource"}],"else":[{"if":{"local":"patient_pending_transport"},"gt":0,"then":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"ground_transport_in_progress"}],"else":[{"set":{"local":"HEMS_DECISION_STATE"},"value":"no_transport_required"}]},{"set":{"local":"whobringpatient"},"value":"ambulance"}]}]},{"return":{"local":"HEMS_PATIENT_NUMBER"}}],
-  "select worst unassigned HEMS patient": [{"call_macro":"select HEMS patient"}],
-  "prepare selected HEMS patient": [{"call_macro":"multipatient registry live prepare patient","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"ok"},{"return":{"param":"ok"}}]
+{"select HEMS patient": [
+    {"if": {"local":"HEMS_TRANSPORT_TICKET"}, "ne": null,
+      "then": [
+        {"call_macro":"multipatient registry live ticket valid","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"valid"},
+        {"if": {"param":"valid"}, "eq": 1,
+          "then": [
+            {"set":{"local":"whobringpatient"},"value":"us"},
+            {"return":{"local":"HEMS_PATIENT_NUMBER"}}
+        ]},
+        {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":null},
+        {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},
+        {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null}
+    ]},
+    {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
+    {"if": {"param":"ready"}, "ne": 1,
+      "then": [
+        {"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},
+        {"return":0}
+    ]},
+    {"call_macro":"hems patient decision after visits"},
+    {"while": {"local":"HEMS_DECISION_STATE"}, "eq": "awaiting_transport_resource",
+      "do": [
+        {"sleep":1},
+        {"call_macro":"hems patient decision after visits"}
+    ]},
+    {"return":{"local":"HEMS_PATIENT_NUMBER"}}
+  ],
+  "hems patient decision after visits": [
+    {"if": {"local":"HEMS_TRANSPORT_TICKET"}, "ne": null,
+      "then": [
+        {"return":{"local":"HEMS_PATIENT_NUMBER"}}
+    ]},
+    {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
+    {"if": {"param":"ready"}, "ne": 1,
+      "then": [
+        {"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},
+        {"return":0}
+    ]},
+    {"call_macro":"multipatient registry submit","params":{"operation":"live_reserve","arguments":{"create_struct":{"resource":"hems"}}},"result":"ticket"},
+    {"if": {"param":"ticket"}, "ne": null,
+      "then": [
+        {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":{"param":"ticket"}},
+        {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":{"param":"ticket","path":"slot"}},
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "eq": 1,
+          "then": [
+            {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human"},
+            {"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE"}}
+        ]},
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "eq": 2,
+          "then": [
+            {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human2"},
+            {"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE2"}}
+        ]},
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "eq": 3,
+          "then": [
+            {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":"injured_human3"},
+            {"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}
+        ]},
+        {"set":{"local":"HEMS_DECISION_STATE"},"value":"hems_selected"},
+        {"set":{"local":"whobringpatient"},"value":"us"}
+      ],"else": [
+        {"call_macro":"multipatient registry live pending"},
+        {"if": {"local":"patient_unassigned_transport"}, "gt": 0,
+          "then": [
+            {"set":{"local":"HEMS_DECISION_STATE"},"value":"awaiting_transport_resource"}
+          ],"else": [
+            {"if": {"local":"patient_pending_transport"}, "gt": 0,
+              "then": [
+                {"set":{"local":"HEMS_DECISION_STATE"},"value":"ground_transport_in_progress"}
+              ],"else": [
+                {"set":{"local":"HEMS_DECISION_STATE"},"value":"no_transport_required"}
+            ]},
+            {"set":{"local":"whobringpatient"},"value":"ambulance"}
+        ]}
+    ]},
+    {"return":{"local":"HEMS_PATIENT_NUMBER"}}
+  ],
+  "select worst unassigned HEMS patient": [
+    {"call_macro":"select HEMS patient"}
+  ],
+  "prepare selected HEMS patient": [
+    {"call_macro":"multipatient registry live prepare patient","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"ok"},
+    {"return":{"param":"ok"}}
+  ]
 }

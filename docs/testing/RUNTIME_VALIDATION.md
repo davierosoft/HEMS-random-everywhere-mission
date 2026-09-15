@@ -2,6 +2,22 @@
 
 These are maintained manual scenarios whose object choreography, UI timing, simulator assets, or HPG execution cannot be proven by static validators. Run only the sections affected by a change and record the result with the release.
 
+## Recovery R1-R7 acceptance matrix
+
+Record the exact artifact SHA-256, aircraft/crew configuration and observed result for each row. All rows below are currently PENDING; command-interpreter tests do not establish simulator behavior.
+
+| Area | Setup and observable acceptance |
+| --- | --- |
+| R1 snapshots | Capture a manual snapshot; start a new dispatch and move through custom/residential/SAR locations. Reopen both tables: manual data remains unchanged, automatic data belongs to the new dispatch, coordinates and writer names match the visible locations, history remains at most 200 entries and an idle scene does not rewrite it. Repeat a second dispatch. |
+| R2 crew and roads | Observe normal crew creation and an unavailable crew livery/package. Debug must identify the requested crew, failure/timeout and any eventual successful recovery. Delay or suppress road data and verify the displayed query status. |
+| R3 scene fallback | Test queries enabled, explicitly skipped, unavailable and late. All three approach/rescue pairs must surround the rescue point; loading must continue after fallback. A late old query must not overwrite the fallback or the next dispatch. Check visible marker movement and cleanup with and without 30West assets. |
+| R4 stabilization | On the ground with the selected HEMS patient loaded, stabilize P1, P2 and P3 separately. Only the selected patient's score changes. Switch displayed patient during the delay; neither patient changes. Frozen ground reports remain unchanged. |
+| R5 CPR duration | Keep a refractory arrest through five minutes, verify uninterrupted CPR elapsed time and STOP availability. Stop, then initiate a new eligible CPR: no old worker resumes or clears it. Verify ROSC and death cleanup. |
+| R6 manual/mCPR | For each loaded P1/P2/P3, airborne without mCPR must request landing, continue deterioration and avoid compressions/start audio. Landing starts manual CPR; takeoff pauses it again. Repeat with mCPR and confirm airborne treatment remains available. |
+| R7 marshaller | For both base/hospital marshaller roles and pisteur3, arm departure, pass NR 20%, switch both prime pumps off at NR 40% and verify startup guidance is retained. Below NR 20% the reset still occurs. Verify approach/departure and hover signals remain correct. |
+
+Retain the existing P1-P3 matrix for all nine patient/resource combinations, manual/automatic treatment, ground/hoist/skid, reports, second rescue and save/reload; no recovery row replaces those integration checks.
+
 ## Inactive multi-patient registry compatibility check
 
 - Setup: open Debug Center, then MULTI-PATIENT REGISTRY DIAGNOSTICS. This preparatory build leaves the live P1-P3 scene and transport logic unchanged; it does not enable five patients.

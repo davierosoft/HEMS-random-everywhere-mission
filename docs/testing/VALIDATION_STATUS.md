@@ -1,15 +1,27 @@
 # Current development validation
 
+## Recovery R1-R7 - 2026-09-15
+
+All seven recovery items are implemented in candidate **0.997 168**. The complete static suite passes, including the existing P1-P3 integration, 582 HVAR triggers and 242 HVAR assignments, plus the new recovery and mandatory-formatting gates. The only root change is the requested release title; data semantics are unchanged. Of 79 changed macros, 55 contain only location-writer diagnostics; the other 24 include six new helpers.
+
+HPG/MSFS validation remains **PENDING**. On 2026-09-15 the user explicitly authorized candidate 168 locally and on GitHub and deferred the named recovery and P1-P3 simulator checks. This consent authorizes an unvalidated candidate, not a simulator-success claim or validated package. The recovery matrix in RUNTIME_VALIDATION.md must be completed against the exact supplied candidate hash before claiming a validated release.
+
+- Canonical local and repository artifact: `everywhere_all.json`.
+- SHA-256: `a05c874a9a8c96125003af9d954b205df1a540e2e40be1d21a10227d0a131423`.
+- The workflow's local-test output has the same bytes; the repository-root file remains the sole official local source-workspace artifact.
+
+See [recovery audit](../architecture/RECOVERY_AUDIT_2026-09-15.md) for requirement coverage and pending runtime evidence.
+
 ## Source-only P1-P3 crew and transport integration
 
 Points 1-9 are connected in source for P1-P3: independent crew visits, completed-treatment barriers, exclusive tickets, HEMS priority, shared loading, temporary shelter, stable repeat rescue, independent deterioration and versioned save/restore. Targeted tests execute all nine patient/resource combinations, real MANUAL and CPR worker commands, interrupted-loading recovery, physiology and three save slots. The complete static suite passes. HPG/MSFS confirmation is PENDING; command tests do not prove simulator scheduling, object choreography or aircraft receipts.
 
-No newly numbered delivery, publication or simulator sign-off was produced. The repository artifact is an internal draft with its pre-existing version unchanged. Follow the P1-P3 transport matrix in `RUNTIME_VALIDATION.md`. P4/P5 and authored scene graph routes remain separate implementation work.
+This integration is retained in candidate 168 above. Follow the P1-P3 transport matrix in `RUNTIME_VALIDATION.md`. P4/P5 and authored scene graph routes remain separate implementation work.
 
 ## Previously recorded candidate
 
 - Candidate: **0.997 167**, local static candidate. This is the latest supplied local-test copy and includes the location diagnostics, bounded residential road-node recovery, separate manual and automatic snapshots, and the preceding P1-P3 ambulance assessment/stretcher flow, patient-record focus controls, residential rescue-point placement, and extinguishable two-firetruck residential fire response.
-- Historical artifact name: `everywhere_all.json`; the current repository-root file is the internal draft described above.
+- Historical artifact name: `everywhere_all.json`; the current repository-root file is candidate 168 described above.
 - SHA-256: `283b21e46f4988187abe6776a7f130a029a2abaefc166f84fa2efdccf614e391`.
 - Local source/artifact byte equality, semantic scope and complete static suite: PASS.
 - HPG/MSFS validation of the complete 167 candidate: **PENDING - user testing in progress**.
