@@ -15,7 +15,7 @@ These instructions protect the deployable mission and user state.
 - `everywhere_all.json` is generated; edit one focused module and run `node tools/mission-workspace.js build`.
 - The historical original mission artifact is `starting point/baseline-0.997-original-fully-functional.json`. Use this exact file as the original-behavior reference when comparing regressions or reconstructing prior behavior. Do not substitute `git HEAD`, a generated `everywhere_all.json`, a release output, or a later modular source snapshot; do not edit the baseline file.
 - `train.json` remains an independent deployable input. HPG owns the local global-state container; it is not a repository or delivery artifact.
-- Use `node tools/mission-workspace.js locate "<name>"` to find an owner; do not load the monolith when a module is available.
+- Use `node tools/mission-workspace.js locate "<name>"` to find an owner; prefer modules over the monolith.
 - Follow nested `AGENTS.md` files inside `mission-src/`, `tools/`, and `docs/` when working there.
 
 ## Surgical changes
@@ -45,11 +45,13 @@ These instructions protect the deployable mission and user state.
 
 - Durable architecture belongs in `docs/architecture/`; runtime checks in `docs/testing/`.
 - Release completeness blocks delivery: audit every explicit requirement against source, artifact, tests, and notes. Do not publish omitted, partial, unverified, or contradicted work; defer only with explicit user consent and record it.
-- Requirement continuity is mandatory: every explicit point from the current and relevant prior chats remains in the active release ledger until the user explicitly cancels or supersedes it. Do not silently drop it because a newer symptom appears, because another subsystem is being debugged, or because a fallback makes the symptom less visible. Before every delivery, process and account for every carried requirement with source coverage, generated-artifact coverage, automated-test status, and runtime status; an omitted, merely deferred, or watchdog-only item blocks publication.
+- Requirement continuity is mandatory: every explicit point from current/relevant prior chats stays in the release ledger until canceled. Before delivery, account for each with source, artifact, automated-test, and runtime status; omitted, deferred, or watchdog-only items block publication.
 - Drafts are internal; publish/link a local-test artifact only when explicitly ordered.
+- Publication is local by default. GitHub push, tag, or PR requires that the user explicitly names GitHub/PR; never open a PR opportunistically.
+- A requested publication must use the next unused release number exactly once; never reuse a supplied local-test number or suffix. The local artifact is always named `everywhere_all.json`.
 - Update `CHANGELOG.en.md` only for a mission release or externally visible technical change. Change `CHANGELOG_USER.en.md` only when explicitly requested.
 - When the user changelog is requested, compare every technical release after its stated coverage version with the user changelog. Add every final user-facing change, omit superseded/internal cumulative details, and never advance the coverage version while any intervening release is unaccounted for.
 - User-changelog contract: when requested, `CHANGELOG_USER.en.md` uses exactly `FIXES`, `UI`, `NEW FUNCTIONS`; describe only user-visible behavior, with one build reference and one runtime test per item. Audit every build in scope and run `node tools/validate-user-changelog.js`.
-- Keep commits on `CICERS/*`. For every future user request to publish a completed change, automatically push the named CICERS branch after its commit and required checks succeed. Never bypass branch protection or claim runtime validation that was not performed.
+- Keep commits on `CICERS/*`. For an explicitly requested GitHub publication, push the named CICERS branch after its commit and required checks succeed, then open/attach a PR only if explicitly requested. Never bypass branch protection or claim runtime validation that was not performed.
 - When explicitly asked to sync code while simulator testing continues, publish a development checkpoint with runtime status marked PENDING. This is not permission to package, tag, or announce a validated mission release. Update `main` only through a normal PR merge after its required checks; never direct-push, force, or use an admin bypass.
-- Keep completed architecture separate from the remaining-work list. Remove implemented tasks from that list, but retain incomplete integration and unverified simulator scenarios. Consult `docs/architecture/DEVELOPMENT_WORKFLOW.md` and `docs/testing/VALIDATION_STATUS.md`; do not restart completed SDK-only work.
+- Keep completed architecture separate from remaining work; retain incomplete integration and unverified simulator scenarios. Consult the workflow and validation-status docs.

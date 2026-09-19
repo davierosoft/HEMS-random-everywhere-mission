@@ -1,3 +1,8 @@
+## Release 0.997 168.20
+
+- Declare release-number update in version check
+- Requested local publication of all carried mission corrections; no GitHub publication
+
 ## Release 0.997 168.19
 
 - Include destination snapshot gate and passive movement diagnostics
