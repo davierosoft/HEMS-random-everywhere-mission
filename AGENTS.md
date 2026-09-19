@@ -29,6 +29,8 @@ These instructions protect the deployable mission and user state.
 - `global.json` is not a repository or delivery artifact. Never edit, regenerate, format, restore, or otherwise write it. Initialize required globals in the mission with null-guarded `set: global`; never overwrite local HPG state.
 - `param:*` is scoped to its owning macro/thread. Workers, `create_thread`, and callees may not implicitly read/write caller params. Snapshot inputs into explicit `params` or locals before spawning; reject any out-of-scope reference.
 - `:LOCATION` is permitted only in HPG text-box formatter parameters. Never use it in values, initialization, conditions, structs, tables, snapshots, or debug state. Runtime logging uses dedicated mission LVARs populated by the documented coordinate mechanism; snapshots may read those LVARs only.
+- Snapshot JSON safety: initialize locals before `json:copy`; never serialize `undefined`. New keys need a guard and pre-capture initialization.
+- Pass `{"param":"..."}` to `location`/`object`; never interpolate `{param:*}` strings.
 - Root keys, command spelling, renderer placement, and state-machine rules are defined in `DEVELOPMENT_RELEASE_CHECKLIST.md`.
 
 ## Required verification

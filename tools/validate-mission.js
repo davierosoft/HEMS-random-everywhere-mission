@@ -424,9 +424,22 @@ function checkCompleteDebugSnapshot(debugPage) {
 function checkHemsMovementSnapshotGuard() {
   const capture = compact(mission.macros['capture diagnostic snapshot'] || []);
   const movementCapture = compact(mission.macros['capture crew movement snapshot'] || []);
+  const diagnosticsStart = compact(mission.macros['start location diagnostics'] || []);
   expectRegression(
     capture.includes('"call_macro":"capture crew movement snapshot"') && movementCapture.includes('"key":"crew_movement_log"') && movementCapture.includes('"local":"crew_movement_log"'),
     'Crew movement snapshot must persist the passive movement log',
+  );
+  expectRegression(
+    diagnosticsStart.includes('"local":"crew_movement_log"') && diagnosticsStart.includes('"create_array":0'),
+    'Snapshot locals must be initialized before any JSON copy',
+  );
+  expectRegression(
+    movementCapture.includes('"local":"crew_movement_log"') && movementCapture.includes('"create_array":0'),
+    'Crew movement JSON copy must guard an uninitialized local',
+  );
+  expectRegression(
+    !movementCapture.includes('"location":"{param:') && !movementCapture.includes('"object":"{param:'),
+    'Crew movement snapshot must pass actor and target as HPG parameter expressions, never interpolated strings',
   );
 }
 
