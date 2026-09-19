@@ -84,6 +84,15 @@ function updateRuntimeReleaseBuild(repositoryRoot, build) {
   writeTextAtomic(source, text.replace(pattern, `$1${build}`));
 }
 
+function updateRuntimeReleaseIdentity(repositoryRoot, release) {
+  const source = path.join(repositoryRoot, 'mission-src', 'macros', '01-bootstrap-settings.json');
+  if (!fs.existsSync(source)) return;
+  const text = fs.readFileSync(source, 'utf8');
+  const pattern = /("set"\s*:\s*\{\s*"local"\s*:\s*"RELEASE_IDENTITY"\s*\}\s*,\s*"value"\s*:\s*)"[^"]*"/;
+  if (!pattern.test(text)) throw new Error(`runtime release identity assignment is missing in ${path.relative(repositoryRoot, source)}`);
+  writeTextAtomic(source, text.replace(pattern, `$1${JSON.stringify(release)}`));
+}
+
 function replaceArtifactTitle(artifact, oldTitle, newTitle) {
   const titlePattern = /^(\s*"title"\s*:\s*)"([^"\r\n]*)"/m;
   const match = titlePattern.exec(artifact);
@@ -111,7 +120,7 @@ function beginRelease(repositoryRoot, release, note, scope) {
   }
   if (compareRelease(release, identity.release) <= 0) throw new Error(`release ${release} must be higher than current ${identity.release}`);
 
-  const newTitle = identity.mission.title.replace(/\d+\.\d+\s+\d+\s*$/, release);
+  const newTitle = identity.mission.title.replace(/\d+\.\d+\s+\d+(?:\.\d+)?\s*$/, release);
   const updatedArtifact = replaceArtifactTitle(artifact, identity.mission.title, newTitle);
   JSON.parse(updatedArtifact);
   const changelogPath = path.join(repositoryRoot, 'CHANGELOG.en.md');
@@ -121,6 +130,7 @@ function beginRelease(repositoryRoot, release, note, scope) {
   scope = { ...scope, macros: scopedMacros };
 
   updateRuntimeReleaseBuild(repositoryRoot, parseRelease(release).build);
+  updateRuntimeReleaseIdentity(repositoryRoot, release);
   writeTextAtomic(changelogPath, updatedChangelog);
   writeTextAtomic(path.join(repositoryRoot, 'everywhere_all.json'), updatedArtifact);
   const intent = {
@@ -175,6 +185,11 @@ function amendPreparedRelease(repositoryRoot, note, scope) {
   const updatedChangelog = changelog.replace(header, `${header}- ${amendment}\n`);
   intent.scope = mergedScope;
   intent.note = `${intent.note} ${amendment}`;
+  if (intent.kind === 'draft') {
+    intent.status = 'prepared';
+    delete intent.builtAt;
+    delete intent.builtArtifactSha256;
+  }
   intent.amendedAt = new Date().toISOString();
   writeTextAtomic(changelogPath, updatedChangelog);
   writeIntent(repositoryRoot, intent);

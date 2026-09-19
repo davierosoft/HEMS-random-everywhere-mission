@@ -1,4 +1,9 @@
 {"select HEMS patient": [
+    {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
+    {"if": {"param":"ready"}, "ne": 1,
+      "then": [
+        {"return":0}
+    ]},
     {"if": {"local":"HEMS_TRANSPORT_TICKET"}, "ne": null,
       "then": [
         {"call_macro":"multipatient registry live ticket valid","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"valid"},
@@ -10,12 +15,6 @@
         {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":null},
         {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},
         {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null}
-    ]},
-    {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
-    {"if": {"param":"ready"}, "ne": 1,
-      "then": [
-        {"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},
-        {"return":0}
     ]},
     {"call_macro":"hems patient decision after visits"},
     {"while": {"local":"HEMS_DECISION_STATE"}, "eq": "awaiting_transport_resource",
@@ -29,12 +28,6 @@
     {"if": {"local":"HEMS_TRANSPORT_TICKET"}, "ne": null,
       "then": [
         {"return":{"local":"HEMS_PATIENT_NUMBER"}}
-    ]},
-    {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
-    {"if": {"param":"ready"}, "ne": 1,
-      "then": [
-        {"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},
-        {"return":0}
     ]},
     {"call_macro":"multipatient registry submit","params":{"operation":"live_reserve","arguments":{"create_struct":{"resource":"hems"}}},"result":"ticket"},
     {"if": {"param":"ticket"}, "ne": null,
@@ -57,6 +50,22 @@
             {"set":{"local":"HEMS_PATIENT_LIFESCORE"},"value":{"local":"LIFESCORE3"}}
         ]},
         {"set":{"local":"HEMS_DECISION_STATE"},"value":"hems_selected"},
+        {"set":{"local":"dispatch_lifescore_hems_only"},"value":1},
+        {"set":{"local":"dispatch_lifescore_show_1"},"value":0},
+        {"set":{"local":"dispatch_lifescore_show_2"},"value":0},
+        {"set":{"local":"dispatch_lifescore_show_3"},"value":0},
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "eq": 1,
+          "then": [
+            {"set":{"local":"dispatch_lifescore_show_1"},"value":1}
+        ]},
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "eq": 2,
+          "then": [
+            {"set":{"local":"dispatch_lifescore_show_2"},"value":1}
+        ]},
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "eq": 3,
+          "then": [
+            {"set":{"local":"dispatch_lifescore_show_3"},"value":1}
+        ]},
         {"set":{"local":"whobringpatient"},"value":"us"}
       ],"else": [
         {"call_macro":"multipatient registry live pending"},

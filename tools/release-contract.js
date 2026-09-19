@@ -14,28 +14,28 @@ function sha256(value) {
 }
 
 function parseRelease(value) {
-  const match = /^(\d+)\.(\d+)\s+(\d+)$/.exec(String(value || '').trim());
+  const match = /^(\d+)\.(\d+)\s+(\d+)(?:\.(\d+))?$/.exec(String(value || '').trim());
   if (!match) throw new Error(`invalid release identity: ${JSON.stringify(value)}`);
-  return { major: Number(match[1]), minor: Number(match[2]), build: Number(match[3]), text: match[0] };
+  return { major: Number(match[1]), minor: Number(match[2]), build: Number(match[3]), suffix: Number(match[4] || 0), text: match[0] };
 }
 
 function compareRelease(left, right) {
   const a = parseRelease(left);
   const b = parseRelease(right);
-  for (const key of ['major', 'minor', 'build']) {
+  for (const key of ['major', 'minor', 'build', 'suffix']) {
     if (a[key] !== b[key]) return a[key] - b[key];
   }
   return 0;
 }
 
 function releaseFromTitle(title) {
-  const match = /(\d+\.\d+\s+\d+)\s*$/.exec(String(title || ''));
+  const match = /(\d+\.\d+\s+\d+(?:\.\d+)?)\s*$/.exec(String(title || ''));
   if (!match) throw new Error(`mission title does not end with a release identity: ${JSON.stringify(title)}`);
   return parseRelease(match[1]).text;
 }
 
 function firstChangelogRelease(changelog) {
-  const match = /^## Release (\d+\.\d+\s+\d+)\s*$/m.exec(String(changelog || ''));
+  const match = /^## Release (\d+\.\d+\s+\d+(?:\.\d+)?)\s*$/m.exec(String(changelog || ''));
   if (!match) throw new Error('CHANGELOG.en.md has no first release heading');
   return parseRelease(match[1]).text;
 }

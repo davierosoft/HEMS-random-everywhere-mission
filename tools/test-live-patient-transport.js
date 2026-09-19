@@ -35,7 +35,8 @@ class Live extends Scene {
         this.locals[command.set.var[0]] = this.query(command.value, p);
       } else if (command.move_object) {
         const name = this.text(command.move_object, p);
-        const target = typeof command.to === 'string' ? command.to : this.text(command.to.object, p);
+        const destination = Array.isArray(command.to) ? command.to.at(-1) : command.to;
+        const target = typeof destination === 'string' ? this.text(destination, p) : this.text(destination.object, p);
         assert.ok(this.objects.has(name)); assert.ok(this.locations[target]);
         this.locations[name] = [...this.locations[target]];
       } else if (command.wait_for?.param === 'request') {
@@ -53,6 +54,16 @@ class Live extends Scene {
         this.events.push(['route', command.create_route.name]); p['$CREATE_ROUTE:DURATION'] = 900;
       } else if (command.wait_for?.has_location) {
         assert.ok(this.locations[command.wait_for.has_location]);
+      } else if (command.wait_for?.local) {
+        while (!this.compare(this.query(command.wait_for, {}), command, {})) {
+          const worker = this.threads.shift();
+          assert.ok(worker, 'Synchronous worker wait has no queued worker');
+          this.commands(worker.commands, worker.params);
+        }
+        while (this.threads.length) {
+          const worker = this.threads.shift();
+          this.commands(worker.commands, worker.params);
+        }
       } else super.commands([command], p);
     }
   }
@@ -77,7 +88,7 @@ class Live extends Scene {
   runThread(thread) {this.macros.__test_worker = thread.commands; return this.call('__test_worker', thread.params);}
 }
 
-for (const resource of ['ambulance1', 'ambulance2', 'hems']) {
+for (const resource of ['ambulance1', 'ambulance2']) {
   const h = new Live();
   h.sleepHook = () => assert.equal(h.reserve(resource), null, 'Neither assessment nor a timer can complete the tour');
   assert.equal(h.tour(resource), 1); h.sleepHook = null;
@@ -122,6 +133,11 @@ for (const slot of [1, 2, 3]) for (const resource of ['ambulance1', 'ambulance2'
   assert.equal(h.locals.HEMS_TRANSPORT_TICKET, ticket, 'An established assignment survives repeated selector calls');
   assert.equal(h.locals.HEMS_PATIENT_NUMBER, 3);
   assert.equal(h.locals.whobringpatient, 'us', 'Legacy hoist routing must follow the reserved HEMS ticket');
+}
+{
+  const h = new Live();
+  assert.equal(h.call('select HEMS patient'), 0, 'HEMS selection must wait for the physical HEMS tour');
+  assert.equal(h.locals.HEMS_TRANSPORT_TICKET ?? null, null, 'HEMS selection must not create a ticket before the tour');
 }
 {
   // Negative control: accepting every patient must be detected by the capacity test.

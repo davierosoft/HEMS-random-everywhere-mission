@@ -27,6 +27,7 @@ let companionChecks = 0;
 let companionExecutableConditions = 0;
 let companionRendererConditions = 0;
 let topLevelRendererChecks = 0;
+let hemsSpeedMonitorCandidates = 0;
 
 function comparatorCount(value) {
   return Object.keys(value || {}).filter((key) => comparators.has(key)).length;
@@ -45,6 +46,49 @@ function checkExecutable(command, key, trail) {
 function checkRenderer(condition, key, trail) {
   if (!condition || typeof condition !== 'object' || Array.isArray(condition) || comparatorCount(condition) !== 1) {
     errors.push(`${key} must have exactly one comparator at ${trail}`);
+  }
+}
+
+function checkHemsDriveSpeed(value, trail) {
+  const drive = value && value.drive_object;
+  if (!drive || typeof drive !== 'object' || Array.isArray(drive)) return;
+  if (!['hoist_crew', 'pax3', 'hpax1'].includes(drive.name)) return;
+  if (typeof drive.speed !== 'number') return;
+
+  const polarCandidates = (waypoint) => {
+    if (Array.isArray(waypoint)) return waypoint.flatMap(polarCandidates);
+    if (!waypoint || typeof waypoint !== 'object') return [];
+    if (Array.isArray(waypoint.closest)) return waypoint.closest.flatMap(polarCandidates);
+    const bearing = typeof waypoint.bearing2 === 'number'
+      ? waypoint.bearing2
+      : typeof waypoint.bearing === 'number' ? waypoint.bearing : null;
+    if (bearing === null || typeof waypoint.dist !== 'number' || waypoint.dist < 0) return [];
+    const radians = bearing * Math.PI / 180;
+    return [{ x: waypoint.dist * Math.sin(radians), y: waypoint.dist * Math.cos(radians) }];
+  };
+  const waypointSets = Array.isArray(drive.to) ? drive.to.map(polarCandidates) : [];
+  if (waypointSets.length < 2 || waypointSets.some((set) => set.length === 0)) return;
+
+  let minimumRoute = Infinity;
+  const visit = (index, previous, distance) => {
+    if (index === waypointSets.length) {
+      minimumRoute = Math.min(minimumRoute, distance);
+      return;
+    }
+    waypointSets[index].forEach((point) => {
+      const segment = previous
+        ? Math.hypot(point.x - previous.x, point.y - previous.y)
+        : 0;
+      visit(index + 1, point, distance + segment);
+    });
+  };
+  visit(0, null, 0);
+  if (!Number.isFinite(minimumRoute) || minimumRoute <= 0) return;
+
+  const ratio = drive.speed / minimumRoute;
+  if (ratio > 1.5) hemsSpeedMonitorCandidates += 1;
+  if (ratio > 2.5 + 1e-9) {
+    errors.push(`HEMS drive speed ${drive.speed} exceeds 2.5x minimum geometric route ${minimumRoute.toFixed(3)} at ${trail}`);
   }
 }
 
@@ -101,6 +145,8 @@ function walk(value, trail = '$') {
   }
   if (!value || typeof value !== 'object') return;
 
+  checkHemsDriveSpeed(value, trail);
+
   Object.keys(value).forEach((key) => {
     if (/^create_l.*ocation$/i.test(key) && key !== 'create_location') {
       errors.push(`invalid create_location command spelling: ${key} at ${trail}`);
@@ -118,6 +164,9 @@ function walk(value, trail = '$') {
     if (Object.prototype.hasOwnProperty.call(value, key)) {
       rendererConditions += 1;
       if (!trail.includes('/create_struct')) checkRenderer(value[key], key, trail);
+      if (key === 'show_condition' && value.slider && JSON.stringify(value[key]).includes('"or"')) {
+        errors.push(`slider show_condition cannot contain or at ${trail}`);
+      }
     }
   });
   if (typeof value.call_macro === 'string' && !value.call_macro.includes('{')) {
@@ -372,6 +421,50 @@ function checkCompleteDebugSnapshot(debugPage) {
   });
 }
 
+function checkHemsMovementSnapshotGuard() {
+  const capture = compact(mission.macros['capture diagnostic snapshot'] || []);
+  const movementCapture = compact(mission.macros['capture crew movement snapshot'] || []);
+  expectRegression(
+    capture.includes('"call_macro":"capture crew movement snapshot"') && movementCapture.includes('"key":"crew_movement_log"') && movementCapture.includes('"local":"crew_movement_log"'),
+    'Crew movement snapshot must persist the passive movement log',
+  );
+}
+
+function checkNationQueryOwnership() {
+  const lifecycle = compact(mission.macros['mission startup'] || []);
+  expectRegression(!lifecycle.includes('"local":"accident_nation"},"value":{"global":"NATION_OTHERS"'), 'accident nation must not inherit numeric NATION_OTHERS');
+  expectRegression(!lifecycle.includes('"local":"hospital_nation"},"value":{"global":"NATION_OTHERS"'), 'hospital nation must not inherit numeric NATION_OTHERS');
+  const queryContracts = [
+    ['Query accident location country', 'accident_nation'],
+    ['Query hospital user country', 'hospital_nation'],
+    ['Query userA country', 'userA_nation'],
+  ];
+  queryContracts.forEach(([macroName, localName]) => {
+    const query = compact(mission.macros[macroName] || []);
+    expectRegression(query.includes('"query_country"'), `${macroName} must execute query_country`);
+    expectRegression(
+      query.includes(`"local":"${localName}"},"value":{"param":"$COUNTRY"}`),
+      `${macroName} must read the query_country $COUNTRY parameter with param`,
+    );
+    expectRegression(
+      !query.includes(`"local":"${localName}"},"value":"$COUNTRY"`),
+      `${macroName} must not treat $COUNTRY as a literal set value`,
+    );
+    expectRegression(
+      query.includes(`"local":"${localName}"},"value":null`) &&
+        query.includes(`"local":"${localName}_query_done"},"value":0`) &&
+        query.includes(`"local":"${localName}_query_done"},"value":1`),
+      `${macroName} must clear stale country state and publish query completion`,
+    );
+  });
+  const missionText = compact(mission);
+  expectRegression(
+    (missionText.split('"local":"accident_nation"},"value":"fallback"').length - 1) === 1 &&
+      (missionText.split('"local":"hospital_nation"},"value":"fallback"').length - 1) === 1,
+    'country fallback values must be initialized only once at mission startup',
+  );
+}
+
 function checkDynamicEltCoverage() {
   const modes = new Set();
   collect(mission.data?.accidents || [], (item) => typeof item?.ELT_mode === 'string').forEach((item) => modes.add(item.ELT_mode));
@@ -413,7 +506,7 @@ function checkRuntimeStateInitialization() {
   const findSetValue = (commands, name, value) => commands.findIndex((command) => command.set?.local === name && JSON.stringify(command.value) === JSON.stringify(value));
   const findVarSetValue = (commands, name, value) => commands.findIndex((command) => command.set?.var?.[0] === name && JSON.stringify(command.value) === JSON.stringify(value));
 
-  const releaseBuild = Number(/(\d+)\s*$/.exec(mission.title || '')?.[1]);
+  const releaseBuild = Number(/\d+\.\d+\s+(\d+)(?:\.\d+)?\s*$/.exec(mission.title || '')?.[1]);
   expectRegression(Number.isInteger(releaseBuild), 'mission title must end in a numeric build');
   expectRegression(findVarSetValue(objective1, 'L:RELEASE_BUILD', releaseBuild) >= 0, 'objective1 must initialize L:RELEASE_BUILD from the mission title build');
 
@@ -562,7 +655,7 @@ function checkRelease91Regressions() {
     const macro = mission.macros[name];
     expectRegression(Array.isArray(macro), `${name} macro must exist`);
     if (macro) {
-      expectRegression(compact(macro).includes('"call_macro":"multipatient registry crew tour"'), `${name} must use the shared physical visit tour`);
+      expectRegression(compact(macro).includes('"call_macro":"multipatient registry crew tour"') || compact(macro).includes('"call_macro":"multipatient registry crew tour safe"'), `${name} must use the shared physical visit tour`);
       const eligibility = mission.macros['multipatient registry crew eligibility'] || [];
       for (const slot of [1, 2, 3]) {
         expectRegression(hasState(eligibility, `P${slot}_GROUND_TRANSPORTED`) && hasState(eligibility, `P${slot}_GROUND_PROVIDER`), `${name} shared tour must exclude assigned/transported patient ${slot}`);
@@ -574,18 +667,19 @@ function checkRelease91Regressions() {
   const sceneAssessmentMacros = ['ambustretcher full', 'ambustretcher close', 'ambustretcher far'].map((name) => compact(mission.macros[name] || []));
   const countMatches = (value, needle) => value.split(needle).length - 1;
   expectRegression(!ambulanceHandover.includes('"distance:m"') && !ambulanceHandover.includes('ambumedic7'), 'ambulance handover must wait for direct assessment completion, not a medic distance');
-  expectRegression(countMatches(sceneAssessmentMacros[0], '"call_macro":"multipatient registry crew tour"') === 1, 'ambulance1 must perform one shared physical visit tour');
-  expectRegression(compact(mission.macros['ambulance2 secondary rescue'] || []).includes('"call_macro":"multipatient registry crew tour"'), 'ambulance2 must perform the same physical visit tour');
+  expectRegression((countMatches(sceneAssessmentMacros[0], '"call_macro":"multipatient registry crew tour"') + countMatches(sceneAssessmentMacros[0], '"call_macro":"multipatient registry crew tour safe"')) === 1, 'ambulance1 must perform one shared physical visit tour');
+  expectRegression(compact(mission.macros['ambulance2 secondary rescue'] || []).includes('"call_macro":"multipatient registry crew tour"') || compact(mission.macros['ambulance2 secondary rescue'] || []).includes('"call_macro":"multipatient registry crew tour safe"'), 'ambulance2 must perform the same physical visit tour');
   expectRegression(sceneAssessmentMacros.every(macro => !macro.includes('"call_macro":"ambulance assess patient"')), 'legacy transfer choreography must not restart clinical assessment outside the visit coordinator');
   const tour = mission.macros['multipatient registry crew tour'] || [];
   const tourVisits = collect(tour, (command) => command.call_macro === 'multipatient registry crew visit').map((command) => command.params?.patient);
   for (const slot of [1, 2, 3]) expectRegression(tourVisits.includes(slot), `shared tour must visit patient ${slot}`);
   const visit = mission.macros['multipatient registry crew visit'] || [];
-  const movementIndex = visit.findIndex(command => command.call_macro === 'multipatient registry crew move');
-  const acquireIndex = visit.findIndex(command => command.call_macro === 'multipatient registry crew acquire');
-  const assessmentIndex = visit.findIndex(command => command.try && compact(command).includes('"call_macro":"ambulance assess patient"'));
-  expectRegression(movementIndex >= 0 && acquireIndex > movementIndex && assessmentIndex > acquireIndex, 'physical movement and post-arrival ownership check must precede assessment');
-  const postStretcherWalk = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":2}';
+  const visitText = compact(visit);
+  const movementIndex = visitText.indexOf('"call_macro":"multipatient registry crew move"');
+  const acquireIndex = visitText.indexOf('"call_macro":"multipatient registry crew acquire"');
+  const assessmentIndex = visitText.indexOf('"call_macro":"ambulance assess patient"');
+  expectRegression(movementIndex >= 0 && acquireIndex >= 0 && assessmentIndex > movementIndex && assessmentIndex > acquireIndex, 'physical movement and ownership check must precede assessment');
+  const postStretcherWalk = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":1.5}';
   const postStretcherStanding = postStretcherWalk.replace('"VAR1":3', '"VAR1":1');
   expectRegression(countMatches(compact(mission.macros['3 crew ground ops'] || []), postStretcherWalk) === 1, '3 crew post-stretcher return must walk before cargo doors close');
   expectRegression(countMatches(compact(mission.macros['4 or 5 crew ground ops'] || []), postStretcherWalk) === 1, '4/5 crew post-stretcher return must walk before cargo doors close');
@@ -624,7 +718,9 @@ function checkRelease91Regressions() {
   });
   expectRegression(debugText.includes('LIVE MISSION SUMMARY'), 'debug page must provide a consolidated live summary');
   expectRegression(debugText.includes('COMPLETE LOCAL INVENTORY') && debugText.includes('COMPLETE LVAR INVENTORY'), 'debug Inventory view must retain both complete inventories');
-  checkCompleteDebugSnapshot(debugPage);
+checkCompleteDebugSnapshot(debugPage);
+checkHemsMovementSnapshotGuard();
+checkNationQueryOwnership();
 }
 
 function checkAircraftProfileRegression() {
@@ -886,7 +982,7 @@ function checkRelease94Regressions() {
   const crewReport = compact(mission.macros['refresh crew lifescore report'] || []);
   expectRegression(crewReport.includes('"value":"CRITICAL"') && crewReport.includes('"value":"DECEASED"'), 'crew report must distinguish critical injury from death');
   const endMenuText = compact(mission.macros['end menu'] || []);
-  expectRegression(endMenuText.includes('MISSION FAILED — CREW MEMBER DECEASED') && endMenuText.includes('MISSION FAILED — CREW MEMBER CRITICALLY INJURED'), 'end menu must report both crew emergency failure outcomes');
+  expectRegression(endMenuText.includes('MISSION FAILED - CREW MEMBER DECEASED') && endMenuText.includes('MISSION FAILED - CREW MEMBER CRITICALLY INJURED'), 'end menu must report both crew emergency failure outcomes');
   expectRegression(endMenuText.includes('"local":"MISSION_FAILED"},"eq":null'), 'successful completion text must be hidden for every failed mission');
   const crewDebugText = compact(mission.macros['debug page'] || []);
   expectRegression(crewDebugText.includes('CREW SAFETY / EMERGENCY') && crewDebugText.includes('CREW_FATAL_OBJECT_REPLACED'), 'debug page must expose crew emergency and packaged-object state');
@@ -1207,5 +1303,6 @@ console.log(JSON.stringify({
   companionExecutableConditions,
   companionRendererConditions,
   topLevelRendererChecks,
+  hemsSpeedMonitorCandidates,
   macroArrays: macroNames.size,
 }, null, 2));

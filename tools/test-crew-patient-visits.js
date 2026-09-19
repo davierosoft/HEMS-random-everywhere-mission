@@ -20,7 +20,15 @@ const Base = context.module.exports;
 const prefix = 'multipatient registry crew ';
 const resources = ['ambulance1', 'ambulance2', 'hems'];
 const patientObject = n => `injured_human${n === 1 ? '' : n}`;
-
+const crewVisit = macros['multipatient registry crew visit'];
+const lifecycle = macros['objective2'];
+const tourUpdate = macros['multipatient registry RescueTrack tour update'];
+assert.ok(!JSON.stringify(crewVisit).includes('{param:actor}'), 'Crew visits must resolve actor through an explicit local');
+assert.ok(JSON.stringify(crewVisit).includes('patient_crew_visit_actor'), 'Crew visits must snapshot the actor before state writes');
+const lifecycleText = JSON.stringify(lifecycle);
+assert.ok(lifecycleText.includes('{local:AGE2} {local:SEX2} {local:consciousness2}'), 'Three-patient injured update must use patient 2 sex');
+assert.ok(lifecycleText.includes('{local:AGE3} {local:SEX3} {local:consciousness3}'), 'Three-patient injured update must use patient 3 sex');
+assert.ok(JSON.stringify(tourUpdate).includes('multipatient_rescuetrack_sender'), 'Tour updates must normalize their RescueTrack sender');
 class Scene extends Base {
   constructor() {
     super(macros); this.events = []; this.sleepHook = null; this.moveHook = null; this.failedMovement = false;
@@ -29,14 +37,25 @@ class Scene extends Base {
     Object.assign(this.locations, { LUP: [10, 10], RUP: [10, -10], RDWN: [-10, -10], LDWN: [-10, 10] });
     this.globals = { P1_MANUAL_MEDICAL_MODE: 'automatic', LIFESCORE_THR_HI: 40 };
     Object.assign(this.locals, { HELOVICTIMS: 3, LIFESCORE: 75, LIFESCORE2: 65, LIFESCORE3: 55,
-      TIME1SHORT: 1, TIME2SHORT: 1, TIME3SHORT: 1 });
+      TIME1SHORT: 1, TIME2SHORT: 1, TIME3SHORT: 1, Dispatcher_Messages: [] });
     for (const slot of [1, 2, 3]) this.locals[`P${slot}_MEDICAL_ACTION_COUNT`] = 4;
     this.call(prefix + 'reset');
   }
-  text(x, p) { return String(x).replace(/\{param:([^}]+)\}/g, (_, k) => p[k]); }
+  text(x, p) {
+    if (x && typeof x === 'object' && x.param) return p[x.param];
+    if (x && typeof x === 'object' && x.local) return this.locals[x.local];
+    if (x && typeof x === 'object' && x.text) return x.text.replace(/\{(\d+)\}/g, (_, i) => this.text(x.params[Number(i)], p));
+    return String(x)
+      .replace(/\{param:([^}]+)\}/g, (_, k) => p[k])
+      .replace(/\{local:([^}]+)\}/g, (_, k) => this.locals[k]);
+  }
   query(q, p) {
     if (q?.global) return this.globals[q.global] ?? null;
+    if (q?.fn === 'get_time_string') return '00:00:00';
     if (q?.has_object !== undefined) return Number(this.objects.has(this.query(q.has_object, p)));
+    if (q?.location && typeof q.location === 'string') {
+      return super.query({ ...q, location: this.text(q.location, p), to: this.text(q.to, p) }, p);
+    }
     return super.query(q, p);
   }
   commands(list, p) {
@@ -50,6 +69,7 @@ class Scene extends Base {
       } else if (c.drive_object) {
         const actor = this.text(c.drive_object.name, p); const route = c.drive_object.to;
         assert.ok(this.objects.has(actor), 'Moving actor must exist');
+        if (this.failedMovement) throw new Error('simulated drive_object failure');
         const last = route.at(-1);
         if (last.object) {
           const object = this.text(last.object, p); assert.ok(this.objects.has(object));
@@ -58,6 +78,19 @@ class Scene extends Base {
           this.locations[actor] = this.failedMovement ? [100, 100] : [...this.locations[object]];
           this.moveHook?.(this, actor, object);
         } else this.events.push(['waypoint', actor]);
+      } else if (c.move_object) {
+        const actor = this.text(c.move_object, p); assert.ok(this.objects.has(actor), 'Recovery actor must exist');
+        const target = c.to;
+        const last = Array.isArray(target) ? target.at(-1) : target;
+        const object = this.text(last.object, p); assert.ok(this.objects.has(object), 'Recovery target must exist');
+        if (!this.failedMovement) this.locations[actor] = [...this.locations[object]];
+        this.events.push([this.failedMovement ? 'recovery_failed' : 'recovery', actor, object]);
+      } else if (c.create_thread) {
+        // The harness is synchronous; execute thread bodies inline without
+        // introducing a fake movement watchdog or scheduler timing.
+        this.commands(c.create_thread.commands, p);
+      } else if (c.wait_for) {
+        assert.ok(this.compare(this.query(c.wait_for, p), c, p), 'Synchronous worker wait did not complete');
       } else if (c.set?.object) {
         assert.ok(this.objects.has(this.text(c.set.object, p)));
         this.events.push(['animation', this.text(c.set.object, p), this.query(c.value, p)]);
@@ -139,16 +172,40 @@ for (const slot of [1, 2, 3]) {
   assert.ok(!h.events.some(e => e[0] === 'assessment' && e[2] === 2), 'Recheck assignment after arrival');
 }
 {
+  const h = new Scene(); const patient = h.locals.patient_crew_visits[0];
+  patient.owner = 'ambulance1';
+  h.sleepHook = () => { patient.owner = 'none'; };
+  assert.equal(h.tour('hems'), 1, 'HEMS must continue its tour when an ambulance owns one patient');
+  assert.deepEqual(h.events.filter(e => e[0] === 'assessment').map(e => e[2]), [1, 2, 3], 'HEMS must retry the busy patient after the ambulance releases it');
+}
+{
   const h = new Scene(); const patient = h.locals.patient_crew_visits[0]; patient.owner = 'hems';
   h.sleepHook = () => { patient.owner = 'none'; };
   assert.equal(h.tour('ambulance1'), 1);
   assert.equal(patient.owner, 'none');
 }
 {
+  // HEMS must retry a claim held by an ambulance; `busy` must not close the
+  // tour without assessing that patient.
+  const h = new Scene(); const patient = h.locals.patient_crew_visits[0];
+  patient.owner = 'ambulance1'; let released = false;
+  h.sleepHook = () => {
+    if (!released) {
+      released = true;
+      h.locals.patient_crew_visits[0].owner = 'none';
+    }
+  };
+  assert.equal(h.tour('hems'), 1);
+  assert.ok(h.events.some(e => e[0] === 'assessment' && e[1] === 'hoist_crew' && e[2] === 1),
+    'HEMS must assess a patient after an ambulance releases its claim');
+}
+{
   const h = new Scene(); h.failedMovement = true;
   assert.equal(h.tour('ambulance2'), 0);
   assert.equal(h.events.filter(e => e[0] === 'assessment').length, 0);
-  assert.ok(h.locals.patient_crew_visits.every(x => x.ambulance2 === 'movement_failed'));
+  assert.equal(h.locals.patient_crew_visits[0].ambulance2, 'pending');
+  assert.equal(h.locals.patient_crew_visits[1].ambulance2, 'pending');
+  assert.equal(h.locals.patient_crew_visits[2].ambulance2, 'movement_failed');
 }
 {
   const h = new Scene(); h.locals.LIFESCORE2 = 0;
@@ -173,7 +230,7 @@ for (const slot of [1, 2, 3]) {
 }
 {
   // Negative control: a coordinator with its physical movement removed cannot pass a tour.
-  const h = new Scene(); h.macros = {...macros, [prefix + 'visit']: macros[prefix + 'visit'].filter(c => c.call_macro !== prefix + 'move')};
+  const h = new Scene(); h.macros = {...macros, [prefix + 'move']: [{return:0}]};
   assert.equal(h.tour('ambulance1'), 0);
   assert.equal(h.events.filter(e => e[0] === 'assessment').length, 0);
 }
@@ -195,11 +252,12 @@ for (const slot of [1, 2, 3]) {
 }
 for (const name of ['3 crew ground ops', '4 or 5 crew ground ops', 'HOISTING', '3 crew SKID LDG', '4 crew SKID LDG', '5 crew SKID LDG']) {
   const text = JSON.stringify(macros[name]);
-  assert.ok(text.includes(`"call_macro":"${prefix}tour"`), name);
+  assert.ok(text.includes(`"call_macro":"${prefix}tour safe"`), name);
   assert.ok(text.includes('HEMS_VISIT_OBJECT'), `${name}: separate approach target`);
   assert.ok(!text.includes('"call_macro":"patient clinical visit gate","params":{"patient":2'), `${name}: duplicate P2 visit`);
 }
-for (const name of ['ambustretcher full', 'ambulance2 secondary rescue']) assert.ok(JSON.stringify(macros[name]).includes(prefix + 'tour'));
+assert.ok(JSON.stringify(macros['ambustretcher full']).includes(prefix + 'tour safe'));
+assert.ok(JSON.stringify(macros['ambulance2 secondary rescue']).includes(prefix + 'tour'), 'Secondary ambulance must execute the common physical tour through its guarded call');
 assert.ok(macros['ambulance2 secondary rescue'][4].if.and.some(c=>c.require?.local==='HELOVICTIMS' && c.gte===1), 'Ambulance2 must also visit a sole unassigned P1');
 assert.ok(JSON.stringify(macros['debug page']).includes('patient_crew_visits'));
 console.log('Crew patient visits PASS: all crews/slots, existing treatment, assignments, movement failure, lock contention, manual revisits, reset and HEMS integration. Simulator validation PENDING.');

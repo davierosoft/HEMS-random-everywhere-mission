@@ -53,6 +53,24 @@ for (const slot of [2, 3]) {
   requireTrue(!branchText.includes('CASUALTY '), `tablet still uses a placeholder identity for patient ${slot}`);
 }
 
+const actionLines = [];
+function collectActionLines(value) {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectActionLines(entry);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  if (value.text === 'IN PROGRESS: {0}') actionLines.push(value);
+  for (const entry of Object.values(value)) collectActionLines(entry);
+}
+collectActionLines(medical['patient health']);
+requireTrue(actionLines.length === 6, 'medical page must expose one in-progress line per action');
+for (const [index, line] of actionLines.entries()) {
+  const step = 6 - index;
+  const guards = line.show_condition?.and || [];
+  requireTrue(guards.some((entry) => entry.require?.local === 'medical_display_ambulance_completed_actions' && entry.lt === step), `action ${step} in-progress state can duplicate an already completed ambulance action`);
+}
+
 for (const name of ['savetemp', 'save1', 'save2', 'save3']) {
   const commands = saves[name];
   const date = commands.find((entry) => entry.set?.local === 'SAVE_LOCAL_DATE');

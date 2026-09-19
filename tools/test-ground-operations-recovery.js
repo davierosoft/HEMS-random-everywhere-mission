@@ -29,6 +29,14 @@ function contains(value, predicate) {
 
 const clinical = runtime['patient1 clinical visit gate'];
 const completedTreatment = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/17-multipatient-runtime.json'), 'utf8'))['multipatient registry crew clinical completion'];
+const ambulanceDispatch = JSON.stringify(ground.Ambulance1);
+const ambulance1Parking = JSON.stringify(ground.park_ambulance1);
+const ambulance2Parking = JSON.stringify(ground.park_ambulance2);
+requireTrue(ambulanceDispatch.includes('Both ambulances are en route to the accident site.'), 'two-ambulance dispatch must announce both units en route');
+requireTrue(!ambulanceDispatch.includes('has reached the scene. Crew requires further assistance'), 'ambulance 1 arrival must not overwrite the two-ambulance status with the single-unit message');
+requireTrue(ambulance1Parking.includes('is still en route') && ambulance1Parking.includes('ambuname2'), 'ambulance 1 arrival must identify ambulance 2 as still en route');
+requireTrue(ambulance2Parking.includes('is still en route') && ambulance2Parking.includes('ambuname'), 'ambulance 2 arrival must identify ambulance 1 as still en route');
+requireTrue(ambulance1Parking.includes('Both ambulances') && ambulance2Parking.includes('Both ambulances'), 'the second arrival must announce both ambulances present');
 requireTrue(Array.isArray(clinical) && clinical.some(entry => entry.call_macro === 'multipatient registry crew record'), 'patient 1 legacy gate must read the physical visit record');
 requireTrue(!contains(clinical, entry => entry?.create_thread), 'legacy gate must not restart an asynchronous treatment worker');
 requireTrue(contains(completedTreatment, entry => entry?.call_macro === 'request manual patient visit'), 'manual medical mode no longer uses its clinical gate');
@@ -212,8 +220,8 @@ for (const [name, target, distance] of [
   ['watchdog_ambulance1_scene_approach', 'accident_location', 55],
   ['watchdog_ambulance2_scene_approach', 'accident_location', 55],
   ['watchdog_police_scene_approach', 'accident_location', 55],
-  ['watchdog_firetruck1_scene_approach', 'accident_location', 55],
-  ['watchdog_firetruck2_scene_approach', 'accident_location', 55],
+  ['watchdog_firetruck1_scene_approach', 'fire_truck_scene_access', 55],
+  ['watchdog_firetruck2_scene_approach', 'fire_truck_scene_access', 55],
   ['watchdog_ambulance1_unhospital_approach', 'unhospital', 30],
   ['watchdog_ambulance1_hospital_approach', 'hospital', 30],
   ['watchdog_ambulance1_close_hospital_approach', 'unhospital', 30],
@@ -230,17 +238,31 @@ for (const [name, target, distance] of [
 }
 
 const crewVisits = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/17-multipatient-runtime.json'), 'utf8'));
+const groundText = JSON.stringify(ground);
+requireTrue(groundText.includes('"path":"nation"},"eq":{"local":"NATION"') || groundText.includes('"path":"id"},"eq":{"local":"NATION"'), 'ground responders must use the shared accident nation selector');
+for (const [name, actor] of [['park_ambulance1', 'ambulance1'], ['park_ambulance2', 'ambulance2']]) {
+  const parkingText = JSON.stringify(ground[name]);
+  const ninetyMoves = (parkingText.match(/"bearing2":90,"dist":5/g) || []).length;
+  const twoSeventyMoves = (parkingText.match(/"bearing2":270,"dist":5/g) || []).length;
+  requireTrue(parkingText.includes(`"call_macro":"drive ${actor} safe"`) && ninetyMoves >= 2 && twoSeventyMoves >= 2, `${name} must retain distinct same-direction lateral parking moves`);
+}
 const primaryCrewCommands = scene['ambustretcher full']?.find(entry => entry.create_thread)?.create_thread?.commands || [];
-const primaryTourIndex = primaryCrewCommands.findIndex(entry => entry.call_macro === 'multipatient registry crew tour');
+const primaryTourIndex = primaryCrewCommands.findIndex(entry => entry.call_macro === 'multipatient registry crew tour safe');
 requireTrue(primaryTourIndex > 0 && contains(primaryCrewCommands.slice(0, primaryTourIndex), entry => entry?.create_object?.name === 'ambumedic7'), 'primary ambulance must create its medic before the physical tour');
 const visitTourText = JSON.stringify(crewVisits['multipatient registry crew tour']);
 requireTrue(visitTourText.includes('"patient":1') && visitTourText.includes('"patient":2') && visitTourText.includes('"patient":3'), 'the common ambulance/HEMS tour must include all three patient slots');
+const dispatchText = JSON.stringify(tablet['Mission dispatch'] || []);
+const lifescoreStart = dispatchText.indexOf('Show lifescores');
+const lifescoreEnd = dispatchText.indexOf('Organ cooler box status', lifescoreStart);
+const lifescoreText = dispatchText.slice(lifescoreStart, lifescoreEnd > lifescoreStart ? lifescoreEnd : undefined);
+requireTrue(lifescoreText.includes('"has_object":"injured_human"') && lifescoreText.includes('"has_object":"injured_human2"') && lifescoreText.includes('"has_object":"injured_human3"'), 'lifescores must appear only after each patient object exists');
+requireTrue(!lifescoreText.includes('L:RESCUED'), 'lifescore visibility must not use the generic RESCUED latch');
 const physicalMove = crewVisits['multipatient registry crew move'];
-requireTrue(contains(physicalMove, entry => entry?.drive_object?.name === '{param:actor}') && contains(physicalMove, entry => entry?.if?.location?.param === 'actor' && entry.if.var === 'distance:m'), 'the common visit must move its own actor and verify actual arrival');
+requireTrue(contains(physicalMove, entry => entry?.drive_object?.name === '{param:actor}') && contains(physicalMove, entry => entry?.call_macro === 'multipatient registry crew movement sample'), 'the common visit must move its own actor and record passive movement diagnostics');
 
 const secondaryAmbulance = ground['ambulance2 secondary rescue']?.find((entry) => entry.if?.and?.some((part) => part.require?.local === 'ambulance2_secondary_started'))?.then;
 requireTrue(Array.isArray(secondaryAmbulance), 'secondary ambulance assessment sequence is missing');
-const secondaryTourIndex = secondaryAmbulance.findIndex(entry => entry.call_macro === 'multipatient registry crew tour' && entry.params?.actor === 'ambumedic2');
+const secondaryTourIndex = secondaryAmbulance.findIndex(entry => JSON.stringify(entry).includes('multipatient registry crew tour') && JSON.stringify(entry).includes('ambumedic2'));
 requireTrue(secondaryTourIndex > 0 && contains(secondaryAmbulance.slice(0, secondaryTourIndex), entry => entry?.create_object?.name === 'ambumedic2'), 'secondary ambulance must create its medic before the same P1/P2/P3 physical tour');
 for (const slot of [2, 3]) {
   const secondaryTransport = ground[`ambulance2 secondary patient${slot}`];

@@ -34,7 +34,7 @@
       "then": [
         {"set":{"local":"debug_snapshot_mission_timer"},"value":"UNKNOWN"}
     ]},
-    {"set":{"local":"debug_snapshot_release_build"},"value":{"table":{"static":"Debug_Table"},"key":"release_build"}},
+    {"set":{"local":"debug_snapshot_release_build"},"value":{"table":{"static":"Debug_Table"},"key":"release_identity"}},
     {"if": {"local":"debug_snapshot_release_build"}, "eq": null,
       "then": [
         {"set":{"local":"debug_snapshot_release_build"},"value":"UNKNOWN"}
@@ -298,14 +298,14 @@
         {"text":"Objective 6: Accident scene in sight, get ready for EMS!","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":6}],"eq":1},"color":"yellow"},
         {"text":"Objective 7 XFR: PATIENT LOADED, SET PATIENT DESTINATION","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":7}],"eq":1},"color":"yellow"},
         {"text":"Objective 7: RESCUE OPERATION IN PROGRESS","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":7}],"eq":1},"color":"yellow"},
-        {"text":"Objective 8: REACH SELECTED DESTINATION","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":8}],"eq":1},"color":"yellow"},
+        {"text":"Objective 8: REACH SELECTED DESTINATION","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":8},{"require":{"local":"destination_confirmed"},"eq":"yes"}],"eq":1},"color":"yellow"},
         {"text":"Objective 9: DESTINATION PROCEDURES STARTED","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":9}],"eq":1},"color":"yellow"},
         {"text":"Objective 10: RETURN TO BASE","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":10}],"eq":1},"color":"yellow"},
         {"text":"Objective 11: OTHER PATIENT RESCUE IN PROGRESS","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":11}],"eq":1},"color":"yellow"},
         {"text":"Objective 12: MISSION ACCOMPLISHED","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"MISSION_PHASE"},"eq":12}],"eq":1},"color":"yellow"},
         {"image":"bar","show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"OPERATIONAL DETAILS","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
-        {"text":"CHATGPT BUILD {0}","color":"gray","align":"center","params":[{"var":["L:RELEASE_BUILD","number"]}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
+        {"text":"CHATGPT BUILD {0}","color":"gray","align":"center","params":[{"local":"RELEASE_IDENTITY"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"MISSION VARIABLES | TYPE {0} | POI {1} | SAR {2}","color":"gray","params":[{"local":"MISSION_NUMBER"},{"var":["L:POI_TYPE","number"]},{"local":"SAR"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"CONNECTIONS | CARLS {0} | SERVICE {1} | WIFI {2} | HOC {3} | 5G {4}","color":"gray","params":[{"var":["L:CARLS_CONNECTED","number"]},{"var":["L:SERVICE_CONNECTED","number"]},{"local":"wificonnect"},{"local":"HOCconnection"},{"global":"TABLET_5G_ENABLED"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"PATIENT TRANSPORT | OWNER {0} | STATE {1} | VISIT ENDED {2}","color":"gray","params":[{"local":"whobringpatient"},{"local":"ambulance_patient_transfer_state"},{"local":"crewvisitended"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1}},
@@ -398,7 +398,7 @@
         {"text":"VFX {0}, CIVILS {1}, WAVINGMAN {2}","params":[{"local":"VFX"},{"local":"CIVILS"},{"local":"WAVINGMAN"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"orange"},
         {"text":"CLOSEST_AMBULANCE {0}, local closestambu {2}, ambu1arrived {3}, AMBUSTRETCHERFULL {1}","params":[{"local":"CLOSEST_AMBULANCE"},{"var":["L:AMBUSTRETCHERFULL","number"]},{"local":"closestambu"},{"local":"ambu1arrived"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"gray"},
         {"text":"Query last error: {0}","params":[{"local":"queryfailed"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"red"},
-        {"text":"Country: $COUNTRY (local s:{4} a:{2} h:{3}), NATION {0}, NATION_BYPASS {1}","params":[{"local":"NATION"},{"global":"NATION_BYPASS"},{"local":"accident_nation"},{"local":"hospital_nation"},{"local":"start_nation"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"gray"},
+        {"text":"COUNTRY NAME | START {0} | ACCIDENT {1} | HOSPITAL {2} | CURRENT {3} | BYPASS {4}","params":[{"local":"start_nation"},{"local":"accident_nation"},{"local":"hospital_nation"},{"local":"NATION"},{"global":"NATION_BYPASS"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"gray"},
         {"text":"POLICE_AVAIL {0} {3} , AMBU_AVAIL {1} {4} , FIREENGINE_AVAIL {2} {5}","params":[{"local":"POLICE_AVAIL"},{"local":"AMBU_AVAIL"},{"local":"FIREENGINE_AVAIL"},{"local":"ambuname"},{"local":"poliname"},{"local":"firename"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"gray"},
         {"image":"bar","show_condition":{"require":{"local":"debug_page_section"},"eq":"GUIDANCE"}},
         {"text":"HOISTED {1}, RESCUED {2}, SAVED {3}, HR_HOISTING_LOCK {0}, HELIRESCUER_BOARDED{4}","params":[{"local":"HR_HOISTING_LOCK"},{"var":["L:HOISTED","number"]},{"var":["L:RESCUED","number"]},{"var":["L:SAVED","number"]},{"local":"HELIRESCUER_BOARDED"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GUIDANCE"},"color":"orange"},

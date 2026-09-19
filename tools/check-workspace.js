@@ -21,6 +21,7 @@ require('./test-crew-patient-visits');
 require('./test-live-patient-transport');
 require('./test-recovery-regressions');
 require('./test-health-symptoms');
+require('./test-user-facing-ascii');
 require('./test-civilian-object-safety');
 require('./test-route-location-integrity');
 require('./test-ambulance-stretcher-returns');
