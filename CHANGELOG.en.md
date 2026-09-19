@@ -1,5 +1,10 @@
+## Release 0.997 168.21
+
+- Requested local publication after undefined-safe snapshot correction and full carried-scope verification
+
 ## Release 0.997 168.20
 
+- Include complete carried scope plus undefined-safe snapshot fix
 - Declare release-number update in version check
 - Requested local publication of all carried mission corrections; no GitHub publication
 
