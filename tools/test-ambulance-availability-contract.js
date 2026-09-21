@@ -81,14 +81,19 @@ const ambulance2SceneParking = source.park_ambulance2_scene;
 assertBaselineSceneStop(ambulance1, ambulance1SceneParking, 'ambulance1', 'ambu1stopdistance');
 assertBaselineSceneStop(ambulance2, ambulance2SceneParking, 'ambulance2', 'ambu2stopdistance');
 if (!hasExactNode(ambulance1SceneParking, (node) => node.drive_object?.name === 'ambulance1' &&
-    node.drive_object.to?.[0]?.bearing2 === 270 && node.drive_object.to?.[0]?.dist === 4 &&
-    node.drive_object.to?.[1]?.bearing2 === 90 && node.drive_object.to?.[1]?.dist === 5)) {
-  fail('ambulance1 scene parking must counter the first relative turn with bearing2 90');
+    node.drive_object.to?.[0]?.bearing2 === 270 && node.drive_object.to?.[0]?.dist === 14 &&
+    node.drive_object.to?.[0]?.object === 'accident_location')) {
+  fail('ambulance1 scene parking must use its independent west accident-location bay');
 }
 if (!hasExactNode(ambulance2SceneParking, (node) => node.drive_object?.name === 'ambulance2' &&
-    node.drive_object.to?.[0]?.closest?.some((candidate) => candidate.bearing2 === 180 && candidate.dist === 10 && candidate.object === 'ambulance1') &&
-    node.drive_object.to?.[0]?.closest?.some((candidate) => candidate.bearing2 === 0 && candidate.dist === 10 && candidate.object === 'ambulance1'))) {
-  fail('ambulance2 scene parking must wait for and park relative to ambulance1');
+    node.drive_object.to?.[0]?.bearing2 === 90 && node.drive_object.to?.[0]?.dist === 14 &&
+    node.drive_object.to?.[0]?.object === 'accident_location')) {
+  fail('ambulance2 scene parking must use its independent east accident-location bay');
+}
+if (hasExactNode(ambulance1SceneParking, (node) => node.drive_object?.name === 'ambulance1' && JSON.stringify(node.drive_object.to).includes('"object":"ambulance1"')) ||
+    hasExactNode(ambulance2SceneParking, (node) => node.wait_for?.object === 'ambulance1' && node.wait_for.var === 'VELOCITY Z') ||
+    hasExactNode(ambulance2SceneParking, (node) => node.drive_object?.name === 'ambulance2' && JSON.stringify(node.drive_object.to).includes('"object":"ambulance1"'))) {
+  fail('scene parking must not use an ambulance itself or the other ambulance as its parking reference');
 }
 if (hasExactNode(ambulance2, (node) => node.wait_for?.local === 'ambu1_dispatch_announced' && node.eq === 'yes')) {
   fail('the second ambulance route must not wait for the first ambulance announcement');

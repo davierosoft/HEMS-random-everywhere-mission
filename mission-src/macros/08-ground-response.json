@@ -336,7 +336,7 @@
                         {"if": {"local":"ambulance_previsit_forced"}, "eq": 1,
                           "then": [
                             {"set":{"local":"ambulance_previsit_decision"},"value":"load"},
-                            {"call_macro":"ambulance previsit load"},
+                            {"call_macro":"ambulance previsit load","params":{"sender":{"local":"ambuname"}}},
                             {"if": {"local":"ambulance_previsit_active"}, "ne": "yes",
                               "then": [
                                 {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
@@ -346,7 +346,7 @@
                             {"if": {"local":"ambulance_previsit_roll"}, "lt": 99,
                               "then": [
                                 {"set":{"local":"ambulance_previsit_decision"},"value":"load"},
-                                {"call_macro":"ambulance previsit load"},
+                                {"call_macro":"ambulance previsit load","params":{"sender":{"local":"ambuname"}}},
                                 {"if": {"local":"ambulance_previsit_active"}, "ne": "yes",
                                   "then": [
                                     {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
@@ -444,7 +444,7 @@
                     {"set":{"local":"Dispatcher_text"},"value":"Patient temporarily sheltered in the ambulance. Clinical visits and transport allocation remain pending."},
                     {"if": {"local":"AMBU_AVAIL"}, "eq": 1,
                       "then": [
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"param":"sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
                     ]},
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
@@ -520,7 +520,7 @@
         {"if": {"var":["L:DISPATCH_ENDED","number"]}, "eq": 0,
           "then": [
             {"set":{"local":"Dispatcher_text"},"value":"Ambulance {local:ambuname}: patient loaded on board. Awaiting HEMS doctor assessment."},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"param":"sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"call_macro":"UpdateRescueTrack"}
         ]},
@@ -1690,7 +1690,6 @@
         {"set":{"local":"fire1_parked"},"value":"yes"},
         {"set":{"local":"fire1_parking"},"value":"no"},
         {"set":{"local":"fire1arrived"},"value":"yes"},
-        {"return":1},
         {"sleep":1},
         {"wait_for":{"local":"rescue_parking_lock"},"ne":1},
         {"set":{"local":"rescue_parking_lock"},"value":1},
@@ -1939,7 +1938,6 @@
         {"set":{"local":"fire2_parked"},"value":"yes"},
         {"set":{"local":"fire2_parking"},"value":"no"},
         {"set":{"local":"fire2arrived"},"value":"yes"},
-        {"return":1},
         {"sleep":1},
         {"wait_for":{"local":"rescue_parking_lock"},"ne":1},
         {"set":{"local":"rescue_parking_lock"},"value":1},
@@ -2499,10 +2497,12 @@
                     {"sleep":[15,30]},
                     {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
+                    {"wait_for":{"local":"ambu_adjusted_time"},"ne":null},
                     {"if": {"local":"AMBU_AVAIL"}, "eq": 2,
                       "then": [
                         {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance '{0}' is on the way to the accident site. TTG: {1:TIME} min","params":[{"local":"ambuname"},{"round":{"local":"ambu_adjusted_time"},"to":1}]}},
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                        {"set":{"local":"ambumessage"},"value":{"local":"Dispatcher_text"}},
+                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
                         {"set":{"local":"Dispatcher_text"},"value":""},
                         {"call_macro":"UpdateRescueTrack"}
                     ]},
@@ -2591,7 +2591,7 @@
                         {"call_macro":"drive ambulance1 safe","params":{"to":"ambulance1_residential_scene_route","fallback":"watchdog_ambulance1_scene_approach","speed":7,"var1":1,"timeout":{"add":[{"param":"$CREATE_ROUTE:DURATION"},120]}}},
                         {"call_macro":"park_ambulance1_scene"},
                         {"wait_for":{"local":"ambu1arrived"},"eq":"yes"},
-                        {"call_macro":"ambustretcher full"}
+                        {"call_macro":"ambustretcher full","params":{"sender":{"local":"ambuname"}}}
                       ],"else": [
                         {"set":{"local":"rescuename"},"value":"wprescue{local:amburoad}"},
                         {"set":{"local":"rescuewp"},"value":"wpc{local:amburoad}"},
@@ -2614,7 +2614,7 @@
                         ]},
                         {"call_macro":"park_ambulance1_scene"},
                         {"wait_for":{"local":"ambu1arrived"},"eq":"yes"},
-                        {"call_macro":"ambustretcher full"}
+                        {"call_macro":"ambustretcher full","params":{"sender":{"local":"ambuname"}}}
                     ]}
                 ]},
                 {"if": {"local":"AMBU_AVAIL"}, "eq": 2,
@@ -2690,7 +2690,7 @@
                           "zones": [
                             {"zone":{"location":{"bearing2":180,"dist":6,"object":"ambulance1"}}}
                         ]},
-                        {"call_macro":"ambustretcher full"}
+                        {"call_macro":"ambustretcher full","params":{"sender":{"local":"ambuname"}}}
                     ]}
                 ]}}
             ]}
@@ -2802,7 +2802,8 @@
                       }
                   ]}
                 },
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname2"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"set":{"local":"ambumessage"},"value":{"local":"Dispatcher_text"}},
+                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname2"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]},
@@ -5430,7 +5431,6 @@
         ]},
         {"set":{"local":"ambulance2_secondary_medic_created"},"value":"yes"},
         {"set":{"local":"ambulance2_secondary_log"},"value":"medic available"},
-        {"set":{"object":"ambumedic2","var":"VAR 1"},"value":1},
         {"set":{"local":"ambulance2_secondary_crew_exit_attempted"},"value":"yes"},
         {"set":{"local":"ambulance2_secondary_gate"},"value":"medic_exit_attempted"},
         {"set":{"local":"ambulance2_secondary_log"},"value":"medic exit attempted"},
@@ -5898,7 +5898,7 @@
             {"return":0}
         ]},
         {"sleep":1},
-        {"drive_object":{"name":"ambulance1","to":[{"bearing2":270,"dist":4,"object":"ambulance1"},{"bearing2":90,"dist":5,"object":"ambulance1"}],"VAR1":1,"speed":3}},
+        {"drive_object":{"name":"ambulance1","to":[{"bearing2":270,"dist":14,"object":"accident_location"}],"VAR1":1,"speed":3}},
         {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
         {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0},
         {"set":{"local":"AMBU_AVAIL"},"value":1},
@@ -5939,9 +5939,8 @@
             {"set":{"local":"ambu2_parking"},"value":"no"},
             {"return":0}
         ]},
-        {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0},
-        {"sleep":1.5},
-        {"drive_object":{"name":"ambulance2","to":[{"closest":[{"bearing2":180,"dist":10,"object":"ambulance1"},{"bearing2":0,"dist":10,"object":"ambulance1"}],"to":"ambulance2"}],"VAR1":1,"speed":3}},
+        {"sleep":1},
+        {"drive_object":{"name":"ambulance2","to":[{"bearing2":90,"dist":14,"object":"accident_location"}],"VAR1":1,"speed":3}},
         {"set":{"object":"ambulance2","var":"VAR 1"},"value":1},
         {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0},
         {"set":{"local":"AMBU_AVAIL"},"value":1},

@@ -1,3 +1,7 @@
+## Release 0.997 168.26
+
+- Fix independent ambulance scene parking, medic arrival gate, dispatch visibility, and HEMS action history.
+
 ## Release 0.997 168.25
 
 - Fix ground response parking, stretcher states, HEMS and crew runtime diagnostics.
