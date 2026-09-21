@@ -1,5 +1,66 @@
 # Current development validation
 
+## Current candidate 0.997 168.22 - 2026-09-20
+
+The supplied drive-object experiment does not prove that every dynamic name fails: the test lifecycle was altered in a replacement harness and lost the original objective `wait_for`, so a mission reset could invalidate the observation. The reliable finding is narrower: `param`-based drive-object fields are not trusted, especially in the crew path; the original traffic paths use same-thread `local` names and are being retained. The production audit now has no `param` in any `drive_object` name or `VAR1`; multipatient patient targets are snapshotted into same-thread locals before movement. The local-vs-param comparison must use the user-supplied test unchanged except for the single field under test. The AMBU_AVAIL logic and synchronous movement contract were not changed.
+
+- Local artifact: `outputs/0.997-168.22-local-test/everywhere_all.json`.
+- SHA-256: `69096fe875d87fdac7bf11937aec732100b1e7b6614bed3f58ebaf0ea310fd89`.
+- Static workspace, mission, formatting, scope, targeted recovery, transport, patient-visit and full verification gates: **PASS**.
+- Runtime HPG/MSFS validation: **PENDING**. The exact simulator checks still required are both ambulances, HEMS crew movement/visits, stretcher handover, traffic/fire response, destination flow, dispatch visibility, snapshots, and the carried P1-P3 scenarios.
+- Traffic `drive_object` names are restored to the previously working same-thread `local` form. Remaining crew/HEMS movement paths must be audited for `param` in object names or VAR1 and converted to static/local forms only after the controlled test confirms the syntax. Simulator confirmation remains required.
+
+## Next-release ledger after release 22
+
+This is the carried checklist for the next explicitly authorized release. It is not a build or a publication instruction.
+
+### Completed or source-covered
+
+- Restored the three traffic `drive_object` commands to their previously working `{local:carname1/2/3}` form.
+- Kept `AMBU_AVAIL` logic unchanged.
+- Kept the static crew/medic/stretcher branches already introduced for the multipatient movement path.
+- Restored the operational stretcher lifecycle for multipatient ground loading: the stretcher is created when the arriving ambulance needs it, exits the ambulance, reaches the assigned casualty, loads the casualty, returns to the ambulance and only then completes the transport state; it is not treated as a permanently static scene prop.
+- Kept the fire/grill smoke restriction tied to mission `ID_CARD 33`, not merely to `CRASH_VARIABLE`.
+- Retained the explicit ambulance identifiers in dispatch messages.
+- Retained the LifeScore show/hide behavior and the additional-info visibility conditions.
+- Removed the duplicate legacy Patient 1 clinical-visit block that ran after the multipatient HEMS tour; the registry tour is now the single visit owner.
+- Raised the HEMS/crew final approach speeds to at least `1`, using `2` for the 0.2-0.4 m final legs, including the shared legacy crew helpers.
+- Corrected the three-crew `pax3` role to the pilot/backpack state: movement uses `VAR 1` 16 and post-movement standing uses `VAR 1` 14; it must never enter the medical crouch state.
+- Removed direct `param` references from the target coordinates of the multipatient crew/stretcher `drive_object` commands by snapshotting the target into a same-thread local; actor names and `VAR1` remain static.
+- Made death terminal before object-presence checks in all three live-patient eligibility branches, so a dead casualty cannot remain classified as unavailable merely because its scene object still exists.
+- Preserved the explicit HEMS/ground assignment rules after death: a dead patient is no longer eligible for a new HEMS ticket, and the existing caller must resolve the terminal no-transport or next-patient decision.
+- Corrected every affected ground-operations death message so the patient identifier is formatted instead of exposing the literal `{0}` placeholder.
+- Recorded the new test rule: use the user-supplied drive-object test in place, preserving its `wait_for` lifecycle guard and changing one field at a time.
+- Corrected the release rules: no build or publication without explicit authorization; main releases use the next integer and trial releases the next decimal suffix.
+
+### Still to complete in source before the next build
+
+- Apply the local-vs-param comparison to the original `drive-object-param-test.json`, preserving its objective, `wait_for`, reset and result controls. Do not use the discarded replacement test; the production source is already protected from `param` in `name` and `VAR1`.
+- Validate the HEMS movement fix in the simulator: correct speed profile, no stop-on-distance watchdog, correct arrival at each patient, and no return to the first patient before the intended visit.
+- Validate medical-state synchronization: HEMS actions must appear on the tablet, progress must belong to the correct patient, and the visit must finalize before the next movement.
+- Validate assistant state handling for `pax3`, including standing, backpack and walking states.
+- Verify in the simulator the end-of-visits transition after a death, ambustretcher creation/use/return, medic return, and release of the mission from the scene.
+- Verify traffic separation from `rescue_location`, fire placement on `accident_location`, ambulance parking, and the missing fire-hose behavior.
+- Keep the dispatch destination control gated by confirmed hospital selection or return-to-base state and by completed ground operations.
+
+### Simulator checks still required
+
+- Both ambulances: travel, arrival messages, parallel parking, patient clearance, stretcher route, loading, return and hospital departure.
+- HEMS: crew movement for all patients, first failed command, actual speeds, destinations, medical actions, assistant behavior and mission completion.
+- Death path: one HEMS-assigned patient reaching zero LifeScore must produce the death message, release the assignment, skip the dead patient, resolve the remaining HEMS/ground decision and never leave `HEMS_DECISION_STATE` waiting.
+- Residential scenes: grill smoke only for `ID_CARD 33`; no accidental smoke for the other one-patient residential scenes.
+- Traffic and fire response, including stop-distance behavior and use of the correct scene location.
+- Dispatch visibility: LifeScore show/hide, additional-info controls and destination button gating.
+- Snapshots: automatic/manual capture of object position, speed, destination and movement state for both ambulances and both HEMS actors.
+
+### Delivery state
+
+- Source changes: **in progress**.
+- Generated artifact for the latest source: **not generated**.
+- Release number: **not advanced**.
+- Publication: **not authorized and not performed**.
+- Runtime validation: **pending**.
+
 ## Recovery R1-R7 - 2026-09-15
 
 All seven recovery items are implemented in candidate **0.997 168**. The complete static suite passes, including the existing P1-P3 integration, 582 HVAR triggers and 242 HVAR assignments, plus the new recovery and mandatory-formatting gates. The only root change is the requested release title; data semantics are unchanged. Of 79 changed macros, 55 contain only location-writer diagnostics; the other 24 include six new helpers.

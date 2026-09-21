@@ -44,6 +44,16 @@ const p1AssessmentText = JSON.stringify(medical['ambulance assess patient1']);
 requireTrue(p1AssessmentText.includes('"local":"ambulance_handover_visible"},"value":"yes"'), 'Patient 1 ambulance actions remain hidden after assessment');
 requireTrue(!JSON.stringify(medical['patient health']).match(/[\u0080-\uFFFF]/), 'patient report contains non-ASCII display text');
 
+function hasShowConditionOr(value) {
+  if (Array.isArray(value)) return value.some((entry) => hasShowConditionOr(entry));
+  if (!value || typeof value !== 'object') return false;
+  if (value.show_condition && contains(value.show_condition, (entry) => entry && typeof entry === 'object' && Object.prototype.hasOwnProperty.call(entry, 'or'))) return true;
+  return Object.values(value).some((entry) => hasShowConditionOr(entry));
+}
+
+requireTrue(!hasShowConditionOr(medical['patient health']), 'patient health contains an unsupported or inside show_condition');
+requireTrue(!JSON.stringify(medical['patient health']).includes('HEMS MEDICAL ACTIONS'), 'HEMS action rows can render before a physical visit starts');
+
 const display = tablet['sync medical patient display'];
 for (const slot of [2, 3]) {
   const branch = display.find((entry) => entry.if?.local === 'medical_display_patient' && entry.eq === slot)?.then;

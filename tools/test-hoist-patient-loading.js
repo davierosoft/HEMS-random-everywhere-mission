@@ -24,7 +24,8 @@ if (selectorText.includes('from_any_injured_to_ready_for_transport') || selector
 const selectorVariants = ['HOISTING', 'hoist heli rescuer down', 'gnd ops heli rescuer down', '4 or 5 crew ground ops', '3 crew ground ops', '5 crew SKID LDG', '4 crew SKID LDG', '3 crew SKID LDG'];
 for (const variant of selectorVariants) {
   const flow = hoistData[variant] || [];
-  if (flow[0]?.call_macro !== 'multipatient registry crew first target') throw new Error(`${variant} must begin with the physical HEMS visit target`);
+  const firstOperationalMacro = flow.find(step => step.call_macro && step.call_macro !== 'ground crew runtime trace');
+  if (firstOperationalMacro?.call_macro !== 'multipatient registry crew first target') throw new Error(`${variant} must begin with the physical HEMS visit target`);
   const tourIndex = flow.findIndex(step => (step.call_macro === 'multipatient registry crew tour' || step.call_macro === 'multipatient registry crew tour safe') && step.params?.resource === 'hems');
   const selectionIndex = flow.findIndex(step => step.call_macro === 'select HEMS patient');
   if (tourIndex >= 0 && selectionIndex <= tourIndex) throw new Error(`${variant} must select HEMS only after the physical HEMS tour`);

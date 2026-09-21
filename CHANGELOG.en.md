@@ -1,5 +1,36 @@
+## Release 0.997 168.25
+
+- Fix ground response parking, stretcher states, HEMS and crew runtime diagnostics.
+- Fix ground response parking, stretcher states, and crew runtime diagnostics.
+
+## Release 0.997 168.24
+
+- Include version identity update for 0.997 168.24
+- Fix HEMS ground operations ambulance parking worker parameter scope and dynamic drive test lifecycle
+
+## Release 0.997 168.23
+
+- Finalize stretcher-first patient loading order
+- Reprepare after final crew eligibility formatting
+- Allow ground eligibility after HEMS assessment completes
+- Force rebuild after final source and workflow-gate correction
+- Reprepare release after canonical source formatting
+- Validate HEMS medical action display conditions
+- Synchronize mission source macro count before local publication
+- Include all carried mission fixes in 0.997 168.23
+- Ambulance naming and stretcher loading sequence
+
+## Release 0.997 168.22
+
+- final scope includes all requested mission corrections
+- include preserved firetruck refresh in final static scope
+- Include the required release version-check scope for 0.997 168.22
+- Fix static drive-object actor and VAR1 paths after external parameter matrix; preserve carried mission fixes and add dynamic-command test rule
+
 ## Release 0.997 168.21
 
+- Declare all macros touched by the completed scoped fixes
+- Fix ground crew movement, route-based ambulance parking, traffic separation, fire response, and dispatch detail visibility
 - Requested local publication after undefined-safe snapshot correction and full carried-scope verification
 
 ## Release 0.997 168.20

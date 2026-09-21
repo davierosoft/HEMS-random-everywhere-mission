@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 const { assertCicersBranch } = require('./assert-cicers-branch');
+const { inspect: inspectReleaseCoherence } = require('./check-release-coherence');
 const { analyzeScope, readBaseline, scopeViolations } = require('./check-mission-scope');
 const {
   assertBuildIntent,
@@ -93,6 +94,27 @@ function updateRuntimeReleaseIdentity(repositoryRoot, release) {
   writeTextAtomic(source, text.replace(pattern, `$1${JSON.stringify(release)}`));
 }
 
+function recordSuppliedRelease(repositoryRoot, release, artifact) {
+  const ledgerPath = path.join(repositoryRoot, 'tools', 'release-ledger.json');
+  const artifactSha256 = sha256(artifact);
+  const existing = fs.existsSync(ledgerPath) ? JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) : null;
+  if (existing && compareRelease(release, existing.lastSuppliedRelease) < 0) {
+    throw new Error(`cannot record supplied release ${release} below ledger ${existing.lastSuppliedRelease}`);
+  }
+  if (existing && compareRelease(release, existing.lastSuppliedRelease) === 0 && existing.artifactSha256 !== artifactSha256) {
+    throw new Error(`release ${release} is already recorded with a different artifact`);
+  }
+  const ledger = {
+    schema: 1,
+    lastSuppliedRelease: release,
+    lastSuppliedArtifact: 'everywhere_all.json',
+    artifactSha256,
+    recordedAt: new Date().toISOString().slice(0, 10),
+    note: 'Updated automatically after explicit local delivery; runtime validation status remains separate.',
+  };
+  writeTextAtomic(ledgerPath, `${JSON.stringify(ledger, null, 2)}\n`);
+}
+
 function replaceArtifactTitle(artifact, oldTitle, newTitle) {
   const titlePattern = /^(\s*"title"\s*:\s*)"([^"\r\n]*)"/m;
   const match = titlePattern.exec(artifact);
@@ -101,6 +123,7 @@ function replaceArtifactTitle(artifact, oldTitle, newTitle) {
 }
 
 function beginRelease(repositoryRoot, release, note, scope) {
+  inspectReleaseCoherence(repositoryRoot, release);
   const currentIntentPath = intentPath(repositoryRoot);
   if (fs.existsSync(currentIntentPath)) {
     const existing = readIntent(repositoryRoot);
@@ -185,11 +208,9 @@ function amendPreparedRelease(repositoryRoot, note, scope) {
   const updatedChangelog = changelog.replace(header, `${header}- ${amendment}\n`);
   intent.scope = mergedScope;
   intent.note = `${intent.note} ${amendment}`;
-  if (intent.kind === 'draft') {
-    intent.status = 'prepared';
-    delete intent.builtAt;
-    delete intent.builtArtifactSha256;
-  }
+  intent.status = 'prepared';
+  delete intent.builtAt;
+  delete intent.builtArtifactSha256;
   intent.amendedAt = new Date().toISOString();
   writeTextAtomic(changelogPath, updatedChangelog);
   writeIntent(repositoryRoot, intent);
@@ -245,6 +266,7 @@ function verifyStatic(repositoryRoot) {
   intent.staticVerifiedAt = new Date().toISOString();
   intent.staticArtifactSha256 = sha256(artifact);
   const localTestArtifact = createLocalTestArtifact(repositoryRoot, intent, artifact);
+  if (intent.kind === 'release') recordSuppliedRelease(repositoryRoot, intent.release, artifact);
   intent.localTestArtifact = path.relative(repositoryRoot, localTestArtifact).replace(/\\/g, '/');
   writeIntent(repositoryRoot, intent);
   return { intent, localTestArtifact, scope };
@@ -256,6 +278,7 @@ function packageRelease(repositoryRoot, runtimeSignoff) {
   if (sha256(artifact) !== intent.staticArtifactSha256) throw new Error('artifact changed after static verification; rebuild and rerun the static gate');
   const identity = assertReleaseIdentity(repositoryRoot, artifact);
   if (identity.release !== intent.release) throw new Error('artifact release changed after static verification');
+  inspectReleaseCoherence(repositoryRoot, intent.release);
 
   const outputDirectory = path.join(repositoryRoot, 'outputs', intent.release.replace(' ', '-'));
   if (fs.existsSync(outputDirectory)) throw new Error(`delivery directory already exists: ${outputDirectory}`);
@@ -272,6 +295,7 @@ function packageRelease(repositoryRoot, runtimeSignoff) {
     runtimeSignoff,
     packagedAt: new Date().toISOString(),
   }, null, 2)}\n`);
+  recordSuppliedRelease(repositoryRoot, intent.release, artifact);
   intent.status = 'packaged';
   intent.packagedAt = new Date().toISOString();
   intent.deliveryPath = path.relative(repositoryRoot, artifactPath).replace(/\\/g, '/');
@@ -310,7 +334,7 @@ function main(argv = process.argv.slice(2)) {
   }
 }
 
-module.exports = { amendPreparedRelease, beginDraft, beginRelease, createLocalTestArtifact, packageRelease, releaseScope, replaceArtifactTitle, runNodeGate, updateRuntimeReleaseBuild, verifyStatic };
+module.exports = { amendPreparedRelease, beginDraft, beginRelease, createLocalTestArtifact, packageRelease, recordSuppliedRelease, releaseScope, replaceArtifactTitle, runNodeGate, updateRuntimeReleaseBuild, verifyStatic };
 
 if (require.main === module) {
   try {

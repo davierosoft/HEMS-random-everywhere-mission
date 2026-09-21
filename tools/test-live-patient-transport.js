@@ -16,7 +16,7 @@ class Live extends Scene {
   constructor() {
     super(); this.macros = {...this.macros}; this.threads = []; this.call(prefix + 'initialize'); this.locals.patient_live_mode = 1;
     for (const slot of [1, 2, 3]) Object.assign(this.locals, slot === 1 ? {SPO2: 96, BPM: 80, GCS_TOTAL: 14} : {[`P${slot}_SPO2`]: 96, [`P${slot}_BPM`]: 80, [`P${slot}_GCS_TOTAL`]: 14});
-    for (const name of ['ambulance1', 'ambulance2']) {this.objects.add(name); this.locations[name] = [0, 0];}
+    for (const name of ['ambulance1', 'ambulance2', 'ambustretcher7', 'ambustretcher2', 'ambumedic7', 'ambumedic2', 'hoist_crew', 'pax3']) {this.objects.add(name); this.locations[name] = [0, 0];}
     Object.assign(this.locals, {VAR_MISSION_NUMBER: 9, 'L:TEMPACCIDENT_LOCATION LAT': 45, 'L:TEMPACCIDENT_LOCATION LON': 8});
     this.locations.accident_location = [0, 0];
   }
@@ -109,7 +109,7 @@ for (const slot of [1, 2, 3]) for (const resource of ['ambulance1', 'ambulance2'
     assert.equal(h.call(prefix + 'live hems loaded'), 1);
   } else {
     const medic = resource === 'ambulance1' ? 'ambumedic7' : 'ambumedic2';
-    assert.equal(h.call(prefix + 'live ground load', {ticket, vehicle: resource, medic, stretcher: resource + '_stretcher'}), 1);
+    assert.equal(h.call(prefix + 'live ground load', {ticket, vehicle: resource, medic, stretcher: resource === 'ambulance1' ? 'ambustretcher7' : 'ambustretcher2'}), 1);
     assert.equal(h.locals[slot === 1 ? 'ambulance_final_provider' : `P${slot}_AMBULANCE_FINAL_PROVIDER`], resource);
   }
   assert.deepEqual(Array.from(h.events.filter(e => e[0] === 'pack'), e => e[1]), [packed]);

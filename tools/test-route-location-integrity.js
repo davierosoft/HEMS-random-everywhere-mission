@@ -69,7 +69,7 @@ if (patientMoves.length !== 3 || patientMoves.some((move) => !move.fireBranch ||
 const residentialFireLocation = residentialScene.find((item) => item?.create_location === 'FIRE');
 if (JSON.stringify(residentialFireLocation) !== JSON.stringify({
   create_location: 'FIRE',
-  zones: [{ zone: { location: { bearing: 190, dist: 2, object: 'accident_location' } } }]
+  zones: [{ zone: { location: { bearing: 0, dist: 0, object: 'accident_location' } } }]
 })) {
   throw new Error('residential fire geometry must remain authored at 2 m from accident_location');
 }
@@ -122,13 +122,17 @@ for (const macroName of ['Firetruck1', 'Firetruck2']) {
     throw new Error(`${macroName} must not use rescue_location as the fire-truck route target`);
   }
 }
-if (findCreatedLocation(ground.Firetruck1, 'FIRE')) throw new Error('Firetruck1 must not overwrite the authored FIRE location');
-for (const [macroName, watchdogName] of [['park_firetruck1', 'watchdog_firetruck1_scene_approach'], ['park_firetruck2', 'watchdog_firetruck2_scene_approach']]) {
+const fireRefresh = findCreatedLocation(ground.Firetruck1, 'FIRE');
+if (fireRefresh?.zones?.[0]?.zone?.location?.object !== 'firetruck1') throw new Error('Firetruck1 must refresh FIRE at the parked fire engine before crew fire response');
+for (const macroName of ['park_firetruck1', 'park_firetruck2']) {
   const parkingText = JSON.stringify(ground[macroName]);
   if (!parkingText.includes('fire_truck_scene_access')) throw new Error(`${macroName} must retain the route access guard`);
-  if (!parkingText.includes(watchdogName)) throw new Error(`${macroName} must retain a fire-overlay watchdog fallback`);
-  if (parkingText.includes('"bearing2":90,"dist":5') || parkingText.includes('"bearing2":270,"dist":5')) {
-    throw new Error(`${macroName} must not perform redundant lateral parking maneuvers`);
+  if (parkingText.includes('overlay_watchdog') || parkingText.includes('watchdog_firetruck')) throw new Error(`${macroName} must not reposition a fire engine through an overlay watchdog`);
+  if (macroName === 'park_firetruck1' && (!parkingText.includes('"bearing2":90,"dist":4') || !parkingText.includes('"bearing2":270,"dist":5'))) {
+    throw new Error('park_firetruck1 must retain the baseline 90 then 270 static parking maneuver');
+  }
+  if (macroName === 'park_firetruck2' && (!parkingText.includes('"local":"fire1arrived"') || !parkingText.includes('"bearing2":180,"dist":12,"object":"firetruck1"'))) {
+    throw new Error('park_firetruck2 must wait only at parking and finish 12m behind firetruck1');
   }
 }
 

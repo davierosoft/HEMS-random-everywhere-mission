@@ -23,12 +23,31 @@ const patientObject = n => `injured_human${n === 1 ? '' : n}`;
 const crewVisit = macros['multipatient registry crew visit'];
 const lifecycle = macros['objective2'];
 const tourUpdate = macros['multipatient registry RescueTrack tour update'];
+const crewDriveSide = macros['multipatient registry crew drive side'];
 assert.ok(!JSON.stringify(crewVisit).includes('{param:actor}'), 'Crew visits must resolve actor through an explicit local');
 assert.ok(JSON.stringify(crewVisit).includes('patient_crew_visit_actor'), 'Crew visits must snapshot the actor before state writes');
 const lifecycleText = JSON.stringify(lifecycle);
 assert.ok(lifecycleText.includes('{local:AGE2} {local:SEX2} {local:consciousness2}'), 'Three-patient injured update must use patient 2 sex');
 assert.ok(lifecycleText.includes('{local:AGE3} {local:SEX3} {local:consciousness3}'), 'Three-patient injured update must use patient 3 sex');
 assert.ok(JSON.stringify(tourUpdate).includes('multipatient_rescuetrack_sender'), 'Tour updates must normalize their RescueTrack sender');
+assert.ok(JSON.stringify(tourUpdate).includes('Ambulance {0} crew'), 'Ambulance visit reports must identify the vehicle crew, not only its callsign');
+assert.ok(JSON.stringify(tourUpdate).includes('multipatient_rescuetrack_label'), 'Tour updates must separate the sender identity from its display label');
+const crewDriveSideText = JSON.stringify(crewDriveSide);
+assert.ok(crewDriveSideText.includes('AMBU7_MOVE_TARGET'), 'Ambulance 1 medic requires a dedicated movement target local');
+assert.ok(crewDriveSideText.includes('AMBU2_MOVE_TARGET'), 'Ambulance 2 medic requires a dedicated movement target local');
+function findDriveObjects(value, drives = []) {
+  if (Array.isArray(value)) value.forEach(item => findDriveObjects(item, drives));
+  else if (value && typeof value === 'object') {
+    if (value.drive_object) drives.push(value.drive_object);
+    Object.values(value).forEach(item => findDriveObjects(item, drives));
+  }
+  return drives;
+}
+for (const drive of findDriveObjects(crewDriveSide)) {
+  const target = JSON.stringify(drive.to);
+  if (drive.name === 'ambumedic7') assert.ok(target.includes('AMBU7_MOVE_TARGET'), 'ambumedic7 must use its dedicated movement target');
+  if (drive.name === 'ambumedic2') assert.ok(target.includes('AMBU2_MOVE_TARGET'), 'ambumedic2 must use its dedicated movement target');
+}
 class Scene extends Base {
   constructor() {
     super(macros); this.events = []; this.sleepHook = null; this.moveHook = null; this.failedMovement = false;
@@ -258,6 +277,6 @@ for (const name of ['3 crew ground ops', '4 or 5 crew ground ops', 'HOISTING', '
 }
 assert.ok(JSON.stringify(macros['ambustretcher full']).includes(prefix + 'tour safe'));
 assert.ok(JSON.stringify(macros['ambulance2 secondary rescue']).includes(prefix + 'tour'), 'Secondary ambulance must execute the common physical tour through its guarded call');
-assert.ok(macros['ambulance2 secondary rescue'][4].if.and.some(c=>c.require?.local==='HELOVICTIMS' && c.gte===1), 'Ambulance2 must also visit a sole unassigned P1');
+assert.ok(macros['ambulance2 secondary rescue'].some(command=>command.if?.and?.some(c=>c.require?.local==='HELOVICTIMS' && c.gte===1)), 'Ambulance2 must also visit a sole unassigned P1');
 assert.ok(JSON.stringify(macros['debug page']).includes('patient_crew_visits'));
 console.log('Crew patient visits PASS: all crews/slots, existing treatment, assignments, movement failure, lock contention, manual revisits, reset and HEMS integration. Simulator validation PENDING.');
