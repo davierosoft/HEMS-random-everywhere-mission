@@ -1,3 +1,169 @@
+## Release 0.997 168.25
+
+- Fix ground response parking, stretcher states, HEMS and crew runtime diagnostics.
+- Fix ground response parking, stretcher states, and crew runtime diagnostics.
+
+## Release 0.997 168.24
+
+- Include version identity update for 0.997 168.24
+- Fix HEMS ground operations ambulance parking worker parameter scope and dynamic drive test lifecycle
+
+## Release 0.997 168.23
+
+- Finalize stretcher-first patient loading order
+- Reprepare after final crew eligibility formatting
+- Allow ground eligibility after HEMS assessment completes
+- Force rebuild after final source and workflow-gate correction
+- Reprepare release after canonical source formatting
+- Validate HEMS medical action display conditions
+- Synchronize mission source macro count before local publication
+- Include all carried mission fixes in 0.997 168.23
+- Ambulance naming and stretcher loading sequence
+
+## Release 0.997 168.22
+
+- final scope includes all requested mission corrections
+- include preserved firetruck refresh in final static scope
+- Include the required release version-check scope for 0.997 168.22
+- Fix static drive-object actor and VAR1 paths after external parameter matrix; preserve carried mission fixes and add dynamic-command test rule
+
+## Release 0.997 168.21
+
+- Declare all macros touched by the completed scoped fixes
+- Fix ground crew movement, route-based ambulance parking, traffic separation, fire response, and dispatch detail visibility
+- Requested local publication after undefined-safe snapshot correction and full carried-scope verification
+
+## Release 0.997 168.20
+
+- Include complete carried scope plus undefined-safe snapshot fix
+- Declare release-number update in version check
+- Requested local publication of all carried mission corrections; no GitHub publication
+
+## Release 0.997 168.19
+
+- Include destination snapshot gate and passive movement diagnostics
+- Prepare publication candidate after formatting and manifest verification
+- Include existing mission changes in local verification scope
+- Update source macro inventory after adding movement workers
+- Format focused HEMS and lifescore source modules
+- Include HEMS selection decision macro in the focused draft scope
+- Preserve exact OSM country text while restoring numeric country selection before vehicle dispatch
+
+## Release 0.997 168.18
+
+- Fix current residential police movement and preserve all previously requested mission changes
+
+## Release 0.997 168.17
+
+- Fix undefined HEMS movement snapshot log before initialization
+
+## Release 0.997 168.16
+
+- Retain complete prior-release audit scope with the snapshot guard
+- Include release version consistency check in final audit scope
+- Final geometric HEMS speed audit, movement monitoring, and blocking-sequence corrections
+
+## Release 0.997 168.15
+
+- Include existing HEMS movement and ground-operation callers in the audited scope
+- Align movement regression test with no-teleport watchdog policy
+- Declare direct owners touched by lifescore, HEMS movement, medical assessment, and ambulance arrival corrections
+- Release identity update changes the version check macro
+- Aggregate two-ambulance dispatch message and patient lifescore visibility controls
+
+## Release 0.997 168.14
+
+- Add comparator to each lifescore visibility branch
+- Scope includes the concrete dispatch and ambulance worker macros
+- Include release identity update
+- HEMS and ground crew sequencing, visit failure stop, HEMS priority, country token preservation
+
+## Release 0.997 168.13
+
+- Finalize HEMS barrier and ground visit stop sequencing
+- Add movement watchdog and HEMS/ground sequencing correction
+- Declare version check change caused by release identity update
+- Local test release: crew movement and tour exception guards; HEMS selection no longer waits on ground tour completion
+
+## Release 0.997 168.12
+
+- Fix HPG move_object parameter resolution in crew movement watchdog recovery
+- Fix HPG move_object parameter resolution in crew movement watchdog recovery
+- Fix RescueTrack undefined ambulance sender and preserve patient-specific clinical message fields
+- Fix RescueTrack undefined ambulance sender and preserve patient-specific clinical message fields
+
+## Release 0.997 168.11
+
+- Include ambulance claim-before-movement correction with isolated worker state
+- Include generated version identity update
+- Fix actor parameter scope, crew VAR1 states, HEMS movement sequence, and en route objective
+
+## Release 0.997 168.10
+
+- Limit ASCII gate to executable mission macro text
+- Include ASCII regression gate and updated emergency-message assertion
+- Complete scope for HEMS sequence and ASCII gate
+- Fix HEMS visit states, duplicate choreography, RescueTrack summary, ambulance naming, and ASCII messages
+
+## Release 0.997 168.9
+
+- Include version-check consumer for the 168.9 build identity
+- Test release: HEMS post-visit selection, independent ground resources, crew movement recovery, RescueTrack diagnostics, and stable HVAR compatibility gate
+
+## Release 0.997 168.8
+
+- Complete integrated HEMS post-visit selection, independent ground resources, crew movement recovery, and RescueTrack diagnostics
+- Complete integrated HEMS post-visit selection, independent ground resources, crew movement recovery, and RescueTrack diagnostics
+- Local test build for ambulance separation and walking crew recovery
+- Local test build for ambulance separation and walking crew recovery
+
+## Release 0.997 168.7
+
+- Fix ambulance separation, patient clearance, and walking crew recovery
+- Remove redundant accident nation id and restore shared nation selector
+- Remove redundant accident nation id and restore shared nation selector
+
+## Release 0.997 168.6
+
+- Test delivery: preserve authored fire location, route fire trucks to nearest road at accident location, prevent fire overlay, and minimize parking maneuvers
+
+## Release 0.997 168.5
+
+- Test delivery: audit and fixes since 19:23, including scoped crew locRefs and debug identity/country diagnostics
+
+## Release 0.997 168.4
+
+- Include Debug snapshot changes already present in this work cycle
+- Include release suffix propagation in version check
+- Test delivery: OSM node location, separated ambulance parking, and accident nation vehicle selection
+
+## Release 0.997 168.3
+
+- Preserve parking command structure while separating ambulance positions
+- Include all ground responder nation selectors in merge scope
+- Scope correction for residential scene line removal
+- Include both country-name and movement fixes in test release scope
+- Fix country-name display and structured crew movement parameters
+
+## Release 0.997 168.2
+
+- Declare all affected location-display callers
+- Add explicit release scope for generated build identity
+- New suffixed test candidate after 168.1 invalidation
+
+## Release 0.997 168.1
+
+- Use the documented move_object form in timeout recovery
+- Cover synchronous crew-visit harness for watchdog regression
+- Rebuild simplified walking watchdog
+- Simplify walking watchdog worker for command compatibility
+- Align hotel and rescue location ownership diagnostics
+- Complete ownership markers for every rescue location write
+- Rebuild after rescue fallback diagnostic ownership
+- Add diagnostic ownership to rescue fallbacks
+- Record suffixed test identity in snapshots
+- Test residential hotel and rescue anchor
+
 ## Release 0.997 168
 
 - Candidate delivery, not simulator-validated. The user explicitly authorized local/GitHub delivery and deferred the HPG/MSFS recovery and P1-P3 integration matrix; runtime status is PENDING.

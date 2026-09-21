@@ -1216,7 +1216,7 @@
                     {"sleep":0.5},
                     {"if": {"local":"trafficroads"}, "eq": "1",
                       "then": [
-                        {"create_route":{"name":"route1","query":{"to":"accident_location","from":"wpt1","type":"car"}}},
+                        {"create_route":{"name":"route1","query":{"to":"rescue_location","from":"wpt1","type":"car"}}},
                         {"if": {"var":["L:TESTTRK","number"]}, "eq": 1,
                           "then": [
                             {"draw_route":"route1","stroke":{"width":6,"color":"#FCBA03"}}
@@ -1226,7 +1226,7 @@
                     ]},
                     {"if": {"local":"trafficroads"}, "eq": "2",
                       "then": [
-                        {"create_route":{"name":"route2","query":{"to":"accident_location","from":"wpt2","type":"car"}}},
+                        {"create_route":{"name":"route2","query":{"to":"rescue_location","from":"wpt2","type":"car"}}},
                         {"if": {"var":["L:TESTTRK","number"]}, "eq": 1,
                           "then": [
                             {"draw_route":"route2","stroke":{"width":4,"color":"#FCBA03"}}
@@ -1236,7 +1236,7 @@
                     ]},
                     {"if": {"local":"trafficroads"}, "eq": "3",
                       "then": [
-                        {"create_route":{"name":"route3","query":{"to":"accident_location","from":"wpt3","type":"car"}}},
+                        {"create_route":{"name":"route3","query":{"to":"rescue_location","from":"wpt3","type":"car"}}},
                         {"if": {"var":["L:TESTTRK","number"]}, "eq": 1,
                           "then": [
                             {"draw_route":"route3","stroke":{"width":2,"color":"#FCBA03"}}
@@ -1273,7 +1273,7 @@
             ]},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"object":"{local:carname1}","var":"distance:m","to":"accident_location"},"lte":{"local":"cardistance1"}},
+                {"wait_for":{"object":"{local:carname1}","var":"distance:m","to":"rescue_location"},"lte":{"local":"cardistance1"}},
                 {"set":{"object":"{local:carname1}","var":"WP INDEX"},"value":0},
                 {"set":{"object":"{local:carname1}","var":"VELOCITY Z"},"value":0}
             ]}},
@@ -1283,7 +1283,7 @@
                 {"set":{"object":"{local:carname1}","var":"VELOCITY Z"},"value":10}
             ]}},
             {"drive_object":{"name":"{local:carname1}","to":"route1","speedMultiplier":1.5}},
-            {"if": {"object":"{local:carname1}","var":"distance:m","to":"accident_location"}, "lt": 7,
+            {"if": {"object":"{local:carname1}","var":"distance:m","to":"rescue_location"}, "lt": 7,
               "then": [
                 {"if": {"has_object":"{local:carname1}"}, "eq": 1,
                   "then": [
@@ -1336,7 +1336,7 @@
             ]},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"object":"{local:carname2}","var":"distance:m","to":"accident_location"},"lte":{"local":"cardistance2"}},
+                {"wait_for":{"object":"{local:carname2}","var":"distance:m","to":"rescue_location"},"lte":{"local":"cardistance2"}},
                 {"set":{"object":"{local:carname2}","var":"WP INDEX"},"value":0},
                 {"set":{"object":"{local:carname2}","var":"VELOCITY Z"},"value":0}
             ]}},
@@ -1346,7 +1346,7 @@
                 {"set":{"object":"{local:carname2}","var":"VELOCITY Z"},"value":10}
             ]}},
             {"drive_object":{"name":"{local:carname2}","to":"route2","speedMultiplier":2}},
-            {"if": {"object":"{local:carname2}","var":"distance:m","to":"accident_location"}, "lt": 7,
+            {"if": {"object":"{local:carname2}","var":"distance:m","to":"rescue_location"}, "lt": 7,
               "then": [
                 {"if": {"has_object":"{local:carname2}"}, "eq": 1,
                   "then": [
@@ -1397,7 +1397,7 @@
             ]},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"object":"{local:carname3}","var":"distance:m","to":"accident_location"},"lte":{"local":"cardistance3"}},
+                {"wait_for":{"object":"{local:carname3}","var":"distance:m","to":"rescue_location"},"lte":{"local":"cardistance3"}},
                 {"set":{"object":"{local:carname3}","var":"WP INDEX"},"value":0},
                 {"set":{"object":"{local:carname3}","var":"VELOCITY Z"},"value":0}
             ]}},
@@ -1407,7 +1407,7 @@
                 {"set":{"object":"{local:carname3}","var":"VELOCITY Z"},"value":10}
             ]}},
             {"drive_object":{"name":"{local:carname3}","to":"route3","speedMultiplier":1.5}},
-            {"if": {"object":"{local:carname3}","var":"distance:m","to":"accident_location"}, "lt": 7,
+            {"if": {"object":"{local:carname3}","var":"distance:m","to":"rescue_location"}, "lt": 7,
               "then": [
                 {"if": {"has_object":"{local:carname3}"}, "eq": 1,
                   "then": [
@@ -1799,6 +1799,11 @@
     ]}}
   ],
   "ambustretcher full": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance1_crew_worker","actor":"ambumedic7","target":"ambulance1","state":"started"}},
+    {"if": {"local":"ambulance1_thread_started"}, "eq": "yes",
+      "then": [
+        {"return":0}
+    ]},
     {"set":{"local":"ambulance1_thread_started"},"value":"yes"},
     {"set":{"local":"ambulance1_gate"},"value":"crew_deployment_started"},
     {"set":{"local":"ambulance1_log"},"value":"ambulance1 crew thread entered"},
@@ -1834,7 +1839,7 @@
         {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0},
         {"sleep":5},
         {"set":{"var":["L:HOLD","number"]},"value":1},
-        {"call_macro":"multipatient registry crew tour","params":{"resource":"ambulance1","actor":"ambumedic7","provider":{"local":"ambuname"},"walk":1},"result":"tour_complete"},
+        {"call_macro":"multipatient registry crew tour safe","params":{"resource":"ambulance1","actor":"ambumedic7","provider":{"local":"ambuname"},"walk":1},"result":"tour_complete"},
         {"if": {"param":"tour_complete"}, "eq": 1,
           "then": [
             {"set":{"local":"ambulance1_crew_at_scene"},"value":"yes"},
@@ -3097,7 +3102,7 @@
     {"sleep":0.2},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":10,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -3176,7 +3181,7 @@
     {"set":{"local":"fire2stopdistance"},"value":"26"},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":10,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -3276,7 +3281,7 @@
     {"set":{"local":"fire2stopdistance"},"value":"28"},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":20,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -3410,7 +3415,7 @@
     {"set":{"local":"fire2stopdistance"},"value":"34"},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":20,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -3612,7 +3617,7 @@
     {"set":{"local":"fire2stopdistance"},"value":"27"},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":20,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -3767,7 +3772,7 @@
     {"sleep":0.2},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":10,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -4593,7 +4598,11 @@
           "then": [
             {"move_object":"VFXA","to":{"bearing":290,"dist":7,"heading":{"rand":[0,30]},"object":"accident_location"}}
         ]},
-        {"if": {"local":"CRASH_VARIABLE"}, "gt": 2,
+        {"if": {
+          "and": [
+            {"require":{"local":"CRASH_VARIABLE"},"gt":2},
+            {"require":{"local":"VAR_MISSION_NUMBER"},"eq":33}
+          ]}, "eq": 1,
           "then": [
             {"move_object":"VFXA","to":{"bearing":200,"dist":8,"heading":{"rand":[0,30]},"object":"accident_location"}}
         ]}
@@ -4811,7 +4820,11 @@
             {"sleep":0.5},
             {"move_object":"VFXA","to":{"bearing":290,"dist":5,"heading":{"rand":[0,30]},"object":"accident_location"}}
         ]},
-        {"if": {"local":"CRASH_VARIABLE"}, "gt": 2,
+        {"if": {
+          "and": [
+            {"require":{"local":"CRASH_VARIABLE"},"gt":2},
+            {"require":{"local":"VAR_MISSION_NUMBER"},"eq":33}
+          ]}, "eq": 1,
           "then": [
             {"sleep":0.5},
             {"move_object":"VFXA","to":{"bearing":180,"dist":1,"heading":{"rand":[0,30]},"object":"accident_location"}}
@@ -5357,7 +5370,7 @@
     {"sleep":0.2},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":10,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -6069,9 +6082,12 @@
     {"set":{"local":"ambu2stopdistance"},"value":9},
     {"set":{"local":"fire1stopdistance"},"value":12},
     {"set":{"local":"fire2stopdistance"},"value":15},
+    {"set":{"local":"ambulance_scene_route_start"},"value":"wpt{local:amburoad}"},
+    {"set":{"local":"ambulance_scene_route_end"},"value":"wprescue{local:amburoad}"},
+    {"set":{"local":"ambulance_scene_heading"},"value":{"bearing":{"from":{"local":"ambulance_scene_route_start"},"to":{"local":"ambulance_scene_route_end"}}}},
     {"create_location": "ambulance_scene_destination",
       "zones": [
-        {"zone":{"location":{"bearing":180,"dist":18,"object":"rescue_location"}}}
+        {"zone":{"location":{"bearing":180,"dist":18,"heading":{"local":"ambulance_scene_heading"},"object":"rescue_location"}}}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "ne": 3,
       "then": [
@@ -6165,14 +6181,13 @@
             {"zone":{"location":{"bearing":0,"dist":3,"object":"rescue_location"}}}
         ]},
         {"call_macro":"fence road","params":{"fence_rescue":"ambulance"}},
-        {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}},
-        {"set_map":{"add":{"line":{"points":["accident_location","rescue_location"],"stroke":{"color":"#34D2EB","width":3},"id":"ADD"}}}}
+        {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":44},
     {"set_message":{"text":"Cabin preparation, 44% completed... please wait, it can take a while"}},
     {"create_location": "POLMAN1",
       "zones": [
-        {"zone":{"location":{"bearing":25,"dist":3.5,"object":"rescue_location"}}}
+        {"zone":{"location":{"bearing":25,"dist":2.7,"object":"rescue_location"}}}
     ]},
     {"sleep":0.2},
     {"create_location": "POLMAN2",
@@ -6182,7 +6197,7 @@
     {"sleep":0.2},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":2,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -6205,7 +6220,11 @@
           "then": [
             {"create_object":{"name":"car_crash","title":{"struct":{"static":"ladders"},"index":{"floor":{"rand":[0,{"struct":{"static":"ladders"},"path":"length"}]}}},"fallback_title":"Airbus H145 Cargo Bag","location":{"bearing":10,"dist":2,"heading":{"rand":[0,359]},"object":"rescue_location"}}}
         ]},
-        {"if": {"local":"CRASH_VARIABLE"}, "gt": 2,
+        {"if": {
+          "and": [
+            {"require":{"local":"CRASH_VARIABLE"},"gt":2},
+            {"require":{"local":"VAR_MISSION_NUMBER"},"eq":33}
+          ]}, "eq": 1,
           "then": [
             {"create_object":{"name":"car_crash","title":{"struct":{"static":"grills"},"index":{"floor":{"rand":[0,{"struct":{"static":"grills"},"path":"length"}]}}},"fallback_title":"Airbus H145 Cargo Bag","location":{"bearing":10,"dist":2,"heading":{"rand":[0,359]},"object":"rescue_location"}}},
             {"create_object":{"name":"VFX2","title":"Smoke Effects","fallback_title":"Airbus H145 VFX Object","location":"car_crash"}},
@@ -6319,7 +6338,7 @@
     {"sleep":0.2},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":2,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [
@@ -6508,7 +6527,7 @@
     {"sleep":0.2},
     {"create_location": "FIRE",
       "zones": [
-        {"zone":{"location":{"bearing":190,"dist":2,"object":"accident_location"}}}
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
     ]},
     {"create_location": "FIRMAN1",
       "zones": [

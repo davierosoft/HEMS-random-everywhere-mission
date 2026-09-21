@@ -57,7 +57,7 @@ function validateDfRelease(mission, changelog) {
     if (!condition) errors.push(message);
   };
 
-  const release = changelog.match(/^##\s+(?:Release\s+)?(0\.\d+\s+\d+)\b/m)?.[1];
+  const release = changelog.match(/^##\s+(?:Release\s+)?(0\.\d+\s+\d+(?:\.\d+)?)\s*$/m)?.[1];
   expect(Boolean(release), 'DF/release gate: current release heading is missing from CHANGELOG.en.md');
   expect(mission.title === `HEMS RANDOM AND EVERYWHERE MISSIONS ${release}`, `DF/release gate: mission title ${JSON.stringify(mission.title)} does not match changelog release ${JSON.stringify(release)}`);
 

@@ -64,3 +64,4 @@ Set `L:WAVING_CIVILIAN_STOP` to `1` to stop the waving animation.
 2. Preserve an actor's object title while changing visual role. In three-crew destination handling, the copilot remains `$TITLE Crew`, uses `VAR 1: 14` standing and `VAR 1: 16` walking, and may use the documented pilot `VAR 2` skin value.
 3. Add or update a structural regression check whenever a mission path relies on a visual state. The check must reject invented titles and verify the required `VAR 1` transition.
 4. Do not use an object state absent from this reference until the current HPG documentation or installed object package proves it.
+5. If repeated analysis cannot isolate a failure and a dynamic `drive_object` field is implicated, create or propose an external minimal matrix before changing production choreography.

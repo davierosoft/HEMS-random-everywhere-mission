@@ -44,6 +44,16 @@ const p1AssessmentText = JSON.stringify(medical['ambulance assess patient1']);
 requireTrue(p1AssessmentText.includes('"local":"ambulance_handover_visible"},"value":"yes"'), 'Patient 1 ambulance actions remain hidden after assessment');
 requireTrue(!JSON.stringify(medical['patient health']).match(/[\u0080-\uFFFF]/), 'patient report contains non-ASCII display text');
 
+function hasShowConditionOr(value) {
+  if (Array.isArray(value)) return value.some((entry) => hasShowConditionOr(entry));
+  if (!value || typeof value !== 'object') return false;
+  if (value.show_condition && contains(value.show_condition, (entry) => entry && typeof entry === 'object' && Object.prototype.hasOwnProperty.call(entry, 'or'))) return true;
+  return Object.values(value).some((entry) => hasShowConditionOr(entry));
+}
+
+requireTrue(!hasShowConditionOr(medical['patient health']), 'patient health contains an unsupported or inside show_condition');
+requireTrue(!JSON.stringify(medical['patient health']).includes('HEMS MEDICAL ACTIONS'), 'HEMS action rows can render before a physical visit starts');
+
 const display = tablet['sync medical patient display'];
 for (const slot of [2, 3]) {
   const branch = display.find((entry) => entry.if?.local === 'medical_display_patient' && entry.eq === slot)?.then;
@@ -51,6 +61,24 @@ for (const slot of [2, 3]) {
   requireTrue(branchText.includes(`"local":"patientid${slot}"`) && branchText.includes(`"local":"P${slot}_MEDICAL_ASSESSMENT_COMPLETE"`), `tablet does not show patient ${slot} identity and ambulance assessment status`);
   requireTrue(branchText.includes(`"local":"P${slot}_AMBULANCE_FINAL_HR"`) && branchText.includes(`"local":"P${slot}_AMBULANCE_FINAL_SPO2"`) && branchText.includes(`"local":"P${slot}_AMBULANCE_FINAL_GCS_TOTAL"`), `tablet handover for patient ${slot} reads live or incomplete values`);
   requireTrue(!branchText.includes('CASUALTY '), `tablet still uses a placeholder identity for patient ${slot}`);
+}
+
+const actionLines = [];
+function collectActionLines(value) {
+  if (Array.isArray(value)) {
+    for (const entry of value) collectActionLines(entry);
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  if (value.text === 'IN PROGRESS: {0}') actionLines.push(value);
+  for (const entry of Object.values(value)) collectActionLines(entry);
+}
+collectActionLines(medical['patient health']);
+requireTrue(actionLines.length === 6, 'medical page must expose one in-progress line per action');
+for (const [index, line] of actionLines.entries()) {
+  const step = 6 - index;
+  const guards = line.show_condition?.and || [];
+  requireTrue(guards.some((entry) => entry.require?.local === 'medical_display_ambulance_completed_actions' && entry.lt === step), `action ${step} in-progress state can duplicate an already completed ambulance action`);
 }
 
 for (const name of ['savetemp', 'save1', 'save2', 'save3']) {

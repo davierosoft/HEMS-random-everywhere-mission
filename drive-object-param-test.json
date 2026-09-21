@@ -1,0 +1,88 @@
+{
+  "title": "DRIVE OBJECT PARAMETER TEST",
+  "id": "drive_object_param_matrix_test",
+  "start_info": {"icon_src": "", "query": []},
+  "objectives": [
+    {
+      "title": "DRIVE OBJECT PARAMETER TEST",
+      "commands": [
+        {"create_object":{"name":"drive_test_crew","title":"$CREW Crew","fallback_title":"Airbus H145 ADAC Crew","location":{"bearing":10,"dist":5,"heading":0}}},
+        {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+        {"set":{"local":"drive_object_test_1_status"},"value":"PENDING"},
+        {"set":{"local":"drive_object_test_2_status"},"value":"PENDING"},
+        {"set":{"local":"drive_object_test_3_status"},"value":"PENDING"},
+        {"set":{"local":"drive_object_test_4_status"},"value":"PENDING"},
+        {"set":{"local":"drive_object_test_5_status"},"value":"PENDING"},
+        {"set":{"local":"drive_object_test_6_status"},"value":"PENDING"},
+        {"set":{"local":"drive_object_test_7_status"},"value":"PENDING"},
+        {"set_briefing_dialog":1},
+        {"wait_for":1,"lt":0}
+      ]
+    }
+  ],
+  "macros": {
+    "drive object parameter test reset": [
+      {"set":{"param":"actor"},"value":"drive_test_crew"},
+      {"set":{"param":"walk_state"},"value":3},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"object":"drive_test_crew","var":"WP INDEX"},"value":0},
+      {"set":{"object":"drive_test_crew","var":"VELOCITY Z"},"value":0},
+      {"move_object":"drive_test_crew","to":{"bearing":10,"dist":5,"heading":0}},
+      {"sleep":0.5}
+    ],
+    "drive object parameter test case 1": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":{"param":"actor"},"to":[{"bearing":30,"dist":20}],"VAR1":3,"speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_1_status"},"value":"OK"}
+    ],
+    "drive object parameter test case 2": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":"{param:actor}","to":[{"bearing":30,"dist":20}],"VAR1":3,"speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_2_status"},"value":"OK"}
+    ],
+    "drive object parameter test case 3": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":"drive_test_crew","to":[{"bearing":30,"dist":20}],"VAR1":{"param":"walk_state"},"speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_3_status"},"value":"OK"}
+    ],
+    "drive object parameter test case 4": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":"drive_test_crew","to":[{"bearing":30,"dist":20}],"VAR1":"{param:walk_state}","speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_4_status"},"value":"OK"}
+    ],
+    "drive object parameter test case 5": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":{"param":"actor"},"to":[{"closest":[{"bearing":10,"dist":10},{"bearing":350,"dist":11}],"to":"drive_test_crew"},{"bearing":30,"dist":20}],"VAR1":3,"speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_5_status"},"value":"OK"}
+    ],
+    "drive object parameter test case 6": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":"{param:actor}","to":[{"closest":[{"bearing":10,"dist":10},{"bearing":350,"dist":11}],"to":"drive_test_crew"},{"bearing":30,"dist":20}],"VAR1":3,"speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_6_status"},"value":"OK"}
+    ],
+    "drive object parameter test case 7": [
+      {"call_macro":"drive object parameter test reset"},
+      {"drive_object":{"name":"drive_test_crew","to":[{"closest":[{"bearing":10,"dist":10},{"bearing":350,"dist":11}],"to":"drive_test_crew"},{"bearing":30,"dist":20}],"VAR1":{"param":"walk_state"},"speed":4}},
+      {"set":{"object":"drive_test_crew","var":"VAR 1"},"value":1},
+      {"set":{"local":"drive_object_test_7_status"},"value":"OK"}
+    ]
+  },
+  "briefing": [
+    {"text":"DRIVE OBJECT PARAMETER TEST","size":"large","align":"center"},
+    {"text":"The object is created once by the mission objective before this page is shown. Each test resets VAR1 to standing with backpack (1), moves the crew to bearing 10 / 5m, sets its params, then drives with VAR1=3 (walking with backpack) to bearing 30 / 20m."},
+    {"buttonbar":[{"title":"1 NAME PARAM","commands":[{"call_macro":"drive object parameter test case 1"}]},{"text":"{0}","params":[{"local":"drive_object_test_1_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"2 NAME STRING PARAM","commands":[{"call_macro":"drive object parameter test case 2"}]},{"text":"{0}","params":[{"local":"drive_object_test_2_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"3 VAR1 PARAM","commands":[{"call_macro":"drive object parameter test case 3"}]},{"text":"{0}","params":[{"local":"drive_object_test_3_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"4 VAR1 STRING PARAM","commands":[{"call_macro":"drive object parameter test case 4"}]},{"text":"{0}","params":[{"local":"drive_object_test_4_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"5 CLOSEST NAME PARAM","commands":[{"call_macro":"drive object parameter test case 5"}]},{"text":"{0}","params":[{"local":"drive_object_test_5_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"6 CLOSEST NAME STRING","commands":[{"call_macro":"drive object parameter test case 6"}]},{"text":"{0}","params":[{"local":"drive_object_test_6_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"7 CLOSEST FIXED NAME + VAR1 PARAM","commands":[{"call_macro":"drive object parameter test case 7"}]},{"text":"{0}","params":[{"local":"drive_object_test_7_status"}],"color":"green"}]}
+  ],
+  "data": {}
+}

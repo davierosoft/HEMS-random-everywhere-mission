@@ -21,9 +21,19 @@ for (const required of ['hems patient decision after visits', 'HEMS_DECISION_STA
 if (selectorText.includes('from_any_injured_to_ready_for_transport') || selectorText.includes('from_any_injured2_to_ready_for_transport') || selectorText.includes('from_any_injured3_to_ready_for_transport') || selectorText.includes('"var":"VAR 1"')) {
   throw new Error('HEMS selector mutates patient transport state before clinical decision');
 }
-const selectorVariants = ['HOISTING', 'Hoisting back up', 'Hoisting back ground', 'hoist heli rescuer down', 'gnd ops heli rescuer down', '4 or 5 crew ground ops', '3 crew ground ops', '5 crew SKID LDG', '4 crew SKID LDG', '3 crew SKID LDG'];
+const selectorVariants = ['HOISTING', 'hoist heli rescuer down', 'gnd ops heli rescuer down', '4 or 5 crew ground ops', '3 crew ground ops', '5 crew SKID LDG', '4 crew SKID LDG', '3 crew SKID LDG'];
 for (const variant of selectorVariants) {
-  if (hoistData[variant]?.[0]?.call_macro !== 'select HEMS patient') throw new Error(`${variant} does not initialize the HEMS selector`);
+  const flow = hoistData[variant] || [];
+  const firstOperationalMacro = flow.find(step => step.call_macro && step.call_macro !== 'ground crew runtime trace');
+  if (firstOperationalMacro?.call_macro !== 'multipatient registry crew first target') throw new Error(`${variant} must begin with the physical HEMS visit target`);
+  const tourIndex = flow.findIndex(step => (step.call_macro === 'multipatient registry crew tour' || step.call_macro === 'multipatient registry crew tour safe') && step.params?.resource === 'hems');
+  const selectionIndex = flow.findIndex(step => step.call_macro === 'select HEMS patient');
+  if (tourIndex >= 0 && selectionIndex <= tourIndex) throw new Error(`${variant} must select HEMS only after the physical HEMS tour`);
+  if (tourIndex < 0 && selectionIndex >= 0) throw new Error(`${variant} must not select HEMS before its physical visit`);
+}
+for (const variant of ['Hoisting back up', 'Hoisting back ground']) {
+  const flow = hoistData[variant] || [];
+  if (flow[0]?.call_macro !== 'select HEMS patient') throw new Error(`${variant} must retain the post-tour HEMS selection`);
 }
 
 function visit(value) {

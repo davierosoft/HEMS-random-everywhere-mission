@@ -1232,11 +1232,12 @@
     ]},
     {"sleep":0.5},
     {"set":{"local":"location_name"},"value":"RTB_location"},
+    {"set":{"local":"destination_confirmed"},"value":"yes"},
     {"sleep":0.1},
     {"set":{"local":"FPL_NMBR"},"value":6},
     {"call_macro":"routeupdate"},
     {"sleep":3},
-    {"set_message":{"text":"Route set for base return. Location: {0:LOCATION}","params":["RTB_location"]}},
+    {"set_message":{"text":"Route set for base return in {1}. Location: {0:LOCATION}","params":["RTB_location",{"local":"start_nation"}]}},
     {"set":{"var":["L:READY","number"]},"value":1},
     {"wait_for":{"location":"RTB_location","var":"distance"},"lt":2},
     {"sleep":1},
@@ -2196,8 +2197,11 @@
     {"set":{"local":"timeOSM"},"value":0},
     {"set":{"local":"midway_accepted"},"value":null},
     {"set":{"local":"NATION"},"value":{"global":"NATION_OTHERS"}},
-    {"set":{"local":"accident_nation"},"value":{"global":"NATION_OTHERS"}},
-    {"set":{"local":"hospital_nation"},"value":{"global":"NATION_OTHERS"}},
+    {"set":{"local":"accident_nation"},"value":"fallback"},
+    {"set":{"local":"accident_nation_id"},"value":null},
+    {"set":{"local":"hospital_nation"},"value":"fallback"},
+    {"set":{"local":"hospital_nation_id"},"value":null},
+    {"set":{"local":"userA_nation_id"},"value":null},
     {"set":{"var":["L:LOADSTART","number"]},"value":15},
     {"set":{"local":"query_skipped"},"value":null},
     {"set":{"local":"progressiveunaccepteddispatch"},"value":0},
@@ -2435,6 +2439,13 @@
     {"sleep":0.1},
     {"set":{"local":"crewpatientloaded"},"value":"no"},
     {"set":{"local":"crewdoconboard"},"value":"no"},
+    {"set":{"local":"destination_confirmed"},"value":"no"},
+    {"set":{"local":"dispatch_lifescores_visible"},"value":0},
+    {"set":{"local":"dispatch_lifescore_hems_only"},"value":0},
+    {"set":{"local":"ambulance2_arrival_message_sent"},"value":"no"},
+    {"set":{"local":"dispatch_lifescore_show_1"},"value":0},
+    {"set":{"local":"dispatch_lifescore_show_2"},"value":0},
+    {"set":{"local":"dispatch_lifescore_show_3"},"value":0},
     {"set":{"local":"consciousness1"},"value":" "},
     {"set":{"local":"consciousness2"},"value":" "},
     {"set":{"local":"consciousness3"},"value":" "},
@@ -2948,9 +2959,17 @@
             {"call_macro":"nation autoselect"},
             {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
               "then": [
-                {"set":{"local":"dispatch_nation"},"value":{"local":"accident_nation"}}
+                {"set":{"local":"dispatch_nation"},"value":{"local":"accident_nation"}},
+                {"if": {"local":"accident_nation_id"}, "ne": null,
+                  "then": [
+                    {"set":{"local":"NATION"},"value":{"local":"accident_nation_id"}}
+                ]}
               ],"else": [
-                {"set":{"local":"dispatch_nation"},"value":{"local":"userA_nation"}}
+                {"set":{"local":"dispatch_nation"},"value":{"local":"userA_nation"}},
+                {"if": {"local":"userA_nation_id"}, "ne": null,
+                  "then": [
+                    {"set":{"local":"NATION"},"value":{"local":"userA_nation_id"}}
+                ]}
             ]},
             {"set_message":{"text":"GPS POSITION ACQUIRED. LOCATION: {0}","params":[{"local":"dispatch_nation"}]}}
         ]}},
@@ -3088,12 +3107,12 @@
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 2,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1},{local:AGE2} {local:SEX1} {local:consciousness2}."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1},{local:AGE2} {local:SEX2} {local:consciousness2}."},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 3,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1},{local:AGE2} {local:SEX1} {local:consciousness2},{local:AGE3} {local:SEX1} {local:consciousness3}"},
+                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1},{local:AGE2} {local:SEX2} {local:consciousness2},{local:AGE3} {local:SEX3} {local:consciousness3}"},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"set":{"local":"SEX_TIME"},"value":1},
@@ -3451,6 +3470,17 @@
     ]}
   ],
   "objective5 HEMS": [
+    {"create_thread": {
+      "commands": [
+        {"or": [
+          {"wait_for":{"location":"mission_start_location","var":"distance:m","to":"$USER"},"gt":200},
+          {"sleep":10}
+        ]},
+        {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
+          "then": [
+            {"set_objective_title":"EN ROUTE TO ACCIDENT SITE","color":"cyan"}
+        ]}
+    ]}},
     {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
       "then": [
         {"if": {"var":["L:MIDWAY","number"]}, "ne": 1,
@@ -3546,6 +3576,7 @@
   ],
   "objective8": [
     {"sleep":5},
+    {"wait_for":{"local":"destination_confirmed"},"eq":"yes"},
     {"if": {"local":"whobringpatient"}, "ne": "organ",
       "then": [
         {"call_macro":"Patient status"}
