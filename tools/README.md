@@ -4,8 +4,8 @@ All commands run with the Node runtime already required by the repository. No pa
 
 | Command | Purpose | Writes files |
 | --- | --- | --- |
-| `node tools/assert-cicers-branch.js` | Fails unless the checked-out branch starts with `CICERS/`. | No |
-| `node tools/assert-safe-push.js` | Pre-push stdin validator; rejects branch destinations outside `refs/heads/CICERS/*`. | No |
+| `node tools/assert-cicers-branch.js` | Fails unless the checked-out branch is `main`. | No |
+| `node tools/assert-safe-push.js` | Pre-push stdin validator; rejects any branch destination other than `refs/heads/main`. | No |
 | `node tools/check-workspace-consistency.js` | Verifies manifest/module/docs/scripts/AGENTS consistency and retired-handoff cleanup. | No |
 | `node tools/test-hvar-command-compatibility.js` | Verifies every current HVAR trigger and assignment form against the documented HPG command contract. | No |
 | `node tools/mission-workspace.js locate "text"` | Finds the owning macro/data module without loading the monolith into agent context. | No |
@@ -27,4 +27,4 @@ All commands run with the Node runtime already required by the repository. No pa
 
 Existing focused validators remain available: `validate-mission.js`, `validate-df-regression.js`, and `test-crew-emergency.js`.
 
-Install the tracked hook protection once per clone with `git config core.hooksPath .githooks` (or `npm run hooks:install`). Pre-commit blocks commits outside `CICERS/*`, runs the complete workspace gate, and checks staged whitespace. Pre-push also rejects explicit refspecs that target `main` or any other non-CICERS branch.
+Install the tracked hook protection once per clone with `git config core.hooksPath .githooks` (or `npm run hooks:install`). Pre-commit blocks commits outside `main`, runs the workspace gate (a targeted subset for doc-only commits, the full suite otherwise), and checks staged whitespace. Pre-push also rejects explicit refspecs that target any branch other than `main`.

@@ -2,7 +2,7 @@
 
 ## Mandatory start gate
 
-1. Run `node tools/assert-cicers-branch.js` and `node tools/assert-single-worktree.js`; work only on `CICERS/*`, never `main`, with hooksPath `.githooks`.
+1. Run `node tools/assert-cicers-branch.js` and `node tools/assert-single-worktree.js`; work only on `main`, with hooksPath `.githooks`. There is a single branch: no separate integration branch, no PR merge step.
 2. Exactly one registered Git worktree may exist: `C:\Users\Andrew\Documents\Codex\progetto hems`. Any second worktree, automatic task worktree, clone, parallel checkout, or alternate mission copy is a blocking violation; do not create, select, or continue in it.
 3. Read `docs/WORKSPACE_MAP.md` and relevant nested `AGENTS.md` files. Inspect `git status --short`, preserve user changes, name semantic scope, and run `node tools/check-mission-scope.js snapshot` before mission edits.
 
@@ -31,7 +31,7 @@
 2. Before every publication, `tools/release-workflow.js` must inspect all registered worktrees, detectable offline copies, local outputs, and remote Git refs. If any contains a release newer than the candidate, publication stops as incoherent and may not be bypassed.
 3. After an authorized build run `mission-workspace.js check`, then `release-workflow.js static`; run strict mission scope, targeted gates, `npm test` (or `node tools/check-workspace.js`), `git diff --check`, status and diff review.
 4. A numbered local artifact is supplied only when explicitly requested and is always named `everywhere_all.json`. Drafts are internal. Static PASS never proves simulator behavior; runtime status must remain pending until tested.
-5. Publication is local by default. GitHub push/tag/PR requires explicit GitHub/PR authorization; never open a PR opportunistically. `main` changes only through normal PR merge.
+5. Publication is local by default (commit only). Pushing to GitHub requires explicit authorization for that specific push; never push opportunistically. `main` is the only branch, so a commit is directly live on it once pushed — treat every push with the same care a PR merge used to require.
 6. Release completeness is blocking: audit every carried requirement against source, artifact, automated tests, release notes, and runtime evidence. Omitted, partial, unverified, or watchdog-only fixes block delivery; defer only with explicit user consent.
 
 ## Documentation

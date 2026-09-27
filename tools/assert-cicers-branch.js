@@ -47,9 +47,12 @@ function assertSingleCanonicalWorktree(repositoryRoot = path.resolve(__dirname, 
   return root;
 }
 
+// Historically this project required a CICERS/* working branch merged into main through a PR;
+// the project now works directly on a single branch (main), so this guard enforces that instead.
+// The exported name is kept to avoid touching every caller across tools/*.js.
 function assertCicersBranch(repositoryRoot = path.resolve(__dirname, '..')) {
   const branch = currentBranch(repositoryRoot);
-  if (!branch.startsWith('CICERS/')) throw new Error(`expected CICERS/*, found ${branch || '(detached HEAD)'}`);
+  if (branch !== 'main') throw new Error(`expected main, found ${branch || '(detached HEAD)'}`);
   assertSingleCanonicalWorktree(repositoryRoot);
   return branch;
 }

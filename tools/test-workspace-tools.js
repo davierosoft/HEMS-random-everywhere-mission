@@ -33,10 +33,10 @@ try {
   fs.mkdirSync(gitDirectory);
   fs.writeFileSync(path.join(gitDirectory, 'HEAD'), 'ref: refs/heads/main\n');
   assert(currentBranch(temporaryRoot) === 'main', 'branch reader did not resolve main');
-  expectThrow(() => assertCicersBranch(temporaryRoot), /expected CICERS/, 'main branch guard');
+  assert(assertCicersBranch(temporaryRoot) === 'main', 'main branch guard rejected the required branch');
 
   fs.writeFileSync(path.join(gitDirectory, 'HEAD'), 'ref: refs/heads/CICERS/tool-test\n');
-  assert(assertCicersBranch(temporaryRoot) === 'CICERS/tool-test', 'CICERS branch guard rejected a valid branch');
+  expectThrow(() => assertCicersBranch(temporaryRoot), /expected main/, 'non-main branch guard');
 
   fs.writeFileSync(path.join(gitDirectory, 'HEAD'), '0123456789abcdef\n');
   expectThrow(() => assertCicersBranch(temporaryRoot), /detached HEAD/, 'detached-head guard');
@@ -61,11 +61,11 @@ assert(validateBaselineRecord(baseline, 'CICERS/tool-test') === baseline, 'valid
 expectThrow(() => validateBaselineRecord({ ...baseline, branch: 'CICERS/other' }, 'CICERS/tool-test'), /belongs to/, 'cross-branch baseline');
 expectThrow(() => validateBaselineRecord({ ...baseline, mission: `${missionText} ` }, 'CICERS/tool-test'), /payload\/hash mismatch/, 'tampered baseline');
 
-const safePush = 'refs/heads/CICERS/tool-test abc refs/heads/CICERS/tool-test def\n';
-assert(isDeepStrictEqual(pushedBranchTargets(safePush), ['refs/heads/CICERS/tool-test']), 'push parser missed the CICERS destination');
-assert(unsafePushTargets(safePush).length === 0, 'push guard rejected a CICERS destination');
-assert(isDeepStrictEqual(unsafePushTargets('refs/heads/CICERS/tool-test abc refs/heads/main def\n'), ['refs/heads/main']), 'push guard did not reject main');
-assert(isDeepStrictEqual(unsafePushTargets('refs/heads/CICERS/tool-test abc refs/heads/release def\n'), ['refs/heads/release']), 'push guard did not reject another non-CICERS branch');
+const safePush = 'refs/heads/main abc refs/heads/main def\n';
+assert(isDeepStrictEqual(pushedBranchTargets(safePush), ['refs/heads/main']), 'push parser missed the main destination');
+assert(unsafePushTargets(safePush).length === 0, 'push guard rejected a main destination');
+assert(isDeepStrictEqual(unsafePushTargets('refs/heads/main abc refs/heads/CICERS/tool-test def\n'), ['refs/heads/CICERS/tool-test']), 'push guard did not reject a CICERS branch');
+assert(isDeepStrictEqual(unsafePushTargets('refs/heads/main abc refs/heads/release def\n'), ['refs/heads/release']), 'push guard did not reject another non-main branch');
 expectThrow(() => pushedBranchTargets('malformed input\n'), /malformed/, 'malformed pre-push input');
 
 const releaseRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hems-release-workflow-'));
@@ -137,5 +137,5 @@ try {
 
 console.log(JSON.stringify({
   result: 'PASS',
-  scenarios: ['main-branch-block', 'CICERS-branch-allow', 'detached-head-block', 'scope-detection', 'scope-allowlist', 'baseline-branch-binding', 'baseline-integrity', 'safe-push-target', 'main-push-block', 'non-CICERS-push-block', 'malformed-push-input', 'release-begin', 'runtime-build-lvar-update', 'stale-runtime-build-rejection', 'mandatory-local-test-artifact', 'release-intent-build-authorisation', 'prepared-release-scope-amendment', 'local-build-intent-consumption', 'draft-preserves-delivered-version', 'draft-artifact-isolation', 'next-local-build-progression', 'release-identity-rejection'],
+  scenarios: ['main-branch-allow', 'non-main-branch-block', 'detached-head-block', 'scope-detection', 'scope-allowlist', 'baseline-branch-binding', 'baseline-integrity', 'safe-push-target', 'cicers-push-block', 'non-main-push-block', 'malformed-push-input', 'release-begin', 'runtime-build-lvar-update', 'stale-runtime-build-rejection', 'mandatory-local-test-artifact', 'release-intent-build-authorisation', 'prepared-release-scope-amendment', 'local-build-intent-consumption', 'draft-preserves-delivered-version', 'draft-artifact-isolation', 'next-local-build-progression', 'release-identity-rejection'],
 }, null, 2));

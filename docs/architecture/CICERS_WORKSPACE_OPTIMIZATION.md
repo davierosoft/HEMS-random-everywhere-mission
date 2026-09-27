@@ -58,7 +58,7 @@ I comandi disponibili sono:
 
 ## Protezione delle scritture
 
-Le operazioni `extract`, `reindex` e `build` invocano `assertCicersBranch` prima di scrivere. Sono accettate soltanto branch con prefisso `CICERS/`; `main`, altre branch e detached HEAD sono respinti.
+Le operazioni `extract`, `reindex` e `build` invocano `assertCicersBranch` prima di scrivere. Il progetto ha successivamente adottato un modello a branch singolo: la funzione (nome storico conservato per non toccare ogni chiamante) ora accetta soltanto `main`; qualsiasi altra branch o detached HEAD è respinta.
 
 Le scritture usano un file temporaneo nella stessa directory seguito da rename atomico. Il file temporaneo viene eliminato nel cleanup anche in caso di errore. Questo riduce il rischio di lasciare manifest, baseline o artefatti parzialmente scritti dopo un'interruzione.
 
@@ -98,7 +98,7 @@ In alternativa è disponibile `npm run hooks:install`.
 
 Il pre-commit:
 
-1. verifica la branch CICERS e il single-worktree;
+1. verifica di essere su `main` e il single-worktree;
 2. esegue il workspace gate completo, tranne quando **ogni** file staged rientra in un allowlist
    ristretto che nessun validator legge per la correttezza della missione (`CHANGELOG_USER.en.md`,
    oppure file `.md` sotto `docs/`, `docs/architecture/` o `docs/testing/` diversi da
@@ -116,7 +116,7 @@ regressione fino a una release.
 
 ### Pre-push
 
-Il pre-push legge il protocollo standard fornito da Git e controlla il remote ref di ogni refspec. Le destinazioni branch sono ammesse soltanto sotto `refs/heads/CICERS/`; un push esplicito verso `main`, `release` o un'altra branch viene respinto anche se la branch locale è CICERS.
+Il pre-push legge il protocollo standard fornito da Git e controlla il remote ref di ogni refspec. Dall'adozione del modello a branch singolo, l'unica destinazione ammessa è `refs/heads/main`; un push esplicito verso qualunque altra branch viene respinto.
 
 Gli hook costituiscono un safeguard locale e possono essere aggirati intenzionalmente con `--no-verify`. La protezione non bypassabile di `main` richiede anche una GitHub Branch Ruleset server-side.
 

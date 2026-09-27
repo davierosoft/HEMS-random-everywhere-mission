@@ -20,7 +20,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `docs/architecture/CICERS_WORKSPACE_OPTIMIZATION.md` | Technical report covering workspace modularization, safeguards, validation, and residual limitations. |
 | `tools/` | Dependency-free assemblers, scope guards, validators, and regression tests. |
 | `standalone-tests/` | Self-contained HPG missions used for isolated runtime checks (e.g. dynamic-object `VAR` probing). Not part of `mission-src/`, not built by `mission-workspace.js`, not covered by release/scope tooling. |
-| `.githooks/` | Local safeguards: pre-commit permits only `CICERS/*` and runs workspace checks; pre-push rejects every non-`CICERS/*` branch destination. |
+| `.githooks/` | Local safeguards: pre-commit permits only `main` and runs workspace checks (a targeted subset for doc-only commits); pre-push rejects every non-`main` branch destination. |
 
 ## Macro modules
 
@@ -61,11 +61,11 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 
 ## Change flow
 
-1. Assert `CICERS/*`, inspect Git status, and declare semantic scope.
+1. Assert `main`, inspect Git status, and declare semantic scope.
 2. Locate the owner with `mission-workspace.js locate`; read only that module and its callers.
 3. Snapshot mission scope and patch the owning module. Prepare a one-use draft intent before intermediate builds; only an explicitly requested artifact delivery uses a higher release intent. Drafts do not advance delivery history.
 4. Inspect the artifact diff, require byte equality and explicit semantic allowlists, then pass the static release gate.
 5. Run focused checks, then `npm test`, `git diff --check`, and the affected simulator matrix. Package only after actual runtime sign-off. The consistency gate keeps manifest ownership, module counts, docs, scripts, and AGENTS limits synchronized.
-6. If the user asks to sync development code while testing, push CICERS and merge its normal PR only after CI passes. Report runtime as pending; do not rebuild an unchanged mission, publish a release, or commit generated `outputs/`.
+6. If the user asks to sync development code while testing, push `main` only after CI passes. Report runtime as pending; do not rebuild an unchanged mission, publish a release, or commit generated `outputs/`.
 
 This layout keeps opaque icons and inactive subsystems out of normal model context, gives each macro one owner, and makes accidental cross-subsystem edits machine-detectable.

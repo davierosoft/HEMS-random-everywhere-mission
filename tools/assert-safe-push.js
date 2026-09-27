@@ -19,13 +19,13 @@ function pushedBranchTargets(input) {
 }
 
 function unsafePushTargets(input) {
-  return pushedBranchTargets(input).filter((remoteRef) => !remoteRef.startsWith('refs/heads/CICERS/'));
+  return pushedBranchTargets(input).filter((remoteRef) => remoteRef !== 'refs/heads/main');
 }
 
 function main(input = fs.readFileSync(0, 'utf8')) {
   const branch = assertCicersBranch();
   const blocked = unsafePushTargets(input);
-  if (blocked.length) throw new Error(`refusing non-CICERS branch destination(s): ${blocked.join(', ')}`);
+  if (blocked.length) throw new Error(`refusing non-main branch destination(s): ${blocked.join(', ')}`);
   console.log(`Push guard PASS (${branch}; ${pushedBranchTargets(input).length} branch destination(s)).`);
 }
 

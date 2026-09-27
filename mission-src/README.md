@@ -25,6 +25,6 @@ git diff --check
 
 `check` requires the modules to reproduce the deployed artifact byte-for-byte, not merely parse to the same object. CI also requires the shared formatting for every source module and both deployable inputs, and checks semantic preservation and formatter idempotence. `extract --force` is a migration/recovery command that overwrites all modules from the artifact; never use it during an ordinary feature edit.
 
-Scope snapshots are bound to the active CICERS branch, timestamped, and protected by SHA-256. A stale snapshot from another branch or a tampered payload is rejected rather than silently reused.
+Scope snapshots are bound to the active branch (`main`), timestamped, and protected by SHA-256. A stale snapshot from another branch or a tampered payload is rejected rather than silently reused.
 
 When a task intentionally adds, renames, or removes a top-level macro/data entry, edit the owning module and run `node tools/mission-workspace.js reindex` before `build`. Reindexing preserves existing separators and appends genuinely new keys; review the manifest and semantic scope like any other source change.

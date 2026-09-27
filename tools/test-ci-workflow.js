@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 function check(text) {
   const failures = [];
-  for (const token of ['pull_request:', 'push:', 'workflow_dispatch:', 'contents: read',
+  for (const token of ['push:', 'workflow_dispatch:', 'contents: read',
     'ubuntu-latest', 'windows-latest', 'node tools/check-workspace.js',
     'persist-credentials: false', 'cancel-in-progress: true', 'timeout-minutes: 10',
     'workspace-before.diff', 'workspace-after.diff', '$beforeHash -ne $afterHash']) {

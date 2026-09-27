@@ -5,11 +5,11 @@
 - **Development checkpoint:** source, generated mission and tests synchronized on GitHub at the user's explicit request. Static checks pass; simulator validation may remain PENDING. No package, release tag, or claim of simulator success is produced.
 - **Validated mission release:** the same artifact has passed both static checks and the named simulator scenarios. Only this state permits the existing release-workflow package command. A PR merge is not a runtime sign-off.
 
-See [validation status](../testing/VALIDATION_STATUS.md) for the current candidate. Existing release-contract enforcement and CICERS-only hooks remain mandatory.
+See [validation status](../testing/VALIDATION_STATUS.md) for the current candidate. Existing release-contract enforcement and the main-only hooks remain mandatory.
 
 ## Focused implementation
 
-Keep one operational CICERS branch and one worktree. The repository-root `everywhere_all.json` is the sole mission artifact in the source workspace. The canonical-artifact gate rejects parallel copies and repository `global.json`; explicit delivery outputs remain governed by the release workflow. Retire obsolete PRs and branches only after accounting for their unique changes.
+Work directly on `main` with one worktree; there is no separate integration branch. The repository-root `everywhere_all.json` is the sole mission artifact in the source workspace. The canonical-artifact gate rejects parallel copies and repository `global.json`; explicit delivery outputs remain governed by the release workflow.
 
 1. Check branch, hooks, ownership and dirty files. Read the workspace map and affected subsystem only.
 2. Use the remaining-work list in the relevant architecture document. Reuse implemented helpers; do not repeat SDK smoke tests as a substitute for integration.
@@ -23,15 +23,17 @@ Before editing any AI object choreography, read [HPG dynamic-object state contra
 
 ## Requested GitHub synchronization
 
+There is a single branch (`main`) and no PR/merge step: a pushed commit is live immediately, so treat every push with the care a PR merge used to require.
+
 1. Fetch remote state and inspect the staged diff. Preserve unrelated dirty files. Do not commit local outputs, debug snapshots, credentials, or formatting-only user changes.
-2. Commit on CICERS with the mandatory pre-commit checks; push that exact branch with its destination guard.
-3. Reuse an existing CICERS-to-main PR when available. Describe active behavior, inactive scaffolding, pending work and actual validation evidence separately.
-4. Wait for the Windows/Linux static jobs and any required checks/reviews. If the PR is blocked, report the condition; do not force, bypass protection, or direct-push main.
-5. Merge only when authorized and checks permit it. Verify the remote main commit and PR result; keep the local checkout on CICERS. A code checkpoint remains runtime-pending after merge.
+2. Commit on `main` with the mandatory pre-commit checks; push only after explicit authorization for that specific push, with the destination guard enforcing `main`.
+3. Describe active behavior, inactive scaffolding, pending work and actual validation evidence separately in the commit message.
+4. Watch the Windows/Linux static CI jobs on the pushed commit. If a job fails after push, report the condition and land a follow-up commit; do not force-push to rewrite what is already live on `main`.
+5. Verify the remote `main` commit matches what was intended. A code checkpoint remains runtime-pending after push.
 
 ## CI contract
 
-`.github/workflows/workspace-checks.yml` runs the same dependency-free Node gate on Windows and Linux for PRs and branch pushes. Actions are pinned, permissions are read-only, credentials are not persisted, stale runs are cancelled, and no build or package is generated. The CI-contract test catches missing platforms/gates and privilege escalation.
+`.github/workflows/workspace-checks.yml` runs the same dependency-free Node gate on Windows and Linux for every push to `main`. Actions are pinned, permissions are read-only, credentials are not persisted, stale runs are cancelled, and no build or package is generated. The CI-contract test catches missing platforms/gates and privilege escalation.
 
 Compare the tracked-file diff before and after the suite: legacy CRLF blobs can already differ from the checkout's LF policy before tests run. Such baseline differences are not test writes. Do not suppress a filename from the comparison or normalize user content merely to make CI clean.
 
