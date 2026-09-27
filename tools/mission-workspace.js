@@ -13,7 +13,61 @@ const ARTIFACT_PATH = path.join(REPOSITORY_ROOT, 'everywhere_all.json');
 const SOURCE_ROOT = path.join(REPOSITORY_ROOT, 'mission-src');
 const MANIFEST_PATH = path.join(SOURCE_ROOT, 'manifest.json');
 
+// Exact allowlist (not a regex) so `extract --force` keeps these macros split out of
+// macros/05-navigation-queries.json instead of silently re-merging them by prefix.
+const POI_LOCATION_GENERATOR_NAMES = new Set([
+  'Query random camping',
+  'Query random peak',
+  'Query random hiking',
+  'Query random road',
+  'Query random road secondary',
+  'Query random parking',
+  'Query random cycleway',
+  'Query random crosswalk',
+  'Query random train',
+  'Query random train custom',
+  'Query random train_station',
+  'Query random bus stop',
+  'Query random farm',
+  'Query random cemetery',
+  'Query random quarry',
+  'Query random runway big',
+  'Query random runway small',
+  'Query random power transformer',
+  'Query random helicopter',
+  'Query random valley',
+  'Query random garden',
+  'Query random cliff',
+  'Query random forest',
+  'Query random fishing',
+  'Query random glider',
+  'Query random ski',
+  'Query random glacier',
+  'Query random climbing cliff',
+  'Query random chairlift',
+  'Query random offroad',
+  'Query random cableway',
+  'Query random fell',
+  'Query closest pitch',
+  'Query random construction site',
+  'Query random factory',
+  'Query random school',
+  'Query random apartm detatched hotel',
+  'Query random apartment',
+  'Query random nursing home',
+  'Query random doctor_office',
+  'Query random detached',
+  'Query random hotel',
+  'Query random supermarket',
+  'Query random depot',
+]);
+
 const MACRO_MODULES = [
+  {
+    file: 'macros/21-poi-location-generators.json',
+    description: 'Procedural point-of-interest and terrain location generators (camping, hiking, roads, train/bus stops, buildings, natural features) used by scene generation.',
+    matches: (name) => POI_LOCATION_GENERATOR_NAMES.has(name),
+  },
   {
     file: 'macros/17-multipatient-runtime.json',
     description: 'Generic patient registry, triage, exclusive transport reservations, CPR leases, and scene access paths.',
@@ -51,7 +105,7 @@ const MACRO_MODULES = [
   },
   {
     file: 'macros/05-navigation-queries.json',
-    description: 'Location queries, waypoint resolution, routes, maps, landing spots, and destination selection.',
+    description: 'Nation/accident-location queries, positional and proximity node queries, hospital/helipad transfer lists, and ambulance/user destination selection.',
     matches: (name) => /^(Query|QUERY|query)|location|routeupdate|legcolor|map and route|landing spot selection|zoom out|teleport|destination_selection|predestination|destination scene|destination hoist|destination1$|hospital WP|hangar WP|pick doctor|closest ambulance|Ambulance destination/i.test(name),
   },
   {

@@ -32,7 +32,8 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `15-debug-and-df-ui.json` | Debug Center plus CARLS Direction Finder controls, renderer, and DF-station database UI. |
 | `16-release-test-tracker.json` | Debug Test Tracker: persistent first-execution, completion, tester result, and failure-comment flow. |
 | `04-dispatch-tablet-ui.json` | Tablet pages, settings, mission lists, and keypad events. |
-| `05-navigation-queries.json` | Queries, locations, waypoints, maps, routes, destinations. |
+| `05-navigation-queries.json` | Nation/accident queries, positional queries, hospital/helipad transfer lists, ambulance/user destination selection. |
+| `21-poi-location-generators.json` | Procedural point-of-interest and terrain location generators for scene generation. |
 | `06-scene-generation.json` | Incident profiles, random assets, people, vehicles, VFX, SAR scenes. |
 | `07-patient-medical.json` | Patient creation, physiology, treatment, CPR, identity, multi-patient state. |
 | `08-ground-response.json` | Ambulance, police, fire, travel, parking, handover, secondary rescue. |
