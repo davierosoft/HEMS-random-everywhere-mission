@@ -304,6 +304,7 @@ const secondaryAmbulance = ground['ambulance2 secondary rescue']?.find((entry) =
 requireTrue(Array.isArray(secondaryAmbulance), 'secondary ambulance assessment sequence is missing');
 const secondaryTourIndex = secondaryAmbulance.findIndex(entry => JSON.stringify(entry).includes('multipatient registry crew tour') && JSON.stringify(entry).includes('ambumedic2'));
 requireTrue(secondaryTourIndex > 0 && contains(secondaryAmbulance.slice(0, secondaryTourIndex), entry => entry?.create_object?.name === 'ambumedic2'), 'secondary ambulance must create its medic before the same P1/P2/P3 physical tour');
+requireTrue(contains(secondaryAmbulance.slice(0, secondaryTourIndex), entry => entry?.wait_for?.local === 'ambu2arrived' && entry.eq === 'yes'), 'secondary ambulance medic must wait for its own completed parking arrival before beginning the physical tour');
 for (const slot of [2, 3]) {
   const secondaryTransport = ground[`ambulance2 secondary patient${slot}`];
   const transportText = JSON.stringify(secondaryTransport);

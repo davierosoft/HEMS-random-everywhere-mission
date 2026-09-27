@@ -112,7 +112,8 @@ for (const slot of [1, 2, 3]) for (const resource of ['ambulance1', 'ambulance2'
     assert.equal(h.call(prefix + 'live ground load', {ticket, vehicle: resource, medic, stretcher: resource === 'ambulance1' ? 'ambustretcher7' : 'ambustretcher2'}), 1);
     assert.equal(h.locals[slot === 1 ? 'ambulance_final_provider' : `P${slot}_AMBULANCE_FINAL_PROVIDER`], resource);
   }
-  assert.deepEqual(Array.from(h.events.filter(e => e[0] === 'pack'), e => e[1]), [packed]);
+  assert.deepEqual(Array.from(h.events.filter(e => e[0] === 'pack'), e => e[1]), resource === 'hems' ? [] : [packed],
+    'HEMS boarding does not repose the casualty into the ambulance-stretcher ready-for-transport model');
   const record = h.call(prefix + 'get', {slot});
   assert.equal(record.report.lifescore, h.locals[`LIFESCORE${slot === 1 ? '' : slot}`]);
   assert.equal(h.call(prefix + 'live prepare patient', {ticket: {...ticket, generation: ticket.generation - 1}}), 0);
@@ -235,8 +236,10 @@ for (const slot of [1, 2, 3]) {
   assert.equal(h.locals['L:CPR'], 0, 'Stopping one patient must leave the controller available for another');
   assert.equal(record.cpr_state, 'stopped');
   for (const other of [1, 2, 3].filter(x => x !== slot)) assert.equal(h.locals[`LIFESCORE${other === 1 ? '' : other}`], before[other - 1]);
-  h.sleepHook = null; h.call(prefix + 'live physiology step', {seconds: 5});
-  assert.equal(h.threads.length, 1, 'A stopped procedure must not automatically restart on the same patient');
+  h.sleepHook = null;
+  const threadsBeforeStep = h.threads.length;
+  h.call(prefix + 'live physiology step', {seconds: 5});
+  assert.equal(h.threads.length, threadsBeforeStep, 'A stopped procedure must not automatically restart on the same patient');
 }
 {
   const h = new Live(); Object.assign(h.locals, {patient_live_generation: 1, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:CPR': 0, cpr_armed: 0, cpr_manual_stop: 0});

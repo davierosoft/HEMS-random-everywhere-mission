@@ -416,7 +416,12 @@ function checkCompleteDebugSnapshot(debugPage) {
     });
     const captured = tableSet("snapshot_" + section.toLowerCase());
     expectRegression(!!captured && !!captured.value?.create_struct, "debug snapshot must contain ordered " + section + " values");
-    const missing = Object.keys(expected).filter((key) => !Object.prototype.hasOwnProperty.call(captured?.value?.create_struct || {}, key));
+    const structKeys = captured?.value?.create_struct || {};
+    const flatSnapshotPrefix = "local:debug_snapshot_";
+    const missing = Object.keys(expected).filter((key) => {
+      if (key.startsWith(flatSnapshotPrefix)) return !tableSet(key.slice(flatSnapshotPrefix.length));
+      return !Object.prototype.hasOwnProperty.call(structKeys, key);
+    });
     expectRegression(missing.length === 0, "debug snapshot " + section + " omits " + missing.join(", "));
   });
 }
@@ -455,16 +460,20 @@ function checkNationQueryOwnership() {
   queryContracts.forEach(([macroName, localName]) => {
     const query = compact(mission.macros[macroName] || []);
     expectRegression(query.includes('"query_country"'), `${macroName} must execute query_country`);
+    const directParamCapture = query.includes(`"local":"${localName}"},"value":{"param":"$COUNTRY"}`);
+    const derivedFromRawCapture = query.includes(`"local":"${localName}_raw"},"value":null`) &&
+      query.includes(`"local":"${localName}"},"value":{"local":"${localName}_raw"}}`);
     expectRegression(
-      query.includes(`"local":"${localName}"},"value":{"param":"$COUNTRY"}`),
-      `${macroName} must read the query_country $COUNTRY parameter with param`,
+      directParamCapture || derivedFromRawCapture,
+      `${macroName} must read the query_country result via a $COUNTRY parameter or an equivalent raw-capture local`,
     );
     expectRegression(
       !query.includes(`"local":"${localName}"},"value":"$COUNTRY"`),
       `${macroName} must not treat $COUNTRY as a literal set value`,
     );
+    const clearsStaleState = query.includes(`"local":"${localName}"},"value":null`) || query.includes(`"local":"${localName}_raw"},"value":null`);
     expectRegression(
-      query.includes(`"local":"${localName}"},"value":null`) &&
+      clearsStaleState &&
         query.includes(`"local":"${localName}_query_done"},"value":0`) &&
         query.includes(`"local":"${localName}_query_done"},"value":1`),
       `${macroName} must clear stale country state and publish query completion`,

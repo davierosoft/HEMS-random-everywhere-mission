@@ -62,6 +62,7 @@ Set `L:WAVING_CIVILIAN_STOP` to `1` to stop the waving animation.
 
 1. Translate an operational instruction to the table before editing. For example, "crew walking with backpack" is H145 Crew `VAR 1: 3`.
 2. Preserve an actor's object title while changing visual role. In three-crew destination handling, the copilot remains `$TITLE Crew`, uses `VAR 1: 14` standing and `VAR 1: 16` walking, and may use the documented pilot `VAR 2` skin value.
+   In four- and five-crew operations pax3 is a rear crew member: it uses VAR 1: 1 standing with backpack, VAR 1: 3 walking with backpack and VAR 1: 5/6 crouching, exactly like hoist_crew. Pilot states (14-16) on pax3 turn the model into a pilot; branch on CREW. Ambulance medics and stretchers (Airbus H145 Medic, Airbus H145 Medic Stretcher) do not use the H145 Crew table at all: medic VAR 1 0 standing, walking only through drive_object VAR1: 1; stretcher VAR 1 0/1 the same way with VAR 2 0, 1, 3 for the carried load.
 3. Add or update a structural regression check whenever a mission path relies on a visual state. The check must reject invented titles and verify the required `VAR 1` transition.
 4. Do not use an object state absent from this reference until the current HPG documentation or installed object package proves it.
 5. If repeated analysis cannot isolate a failure and a dynamic `drive_object` field is implicated, create or propose an external minimal matrix before changing production choreography.

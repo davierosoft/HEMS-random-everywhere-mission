@@ -81,7 +81,11 @@
     ]},
     {"if": {"has_object":"flare_accident"}, "eq": 1,
       "then": [
-        {"destroy_object":"flare_accident"}
+        {"destroy_object":"flare_accident"},
+        {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+          "then": [
+            {"destroy_object":"flare_accident_30west"}
+        ]}
     ]},
     {"set_objective_title":"RESCUE OPERATION IN PROGRESS","color":"yellow"},
     {"if": {"global":"HOIST_AUDIO"}, "ne": 0,
@@ -974,7 +978,9 @@
       "then": [
         {"set":{"var":["L:PAX_HOIST","number"]},"value":1},
         {"sleep":0.5},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Hoisting back up","state":"drive_start"}},
         {"drive_object":{"name":"hoist_crew","to":[{"closest":["INJU12","INJU13"],"to":"ambulance1"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Hoisting back up","state":"drive_done"}},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
         {"sleep":5},
         {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -1520,7 +1526,9 @@
                     ]}}
                 ]}
             ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Hoisting back ground","state":"drive_start"}},
             {"drive_object":{"name":"hoist_crew","to":[{"closest":["INJU12","INJU13"],"to":"ambulance1"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Hoisting back ground","state":"drive_done"}},
             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
             {"sleep":5},
             {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -3377,6 +3385,7 @@
     ]}
   ],
   "ground ops": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ground_ops","actor":"hems","target":"n/a","state":"entered"}},
     {"call_macro":"test tracker begin","params":{"test_id":"ground_ops"}},
     {"set_objective_title":"PREPARING FOR RESCUE OPERATION","color":"yellow"},
     {"set_message":{"text":"Please make sure you are within the landing spot area (lime area on the map)"}},
@@ -3417,11 +3426,13 @@
         {"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},
         {"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},
         {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":{"global":"MISSION_GUIDANCE_OVERRIDE"}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ground_ops","actor":"hems","target":"n/a","state":"landing_gate_passed"}},
         {"if": {"local":"GNDOPS_ROTOR"}, "eq": 1,
           "then": [
             {"set_message":{"text":"Set engines to OFF and stop the rotor to start operations"}},
             {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10}
         ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ground_ops","actor":"hems","target":"n/a","state":"rotor_gate_passed"}},
         {"set_objective_title":"RESCUE OPERATION IN PROGRESS","color":"yellow"},
         {"set_message":{"text":"Beginning ground operations, please wait..."}},
         {"set":{"var":["L:SATISFACTION","number"]},"value":0},
@@ -3451,7 +3462,11 @@
               "then": [
                 {"if": {"has_object":"flare_accident"}, "eq": 1,
                   "then": [
-                    {"destroy_object":"flare_accident"}
+                    {"destroy_object":"flare_accident"},
+                    {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"flare_accident_30west"}
+                    ]}
                 ]},
                 {"call_macro":"4 or 5 crew ground ops"}
             ]},
@@ -3459,7 +3474,11 @@
               "then": [
                 {"if": {"has_object":"flare_accident"}, "eq": 1,
                   "then": [
-                    {"destroy_object":"flare_accident"}
+                    {"destroy_object":"flare_accident"},
+                    {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"flare_accident_30west"}
+                    ]}
                 ]},
                 {"call_macro":"3 crew ground ops"}
             ]}
@@ -3575,7 +3594,8 @@
                     {"require":{"local":"customLZ"},"eq":"yes"},
                     {"require":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"gt":{"local":"police_bring_crew_min_dist"}},
                     {"require":{"local":"POLICE_AVAIL"},"gte":1},
-                    {"require":{"local":"police_lz_force_pickup"},"ne":"yes"}
+                    {"require":{"local":"police_lz_force_pickup"},"ne":"yes"},
+                    {"or":[{"require":{"has_object":"police"},"eq":1},{"require":{"local":"poli1started"},"eq":"yes"}],"eq":1}
                   ]}, "eq": 1,
                   "then": [
                     {"call_macro":"police_preposition_to_landing_spot"},
@@ -3584,7 +3604,7 @@
                 {"if": {
                   "or": [
                     {"require":{"local":"police_lz_force_pickup"},"eq":"yes"},
-                    {"and":[{"or":[{"and":[{"require":{"local":"customLZ"},"eq":"yes"},{"require":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1},{"and":[{"require":{"local":"customLZ"},"ne":"yes"},{"require":{"location":"{local:HEMS_VISIT_OBJECT}","var":"distance:m"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1}],"eq":1},{"require":{"local":"POLICE_AVAIL"},"eq":1}],"eq":1}
+                    {"and":[{"or":[{"and":[{"require":{"local":"customLZ"},"eq":"yes"},{"require":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1},{"and":[{"require":{"local":"customLZ"},"ne":"yes"},{"require":{"location":"{local:HEMS_VISIT_OBJECT}","var":"distance:m"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1}],"eq":1},{"require":{"local":"POLICE_AVAIL"},"eq":1},{"or":[{"require":{"has_object":"police"},"eq":1},{"require":{"local":"poli1started"},"eq":"yes"}],"eq":1}],"eq":1}
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"policeloadingenabled"},"value":"yes"},
@@ -3631,6 +3651,10 @@
                             ]}},
                             {"wait_for":{"local":"police_lz_departure_delay_done"},"eq":"yes"},
                             {"set":{"local":"police_lz_move_lock"},"value":"yes"},
+                            {"create_thread": {
+                              "commands": [
+                                {"call_macro":"police_restart_at_slow_speed"}
+                            ]}},
                             {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
                             {"set":{"object":"police","var":"VAR 1"},"value":1},
                             {"set":{"var":["L:STEP","number"]},"value":1},
@@ -3718,10 +3742,10 @@
               "commands": [
                 {"wait_for":{"var":["L:STEP","number"]},"eq":3},
                 {"set":{"local":"crewarrived"},"value":"yes"},
-                {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                 {"sleep":1},
                 {"sleep":1},
-                {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                 {"set":{"local":"crewvisiting1"},"value":"yes"},
                 {"sleep":2}
             ]}},
@@ -3729,6 +3753,7 @@
             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
             {"set":{"var":["L:HOLD","number"]},"value":0},
             {"sleep":[1,3]},
+            {"sleep":[0.5,1.5]},
             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
             {"sleep":[2,4]},
             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":6},
@@ -3739,6 +3764,7 @@
                 {"return":0}
             ]},
             {"set":{"var":["L:RESCUED","number"]},"value":1},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hoist_crew","target":"n/a","state":"tour_complete"}},
             {"call_macro":"Life rescued"},
             {"if": {"has_object":"defibri"}, "eq": 1,
               "then": [
@@ -3764,9 +3790,9 @@
                     {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":230,"dist":0.4,"object":"{local:HEMS_VISIT_OBJECT}"},{"bearing2":310,"dist":0.4,"object":"{local:HEMS_VISIT_OBJECT}"}],"to":"pax3"}],"VAR1":3,"speed":2}},
                     {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                     {"sleep":1},
-                    {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                    {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                     {"sleep":1},
-                    {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                    {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                 ]}}
             ]},
             {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 0,
@@ -3775,10 +3801,7 @@
               ],"else": [
                 {"set":{"local":"HOLDHOISTED"},"value":1}
             ]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
-            {"sleep":[2,4]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-            {"sleep":[1,3]},
+            {"sleep":[1.5,4.5]},
             {"wait_for":{"object":"pax3","var":"VELOCITY Z"},"eq":0},
             {"set":{"var":["L:STEP","number"]},"value":6},
             {"if": {
@@ -3811,6 +3834,24 @@
             ]},
             {"set":{"local":"crewvisitended"},"value":"yes"},
             {"call_macro":"select HEMS patient"},
+            {"call_macro": "ground crew runtime trace",
+              "params": {
+                "macro": "hems_45crew",
+                "actor": "hems",
+                "target": "n/a",
+                "state": {
+                  "text": "select_returned whobring={0} decision={1} ticket={2}",
+                  "params": [
+                    {"local":"whobringpatient"},
+                    {"local":"HEMS_DECISION_STATE"},
+                    {"if": {"local":"HEMS_TRANSPORT_TICKET"},
+                      "ne": null,
+                      "then": "yes",
+                      "else": "no"
+                    }
+                ]}
+              }
+            },
             {"if": {"has_user_action":"ambuloadlock"}, "eq": 1,
               "then": [
                 {"destroy_user_action":"ambuloadlock"}
@@ -3818,6 +3859,7 @@
             {"set_message":{"text":"Ground crew operations are almost complete, land and set engines to idle or stop..."}},
             {"call_macro":"ground ops NR gate","params":{"source":"4 or 5 crew ground ops"}},
             {"set_message":{"text":"Ground crew loading procedures in progress..."}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":{"text":"ambufar={0} whobring={1} step={2}","params":[{"local":"AMBUFAR"},{"local":"whobringpatient"},{"var":["L:STEP","number"]}]}}},
             {"if": {"local":"AMBUFAR"}, "eq": 0,
               "then": [
                 {"wait_for":{"var":["L:STEP","number"]},"gt":5},
@@ -3827,6 +3869,7 @@
                     {"require":{"local":"whobringpatient"},"eq":"lethimdie"}
                   ]}, "eq": 1,
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"stretcher_branch_entered"}},
                     {"call_macro":"select patient1 transport","params":{"automatic":"us"}},
                     {"#comment":"Per-patient confirmation is written by live hems loaded."},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by us"},
@@ -3848,12 +3891,26 @@
                             {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":null},
                             {"return":0}
                         ]},
+                        {"set":{"local":"HEMS_PACK_STATE"},"value":0},
+                        {"set":{"local":"HEMS_PACK_GEN"},"value":{"add":[{"if":{"local":"HEMS_PACK_GEN"},"ne":null,"then":{"local":"HEMS_PACK_GEN"},"else":0},1]}},
+                        {"call_macro":"multipatient registry assistant dispatch","params":{"actor":"pax3","object":{"local":"HEMS_PATIENT_OBJECT"},"walk":3,"side":270}},
+                        {"create_thread": {
+                          "commands": [
+                            {"set":{"param":"pack_gen"},"value":{"local":"HEMS_PACK_GEN"}},
+                            {"sleep":[30,60]},
+                            {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                            {"if": {"local":"HEMS_PACK_GEN"}, "eq": {"param":"pack_gen"},
+                              "then": [
+                                {"call_macro":"multipatient registry live pack hems patient once"}
+                            ]}
+                        ]}},
+                        {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
                         {"sleep":[5,10]},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":5},
                         {"sleep":[1,5]},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                     ]}},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":200,"dist":2}],"VAR1":3,"speed":2}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":200,"dist":2}],"VAR1":3,"speed":4}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
                     {"sleep":[1,4]},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
@@ -3889,9 +3946,15 @@
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
                     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":120,"dist":3,"object":"{local:HEMS_PATIENT_OBJECT}"},{"bearing2":50,"dist":2,"object":"{local:HEMS_PATIENT_OBJECT}"}],"to":"hoist_crew"}],"VAR1":10,"speed":2}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
+                    {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                    {"call_macro":"multipatient registry live pack hems patient once"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"patient_packed"}},
+                    {"sleep":1},
                     {"call_macro":"Patient status"},
                     {"sleep":3},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
+                    {"call_macro":"multipatient registry live remove hems patient object"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"patient_object_removed"}},
                     {"if": {"has_object":"{local:HEMS_PATIENT_OBJECT}"}, "eq": 1,
                       "then": [
                         {"#comment":"The selected patient object is removed only after the ticket commits loaded."}
@@ -3933,6 +3996,7 @@
                     {"open_door":"cargo_left"},
                     {"open_door":"cargo_right"},
                     {"set":{"local":"crewpatientonstretcher"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"on_stretcher"}},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_on_stretcher"},
                     {"set":{"local":"HEMS_LOADING_LOG"},"value":"patient on stretcher; awaiting load"},
                     {"set":{"var":["H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT","number"]},"value":0},
@@ -3948,6 +4012,7 @@
                     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
                     {"sleep":4.5},
                     {"set":{"local":"crewpatientloaded"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"loaded_confirmed"}},
                     {"set":{"local":"HEMS_LOADING_CONFIRMED"},"value":"yes"},
                     {"call_macro":"multipatient registry live hems loaded"},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_loaded"},
@@ -3984,6 +4049,7 @@
                 ]},
                 {"if": {"local":"whobringpatient"}, "eq": "ambulance",
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"ambulance_branch_entered"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by ambulance"},
                     {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
                     {"create_thread": {
@@ -4042,7 +4108,9 @@
                     {"create_thread": {
                       "commands": [
                         {"sleep":[2,5]},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13"],"to":"pax3"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                         {"set":{"var":["L:STEP","number"]},"value":7},
                         {"if": {"has_object":"pax3"}, "eq": 1,
@@ -4084,6 +4152,7 @@
                     {"require":{"local":"whobringpatient"},"eq":"lethimdie"}
                   ]}, "eq": 1,
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"stretcher_branch_entered"}},
                     {"call_macro":"select patient1 transport","params":{"automatic":"us"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by us"},
                     {"if": {"global":"ASSISTANT"}, "ne": "no",
@@ -4113,13 +4182,21 @@
                             ]}},
                             {"create_thread": {
                               "commands": [
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambulance1"}],"VAR1":3,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":90,"dist":4,"object":"ambulance1"},{"bearing2":270,"dist":6,"object":"ambulance1"},{"bearing2":180,"dist":8,"object":"ambulance1"}],"to":"ambulance1"}],"VAR1":3,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":[{"bearing2":180,"dist":6,"object":"ambulance1"}],"VAR1":3,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":["ambulance1"],"VAR1":3,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                                 {"set":{"local":"pax3onambulance"},"value":"yes"},
                                 {"create_location": "polly",
@@ -4157,6 +4234,7 @@
                                 ]}},
                                 {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
                                 {"sleep":[5,10]},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"move_object"}},
                                 {"move_object":"pax3","to":{"bearing2":180,"dist":3.2,"heading":100,"object":"ambulance1"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                                 {"sleep":1},
@@ -4204,10 +4282,13 @@
                       "then": [
                         {"set":{"local":"ambuloadingenabled"},"value":"yes"},
                         {"set":{"local":"stretcheronambulance"},"value":"move"},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"4 or 5 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambulance1"},"AMBWP",{"bearing2":180,"dist":6,"object":"ambulance1"},"ambulance1"],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"4 or 5 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
                         {"set":{"local":"hoistcrewonambulance"},"value":"yes"},
                         {"wait_for":{"local":"crewonambulance"},"eq":"exit"},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"4 or 5 crew ground ops","state":"move_object"}},
                         {"move_object":"hoist_crew","to":{"bearing2":180,"dist":3.6,"heading":100,"object":"ambulance1"}},
                         {"sleep":[1,3]},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
@@ -4230,10 +4311,12 @@
                     {"open_door":"cargo_left"},
                     {"sleep":0.25},
                     {"open_door":"cargo_right"},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":245,"dist":5}],"VAR1":1,"speed":2}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":245,"dist":5}],"VAR1":3,"speed":2}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"4 or 5 crew ground ops","state":"point_object"}},
                     {"point_object":"hoist_crew","to":"ambustretcher7"},
                     {"set":{"local":"crewpatientonstretcher"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"on_stretcher"}},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_on_stretcher"},
                     {"set":{"local":"HEMS_LOADING_LOG"},"value":"patient on stretcher; awaiting load"},
                     {"call_macro":"prepare ambulance stretcher for HEMS loading"},
@@ -4250,6 +4333,7 @@
                     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
                     {"sleep":4.5},
                     {"set":{"local":"crewpatientloaded"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"loaded_confirmed"}},
                     {"set":{"local":"HEMS_LOADING_CONFIRMED"},"value":"yes"},
                     {"call_macro":"multipatient registry live hems loaded"},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_loaded"},
@@ -4293,6 +4377,7 @@
                 {"set":{"local":"pax3onpolice"},"value":"no"},
                 {"if": {"local":"whobringpatient"}, "eq": "ambulance",
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":"ambulance_branch_entered"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by ambulance"},
                     {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
                     {"create_thread": {
@@ -4371,9 +4456,13 @@
                         {"sleep":[2,5]},
                         {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13"],"to":"pax3"}],"VAR1":3,"speed":4}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":90,"dist":4,"object":"ambulance1"},{"bearing2":270,"dist":6,"object":"ambulance1"},{"bearing2":180,"dist":8,"object":"ambulance1"}],"to":"ambulance1"}],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"pax3","to":["ambulance1"],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                         {"set":{"var":["L:STEP","number"]},"value":7},
                         {"if": {"has_object":"pax3"}, "eq": 1,
@@ -4472,6 +4561,7 @@
               "then": [
                 {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}}
             ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_45crew","actor":"hems","target":"n/a","state":{"text":"tail_hoisted whobring={0} phase={1}","params":[{"local":"whobringpatient"},{"local":"MISSION_PHASE"}]}}},
             {"set":{"var":["L:HOISTED","number"]},"value":1},
             {"sleep":1}
         ]}
@@ -4516,10 +4606,9 @@
         {"wait_for":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":0},
         {"wait_for":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":0},
         {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"command flags cleared"},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3_crew_ground_ops","actor":"hems_crew","target":{"local":"HEMS_VISIT_OBJECT"},"state":"command_flags_cleared"}},
         {"call_macro":"ground ops NR gate","params":{"source":"3 crew ground ops"}},
-        {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"NR gate passed"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3_crew_ground_ops","actor":"hems_crew","target":{"local":"HEMS_VISIT_OBJECT"},"state":"nr_gate_passed"}},
+        {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"NR gate passed"},
         {"if": {"local":"halloween"}, "ne": 1,
           "then": [
             {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}}
@@ -4533,7 +4622,6 @@
         ]},
         {"call_macro":"crew spawn wait","params":{"crew_name":"hoist_crew","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
         {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"hoist crew created"},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3_crew_ground_ops","actor":"hoist_crew","target":{"local":"HEMS_VISIT_OBJECT"},"state":"created"}},
         {"call_macro":"crew spawn launch","params":{"crew_name":"pax3","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
         {"try": [
             {"create_object":{"name":"pax3","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew"}}
@@ -4543,7 +4631,6 @@
         ]},
         {"call_macro":"crew spawn wait","params":{"crew_name":"pax3","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
         {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"pax3 created"},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3_crew_ground_ops","actor":"pax3","target":{"local":"HEMS_VISIT_OBJECT"},"state":"created"}},
         {"if": {"var":["L:HOISTED","number"]}, "eq": 0,
           "then": [
             {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"deboarding branch entered"},
@@ -4560,10 +4647,10 @@
             {"set":{"object":"pax3","var":"COUPLED"},"value":0},
             {"set":{"object":"pax3","var":"VAR 1"},"value":14},
             {"set":{"object":"pax3","var":"VAR 2"},"value":3},
+            {"set_message":{"text":"Ground operations started, wait for crew deboarding..."}},
             {"open_door":"pax_right"},
             {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"pax right door command sent"},
             {"sleep":3},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
             {"set":{"var":["H:{local:HXX}_SDK_PAX_3_OFF","number"]},"value":0},
             {"move_object":"hoist_crew","to":{"bearing":30,"dist":3.2,"heading":100}},
             {"set":{"local":"GNDOPS_3_CREW_TRACE"},"value":"hoist crew exit move sent"},
@@ -4577,13 +4664,8 @@
               "then": [
                 {"close_door":"pax_right"}
             ]},
-            {"drive_object":{"name":"hoist_crew","to":[{"bearing":60,"dist":5}],"VAR1":3,"speed":4}},
-            {"set_message":{"text":"Ground operations started, wait for crew deboarding..."}},
-            {"if": {"local":"ambulance_previsit_active"}, "eq": "yes",
+            {"if": {"local":"ambulance_previsit_active"}, "ne": "yes",
               "then": [
-                {"set":{"var":["L:STEP","number"]},"value":4},
-                {"set":{"local":"crewarrived"},"value":"yes"}
-              ],"else": [
                 {"create_thread": {
                   "commands": [
                     {"sleep":[5,8]},
@@ -4596,13 +4678,24 @@
                     {"drive_object":{"name":"pax3","to":[{"bearing":290,"dist":3}],"VAR1":16,"speed":2}},
                     {"set":{"object":"pax3","var":"VAR 1"},"value":14},
                     {"close_door":"cockpit_left"},
-                    {"set_message":{"text":"Ground operations in progress, helicopter area clear. <br />Operations may take a while.<br />(Optional) Take off is allowed if the area is not safe."}},
+                    {"set":{"var":["L:PAX3","number"]},"value":1},
+                    {"set_message":{"text":"Ground operations in progress, helicopter area clear. <br />Operations may take a while.<br />(Optional) Take off is allowed if the area is not safe."}}
+                ]}}
+            ]},
+            {"drive_object":{"name":"hoist_crew","to":[{"bearing":60,"dist":5}],"VAR1":3,"speed":4}},
+            {"if": {"local":"ambulance_previsit_active"}, "eq": "yes",
+              "then": [
+                {"set":{"var":["L:STEP","number"]},"value":4}
+              ],"else": [
+                {"create_thread": {
+                  "commands": [
                     {"if": {
                       "and": [
                         {"require":{"local":"customLZ"},"eq":"yes"},
                         {"require":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"gt":{"local":"police_bring_crew_min_dist"}},
                         {"require":{"local":"POLICE_AVAIL"},"gte":1},
-                        {"require":{"local":"police_lz_force_pickup"},"ne":"yes"}
+                        {"require":{"local":"police_lz_force_pickup"},"ne":"yes"},
+                        {"or":[{"require":{"has_object":"police"},"eq":1},{"require":{"local":"poli1started"},"eq":"yes"}],"eq":1}
                       ]}, "eq": 1,
                       "then": [
                         {"call_macro":"police_preposition_to_landing_spot"},
@@ -4611,7 +4704,7 @@
                     {"if": {
                       "or": [
                         {"require":{"local":"police_lz_force_pickup"},"eq":"yes"},
-                        {"and":[{"or":[{"and":[{"require":{"local":"customLZ"},"eq":"yes"},{"require":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1},{"and":[{"require":{"local":"customLZ"},"ne":"yes"},{"require":{"location":"{local:HEMS_VISIT_OBJECT}","var":"distance:m"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1}],"eq":1},{"require":{"local":"POLICE_AVAIL"},"eq":1}],"eq":1}
+                        {"and":[{"or":[{"and":[{"require":{"local":"customLZ"},"eq":"yes"},{"require":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1},{"and":[{"require":{"local":"customLZ"},"ne":"yes"},{"require":{"location":"{local:HEMS_VISIT_OBJECT}","var":"distance:m"},"gt":{"local":"police_bring_crew_min_dist"}}],"eq":1}],"eq":1},{"require":{"local":"POLICE_AVAIL"},"eq":1},{"or":[{"require":{"has_object":"police"},"eq":1},{"require":{"local":"poli1started"},"eq":"yes"}],"eq":1}],"eq":1}
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"policeloadingenabled"},"value":"yes"},
@@ -4678,6 +4771,7 @@
                             {"call_macro":"police_restart_at_slow_speed"}
                         ]}},
                         {"set":{"local":"police_lz_move_lock"},"value":"yes"},
+                        {"set_message":{"text":"Ground operations in progress, helicopter area clear. <br />Operations may take a while.<br />(Optional) Take off is allowed if the area is not safe."}},
                         {"call_macro":"drive police safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
                         {"set":{"object":"police","var":"VAR 1"},"value":0},
                         {"if": {"location":"POLWP","var":"distance:m","to":"police"}, "gt": 2,
@@ -4700,46 +4794,36 @@
                         {"sleep":1},
                         {"create_thread": {
                           "commands": [
-                            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":4}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"set":{"var":["L:STEP","number"]},"value":3}
-                        ]}},
-                        {"sleep":2},
-                        {"create_thread": {
-                          "commands": [
                             {"call_macro":"shared repeated block 053"}
-                        ]}},
-                        {"set_message":{"text":"Ground operations in progress, helicopter area clear. <br />Operations may take a while.<br />(Optional) Take off is allowed if the area is not safe."}},
-                        {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                        {"set":{"var":["L:STEP","number"]},"value":4}
+                        ]}}
                       ],"else": [
-                        {"set":{"local":"policeloadingenabled"},"value":"no"},
-                        {"create_thread": {
-                          "commands": [
-                            {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":345,"dist":7},{"bearing":225,"dist":10}],"to":"{local:HEMS_VISIT_OBJECT}"}],"VAR1":16,"speed":4}},
+                        {"set":{"local":"policeloadingenabled"},"value":"no"}
+                    ]},
+                    {"create_thread": {
+                      "commands": [
+                        {"wait_for":{"var":["L:PAX3","number"]},"eq":1},
+                        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":345,"dist":7},{"bearing":225,"dist":10}],"to":"{local:HEMS_VISIT_OBJECT}"}],"VAR1":16,"speed":4}},
+                        {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":4}},
+                        {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                        {"if": {"has_object":"poordead"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"poordead"},{"bearing2":140,"dist":3,"object":"poordead"}],"to":"pax3"}],"VAR1":16,"speed":3}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":4}},
+                            {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":0.2,"object":"poordead"},{"bearing2":140,"dist":0.2,"object":"poordead"}],"to":"pax3"}],"VAR1":16,"speed":2}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"if": {"has_object":"poordead"}, "eq": 1,
-                              "then": [
-                                {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"poordead"},{"bearing2":140,"dist":3,"object":"poordead"}],"to":"pax3"}],"VAR1":16,"speed":3}},
-                                {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                                {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":0.2,"object":"poordead"},{"bearing2":140,"dist":0.2,"object":"poordead"}],"to":"pax3"}],"VAR1":16,"speed":2}},
-                                {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                                {"sleep":[3,9]},
-                                {"set":{"object":"pax3","var":"VAR 1"},"value":14}
-                            ]},
-                            {"set":{"var":["L:STEP","number"]},"value":3}
-                        ]}},
-                        {"sleep":4},
-                        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":40,"dist":7},{"bearing":160,"dist":7}],"to":"{local:HEMS_VISIT_OBJECT}"}],"VAR1":3,"speed":4}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                        {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                        {"set":{"var":["L:HOLD","number"]},"value":0},
-                        {"set":{"var":["L:STEP","number"]},"value":4}
-                    ]}
+                            {"sleep":[3,9]},
+                            {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                        ]},
+                        {"set":{"var":["L:STEP","number"]},"value":3}
+                    ]}},
+                    {"sleep":4},
+                    {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":40,"dist":7},{"bearing":160,"dist":7}],"to":"{local:HEMS_VISIT_OBJECT}"}],"VAR1":3,"speed":4}},
+                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                    {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
+                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                    {"set":{"var":["L:HOLD","number"]},"value":0},
+                    {"set":{"var":["L:STEP","number"]},"value":4}
                 ]}}
             ]},
             {"create_thread": {
@@ -4748,23 +4832,15 @@
             ]}},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"var":["L:STEP","number"]},"eq":3},
-                {"set":{"local":"crewarrived"},"value":"yes"},
-                {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                {"wait_for":{"var":["L:STEP","number"]},"gte":3},
+                {"set":{"local":"crewarrived"},"value":"yes"}
             ]}},
             {"wait_for":{"var":["L:STEP","number"]},"eq":4},
             {"if": {"local":"ambulance_previsit_active"}, "eq": "yes",
               "then": [
                 {"call_macro":"ambulance previsit doctor enter"}
-              ],"else": [
-                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
             ]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
             {"set":{"var":["L:HOLD","number"]},"value":0},
-            {"sleep":[1,3]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
-            {"sleep":[2,4]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":6},
             {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
             {"if": {"param":"tour_complete"}, "ne": 1,
               "then": [
@@ -4772,6 +4848,7 @@
                 {"return":0}
             ]},
             {"set":{"var":["L:RESCUED","number"]},"value":1},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hoist_crew","target":"n/a","state":"tour_complete"}},
             {"call_macro":"Life rescued"},
             {"if": {"has_object":"defibri"}, "eq": 1,
               "then": [
@@ -4800,10 +4877,7 @@
               ],"else": [
                 {"set":{"local":"HOLDHOISTED"},"value":1}
             ]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
-            {"sleep":[2,4]},
-            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-            {"sleep":[1,3]},
+            {"sleep":[1.5,4.5]},
             {"wait_for":{"object":"pax3","var":"VELOCITY Z"},"eq":0},
             {"set":{"var":["L:STEP","number"]},"value":6},
             {"if": {
@@ -4838,6 +4912,24 @@
             ]},
             {"set":{"local":"crewvisitended"},"value":"yes"},
             {"call_macro":"select HEMS patient"},
+            {"call_macro": "ground crew runtime trace",
+              "params": {
+                "macro": "hems_3crew",
+                "actor": "hems",
+                "target": "n/a",
+                "state": {
+                  "text": "select_returned whobring={0} decision={1} ticket={2}",
+                  "params": [
+                    {"local":"whobringpatient"},
+                    {"local":"HEMS_DECISION_STATE"},
+                    {"if": {"local":"HEMS_TRANSPORT_TICKET"},
+                      "ne": null,
+                      "then": "yes",
+                      "else": "no"
+                    }
+                ]}
+              }
+            },
             {"if": {"has_user_action":"ambuloadlock"}, "eq": 1,
               "then": [
                 {"destroy_user_action":"ambuloadlock"}
@@ -4845,6 +4937,7 @@
             {"set_message":{"text":"Ground crew operations are almost complete, land and set engines to idle or stop..."}},
             {"call_macro":"ground ops NR gate","params":{"source":"3 crew ground ops"}},
             {"set_message":{"text":"Ground crew loading procedures in progress..."}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":{"text":"ambufar={0} whobring={1} step={2}","params":[{"local":"AMBUFAR"},{"local":"whobringpatient"},{"var":["L:STEP","number"]}]}}},
             {"if": {"local":"AMBUFAR"}, "eq": 0,
               "then": [
                 {"wait_for":{"var":["L:STEP","number"]},"gt":5},
@@ -4854,6 +4947,7 @@
                     {"require":{"local":"whobringpatient"},"eq":"lethimdie"}
                   ]}, "eq": 1,
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"stretcher_branch_entered"}},
                     {"call_macro":"select patient1 transport","params":{"automatic":"us"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by us"},
                     {"set":{"local":"crewgoforstretcherload"},"value":"yes"},
@@ -4871,7 +4965,21 @@
                         {"return":0}
                     ]},
                     {"wait_for":{"has_object":"{local:HEMS_PATIENT_OBJECT}"},"eq":1},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":200,"dist":2}],"VAR1":3,"speed":2}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"patient_object_ready"}},
+                    {"set":{"local":"HEMS_PACK_STATE"},"value":0},
+                    {"set":{"local":"HEMS_PACK_GEN"},"value":{"add":[{"if":{"local":"HEMS_PACK_GEN"},"ne":null,"then":{"local":"HEMS_PACK_GEN"},"else":0},1]}},
+                    {"call_macro":"multipatient registry assistant dispatch","params":{"actor":"pax3","object":{"local":"HEMS_PATIENT_OBJECT"},"walk":3,"side":270}},
+                    {"create_thread": {
+                      "commands": [
+                        {"set":{"param":"pack_gen"},"value":{"local":"HEMS_PACK_GEN"}},
+                        {"sleep":[30,60]},
+                        {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                        {"if": {"local":"HEMS_PACK_GEN"}, "eq": {"param":"pack_gen"},
+                          "then": [
+                            {"call_macro":"multipatient registry live pack hems patient once"}
+                        ]}
+                    ]}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":200,"dist":2}],"VAR1":3,"speed":4}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
                     {"sleep":[1,4]},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
@@ -4907,16 +5015,19 @@
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
                     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":120,"dist":3,"object":"{local:HEMS_PATIENT_OBJECT}"},{"bearing2":50,"dist":2,"object":"{local:HEMS_PATIENT_OBJECT}"}],"to":"hoist_crew"}],"VAR1":10,"speed":2}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
+                    {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                    {"call_macro":"multipatient registry live pack hems patient once"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"patient_packed"}},
+                    {"sleep":1},
                     {"call_macro":"Patient status"},
                     {"sleep":3},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
+                    {"call_macro":"multipatient registry live remove hems patient object"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"patient_object_removed"}},
                     {"create_thread": {
                       "commands": [
-                        {"wait_for":{"local":"crewpatientloaded"},"eq":"yes"},
-                        {"sleep":[2,5]},
-                        {"set_hover_display":{"range":0}},
-                        {"set":{"var":["L:READY","number"]},"value":0},
-                        {"set":{"local":"MISSION_PHASE"},"value":8},
+                        {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                        {"sleep":[1,3]},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
                         {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":6}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":14},
@@ -4935,6 +5046,14 @@
                         {"sleep":1},
                         {"close_door":"cockpit_left"}
                     ]}},
+                    {"create_thread": {
+                      "commands": [
+                        {"wait_for":{"local":"crewpatientloaded"},"eq":"yes"},
+                        {"sleep":[2,5]},
+                        {"set_hover_display":{"range":0}},
+                        {"set":{"var":["L:READY","number"]},"value":0},
+                        {"set":{"local":"MISSION_PHASE"},"value":8}
+                    ]}},
                     {"if": {"var":["L:DEBOARD","number"]}, "gt": 4,
                       "then": [
                         {"set":{"var":["L:PLT{local:VCP}36","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}36","number"]},1]}}
@@ -4950,6 +5069,7 @@
                     {"open_door":"cargo_left"},
                     {"open_door":"cargo_right"},
                     {"set":{"local":"crewpatientonstretcher"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"on_stretcher"}},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_on_stretcher"},
                     {"set":{"local":"HEMS_LOADING_LOG"},"value":"patient on stretcher; awaiting load"},
                     {"set":{"var":["H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT","number"]},"value":0},
@@ -4970,6 +5090,7 @@
                     {"sleep":4.5},
                     {"#comment":"Per-patient confirmation is written by live hems loaded."},
                     {"set":{"local":"crewpatientloaded"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"loaded_confirmed"}},
                     {"set":{"local":"HEMS_LOADING_CONFIRMED"},"value":"yes"},
                     {"call_macro":"multipatient registry live hems loaded"},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_loaded"},
@@ -5000,6 +5121,7 @@
                 ]},
                 {"if": {"local":"whobringpatient"}, "eq": "ambulance",
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"ambulance_branch_entered"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by ambulance"},
                     {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
                     {"create_thread": {
@@ -5100,6 +5222,7 @@
                     {"require":{"local":"whobringpatient"},"eq":"lethimdie"}
                   ]}, "eq": 1,
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"stretcher_branch_entered"}},
                     {"call_macro":"select patient1 transport","params":{"automatic":"us"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by us"},
                     {"wait_for":{"object":"pax3","var":"VELOCITY Z"},"eq":0},
@@ -5125,13 +5248,21 @@
                             ]}},
                             {"create_thread": {
                               "commands": [
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambulance1"}],"VAR1":16,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":90,"dist":4,"object":"ambulance1"},{"bearing2":270,"dist":6,"object":"ambulance1"},{"bearing2":180,"dist":8,"object":"ambulance1"}],"to":"ambulance1"}],"VAR1":16,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":[{"bearing2":180,"dist":6,"object":"ambulance1"}],"VAR1":16,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_start"}},
                                 {"drive_object":{"name":"pax3","to":["ambulance1"],"VAR1":16,"speed":4}},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"drive_done"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":14},
                                 {"set":{"local":"pax3onambulance"},"value":"yes"},
                                 {"create_location": "polly",
@@ -5169,6 +5300,7 @@
                                 ]}},
                                 {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
                                 {"sleep":[5,10]},
+                                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"move_object"}},
                                 {"move_object":"pax3","to":{"bearing2":180,"dist":3.2,"heading":100,"object":"ambulance1"}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":14},
                                 {"sleep":1},
@@ -5216,16 +5348,25 @@
                       "then": [
                         {"set":{"local":"ambuloadingenabled"},"value":"yes"},
                         {"set":{"local":"stretcheronambulance"},"value":"move"},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambulance1"}],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":90,"dist":4,"object":"ambulance1"},{"bearing2":270,"dist":6,"object":"ambulance1"},{"bearing2":180,"dist":8,"object":"ambulance1"}],"to":"ambulance1"}],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"hoist_crew","to":[{"bearing2":180,"dist":6,"object":"ambulance1"}],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_start"}},
                         {"drive_object":{"name":"hoist_crew","to":["ambulance1"],"VAR1":3,"speed":4}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"drive_done"}},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
                         {"set":{"local":"hoistcrewonambulance"},"value":"yes"},
                         {"wait_for":{"local":"crewonambulance"},"eq":"exit"},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"move_object"}},
                         {"move_object":"hoist_crew","to":{"bearing2":180,"dist":3.6,"heading":100,"object":"ambulance1"}},
                         {"sleep":[1,3]},
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
@@ -5248,10 +5389,12 @@
                     {"open_door":"cargo_left"},
                     {"sleep":0.25},
                     {"open_door":"cargo_right"},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":245,"dist":5}],"VAR1":1,"speed":2}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing":245,"dist":5}],"VAR1":3,"speed":2}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"3 crew ground ops","state":"point_object"}},
                     {"point_object":"hoist_crew","to":"ambustretcher7"},
                     {"set":{"local":"crewpatientonstretcher"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"on_stretcher"}},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_on_stretcher"},
                     {"set":{"local":"HEMS_LOADING_LOG"},"value":"patient on stretcher; awaiting load"},
                     {"call_macro":"prepare ambulance stretcher for HEMS loading"},
@@ -5268,6 +5411,7 @@
                     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
                     {"sleep":4.5},
                     {"set":{"local":"crewpatientloaded"},"value":"yes"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"loaded_confirmed"}},
                     {"set":{"local":"HEMS_LOADING_CONFIRMED"},"value":"yes"},
                     {"call_macro":"multipatient registry live hems loaded"},
                     {"set":{"local":"HEMS_LOADING_TRACE"},"value":"patient_loaded"},
@@ -5310,6 +5454,7 @@
                 {"set":{"local":"pax3onpolice"},"value":"no"},
                 {"if": {"local":"whobringpatient"}, "eq": "ambulance",
                   "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":"ambulance_branch_entered"}},
                     {"set":{"local":"patientmessages"},"value":"Patient will be transported by ambulance"},
                     {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
                     {"create_thread": {
@@ -5476,6 +5621,7 @@
               "then": [
                 {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}}
             ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_3crew","actor":"hems","target":"n/a","state":{"text":"tail_hoisted whobring={0} phase={1}","params":[{"local":"whobringpatient"},{"local":"MISSION_PHASE"}]}}},
             {"set":{"var":["L:HOISTED","number"]},"value":1},
             {"sleep":1}
         ]}
@@ -5594,7 +5740,11 @@
     ]},
     {"if": {"has_object":"flare_accident"}, "eq": 1,
       "then": [
-        {"destroy_object":"flare_accident"}
+        {"destroy_object":"flare_accident"},
+        {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+          "then": [
+            {"destroy_object":"flare_accident_30west"}
+        ]}
     ]},
     {"sleep":3},
     {"set":{"global":"SKID_TOTAL"},"value":{"add":[{"global":"SKID_TOTAL"},1]}},
@@ -5759,10 +5909,7 @@
       "then": [
         {"call_macro":"shared repeated block 030"}
     ]},
-    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
-    {"sleep":[2,4]},
-    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-    {"sleep":[1,3]},
+    {"sleep":[2.5,6]},
     {"if": {
       "and": [
         {"require":{"local":"LIFESCORE"},"lte":12},
@@ -5828,7 +5975,7 @@
         ]}},
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":0,"dist":1,"object":"MEET"}],"VAR1":1,"speed":1}},
+            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":0,"dist":1,"object":"MEET"}],"VAR1":3,"speed":1}},
             {"set":{"object":"pax3","var":"VAR 1"},"value":1}
         ]}},
         {"drive_object":{"name":"hoist_crew","to":["{local:HEMS_PATIENT_OBJECT}",{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":3,"speed":1}},
@@ -5936,7 +6083,7 @@
         {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":1,"speed":1}},
+            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":3,"speed":1}},
             {"set":{"object":"pax3","var":"VAR 1"},"value":1}
         ]}},
         {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":90,"dist":1,"object":"MEET"}],"VAR1":3,"speed":1}},
@@ -6039,7 +6186,9 @@
       "then": [
         {"create_thread": {
           "commands": [
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"5 crew SKID LDG","state":"drive_start"}},
             {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13"],"to":"pax3"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"5 crew SKID LDG","state":"drive_done"}},
             {"set":{"object":"pax3","var":"VAR 1"},"value":1},
             {"set":{"var":["L:STEP","number"]},"value":7},
             {"if": {"has_object":"pax3"}, "eq": 1,
@@ -6185,7 +6334,11 @@
     ]},
     {"if": {"has_object":"flare_accident"}, "eq": 1,
       "then": [
-        {"destroy_object":"flare_accident"}
+        {"destroy_object":"flare_accident"},
+        {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+          "then": [
+            {"destroy_object":"flare_accident_30west"}
+        ]}
     ]},
     {"set":{"global":"SKID_TOTAL"},"value":{"add":[{"global":"SKID_TOTAL"},1]}},
     {"and": [
@@ -6341,10 +6494,7 @@
       "then": [
         {"call_macro":"shared repeated block 030"}
     ]},
-    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
-    {"sleep":[2,4]},
-    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-    {"sleep":[1,3]},
+    {"sleep":[2.5,6]},
     {"set":{"var":["L:STEP","number"]},"value":6},
     {"wait_for":{"var":["L:STEP","number"]},"gt":5},
     {"set":{"var":["L:STEP","number"]},"value":7},
@@ -6517,7 +6667,7 @@
         {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":1,"speed":1}},
+            {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":3,"speed":1}},
             {"set":{"object":"pax3","var":"VAR 1"},"value":1}
         ]}},
         {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":90,"dist":1,"object":"MEET"}],"VAR1":3,"speed":1}},
@@ -6602,7 +6752,9 @@
       "then": [
         {"create_thread": {
           "commands": [
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 crew SKID LDG","state":"drive_start"}},
             {"drive_object":{"name":"pax3","to":[{"closest":["INJU12","INJU13"],"to":"pax3"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 crew SKID LDG","state":"drive_done"}},
             {"set":{"object":"pax3","var":"VAR 1"},"value":1},
             {"set":{"var":["L:STEP","number"]},"value":7},
             {"if": {"has_object":"pax3"}, "eq": 1,
@@ -6748,7 +6900,11 @@
     ]},
     {"if": {"has_object":"flare_accident"}, "eq": 1,
       "then": [
-        {"destroy_object":"flare_accident"}
+        {"destroy_object":"flare_accident"},
+        {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+          "then": [
+            {"destroy_object":"flare_accident_30west"}
+        ]}
     ]},
     {"set":{"global":"SKID_TOTAL"},"value":{"add":[{"global":"SKID_TOTAL"},1]}},
     {"and": [
@@ -6886,10 +7042,7 @@
         {"destroy_object":"defibri"},
         {"sleep":[2,5]}
     ]},
-    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":5},
-    {"sleep":[2,4]},
-    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-    {"sleep":[1,3]},
+    {"sleep":[2.5,6]},
     {"set":{"var":["L:STEP","number"]},"value":6},
     {"wait_for":{"var":["L:STEP","number"]},"gt":5},
     {"set":{"var":["L:STEP","number"]},"value":7},
@@ -7333,6 +7486,20 @@
         ]}
     ]}
   ],
+  "apply hoist crew lifescore impact": [
+    {"set":{"local":"CREW_IMPACT_OBJECT"},"value":"hoist_crew"},
+    {"if": {"local":"HOIST_CABLE_PERSON_TYPE"}, "eq": "helirescuer",
+      "then": [
+        {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 2,
+          "then": [
+            {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"param":"score"},"cause":{"param":"cause"}}}
+          ],"else": [
+            {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"param":"score"},"cause":{"param":"cause"}}}
+        ]}
+      ],"else": [
+        {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]}
+  ],
   "start hoist out risk monitor legacy": [
     {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
       "then": [
@@ -7514,20 +7681,6 @@
                 ]}
             ]}}
         ]}}
-    ]}
-  ],
-  "apply hoist crew lifescore impact": [
-    {"set":{"local":"CREW_IMPACT_OBJECT"},"value":"hoist_crew"},
-    {"if": {"local":"HOIST_CABLE_PERSON_TYPE"}, "eq": "helirescuer",
-      "then": [
-        {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 2,
-          "then": [
-            {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"param":"score"},"cause":{"param":"cause"}}}
-          ],"else": [
-            {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"param":"score"},"cause":{"param":"cause"}}}
-        ]}
-      ],"else": [
-        {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"param":"score"},"cause":{"param":"cause"}}}
     ]}
   ]
 }

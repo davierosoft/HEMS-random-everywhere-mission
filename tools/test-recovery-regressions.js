@@ -73,7 +73,12 @@ for (const slot of [1, 2, 3]) {
   };
   h.runThread(h.threads[0]);
   assert.ok(h.locals.cpr_elapsed >= 300, 'STOP after five minutes must be reachable');
-  assert.equal(h.threads.length, 1, 'Heartbeat must not create replacement workers');
+  // Every "multipatient registry submit" call (including the worker's own periodic
+  // lease renewals) queues a short-lived stale-pump watchdog; with the real
+  // background pump alive these always no-op. Only a genuine replacement CPR
+  // worker thread must be absent here.
+  const replacementWorkers = h.threads.filter(t => !JSON.stringify(t.commands).includes('registry_pump_heartbeat'));
+  assert.equal(replacementWorkers.length, 1, 'Heartbeat must not create replacement workers');
   assert.equal(h.locals.active_cpr_slot, 0);
   assert.equal(h.call('multipatient registry CPR renew', {slot, generation}), 0, 'Released workers cannot renew their lease');
 }

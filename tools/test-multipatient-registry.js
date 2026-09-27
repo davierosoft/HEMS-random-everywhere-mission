@@ -39,9 +39,9 @@ class HpgRegistry {
       return a + (b - a) * this.seed / 4294967296;
     }
     if (q.has_location) return Number(Object.hasOwn(this.locations, this.query(q.has_location, p)));
-    if (q.location) {
+    if (q.location || (q.object && q.var === 'distance:m')) {
       assert.equal(q.var, 'distance:m');
-      const a = this.locations[this.query(q.location, p)], b = this.locations[this.query(q.to, p)];
+      const a = this.locations[this.query(q.location ?? q.object, p)], b = this.locations[this.query(q.to, p)];
       assert.ok(a && b, 'Both graph locations must exist');
       return Math.hypot(a[0] - b[0], a[1] - b[1]);
     }
@@ -65,6 +65,7 @@ class HpgRegistry {
     }
     if (q.text !== undefined) return q.text.replace(/\{(\d+)(?::[^}]+)?\}/g, (_, n) => this.query(q.params[Number(n)], p));
     if (q['string:join']) return this.query(q['string:join'], p).join(q.delimiter);
+    if (q.if !== undefined) return this.compare(this.query(q.if, p), q, p) ? this.query(q.then, p) : this.query(q.else, p);
     throw new Error(`Unsupported query ${JSON.stringify(q)}`);
   }
   commands(list, p) {
@@ -300,6 +301,7 @@ for (let count = 1; count <= 5; count++) {
   const legacySource = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/07-patient-medical.json'), 'utf8'));
   const legacyMacros = {
     consciousness: [],
+    'ground crew runtime trace': [],
     'initialize patient2 physiology': legacySource['initialize patient2 physiology'].filter(c => !c.create_thread),
     'update patient2 physiology': legacySource['update patient2 physiology'].slice(0, -1),
     'apply patient2 medical action effect': legacySource['apply patient2 medical action effect'],
