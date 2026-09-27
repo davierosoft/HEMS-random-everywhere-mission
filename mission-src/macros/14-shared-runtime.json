@@ -1,56 +1,4 @@
-{"savetemp async": [
-    {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
-    {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
-    {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
-    {"set":{"global":"SAVETEMP_START_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
-    {"set":{"global":"SAVETEMP_START_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
-    {"call_macro":"savetemp"},
-    {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
-    {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
-    {"set":{"global":"SAVETEMP_END_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
-    {"set":{"global":"SAVETEMP_END_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
-    {"set":{"global":"SAVETEMP_STATUS"},"value":"completed"}
-  ],
-  "landing spot watchdog": [
-    {"set":{"local":"landing_spot_watchdog_status"},"value":"monitoring"},
-    {"while": {"local":"landing_spot_watchdog_active"}, "eq": "yes",
-      "do": [
-        {"if": {"local":"customLZ"}, "eq": "yes",
-          "then": [
-            {"set":{"local":"landing_spot_watchdog_active"},"value":"no"},
-            {"set":{"local":"landing_spot_watchdog_status"},"value":"disabled_manual"}
-        ]},
-        {"if": {
-          "and": [
-            {"require":{"local":"landing_spot_watchdog_active"},"eq":"yes"},
-            {"require":{"has_location":"landing_spot"},"eq":1},
-            {"require":{"has_object":"injured_human"},"eq":1}
-          ]}, "eq": 1,
-          "then": [
-            {"set":{"local":"landing_spot_watchdog_distance_m"},"value":{"location":"landing_spot","var":"distance:m","to":"injured_human"}},
-            {"if": {"local":"landing_spot_watchdog_distance_m"}, "gt": 0.5,
-              "then": [
-                {"set":{"local":"landing_spot_watchdog_discrepancy"},"value":"yes"},
-                {"set":{"local":"landing_spot_watchdog_status"},"value":"correcting"},
-                {"set":{"local":"landing_spot_watchdog_fix_count"},"value":{"add":[{"local":"landing_spot_watchdog_fix_count"},1]}},
-                {"set_map":{"remove":{"point":{"id":"ring1"}}}},
-                {"set_map":{"remove":{"point":{"id":"landing_spot"}}}},
-                {"create_location": "landing_spot",
-                  "zones": [
-                    {"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}
-                ]},
-                {"set":{"local":"location_diagnostic_source_macro"},"value":"landing spot watchdog"},
-                {"set":{"local":"location_diagnostic_writer_landing_spot"},"value":"landing spot watchdog"},
-                {"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},
-                {"set_map":{"add":{"point":{"location":"landing_spot","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAgCAYAAAHiVIEmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIGSURBVEhL1Zc/T8JAFMDbgjQkJJjGhWDCZEJSd5xwAmPCwoyfAEcXU+MncDc4yFdycnRgV2cWU+8d78r9a+84SqO/5HHvvd77c3dtAc+GFD4Cqm6gDoVer3dCBv1FhnA1N2eKufaHT5tb+y8DTbPGed1uAbpJwjYAMEl2+jhSarXa9jocDTseXhdoNptyRqWsQLvdTjudzjeaAqT8exAExQlcGY3GIaoZutaZ8BT5xR3kkCfrUGJtDhuCmBRSyq2fJMk1qhXR7/f5DU+73VObvTwcRdWr68ylkhIjO8BmQsEHWvAh1Gb3lPHmK4DG6l5GLqSQDRLJHZmSK/NLeVwA64eYbPbGygESyW264LOOnDe8Xq/TWG03/DfDarX6hFHnqwybZSpzTBstB5RxMFvCMIQCgkRRpPhw3sFIk+ThDHUnSPwRGQ7aZCmQRu9RNZK3muxYJFGQXqu86FD82StlPL56Isl+iFruDWjGHw4vP+L4XGxuMpkcNxqNvJUw2GplUdhxpyitVutrMLh4RpNSGIDIBZgouDSF0DnsqMDY9T3jgk0Nf++m5vNb1LYsl6/eer1GS8CqqY1KjNns5g71PCBAJwr7Hh+PKYhPzouCY1PZdf5XBmxbOp1OHzdmpUBDpqM1rqosqqpTIYvFS0QGWBn8c36jTgNxHMM8GkO+52Lq/J943i9NtsTiAlnwAgAAAABJRU5ErkJggg==","id":"landing_spot"}}}},
-                {"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}},
-                {"set":{"local":"landing_spot_watchdog_status"},"value":"corrected"}
-            ]}
-        ]},
-        {"sleep":1}
-    ]}
-  ],
-  "custom separate settings": [
+{"custom separate settings": [
     {"#comment":"THESE SETTINGS APPLY ALWAYS, EVEN IF THE CUSTOM SETTINGS ARE DISABLED."},
     {"#comment":"Defines the hangar to helicopter distance threshold for crew boarding. Default value is 0.08 (NM) "},
     {"#comment":"Above preset value (in nautical miles) the crew will arrive transported by a van."},
@@ -84,178 +32,18 @@
     {"set":{"var":["L:INHIBVAR","number"]},"value":1},
     {"set":{"var":["L:TESTTRK","number"]},"value":0}
   ],
-  "crew spawn launch": [
-    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"launch_requested"},
-    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":0},
-    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":-1},
-    {"set":{"local":"crew_spawn_log"},"value":{"text":"LAUNCH: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
-    {"if": {"has_object":{"param":"crew_name"}}, "eq": 1,
-      "then": [
-        {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0} already exists; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
-        {"set_message":{"text":"ERROR: crew object {0} already exists. Waiting for cleanup before creation.","params":[{"param":"crew_name"}],"color":"red"}},
-        {"wait_for":{"has_object":{"param":"crew_name"}},"eq":0}
-    ]}
-  ],
-  "crew spawn wait": [
-    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"waiting_created_flag"},
-    {"set":{"param":"crew_spawn_wait_seconds"},"value":0},
-    {"set":{"param":"crew_spawn_state"},"value":"pending"},
-    {"while": {"param":"crew_spawn_wait_seconds"}, "lt": 20,
-      "do": [
-        {"if": {
-          "and": [
-            {"require":{"has_object":{"param":"crew_name"}},"eq":1},
-            {"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}
-          ]}, "eq": 1,
-          "then": [
-            {"set":{"param":"crew_spawn_state"},"value":"created"},
-            {"set":{"param":"crew_spawn_wait_seconds"},"value":20},
-            {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
-            {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
-        ]},
-        {"if": {
-          "and": [
-            {"require":{"has_object":{"param":"crew_name"}},"eq":1},
-            {"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":-1}
-          ]}, "eq": 1,
-          "then": [
-            {"set":{"param":"crew_spawn_state"},"value":"failed"},
-            {"set":{"param":"crew_spawn_wait_seconds"},"value":20},
-            {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
-            {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
-        ]},
-        {"if": {"param":"crew_spawn_state"}, "eq": "pending",
-          "then": [
-            {"sleep":0.5},
-            {"set":{"param":"crew_spawn_wait_seconds"},"value":{"add":[{"param":"crew_spawn_wait_seconds"},0.5]}}
-        ]}
-    ]},
-    {"if": {"param":"crew_spawn_state"}, "eq": "created",
-      "then": [
-        {"set":{"local":"crew_spawn_log"},"value":{"text":"CREATED: {0}","params":[{"param":"crew_name"}]}}
-      ],"else": [
-        {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"failed","then":"create_object_failed","else":"created_flag_timeout"}},
-        {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
-        {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
-        {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
-    ]},
-    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"created","then":"created","else":"recovered_created"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
-  ],
-  "crew spawn failure": [
-    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"create_object_failed"},
-    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":0},
-    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":-1},
-    {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; error={1}; title={2}; fallback={3}","params":[{"param":"crew_name"},{"param":"error"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
-    {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
-    {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
-  ],
-  "ground ops NR gate": [
-    {"set":{"local":"gndops_nr_gate_state"},"value":"waiting"},
-    {"set":{"local":"gndops_nr_bypass_seconds"},"value":0},
-    {"set":{"local":"gndops_idle_bypass_seconds"},"value":0},
-    {"set":{"local":"gndops_nr_gate_reason"},"value":null},
-    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"WAITING: {0}; NR < {1}; safety bypass after 30s","params":[{"param":"source"},{"local":"gndopsNR"}]}},
-    {"while": {"local":"gndops_nr_gate_state"}, "ne": "passed",
-      "do": [
-        {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": {"local":"gndopsNR"},
-          "then": [
-            {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
-            {"set":{"local":"gndops_nr_gate_reason"},"value":"NR threshold"}
-        ]},
-        {"if": {"local":"gndops_nr_gate_state"}, "ne": "passed",
-          "then": [
-            {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": 84,
-              "then": [
-                {"set":{"local":"gndops_nr_bypass_seconds"},"value":{"add":[{"local":"gndops_nr_bypass_seconds"},1]}}
-              ],"else": [
-                {"set":{"local":"gndops_nr_bypass_seconds"},"value":0}
-            ]},
-            {"if": {
-              "and": [
-                {"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]},"eq":1},
-                {"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]},"eq":1}
-              ]}, "eq": 1,
-              "then": [
-                {"set":{"local":"gndops_idle_bypass_seconds"},"value":{"add":[{"local":"gndops_idle_bypass_seconds"},1]}}
-              ],"else": [
-                {"set":{"local":"gndops_idle_bypass_seconds"},"value":0}
-            ]},
-            {"if": {"local":"gndops_nr_bypass_seconds"}, "gt": 30,
-              "then": [
-                {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
-                {"set":{"local":"gndops_nr_gate_reason"},"value":"NR below 84 percent for over 30 seconds"}
-            ]},
-            {"if": {"local":"gndops_idle_bypass_seconds"}, "gt": 30,
-              "then": [
-                {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
-                {"set":{"local":"gndops_nr_gate_reason"},"value":"both engine MAIN switches IDLE for over 30 seconds"}
-            ]}
-        ]},
-        {"if": {"local":"gndops_nr_gate_state"}, "ne": "passed",
-          "then": [
-            {"sleep":1}
-        ]}
-    ]},
-    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}}
-  ],
-  "HELOVICTIMS refinement": [
-    {"if": {"global":"HELOVICTIMS_CUSTOM"}, "eq": 0,
-      "then": [
-        {"if": {"local":"max_injured"}, "lte": 2,
-          "then": [
-            {"set":{"local":"HELOVICTIMS"},"value":1}
-        ]},
-        {"if": {"local":"max_injured"}, "gt": 2,
-          "then": [
-            {"set":{"local":"HELOVICTIMS"},"value":{"floor":{"rand":[1,{"local":"max_injured"}]}}}
-        ]}
-      ],"else": [
-        {"call_macro":"HELOVICTIMS custom"}
-    ]}
-  ],
-  "HELOVICTIMS custom": [
-    {"set":{"local":"max_inju_real"},"value":{"subtract":[{"local":"max_injured"},1]}},
-    {"set":{"local":"HELOVICTIMS"},"value":{"clamp":[{"global":"HELOVICTIMS_CUSTOM"},1,{"local":"max_inju_real"}]}}
-  ],
-  "CUSTOM HOSPITAL DB map update": [
-    {"set_map":{"remove":{"point":{"id":"h1"}}}},
-    {"set_map":{"remove":{"point":{"id":"h2"}}}},
-    {"set_map":{"remove":{"point":{"id":"h3"}}}},
-    {"set_map":{"remove":{"point":{"id":"h4"}}}},
-    {"set_map":{"remove":{"point":{"id":"h5"}}}},
-    {"create_location": "h1",
-      "zones": [
-        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos1_lat"},{"global":"cushos1_lon"}]}}}}
-    ]},
-    {"create_location": "h2",
-      "zones": [
-        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos2_lat"},{"global":"cushos2_lon"}]}}}}
-    ]},
-    {"create_location": "h3",
-      "zones": [
-        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos3_lat"},{"global":"cushos3_lon"}]}}}}
-    ]},
-    {"create_location": "h4",
-      "zones": [
-        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos4_lat"},{"global":"cushos4_lon"}]}}}}
-    ]},
-    {"create_location": "h5",
-      "zones": [
-        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos5_lat"},{"global":"cushos5_lon"}]}}}}
-    ]},
-    {"set_map":{"add":{"point":{"location":"h1","icon":"cus_hospital","id":"h1"}}}},
-    {"set_map":{"add":{"point":{"location":"h2","icon":"cus_hospital","id":"h2"}}}},
-    {"set_map":{"add":{"point":{"location":"h3","icon":"cus_hospital","id":"h3"}}}},
-    {"set_map":{"add":{"point":{"location":"h4","icon":"cus_hospital","id":"h4"}}}},
-    {"set_map":{"add":{"point":{"location":"h5","icon":"cus_hospital","id":"h5"}}}}
+  "savetemp async": [
+    {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
+    {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
+    {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
+    {"set":{"global":"SAVETEMP_START_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
+    {"set":{"global":"SAVETEMP_START_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
+    {"call_macro":"savetemp"},
+    {"set":{"local":"SAVETEMP_DATE"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleDateString","params":["en-GB"]}},
+    {"set":{"local":"SAVETEMP_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
+    {"set":{"global":"SAVETEMP_END_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVETEMP_DATE"},{"local":"SAVETEMP_TIME"}]}},
+    {"set":{"global":"SAVETEMP_END_MISSION_KEY"},"value":{"text":"M{0}-C{1}-V{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}]}},
+    {"set":{"global":"SAVETEMP_STATUS"},"value":"completed"}
   ],
   "multiplayer": [
     {"create_thread": {
@@ -590,6 +378,96 @@
   ],
   "timefororgantransport": [
     {"set":{"local":"organexpiration"},"value":{"tofixed":{"add":[{"var":["E:LOCAL TIME","seconds"]},{"multiply":[{"object":"userA","var":"distance:m"},{"local":"timemultiplier"}]},{"multiply":[{"location":"hospital_user","var":"distance:m","to":"userA"},{"local":"timemultiplier"}]},{"rand":[300,1200]}]},"digits":0}}
+  ],
+  "CUSTOM HOSPITAL DB map update": [
+    {"set_map":{"remove":{"point":{"id":"h1"}}}},
+    {"set_map":{"remove":{"point":{"id":"h2"}}}},
+    {"set_map":{"remove":{"point":{"id":"h3"}}}},
+    {"set_map":{"remove":{"point":{"id":"h4"}}}},
+    {"set_map":{"remove":{"point":{"id":"h5"}}}},
+    {"create_location": "h1",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos1_lat"},{"global":"cushos1_lon"}]}}}}
+    ]},
+    {"create_location": "h2",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos2_lat"},{"global":"cushos2_lon"}]}}}}
+    ]},
+    {"create_location": "h3",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos3_lat"},{"global":"cushos3_lon"}]}}}}
+    ]},
+    {"create_location": "h4",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos4_lat"},{"global":"cushos4_lon"}]}}}}
+    ]},
+    {"create_location": "h5",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"global":"cushos5_lat"},{"global":"cushos5_lon"}]}}}}
+    ]},
+    {"set_map":{"add":{"point":{"location":"h1","icon":"cus_hospital","id":"h1"}}}},
+    {"set_map":{"add":{"point":{"location":"h2","icon":"cus_hospital","id":"h2"}}}},
+    {"set_map":{"add":{"point":{"location":"h3","icon":"cus_hospital","id":"h3"}}}},
+    {"set_map":{"add":{"point":{"location":"h4","icon":"cus_hospital","id":"h4"}}}},
+    {"set_map":{"add":{"point":{"location":"h5","icon":"cus_hospital","id":"h5"}}}}
+  ],
+  "landing spot watchdog": [
+    {"set":{"local":"landing_spot_watchdog_status"},"value":"monitoring"},
+    {"while": {"local":"landing_spot_watchdog_active"}, "eq": "yes",
+      "do": [
+        {"if": {"local":"customLZ"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"landing_spot_watchdog_active"},"value":"no"},
+            {"set":{"local":"landing_spot_watchdog_status"},"value":"disabled_manual"}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"landing_spot_watchdog_active"},"eq":"yes"},
+            {"require":{"has_location":"landing_spot"},"eq":1},
+            {"require":{"has_object":"injured_human"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"landing_spot_watchdog_distance_m"},"value":{"location":"landing_spot","var":"distance:m","to":"injured_human"}},
+            {"if": {"local":"landing_spot_watchdog_distance_m"}, "gt": 0.5,
+              "then": [
+                {"set":{"local":"landing_spot_watchdog_discrepancy"},"value":"yes"},
+                {"set":{"local":"landing_spot_watchdog_status"},"value":"correcting"},
+                {"set":{"local":"landing_spot_watchdog_fix_count"},"value":{"add":[{"local":"landing_spot_watchdog_fix_count"},1]}},
+                {"set_map":{"remove":{"point":{"id":"ring1"}}}},
+                {"set_map":{"remove":{"point":{"id":"landing_spot"}}}},
+                {"create_location": "landing_spot",
+                  "zones": [
+                    {"zone":{"location":{"bearing":0,"dist":5,"object":"injured_human"}}}
+                ]},
+                {"set":{"local":"location_diagnostic_source_macro"},"value":"landing spot watchdog"},
+                {"set":{"local":"location_diagnostic_writer_landing_spot"},"value":"landing spot watchdog"},
+                {"set_map":{"add":{"point":{"location":"landing_spot","id":"ring1","stroke":{"width":1,"color":"lime"},"fill":{"color":"rgba(204, 255, 0, 0.1)"},"range":{"local":"ldg_spot_area_size"}}}}},
+                {"set_map":{"add":{"point":{"location":"landing_spot","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACUAAAAgCAYAAAHiVIEmAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAIGSURBVEhL1Zc/T8JAFMDbgjQkJJjGhWDCZEJSd5xwAmPCwoyfAEcXU+MncDc4yFdycnRgV2cWU+8d78r9a+84SqO/5HHvvd77c3dtAc+GFD4Cqm6gDoVer3dCBv1FhnA1N2eKufaHT5tb+y8DTbPGed1uAbpJwjYAMEl2+jhSarXa9jocDTseXhdoNptyRqWsQLvdTjudzjeaAqT8exAExQlcGY3GIaoZutaZ8BT5xR3kkCfrUGJtDhuCmBRSyq2fJMk1qhXR7/f5DU+73VObvTwcRdWr68ylkhIjO8BmQsEHWvAh1Gb3lPHmK4DG6l5GLqSQDRLJHZmSK/NLeVwA64eYbPbGygESyW264LOOnDe8Xq/TWG03/DfDarX6hFHnqwybZSpzTBstB5RxMFvCMIQCgkRRpPhw3sFIk+ThDHUnSPwRGQ7aZCmQRu9RNZK3muxYJFGQXqu86FD82StlPL56Isl+iFruDWjGHw4vP+L4XGxuMpkcNxqNvJUw2GplUdhxpyitVutrMLh4RpNSGIDIBZgouDSF0DnsqMDY9T3jgk0Nf++m5vNb1LYsl6/eer1GS8CqqY1KjNns5g71PCBAJwr7Hh+PKYhPzouCY1PZdf5XBmxbOp1OHzdmpUBDpqM1rqosqqpTIYvFS0QGWBn8c36jTgNxHMM8GkO+52Lq/J943i9NtsTiAlnwAgAAAABJRU5ErkJggg==","id":"landing_spot"}}}},
+                {"set_map":{"add":{"point":{"location":"landing_spot","text":"LNDG SPOT"}}}},
+                {"set":{"local":"landing_spot_watchdog_status"},"value":"corrected"}
+            ]}
+        ]},
+        {"sleep":1}
+    ]}
+  ],
+  "HELOVICTIMS refinement": [
+    {"if": {"global":"HELOVICTIMS_CUSTOM"}, "eq": 0,
+      "then": [
+        {"if": {"local":"max_injured"}, "lte": 2,
+          "then": [
+            {"set":{"local":"HELOVICTIMS"},"value":1}
+        ]},
+        {"if": {"local":"max_injured"}, "gt": 2,
+          "then": [
+            {"set":{"local":"HELOVICTIMS"},"value":{"floor":{"rand":[1,{"local":"max_injured"}]}}}
+        ]}
+      ],"else": [
+        {"call_macro":"HELOVICTIMS custom"}
+    ]}
+  ],
+  "HELOVICTIMS custom": [
+    {"set":{"local":"max_inju_real"},"value":{"subtract":[{"local":"max_injured"},1]}},
+    {"set":{"local":"HELOVICTIMS"},"value":{"clamp":[{"global":"HELOVICTIMS_CUSTOM"},1,{"local":"max_inju_real"}]}}
   ],
   "road nodes generator": [
     {"set":{"local":"roadnode_query_status"},"value":"query_requested"},
@@ -1404,20 +1282,28 @@
     {"wait_for":{"object":"ambumedic","var":"VELOCITY Z"},"eq":0},
     {"if": {"local":"hospital_wptot"}, "eq": 1,
       "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_start"}},
         {"drive_object":{"name":"ambumedic","to":["hospital_wp1"],"VAR1":1,"speed":6}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 2,
       "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_start"}},
         {"drive_object":{"name":"ambumedic","to":["hospital_wp1","hospital_wp2"],"VAR1":1,"speed":6}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 3,
       "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_start"}},
         {"drive_object":{"name":"ambumedic","to":["hospital_wp1","hospital_wp2","hospital_wp3"],"VAR1":1,"speed":6}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
     ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_start"}},
     {"drive_object":{"name":"ambumedic","to":["hospital_door","hospital"],"VAR1":1,"speed":6}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"shared repeated block 022","state":"drive_done"}},
     {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
   ],
   "shared repeated block 023": [
@@ -1523,7 +1409,15 @@
   "shared repeated block 032": [
     {"wait_for":{"local":"stretcheronambulance"},"eq":"return"},
     {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"ambulance_restart_at_slow_speed"}
+    ]}},
     {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"ambulance_restart_at_slow_speed"}
+    ]}},
     {"if": {"location":"AMBWP","var":"distance:m","to":"ambulance1"}, "gt": 2,
       "then": [
         {"call_macro":"drive ambulance1 safe","params":{"to":["AMBWP","Ambuloc"],"fallback":"Ambuloc","speed":{"location":"AMBWP","var":"distance:m","to":"ambulance1"},"var1":1,"timeout":420}}
@@ -1535,7 +1429,9 @@
   ],
   "shared repeated block 033": [
     {"sleep":[2,5]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"shared repeated block 033","state":"drive_start"}},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":["INJU12","INJU13"],"to":"hoist_crew"},"AMBWP","ambulance1"],"VAR1":3,"speed":4}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"shared repeated block 033","state":"drive_done"}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"set":{"var":["L:STEP","number"]},"value":7},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -1804,6 +1700,7 @@
     {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu7","fallback":"watchdog_ambulance1_shared_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
     {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
     {"sleep":60},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"shared repeated block 064","state":"destroy"}},
     {"destroy_object":"ambulance1"}
   ],
   "select unique public title": [
@@ -1875,15 +1772,16 @@
   "create orange smoke marker": [
     {"if": {"has_object":"flare_accident"}, "eq": 0,
       "then": [
+        {"create_object":{"name":"flare_accident","title":"Airbus H145 Flare","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},
         {"if": {"local":"30West2024_installed"}, "eq": "OK",
           "then": [
-            {"create_object":{"name":"flare_accident","title":"30West smoke","fallback_title":"Smoke Effects","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},
-            {"set":{"object":"flare_accident","var":"VAR 1"},"value":3},
-            {"set":{"object":"flare_accident","var":"VAR 2"},"value":0},
-            {"set":{"object":"flare_accident","var":"COUPLED"},"value":0}
+            {"set":{"object":"flare_accident","var":"VAR 1"},"value":-1},
+            {"create_object":{"name":"flare_accident_30west","title":"30West smoke","fallback_title":"Smoke Effects","location":{"bearing":0,"dist":0,"object":"flare_accident"}}},
+            {"set":{"object":"flare_accident_30west","var":"VAR 1"},"value":0},
+            {"set":{"object":"flare_accident_30west","var":"VAR 2"},"value":2},
+            {"set":{"object":"flare_accident_30west","var":"COUPLED"},"value":0}
           ],"else": [
-            {"create_object":{"name":"flare_accident","title":"Airbus H145 Flare","location":{"bearing":45,"dist":15,"heading":{"rand":[0,359]},"object":"accident_location"}}},
-            {"set":{"object":"flare_accident","var":"VAR 1"},"value":1}
+            {"set":{"object":"flare_accident","var":"VAR 1"},"value":0}
         ]},
         {"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"yes"}
     ]},
@@ -1902,6 +1800,24 @@
         {"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},
         {"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"realistic","options":["auto","always","realistic","disabled"]}}
     ]}
+  ],
+  "monitor orange smoke proximity": [
+    {"create_thread": {
+      "commands": [
+        {"or": [
+          {"wait_for":{"location":"accident_location","var":"distance:m"},"lte":200},
+          {"wait_for":{"has_object":"flare_accident"},"eq":0}
+        ]},
+        {"if": {"has_object":"flare_accident"}, "eq": 1,
+          "then": [
+            {"destroy_object":"flare_accident"},
+            {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+              "then": [
+                {"destroy_object":"flare_accident_30west"}
+            ]},
+            {"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"no"}
+        ]}
+    ]}}
   ],
   "evaluate realistic orange smoke scene": [
     {"set":{"local":"ORANGE_SMOKE_REALISTIC_SCENE"},"value":"no"},
@@ -1954,6 +1870,10 @@
                 {"if": {"has_object":"flare_accident"}, "eq": 1,
                   "then": [
                     {"destroy_object":"flare_accident"},
+                    {"if": {"has_object":"flare_accident_30west"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"flare_accident_30west"}
+                    ]},
                     {"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"no"}
                 ]}
             ]}
@@ -2053,5 +1973,127 @@
     {"close_door":"pax_left"},
     {"close_door":"pax_right"},
     {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"yes"}
+  ],
+  "crew spawn launch": [
+    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"launch_requested"},
+    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":0},
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":-1},
+    {"set":{"local":"crew_spawn_log"},"value":{"text":"LAUNCH: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+    {"if": {"has_object":{"param":"crew_name"}}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0} already exists; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+        {"set_message":{"text":"ERROR: crew object {0} already exists. Waiting for cleanup before creation.","params":[{"param":"crew_name"}],"color":"red"}},
+        {"wait_for":{"has_object":{"param":"crew_name"}},"eq":0}
+    ]}
+  ],
+  "crew spawn wait": [
+    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"waiting_created_flag"},
+    {"set":{"param":"crew_spawn_wait_seconds"},"value":0},
+    {"set":{"param":"crew_spawn_state"},"value":"pending"},
+    {"while": {"param":"crew_spawn_wait_seconds"}, "lt": 20,
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"has_object":{"param":"crew_name"}},"eq":1},
+            {"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"crew_spawn_state"},"value":"created"},
+            {"set":{"param":"crew_spawn_wait_seconds"},"value":20},
+            {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
+            {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"has_object":{"param":"crew_name"}},"eq":1},
+            {"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":-1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"crew_spawn_state"},"value":"failed"},
+            {"set":{"param":"crew_spawn_wait_seconds"},"value":20},
+            {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
+            {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+        ]},
+        {"if": {"param":"crew_spawn_state"}, "eq": "pending",
+          "then": [
+            {"sleep":0.5},
+            {"set":{"param":"crew_spawn_wait_seconds"},"value":{"add":[{"param":"crew_spawn_wait_seconds"},0.5]}}
+        ]}
+    ]},
+    {"if": {"param":"crew_spawn_state"}, "eq": "created",
+      "then": [
+        {"set":{"local":"crew_spawn_log"},"value":{"text":"CREATED: {0}","params":[{"param":"crew_name"}]}}
+      ],"else": [
+        {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"failed","then":"create_object_failed","else":"created_flag_timeout"}},
+        {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; title={1}; fallback={2}","params":[{"param":"crew_name"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+        {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
+        {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
+    ]},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"created","then":"created","else":"recovered_created"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+  ],
+  "crew spawn failure": [
+    {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
+    {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"create_object_failed"},
+    {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":0},
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":-1},
+    {"set":{"local":"crew_spawn_log"},"value":{"text":"FAILED: {0}; error={1}; title={2}; fallback={3}","params":[{"param":"crew_name"},{"param":"error"},{"param":"crew_title"},{"param":"crew_fallback"}]}},
+    {"set_message":{"text":"ERROR: crew creation failed for {0}. Check active livery or crew package.","params":[{"param":"crew_name"}],"color":"red"}},
+    {"wait_for":{"and":[{"require":{"has_object":{"param":"crew_name"}},"eq":1},{"require":{"object":{"param":"crew_name"},"var":"CREATED"},"eq":1}]},"eq":1}
+  ],
+  "ground ops NR gate": [
+    {"set":{"local":"gndops_nr_gate_state"},"value":"waiting"},
+    {"set":{"local":"gndops_nr_bypass_seconds"},"value":0},
+    {"set":{"local":"gndops_idle_bypass_seconds"},"value":0},
+    {"set":{"local":"gndops_nr_gate_reason"},"value":null},
+    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"WAITING: {0}; NR < {1}; safety bypass after 30s","params":[{"param":"source"},{"local":"gndopsNR"}]}},
+    {"while": {"local":"gndops_nr_gate_state"}, "ne": "passed",
+      "do": [
+        {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": {"local":"gndopsNR"},
+          "then": [
+            {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
+            {"set":{"local":"gndops_nr_gate_reason"},"value":"NR threshold"}
+        ]},
+        {"if": {"local":"gndops_nr_gate_state"}, "ne": "passed",
+          "then": [
+            {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": 84,
+              "then": [
+                {"set":{"local":"gndops_nr_bypass_seconds"},"value":{"add":[{"local":"gndops_nr_bypass_seconds"},1]}}
+              ],"else": [
+                {"set":{"local":"gndops_nr_bypass_seconds"},"value":0}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]},"eq":1},
+                {"require":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"gndops_idle_bypass_seconds"},"value":{"add":[{"local":"gndops_idle_bypass_seconds"},1]}}
+              ],"else": [
+                {"set":{"local":"gndops_idle_bypass_seconds"},"value":0}
+            ]},
+            {"if": {"local":"gndops_nr_bypass_seconds"}, "gt": 30,
+              "then": [
+                {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
+                {"set":{"local":"gndops_nr_gate_reason"},"value":"NR below 84 percent for over 30 seconds"}
+            ]},
+            {"if": {"local":"gndops_idle_bypass_seconds"}, "gt": 30,
+              "then": [
+                {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
+                {"set":{"local":"gndops_nr_gate_reason"},"value":"both engine MAIN switches IDLE for over 30 seconds"}
+            ]}
+        ]},
+        {"if": {"local":"gndops_nr_gate_state"}, "ne": "passed",
+          "then": [
+            {"sleep":1}
+        ]}
+    ]},
+    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}}
   ]
 }

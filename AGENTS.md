@@ -23,7 +23,7 @@
 - Validate dynamic drive syntax against the original baseline and a minimal matrix; do not infer success from fallback/static behavior. Dynamic-command ambiguity requires a test before changing mission logic.
 - Before `$CREW` create/set/drive, read `docs/architecture/HPG_DYNAMIC_OBJECT_STATES.md`; backpack standing is `VAR1:1`, walking is `VAR1:3`. Unknown state blocks edits.
 - Crew movement is synchronous; no distance watchdog/fallback may decide completion. Initialize locals before `json:copy`; never serialize `undefined`.
-- `pax3` is the pilot/backpack asset in ground operations, not a medical crew asset: never use its crouch/assessment `VAR1` states; use the documented pilot walking/standing states and reset standing before and after each drive.
+- `pax3` is the pilot/backpack asset in 3-crew ground operations, not a medical crew asset: never use its crouch/assessment `VAR1` states there; use the documented pilot walking/standing states (`VAR1` 16/14) and reset standing before and after each drive. In 4 and 5 crew `pax3` is a rear crew member like `hoist_crew`: use crew states (`VAR1` 1 standing with backpack, 3 walking with backpack, 5/6 crouching) and never a pilot state, which turns the model into a pilot. Branch on `CREW`, never on the actor name alone.
 
 ## Build, release, and publication gates
 

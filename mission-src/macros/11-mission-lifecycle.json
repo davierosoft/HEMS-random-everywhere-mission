@@ -1826,7 +1826,6 @@
           "then": [
             {"set":{"global":"TABLET_5G_ENABLED"},"value":"no"}
         ]},
-        {"call_macro":"ensure aircraft profile defaults"},
         {"if": {"global":"NATION_BYPASS"}, "eq": null,
           "then": [
             {"set":{"global":"NATION_BYPASS"},"value":100}
@@ -2076,6 +2075,64 @@
         {"if": {"global":"RINGONCE"}, "eq": null,
           "then": [
             {"set":{"global":"RINGONCE"},"value":0}
+        ]},
+        {"if": {"global":"ENGINE_FAILURES_ENABLED"}, "eq": null,
+          "then": [
+            {"set":{"global":"ENGINE_FAILURES_ENABLED"},"value":"yes"}
+        ]},
+        {"call_macro":"normalize orange target smoke setting"},
+        {"call_macro":"normalize crew health simulation setting"},
+        {"if": {"global":"TARGET_GUIDANCE_RANGE"}, "eq": null,
+          "then": [
+            {"set":{"global":"TARGET_GUIDANCE_RANGE"},"value":"wide"}
+        ]},
+        {"if": {"global":"HOIST_CONTROL_PROFILE"}, "eq": null,
+          "then": [
+            {"set":{"global":"HOIST_CONTROL_PROFILE"},"value":"auto"}
+        ]},
+        {"if": {"global":"AUTO_FPL_NAV_SOURCE"}, "eq": null,
+          "then": [
+            {"set":{"global":"AUTO_FPL_NAV_SOURCE"},"value":"yes"}
+        ]},
+        {"if": {"global":"TELEPORT_ASSIST_ENABLED"}, "eq": null,
+          "then": [
+            {"set":{"global":"TELEPORT_ASSIST_ENABLED"},"value":"yes"}
+        ]},
+        {"if": {"global":"AIRCRAFT_PROFILE_ACTIVE"}, "eq": null,
+          "then": [
+            {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"}
+        ]},
+        {"if": {"global":"AIRCRAFT_PROFILE_SLOT"}, "eq": null,
+          "then": [
+            {"set":{"global":"AIRCRAFT_PROFILE_SLOT"},"value":"Aircraft_Profile_Table1"}
+        ]},
+        {"if": {"global":"P1_MANUAL_MEDICAL_MODE"}, "eq": null,
+          "then": [
+            {"set":{"global":"P1_MANUAL_MEDICAL_MODE"},"value":"automatic"}
+        ]},
+        {"if": {"global":"CARLS_DF_TUNING_MODE"}, "eq": null,
+          "then": [
+            {"set":{"global":"CARLS_DF_TUNING_MODE"},"value":"auto"}
+        ]},
+        {"if": {"global":"TABLET_5G_ENABLED"}, "eq": null,
+          "then": [
+            {"set":{"global":"TABLET_5G_ENABLED"},"value":"no"}
+        ]},
+        {"if": {"global":"MARSHAL_START_ENABLED"}, "eq": null,
+          "then": [
+            {"set":{"global":"MARSHAL_START_ENABLED"},"value":"yes"}
+        ]},
+        {"if": {"global":"MARSHAL_HOSPITAL_ENABLED"}, "eq": null,
+          "then": [
+            {"set":{"global":"MARSHAL_HOSPITAL_ENABLED"},"value":"yes"}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"global":"HOIST_SAFETY_MONITOR"},"ne":"yes"},
+            {"require":{"global":"HOIST_SAFETY_MONITOR"},"ne":"no"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"global":"HOIST_SAFETY_MONITOR"},"value":"yes"}
         ]},
         {"if": {"global":"cushos1_name"}, "eq": null,
           "then": [
@@ -2666,7 +2723,9 @@
     {"set":{"local":"fire1_parked"},"value":"no"},
     {"set":{"local":"fire2_parked"},"value":"no"},
     {"set":{"local":"ambu1_parking"},"value":"no"},
+    {"set":{"local":"ambu1_stop_active"},"value":"no"},
     {"set":{"local":"ambu2_parking"},"value":"no"},
+    {"set":{"local":"ambu2_stop_active"},"value":"no"},
     {"set":{"local":"closest_ambu_parking"},"value":"no"},
     {"set":{"local":"poli1_parking"},"value":"no"},
     {"set":{"local":"poli7_parking"},"value":"no"},
@@ -2956,21 +3015,10 @@
         {"set":{"var":["L:LOADSTART","number"]},"value":60},
         {"create_thread": {
           "commands": [
+            {"set":{"local":"start_nation"},"value":null},
             {"call_macro":"nation autoselect"},
-            {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
-              "then": [
-                {"set":{"local":"dispatch_nation"},"value":{"local":"accident_nation"}},
-                {"if": {"local":"accident_nation_id"}, "ne": null,
-                  "then": [
-                    {"set":{"local":"NATION"},"value":{"local":"accident_nation_id"}}
-                ]}
-              ],"else": [
-                {"set":{"local":"dispatch_nation"},"value":{"local":"userA_nation"}},
-                {"if": {"local":"userA_nation_id"}, "ne": null,
-                  "then": [
-                    {"set":{"local":"NATION"},"value":{"local":"userA_nation_id"}}
-                ]}
-            ]},
+            {"call_macro":"nation query wait","params":{"which":"start"}},
+            {"set":{"local":"dispatch_nation"},"value":{"if":{"local":"start_nation"},"ne":null,"then":{"local":"start_nation"},"else":"n/a"}},
             {"set_message":{"text":"GPS POSITION ACQUIRED. LOCATION: {0}","params":[{"local":"dispatch_nation"}]}}
         ]}},
         {"sleep":0.5},
@@ -3547,6 +3595,8 @@
         {"set":{"var":["L:POI_TYPE","number"]},"value":2},
         {"call_macro":"user destination menu"},
         {"wait_for":{"local":"MISSION_PHASE"},"eq":8}
+      ],"else": [
+        {"wait_for":{"local":"destination_confirmed"},"eq":"yes"}
     ]}
   ],
   "objective7 HEMS": [
@@ -3637,12 +3687,6 @@
     ]},
     {"set":{"var":["L:READY","number"]},"value":1},
     {"wait_for":{"local":"MISSION_END_WAITING"},"eq":1}
-  ],
-  "objective12 end mission": [
-    {"sleep":0.5},
-    {"wait_for":{"local":"MISSION_END_WAITING"},"eq":1},
-    {"call_macro":"end menu"},
-    {"wait_for":{"local":"MISSION_END_WAITING"},"eq":2}
   ],
   "delayed threads": [
     {"call_macro":"initialize crew lifescores for shift"},

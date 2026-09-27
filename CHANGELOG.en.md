@@ -1,3 +1,93 @@
+## Release 0.997 168.147
+
+- Replace non-ASCII degree sign with plain C in patient temperature displays (ASCII-only user-facing text rule).
+- Fix non-cardinal bearing2:225 for ambustretcher7/2 side-270 approach in multipatient registry stretcher move (must be 270 per ground-offset rule); harden test harnesses further (object-distance query, CPR watchdog thread-count assertion, HEMS packaging expectation).
+- Fix non-cardinal bearing2:135 for ambumedic7/ambumedic2 ground-side approach in multipatient registry crew drive side (must be 0/90/180/270 per ground-offset rule); harden test harness (ambulance locations, patients array, crew-visit query if-as-value support, ground crew runtime trace stub).
+- Route the 3-crew ground-ops NR check through the shared ground ops NR gate watchdog instead of a standalone wait_for.
+- Add missing crew-spawn launch/wait watchdog wrapper for the 3-crew ground-ops hoist_crew/pax3 spawns, the cockpit-side pax1 spawn in Ambulance/User destination1 and midway/transfer patient load1, and the hospital marshal spawn, so every packaged crew creation has synchronous confirmation.
+- Add missing GNDOPS_3_CREW_TRACE stages to 3 crew ground ops so debug diagnostics match the 4/5-crew trace coverage.
+- Add missing normalize crew health simulation setting macro (legacy ACTIVE value migration) called from mission startup.
+- Fix pre-existing static-gate regressions: add missing ensure aircraft profile defaults macro wired into the profile page, and correct the debug-snapshot SUMMARY and country-query validators to check the actual implemented state contracts.
+- Include release-identity/build macro in declared scope.
+- Fix vehicle circling regression (departure throttle for all rescue vehicles), orange smoke proximity/ops-start despawn, ground handover vitals NaN guard, patient tab hijack, EXAMINATIONS text and duplicate HEMS lines, awaiting-transport-decision status, and 3-crew copilot VAR1 fix.
+
+## Release 0.997 168.146
+
+- Per-step ambulance/HEMS action attribution, vitals NaN guard and rounding, temperature deg C, orange smoke marker rebuilt: HPG flare VAR1 0/-1/1=orange/off/green, 30West VAR2 0/2=off/on with VAR1 pinned to 0
+- Per-step ambulance/HEMS action attribution, vitals NaN guard and rounding, temperature deg C, orange smoke marker rebuilt: HPG flare VAR1 0/-1/1=orange/off/green, 30West VAR2 0/2=off/on with VAR1 pinned to 0
+- Per-step ambulance/HEMS action attribution, vitals NaN guard and rounding, temperature deg C, orange smoke marker rebuilt: HPG flare VAR1 0/-1/1=orange/off/green, 30West VAR2 0/2=off/on with VAR1 pinned to 0
+
+## Release 0.997 168.145
+
+- Orange smoke marker uses 30West smoke VAR1=0 VAR2=2
+
+## Release 0.997 168.144
+
+- Ambulance parking turn-back, aligned ambulance 2, HEMS preempts ambulance visits, physiology timing and tracker fixes
+
+## Release 0.997 168.143
+
+- Ambulance crew routes, scene defibrillator, walking states, physiology diagnostics, literal recover move
+- Ambulance crew routes, scene defibrillator, walking states, physiology diagnostics
+
+## Release 0.997 168.142
+
+- RescueTrack medical summary; ambulance park race and scene destination fix
+- RescueTrack medical summary; ambulance park race and scene destination fix
+- RescueTrack medical summary; ambulance park race and scene destination fix
+
+## Release 0.997 168.141
+
+- Snapshot tracks VFXA/VFXB/VFX2/vapo objects; carries the 168.140 content
+
+## Release 0.997 168.140
+
+- Orange smoke AUTO restored to previous flare state (VAR 1 = 1); carries the 168.139 changes
+
+## Release 0.997 168.139
+
+- pax3 crew states for 4/5 crew, LZ police pickup guard, orange smoke auto, operational medical page text, physiology and HEMS visit tracing
+
+## Release 0.997 168.138
+
+- HEMS visit tracing, level-dependent visit times, SKID LDG single stand-up, transport decision page details, ambulance tracing carried
+
+## Release 0.997 168.137
+
+- Ambulance operations tracing and 10 s monitor, TTG format fix, hoist_crew single stand-up at visit end, ambulance VAR restore carried
+
+## Release 0.997 168.136
+
+- Ambulance crew/stretcher states restored to original 0.997 VAR1/VAR2, opposite ambulance parking sides, ambulance crew traces, accident country diagnostics, transport decision on medical page
+
+## Release 0.997 168.135
+
+- HEMS decision adopts an existing reservation instead of reserving a second patient
+
+## Release 0.997 168.134
+
+- HEMS decision fallback: forced reservation after bounded 10 s polling, force flag in registry reserve, pump cadence 0.5 s
+
+## Release 0.997 168.133
+
+- Separate pump and physiology workers, single-flight HEMS decision with state repair, crouch delay after tour, runtime traces for ground ops loading and nation queries
+
+## Release 0.997 168.132
+
+- Registry pump watchdog and heartbeat, nation queries with literal names and bounded waits, GPS message from start nation
+
+## Release 0.997 168.131
+
+- HEMS (COMPLETED) labels, hoist_crew pose delays, pax3 departure delay, injured packed after pax3 arrival and removed on stretcher, earlier pax3 return, vitals instead of lifescore
+
+## Release 0.997 168.130
+
+- Independent pax3/hoist_crew visits, faster stretcher fetch, pax3 to loading patient, destination objective timing, copilot pilot state at hospital, completed medical actions on patient page
+
+## Release 0.997 168.128
+
+- Fix registry pump worker never starting (param scope) plus multipatient recovery fixes; local test build
+
 ## Release 0.997 168.26
 
 - Fix independent ambulance scene parking, medic arrival gate, dispatch visibility, and HEMS action history.

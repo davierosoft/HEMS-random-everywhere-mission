@@ -19,6 +19,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `docs/architecture/DEBUG_HANDOFF_2026-09-12.md` | User-requested handoff: preserved behavior, ownership and next debug work. Read before changing the P1-P3 integration. |
 | `docs/architecture/CICERS_WORKSPACE_OPTIMIZATION.md` | Technical report covering workspace modularization, safeguards, validation, and residual limitations. |
 | `tools/` | Dependency-free assemblers, scope guards, validators, and regression tests. |
+| `standalone-tests/` | Self-contained HPG missions used for isolated runtime checks (e.g. dynamic-object `VAR` probing). Not part of `mission-src/`, not built by `mission-workspace.js`, not covered by release/scope tooling. |
 | `.githooks/` | Local safeguards: pre-commit permits only `CICERS/*` and runs workspace checks; pre-push rejects every non-`CICERS/*` branch destination. |
 
 ## Macro modules

@@ -1,4 +1,6 @@
 {"select HEMS patient": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":"entered"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_multipatient_registry_crew_barrier"}},
     {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
     {"if": {"param":"ready"}, "ne": 1,
       "then": [
@@ -6,6 +8,7 @@
     ]},
     {"if": {"local":"HEMS_TRANSPORT_TICKET"}, "ne": null,
       "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_multipatient_registry_live_ticket_valid"}},
         {"call_macro":"multipatient registry live ticket valid","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"valid"},
         {"if": {"param":"valid"}, "eq": 1,
           "then": [
@@ -16,20 +19,108 @@
         {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},
         {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null}
     ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
     {"call_macro":"hems patient decision after visits"},
-    {"while": {"local":"HEMS_DECISION_STATE"}, "eq": "awaiting_transport_resource",
+    {"set":{"param":"waited"},"value":0},
+    {"while": {"param":"waited"}, "lt": 6,
       "do": [
-        {"sleep":1},
-        {"call_macro":"hems patient decision after visits"}
+        {"if": {"local":"HEMS_DECISION_STATE"}, "ne": "awaiting_transport_resource",
+          "then": [
+            {"set":{"param":"waited"},"value":99}
+          ],"else": [
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"sleep_10"}},
+            {"sleep":10},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
+            {"call_macro":"hems patient decision after visits"},
+            {"set":{"param":"waited"},"value":{"add":[{"param":"waited"},1]}}
+        ]}
+    ]},
+    {"if": {"local":"HEMS_DECISION_STATE"}, "eq": "awaiting_transport_resource",
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":"wait_expired_forcing"}},
+        {"set":{"local":"HEMS_DECISION_FORCE"},"value":1},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
+        {"call_macro":"hems patient decision after visits"},
+        {"set":{"local":"HEMS_DECISION_FORCE"},"value":0}
     ]},
     {"return":{"local":"HEMS_PATIENT_NUMBER"}}
   ],
   "hems patient decision after visits": [
+    {"if": {"local":"HEMS_DECISION_LOCK"}, "eq": null,
+      "then": [
+        {"set":{"local":"HEMS_DECISION_LOCK"},"value":0}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"hems patient decision after visits","state":"wait_local.HEMS_DECISION_LOCK_eq_0"}},
+    {"wait_for":{"local":"HEMS_DECISION_LOCK"},"eq":0},
+    {"set":{"local":"HEMS_DECISION_LOCK"},"value":1},
+    {"set":{"param":"tstate"},"value":{"text":"state={0} ticket={1} number={2}","params":[{"local":"HEMS_DECISION_STATE"},{"if":{"local":"HEMS_TRANSPORT_TICKET"},"ne":null,"then":"yes","else":"no"},{"local":"HEMS_PATIENT_NUMBER"}]}},
+    {"if": {"local":"HEMS_DECISION_LAST"}, "ne": {"param":"tstate"},
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"hems patient decision after visits","actor":"hems","target":"n/a","state":{"param":"tstate"}}},
+        {"set":{"local":"HEMS_DECISION_LAST"},"value":{"param":"tstate"}}
+    ]},
+    {"try": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"hems patient decision after visits","state":"call_hems_patient_decision_core"}},
+        {"call_macro":"hems patient decision core","result":"decision"}
+      ],
+      "catch": [
+        {"set":{"local":"HEMS_DECISION_ERROR"},"value":{"text":"decision: {0}","params":[{"param":"$ERROR"}]}}
+    ]},
+    {"set":{"local":"HEMS_DECISION_LOCK"},"value":0},
+    {"return":{"local":"HEMS_PATIENT_NUMBER"}}
+  ],
+  "select worst unassigned HEMS patient": [
+    {"call_macro":"select HEMS patient"}
+  ],
+  "prepare selected HEMS patient": [
+    {"call_macro":"multipatient registry live prepare patient","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"ok"},
+    {"return":{"param":"ok"}}
+  ],
+  "hems patient decision core": [
     {"if": {"local":"HEMS_TRANSPORT_TICKET"}, "ne": null,
       "then": [
+        {"set":{"local":"HEMS_DECISION_STATE"},"value":"hems_selected"},
         {"return":{"local":"HEMS_PATIENT_NUMBER"}}
     ]},
-    {"call_macro":"multipatient registry submit","params":{"operation":"live_reserve","arguments":{"create_struct":{"resource":"hems"}}},"result":"ticket"},
+    {"#comment":"Adopt an existing HEMS reservation before asking the registry for a new one: a resource that already holds a patient can never reserve a second one."},
+    {"set":{"param":"ticket"},"value":null},
+    {"set":{"local":"HEMS_ADOPT_SLOT"},"value":null},
+    {"for_each": {"local":"patients"},
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"param":"$item","path":"resource"},"eq":"hems"},
+            {"require":{"param":"$item","path":"active"},"eq":1},
+            {"require":{"param":"$item","path":"lifescore"},"gt":0}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"HEMS_ADOPT_SLOT"},"value":{"param":"$item","path":"slot"}},
+            {"set":{"local":"HEMS_ADOPT_GEN"},"value":{"param":"$item","path":"reservation_generation"}}
+        ]}
+    ]},
+    {"if": {"local":"HEMS_ADOPT_SLOT"}, "ne": null,
+      "then": [
+        {"set":{"param":"ticket"},"value":{"create_struct":{"slot":{"local":"HEMS_ADOPT_SLOT"},"resource":"hems","generation":{"local":"HEMS_ADOPT_GEN"}}}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"hems patient decision","actor":"hems","target":"n/a","state":{"text":"adopted existing reservation slot={0}","params":[{"local":"HEMS_ADOPT_SLOT"}]}}}
+      ],"else": [
+        {"call_macro": "multipatient registry submit",
+          "params": {
+            "operation": "live_reserve",
+            "arguments": {
+              "create_struct": {
+                "resource": "hems",
+                "force": {
+                  "if": {"local":"HEMS_DECISION_FORCE"},
+                  "ne": null,
+                  "then": {"local":"HEMS_DECISION_FORCE"},
+                  "else": 0
+                }
+              }
+            }
+          },
+          "result": "ticket"
+        }
+    ]},
     {"if": {"param":"ticket"}, "ne": null,
       "then": [
         {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":{"param":"ticket"}},
@@ -66,12 +157,21 @@
           "then": [
             {"set":{"local":"dispatch_lifescore_show_3"},"value":1}
         ]},
-        {"set":{"local":"whobringpatient"},"value":"us"}
+        {"set":{"local":"whobringpatient"},"value":"us"},
+        {"set":{"local":"HEMS_DECISION_DEADLINE"},"value":null}
       ],"else": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"hems patient decision core","state":"call_multipatient_registry_live_pending"}},
         {"call_macro":"multipatient registry live pending"},
         {"if": {"local":"patient_unassigned_transport"}, "gt": 0,
           "then": [
-            {"set":{"local":"HEMS_DECISION_STATE"},"value":"awaiting_transport_resource"}
+            {"if": {"local":"HEMS_DECISION_FORCE"}, "eq": 1,
+              "then": [
+                {"set":{"local":"HEMS_DECISION_STATE"},"value":"no_transport_required"},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems patient decision","actor":"hems","target":"n/a","state":"forced_reserve_failed_no_transport"}},
+                {"set":{"local":"whobringpatient"},"value":"ambulance"}
+              ],"else": [
+                {"set":{"local":"HEMS_DECISION_STATE"},"value":"awaiting_transport_resource"}
+            ]}
           ],"else": [
             {"if": {"local":"patient_pending_transport"}, "gt": 0,
               "then": [
@@ -83,12 +183,5 @@
         ]}
     ]},
     {"return":{"local":"HEMS_PATIENT_NUMBER"}}
-  ],
-  "select worst unassigned HEMS patient": [
-    {"call_macro":"select HEMS patient"}
-  ],
-  "prepare selected HEMS patient": [
-    {"call_macro":"multipatient registry live prepare patient","params":{"ticket":{"local":"HEMS_TRANSPORT_TICKET"}},"result":"ok"},
-    {"return":{"param":"ok"}}
   ]
 }

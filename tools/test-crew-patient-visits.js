@@ -53,10 +53,10 @@ class Scene extends Base {
     super(macros); this.events = []; this.sleepHook = null; this.moveHook = null; this.failedMovement = false;
     this.objects = new Set(['ambumedic7', 'ambumedic2', 'hoist_crew', 'pax3', ...[1, 2, 3].map(patientObject)]);
     for (const id of this.objects) this.locations[id] = [0, 0];
-    Object.assign(this.locations, { LUP: [10, 10], RUP: [10, -10], RDWN: [-10, -10], LDWN: [-10, 10] });
+    Object.assign(this.locations, { LUP: [10, 10], RUP: [10, -10], RDWN: [-10, -10], LDWN: [-10, 10], ambulance1: [1000, 1000], ambulance2: [1000, 1000] });
     this.globals = { P1_MANUAL_MEDICAL_MODE: 'automatic', LIFESCORE_THR_HI: 40 };
     Object.assign(this.locals, { HELOVICTIMS: 3, LIFESCORE: 75, LIFESCORE2: 65, LIFESCORE3: 55,
-      TIME1SHORT: 1, TIME2SHORT: 1, TIME3SHORT: 1, Dispatcher_Messages: [] });
+      TIME1SHORT: 1, TIME2SHORT: 1, TIME3SHORT: 1, Dispatcher_Messages: [], patients: [] });
     for (const slot of [1, 2, 3]) this.locals[`P${slot}_MEDICAL_ACTION_COUNT`] = 4;
     this.call(prefix + 'reset');
   }
@@ -74,6 +74,9 @@ class Scene extends Base {
     if (q?.has_object !== undefined) return Number(this.objects.has(this.query(q.has_object, p)));
     if (q?.location && typeof q.location === 'string') {
       return super.query({ ...q, location: this.text(q.location, p), to: this.text(q.to, p) }, p);
+    }
+    if (q?.object && typeof q.object === 'string' && q.var === 'distance:m') {
+      return super.query({ ...q, object: this.text(q.object, p), to: this.text(q.to, p) }, p);
     }
     return super.query(q, p);
   }

@@ -648,31 +648,6 @@
         {"set":{"var":["L:HOLD","number"]},"value":0}
     ]}}
   ],
-  "verify boarding cargo doors closed": [
-    {"set":{"local":"boarding_cargo_door_close_attempt"},"value":0},
-    {"while": {"local":"boarding_cargo_door_close_attempt"}, "lt": 3,
-      "do": [
-        {"if": {
-          "and": [
-            {"require":{"var":["L:{local:HXX}_SDK_DOOR_CARGO_L","number"]},"eq":0},
-            {"require":{"var":["L:{local:HXX}_SDK_DOOR_CARGO_R","number"]},"eq":0}
-          ]}, "eq": 1,
-          "then": [
-            {"set":{"local":"boarding_cargo_door_close_attempt"},"value":3}
-          ],"else": [
-            {"if": {"var":["L:{local:HXX}_SDK_DOOR_CARGO_L","number"]}, "ne": 0,
-              "then": [
-                {"close_door":"cargo_left"}
-            ]},
-            {"if": {"var":["L:{local:HXX}_SDK_DOOR_CARGO_R","number"]}, "ne": 0,
-              "then": [
-                {"close_door":"cargo_right"}
-            ]},
-            {"sleep":1},
-            {"set":{"local":"boarding_cargo_door_close_attempt"},"value":{"add":[{"local":"boarding_cargo_door_close_attempt"},1]}}
-        ]}
-    ]}
-  ],
   "crew boarding": [
     {"if": {"var":["SIM ON GROUND","bool"]}, "eq": 1,
       "then": [
@@ -1986,58 +1961,6 @@
         {"set":{"global":"CHIN_WINDOW_PLATES"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_CHIN_WINDOW_PLATES","number"]}}
     ]}
   ],
-  "ensure aircraft profile defaults": [
-    {"if": {"global":"ENGINE_FAILURES_ENABLED"}, "eq": null,
-      "then": [
-        {"set":{"global":"ENGINE_FAILURES_ENABLED"},"value":"yes"}
-    ]},
-    {"call_macro":"normalize orange target smoke setting"},
-    {"if": {"global":"TARGET_GUIDANCE_RANGE"}, "eq": null,
-      "then": [
-        {"set":{"global":"TARGET_GUIDANCE_RANGE"},"value":"wide"}
-    ]},
-    {"call_macro":"normalize crew health simulation setting"},
-    {"if": {"global":"HOIST_CONTROL_PROFILE"}, "eq": null,
-      "then": [
-        {"set":{"global":"HOIST_CONTROL_PROFILE"},"value":"auto"}
-    ]},
-    {"if": {"global":"AUTO_FPL_NAV_SOURCE"}, "eq": null,
-      "then": [
-        {"set":{"global":"AUTO_FPL_NAV_SOURCE"},"value":"yes"}
-    ]},
-    {"if": {"global":"TELEPORT_ASSIST_ENABLED"}, "eq": null,
-      "then": [
-        {"set":{"global":"TELEPORT_ASSIST_ENABLED"},"value":"yes"}
-    ]},
-    {"if": {"global":"AIRCRAFT_PROFILE_ACTIVE"}, "eq": null,
-      "then": [
-        {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"}
-    ]},
-    {"if": {"global":"AIRCRAFT_PROFILE_SLOT"}, "eq": null,
-      "then": [
-        {"set":{"global":"AIRCRAFT_PROFILE_SLOT"},"value":"Aircraft_Profile_Table1"}
-    ]},
-    {"if": {"global":"P1_MANUAL_MEDICAL_MODE"}, "eq": null,
-      "then": [
-        {"set":{"global":"P1_MANUAL_MEDICAL_MODE"},"value":"automatic"}
-    ]},
-    {"if": {"global":"CARLS_DF_TUNING_MODE"}, "eq": null,
-      "then": [
-        {"set":{"global":"CARLS_DF_TUNING_MODE"},"value":"auto"}
-    ]},
-    {"if": {"global":"TABLET_5G_ENABLED"}, "eq": null,
-      "then": [
-        {"set":{"global":"TABLET_5G_ENABLED"},"value":"no"}
-    ]},
-    {"if": {"global":"MARSHAL_START_ENABLED"}, "eq": null,
-      "then": [
-        {"set":{"global":"MARSHAL_START_ENABLED"},"value":"yes"}
-    ]},
-    {"if": {"global":"MARSHAL_HOSPITAL_ENABLED"}, "eq": null,
-      "then": [
-        {"set":{"global":"MARSHAL_HOSPITAL_ENABLED"},"value":"yes"}
-    ]}
-  ],
   "sync aircraft profile runtime": [
     {"set":{"local":"CREW"},"value":{"global":"CREW"}},
     {"set":{"local":"GNDOPS_ROTOR"},"value":{"global":"GNDOPS_ROTOR"}},
@@ -2074,7 +1997,6 @@
         {"set":{"local":"TABLET_5G_NOTICE_STATE"},"value":"idle"}
     ]},
     {"call_macro":"normalize orange target smoke setting"},
-    {"call_macro":"normalize crew health simulation setting"},
     {"call_macro":"voice pack fallback"}
   ],
   "aircraft factory DEFAULT": [
@@ -2474,6 +2396,16 @@
   "select aircraft factory profile": [
     {"call_macro":"apply aircraft factory profile","params":{"PROFILE":{"param":"PROFILE"}}},
     {"call_macro":"aircraft profiles page"}
+  ],
+  "ensure aircraft profile defaults": [
+    {"if": {"global":"AIRCRAFT_PROFILE_ACTIVE"}, "eq": null,
+      "then": [
+        {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"}
+    ]},
+    {"if": {"global":"AIRCRAFT_PROFILE_SLOT"}, "eq": null,
+      "then": [
+        {"set":{"global":"AIRCRAFT_PROFILE_SLOT"},"value":"Aircraft_Profile_Table1"}
+    ]}
   ],
   "aircraft profiles page": [
     {"call_macro":"ensure aircraft profile defaults"},
@@ -4068,6 +4000,7 @@
     ]}}
   ],
   "Ground time": [
+    {"#comment":"HEMS registry visits sleep TIMEnSHORT once per clinical step, so TIMEnSHORT is level dependent. TIMEnMED/TIMEnLONG are still consumed by patient_wait_interval (ambulance and legacy hoist flows) and are not part of the HEMS visit estimate."},
     {"if": {"global":"ULTRASHORT"}, "eq": "yes",
       "then": [
         {"set":{"local":"TIMEBIAS"},"value":{"floor":{"rand":[-5,5]}}},
@@ -4075,10 +4008,25 @@
         {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[5,15]}}},
         {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[5,15]}}}
       ],"else": [
-        {"set":{"local":"TIMEBIAS"},"value":{"floor":{"rand":[-20,180]}}},
-        {"set":{"local":"TIME1SHORT"},"value":{"floor":{"rand":[25,50]}}},
-        {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[25,50]}}},
-        {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[25,50]}}}
+        {"set":{"local":"TIMEBIAS"},"value":{"floor":{"rand":[-10,10]}}},
+        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"TIME1SHORT"},"value":{"floor":{"rand":[12,25]}}},
+            {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[12,25]}}},
+            {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[12,25]}}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIME1SHORT"},"value":{"floor":{"rand":[20,40]}}},
+            {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[20,40]}}},
+            {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[20,40]}}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
+          "then": [
+            {"set":{"local":"TIME1SHORT"},"value":{"floor":{"rand":[50,90]}}},
+            {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[50,90]}}},
+            {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[50,90]}}}
+        ]}
     ]},
     {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
       "then": [
@@ -4088,60 +4036,26 @@
     ]},
     {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
       "then": [
-        {"set":{"local":"TIMEBIAS"},"value":{"floor":{"rand":[-40,350]}}},
         {"set":{"local":"TIME1LONG"},"value":{"floor":{"rand":[60,{"global":"CREW_SLOTH"}]}}},
         {"set":{"local":"TIME2LONG"},"value":{"floor":{"rand":[60,{"global":"CREW_SLOTH"}]}}},
         {"set":{"local":"TIME3LONG"},"value":{"floor":{"rand":[60,{"global":"CREW_SLOTH"}]}}}
     ]},
     {"sleep":1},
-    {"if": {"local":"LIFESCORE"}, "lt": 30,
-      "then": [
-        {"set":{"local":"TIMEBIAS"},"value":{"add":[{"local":"TIMEBIAS"},{"local":"LIFESCORE"},{"local":"LIFESCORE"}]}}
-    ]},
     {"if": {"local":"HELOVICTIMS"}, "eq": 1,
       "then": [
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 0,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[{"local":"TIME1SHORT"},{"local":"TIME1MED"},{"local":"TIMEBIAS"}]}}
-        ]},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[{"local":"TIME1SHORT"},{"local":"TIMEBIAS"}]}}
-        ]},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[{"local":"TIME1SHORT"},{"local":"TIME1MED"},{"local":"TIME1LONG"},{"local":"TIMEBIAS"}]}}
-        ]}
+        {"set":{"local":"TIMERGND"},"value":{"add":[20,{"multiply":[{"local":"TIME1SHORT"},6]},{"local":"TIMEBIAS"}]}}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "eq": 2,
       "then": [
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 0,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[30,{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIME1MED"},{"local":"TIME2MED"},{"local":"TIMEBIAS"}]}}
-        ]},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[15,{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIMEBIAS"}]}}
-        ]},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[45,{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIME1MED"},{"local":"TIME2MED"},{"local":"TIME1LONG"},{"local":"TIME2LONG"},{"local":"TIMEBIAS"}]}}
-        ]}
+        {"set":{"local":"TIMERGND"},"value":{"add":[40,{"multiply":[{"add":[{"local":"TIME1SHORT"},{"local":"TIME2SHORT"}]},6]},{"local":"TIMEBIAS"}]}}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "eq": 3,
       "then": [
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 0,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[30,{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIME3SHORT"},{"local":"TIME1MED"},{"local":"TIME2MED"},{"local":"TIME3MED"},{"local":"TIMEBIAS"}]}}
-        ]},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[15,{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIME3SHORT"},{"local":"TIMEBIAS"}]}}
-        ]},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
-          "then": [
-            {"set":{"local":"TIMERGND"},"value":{"add":[45,{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIME3SHORT"},{"local":"TIME1MED"},{"local":"TIME2MED"},{"local":"TIME3MED"},{"local":"TIME1LONG"},{"local":"TIME2LONG"},{"local":"TIME3LONG"},{"local":"TIMEBIAS"}]}}
-        ]}
+        {"set":{"local":"TIMERGND"},"value":{"add":[60,{"multiply":[{"add":[{"local":"TIME1SHORT"},{"local":"TIME2SHORT"},{"local":"TIME3SHORT"}]},6]},{"local":"TIMEBIAS"}]}}
+    ]},
+    {"if": {"local":"LIFESCORE"}, "lt": 30,
+      "then": [
+        {"set":{"local":"TIMERGND"},"value":{"add":[{"local":"TIMERGND"},{"local":"LIFESCORE"},{"local":"LIFESCORE"}]}}
     ]},
     {"sleep":2},
     {"set":{"local":"MINGND"},"value":{"tofixed":{"divide":[{"local":"TIMERGND"},60]},"digits":0}},
@@ -4631,6 +4545,31 @@
         {"if": {"table":{"static":{"param":"PROFILE_TABLE"}},"key":"name"}, "ne": null,
           "then": [
             {"set":{"local":"AIRCRAFT_PROFILE_DISPLAY_NAME"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"name"}}
+        ]}
+    ]}
+  ],
+  "verify boarding cargo doors closed": [
+    {"set":{"local":"boarding_cargo_door_close_attempt"},"value":0},
+    {"while": {"local":"boarding_cargo_door_close_attempt"}, "lt": 3,
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"var":["L:{local:HXX}_SDK_DOOR_CARGO_L","number"]},"eq":0},
+            {"require":{"var":["L:{local:HXX}_SDK_DOOR_CARGO_R","number"]},"eq":0}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"boarding_cargo_door_close_attempt"},"value":3}
+          ],"else": [
+            {"if": {"var":["L:{local:HXX}_SDK_DOOR_CARGO_L","number"]}, "ne": 0,
+              "then": [
+                {"close_door":"cargo_left"}
+            ]},
+            {"if": {"var":["L:{local:HXX}_SDK_DOOR_CARGO_R","number"]}, "ne": 0,
+              "then": [
+                {"close_door":"cargo_right"}
+            ]},
+            {"sleep":1},
+            {"set":{"local":"boarding_cargo_door_close_attempt"},"value":{"add":[{"local":"boarding_cargo_door_close_attempt"},1]}}
         ]}
     ]}
   ],
