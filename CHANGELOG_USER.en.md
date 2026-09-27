@@ -1,8 +1,8 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus the development checkpoint made after build 142. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 168.147. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-The checks below are simulator checks. The changes recorded after build 142 still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 168.147, still need final simulator confirmation.
 
 ## FIXES
 
@@ -14,9 +14,21 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 
 ### Safer arrival of emergency vehicles
 
-- Ambulances, police and fire engines now report arrival only after they have stopped in a safe place beside the incident. They avoid patients, other vehicles and world-origin spawns.
-- **Build history:** 0.997 1-13, 46, 75, 130.
+- Ambulances, police and fire engines now report arrival only after they have stopped in a safe place beside the incident. They avoid patients, other vehicles and world-origin spawns, and two ambulances now park on opposite sides of the scene instead of crowding one side.
+- **Build history:** 0.997 1-13, 46, 75, 130, 168.136, 168.142.
 - **Test:** Run road, closest-service and custom landing-zone calls; each vehicle must park safely before its crew acts.
+
+### Rescue vehicles no longer circle after arrival
+
+- Ambulances, police cars and fire engines no longer get stuck driving in a circle instead of completing their approach or departure. Every rescue vehicle restarts and continues normally.
+- **Build history:** 0.997 168.147.
+- **Test:** Run a call with ambulance, police and fire response and watch each vehicle through its full arrival and departure without circling.
+
+### Reliable ground-vehicle routing
+
+- Ambulances, police and fire vehicles now correctly recover their route to the scene, hospital or a midway point instead of stalling or falling back to an invalid path.
+- **Build history:** 0.997 144-145, 168.143.
+- **Test:** Run a call with a distant scene, hospital or midway destination and confirm each vehicle reaches it without stalling.
 
 ### Stable route and map selection
 
@@ -32,20 +44,20 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 
 ### Complete ambulance assessments
 
-- Ground medics can assess every patient when time allows. When HEMS arrives late, it begins with the most urgent already assessed patient instead of missing records or showing an empty ambulance status.
-- **Build history:** 0.997 67, 77, 91, 104, 106, 127, 138, post-142 checkpoint.
+- Ground medics can assess every patient when time allows. When HEMS arrives late, it begins with the most urgent already assessed patient instead of missing records or showing an empty ambulance status. Each patient's identity, assessment and vital signs are now kept correctly separate at multi-patient incidents.
+- **Build history:** 0.997 67, 77, 91, 104, 106, 127, 138, 146-147, post-142 checkpoint.
 - **Test:** Land late at a multi-patient incident with one medic; check that each patient has an assessment or receives priority from HEMS.
 
 ### Realistic ambulance loading
 
-- A patient selected for road transport is now prepared and moved as a stretcher patient. They no longer slide across the scene as if pulled by an invisible force.
-- **Build history:** 0.997 65, 91, 138, post-142 checkpoint.
+- A patient selected for road transport is now prepared and moved as a stretcher patient. They no longer slide across the scene as if pulled by an invisible force, and the ambulance crew's walking and standing postures during loading are correct again.
+- **Build history:** 0.997 65, 91, 138, 168.130, 168.136, 168.144, post-142 checkpoint.
 - **Test:** Let an ambulance take a non-HEMS patient and watch the complete loading sequence before departure.
 
 ### Correct three-crew roles
 
-- In a three-crew operation, the copilot remains the pilot throughout hospital unloading and only returns to the cockpit role when actually going back to the cockpit.
-- **Build history:** 0.997 20, 27, 40-42, 118-122, 142.
+- In a three-crew operation, the copilot remains the pilot throughout hospital unloading and only returns to the cockpit role when actually going back to the cockpit. Four- and five-crew operations follow the equivalent pattern, with the extra crew member(s) taking the correct standing, walking or crouching role instead of a pilot role.
+- **Build history:** 0.997 20, 27, 40-42, 118-122, 142, 168.139, 168.147.
 - **Test:** Complete a hospital arrival with three crew and verify the copilot's role during unloading and reboarding.
 
 ### Reliable rear-door closure
@@ -68,26 +80,26 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 
 ### Consistent clinical observations
 
-- Living patients no longer display impossible observations. Blood pressure, breathing, temperature, consciousness and Life Score appear consistently after assessment.
-- **Build history:** 0.997 52-57, 64-65, 81.
+- Living patients no longer display impossible observations. Blood pressure, breathing, temperature, consciousness and Life Score appear consistently after assessment, with no invalid ("NaN") readings and temperature shown in plain Celsius.
+- **Build history:** 0.997 52-57, 64-65, 81, 168.146, 168.147.
 - **Test:** Inspect normal, critical and intubated patients after assessment; all displayed observations must be plausible and populated.
 
 ### Stable CPR outcomes
 
-- CPR uses one coherent rescue sequence, with correct crew involvement, recovery/failure outcomes and a reliable Stop CPR choice when available.
-- **Build history:** 0.997 58, 64.
-- **Test:** Start CPR on scene and in flight where enabled; verify one procedure runs and Stop CPR ends it for that call.
+- CPR uses one coherent rescue sequence, with correct crew involvement, recovery/failure outcomes and a reliable Stop CPR choice when available. CPR can now continue reliably beyond five minutes instead of stalling; mechanical CPR remains available in flight while manual CPR still waits for landing.
+- **Build history:** 0.997 58, 64, 168.
+- **Test:** Start CPR on scene and in flight where enabled; verify one procedure runs, continues past five minutes when eligible, and Stop CPR ends it for that call.
 
 ### Correct fence and patient placement
 
 - Indoor calls no longer receive an outdoor privacy fence. In residential fire calls, patients and the rescue fence are placed at the external rescue point rather than at the fire itself.
-- **Build history:** 0.997 58, 65, 138, post-142 checkpoint.
+- **Build history:** 0.997 58, 65, 138, 147, post-142 checkpoint.
 - **Test:** Compare an indoor call with a residential fire call; only the external rescue point should receive the fence.
 
 ### Residential fire is now handled by fire crews
 
-- Residential fire scenes use an extinguishable fire and can call two fire engines. The fire now reduces after the response instead of remaining permanently active.
-- **Build history:** 0.997 18, 138, post-142 checkpoint.
+- Residential fire scenes use the same extinguishable fire as other fire calls and can call two fire engines. The fire now reduces after the response instead of remaining permanently active or using a separate three-casualty fire effect.
+- **Build history:** 0.997 18, 138, GitHub development checkpoint after 0.997 142.
 - **Test:** Run a residential fire call and verify both fire engines respond and the fire visibly reduces.
 
 ### Reliable Direction Finder
@@ -116,8 +128,8 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 
 ### Stable marshal guidance
 
-- Marshal guidance now remains stable during approach, touchdown, restart and departure. It no longer keeps giving side calls on the centreline or moving incorrectly after landing.
-- **Build history:** 0.997 14, 19, 22, 32, 34-36, 43-45, 49-50, 55, 66, 68, 78, 142.
+- Marshal guidance now remains stable during approach, touchdown, restart and departure. It no longer keeps giving side calls on the centreline or moving incorrectly after landing, and both marshal controllers correctly recognize a restart from 20% rotor RPM when the engines were previously shut down.
+- **Build history:** 0.997 14, 19, 22, 32, 34-36, 43-45, 49-50, 55, 66, 68, 78, 142, 168.
 - **Test:** Follow a full marshal approach, land, restart and depart; confirm neutral centreline guidance and no movement after landing.
 
 ### Correct marshal location behavior
@@ -128,9 +140,15 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 
 ### Reliable local saves and generated scenes
 
-- Saving now records local time correctly, and affected road/railway scenes no longer fail with a command error while being created.
-- **Build history:** 0.997 45, 130.
-- **Test:** Save a mission and start a railway or roadside incident; no error banner should appear.
+- Saving now records local time correctly, the default landing-spot marker on the map is repaired after the rescue point moves or after a save, and affected road/railway scenes no longer fail with a command error while being created.
+- **Build history:** 0.997 45, 128, 130, 154-155.
+- **Test:** Save a mission and start a railway or roadside incident; no error banner should appear, and the default landing-spot marker should still be correct on the map.
+
+### Clear country names in mission messages
+
+- Dispatch, GPS and location messages now show the country name instead of an internal numeric code.
+- **Build history:** 0.997 156, 168.132.
+- **Test:** Start calls in different countries and check that dispatch and GPS messages name the country correctly.
 
 ### Working take-off checklist flow
 
@@ -214,9 +232,9 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 
 ### Better RescueTrack alerts
 
-- RescueTrack gives one sound for each new operational update after the first dispatch call, without duplicate alerts.
-- **Build history:** 0.997 68-69, 73, 77.
-- **Test:** Start a realistic dispatch and wait for ambulance, police or cancellation updates.
+- RescueTrack gives one sound for each new operational update after the first dispatch call, without duplicate alerts. Each update is now attributed to the correct ambulance or HEMS action, and includes a medical summary.
+- **Build history:** 0.997 68-69, 73, 77, 168.142, 168.146-147.
+- **Test:** Start a realistic dispatch and wait for ambulance, police or cancellation updates; confirm each message names the correct service and action.
 
 ## NEW FUNCTIONS
 
@@ -244,6 +262,12 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 - **Build history:** 0.997 1-13, 10, 67, 91, 138, post-142 checkpoint.
 - **Test:** Delay HEMS arrival in a suitable call and inspect the ambulance handover after landing.
 
+### Independent care for up to three patients
+
+- Up to three casualties at one incident (Patient 1, 2 and 3) can now be assessed, transported by ambulance, or treated and flown by HEMS independently of each other. The mission no longer lets two crews claim the same patient, and a patient's completed report stays available while the others are still being treated.
+- **Build history:** GitHub development checkpoint after 0.997 142, 0.997 146-147, 153, 168.130-168.138, 168.144, 168.147, Development checkpoint - P1-P3 crew and transport integration.
+- **Test:** Start a three-patient call, send the ambulance to one casualty while HEMS treats another, and confirm both records stay correct and available at the same time.
+
 ### Diagnosis-based patient condition
 
 - Each patient's diagnosis shapes their starting condition and how it changes during care, rather than using one generic patient profile.
@@ -261,6 +285,12 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 - The mechanical CPR setting allows eligible CPR to continue in flight. With it disabled, CPR waits for a landing.
 - **Build history:** 0.997 58.
 - **Test:** Repeat the same critical-patient scenario with the setting on and off.
+
+### Crew safety scoring near hazards
+
+- Ground crew working near smoke or fire, or during a hoist, now accumulate a safety score. Staged warnings appear as the risk builds; a low score cancels and fails the mission, and a fatal exposure is correctly detected and reported, placing the injured-crew asset at the crew member's last position.
+- **Build history:** 0.997 93, 160.
+- **Test:** Expose a ground crew member to prolonged smoke or fire and to a risky hoist descent; verify the staged warnings, the low-score mission failure, and the fatal-hoist outcome each report correctly.
 
 ### Distant custom landing-zone police support
 
@@ -291,6 +321,18 @@ The checks below are simulator checks. The changes recorded after build 142 stil
 - Hoist guidance and readiness support the 40 to 160 ft operating range across patient and heli-rescuer work.
 - **Build history:** 0.997 84-85.
 - **Test:** Try hoist work below, inside and above the permitted range.
+
+### Adjustable ground-operations rotor safety threshold
+
+- A setting controls the minimum rotor RPM required before ground crew can begin work, with an automatic 30-second safety bypass if the aircraft cannot reach it.
+- **Build history:** 0.997 143.
+- **Test:** Set a custom rotor threshold, begin ground operations, and confirm crew wait for it (or proceed after the 30-second bypass).
+
+### Orange target smoke marker modes
+
+- The orange smoke landing marker can be set to Never, Auto, Realistic or Always. Realistic waits until the helicopter is close, requires an eligible scene and a responding ground service, and reliably disappears once the crew is close to the scene or once ground operations begin, whichever happens first.
+- **Build history:** 0.997 93, 139-140, 145-147.
+- **Test:** Try each smoke mode on a suitable call and confirm the marker appears and disappears at the right moment.
 
 ### Ground-patient report continuity
 
@@ -355,4 +397,12 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 138-139:** Multi-patient ground care, patient records and residential fire response.
 - **0.997 140-141:** Reviewed delivery builds; their final pilot-facing outcome is included in build 142.
 - **0.997 142:** Three-crew role correction and custom fixed-location marshal support.
-- **Post-142 checkpoint:** Cumulative ground assessment, patient-record focus, ambulance loading and residential fire response remain to be confirmed in the simulator.
+- **GitHub development checkpoint after 0.997 142:** P1-P3 ambulance-assessment consolidation and residential fire conversion to the standard fire (see Independent care for up to three patients, Residential fire is now handled by fire crews).
+- **0.997 143-147:** Adjustable rotor safety threshold, vehicle route-recovery reliability, and clinical/handover groundwork for multiple patients.
+- **0.997 148-155:** Settings and UI label corrections, crew acceleration LifeScore impacts, and default landing-spot repair.
+- **0.997 156-159:** Country-name display, consolidated clinical handover, and crew LifeScore monitoring refinements.
+- **Development checkpoint - P1-P3 crew and transport integration:** see Independent care for up to three patients.
+- **0.997 160-167:** Hoist fatal-detection fix (see Crew safety scoring near hazards) and expanded troubleshooting diagnostics.
+- **0.997 168:** Candidate delivery restoring five-minute-plus CPR stability, crew-fatality placement, and marshal restart recognition; runtime PENDING.
+- **0.997 168.1-168.129:** Internal reliability hardening and trial builds; no separate final pilot-facing change beyond what is listed above.
+- **0.997 168.130-168.147 (this checkpoint):** Independent multi-patient ambulance/HEMS choreography, rebuilt orange smoke marker, per-action RescueTrack attribution, the vehicle-circling fix, and corrected vitals/temperature display. Still to be confirmed in the simulator.
