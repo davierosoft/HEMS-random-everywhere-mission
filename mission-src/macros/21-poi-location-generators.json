@@ -1,0 +1,1277 @@
+{"Query random camping": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"local":"queryfailed"},"value":"ERR001 failed to retrieve location, Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"},
+            {"set_message":{"text":"ERR001 failed to retrieve location! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[tourism=camp_site];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": [
+                  {"set":{"local":"location_name"},"value":"accident_location"}
+              ]}
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random camping"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random camping"}
+    ]}
+  ],
+  "Query random peak": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR6 failed to retrieve location! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR6 failed to retrieve location, Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[natural=peak];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": [
+                  {"set":{"local":"location_name"},"value":"accident_location"}
+              ]}
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random peak"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random peak"}
+    ]}
+  ],
+  "Query random hiking": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"if": {"local":"CRASH_VARIABLE"}, "lt": 3,
+          "then": [
+            {"create_location": "temp_location",
+              "no_results_commands": [
+                {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+                {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+                {"set_message":{"text":"ERR10 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+                {"set":{"local":"queryfailed"},"value":"ERR10 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}
+              ],
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_random_result",
+                    "query": "[out:json];nwr({{bbox}})[natural=peak];out center;",
+                    "location": {"global":"location_ref"},
+                    "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                    "commands": []
+                  }
+                }
+            ]}
+          ],"else": [
+            {"create_location": "temp_location",
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_random_result",
+                    "query": "[out:json];(node({{bbox}})[natural=saddle]; node({{bbox}})[natural=peak]; ); out center;",
+                    "location": {"global":"location_ref"},
+                    "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                    "commands": []
+                  }
+                }
+            ]}
+        ]},
+        {"sleep":1},
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"hiking query failed. Fail code 003A. Mission will reset"}},
+            {"sleep":5},
+            {"call_macro":"objective1"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];way({{bbox}})[highway=path];out center;",
+                "location": "temp_location",
+                "radius": 5000,
+                "minRadius": 500,
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random hiking"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random hiking"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random road": [
+    {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|tertiary|(motorway|trunk|primary|secondary)_link)$\"]->.major;way({{bbox}})[highway~\"^(unclassified|residential|living_street|service)$\"]->.minor;node(w.major)(w.minor);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}},
+    {"set":{"local":"roadtype"},"value":"road"},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random road secondary": [
+    {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|tertiary|(motorway|trunk|primary|secondary)_link)$\"]->.major;way({{bbox}})[highway~\"^(unclassified)$\"]->.minor;node(w.major)(w.minor);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random parking": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json]; ( nwr({{bbox}})[amenity=parking]; node({{bbox}})[highway]; ); (._;>;); out center;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"roadtype"},"value":"parking"},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random cycleway": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[highway=cycleway];(._;>;);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random crosswalk": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];(nwr[crossing=uncontrolled]({{bbox}});nwr[highway=crossing]({{bbox}}););(._;>;); out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random train": [
+    {"set":{"param":"crash_brg"},"value":null},
+    {"create_location": "accident_location",
+      "no_results_commands": [
+        {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+        {"set_message":{"text":"ERR102 failed to retrieve railway location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+        {"set":{"local":"queryfailed"},"value":"ERR102 failed to retrieve railway location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+      ],
+      "zones": [
+        {"zone": {
+            "zone_type": "query_random_result",
+            "query": "[out:json];node({{bbox}})[railway=\"level_crossing\"];out center;",
+            "location": {"global":"location_ref"},
+            "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+            "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+            "commands": [
+              {"set":{"local":"roadtype"},"value":"railway"},
+              {"set":{"local":"railway_crossing_node_id"},"value":{"param":"$LOCATION:ID"}}
+          ]}
+        }
+    ]},
+    {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random train"},
+    {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random train"},
+    {"set":{"local":"location_name"},"value":"accident_location"},
+    {"return":{"create_struct":{"isSuccess":true,"location":{"resolve_location":"accident_location"}}}}
+  ],
+  "Query random train custom": [
+    {"set":{"param":"crash_brg"},"value":null},
+    {"create_location": "accident_location",
+      "no_results_commands": [
+        {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+        {"set_message":{"text":"ERR103 failed to retrieve railway location,If error persists, check custom area for railway crossing. Push 'NEXT DISPATCH'for another dispatch. Evaluate changing OSM service"}},
+        {"set":{"local":"queryfailed"},"value":"ERR103 failed to retrieve railway location,If error persists, check custom area for railway crossing. Push 'NEXT DISPATCH'for another dispatch. Evaluate changing OSM service"}
+      ],
+      "zones": [
+        {"zone": {
+            "zone_type": "query_random_result",
+            "query": "[out:json];node({{bbox}})[railway=\"level_crossing\"];out center;",
+            "location": "location_temp",
+            "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+            "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+            "commands": [
+              {"set":{"local":"roadtype"},"value":"railway"},
+              {"set":{"local":"railway_crossing_node_id"},"value":{"param":"$LOCATION:ID"}}
+          ]}
+        }
+    ]},
+    {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random train custom"},
+    {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random train custom"},
+    {"set":{"local":"location_name"},"value":"accident_location"},
+    {"return":{"create_struct":{"isSuccess":true,"location":{"resolve_location":"accident_location"}}}}
+  ],
+  "Query random train_station": [
+    {"set":{"local":"roadnodequerydistance"},"value":600},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "rescue_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR254 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR254 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[railway=station];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random train_station"},
+        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random train_station"}
+    ]},
+    {"call_macro":"query closest residential rescue team"},
+    {"set":{"local":"location_name"},"value":"rescue_location"}
+  ],
+  "Query random bus stop": [
+    {"set":{"local":"roadnodequerydistance"},"value":600},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[public_transport=stop_area];(._;>;);out center;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":1000,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"create_location": "rescue_location",
+      "zones": [
+        {"zone":{"location":"accident_location"}}
+    ]},
+    {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random bus stop"},
+    {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random bus stop"},
+    {"call_macro":"query closest residential rescue team"},
+    {"set":{"local":"location_name"},"value":"rescue_location"}
+  ],
+  "Query random farm": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[landuse=farmland];(._;>;);out center;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":1000,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random cemetery": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR154 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR154 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[landuse=cemetery];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random cemetery"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random cemetery"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random quarry": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"Quarry query failed. Fail code 005. Mission will try construction site instead"}},
+            {"sleep":5},
+            {"call_macro":"Query random construction site"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[landuse=quarry];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random quarry"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random quarry"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random runway big": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "airport_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR105 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR105 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "DB:AIRPORT",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"create_location": "runway_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR105&6 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR105&6 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "DB:RUNWAY",
+                "location": "airport_location",
+                "radius": 1000,
+                "commands": []
+              }
+            }
+        ]},
+        {"create_location": "accident_location",
+          "zones": [
+            {"zone":{"location":{"bearing":{"rand":[0,320]},"dist":{"rand":[0,200]},"object":"runway_location"}}}
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random runway big"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random runway big"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random runway small": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "airport_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR107 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR107 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "DB:AIRPORT-NOCODE",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"create_location": "runway_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR107&8 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR107&8 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_closest_result",
+                "query": "DB:RUNWAY",
+                "location": "airport_location",
+                "radius": 1000,
+                "commands": []
+              }
+            }
+        ]},
+        {"create_location": "accident_location",
+          "zones": [
+            {"zone":{"location":{"bearing":{"rand":[0,320]},"dist":{"rand":[0,100]},"object":"runway_location"}}}
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random runway small"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random runway small"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random power transformer": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR109 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR109 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[power=transformer];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": [],
+                "no_results_commands": [
+                  {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+                  {"set_message":{"text":"Power transformer query failed. Fail code 007. Mission will reset"}},
+                  {"sleep":5},
+                  {"call_macro":"objective1"}
+              ]}
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random power transformer"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random power transformer"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random helicopter": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"if": {"var":["L:HELICOPTER_VARIABLE","number"]}, "eq": 1,
+          "then": [
+            {"call_macro":"Query random valley"}
+        ]},
+        {"if": {"var":["L:HELICOPTER_VARIABLE","number"]}, "eq": 2,
+          "then": [
+            {"call_macro":"Query random camping"}
+        ]},
+        {"if": {"var":["L:HELICOPTER_VARIABLE","number"]}, "eq": 3,
+          "then": [
+            {"call_macro":"Query random quarry"}
+        ]},
+        {"if": {"var":["L:HELICOPTER_VARIABLE","number"]}, "eq": 4,
+          "then": [
+            {"call_macro":"Query random cliff"}
+        ]},
+        {"if": {"var":["L:HELICOPTER_VARIABLE","number"]}, "eq": 5,
+          "then": [
+            {"call_macro":"Query random fell"}
+        ]}
+    ]}
+  ],
+  "Query random valley": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"valley query failed. Fail code 008. Mission will try Fell query instead"}},
+            {"sleep":2},
+            {"call_macro":"Query random fell"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[natural=valley];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random valley"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random valley"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random garden": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[leisure=garden];(._;>;);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"LOCATION_NAME":"rescue_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"rescue_location"},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random cliff": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+            {"set_message":{"text":"ERR16 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR16 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[natural=cliff];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random cliff"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random cliff"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random forest": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[landuse=forest];(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random fishing": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "lake_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+            {"set_message":{"text":"ERR16 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR16 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[water=lake];(._;>;);out;",
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": [
+                  {"osm_query_data":"[out:json];nwr({{bbox}})[natural=water];(._;>;);out;","location":"lake_location","size":700,"result":"my_data"},
+                  {"osm_get_closest_nodes":"lake_location","data":{"param":"my_data"},"result":"my_closest_nodes"},
+                  {"for_each": {"param":"my_closest_nodes"},
+                    "do": [
+                      {"osm_get_parent_ways":{"struct":{"param":"$item"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+                      {"if": {"struct":{"param":"parents"},"path":"length"}, "gt": 0,
+                        "then": [
+                          {"set":{"param":"closest_node"},"value":{"param":"$item"}},
+                          {"break":1}
+                      ]},
+                      {"sleep":0.0025}
+                  ]},
+                  {"set":{"param":"closest_location"},"value":{"create_array":[{"struct":{"param":"closest_node"},"path":"lat"},{"struct":{"param":"closest_node"},"path":"lon"}]}},
+                  {"create_location": "accident_location",
+                    "zones": [
+                      {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"closest_node"},"path":"lat"},{"struct":{"param":"closest_node"},"path":"lon"}]}}}}
+                  ]},
+                  {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random fishing"},
+                  {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random fishing"},
+                  {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
+                  {"for_each": {"param":"my_ways"},
+                    "do": [
+                      {"set":{"param":"way"},"value":{"param":"$item"}},
+                      {"set":{"param":"count"},"value":0},
+                      {"set":{"param":"prevcount"},"value":0},
+                      {"osm_is_point_within_way":{"struct":{"param":"way"},"path":"id"},"location":{"bearing":30,"dist":3},"data":{"param":"my_data"},"result":"is_in"},
+                      {"if": {"param":"is_in"}, "eq": 1,
+                        "then": [
+                          {"set":{"param":"count"},"value":{"add":[{"param":"count"},1]}}
+                      ]},
+                      {"sleep":0.0025},
+                      {"if": {"param":"count"}, "eq": {"param":"prevcount"},
+                        "then": [
+                          {"create_location": "RUP",
+                            "zones": [
+                              {"zone":{"location":{"bearing":30,"dist":3,"object":"accident_location"}}}
+                          ]},
+                          {"create_location": "RDWN",
+                            "zones": [
+                              {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                          ]},
+                          {"create_location": "LDWN",
+                            "zones": [
+                              {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                          ]},
+                          {"create_location": "LUP",
+                            "zones": [
+                              {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                          ]},
+                          {"create_location": "INJU12",
+                            "zones": [
+                              {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                          ]},
+                          {"create_location": "INJU13",
+                            "zones": [
+                              {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                          ]},
+                          {"create_location": "INJU23",
+                            "zones": [
+                              {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                          ]}
+                        ],"else": [
+                          {"for_each": {"create_array":12},
+                            "do": [
+                              {"set":{"param":"brg"},"value":{"multiply":[{"param":"$index"},30]}},
+                              {"osm_is_point_within_way":{"struct":{"param":"way"},"path":"id"},"location":{"bearing":{"param":"brg"},"dist":3},"data":{"param":"my_data"},"result":"is_in"},
+                              {"if": {"param":"is_in"}, "eq": 1,
+                                "then": [
+                                  {"set":{"param":"count"},"value":{"add":[{"param":"count"},1]}}
+                              ]},
+                              {"sleep":0.0025},
+                              {"set":{"param":"prevcount"},"value":{"add":[{"param":"prevcount"},1]}},
+                              {"if": {"param":"count"}, "eq": {"param":"prevcount"},
+                                "then": [
+                                  {"create_location": "RUP",
+                                    "zones": [
+                                      {"zone":{"location":{"resolve_location":{"bearing":{"param":"brg"},"dist":3,"object":"accident_location"}}}}
+                                  ]},
+                                  {"create_location": "RDWN",
+                                    "zones": [
+                                      {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                                  ]},
+                                  {"create_location": "LDWN",
+                                    "zones": [
+                                      {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                                  ]},
+                                  {"create_location": "LUP",
+                                    "zones": [
+                                      {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                                  ]},
+                                  {"create_location": "INJU12",
+                                    "zones": [
+                                      {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                                  ]},
+                                  {"create_location": "INJU13",
+                                    "zones": [
+                                      {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                                  ]},
+                                  {"create_location": "INJU23",
+                                    "zones": [
+                                      {"zone":{"location":{"bearing":0,"dist":0,"object":"RUP"}}}
+                                  ]},
+                                  {"set":{"param":"prevcount"},"value":{"add":[{"param":"prevcount"},1]}},
+                                  {"break":1}
+                              ]},
+                              {"sleep":0.001}
+                          ]}
+                      ]},
+                      {"set":{"param":"count1"},"value":0},
+                      {"set":{"param":"prevcount1"},"value":0},
+                      {"osm_is_point_within_way":{"struct":{"param":"way"},"path":"id"},"location":{"bearing":90,"dist":2,"object":"accident_location"},"data":{"param":"my_data"},"result":"is_in"},
+                      {"if": {"param":"is_in"}, "eq": 1,
+                        "then": [
+                          {"set":{"param":"count1"},"value":{"add":[{"param":"count1"},1]}}
+                      ]},
+                      {"sleep":0.0025},
+                      {"if": {"param":"count1"}, "eq": {"param":"prevcount1"},
+                        "then": [
+                          {"create_location": "DOG",
+                            "zones": [
+                              {"zone":{"location":{"bearing":90,"dist":2,"object":"accident_location"}}}
+                          ]}
+                        ],"else": [
+                          {"for_each": {"create_array":15},
+                            "do": [
+                              {"set":{"param":"brg"},"value":{"multiply":[{"param":"$index"},24]}},
+                              {"osm_is_point_within_way":{"struct":{"param":"way"},"path":"id"},"location":{"bearing":{"param":"brg"},"dist":2},"data":{"param":"my_data"},"result":"is_in"},
+                              {"if": {"param":"is_in"}, "eq": 1,
+                                "then": [
+                                  {"set":{"param":"count1"},"value":{"add":[{"param":"count1"},1]}}
+                              ]},
+                              {"sleep":0.0025},
+                              {"set":{"param":"prevcount1"},"value":{"add":[{"param":"prevcount1"},1]}},
+                              {"if": {"param":"count1"}, "eq": {"param":"prevcount1"},
+                                "then": [
+                                  {"create_location": "DOG",
+                                    "zones": [
+                                      {"zone":{"location":{"resolve_location":{"bearing":{"param":"brg"},"dist":2,"object":"accident_location"}}}}
+                                  ]},
+                                  {"set":{"param":"prevcount1"},"value":{"add":[{"param":"prevcount1"},1]}},
+                                  {"break":1}
+                              ]},
+                              {"sleep":0.001}
+                          ]}
+                      ]},
+                      {"set":{"param":"count2"},"value":0},
+                      {"set":{"param":"prevcount2"},"value":0},
+                      {"osm_is_point_within_way":{"struct":{"param":"way"},"path":"id"},"location":{"bearing":0,"dist":5,"object":"accident_location"},"data":{"param":"my_data"},"result":"is_in"},
+                      {"if": {"param":"is_in"}, "eq": 1,
+                        "then": [
+                          {"set":{"param":"count2"},"value":{"add":[{"param":"count2"},1]}}
+                      ]},
+                      {"sleep":0.0025},
+                      {"if": {"param":"count2"}, "eq": {"param":"prevcount2"},
+                        "then": [
+                          {"create_location": "CAMPF",
+                            "zones": [
+                              {"zone":{"location":{"bearing":180,"dist":5,"object":"accident_location"}}}
+                          ]},
+                          {"create_location": "CAMPT",
+                            "zones": [
+                              {"zone":{"location":{"bearing":180,"dist":2.5,"object":"accident_location"}}}
+                          ]},
+                          {"create_location": "POLMAN1",
+                            "zones": [
+                              {"zone":{"location":{"bearing":170,"dist":4,"object":"accident_location"}}}
+                          ]},
+                          {"create_location": "POLMAN2",
+                            "zones": [
+                              {"zone":{"location":{"bearing":190,"dist":4,"object":"accident_location"}}}
+                          ]}
+                        ],"else": [
+                          {"for_each": {"create_array":10},
+                            "do": [
+                              {"set":{"param":"brg"},"value":{"multiply":[{"param":"$index"},36]}},
+                              {"osm_is_point_within_way":{"struct":{"param":"way"},"path":"id"},"location":{"bearing":{"param":"brg"},"dist":5},"data":{"param":"my_data"},"result":"is_in"},
+                              {"if": {"param":"is_in"}, "eq": 1,
+                                "then": [
+                                  {"set":{"param":"count1"},"value":{"add":[{"param":"count1"},1]}}
+                              ]},
+                              {"sleep":0.0025},
+                              {"set":{"param":"prevcount1"},"value":{"add":[{"param":"prevcount1"},1]}},
+                              {"if": {"param":"count1"}, "eq": {"param":"prevcount1"},
+                                "then": [
+                                  {"create_location": "CAMPF",
+                                    "zones": [
+                                      {"zone":{"location":{"resolve_location":{"bearing":{"param":"brg"},"dist":5,"object":"accident_location"}}}}
+                                  ]},
+                                  {"create_location": "CAMPT",
+                                    "zones": [
+                                      {"zone":{"location":{"resolve_location":{"bearing":{"param":"brg"},"dist":2.5,"object":"accident_location"}}}}
+                                  ]},
+                                  {"create_location": "POLMAN1",
+                                    "zones": [
+                                      {"zone":{"location":{"resolve_location":{"bearing":{"param":"brg"},"dist":4,"object":"accident_location"}}}}
+                                  ]},
+                                  {"create_location": "POLMAN2",
+                                    "zones": [
+                                      {"zone":{"location":{"resolve_location":{"bearing":{"param":"brg"},"dist":6,"object":"accident_location"}}}}
+                                  ]},
+                                  {"set":{"param":"prevcount1"},"value":{"add":[{"param":"prevcount1"},1]}},
+                                  {"break":1}
+                              ]},
+                              {"sleep":0.001}
+                          ]}
+                      ]}
+                  ]},
+                  {"create_location": "INJURED1",
+                    "zones": [
+                      {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+                  ]},
+                  {"create_location": "AMBWP",
+                    "zones": [
+                      {"zone":{"location":{"bearing":20,"dist":10.5,"object":"accident_location"}}}
+                  ]},
+                  {"create_location": "FIRMAN1",
+                    "zones": [
+                      {"zone":{"location":{"bearing2":270,"dist":2,"object":"POLMAN1"}}}
+                  ]},
+                  {"sleep":0.2},
+                  {"create_location": "FIRMAN2",
+                    "zones": [
+                      {"zone":{"location":{"bearing2":90,"dist":2,"object":"POLMAN2"}}}
+                  ]},
+                  {"sleep":0.2},
+                  {"create_location": "POLWP",
+                    "zones": [
+                      {"zone":{"location":{"bearing":150,"dist":9,"object":"accident_location"}}}
+                  ]},
+                  {"create_location": "POL",
+                    "zones": [
+                      {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+                  ]},
+                  {"sleep":0.2},
+                  {"create_location": "FIRE",
+                    "zones": [
+                      {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+                  ]}
+              ]}
+            }
+        ]}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random glider": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "temp_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR17 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR17 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[sport=free_flying];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"create_location": "accident_location",
+          "zones": [
+            {"zone":{"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[50,6000]},"object":"temp_location"}}}
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random glider"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random glider"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random ski": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+            {"set_message":{"text":"ERR36 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR36 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[route=piste];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random ski"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random ski"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random glacier": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[natural=glacier];(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":1000,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random climbing cliff": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+            {"set_message":{"text":"ERR3 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR3 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": {"query":"[out:json];(node({{bbox}})[natural=cliff]; node({{bbox}})[sport=climbing]; way({{bbox}})[natural=cliff]; way({{bbox}})[sport=climbing];); out center;","groups":[{"natural":"cliff"},{"sport":"climbing"}],"logic":{"intersection":0.2}},
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random climbing cliff"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random climbing cliff"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random chairlift": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+            {"set_message":{"text":"ERR2 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR2 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];way({{bbox}})[aerialway=chair_lift];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random chairlift"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random chairlift"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random offroad": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];way({{bbox}})[highway=track];(._;>;);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random cableway": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":150000},
+            {"set_message":{"text":"ERR1 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider"}},
+            {"set":{"local":"queryfailed"},"value":"ERR1 failed to retrieve location, increasing query range to 150Km! Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];way({{bbox}})[aerialway=gondola];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random cableway"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random cableway"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random fell": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR112 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR112 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];way({{bbox}})[natural=fell];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random fell"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random fell"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query closest pitch": [
+    {"wait_for":{"has_location":"search_center"},"eq":1},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];way({{bbox}})[leisure=pitch];(._;>;);out center;","MAX_ATTEMPTS":10,"SAMPLE_RADIUS":200,"MULTIPLIER":1.5,"CENTER_AREA":"search_center","LOCATION_NAME":"userA"}}
+      ],"else": [
+        {"create_location": "userA",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"search_center"}}}
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query closest pitch"},
+        {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query closest pitch"}
+    ]},
+    {"set":{"local":"userA_name"},"value":"userA_Name"},
+    {"set":{"local":"location_name"},"value":"userA"}
+  ],
+  "Query random construction site": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR114 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR114 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[landuse=greenfield];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random construction site"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random construction site"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random factory": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "rescue_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR214 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR214 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[man_made=works];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random factory"},
+        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random factory"}
+    ]},
+    {"set":{"local":"location_name"},"value":"rescue_location"},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random school": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR115 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR115 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."},
+            {"create_location": "accident_location",
+              "no_results_commands": [
+                {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+                {"set_message":{"text":"ERR115bis failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+                {"set":{"local":"queryfailed"},"value":"ERR115bis failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+              ],
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_random_result",
+                    "query": "[out:json];nwr({{bbox}})[building=school];out center;",
+                    "location": "accident_location",
+                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                    "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                    "commands": []
+                  }
+                }
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random school"},
+            {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random school"}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": {"query":"[out:json];(nwr({{bbox}})[amenity=school]; nwr({{bbox}})[leisure=pitch];); out center;","groups":[{"amenity":"school"},{"leisure":"pitch"}],"logic":{"intersection":0.1}},
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random school"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random school"},
+        {"create_location": "rescue_location",
+          "zones": [
+            {"zone": {
+                "zone_type": "query_closest_result",
+                "query": "[out:json];nwr({{bbox}})[building=school];out center;",
+                "location": "accident_location",
+                "radius": 100,
+                "commands": [],
+                "no_results_commands": [
+                  {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+                  {"set_message":{"text":"ERR218 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+                  {"set":{"local":"queryfailed"},"value":"ERR218 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+              ]}
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random school"},
+        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random school"},
+        {"if": {"has_location":"accident_location"}, "ne": 1,
+          "then": [
+            {"create_location": "accident_location",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":10,"object":"rescue_location"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random school"},
+            {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random school"}
+        ]}
+      ],"else": [
+        {"create_location": "accident_location",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":10,"object":"rescue_location"}}}
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random school"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random school"}
+    ]},
+    {"set":{"local":"location_name"},"value":"rescue_location"}
+  ],
+  "Query random apartm detatched hotel": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"VAR_MISSION_NUMBER"},"lt":29},
+            {"require":{"local":"CRASH_VARIABLE"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"Query random hotel"}
+          ],"else": [
+            {"if": {"local":"CRASH_VARIABLE"}, "gt": 2,
+              "then": [
+                {"call_macro":"Query random apartment"}
+            ]},
+            {"if": {"local":"CRASH_VARIABLE"}, "lte": 2,
+              "then": [
+                {"call_macro":"Query random detached"}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random apartment": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building~'^(apartments|house)$'];(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":1000,"MULTIPLIER":2.5,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"create_location": "rescue_location",
+      "zones": [
+        {"zone":{"location":"accident_location"}}
+    ]},
+    {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random apartment"},
+    {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random apartment"},
+    {"set":{"local":"location_name"},"value":"rescue_location"}
+  ],
+  "Query random nursing home": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "rescue_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR117 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR117 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[social_facility=nursing_home];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random nursing home"},
+        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random nursing home"}
+    ]},
+    {"set":{"local":"location_name"},"value":"rescue_location"},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random doctor_office": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "rescue_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR217 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR217 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[amenity=doctors];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random doctor_office"},
+        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random doctor_office"}
+    ]},
+    {"set":{"local":"location_name"},"value":"rescue_location"},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random detached": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=detached];(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"create_location": "rescue_location",
+      "zones": [
+        {"zone":{"location":"accident_location"}}
+    ]},
+    {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random detached"},
+    {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random detached"},
+    {"set":{"local":"location_name"},"value":"rescue_location"},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random hotel": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR119 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR119 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[tourism=hotel];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random hotel"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random hotel"},
+        {"if": {"has_location":"accident_location"}, "eq": 1,
+          "then": [
+            {"create_location": "rescue_location",
+              "zones": [
+                {"zone":{"location":{"bearing2":0,"dist":25,"object":"accident_location"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random hotel"},
+            {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random hotel anchor"}
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random hotel"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random hotel"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random supermarket": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "rescue_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR254 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR254 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json];nwr({{bbox}})[shop=supermarket];out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random supermarket"},
+        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"Query random supermarket"}
+    ]},
+    {"set":{"local":"location_name"},"value":"rescue_location"},
+    {"call_macro":"query closest residential rescue team"}
+  ],
+  "Query random depot": [
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"create_location": "accident_location",
+          "no_results_commands": [
+            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
+            {"set_message":{"text":"ERR120 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}},
+            {"set":{"local":"queryfailed"},"value":"ERR120 failed to retrieve location. Push 'NEXT DISPATCH'for another dispatch. If error persists, try another OSM Service provider."}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json]; way({{bbox}})[landuse=depot]; out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            },
+            {"zone": {
+                "zone_type": "query_random_result",
+                "query": "[out:json]; nwr({{bbox}})[landuse=depot]; out center;",
+                "location": {"global":"location_ref"},
+                "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                "commands": []
+              }
+            }
+        ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random depot"},
+        {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random depot"}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ]
+}
