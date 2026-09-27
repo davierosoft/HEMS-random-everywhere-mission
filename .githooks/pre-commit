@@ -4,7 +4,47 @@ set -eu
 
 node tools/assert-cicers-branch.js
 node tools/assert-single-worktree.js
-node tools/check-workspace.js
+
+# A commit may skip the full mission workspace suite only when every staged path is one no
+# validator reads for mission correctness (see docs/architecture/CICERS_WORKSPACE_OPTIMIZATION.md,
+# "Pre-commit"). Any deletion, or any staged path outside this exact allowlist, always falls back
+# to the full gate below.
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
+deleted=$(git diff --cached --name-only --diff-filter=D)
+
+light_lane=1
+changelog_user_staged=0
+if [ -z "$staged" ] || [ -n "$deleted" ]; then
+  light_lane=0
+fi
+
+if [ "$light_lane" = "1" ]; then
+  for path in $staged; do
+    case "$path" in
+      CHANGELOG_USER.en.md)
+        changelog_user_staged=1
+        ;;
+      docs/WORKSPACE_MAP.md|docs/AGENTS.md|docs/testing/AGENTS.md|docs/testing/VALIDATION_STATUS.md|docs/testing/RUNTIME_VALIDATION.md|docs/architecture/DEVELOPMENT_WORKFLOW.md)
+        light_lane=0
+        ;;
+      docs/*.md|docs/architecture/*.md|docs/testing/*.md)
+        ;;
+      *)
+        light_lane=0
+        ;;
+    esac
+  done
+fi
+
+if [ "$light_lane" = "1" ]; then
+  echo "pre-commit: doc-only staged change detected; running the targeted changelog gate instead of the full mission workspace suite."
+  if [ "$changelog_user_staged" = "1" ]; then
+    node tools/validate-user-changelog.js
+  fi
+else
+  node tools/check-workspace.js
+fi
+
 # The historical baseline intentionally preserves its original whitespace and
 # must remain byte-exact; enforce staged whitespace on every other path.
 git diff --cached --check -- . ':(exclude)starting point/baseline-0.997-original-fully-functional.json'

@@ -98,9 +98,21 @@ In alternativa è disponibile `npm run hooks:install`.
 
 Il pre-commit:
 
-1. verifica la branch CICERS;
-2. esegue il workspace gate completo;
+1. verifica la branch CICERS e il single-worktree;
+2. esegue il workspace gate completo, tranne quando **ogni** file staged rientra in un allowlist
+   ristretto che nessun validator legge per la correttezza della missione (`CHANGELOG_USER.en.md`,
+   oppure file `.md` sotto `docs/`, `docs/architecture/` o `docs/testing/` diversi da
+   `docs/WORKSPACE_MAP.md`, `docs/AGENTS.md`, `docs/testing/AGENTS.md`,
+   `docs/testing/VALIDATION_STATUS.md`, `docs/testing/RUNTIME_VALIDATION.md` e
+   `docs/architecture/DEVELOPMENT_WORKFLOW.md`, che restano contenuti verificati). In quel caso
+   esegue soltanto `node tools/validate-user-changelog.js` quando `CHANGELOG_USER.en.md` è staged.
+   Qualsiasi file eliminato o non riconosciuto forza sempre il gate completo;
 3. esegue `git diff --cached --check`.
+
+Il comando `node tools/release-workflow.js static` (unico percorso che può avanzare una release)
+esegue sempre il gate completo, senza dipendere dallo staging Git: la corsia leggera del
+pre-commit riduce soltanto il costo dei commit intermedi, non può mai lasciar passare una
+regressione fino a una release.
 
 ### Pre-push
 
