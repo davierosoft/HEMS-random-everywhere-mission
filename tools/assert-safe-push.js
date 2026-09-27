@@ -5,7 +5,7 @@
 const fs = require('fs');
 const { assertCicersBranch } = require('./assert-cicers-branch');
 
-function pushedBranchTargets(input) {
+function parsePushLines(input) {
   return input
     .split(/\r?\n/)
     .map((line) => line.trim())
@@ -13,13 +13,21 @@ function pushedBranchTargets(input) {
     .map((line) => {
       const fields = line.split(/\s+/);
       if (fields.length !== 4) throw new Error(`malformed pre-push input: ${line}`);
-      return fields[2];
+      return { localSha: fields[1], remoteRef: fields[2] };
     })
-    .filter((remoteRef) => remoteRef.startsWith('refs/heads/'));
+    .filter((entry) => entry.remoteRef.startsWith('refs/heads/'));
+}
+
+function pushedBranchTargets(input) {
+  return parsePushLines(input).map((entry) => entry.remoteRef);
 }
 
 function unsafePushTargets(input) {
-  return pushedBranchTargets(input).filter((remoteRef) => remoteRef !== 'refs/heads/main');
+  return parsePushLines(input)
+    // An all-zero local SHA means the ref is being deleted, not written to; deleting an obsolete
+    // branch introduces no content and is always safe, regardless of its name.
+    .filter((entry) => entry.remoteRef !== 'refs/heads/main' && !/^0+$/.test(entry.localSha))
+    .map((entry) => entry.remoteRef);
 }
 
 function main(input = fs.readFileSync(0, 'utf8')) {

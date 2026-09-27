@@ -66,6 +66,7 @@ assert(isDeepStrictEqual(pushedBranchTargets(safePush), ['refs/heads/main']), 'p
 assert(unsafePushTargets(safePush).length === 0, 'push guard rejected a main destination');
 assert(isDeepStrictEqual(unsafePushTargets('refs/heads/main abc refs/heads/CICERS/tool-test def\n'), ['refs/heads/CICERS/tool-test']), 'push guard did not reject a CICERS branch');
 assert(isDeepStrictEqual(unsafePushTargets('refs/heads/main abc refs/heads/release def\n'), ['refs/heads/release']), 'push guard did not reject another non-main branch');
+assert(unsafePushTargets(`(delete) ${'0'.repeat(40)} refs/heads/CICERS/retired def\n`).length === 0, 'push guard rejected a branch deletion');
 expectThrow(() => pushedBranchTargets('malformed input\n'), /malformed/, 'malformed pre-push input');
 
 const releaseRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'hems-release-workflow-'));
@@ -137,5 +138,5 @@ try {
 
 console.log(JSON.stringify({
   result: 'PASS',
-  scenarios: ['main-branch-allow', 'non-main-branch-block', 'detached-head-block', 'scope-detection', 'scope-allowlist', 'baseline-branch-binding', 'baseline-integrity', 'safe-push-target', 'cicers-push-block', 'non-main-push-block', 'malformed-push-input', 'release-begin', 'runtime-build-lvar-update', 'stale-runtime-build-rejection', 'mandatory-local-test-artifact', 'release-intent-build-authorisation', 'prepared-release-scope-amendment', 'local-build-intent-consumption', 'draft-preserves-delivered-version', 'draft-artifact-isolation', 'next-local-build-progression', 'release-identity-rejection'],
+  scenarios: ['main-branch-allow', 'non-main-branch-block', 'detached-head-block', 'scope-detection', 'scope-allowlist', 'baseline-branch-binding', 'baseline-integrity', 'safe-push-target', 'cicers-push-block', 'non-main-push-block', 'branch-deletion-allow', 'malformed-push-input', 'release-begin', 'runtime-build-lvar-update', 'stale-runtime-build-rejection', 'mandatory-local-test-artifact', 'release-intent-build-authorisation', 'prepared-release-scope-amendment', 'local-build-intent-consumption', 'draft-preserves-delivered-version', 'draft-artifact-isolation', 'next-local-build-progression', 'release-identity-rejection'],
 }, null, 2));
