@@ -1242,6 +1242,69 @@
                         ]},
                         {"sleep":1}
                     ]}
+                ]}},
+                {"create_thread": {
+                  "commands": [
+                    {"while": {"local":"HOIST_OUT"}, "gt": 0,
+                      "do": [
+                        {"if": {"var":["AIRSPEED INDICATED","knots"]}, "gte": 105,
+                          "then": [
+                            {"call_macro":"apply hoist crew lifescore impact","params":{"score":12,"cause":"HOIST OPERATION OVERSPEED"}}
+                          ],"else": [
+                            {"if": {"var":["AIRSPEED INDICATED","knots"]}, "gte": 95,
+                              "then": [
+                                {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"HOIST OPERATION OVERSPEED"}}
+                              ],"else": [
+                                {"if": {"var":["AIRSPEED INDICATED","knots"]}, "gte": 75,
+                                  "then": [
+                                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":2,"cause":"HOIST OPERATION OVERSPEED"}}
+                                ]}
+                            ]}
+                        ]},
+                        {"sleep":1}
+                    ]}
+                ]}},
+                {"create_thread": {
+                  "commands": [
+                    {"while": {"local":"HOIST_OUT"}, "gt": 0,
+                      "do": [
+                        {"if": {"var":["PLANE BANK DEGREES","Radians"]}, "gte": 0.8,
+                          "then": [
+                            {"call_macro":"apply hoist crew lifescore impact","params":{"score":12,"cause":"HOIST OPERATION EXCESSIVE BANK"}}
+                          ],"else": [
+                            {"if": {"var":["PLANE BANK DEGREES","Radians"]}, "gte": 0.7,
+                              "then": [
+                                {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"HOIST OPERATION EXCESSIVE BANK"}}
+                              ],"else": [
+                                {"if": {"var":["PLANE BANK DEGREES","Radians"]}, "gte": 0.55,
+                                  "then": [
+                                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":2,"cause":"HOIST OPERATION EXCESSIVE BANK"}}
+                                ]}
+                            ]}
+                        ]},
+                        {"sleep":1}
+                    ]}
+                ]}},
+                {"create_thread": {
+                  "commands": [
+                    {"while": {"local":"HOIST_OUT"}, "gt": 0,
+                      "do": [
+                        {"if": {"var":["ACCELERATION BODY Y","Feet per second squared"]}, "gte": 50,
+                          "then": [
+                            {"call_macro":"apply hoist crew lifescore impact","params":{"score":15,"cause":"HOIST OPERATION EXCESSIVE LOAD ACCELERATION"}}
+                          ],"else": [
+                            {"if": {"var":["ACCELERATION BODY Y","Feet per second squared"]}, "gte": 48.9,
+                              "then": [
+                                {"call_macro":"apply hoist crew lifescore impact","params":{"score":8,"cause":"HOIST OPERATION EXCESSIVE LOAD ACCELERATION"}}
+                              ],"else": [
+                                {"if": {"var":["ACCELERATION BODY Y","Feet per second squared"]}, "gte": 46,
+                                  "then": [
+                                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":3,"cause":"HOIST OPERATION EXCESSIVE LOAD ACCELERATION"}}
+                                ]}
+                            ]}
+                        ]},
+                        {"sleep":1}
+                    ]}
                 ]}}
             ]}
         ]}
@@ -7498,189 +7561,6 @@
         ]}
       ],"else": [
         {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"param":"score"},"cause":{"param":"cause"}}}
-    ]}
-  ],
-  "start hoist out risk monitor legacy": [
-    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
-      "then": [
-        {"create_thread": {
-          "commands": [
-            {"set":{"local":"HOIST_OUT_RISK_MONITOR_STARTED"},"value":"yes"},
-            {"sleep":0.2},
-            {"set":{"local":"HOIST_VNE_LIFESCORE_BAND"},"value":0},
-            {"set":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"value":0},
-            {"create_thread": {
-              "commands": [
-                {"while": {"local":"HOIST_OUT"}, "gt": 0,
-                  "do": [
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["AIRSPEED INDICATED","knots"]},"gte":75},
-                        {"require":{"local":"HOIST_VNE_LIFESCORE_BAND"},"eq":0}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":2,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set":{"local":"HOIST_VNE_LIFESCORE_BAND"},"value":1}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["AIRSPEED INDICATED","knots"]},"gte":95},
-                        {"require":{"local":"HOIST_VNE_LIFESCORE_BAND"},"lt":2}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set":{"local":"HOIST_VNE_LIFESCORE_BAND"},"value":2}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["AIRSPEED INDICATED","knots"]},"gte":105},
-                        {"require":{"local":"HOIST_VNE_LIFESCORE_BAND"},"lt":3}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":12,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set":{"local":"HOIST_VNE_LIFESCORE_BAND"},"value":3}
-                    ]},
-                    {"if": {"var":["AIRSPEED INDICATED","knots"]}, "lt": 70,
-                      "then": [
-                        {"set":{"local":"HOIST_VNE_LIFESCORE_BAND"},"value":0}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":46},
-                        {"require":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"eq":0}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":3,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"value":1}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":48.9},
-                        {"require":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"lt":2}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":8,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"value":2}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":50},
-                        {"require":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"lt":3}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":15,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"value":3}
-                    ]},
-                    {"if": {"var":["ACCELERATION BODY Y","Feet per second squared"]}, "lt": 45,
-                      "then": [
-                        {"set":{"local":"HOIST_ACCEL_LIFESCORE_BAND"},"value":0}
-                    ]},
-                    {"sleep":1}
-                ]}
-            ]}},
-            {"while": {"local":"HOIST_OUT"}, "gt": 0,
-              "do": [
-                {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"gt":12},
-                {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":9},
-                {"set":{"local":"HOIST_GROUND_RISK_WINDOW"},"value":"open"},
-                {"set":{"local":"HOIST_GROUND_RISK_EVENT"},"value":"none"},
-                {"create_thread": {
-                  "commands": [
-                    {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":4},
-                    {"if": {
-                      "and": [
-                        {"require":{"local":"HOIST_GROUND_RISK_WINDOW"},"eq":"open"},
-                        {"require":{"local":"HOIST_GROUND_RISK_EVENT"},"ne":"fatal"}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"set":{"local":"HOIST_GROUND_RISK_EVENT"},"value":"impact"}
-                    ]}
-                ]}},
-                {"create_thread": {
-                  "commands": [
-                    {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":1},
-                    {"if": {"local":"HOIST_GROUND_RISK_WINDOW"}, "eq": "open",
-                      "then": [
-                        {"set":{"local":"HOIST_GROUND_RISK_EVENT"},"value":"fatal"}
-                    ]}
-                ]}},
-                {"sleep":0.75},
-                {"if": {"local":"HOIST_GROUND_RISK_EVENT"}, "eq": "fatal",
-                  "then": [
-                    {"call_macro":"hoist out fatal failure"}
-                  ],"else": [
-                    {"if": {"local":"HOIST_GROUND_RISK_EVENT"}, "eq": "impact",
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":12,"cause":"HOIST OPERATION IMPACT"}},
-                        {"set_message":{"text":"Hard hoist-ground approach: crew impact recorded. Stabilize before continuing."}}
-                    ]}
-                ]},
-                {"set":{"local":"HOIST_GROUND_RISK_WINDOW"},"value":"closed"},
-                {"sleep":1}
-            ]}
-        ]}}
-    ]}
-  ],
-  "start hoist attached risk monitor legacy": [
-    {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
-      "then": [
-        {"create_thread": {
-          "commands": [
-            {"set":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"value":"yes"},
-            {"sleep":0.2},
-            {"set":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"value":0},
-            {"create_thread": {
-              "commands": [
-                {"while": {"local":"HOIST_CREW_ON_CABLE"}, "gt": 0,
-                  "do": [
-                    {"if": {
-                      "and": [
-                        {"or":[{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":3},{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":-3},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":3},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":-3},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":3},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":-3}],"eq":1},
-                        {"require":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"eq":0}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":2,"cause":"ABRUPT HOIST OPERATOR ACCELERATION"}},
-                        {"set":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"value":1}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"or":[{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":6},{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":-6},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":6},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":-6},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":6},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":-6}],"eq":1},
-                        {"require":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"lt":2}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"ABRUPT HOIST OPERATOR ACCELERATION"}},
-                        {"set":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"value":2}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"or":[{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":10},{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":-10},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":10},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":-10},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":10},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":-10}],"eq":1},
-                        {"require":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"lt":3}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":100,"cause":"FATAL HOIST OPERATOR ACCELERATION"}},
-                        {"set":{"local":"HOIST_ATTACHED_ACCEL_BAND"},"value":3}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":4},
-                        {"require":{"local":"HOIST_GROUND_RISK_WINDOW"},"eq":"open"}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":12,"cause":"HOIST OPERATOR GROUND IMPACT"}},
-                        {"set":{"local":"HOIST_GROUND_RISK_WINDOW"},"value":"closed"}
-                    ]},
-                    {"if": {"fn":"hoist_get_distance_from_ground:ft"}, "lt": 1,
-                      "then": [
-                        {"call_macro":"hoist out fatal failure"}
-                    ]},
-                    {"if": {"fn":"hoist_get_distance_from_ground:ft"}, "gt": 12,
-                      "then": [
-                        {"set":{"local":"HOIST_GROUND_RISK_WINDOW"},"value":"open"}
-                    ]},
-                    {"sleep":1}
-                ]}
-            ]}}
-        ]}}
     ]}
   ]
 }

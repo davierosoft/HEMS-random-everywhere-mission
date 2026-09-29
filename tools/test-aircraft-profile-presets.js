@@ -26,12 +26,12 @@ function hasSetTable(value, table, key, expectedValue) {
   return contains(value, (entry) => entry && entry.set && entry.set.table && entry.set.table.static === table && entry.set.key === key && JSON.stringify(entry.value) === JSON.stringify(expectedValue));
 }
 
-requireTrue(tables.Aircraft_Profile_Saved_Preset === 'Andrews_saved_aircraft_profile', 'independent saved-preset table is missing');
+requireTrue(tables.Aircraft_Profile_Saved_Preset === 'R&E_saved_custom_settings', 'independent saved-preset table is missing');
 requireTrue(contains(lifecycle.objective1, (entry) => entry?.if?.global === 'SAVENAME' && entry.eq === null && entry.then?.some((command) => command.set?.global === 'SAVENAME')), 'mission startup must initialize saved-profile state through set: global');
 
 const marker = profiles['mark aircraft profile custom'];
 requireTrue(hasCall(marker, 'save custom aircraft profile'), 'settings changes do not persist immediately');
-requireTrue(contains(marker, (entry) => entry && entry.set && entry.set.global === 'AIRCRAFT_PROFILE_SLOT' && entry.value === 'Aircraft_Profile_Table1'), 'factory changes do not seed CUS.PROFILE 0');
+requireTrue(contains(marker, (entry) => entry && entry.set && entry.set.global === 'AIRCRAFT_PROFILE_SLOT' && entry.value === 'Aircraft_Profile_Table0'), 'factory changes do not seed CUS.PROFILE 0');
 
 const store = presets['store aircraft profile on file'];
 const copy = presets['copy saved aircraft profile to actual set'];
@@ -39,7 +39,7 @@ const profileSave = presets['save custom aircraft profile'];
 requireTrue(Array.isArray(store) && hasCall(store, 'save custom aircraft profile'), 'file-store macro is missing');
 requireTrue(contains(store, (entry) => entry && entry.call_macro === 'save custom aircraft profile' && entry.params && entry.params.PROFILE_TABLE === 'Aircraft_Profile_Saved_Preset'), 'file-store macro does not target the independent backup');
 requireTrue(Array.isArray(copy) && hasCall(copy, 'load custom aircraft profile') && hasCall(copy, 'save custom aircraft profile'), 'saved preset is not copied through the existing profile schema');
-const profileSlots = ['Aircraft_Profile_Table1', 'Aircraft_Profile_Table2', 'Aircraft_Profile_Table3', 'Aircraft_Profile_Table4', 'Aircraft_Profile_Table5', 'Aircraft_Profile_Table6'];
+const profileSlots = ['Aircraft_Profile_Table0', 'Aircraft_Profile_Table1', 'Aircraft_Profile_Table2', 'Aircraft_Profile_Table3', 'Aircraft_Profile_Table4', 'Aircraft_Profile_Table5'];
 const savedCopy = copy.find((entry) => entry && entry.if && entry.if.table && entry.if.table.static === 'Aircraft_Profile_Saved_Preset' && entry.if.key === 'valid');
 requireTrue(savedCopy && Array.isArray(savedCopy.then), 'saved-preset copy has no valid-table branch');
 for (const slot of profileSlots) {
@@ -90,7 +90,7 @@ const selectCustom = presets['select custom aircraft profile'];
 requireTrue(contains(selectCustom, (entry) => entry && entry.open_table && entry.open_table.static === 'Debug_Table'), 'custom profile reload does not open test state before reading it');
 requireTrue(contains(selectCustom, (entry) => entry && entry.call_macro === 'test tracker complete' && entry.params && entry.params.test_id === 'aircraft_profiles'), 'custom profile reload does not complete the verified test');
 
-const missionTables = ['Config_Table1', 'Config_Table3', 'Config_Table4', 'Config_Table5', 'Config_Table6', 'Config_Table7'];
+const missionTables = ['Config_Table0', 'Config_Table1', 'Config_Table2', 'Config_Table3', 'Config_Table4', 'Config_Table5'];
 const link = presets['link aircraft profile to mission'];
 for (const mission of missionTables) {
   const branch = link.find((entry) => entry.if && entry.if.param === 'MISSION_TABLE' && entry.eq === mission);

@@ -94,6 +94,7 @@ function assert(condition, message) {
 
 const monitorJson = JSON.stringify(mission.macros['start crew lifescore monitor']);
 const recorderJson = JSON.stringify(mission.macros['record crew acceleration maxima']);
+const fireExposureJson = JSON.stringify(mission.macros['monitor crew fire exposure']);
 const hoistJson = JSON.stringify(mission.macros['apply hoist crew lifescore impact']);
 const hoistDownJson = JSON.stringify(mission.macros['hoist down']);
 const hoistRiskJson = JSON.stringify(mission.macros['start hoist out risk monitor']);
@@ -112,12 +113,12 @@ assert(accelerationJson.includes('SDK_PILOT_CAPT_ON') && accelerationJson.includ
 assert(accelerationJson.includes('"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]') && accelerationJson.includes('"eq":1'), 'aircraft acceleration monitor does not restrict member 3 to the onboard seat HVAR');
 assert(!accelerationJson.includes('"local":"HOIST_OUT"'), 'aircraft acceleration monitor still uses HOIST_OUT as a proxy for onboard member 3');
 assert(accelerationJson.includes('"member":3') && accelerationJson.includes('"cause":"ABRUPT AIRCRAFT ACCELERATION"'), 'non-hoist-out winch operator is not covered by aircraft acceleration LifeScore monitoring');
-assert(recorderJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');
+assert(fireExposureJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');
 assert(hoistJson.includes('"member":3') && hoistJson.includes('"member":4') && hoistJson.includes('"member":5'), 'hoist impact is not mapped to operator and helirescuer LifeScores 3, 4, and 5');
 assert(hoistRiskJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistRiskJson.includes('"eq":"yes"'), 'hoist-out LifeScore monitoring is not gated by YES');
 assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"eq":"yes"'), 'fatal hoist loss is not gated by YES');
 assert(attachedRiskJson.includes('"local":"HOIST_CREW_ON_CABLE"') && attachedRiskJson.includes('"gt":0'), 'attached hoist operator monitor is not tied to the cable state');
-assert(attachedRiskJson.includes('"local":"HOIST_GROUND_RATE_FPS"') && attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator monitor does not derive risk from measured descent rate');
+assert(attachedRiskJson.includes('"local":"HOIST_IMPACT_RATE_FPS"') && attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator monitor does not derive risk from measured descent rate');
 assert(!attachedRiskJson.includes('ACCELERATION BODY'), 'attached hoist operator monitor must not use aircraft acceleration as a hoist proxy');
 assert(attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator ground-impact monitor is missing');
 assert(hoistDownJson.includes('"local":"HOIST_CREW_ON_CABLE"') && hoistDownJson.includes('"start hoist attached risk monitor"'), 'hoist-down cable procedure does not start the attached-person monitor');

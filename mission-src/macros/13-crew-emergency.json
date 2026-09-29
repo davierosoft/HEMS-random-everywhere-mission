@@ -25,7 +25,11 @@
         {"set":{"local":"CREW_LIFESCORE_4"},"value":100},
         {"set":{"local":"CREW_LIFESCORE_ALERT_4"},"value":0},
         {"set":{"local":"CREW_LIFESCORE_5"},"value":100},
-        {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":0}
+        {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":0},
+        {"set":{"local":"CREW_FIRE_IMPACT_2"},"value":0},
+        {"set":{"local":"CREW_FIRE_IMPACT_3"},"value":0},
+        {"set":{"local":"CREW_FIRE_IMPACT_4"},"value":0},
+        {"set":{"local":"CREW_FIRE_IMPACT_5"},"value":0}
     ]}
   ],
   "apply crew lifescore impact": [
@@ -178,6 +182,9 @@
   ],
   "start crew lifescore monitor": [
     {"call_macro":"record crew acceleration maxima"},
+    {"call_macro":"monitor crew fire exposure"},
+    {"call_macro":"monitor aircraft crash impact"},
+    {"call_macro":"recover crew lifescore over time"},
     {"create_thread": {
       "commands": [
         {"while": 1, "gt": 0,
@@ -269,83 +276,113 @@
                   "then": [
                     {"set":{"local":"CREW_ACCELERATION_MAX_Z_NEG"},"value":{"var":["ACCELERATION BODY Z","Feet per second squared"]}}
                 ]},
-                {"sleep":1},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"pax3"},"eq":1},
-                    {"require":{"has_object":"VFXA"},"eq":1},
-                    {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
-                    {"require":{"object":"pax3","var":"distance:m","to":"VFXA"},"lt":60}
-                  ]}, "eq": 1,
+                {"sleep":1}
+            ]}
+        ]}
+    ]}}
+  ],
+  "monitor crew fire exposure": [
+    {"create_thread": {
+      "commands": [
+        {"while": {"local":"CREW_LIFESCORE_MONITOR_ACTIVE"}, "eq": "yes",
+          "do": [
+            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 1,
+              "then": [
+                {"set":{"local":"CREW_FIRE_PACE_REF"},"value":300}
+              ],"else": [
+                {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
                   "then": [
-                    {"call_macro":"apply object crew lifescore impact","params":{"object":"pax3","member":2,"score":1,"cause":"ACTIVE SMOKE/FIRE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"pax1"},"eq":1},
-                    {"require":{"has_object":"VFXA"},"eq":1},
-                    {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
-                    {"require":{"object":"pax1","var":"distance:m","to":"VFXA"},"lt":60}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply object crew lifescore impact","params":{"object":"pax1","member":4,"score":1,"cause":"ACTIVE SMOKE/FIRE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"pax2"},"eq":1},
-                    {"require":{"has_object":"VFXA"},"eq":1},
-                    {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
-                    {"require":{"object":"pax2","var":"distance:m","to":"VFXA"},"lt":60}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply object crew lifescore impact","params":{"object":"pax2","member":5,"score":1,"cause":"ACTIVE SMOKE/FIRE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"hoist_crew"},"eq":1},
-                    {"require":{"has_object":"VFXA"},"eq":1},
-                    {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
-                    {"require":{"object":"hoist_crew","var":"distance:m","to":"VFXA"},"lt":60}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":1,"cause":"ACTIVE SMOKE/FIRE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"pax3"},"eq":1},
-                    {"require":{"has_object":"flare_accident"},"eq":1},
-                    {"require":{"object":"pax3","var":"distance:m","to":"flare_accident"},"lt":25}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply object crew lifescore impact","params":{"object":"pax3","member":2,"score":1,"cause":"ACTIVE FLARE/SMOKE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"pax1"},"eq":1},
-                    {"require":{"has_object":"flare_accident"},"eq":1},
-                    {"require":{"object":"pax1","var":"distance:m","to":"flare_accident"},"lt":25}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply object crew lifescore impact","params":{"object":"pax1","member":4,"score":1,"cause":"ACTIVE FLARE/SMOKE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"pax2"},"eq":1},
-                    {"require":{"has_object":"flare_accident"},"eq":1},
-                    {"require":{"object":"pax2","var":"distance:m","to":"flare_accident"},"lt":25}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply object crew lifescore impact","params":{"object":"pax2","member":5,"score":1,"cause":"ACTIVE FLARE/SMOKE EXPOSURE"}}
-                ]},
-                {"if": {
-                  "and": [
-                    {"require":{"has_object":"hoist_crew"},"eq":1},
-                    {"require":{"has_object":"flare_accident"},"eq":1},
-                    {"require":{"object":"hoist_crew","var":"distance:m","to":"flare_accident"},"lt":25}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":1,"cause":"ACTIVE FLARE/SMOKE EXPOSURE"}}
+                    {"set":{"local":"CREW_FIRE_PACE_REF"},"value":{"global":"CREW_SLOTH"}}
+                  ],"else": [
+                    {"set":{"local":"CREW_FIRE_PACE_REF"},"value":900}
                 ]}
+            ]},
+            {"set":{"local":"CREW_FIRE_TICK_INTERVAL"},"value":{"multiply":[300,{"divide":[{"local":"CREW_FIRE_PACE_REF"},900]}]}},
+            {"sleep":{"local":"CREW_FIRE_TICK_INTERVAL"}},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"pax3"},"eq":1},
+                {"require":{"has_object":"VFXA"},"eq":1},
+                {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
+                {"require":{"object":"pax3","var":"distance:m","to":"VFXA"},"lt":25},
+                {"require":{"local":"CREW_FIRE_IMPACT_2"},"lt":50}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"CREW_FIRE_TICK"},"value":{"clamp":[1,0,{"subtract":[50,{"local":"CREW_FIRE_IMPACT_2"}]}]}},
+                {"call_macro":"apply object crew lifescore impact","params":{"object":"pax3","member":2,"score":{"local":"CREW_FIRE_TICK"},"cause":"ACTIVE FIRE EXPOSURE"}},
+                {"set":{"local":"CREW_FIRE_IMPACT_2"},"value":{"add":[{"local":"CREW_FIRE_IMPACT_2"},{"local":"CREW_FIRE_TICK"}]}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"pax1"},"eq":1},
+                {"require":{"has_object":"VFXA"},"eq":1},
+                {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
+                {"require":{"object":"pax1","var":"distance:m","to":"VFXA"},"lt":25},
+                {"require":{"local":"CREW_FIRE_IMPACT_4"},"lt":50}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"CREW_FIRE_TICK"},"value":{"clamp":[1,0,{"subtract":[50,{"local":"CREW_FIRE_IMPACT_4"}]}]}},
+                {"call_macro":"apply object crew lifescore impact","params":{"object":"pax1","member":4,"score":{"local":"CREW_FIRE_TICK"},"cause":"ACTIVE FIRE EXPOSURE"}},
+                {"set":{"local":"CREW_FIRE_IMPACT_4"},"value":{"add":[{"local":"CREW_FIRE_IMPACT_4"},{"local":"CREW_FIRE_TICK"}]}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"pax2"},"eq":1},
+                {"require":{"has_object":"VFXA"},"eq":1},
+                {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
+                {"require":{"object":"pax2","var":"distance:m","to":"VFXA"},"lt":25},
+                {"require":{"local":"CREW_FIRE_IMPACT_5"},"lt":50}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"CREW_FIRE_TICK"},"value":{"clamp":[1,0,{"subtract":[50,{"local":"CREW_FIRE_IMPACT_5"}]}]}},
+                {"call_macro":"apply object crew lifescore impact","params":{"object":"pax2","member":5,"score":{"local":"CREW_FIRE_TICK"},"cause":"ACTIVE FIRE EXPOSURE"}},
+                {"set":{"local":"CREW_FIRE_IMPACT_5"},"value":{"add":[{"local":"CREW_FIRE_IMPACT_5"},{"local":"CREW_FIRE_TICK"}]}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"hoist_crew"},"eq":1},
+                {"require":{"has_object":"VFXA"},"eq":1},
+                {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
+                {"require":{"object":"hoist_crew","var":"distance:m","to":"VFXA"},"lt":25},
+                {"require":{"local":"CREW_FIRE_IMPACT_3"},"lt":50}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"CREW_FIRE_TICK"},"value":{"clamp":[1,0,{"subtract":[50,{"local":"CREW_FIRE_IMPACT_3"}]}]}},
+                {"call_macro":"apply hoist crew lifescore impact","params":{"score":{"local":"CREW_FIRE_TICK"},"cause":"ACTIVE FIRE EXPOSURE"}},
+                {"set":{"local":"CREW_FIRE_IMPACT_3"},"value":{"add":[{"local":"CREW_FIRE_IMPACT_3"},{"local":"CREW_FIRE_TICK"}]}}
+            ]}
+        ]}
+    ]}}
+  ],
+  "recover crew lifescore over time": [
+    {"create_thread": {
+      "commands": [
+        {"while": {"local":"CREW_LIFESCORE_MONITOR_ACTIVE"}, "eq": "yes",
+          "do": [
+            {"sleep":300},
+            {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
+              "then": [
+                {"if": {"local":"CREW_LIFESCORE_1"}, "lt": 70,
+                  "then": [
+                    {"set":{"local":"CREW_LIFESCORE_1"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_1"},1]},0,70]}}
+                ]},
+                {"if": {"local":"CREW_LIFESCORE_2"}, "lt": 70,
+                  "then": [
+                    {"set":{"local":"CREW_LIFESCORE_2"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_2"},1]},0,70]}}
+                ]},
+                {"if": {"local":"CREW_LIFESCORE_3"}, "lt": 70,
+                  "then": [
+                    {"set":{"local":"CREW_LIFESCORE_3"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_3"},1]},0,70]}}
+                ]},
+                {"if": {"local":"CREW_LIFESCORE_4"}, "lt": 70,
+                  "then": [
+                    {"set":{"local":"CREW_LIFESCORE_4"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_4"},1]},0,70]}}
+                ]},
+                {"if": {"local":"CREW_LIFESCORE_5"}, "lt": 70,
+                  "then": [
+                    {"set":{"local":"CREW_LIFESCORE_5"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_5"},1]},0,70]}}
+                ]},
+                {"call_macro":"refresh crew lifescore report"}
             ]}
         ]}
     ]}}
@@ -822,5 +859,112 @@
           {"end_mission":1}
       ]}
     }
+  ],
+  "apply aircraft crash lifescore impact": [
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":1},
+        {"require":{"var":["L:{local:HXX}_SDK_PILOT_CAPT_ON","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":2},
+        {"require":{"var":["L:{local:HXX}_SDK_PILOT_FO_ON","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":3},
+        {"require":{"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":4},
+        {"require":{"var":["L:{local:HXX}_SDK_PAX_1_ON","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":5},
+        {"require":{"var":["L:{local:HXX}_SDK_PAX_3_ON","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]}
+  ],
+  "monitor aircraft crash impact": [
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"yes"},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"if": {"local":"CRASH_IMPACT_ARMED"}, "eq": "yes",
+              "then": [
+                {"or": [
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":97},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-97},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":97},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-97},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":97},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-97}
+                ]},
+                {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"no"},
+                {"if": {
+                  "or": [
+                    {"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":386},
+                    {"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-386},
+                    {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":386},
+                    {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-386},
+                    {"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":386},
+                    {"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-386}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":100,"cause":"FATAL AIRCRAFT CRASH IMPACT"}},
+                    {"set_message":{"text":"Catastrophic impact detected. Crew casualties likely."}}
+                  ],"else": [
+                    {"if": {
+                      "or": [
+                        {"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":193},
+                        {"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-193},
+                        {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":193},
+                        {"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-193},
+                        {"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":193},
+                        {"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-193}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":60,"cause":"SEVERE AIRCRAFT CRASH IMPACT"}},
+                        {"set_message":{"text":"Severe impact detected. Crew injuries reported."}}
+                      ],"else": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":25,"cause":"AIRCRAFT CRASH IMPACT"}},
+                        {"set_message":{"text":"Impact detected. Crew shaken but conscious."}}
+                    ]}
+                ]}
+            ]},
+            {"if": {"local":"CRASH_IMPACT_ARMED"}, "eq": "no",
+              "then": [
+                {"and": [
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":97},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":97},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":97},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":-97},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":-97},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":-97}
+                ]},
+                {"sleep":3},
+                {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"yes"}
+            ]},
+            {"sleep":0.1}
+        ]}
+    ]}}
   ]
 }

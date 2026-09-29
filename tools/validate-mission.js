@@ -98,7 +98,7 @@ function checkRootShape() {
     if (!Object.prototype.hasOwnProperty.call(mission, key)) errors.push(`missing required root key: ${key}`);
   });
   if (!mission.data || typeof mission.data !== 'object' || Array.isArray(mission.data)) errors.push('root data must be an object');
-  if (mission.data?.Debug_Table !== 'Andrews_debug_manual_snapshots' || mission.data?.Debug_Auto_Table !== 'Andrews_debug_automatic_snapshots') errors.push('debug snapshot tables must remain under root data');
+  if (mission.data?.Debug_Table !== 'R&E_debug_manual_snapshots' || mission.data?.Debug_Auto_Table !== 'R&E_debug_automatic_snapshots') errors.push('debug snapshot tables must remain under root data');
   if (Object.prototype.hasOwnProperty.call(mission.macros || {}, 'Debug_Table')) errors.push('root data entries must not be absorbed into macros');
 }
 
@@ -733,7 +733,7 @@ function checkRelease91Regressions() {
   ['CAPTURE SNAPSHOT', 'CLEAR SNAPSHOT'].forEach((title) => {
     expectRegression(debugText.includes(`"title":"${title}"`), `debug page must expose ${title}`);
   });
-  expectRegression(mission.data?.Debug_Table === 'Andrews_debug_manual_snapshots' && mission.data?.Debug_Auto_Table === 'Andrews_debug_automatic_snapshots', 'debug snapshots must use persistent HPG tables');
+  expectRegression(mission.data?.Debug_Table === 'R&E_debug_manual_snapshots' && mission.data?.Debug_Auto_Table === 'R&E_debug_automatic_snapshots', 'debug snapshots must use persistent HPG tables');
   expectRegression(debugText.includes('"open_table":{"static":"Debug_Table"}') && debugText.includes('"save_table":{"static":"Debug_Table"}'), 'debug snapshot table must be opened and saved');
   ['valid', 'time', 'mission_id', 'phase', 'route_error', 'query_error', 'transport', 'transfer_state', 'active_patient', 'display_patient', 'preset'].forEach((key) => {
     expectRegression(debugText.includes('"key":"' + key + '"'), 'debug snapshot table must persist ' + key);
@@ -759,21 +759,21 @@ function checkAircraftProfileRegression() {
   expectRegression(!hasState(mission, 'DIFFICULTY'), 'mission must not retain legacy Difficulty state');
 
   const expectedTables = {
-    Aircraft_Profile_Links: 'Andrews_aircraft_profile_links',
-    Aircraft_Profile_Table1: 'Andrews_custom_default',
-    Aircraft_Profile_Table2: 'Andrews_custom_prst_1',
-    Aircraft_Profile_Table3: 'Andrews_custom_prst_2',
-    Aircraft_Profile_Table4: 'Andrews_custom_prst_3',
-    Aircraft_Profile_Table5: 'Andrews_custom_prst_4',
-    Aircraft_Profile_Table6: 'Andrews_custom_prst_5',
-    Aircraft_Profile_Saved_Preset: 'Andrews_saved_aircraft_profile'
+    Aircraft_Profile_Links: 'R&E_aircraft_profile_links',
+    Aircraft_Profile_Table0: 'R&E_custom_settings_default',
+    Aircraft_Profile_Table1: 'R&E_custom_settings_prst_1',
+    Aircraft_Profile_Table2: 'R&E_custom_settings_prst_2',
+    Aircraft_Profile_Table3: 'R&E_custom_settings_prst_3',
+    Aircraft_Profile_Table4: 'R&E_custom_settings_prst_4',
+    Aircraft_Profile_Table5: 'R&E_custom_settings_prst_5',
+    Aircraft_Profile_Saved_Preset: 'R&E_saved_custom_settings'
   };
   Object.entries(expectedTables).forEach(([name, table]) => {
     expectRegression(mission.data[name] === table, `aircraft profile table must be registered: ${name}`);
   });
 
   const firstRun = {
-    AIRCRAFT_PROFILE_ACTIVE: 'DEFAULT', AIRCRAFT_PROFILE_SLOT: 'Aircraft_Profile_Table1',
+    AIRCRAFT_PROFILE_ACTIVE: 'DEFAULT', AIRCRAFT_PROFILE_SLOT: 'Aircraft_Profile_Table0',
     ENGINE_FAILURES_ENABLED: 'yes', ORANGE_TARGET_SMOKE: 'auto', TARGET_GUIDANCE_RANGE: 'wide',
     HOIST_SAFETY_MONITOR: 'yes', HOIST_CONTROL_PROFILE: 'auto', AUTO_FPL_NAV_SOURCE: 'yes',
     TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100
@@ -813,7 +813,7 @@ function checkAircraftProfileRegression() {
     expectRegression(settingsText.includes(token), `Settings must expose individual flight-assist option: ${token}`);
   });
   const linked = compact(mission.macros['apply linked aircraft profile'] || []);
-  ['Config_Table1', 'Config_Table3', 'Config_Table4', 'Config_Table5', 'Config_Table6', 'Config_Table7'].forEach((table) => {
+  ['Config_Table0', 'Config_Table1', 'Config_Table2', 'Config_Table3', 'Config_Table4', 'Config_Table5'].forEach((table) => {
     expectRegression(linked.includes(table), `linked aircraft profile must resolve ${table}`);
   });
   expectRegression(!linked.includes('"key":{"local":"MSN_CONFIG_PRESET"}'), 'linked aircraft profile must use explicit supported mission-table keys');
@@ -823,7 +823,7 @@ function checkAircraftProfileRegression() {
   const linkToggle = compact(mission.macros['link aircraft profile to mission'] || []);
   expectRegression(linkToggle.includes('Aircraft_Profile_Links') && linkToggle.includes('"value":null') && linkToggle.includes('save_table'), 'selected MSN LIST link must toggle off and persist the link table');
   const immediateSave = compact(mission.macros['mark aircraft profile custom'] || []);
-  expectRegression(immediateSave.includes('Aircraft_Profile_Table1') && immediateSave.includes('save custom aircraft profile'), 'profile changes must immediately persist to a custom slot');
+  expectRegression(immediateSave.includes('Aircraft_Profile_Table0') && immediateSave.includes('save custom aircraft profile'), 'profile changes must immediately persist to a custom slot');
 
   const profileKeys = new Set([
     'MISSION_ACCIDENT_MAX_RADIUS', 'MISSION_ACCIDENT_MIN_RADIUS', 'rangeautorandom', 'CREW', 'BOARDING_HOLD_GLOBAL',
@@ -956,7 +956,8 @@ function checkRelease94Regressions() {
   expectRegression(crewImpact.includes('"param":"member"') && crewImpact.includes('"local":"CREW_LIFESCORE_CURRENT"'), 'crew impact must target one explicit member and evaluate the resulting score');
   const crewMonitor = compact(mission.macros['start crew lifescore monitor'] || []);
   const crewRecorder = compact(mission.macros['record crew acceleration maxima'] || []);
-  const crewMonitorAndRecorder = `${crewMonitor}${crewRecorder}`;
+  const crewFireExposure = compact(mission.macros['monitor crew fire exposure'] || []);
+  const crewMonitorAndRecorder = `${crewMonitor}${crewRecorder}${crewFireExposure}`;
   expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","var":"distance:m","to":"VFXA"') && crewMonitorAndRecorder.includes('"object":"hoist_crew","var":"distance:m","to":"VFXA"'), 'scene exposure must use each ground operator distance to the active hazard');
   expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","member":2') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":3') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":4') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":5'), 'crew role mapping must preserve medical crew 2, hoist operator 3, and helirescuer members 4/5');
   expectRegression(!crewMonitorAndRecorder.includes('"object":"VFXA","var":"distance:m"'), 'scene exposure must never use helicopter-to-smoke distance as crew exposure');
@@ -975,7 +976,7 @@ function checkRelease94Regressions() {
   const hoistOutMonitor = compact(mission.macros['start hoist out risk monitor'] || []);
   const hoistAttachedMonitor = compact(mission.macros['start hoist attached risk monitor'] || []);
   expectRegression(hoistOutMonitor.includes('HOIST_GROUND_RATE_FPS') && hoistOutMonitor.includes('hoist_get_distance_from_ground:ft') && !hoistOutMonitor.includes('ACCELERATION BODY'), 'hoist-out monitor must use measured descent rate instead of aircraft acceleration');
-  expectRegression(hoistAttachedMonitor.includes('HOIST_GROUND_RATE_FPS') && hoistAttachedMonitor.includes('hoist_get_distance_from_ground:ft') && !hoistAttachedMonitor.includes('ACCELERATION BODY'), 'attached hoist monitor must use measured descent rate instead of aircraft acceleration');
+  expectRegression(hoistAttachedMonitor.includes('HOIST_IMPACT_RATE_FPS') && hoistAttachedMonitor.includes('hoist_get_distance_from_ground:ft') && !hoistAttachedMonitor.includes('ACCELERATION BODY'), 'attached hoist monitor must use measured descent rate instead of aircraft acceleration');
   const emergencyBoarding = compact(mission.macros['board crew after emergency'] || []);
   ['SDK_PAX_1_ON', 'SDK_PAX_2_ON', 'SDK_PAX_3_ON'].forEach((trigger) => expectRegression(emergencyBoarding.includes(trigger), `emergency boarding must restore ${trigger}`));
   expectRegression(emergencyBoarding.includes('CREW_EMERGENCY_FATAL') && emergencyBoarding.includes('CREW_IMPACT_OBJECT'), 'fatal boarding must leave only the deceased packaged object on scene while boarding survivors');

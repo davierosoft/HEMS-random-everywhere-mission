@@ -1371,7 +1371,7 @@
     {"set":{"local":"MISSION_END_WAITING"},"value":1}
   ],
   "objective1": [
-    {"set":{"var":["L:RELEASE_BUILD","number"]},"value":168},
+    {"set":{"var":["L:RELEASE_BUILD","number"]},"value":169},
     {"call_macro":"start location diagnostics"},
     {"set":{"local":"PUBLIC_USED_TITLES"},"value":[]},
     {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0},
@@ -1415,7 +1415,7 @@
     ]},
     {"if": {"global":"MSN_CONFIG_PRESET"}, "eq": null,
       "then": [
-        {"set":{"global":"MSN_CONFIG_PRESET"},"value":"Config_Table1"}
+        {"set":{"global":"MSN_CONFIG_PRESET"},"value":"Config_Table0"}
     ]},
     {"set":{"local":"MSN_CONFIG_PRESET"},"value":{"global":"MSN_CONFIG_PRESET"}},
     {"if": {"global":"RESCUETRACK_ID"}, "eq": null,
@@ -1461,15 +1461,15 @@
     {"call_macro":"addon check"},
     {"call_macro":"voice pack fallback"},
     {"set_briefing_dialog":0},
+    {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table0"}},
     {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table1"}},
+    {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table2"}},
     {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table3"}},
     {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table4"}},
     {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table5"}},
-    {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table6"}},
-    {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table7"}},
-    {"open_table":{"static":"Config_Table2"}},
-    {"set":{"table":{"static":"Config_Table2"},"key":0,"value":null}},
-    {"save_table":{"static":"Config_Table2"}},
+    {"open_table":{"static":"config_custom_mission"}},
+    {"set":{"table":{"static":"config_custom_mission"},"key":0,"value":null}},
+    {"save_table":{"static":"config_custom_mission"}},
     {"sleep":0.3},
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_OFF_VECTOR","H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_OFF_TOPOGRAPH","H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_OFF_SATELLITE"]},
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_ZOOM_SET_13"]},
@@ -2104,7 +2104,7 @@
         ]},
         {"if": {"global":"AIRCRAFT_PROFILE_SLOT"}, "eq": null,
           "then": [
-            {"set":{"global":"AIRCRAFT_PROFILE_SLOT"},"value":"Aircraft_Profile_Table1"}
+            {"set":{"global":"AIRCRAFT_PROFILE_SLOT"},"value":"Aircraft_Profile_Table0"}
         ]},
         {"if": {"global":"P1_MANUAL_MEDICAL_MODE"}, "eq": null,
           "then": [
@@ -2879,7 +2879,11 @@
       "then": [
         {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
           "then": [
-            {"if": {"var":["L:LIVERY_ACTIVATION","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},
+                {"require":{"global":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"ne":1}
+              ]}, "eq": 1,
               "then": [
                 {"set":{"local":"CREW"},"value":{"var":["L:LIVERY_CREW","number"]}},
                 {"set":{"local":"GNDOPS_ROTOR"},"value":{"var":["L:LIVERY_GNDOPS_ROTOR","number"]}},
@@ -2887,30 +2891,31 @@
                 {"set":{"local":"RESCUETRACK_ID"},"value":{"var":["L:LIVERY_RESCUETRACK_ID","number"]}},
                 {"if": {"var":["L:LIVERY_PRESET","number"]}, "eq": 0,
                   "then": [
-                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table1"}
+                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table0"}
                 ]},
                 {"if": {"var":["L:LIVERY_PRESET","number"]}, "eq": 1,
                   "then": [
-                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table3"}
+                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table1"}
                 ]},
                 {"if": {"var":["L:LIVERY_PRESET","number"]}, "eq": 2,
                   "then": [
-                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table4"}
+                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table2"}
                 ]},
                 {"if": {"var":["L:LIVERY_PRESET","number"]}, "eq": 3,
                   "then": [
-                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table5"}
+                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table3"}
                 ]},
                 {"if": {"var":["L:LIVERY_PRESET","number"]}, "eq": 4,
                   "then": [
-                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table6"}
+                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table4"}
                 ]},
                 {"if": {"var":["L:LIVERY_PRESET","number"]}, "eq": 5,
                   "then": [
-                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table7"}
+                    {"set":{"local":"MSN_CONFIG_PRESET"},"value":"Config_Table5"}
                 ]},
                 {"set":{"local":"BOARDING_HOLD"},"value":0}
             ]},
+            {"set":{"global":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"value":null},
             {"set_map":{"remove":{"point":{"id":"BASE_inner"}}}},
             {"set_map":{"remove":{"point":{"id":"BASE_outer"}}}},
             {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_outer","stroke":{"width":1,"color":"green"},"fill":{"color":"rgba(0, 255, 0, 0.05)"},"range":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}}}},
@@ -2933,8 +2938,7 @@
                 {"set_dispatch_dialog":1},
                 {"sleep":1},
                 {"wait_for":{"local":"letsgo"},"eq":"yes"},
-                {"set_dispatch_dialog":0},
-                {"set_briefing_dialog":1}
+                {"set_dispatch_dialog":0}
               ],"else": [
                 {"set":{"local":"first_start"},"value":"no"},
                 {"if": {"local":"startpage"}, "ne": "mainpage",
@@ -2946,11 +2950,9 @@
                     {"set_dispatch_dialog":1},
                     {"sleep":1},
                     {"wait_for":{"local":"letsgo"},"eq":"yes"},
-                    {"set_dispatch_dialog":0},
-                    {"set_briefing_dialog":1}
+                    {"set_dispatch_dialog":0}
                   ],"else": [
-                    {"set_dispatch_dialog":0},
-                    {"set_briefing_dialog":1}
+                    {"set_dispatch_dialog":0}
                 ]}
             ]},
             {"if": {"local":"player"}, "eq": "multiplayer",
@@ -2968,7 +2970,6 @@
         ]}
       ],"else": [
         {"set":{"local":"player"},"value":"custom"},
-        {"set_briefing_dialog":1},
         {"call_macro":"CUSTOM_MISSION"}
     ]},
     {"call_macro":"apply linked aircraft profile"},
@@ -4060,6 +4061,32 @@
                 {"or": [
                   {"wait_for":{"var":["RADIO HEIGHT","feet"]},"gt":163},
                   {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":40}
+                ]}
+            ]}
+        ]}},
+        {"#comment":"HOIST ALTITUDE SAFETY GATE"},
+        {"create_thread": {
+          "commands": [
+            {"while": {"var":["L:MISSION_HOIST","number"]}, "eq": 1,
+              "do": [
+                {"wait_for":{"var":["L:{local:HXX}_SDK_OH_HOIST","number"]},"ne":0},
+                {"set":{"local":"HOIST_ALT_WARN_COUNT"},"value":0},
+                {"while": {
+                  "and": [
+                    {"require":{"var":["L:{local:HXX}_SDK_OH_HOIST","number"]},"ne":0},
+                    {"require":{"var":["L:MISSION_HOIST","number"]},"eq":1}
+                  ]}, "eq": 1,
+                  "do": [
+                    {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":30},
+                    {"if": {"local":"HOIST_ALT_WARN_COUNT"}, "lt": 3,
+                      "then": [
+                        {"set":{"var":["L:{local:VCP}48","number"]},"value":{"add":[{"var":["L:{local:VCP}48","number"]},1]}},
+                        {"set":{"local":"HOIST_ALT_WARN_COUNT"},"value":{"add":[{"local":"HOIST_ALT_WARN_COUNT"},1]}},
+                        {"sleep":{"rand":[5,10]}}
+                      ],"else": [
+                        {"wait_for":{"var":["RADIO HEIGHT","feet"]},"gte":30},
+                        {"set":{"local":"HOIST_ALT_WARN_COUNT"},"value":0}
+                    ]}
                 ]}
             ]}
         ]}},

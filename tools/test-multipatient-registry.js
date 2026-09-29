@@ -50,7 +50,11 @@ class HpgRegistry {
     if (q.create_struct) return Object.fromEntries(Object.entries(q.create_struct).map(([k, v]) => [k, this.query(v, p)]));
     if (q['json:copy']) return structuredClone(this.query(q['json:copy'], p));
     if (q['json:stringify']) return JSON.stringify(this.query(q['json:stringify'], p));
-    if (q.static) { assert.equal(q.static, 'Debug_Table'); return 'Andrews_debug_snapshots'; }
+    if (q.static) {
+      if (q.static === 'Debug_Table') return 'Andrews_debug_snapshots';
+      assert.match(q.static, /^Mission_Save_Slot[0-3]$/, `Unexpected static table ${q.static}`);
+      return q.static;
+    }
     if (q['js:get']) { assert.equal(q['js:get'], 'Object'); return Object; }
     if (q.struct) {
       const target = this.query(q.struct, p);

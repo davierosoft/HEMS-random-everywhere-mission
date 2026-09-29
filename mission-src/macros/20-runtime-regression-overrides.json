@@ -25,17 +25,64 @@
         {"create_thread": {
           "commands": [
             {"set":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"value":"yes"},
-            {"set":{"local":"HOIST_PREVIOUS_GROUND_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+            {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"yes"},
+            {"set":{"local":"HOIST_IMPACT_LOW_FT"},"value":0},
             {"while": {"local":"HOIST_CREW_ON_CABLE"}, "gt": 0,
               "do": [
-                {"set":{"local":"HOIST_CURRENT_GROUND_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
-                {"set":{"local":"HOIST_GROUND_RATE_FPS"},"value":{"subtract":[{"local":"HOIST_PREVIOUS_GROUND_FT"},{"local":"HOIST_CURRENT_GROUND_FT"}]}},
-                {"set":{"local":"HOIST_PREVIOUS_GROUND_FT"},"value":{"local":"HOIST_CURRENT_GROUND_FT"}},
-                {"if": {"local":"HOIST_GROUND_RATE_FPS"}, "gt": 6,
+                {"if": {"local":"HOIST_IMPACT_ARMED"}, "eq": "yes",
                   "then": [
-                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":5,"cause":"EXCESSIVE HOIST DESCENT RATE"}}
+                    {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":15},
+                    {"set":{"local":"HOIST_IMPACT_TRIGGERED"},"value":"no"},
+                    {"set":{"local":"HOIST_IMPACT_MONITORING"},"value":1},
+                    {"while": {"local":"HOIST_IMPACT_MONITORING"}, "eq": 1,
+                      "do": [
+                        {"if": {
+                          "or": [
+                            {"require":{"local":"HOIST_CREW_ON_CABLE"},"eq":0},
+                            {"require":{"fn":"hoist_get_distance_from_ground:ft"},"gte":15},
+                            {"require":{"local":"HOIST_IMPACT_TRIGGERED"},"eq":"yes"}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"HOIST_IMPACT_MONITORING"},"value":0}
+                          ],"else": [
+                            {"set":{"local":"HOIST_IMPACT_PREV_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+                            {"sleep":0.15},
+                            {"set":{"local":"HOIST_IMPACT_CUR_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+                            {"set":{"local":"HOIST_IMPACT_RATE_FPS"},"value":{"divide":[{"subtract":[{"local":"HOIST_IMPACT_PREV_FT"},{"local":"HOIST_IMPACT_CUR_FT"}]},0.15]}},
+                            {"if": {"local":"HOIST_IMPACT_CUR_FT"}, "lt": 1.5,
+                              "then": [
+                                {"set":{"local":"HOIST_IMPACT_TRIGGERED"},"value":"yes"},
+                                {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"no"},
+                                {"set":{"local":"HOIST_IMPACT_LOW_FT"},"value":{"local":"HOIST_IMPACT_CUR_FT"}},
+                                {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 12,
+                                  "then": [
+                                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":100,"cause":"FATAL HOIST OPERATOR GROUND IMPACT"}},
+                                    {"set_message":{"text":"Hoist operator hit the ground at high speed. Fatal impact."}}
+                                  ],"else": [
+                                    {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 7,
+                                      "then": [
+                                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":30,"cause":"HARD HOIST OPERATOR GROUND IMPACT"}},
+                                        {"set_message":{"text":"Hoist operator hit the ground hard. Injury sustained."}}
+                                      ],"else": [
+                                        {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 4,
+                                          "then": [
+                                            {"call_macro":"apply hoist crew lifescore impact","params":{"score":8,"cause":"HOIST OPERATOR GROUND IMPACT"}},
+                                            {"set_message":{"text":"Hoist operator touched down abruptly."}}
+                                        ]}
+                                    ]}
+                                ]}
+                            ]}
+                        ]}
+                    ]}
                 ]},
-                {"sleep":1}
+                {"if": {"local":"HOIST_IMPACT_ARMED"}, "eq": "no",
+                  "then": [
+                    {"or": [
+                      {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"gte":{"add":[{"local":"HOIST_IMPACT_LOW_FT"},3]}},
+                      {"wait_for":{"local":"HOIST_CREW_ON_CABLE"},"eq":0}
+                    ]},
+                    {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"yes"}
+                ]}
             ]}
         ]}}
     ]}
