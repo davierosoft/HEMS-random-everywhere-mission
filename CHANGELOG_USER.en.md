@@ -1,8 +1,8 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 168.147. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.0. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 168.147, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.0, still need final simulator confirmation.
 
 ## FIXES
 
@@ -162,6 +162,36 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 87, 135-136.
 - **Test:** Compare a level take-off with a steep-slope take-off while changing collective and engine power.
 
+### Briefing screen no longer reopens over an open menu
+
+- Opening a menu such as Settings, Save/Reload or Custom Mission while waiting for a dispatch no longer flips back to the briefing screen a moment later. The menu now stays open until the pilot closes it.
+- **Build history:** 0.997 169.
+- **Test:** While waiting for a dispatch, open Settings (or another menu) and confirm it stays open instead of returning to the briefing screen on its own.
+
+### Dispatch location marker no longer flickers on the map
+
+- When a new dispatch appears, or after pressing Next Dispatch, the location marker on the map used to appear, disappear immediately, then reappear about a second later. It now appears once, without flickering.
+- **Build history:** 0.997 169.
+- **Test:** Press Next Dispatch (or wait for a dispatch to appear) and watch the map marker; it should appear once without disappearing and reappearing.
+
+### Save slots no longer share information with each other
+
+- Deleting or reusing a save slot could occasionally leave a leftover value behind that affected a different slot. Each save slot now keeps its own information completely separate, so deleting or overwriting one slot cannot affect another.
+- **Build history:** 0.997 168.148, 169.
+- **Test:** Save a mission in one slot, delete it, then save a different mission in another slot and confirm nothing from the deleted slot carries over.
+
+### Settings correctly show options set by the livery
+
+- A display problem in Settings could hide or wrongly show hints set by an active livery, such as crew count or ground-operation requirements. These now appear correctly whenever a livery has set them.
+- **Build history:** 0.997 168.149.
+- **Test:** Load a livery that sets crew count or ground-operation requirements and confirm Settings shows the matching hint.
+
+### Reset to Default and Reset Stats now reset every setting
+
+- Reset to Default and Reset Stats previously left a few settings unchanged after resetting. Both resets now correctly restore every affected setting to its starting value.
+- **Build history:** 0.997 168.149.
+- **Test:** Change a few settings, including Direction Finder tuning mode and Tablet 5G, use Reset to Default (or Reset Stats), and confirm every changed setting returns to its starting value.
+
 ## UI
 
 ### Persistent troubleshooting snapshots
@@ -236,6 +266,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 68-69, 73, 77, 168.142, 168.146-147.
 - **Test:** Start a realistic dispatch and wait for ambulance, police or cancellation updates; confirm each message names the correct service and action.
 
+### Save disabled once ground or hoist work has begun
+
+- The Save button on the Save/Reload page is now disabled once ground or hoist operations have started at the scene. A mission can still be saved at any point before ground work begins.
+- **Build history:** 0.997 168.148.
+- **Test:** Start ground or hoist operations at a scene, then open Save/Reload and confirm the Save button is disabled.
+
 ## NEW FUNCTIONS
 
 ### Three-crew skid operations
@@ -288,9 +324,9 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 
 ### Crew safety scoring near hazards
 
-- Ground crew working near smoke or fire, or during a hoist, now accumulate a safety score. Staged warnings appear as the risk builds; a low score cancels and fails the mission, and a fatal exposure is correctly detected and reported, placing the injured-crew asset at the crew member's last position.
-- **Build history:** 0.997 93, 160.
-- **Test:** Expose a ground crew member to prolonged smoke or fire and to a risky hoist descent; verify the staged warnings, the low-score mission failure, and the fatal-hoist outcome each report correctly.
+- Ground crew working near smoke or fire, or during a hoist, now accumulate a safety score. Staged warnings appear as the risk builds; a low score cancels and fails the mission, and a fatal exposure is correctly detected and reported, placing the injured-crew asset at the crew member's last position. The score now also drops gradually during sustained nearby fire, detects an unsafe hoist ground-contact speed in stages, drains gradually during sustained hoist overspeed, excessive bank or excessive load, detects an aircraft crash in stages, and slowly recovers over time once the crew is no longer at risk.
+- **Build history:** 0.997 93, 160, 168.149.
+- **Test:** Expose a ground crew member to prolonged nearby fire, a fast hoist ground contact, sustained hoist overspeed/bank/excess load, and an aircraft crash; verify each staged warning, the low-score mission failure, the fatal-hoist outcome, and gradual score recovery once the crew is safe.
 
 ### Distant custom landing-zone police support
 
@@ -370,6 +406,24 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 71.
 - **Test:** Return to base, wait for another call, then repeat and choose End Shift.
 
+### Portable save files
+
+- Each save slot is now a separate, self-contained save file that includes everything needed to identify and reload it. A save file can be copied to the matching numbered slot on another installation and will load correctly there, without depending on any separate setting that could differ between two installations. Runtime confirmation of a copied save loading correctly on another installation is still pending.
+- **Build history:** 0.997 168.148, 169.
+- **Test:** Save a mission, copy the resulting save file to the matching slot on another installation, and confirm it reloads with the correct name and mission details.
+
+### Hoist too-low altitude callout
+
+- During hoist operations with the boom extended, a voice warning now alerts the crew if the helicopter descends below a safe hoist altitude, repeating up to three times if the condition continues, and rearming once a safe altitude is regained.
+- **Build history:** 0.997 168.148.
+- **Test:** Start a hoist with the boom extended and descend below the safe altitude threshold; confirm the warning plays and rearms after returning to a safe altitude.
+
+### Choice between livery and saved settings when loading
+
+- When loading a save while a livery with its own settings is active, a dialog now lets the pilot choose whether to load with the livery's settings, with the settings stored in the save, or to cancel the load.
+- **Build history:** 0.997 168.148.
+- **Test:** Load a livery with its own settings, then load a save, and confirm the dialog offers the livery, saved, and cancel choices.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -405,4 +459,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 160-167:** Hoist fatal-detection fix (see Crew safety scoring near hazards) and expanded troubleshooting diagnostics.
 - **0.997 168:** Candidate delivery restoring five-minute-plus CPR stability, crew-fatality placement, and marshal restart recognition; runtime PENDING.
 - **0.997 168.1-168.129:** Internal reliability hardening and trial builds; no separate final pilot-facing change beyond what is listed above.
-- **0.997 168.130-168.147 (this checkpoint):** Independent multi-patient ambulance/HEMS choreography, rebuilt orange smoke marker, per-action RescueTrack attribution, the vehicle-circling fix, and corrected vitals/temperature display. Still to be confirmed in the simulator.
+- **0.997 168.130-168.147:** Independent multi-patient ambulance/HEMS choreography, rebuilt orange smoke marker, per-action RescueTrack attribution, the vehicle-circling fix, and corrected vitals/temperature display.
+- **0.997 168.148-169.0 (this release):** Portable, self-contained save files, save disabled during active ground/hoist work, the hoist too-low altitude callout, the livery-vs-saved-settings load choice, expanded crew safety scoring (sustained fire, hoist ground-contact speed, sustained hoist overspeed/bank/excess load, aircraft crash, gradual recovery), corrected livery hints and full Reset to Default/Reset Stats coverage in Settings, the briefing screen reopening over an open menu, and the flickering dispatch location marker. Still to be confirmed in the simulator.
