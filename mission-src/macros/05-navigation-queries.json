@@ -607,12 +607,14 @@
                 {"set_map":{"add":{"point":{"location":"SAR_start_location","id":"ringSAR","stroke":{"width":0.2,"color":"red"},"fill":{"color":"rgba(255, 0, 0, 0.2)"},"range":{"global":"SAR_MAX_RADIUS"}}}}}
             ]}
         ]},
+        {"set":{"local":"accident_primary_valid"},"value":"no"},
         {"if": {
           "and": [
             {"require":{"has_location":"accident_location"},"eq":1},
             {"require":{"location":"accident_location","var":"distance:km"},"lt":400}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"accident_primary_valid"},"value":"yes"},
             {"set":{"local":"queryfailed"},"value":null},
             {"set":{"local":"has_location"},"value":"yes"}
         ]},
@@ -622,10 +624,10 @@
             {"require":{"location":"rescue_location","var":"distance:km"},"lt":400}
           ]}, "eq": 1,
           "then": [
-            {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
-            {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
-            {"sleep":1},
-            {"set_map":{"add":{"point":{"location":"rescue_location","icon":{"resolve_icon":"{local:Icon}"},"id":"rescue_location_icon"}}}},
+            {"if": {"local":"accident_primary_valid"}, "ne": "yes",
+              "then": [
+                {"set":{"local":"location_name"},"value":"rescue_location"}
+            ]},
             {"set":{"var":["L:PRE_RESCUE_LOCATION","number"]},"value":{"location":"rescue_location"}},
             {"set":{"local":"queryfailed"},"value":null},
             {"set":{"local":"has_location"},"value":"yes"}

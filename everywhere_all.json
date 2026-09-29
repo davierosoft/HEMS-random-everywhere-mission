@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.0",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.1",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.0"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.1"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -11291,12 +11291,14 @@
                 {"set_map":{"add":{"point":{"location":"SAR_start_location","id":"ringSAR","stroke":{"width":0.2,"color":"red"},"fill":{"color":"rgba(255, 0, 0, 0.2)"},"range":{"global":"SAR_MAX_RADIUS"}}}}}
             ]}
         ]},
+        {"set":{"local":"accident_primary_valid"},"value":"no"},
         {"if": {
           "and": [
             {"require":{"has_location":"accident_location"},"eq":1},
             {"require":{"location":"accident_location","var":"distance:km"},"lt":400}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"accident_primary_valid"},"value":"yes"},
             {"set":{"local":"queryfailed"},"value":null},
             {"set":{"local":"has_location"},"value":"yes"}
         ]},
@@ -11306,10 +11308,10 @@
             {"require":{"location":"rescue_location","var":"distance:km"},"lt":400}
           ]}, "eq": 1,
           "then": [
-            {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
-            {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
-            {"sleep":1},
-            {"set_map":{"add":{"point":{"location":"rescue_location","icon":{"resolve_icon":"{local:Icon}"},"id":"rescue_location_icon"}}}},
+            {"if": {"local":"accident_primary_valid"}, "ne": "yes",
+              "then": [
+                {"set":{"local":"location_name"},"value":"rescue_location"}
+            ]},
             {"set":{"var":["L:PRE_RESCUE_LOCATION","number"]},"value":{"location":"rescue_location"}},
             {"set":{"local":"queryfailed"},"value":null},
             {"set":{"local":"has_location"},"value":"yes"}
@@ -114820,7 +114822,7 @@
     {"image":"bar"},
     {"link":"+ Quick links (click to show):","commands":[{"set":{"local":"dtab0"},"value":1}],"show_condition":{"require":{"local":"dtab0"},"eq":0}},
     {"link":"- Quick links (click to hide):","commands":[{"set":{"local":"dtab0"},"value":0}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
-    {"link":"- TECHNICAL PAGE & GROUND OPS","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"set_dispatch_dialog":1},{"call_macro":"techpage"}],"show_condition":{"require":{"var":["SIM ON GROUND","bool"]},"eq":1}},
+    {"link":"- TECHNICAL PAGE & GROUND OPS","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"techpage"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["SIM ON GROUND","bool"]},"eq":1}},
     {"link":"- CHECKLISTS PAGE","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"checklist home"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
     {"link":"- DISPATCH CONTROL PAGE","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"dispatch control"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
     {"link":"- Start boarding procedures","commands":[{"set":{"local":"BOARDING_HOLD"},"value":0}],"show_condition":{"and":[{"require":{"local":"BOARDING_HOLD"},"eq":1},{"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10}],"eq":1}},
@@ -114837,7 +114839,7 @@
     {"slider":{"min":500,"max":60000,"global":"MISSION_ACCIDENT_MIN_RADIUS","commands":[{"call_macro":"min max rng check"},{"call_macro":"mark aircraft profile custom"}]}},
     {"buttonbar":[{"text":"Crew members selection (locked during crew boarding) (4 = DEFAULT):"},{"title":"3","select_condition":{"require":{"local":"CREW"},"eq":3},"disabled_condition":{"require":{"var":["L:HOLD","number"]},"eq":1},"commands":[{"call_macro":"shared repeated block 058"},{"call_macro":"mark aircraft profile custom"}]},{"title":"4","select_condition":{"require":{"local":"CREW"},"eq":4},"disabled_condition":{"require":{"var":["L:HOLD","number"]},"eq":1},"commands":[{"call_macro":"shared repeated block 059"},{"call_macro":"mark aircraft profile custom"}]},{"title":"5","select_condition":{"require":{"local":"CREW"},"eq":5},"disabled_condition":{"require":{"var":["L:HOLD","number"]},"eq":1},"commands":[{"call_macro":"shared repeated block 060"},{"call_macro":"mark aircraft profile custom"}]}]},
     {"image":"bar"},
-    {"link":"- R&E Mission generator - DESCRIPTION","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"set_dispatch_dialog":1},{"call_macro":"description"}]},
+    {"link":"- R&E Mission generator - DESCRIPTION","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"description"},{"set_dispatch_dialog":1}]},
     {"image":"bar"}
   ],
 
