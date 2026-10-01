@@ -1967,7 +1967,11 @@
         ]},
         {"if": {"local":"patient_live_mode"}, "eq": 1,
           "then": [
-            {"call_macro":"multipatient registry live ground dispatch","params":{"resource":"ambulance1","medic":"ambumedic7","stretcher":"ambustretcher7"}},
+            {"call_macro":"multipatient registry live ground dispatch","params":{"resource":"ambulance1","medic":"ambumedic7","stretcher":"ambustretcher7"},"result":"dispatch_ok"},
+            {"if": {"param":"dispatch_ok"}, "ne": 1,
+              "then": [
+                {"call_macro":"ambulance1 stand down"}
+            ]},
             {"return":1}
         ]},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambustretcher full","state":"wait_var.L:MIDWAY_eq_0"}},
@@ -2453,16 +2457,34 @@
                   "zones": [
                     {"zone":{"location":{"bearing2":180,"dist":30,"object":"unhospital"}}}
                 ]},
-                {"create_route":{"name":"ambu1","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
+                {"call_macro":"legacy scene routing check"},
+                {"set":{"local":"rd_ambu1"},"value":"yes"},
+                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                  "then": [
+                    {"create_route":{"name":"ambu1","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
+                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                    {"if": {"local":"route_check_value"}, "gt": 0,
+                      "then": [
+                        {"set":{"local":"rd_ambu1"},"value":"no"}
+                    ]}
+                ]},
                 {"set":{"local":"ambulance_patient_transfer_state"},"value":"departing"},
-                {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}},
+                {"if": {"local":"rd_ambu1"}, "eq": "no",
+                  "then": [
+                    {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}}
+                ]},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                 {"sleep":[1,5]},
                 {"create_thread": {
                   "commands": [
                     {"call_macro":"ambulance_restart_at_slow_speed"}
                 ]}},
-                {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"watchdog_ambulance1_close_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5},"__mark_arrival":true},
+                {"if": {"local":"rd_ambu1"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"drive ambulance1 safe","params":{"to":["watchdog_ambulance1_close_hospital_approach"],"fallback":"watchdog_ambulance1_close_hospital_approach","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"watchdog_ambulance1_close_hospital_approach"},24.6]},120]}},"__mark_arrival":true}
+                  ],"else": [
+                    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"watchdog_ambulance1_close_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5},"__mark_arrival":true}
+                ]},
                 {"set":{"local":"ambulance_patient_transfer_state"},"value":"hospital_arrived"},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
                 {"sleep":60},
@@ -2911,14 +2933,32 @@
                   "zones": [
                     {"zone":{"location":{"bearing2":180,"dist":30,"object":"unhospital"}}}
                 ]},
-                {"create_route":{"name":"ambu1","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
-                {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}},
+                {"call_macro":"legacy scene routing check"},
+                {"set":{"local":"rd_ambu1"},"value":"yes"},
+                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                  "then": [
+                    {"create_route":{"name":"ambu1","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
+                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                    {"if": {"local":"route_check_value"}, "gt": 0,
+                      "then": [
+                        {"set":{"local":"rd_ambu1"},"value":"no"}
+                    ]}
+                ]},
+                {"if": {"local":"rd_ambu1"}, "eq": "no",
+                  "then": [
+                    {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}}
+                ]},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                 {"create_thread": {
                   "commands": [
                     {"call_macro":"ambulance_restart_at_slow_speed"}
                 ]}},
-                {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"watchdog_ambulance1_far_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5},"__mark_arrival":true},
+                {"if": {"local":"rd_ambu1"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"drive ambulance1 safe","params":{"to":["watchdog_ambulance1_far_hospital_approach"],"fallback":"watchdog_ambulance1_far_hospital_approach","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"watchdog_ambulance1_far_hospital_approach"},24.6]},120]}},"__mark_arrival":true}
+                  ],"else": [
+                    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"watchdog_ambulance1_far_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5},"__mark_arrival":true}
+                ]},
                 {"set":{"local":"ambulance_patient_transfer_state"},"value":"hospital_arrived"},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
                 {"sleep":60},

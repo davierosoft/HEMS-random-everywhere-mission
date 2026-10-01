@@ -90,6 +90,10 @@
         ]},
         {"call_macro":"refresh crew lifescore report"},
         {"call_macro":"evaluate crew lifescore state","params":{"member":{"param":"member"},"cause":{"param":"cause"}}}
+      ],"else": [
+        {"set":{"local":"crash_trace_member"},"value":{"param":"member"}},
+        {"set":{"local":"crash_trace_score"},"value":{"param":"score"}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_discarded member={local:crash_trace_member} score={local:crash_trace_score} safety={global:HOIST_SAFETY_MONITOR} emergency={local:CREW_EMERGENCY_ACTIVE}"}}
     ]},
     {"call_macro":"test tracker complete","params":{"test_id":"crew_health"}}
   ],
@@ -689,6 +693,7 @@
     {"call_macro":"test tracker complete","params":{"test_id":"crew_emergency"}}
   ],
   "apply aircraft acceleration lifescore impact": [
+    {"call_macro":"crew presence flags"},
     {"if": {"and":[{"require":{"local":"CREW_ACCELERATION_COOLDOWN"},"ne":1},{"or":[{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":3},{"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":-3},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":3},{"require":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":-3},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":3},{"require":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":-3}],"eq":1}],"eq":1},
       "then": [
         {"set":{"local":"CREW_ACCELERATION_COOLDOWN"},"value":1},
@@ -724,7 +729,7 @@
         {"if": {
           "and": [
             {"require":{"local":"CREW"},"gte":1},
-            {"require":{"var":["L:{local:HXX}_SDK_PILOT_CAPT_ON","number"]},"eq":1}
+            {"require":{"local":"CREW_PRESENT_1"},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"local":"CREW_ACCELERATION_DAMAGE"},"cause":"ABRUPT AIRCRAFT ACCELERATION"}}
@@ -732,7 +737,7 @@
         {"if": {
           "and": [
             {"require":{"local":"CREW"},"gte":2},
-            {"require":{"var":["L:{local:HXX}_SDK_PILOT_FO_ON","number"]},"eq":1}
+            {"require":{"local":"CREW_PRESENT_2"},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"local":"CREW_ACCELERATION_DAMAGE"},"cause":"ABRUPT AIRCRAFT ACCELERATION"}}
@@ -740,7 +745,7 @@
         {"if": {
           "and": [
             {"require":{"local":"CREW"},"gte":3},
-            {"require":{"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]},"eq":1}
+            {"require":{"local":"CREW_PRESENT_3"},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"local":"CREW_ACCELERATION_DAMAGE"},"cause":"ABRUPT AIRCRAFT ACCELERATION"}}
@@ -748,7 +753,7 @@
         {"if": {
           "and": [
             {"require":{"local":"CREW"},"gte":4},
-            {"require":{"var":["L:{local:HXX}_SDK_PAX_1_ON","number"]},"eq":1}
+            {"require":{"local":"CREW_PRESENT_4"},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"local":"CREW_ACCELERATION_DAMAGE"},"cause":"ABRUPT AIRCRAFT ACCELERATION"}}
@@ -756,7 +761,7 @@
         {"if": {
           "and": [
             {"require":{"local":"CREW"},"gte":5},
-            {"require":{"var":["L:{local:HXX}_SDK_PAX_3_ON","number"]},"eq":1}
+            {"require":{"local":"CREW_PRESENT_5"},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"local":"CREW_ACCELERATION_DAMAGE"},"cause":"ABRUPT AIRCRAFT ACCELERATION"}}
@@ -860,11 +865,82 @@
       ]}
     }
   ],
+  "crew presence flags": [
+    {"#comment":"Member index to SDK presence flag, matching the boarding triggers: CREW 3 = pilot, copilot, pax3; CREW 4 = pilot, copilot, pax1, pax3; CREW 5 adds pax2."},
+    {"set":{"local":"CREW_PRESENT_1"},"value":0},
+    {"set":{"local":"CREW_PRESENT_2"},"value":0},
+    {"set":{"local":"CREW_PRESENT_3"},"value":0},
+    {"set":{"local":"CREW_PRESENT_4"},"value":0},
+    {"set":{"local":"CREW_PRESENT_5"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:{local:HXX}_SDK_PILOT_CAPT_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_1"},"value":1}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":2}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:{local:HXX}_SDK_PILOT_FO_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_2"},"value":1}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"eq":3}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:{local:HXX}_SDK_PAX_3_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_3"},"value":1}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"eq":4}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:{local:HXX}_SDK_PAX_1_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_3"},"value":1}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_PAX_3_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_4"},"value":1}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW"},"gte":5}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_3"},"value":1}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_PAX_1_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_4"},"value":1}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_PAX_3_ON","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_PRESENT_5"},"value":1}
+        ]}
+    ]}
+  ],
   "apply aircraft crash lifescore impact": [
+    {"call_macro":"crew presence flags"},
     {"if": {
       "and": [
         {"require":{"local":"CREW"},"gte":1},
-        {"require":{"var":["L:{local:HXX}_SDK_PILOT_CAPT_ON","number"]},"eq":1}
+        {"require":{"local":"CREW_PRESENT_1"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"param":"score"},"cause":{"param":"cause"}}}
@@ -872,7 +948,7 @@
     {"if": {
       "and": [
         {"require":{"local":"CREW"},"gte":2},
-        {"require":{"var":["L:{local:HXX}_SDK_PILOT_FO_ON","number"]},"eq":1}
+        {"require":{"local":"CREW_PRESENT_2"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"param":"score"},"cause":{"param":"cause"}}}
@@ -880,7 +956,7 @@
     {"if": {
       "and": [
         {"require":{"local":"CREW"},"gte":3},
-        {"require":{"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]},"eq":1}
+        {"require":{"local":"CREW_PRESENT_3"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"param":"score"},"cause":{"param":"cause"}}}
@@ -888,7 +964,7 @@
     {"if": {
       "and": [
         {"require":{"local":"CREW"},"gte":4},
-        {"require":{"var":["L:{local:HXX}_SDK_PAX_1_ON","number"]},"eq":1}
+        {"require":{"local":"CREW_PRESENT_4"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"param":"score"},"cause":{"param":"cause"}}}
@@ -896,7 +972,7 @@
     {"if": {
       "and": [
         {"require":{"local":"CREW"},"gte":5},
-        {"require":{"var":["L:{local:HXX}_SDK_PAX_3_ON","number"]},"eq":1}
+        {"require":{"local":"CREW_PRESENT_5"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"param":"score"},"cause":{"param":"cause"}}}
@@ -919,6 +995,11 @@
                   {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-97}
                 ]},
                 {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"no"},
+                {"call_macro":"crew presence flags"},
+                {"set":{"local":"crash_trace_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                {"set":{"local":"crash_trace_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                {"set":{"local":"crash_trace_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_detected accel X={local:crash_trace_x} Y={local:crash_trace_y} Z={local:crash_trace_z} crew={local:CREW} present={local:CREW_PRESENT_1}{local:CREW_PRESENT_2}{local:CREW_PRESENT_3}{local:CREW_PRESENT_4}{local:CREW_PRESENT_5} emergency={local:CREW_EMERGENCY_ACTIVE} total_before={local:CREW_LIFESCORE_TOTAL_IMPACT}"}},
                 {"if": {
                   "or": [
                     {"require":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":386},
@@ -948,7 +1029,8 @@
                         {"call_macro":"apply aircraft crash lifescore impact","params":{"score":25,"cause":"AIRCRAFT CRASH IMPACT"}},
                         {"set_message":{"text":"Impact detected. Crew shaken but conscious."}}
                     ]}
-                ]}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_applied total_after={local:CREW_LIFESCORE_TOTAL_IMPACT} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}}
             ]},
             {"if": {"local":"CRASH_IMPACT_ARMED"}, "eq": "no",
               "then": [

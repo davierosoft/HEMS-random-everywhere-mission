@@ -30,6 +30,7 @@ const scripts = [
   'test-user-facing-ascii.js',
   'test-civilian-object-safety.js',
   'test-route-location-integrity.js',
+  'test-route-legacy-fallback.js',
   'test-ambulance-stretcher-returns.js',
   'test-hoist-patient-loading.js',
   'test-hvar-command-compatibility.js',

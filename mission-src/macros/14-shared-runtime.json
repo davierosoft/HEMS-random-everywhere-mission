@@ -1413,7 +1413,12 @@
       "commands": [
         {"call_macro":"ambulance_restart_at_slow_speed"}
     ]}},
-    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+    {"if": {"local":"rd_polyb"}, "eq": "yes",
+      "then": [
+        {"call_macro":"drive ambulance1 safe","params":{"to":["POLWP"],"fallback":"POLWP","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"POLWP"},24.6]},120]}}}
+      ],"else": [
+        {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+    ]},
     {"create_thread": {
       "commands": [
         {"call_macro":"ambulance_restart_at_slow_speed"}
@@ -1689,15 +1694,33 @@
       "zones": [
         {"zone":{"location":{"bearing":225,"dist":30,"object":"unhospital"}}}
     ]},
-    {"create_route":{"name":"ambu7","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
-    {"draw_route":"ambu7","stroke":{"width":2,"color":"#9A9A9A"}},
+    {"call_macro":"legacy scene routing check"},
+    {"set":{"local":"rd_ambu7"},"value":"yes"},
+    {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+      "then": [
+        {"create_route":{"name":"ambu7","query":{"to":"unhospital","from":"ambulance1","type":"car"}}},
+        {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+        {"if": {"local":"route_check_value"}, "gt": 0,
+          "then": [
+            {"set":{"local":"rd_ambu7"},"value":"no"}
+        ]}
+    ]},
+    {"if": {"local":"rd_ambu7"}, "eq": "no",
+      "then": [
+        {"draw_route":"ambu7","stroke":{"width":2,"color":"#9A9A9A"}}
+    ]},
     {"sleep":1},
     {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
     {"create_thread": {
       "commands": [
         {"call_macro":"ambulance_restart_at_slow_speed"}
     ]}},
-    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu7","fallback":"watchdog_ambulance1_shared_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
+    {"if": {"local":"rd_ambu7"}, "eq": "yes",
+      "then": [
+        {"call_macro":"drive ambulance1 safe","params":{"to":["watchdog_ambulance1_shared_hospital_approach"],"fallback":"watchdog_ambulance1_shared_hospital_approach","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"watchdog_ambulance1_shared_hospital_approach"},24.6]},120]}}}
+      ],"else": [
+        {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu7","fallback":"watchdog_ambulance1_shared_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}}
+    ]},
     {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
     {"sleep":60},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"shared repeated block 064","state":"destroy"}},
@@ -2095,5 +2118,17 @@
         ]}
     ]},
     {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}}
+  ],
+  "legacy scene routing check": [
+    {"#comment":"Straight-line (legacy) scene approach for rescue vehicles: active when SKIP QUERY is on or the route mode is legacy. No OSM route is created or drawn; ETA is distance / fixed speed."},
+    {"set":{"local":"legacy_scene_routing"},"value":"no"},
+    {"if": {"var":["L:SKIP_QUERY","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"legacy_scene_routing"},"value":"yes"}
+    ]},
+    {"if": {"global":"ambu_route_mode"}, "eq": "legacy",
+      "then": [
+        {"set":{"local":"legacy_scene_routing"},"value":"yes"}
+    ]}
   ]
 }

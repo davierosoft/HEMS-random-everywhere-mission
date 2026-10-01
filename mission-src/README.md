@@ -2,7 +2,7 @@
 
 `everywhere_all.json` must remain a single HPG deployment artifact, but it is too large for safe routine editing. This directory exposes its two actively maintained object sections as focused, valid JSON modules:
 
-- `macros/`: 21 subsystem files containing all 794 command macros, including Astra P1-P3 integration and location diagnostics.
+- `macros/`: 21 subsystem files containing all 798 command macros, including Astra P1-P3 integration and location diagnostics.
 - `data/`: 6 files containing all 190 persistent tables, content pools, assets, and message catalogs.
 - `manifest.json`: stable key order, module descriptions, and retained source-extraction metadata. Assembly uses the mandatory shared formatter.
 

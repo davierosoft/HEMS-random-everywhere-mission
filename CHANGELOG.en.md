@@ -1,3 +1,11 @@
+## Release 0.997 169.3
+
+- Local test build 169.3, includes the unreleased 169.2 legacy straight-line movement. Medic stand-down after the last patient is handed over, with a 60 s wait and return to the station. Fire truck diagnostic traces. Role-based scene parking lanes (fire 4 lateral then 6 realigned, ambulance opposite side 4 then 2, police reverses 5 m then parks on the fire side 4 then 2), anti-overlap only with ambulance2 or firetruck2, scene gap trace. Crew impact: member presence flags now follow the boarded crew (3 crew: pilot, copilot, pax3; 4 crew: pilot, copilot, pax1, pax3) and crash_ops traces record detected, applied and discarded impacts. Runtime behaviour pending.
+
+## Release 0.997 169.2
+
+- Legacy straight-line movement for rescue vehicles: when SKIP QUERY is active or the route mode is LEGACY, ambulance, police and fire vehicles arriving on scene start from a random station 3 to 8 NM from the scene and drive directly at 80 km/h with the ETA computed from distance (measured 24.6 m/s), without OSM routes or route drawing. The same applies to hospital transport, patient and crew transfers, midway and pick doctor moves and multipatient ground load. In normal mode, if OSM does not answer, the station query falls back to a random station after 90 s, and a route returned with zero or empty duration falls back to a direct drive only for the failed part. Menu label updated. Scenery traffic routes are unchanged.
+
 ## Release 0.997 169.1
 
 - Fix rescue_location fallback in accident location pregenerator drawing the map icon twice or on the wrong location; icon is now drawn only by refresh_unaccepted_dispatch_map with location_name set to rescue_location when the primary accident location is invalid. Fix TECHNICAL PAGE and R&E DESCRIPTION links in the briefing page opening the dialog before the page content was populated.

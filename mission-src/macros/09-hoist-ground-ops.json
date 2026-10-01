@@ -3690,9 +3690,32 @@
                             ]},
                             {"drive_object":{"name":"pax3","to":[{"bearing":30,"dist":6}],"VAR1":3,"speed":4}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                            {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
-                            {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
-                            {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}},
+                            {"call_macro":"legacy scene routing check"},
+                            {"set":{"local":"rd_polya"},"value":"yes"},
+                            {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                              "then": [
+                                {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
+                                {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                {"if": {"local":"route_check_value"}, "gt": 0,
+                                  "then": [
+                                    {"set":{"local":"rd_polya"},"value":"no"}
+                                ]}
+                            ]},
+                            {"call_macro":"legacy scene routing check"},
+                            {"set":{"local":"rd_polyb"},"value":"yes"},
+                            {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                              "then": [
+                                {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
+                                {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                {"if": {"local":"route_check_value"}, "gt": 0,
+                                  "then": [
+                                    {"set":{"local":"rd_polyb"},"value":"no"}
+                                ]}
+                            ]},
+                            {"if": {"local":"rd_polya"}, "eq": "no",
+                              "then": [
+                                {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}}
+                            ]},
                             {"sleep":1},
                             {"set":{"object":"police","var":"VAR 1"},"value":1},
                             {"create_thread": {
@@ -3718,7 +3741,12 @@
                               "commands": [
                                 {"call_macro":"police_restart_at_slow_speed"}
                             ]}},
-                            {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                            {"if": {"local":"rd_polya"}, "eq": "yes",
+                              "then": [
+                                {"call_macro":"drive police safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"polly"},24.6]},120]}}}
+                              ],"else": [
+                                {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                            ]},
                             {"set":{"object":"police","var":"VAR 1"},"value":1},
                             {"set":{"var":["L:STEP","number"]},"value":1},
                             {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":90,"dist":2,"object":"police"},{"bearing2":270,"dist":2,"object":"police"}],"to":"hoist_crew"}],"VAR1":3,"speed":2}},
@@ -3738,7 +3766,12 @@
                         {"call_macro":"police_restart_at_slow_speed"}
                     ]}},
                     {"set":{"local":"police_lz_move_lock"},"value":"yes"},
-                    {"call_macro":"drive police safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                    {"if": {"local":"rd_polyb"}, "eq": "yes",
+                      "then": [
+                        {"call_macro":"drive police safe","params":{"to":["POLWP"],"fallback":"POLWP","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"POLWP"},24.6]},120]}}}
+                      ],"else": [
+                        {"call_macro":"drive police safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                    ]},
                     {"set":{"object":"police","var":"VAR 1"},"value":0},
                     {"if": {"location":"POLWP","var":"distance:m","to":"police"}, "gt": 2,
                       "then": [
@@ -4270,9 +4303,32 @@
                                   "zones": [
                                     {"zone":{"location":{"bearing2":180,"dist":6,"object":"ambulance1"}}}
                                 ]},
-                                {"create_route":{"name":"polya","query":{"to":"polly","from":"ambulance1","type":"car"}}},
-                                {"create_route":{"name":"polyb","query":{"to":"AMBWP","from":"polly","type":"car"}}},
-                                {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}},
+                                {"call_macro":"legacy scene routing check"},
+                                {"set":{"local":"rd_polya"},"value":"yes"},
+                                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                                  "then": [
+                                    {"create_route":{"name":"polya","query":{"to":"polly","from":"ambulance1","type":"car"}}},
+                                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                    {"if": {"local":"route_check_value"}, "gt": 0,
+                                      "then": [
+                                        {"set":{"local":"rd_polya"},"value":"no"}
+                                    ]}
+                                ]},
+                                {"call_macro":"legacy scene routing check"},
+                                {"set":{"local":"rd_polyb"},"value":"yes"},
+                                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                                  "then": [
+                                    {"create_route":{"name":"polyb","query":{"to":"AMBWP","from":"polly","type":"car"}}},
+                                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                    {"if": {"local":"route_check_value"}, "gt": 0,
+                                      "then": [
+                                        {"set":{"local":"rd_polyb"},"value":"no"}
+                                    ]}
+                                ]},
+                                {"if": {"local":"rd_polya"}, "eq": "no",
+                                  "then": [
+                                    {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}}
+                                ]},
                                 {"sleep":1},
                                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                                 {"create_thread": {
@@ -4295,7 +4351,12 @@
                                     {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":0},
                                     {"set":{"object":"ambulance1","var":"WP INDEX"},"value":0}
                                 ]}},
-                                {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                                {"if": {"local":"rd_polya"}, "eq": "yes",
+                                  "then": [
+                                    {"call_macro":"drive ambulance1 safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"polly"},24.6]},120]}}}
+                                  ],"else": [
+                                    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                                ]},
                                 {"sleep":[5,10]},
                                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"4 or 5 crew ground ops","state":"move_object"}},
                                 {"move_object":"pax3","to":{"bearing2":180,"dist":3.2,"heading":100,"object":"ambulance1"}},
@@ -4556,8 +4617,28 @@
                           "zones": [
                             {"zone":{"location":{"bearing":90,"dist":10}}}
                         ]},
-                        {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
-                        {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
+                        {"call_macro":"legacy scene routing check"},
+                        {"set":{"local":"rd_polya"},"value":"yes"},
+                        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                          "then": [
+                            {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
+                            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                            {"if": {"local":"route_check_value"}, "gt": 0,
+                              "then": [
+                                {"set":{"local":"rd_polya"},"value":"no"}
+                            ]}
+                        ]},
+                        {"call_macro":"legacy scene routing check"},
+                        {"set":{"local":"rd_polyb"},"value":"yes"},
+                        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                          "then": [
+                            {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
+                            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                            {"if": {"local":"route_check_value"}, "gt": 0,
+                              "then": [
+                                {"set":{"local":"rd_polyb"},"value":"no"}
+                            ]}
+                        ]},
                         {"sleep":1},
                         {"create_thread": {
                           "commands": [
@@ -4581,7 +4662,12 @@
                         {"sleep":3},
                         {"wait_for":{"local":"police_lz_departure_delay_done"},"eq":"yes"},
                         {"set":{"local":"police_lz_move_lock"},"value":"yes"},
-                        {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                        {"if": {"local":"rd_polya"}, "eq": "yes",
+                          "then": [
+                            {"call_macro":"drive police safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"polly"},24.6]},120]}}}
+                          ],"else": [
+                            {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                        ]},
                         {"set":{"local":"policeloadingenabled"},"value":"returned"},
                         {"move_object":"hoist_crew","to":{"bearing2":280,"dist":1.5,"heading":100,"object":"police"}},
                         {"sleep":2},
@@ -4790,9 +4876,32 @@
                                 ]},
                                 {"drive_object":{"name":"pax3","to":[{"bearing":340,"dist":7},{"bearing":5,"dist":7},{"bearing":30,"dist":6}],"VAR1":16,"speed":4}},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                                {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
-                                {"create_route":{"name":"polyb","query":{"to":"police","from":"polly","type":"car"}}},
-                                {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}},
+                                {"call_macro":"legacy scene routing check"},
+                                {"set":{"local":"rd_polya"},"value":"yes"},
+                                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                                  "then": [
+                                    {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
+                                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                    {"if": {"local":"route_check_value"}, "gt": 0,
+                                      "then": [
+                                        {"set":{"local":"rd_polya"},"value":"no"}
+                                    ]}
+                                ]},
+                                {"call_macro":"legacy scene routing check"},
+                                {"set":{"local":"rd_polyb"},"value":"yes"},
+                                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                                  "then": [
+                                    {"create_route":{"name":"polyb","query":{"to":"police","from":"polly","type":"car"}}},
+                                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                    {"if": {"local":"route_check_value"}, "gt": 0,
+                                      "then": [
+                                        {"set":{"local":"rd_polyb"},"value":"no"}
+                                    ]}
+                                ]},
+                                {"if": {"local":"rd_polya"}, "eq": "no",
+                                  "then": [
+                                    {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}}
+                                ]},
                                 {"sleep":1},
                                 {"set":{"object":"police","var":"VAR 1"},"value":1},
                                 {"create_thread": {
@@ -4814,7 +4923,12 @@
                                 ]}},
                                 {"wait_for":{"local":"police_lz_departure_delay_done"},"eq":"yes"},
                                 {"set":{"local":"police_lz_move_lock"},"value":"yes"},
-                                {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                                {"if": {"local":"rd_polya"}, "eq": "yes",
+                                  "then": [
+                                    {"call_macro":"drive police safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"polly"},24.6]},120]}}}
+                                  ],"else": [
+                                    {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                                ]},
                                 {"set":{"object":"police","var":"VAR 1"},"value":1},
                                 {"set":{"var":["L:STEP","number"]},"value":1},
                                 {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":90,"dist":2,"object":"police"},{"bearing2":270,"dist":2,"object":"police"}],"to":"hoist_crew"}],"VAR1":3,"speed":2}},
@@ -4835,7 +4949,12 @@
                         ]}},
                         {"set":{"local":"police_lz_move_lock"},"value":"yes"},
                         {"set_message":{"text":"Ground operations in progress, helicopter area clear. <br />Operations may take a while.<br />(Optional) Take off is allowed if the area is not safe."}},
-                        {"call_macro":"drive police safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                        {"if": {"local":"rd_polyb"}, "eq": "yes",
+                          "then": [
+                            {"call_macro":"drive police safe","params":{"to":["POLWP"],"fallback":"POLWP","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"POLWP"},24.6]},120]}}}
+                          ],"else": [
+                            {"call_macro":"drive police safe multiplier","params":{"to":"polyb","fallback":"POLWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                        ]},
                         {"set":{"object":"police","var":"VAR 1"},"value":0},
                         {"if": {"location":"POLWP","var":"distance:m","to":"police"}, "gt": 2,
                           "then": [
@@ -5336,9 +5455,32 @@
                                   "zones": [
                                     {"zone":{"location":{"bearing2":180,"dist":6,"object":"ambulance1"}}}
                                 ]},
-                                {"create_route":{"name":"polya","query":{"to":"polly","from":"ambulance1","type":"car"}}},
-                                {"create_route":{"name":"polyb","query":{"to":"AMBWP","from":"polly","type":"car"}}},
-                                {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}},
+                                {"call_macro":"legacy scene routing check"},
+                                {"set":{"local":"rd_polya"},"value":"yes"},
+                                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                                  "then": [
+                                    {"create_route":{"name":"polya","query":{"to":"polly","from":"ambulance1","type":"car"}}},
+                                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                    {"if": {"local":"route_check_value"}, "gt": 0,
+                                      "then": [
+                                        {"set":{"local":"rd_polya"},"value":"no"}
+                                    ]}
+                                ]},
+                                {"call_macro":"legacy scene routing check"},
+                                {"set":{"local":"rd_polyb"},"value":"yes"},
+                                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                                  "then": [
+                                    {"create_route":{"name":"polyb","query":{"to":"AMBWP","from":"polly","type":"car"}}},
+                                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                                    {"if": {"local":"route_check_value"}, "gt": 0,
+                                      "then": [
+                                        {"set":{"local":"rd_polyb"},"value":"no"}
+                                    ]}
+                                ]},
+                                {"if": {"local":"rd_polya"}, "eq": "no",
+                                  "then": [
+                                    {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}}
+                                ]},
                                 {"sleep":1},
                                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                                 {"create_thread": {
@@ -5361,7 +5503,12 @@
                                     {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":0},
                                     {"set":{"object":"ambulance1","var":"WP INDEX"},"value":0}
                                 ]}},
-                                {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                                {"if": {"local":"rd_polya"}, "eq": "yes",
+                                  "then": [
+                                    {"call_macro":"drive ambulance1 safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"polly"},24.6]},120]}}}
+                                  ],"else": [
+                                    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                                ]},
                                 {"sleep":[5,10]},
                                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"pax3","target":"3 crew ground ops","state":"move_object"}},
                                 {"move_object":"pax3","to":{"bearing2":180,"dist":3.2,"heading":100,"object":"ambulance1"}},
@@ -5622,8 +5769,28 @@
                           "zones": [
                             {"zone":{"location":{"bearing":90,"dist":10}}}
                         ]},
-                        {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
-                        {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
+                        {"call_macro":"legacy scene routing check"},
+                        {"set":{"local":"rd_polya"},"value":"yes"},
+                        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                          "then": [
+                            {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
+                            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                            {"if": {"local":"route_check_value"}, "gt": 0,
+                              "then": [
+                                {"set":{"local":"rd_polya"},"value":"no"}
+                            ]}
+                        ]},
+                        {"call_macro":"legacy scene routing check"},
+                        {"set":{"local":"rd_polyb"},"value":"yes"},
+                        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                          "then": [
+                            {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
+                            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                            {"if": {"local":"route_check_value"}, "gt": 0,
+                              "then": [
+                                {"set":{"local":"rd_polyb"},"value":"no"}
+                            ]}
+                        ]},
                         {"sleep":1},
                         {"create_thread": {
                           "commands": [
@@ -5647,7 +5814,12 @@
                         {"sleep":3},
                         {"wait_for":{"local":"police_lz_departure_delay_done"},"eq":"yes"},
                         {"set":{"local":"police_lz_move_lock"},"value":"yes"},
-                        {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}},
+                        {"if": {"local":"rd_polya"}, "eq": "yes",
+                          "then": [
+                            {"call_macro":"drive police safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"polly"},24.6]},120]}}}
+                          ],"else": [
+                            {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                        ]},
                         {"set":{"local":"policeloadingenabled"},"value":"returned"},
                         {"move_object":"pax3","to":{"bearing2":280,"dist":1.5,"heading":100,"object":"police"}},
                         {"sleep":2},

@@ -128,8 +128,8 @@ for (const macroName of ['park_firetruck1', 'park_firetruck2']) {
   const parkingText = JSON.stringify(ground[macroName]);
   if (!parkingText.includes('fire_truck_scene_access')) throw new Error(`${macroName} must retain the route access guard`);
   if (parkingText.includes('overlay_watchdog') || parkingText.includes('watchdog_firetruck')) throw new Error(`${macroName} must not reposition a fire engine through an overlay watchdog`);
-  if (macroName === 'park_firetruck1' && (!parkingText.includes('"bearing2":90,"dist":4') || !parkingText.includes('"bearing2":270,"dist":5'))) {
-    throw new Error('park_firetruck1 must retain the baseline 90 then 270 static parking maneuver');
+  if (macroName === 'park_firetruck1' && (!parkingText.includes('"bearing2":90,"dist":4') || !parkingText.includes('"bearing2":270,"dist":6'))) {
+    throw new Error('park_firetruck1 must park 4 m on bearing2 90, then realign 6 m on bearing2 270 (user-specified parking lane)');
   }
   if (macroName === 'park_firetruck2' && (!parkingText.includes('"local":"fire1arrived"') || !parkingText.includes('"bearing2":180,"dist":12,"object":"firetruck1"'))) {
     throw new Error('park_firetruck2 must wait only at parking and finish 12m behind firetruck1');

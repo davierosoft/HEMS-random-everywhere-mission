@@ -109,8 +109,14 @@ assert(monitorJson.includes('"global":"HOIST_SAFETY_MONITOR"') && monitorJson.in
 assert(!monitorJson.includes('"local":"MISSION_PHASE"'), 'crew monitor is still coupled to mission phase');
 assert(accelerationJson.includes('"ACCELERATION BODY X"') && accelerationJson.includes('"ACCELERATION BODY Y"') && accelerationJson.includes('"ACCELERATION BODY Z"'), 'aircraft acceleration monitor does not read the simulator body-axis simvars');
 assert(!accelerationJson.includes('SDK_ACCELERATION_BODY_'), 'aircraft acceleration monitor still uses non-simulator SDK acceleration aliases');
-assert(accelerationJson.includes('SDK_PILOT_CAPT_ON') && accelerationJson.includes('SDK_PAX_1_ON') && accelerationJson.includes('SDK_PAX_2_ON') && accelerationJson.includes('SDK_PAX_3_ON'), 'aircraft acceleration monitor does not restrict impacts to onboard crew seats');
-assert(accelerationJson.includes('"var":["L:{local:HXX}_SDK_PAX_2_ON","number"]') && accelerationJson.includes('"eq":1'), 'aircraft acceleration monitor does not restrict member 3 to the onboard seat HVAR');
+const presenceJson = JSON.stringify(mission.macros['crew presence flags']);
+const crashApplyJson = JSON.stringify(mission.macros['apply aircraft crash lifescore impact']);
+assert(presenceJson.includes('SDK_PILOT_CAPT_ON') && presenceJson.includes('SDK_PILOT_FO_ON') && presenceJson.includes('SDK_PAX_1_ON') && presenceJson.includes('SDK_PAX_2_ON') && presenceJson.includes('SDK_PAX_3_ON'), 'crew presence flags do not read the onboard crew seat HVARs');
+assert([1, 2, 3, 4, 5].every((member) => accelerationJson.includes(`"local":"CREW_PRESENT_${member}"`) && crashApplyJson.includes(`"local":"CREW_PRESENT_${member}"`)), 'aircraft acceleration and crash impacts do not restrict every member to its onboard seat presence flag');
+assert(!/_SDK_(PILOT_CAPT|PILOT_FO|PAX_\d)_ON/.test(accelerationJson) && !/_SDK_(PILOT_CAPT|PILOT_FO|PAX_\d)_ON/.test(crashApplyJson), 'aircraft impact macros bypass the shared crew presence mapping');
+const presenceThree = presenceJson.slice(presenceJson.indexOf('"eq":3'), presenceJson.indexOf('"eq":4'));
+assert(presenceThree.includes('SDK_PAX_3_ON') && !presenceThree.includes('SDK_PAX_2_ON') && !presenceThree.includes('SDK_PAX_1_ON'), 'with 3 crew the third member is not mapped to the pax3 seat flag');
+assert(mission.macros['monitor aircraft crash impact'] && JSON.stringify(mission.macros['monitor aircraft crash impact']).includes('crash_ops'), 'crash impact monitor does not record crash_ops traces');
 assert(!accelerationJson.includes('"local":"HOIST_OUT"'), 'aircraft acceleration monitor still uses HOIST_OUT as a proxy for onboard member 3');
 assert(accelerationJson.includes('"member":3') && accelerationJson.includes('"cause":"ABRUPT AIRCRAFT ACCELERATION"'), 'non-hoist-out winch operator is not covered by aircraft acceleration LifeScore monitoring');
 assert(fireExposureJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');

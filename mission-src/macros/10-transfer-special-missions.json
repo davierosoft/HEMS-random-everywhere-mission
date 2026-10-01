@@ -1225,8 +1225,22 @@
     {"set":{"var":["L:AMBULANCE","number"]},"value":1},
     {"create_thread": {
       "commands": [
-        {"create_route":{"name":"ambul1","query":{"to":"LAMBWP","from":"ambulance1","type":"car"}}},
+        {"call_macro":"legacy scene routing check"},
+        {"set":{"local":"rd_ambul1"},"value":"yes"},
+        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+          "then": [
+            {"create_route":{"name":"ambul1","query":{"to":"LAMBWP","from":"ambulance1","type":"car"}}},
+            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+            {"if": {"local":"route_check_value"}, "gt": 0,
+              "then": [
+                {"set":{"local":"rd_ambul1"},"value":"no"}
+            ]}
+        ]},
         {"set":{"local":"ambu_route_distance_meters"},"value":{"param":"$CREATE_ROUTE:DISTANCE"}},
+        {"if": {"local":"rd_ambul1"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"ambu_route_distance_meters"},"value":{"location":"ambulance1","var":"distance:m","to":"LAMBWP"}}
+        ]},
         {"set":{"local":"ambu_route_raw_time"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
         {"sleep":0.1},
         {"if": {"local":"ambu_route_distance_meters"}, "gt": 10000,
@@ -1237,15 +1251,27 @@
         ]},
         {"sleep":0.1},
         {"set":{"local":"ambu_route_adjusted_time"},"value":{"divide":[{"local":"ambu_route_raw_time"},{"local":"ambu_multiplier"}]}},
+        {"if": {"local":"rd_ambul1"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"ambu_route_adjusted_time"},"value":{"divide":[{"location":"ambulance1","var":"distance:m","to":"LAMBWP"},24.6]}}
+        ]},
         {"set":{"local":"ambu_mission_time_arrival"},"value":{"add":[{"local":"ambu_route_adjusted_time"},{"var":["L:MISSION_TIME","number"]}]}},
-        {"draw_route":"ambul1","stroke":{"width":2,"color":"#9A9A9A"}},
+        {"if": {"local":"rd_ambul1"}, "eq": "no",
+          "then": [
+            {"draw_route":"ambul1","stroke":{"width":2,"color":"#9A9A9A"}}
+        ]},
         {"sleep":1},
         {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
         {"create_thread": {
           "commands": [
             {"call_macro":"ambulance_restart_at_slow_speed"}
         ]}},
-        {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambul1","fallback":"LAMBWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"ambu_multiplier"}]},120]},"speedMultiplier":{"local":"ambu_multiplier"}}},
+        {"if": {"local":"rd_ambul1"}, "eq": "yes",
+          "then": [
+            {"call_macro":"drive ambulance1 safe","params":{"to":["LAMBWP"],"fallback":"LAMBWP","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"LAMBWP"},24.6]},120]}}}
+          ],"else": [
+            {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambul1","fallback":"LAMBWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"ambu_multiplier"}]},120]},"speedMultiplier":{"local":"ambu_multiplier"}}}
+        ]},
         {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"midway","state":"wait_local.midway_accepted_eq_null"}},
         {"wait_for":{"local":"midway_accepted"},"eq":null},
@@ -1590,15 +1616,33 @@
                 {"wait_for":{"has_object":"ambumedic1"},"eq":0},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                 {"call_macro":"drive ambulance1 safe","params":{"to":[{"bearing":50,"dist":50,"object":"userA"}],"fallback":{"bearing":50,"dist":50,"object":"userA"},"speed":25,"var1":1,"timeout":420}},
-                {"create_route":{"name":"ambu1","query":{"to":"AMBWP","from":"ambulance1","type":"car"}}},
-                {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}},
+                {"call_macro":"legacy scene routing check"},
+                {"set":{"local":"rd_ambu1"},"value":"yes"},
+                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                  "then": [
+                    {"create_route":{"name":"ambu1","query":{"to":"AMBWP","from":"ambulance1","type":"car"}}},
+                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                    {"if": {"local":"route_check_value"}, "gt": 0,
+                      "then": [
+                        {"set":{"local":"rd_ambu1"},"value":"no"}
+                    ]}
+                ]},
+                {"if": {"local":"rd_ambu1"}, "eq": "no",
+                  "then": [
+                    {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}}
+                ]},
                 {"sleep":1},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
                 {"create_thread": {
                   "commands": [
                     {"call_macro":"ambulance_restart_at_slow_speed"}
                 ]}},
-                {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"AMBWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
+                {"if": {"local":"rd_ambu1"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"drive ambulance1 safe","params":{"to":["AMBWP"],"fallback":"AMBWP","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"AMBWP"},24.6]},120]}}}
+                  ],"else": [
+                    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"AMBWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}}
+                ]},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":0}
             ]},
             {"set":{"var":["L:AMBULANCE","number"]},"value":0}
@@ -1726,15 +1770,33 @@
                 {"wait_for":{"has_object":"ambustretcher1"},"eq":0},
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"midway patient load2","state":"wait_has_object.ambumedic1_eq_0"}},
                 {"wait_for":{"has_object":"ambumedic1"},"eq":0},
-                {"create_route":{"name":"ambu1","query":{"to":"AMBWP","from":"ambulance1","type":"car"}}},
-                {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}},
+                {"call_macro":"legacy scene routing check"},
+                {"set":{"local":"rd_ambu1"},"value":"yes"},
+                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                  "then": [
+                    {"create_route":{"name":"ambu1","query":{"to":"AMBWP","from":"ambulance1","type":"car"}}},
+                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                    {"if": {"local":"route_check_value"}, "gt": 0,
+                      "then": [
+                        {"set":{"local":"rd_ambu1"},"value":"no"}
+                    ]}
+                ]},
+                {"if": {"local":"rd_ambu1"}, "eq": "no",
+                  "then": [
+                    {"draw_route":"ambu1","stroke":{"width":2,"color":"#9A9A9A"}}
+                ]},
                 {"sleep":1},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
                 {"create_thread": {
                   "commands": [
                     {"call_macro":"ambulance_restart_at_slow_speed"}
                 ]}},
-                {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"AMBWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
+                {"if": {"local":"rd_ambu1"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"drive ambulance1 safe","params":{"to":["AMBWP"],"fallback":"AMBWP","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"AMBWP"},24.6]},120]}}}
+                  ],"else": [
+                    {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambu1","fallback":"AMBWP","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}}
+                ]},
                 {"set":{"object":"ambulance1","var":"VAR 1"},"value":0}
             ]},
             {"set":{"var":["L:AMBULANCE","number"]},"value":0}
@@ -2555,7 +2617,17 @@
                   "zones": [
                     {"zone":{"location":{"bearing":225,"dist":30,"object":"unhospital"}}}
                 ]},
-                {"create_route":{"name":"ambu6","query":{"to":"unhospital","from":"ambulance6","type":"car"}}},
+                {"call_macro":"legacy scene routing check"},
+                {"set":{"local":"rd_ambu6"},"value":"yes"},
+                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                  "then": [
+                    {"create_route":{"name":"ambu6","query":{"to":"unhospital","from":"ambulance6","type":"car"}}},
+                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                    {"if": {"local":"route_check_value"}, "gt": 0,
+                      "then": [
+                        {"set":{"local":"rd_ambu6"},"value":"no"}
+                    ]}
+                ]},
                 {"sleep":10},
                 {"set":{"object":"ambulance6","var":"VAR 1"},"value":1},
                 {"create_thread": {
@@ -2566,7 +2638,12 @@
                     {"sleep":0.8},
                     {"set":{"object":"ambulance6","var":"VELOCITY Z"},"value":10}
                 ]}},
-                {"call_macro":"drive ambulance6 safe multiplier","params":{"to":"ambu6","fallback":"watchdog_ambulance6_patient1_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
+                {"if": {"local":"rd_ambu6"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"drive ambulance6 safe","params":{"to":["watchdog_ambulance6_patient1_hospital_approach"],"fallback":"watchdog_ambulance6_patient1_hospital_approach","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance6","var":"distance:m","to":"watchdog_ambulance6_patient1_hospital_approach"},24.6]},120]}}}
+                  ],"else": [
+                    {"call_macro":"drive ambulance6 safe multiplier","params":{"to":"ambu6","fallback":"watchdog_ambulance6_patient1_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}}
+                ]},
                 {"destroy_object":"ambulance6"}
             ]},
             {"set":{"var":["L:AMBULANCE","number"]},"value":0}
@@ -2884,7 +2961,17 @@
                   "zones": [
                     {"zone":{"location":{"bearing":225,"dist":30,"object":"unhospital"}}}
                 ]},
-                {"create_route":{"name":"ambu6","query":{"to":"unhospital","from":"ambulance6","type":"car"}}},
+                {"call_macro":"legacy scene routing check"},
+                {"set":{"local":"rd_ambu6"},"value":"yes"},
+                {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                  "then": [
+                    {"create_route":{"name":"ambu6","query":{"to":"unhospital","from":"ambulance6","type":"car"}}},
+                    {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                    {"if": {"local":"route_check_value"}, "gt": 0,
+                      "then": [
+                        {"set":{"local":"rd_ambu6"},"value":"no"}
+                    ]}
+                ]},
                 {"sleep":[10,30]},
                 {"set":{"object":"ambulance6","var":"VAR 1"},"value":1},
                 {"create_thread": {
@@ -2895,7 +2982,12 @@
                     {"sleep":0.8},
                     {"set":{"object":"ambulance6","var":"VELOCITY Z"},"value":10}
                 ]}},
-                {"call_macro":"drive ambulance6 safe multiplier","params":{"to":"ambu6","fallback":"watchdog_ambulance6_patient2_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}},
+                {"if": {"local":"rd_ambu6"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"drive ambulance6 safe","params":{"to":["watchdog_ambulance6_patient2_hospital_approach"],"fallback":"watchdog_ambulance6_patient2_hospital_approach","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance6","var":"distance:m","to":"watchdog_ambulance6_patient2_hospital_approach"},24.6]},120]}}}
+                  ],"else": [
+                    {"call_macro":"drive ambulance6 safe multiplier","params":{"to":"ambu6","fallback":"watchdog_ambulance6_patient2_hospital_approach","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]},"speedMultiplier":1.5}}
+                ]},
                 {"destroy_object":"ambulance6"}
             ]},
             {"set":{"var":["L:AMBULANCE","number"]},"value":0}

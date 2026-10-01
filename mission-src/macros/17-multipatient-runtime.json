@@ -3555,12 +3555,27 @@
           "zones": [
             {"zone":{"location":"unhospital"}}
         ]},
-        {"create_route":{"name":"ambulance1_assigned_route","query":{"from":"ambulance1","to":"ambulance1_assigned_hospital","type":"car"}}},
+        {"call_macro":"legacy scene routing check"},
+        {"set":{"local":"rd_ambulance1_assigned_route"},"value":"yes"},
+        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+          "then": [
+            {"create_route":{"name":"ambulance1_assigned_route","query":{"from":"ambulance1","to":"ambulance1_assigned_hospital","type":"car"}}},
+            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+            {"if": {"local":"route_check_value"}, "gt": 0,
+              "then": [
+                {"set":{"local":"rd_ambulance1_assigned_route"},"value":"no"}
+            ]}
+        ]},
         {"create_thread": {
           "commands": [
             {"call_macro":"ambulance_restart_at_slow_speed"}
         ]}},
-        {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambulance1_assigned_route","fallback":"ambulance1_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}},
+        {"if": {"local":"rd_ambulance1_assigned_route"}, "eq": "yes",
+          "then": [
+            {"call_macro":"drive ambulance1 safe","params":{"to":["ambulance1_assigned_hospital"],"fallback":"ambulance1_assigned_hospital","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance1","var":"distance:m","to":"ambulance1_assigned_hospital"},24.6]},120]}}}
+          ],"else": [
+            {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"ambulance1_assigned_route","fallback":"ambulance1_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}}
+        ]},
         {"call_macro":"park_ambulance1"}
     ]},
     {"if": {"param":"vehicle"}, "eq": "ambulance2",
@@ -3569,12 +3584,27 @@
           "zones": [
             {"zone":{"location":"unhospital"}}
         ]},
-        {"create_route":{"name":"ambulance2_assigned_route","query":{"from":"ambulance2","to":"ambulance2_assigned_hospital","type":"car"}}},
+        {"call_macro":"legacy scene routing check"},
+        {"set":{"local":"rd_ambulance2_assigned_route"},"value":"yes"},
+        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+          "then": [
+            {"create_route":{"name":"ambulance2_assigned_route","query":{"from":"ambulance2","to":"ambulance2_assigned_hospital","type":"car"}}},
+            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+            {"if": {"local":"route_check_value"}, "gt": 0,
+              "then": [
+                {"set":{"local":"rd_ambulance2_assigned_route"},"value":"no"}
+            ]}
+        ]},
         {"create_thread": {
           "commands": [
             {"call_macro":"ambulance2_restart_at_slow_speed"}
         ]}},
-        {"call_macro":"drive ambulance2 safe multiplier","params":{"to":"ambulance2_assigned_route","fallback":"ambulance2_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}},
+        {"if": {"local":"rd_ambulance2_assigned_route"}, "eq": "yes",
+          "then": [
+            {"call_macro":"drive ambulance2 safe","params":{"to":["ambulance2_assigned_hospital"],"fallback":"ambulance2_assigned_hospital","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance2","var":"distance:m","to":"ambulance2_assigned_hospital"},24.6]},120]}}}
+          ],"else": [
+            {"call_macro":"drive ambulance2 safe multiplier","params":{"to":"ambulance2_assigned_route","fallback":"ambulance2_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}}
+        ]},
         {"call_macro":"park_ambulance2"}
     ]},
     {"call_macro":"multipatient registry submit","params":{"operation":"transition","arguments":{"create_struct":{"ticket":{"param":"ticket"},"from":"loaded","to":"transported"}}},"result":"ok"},
