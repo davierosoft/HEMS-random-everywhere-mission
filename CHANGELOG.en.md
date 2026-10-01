@@ -1,3 +1,11 @@
+## Release 0.997 169.5
+
+- Crew impact in tiers with one logic for every acceleration level. Thresholds at 32 ft/s2 (1 g), 64 (2 g), 97, 193, 386 and 600, each with its own wait_for latch on every axis, so a single-sample spike is not missed and severity no longer depends on the first sample. A single worker applies, in order, a random injury to each present person and to a patient on the stretcher: 0 to 3 at 1 g, 3 to 8 at 2 g, 10 to 30 at 97, 193 and 386, and 45 to 60 at 600. The three small-threshold acceleration monitors (3, 6 and 10 ft/s2, damage up to 100) and their apply macro are removed. Includes the 169.4 presence fix: pilot and copilot read IMPL_PILOT0 and IMPL_PILOT1 (0 is present), rear seats SDK_CABIN_PAX_1 to 3, patient SDK_CABIN_PAX_5 equal to 2. Runtime behaviour pending.
+
+## Release 0.997 169.4
+
+- Crew impact fix: member presence now reads the aircraft LVARs (pilot and copilot IMPL_PILOT0 and IMPL_PILOT1 where 0 is present, rear seats SDK_CABIN_PAX_1 to 3 where 1 is present) instead of the HVAR event names, which always read 0 and made every crash and acceleration impact reach nobody. A patient on the stretcher (SDK_CABIN_PAX_5 equal to 2) takes the same impact damage on both crash and acceleration paths. crash_ops traces now include the patient flag. Runtime behaviour pending.
+
 ## Release 0.997 169.3
 
 - Local test build 169.3, includes the unreleased 169.2 legacy straight-line movement. Medic stand-down after the last patient is handed over, with a 60 s wait and return to the station. Fire truck diagnostic traces. Role-based scene parking lanes (fire 4 lateral then 6 realigned, ambulance opposite side 4 then 2, police reverses 5 m then parks on the fire side 4 then 2), anti-overlap only with ambulance2 or firetruck2, scene gap trace. Crew impact: member presence flags now follow the boarded crew (3 crew: pilot, copilot, pax3; 4 crew: pilot, copilot, pax1, pax3) and crash_ops traces record detected, applied and discarded impacts. Runtime behaviour pending.
