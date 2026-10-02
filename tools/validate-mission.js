@@ -1007,7 +1007,7 @@ function checkRelease94Regressions() {
   const crewReport = compact(mission.macros['refresh crew lifescore report'] || []);
   expectRegression(crewReport.includes('"value":"CRITICAL"') && crewReport.includes('"value":"DECEASED"'), 'crew report must distinguish critical injury from death');
   const endMenuText = compact(mission.macros['end menu'] || []);
-  expectRegression(endMenuText.includes('MISSION FAILED - CREW MEMBER DECEASED') && endMenuText.includes('MISSION FAILED - CREW MEMBER CRITICALLY INJURED'), 'end menu must report both crew emergency failure outcomes');
+  expectRegression(endMenuText.includes('MISSION FAILED - {0} DECEASED.') && endMenuText.includes('ALL CREW MEMBERS') && endMenuText.includes('MISSION FAILED - CREW MEMBER CRITICALLY INJURED'), 'end menu must report both crew emergency failure outcomes');
   expectRegression(endMenuText.includes('"local":"MISSION_FAILED"},"eq":null'), 'successful completion text must be hidden for every failed mission');
   const crewDebugText = compact(mission.macros['debug page'] || []);
   expectRegression(crewDebugText.includes('CREW SAFETY / EMERGENCY') && crewDebugText.includes('CREW_FATAL_OBJECT_REPLACED'), 'debug page must expose crew emergency and packaged-object state');

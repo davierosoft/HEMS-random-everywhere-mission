@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.10",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.11",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.10"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.11"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -6136,6 +6136,24 @@
   ],
   "end menu": [
     {"call_macro":"refresh crew lifescore report"},
+    {"call_macro":"crew members cap"},
+    {"call_macro":"crew survivors count"},
+    {"set":{"local":"CREW_DEAD_COUNT"},"value":{"subtract":[{"local":"CREW_MEMBER_CAP"},{"local":"CREW_ALIVE_COUNT"}]}},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_ALIVE_COUNT"},"eq":0},
+        {"require":{"local":"CREW_MEMBER_CAP"},"gt":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_DEAD_LABEL"},"value":"ALL CREW MEMBERS"}
+      ],"else": [
+        {"if": {"local":"CREW_DEAD_COUNT"}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_DEAD_LABEL"},"value":"1 CREW MEMBER"}
+          ],"else": [
+            {"set":{"local":"CREW_DEAD_LABEL"},"value":{"text":"{0} CREW MEMBERS","params":[{"local":"CREW_DEAD_COUNT"}]}}
+        ]}
+    ]},
     {"set_dispatch": [
         {"link":"Back to dispatch","commands":[{"set_dispatch_dialog":0},{"sleep":0.2},{"set_briefing_dialog":1}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},
         {"image":"home"},
@@ -6143,7 +6161,7 @@
         {"text":"HEMS R&E Mission generator by Andrewwww COMPLETED","align":"center","show_condition":{"require":{"local":"MISSION_VERSION"},"eq":null}},
         {"image":"bar"},
         {"text":"Congratulation! You completed mission: {0} {1} {2}","color":"green","params":[{"var":["L:OLD_VAR_MISSION_NUMBER","number"]},{"var":["L:OLD_CRASH_VARIABLE","number"]},{"var":["L:OLD_MISSION_SCENE_VARIANT","number"]}],"show_condition":{"require":{"local":"MISSION_FAILED"},"eq":null}},
-        {"text":"MISSION FAILED - CREW MEMBER DECEASED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"}},
+        {"text":"MISSION FAILED - {0} DECEASED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"},"params":[{"local":"CREW_DEAD_LABEL"}]},
         {"text":"MISSION FAILED - CREW MEMBER CRITICALLY INJURED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}},
         {"image":"bar"},
         {"text":"In your work shift you completed a total of {0} missions out of {1} accepted dispatches","params":[{"local":"COMPLETED_TEMP_MISSIONS"},{"local":"STARTED_TEMP_MISSIONS"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},
@@ -6160,6 +6178,8 @@
         {"text":""},
         {"text":"In all your missions a total of {0} patients were alive at destination","params":[{"global":"ALIVE_TOTAL"}]},
         {"text":"In all your missions a total of {0} organ transports were successfully delivered","params":[{"global":"ORGAN_TOTAL"}]},
+        {"text":"In all your missions a total of {0} crew members died because of your piloting","params":[{"global":"CREW_KILLED_TOTAL"}]},
+        {"text":"In all your missions a total of {0} patients died on board because of your piloting","params":[{"global":"PATIENTS_KILLED_TOTAL"}]},
         {"image":"bar"},
         {"image":"bar"},
         {"text":"CREW STATUS REPORT","color":"yellow","align":"center"},
@@ -44490,7 +44510,9 @@
     {"set":{"global":"ORGAN_TOTAL"},"value":null},
     {"set":{"global":"COMPLETED_MISSIONS"},"value":null},
     {"set":{"global":"MISSION_COUNT_START"},"value":null},
-    {"set":{"global":"CANCELLED_DISPATCHES"},"value":null}
+    {"set":{"global":"CANCELLED_DISPATCHES"},"value":null},
+    {"set":{"global":"CREW_KILLED_TOTAL"},"value":null},
+    {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":null}
   ],
   "msn preset loading": [
     {"open_table":{"static":{"param":"PRESET"}}},
@@ -44522,6 +44544,15 @@
   "objective1": [
     {"set":{"var":["L:RELEASE_BUILD","number"]},"value":169},
     {"call_macro":"start location diagnostics"},
+    {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
+    {"set":{"local":"START_PHASE_SEEN"},"value":{"var":["L:DISPATCH_PHASE","number"]}},
+    {"set":{"local":"START_SECOND_SEEN"},"value":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}},
+    {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
+      "then": [
+        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":100},
+        {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"mission_start","actor":"dispatch","target":"phase","state":"phase_seen={local:START_PHASE_SEEN} second_accepted={local:START_SECOND_SEEN}"}},
     {"set":{"local":"PUBLIC_USED_TITLES"},"value":[]},
     {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0},
     {"set":{"local":"CARLS_DF_SAR_PLB_PERSON_ACTIVE"},"value":"no"},
@@ -44659,8 +44690,6 @@
         {"set":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"value":{"global":"FUEL_START"}},
         {"set":{"local":"FUEL_UPDATED"},"value":"done"},
         {"set_rescuetrack":null},
-        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":100},
-        {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100},
         {"if": {"global":"STATION_1"}, "eq": null,
           "then": [
             {"set":{"global":"STATION_1"},"value":90}
@@ -44819,6 +44848,14 @@
         {"if": {"global":"ORGAN_TOTAL"}, "eq": null,
           "then": [
             {"set":{"global":"ORGAN_TOTAL"},"value":0}
+        ]},
+        {"if": {"global":"CREW_KILLED_TOTAL"}, "eq": null,
+          "then": [
+            {"set":{"global":"CREW_KILLED_TOTAL"},"value":0}
+        ]},
+        {"if": {"global":"PATIENTS_KILLED_TOTAL"}, "eq": null,
+          "then": [
+            {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":0}
         ]},
         {"if": {"global":"COMPLETED_MISSIONS"}, "eq": null,
           "then": [
@@ -63074,6 +63111,15 @@
           ]}, "eq": 1,
           "then": [
             {"set":{"param":"score"},"value":{"clamp":[{"subtract":[{"param":"patient","path":"lifescore"},{"param":"damage"}]},0,100]}},
+            {"if": {
+              "and": [
+                {"require":{"param":"score"},"eq":0},
+                {"require":{"param":"patient","path":"lifescore"},"gt":0}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":{"add":[{"global":"PATIENTS_KILLED_TOTAL"},1]}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"patient_impact","actor":"crew","target":"patient","state":"patient killed by impact damage={param:damage}"}}
+            ]},
             {"set":{"param":"medical"},"value":{"param":"patient","path":"medical"}},
             {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"param":"score"}}}]}},
             {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"subtract":[{"param":"medical","path":"SPO2"},{"multiply":[{"param":"damage"},0.4]}]},0,100]},"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"multiply":[{"param":"damage"},4]}]},0,220]},"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"multiply":[{"param":"damage"},2]}]},0,220]},"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"multiply":[{"param":"damage"},2]}]},0,60]}}}]}},
@@ -70023,7 +70069,7 @@
     ]}
   ],
   "monitor aircraft crash impact": [
-    {"#comment":"Aircraft impacts on two independent paths so that a light impact never blinds the crash path. Minor path: an axis at 32 ft/s2 (about 1 g) samples the resultant X2 + Y2 + Z2 every 0.02 s for 0.3 s and applies 0 to 3 (not below 70) and, from a resultant of 64, 3 to 8 (not below 40); it rearms as soon as the aircraft calms below 32. Crash path: an axis at 150 or a resultant of 150 seen by the minor path samples the same way, takes the tier latches of 300, 500 and 800 on every axis, applies 7 to 20 (not below 20) at 150, 10 to 30 at 300 and 500 and 45 to 60 at 800 (ignores the member lock), starts the failures, evaluates the events once and rearms below 64. The two paths share a lock only while they apply damage."},
+    {"#comment":"Aircraft impacts on two independent paths so that a light impact never blinds the crash path. Minor path: an axis at 32 ft/s2 (about 1 g) samples the resultant X2 + Y2 + Z2 every 0.02 s for 0.3 s and applies 0 to 3 (not below 70) and, from a resultant of 64, 3 to 8 (not below 40); it rearms as soon as the aircraft calms below 32. Crash path: an axis at 150 or a resultant of 150 seen by the minor path samples the same way, takes the tier latches of 250, 330 and 400 on every axis, applies 7 to 20 (not below 20) at 150, 10 to 30 at 250 and 330 and 45 to 60 at 400 (ignores the member lock), starts the failures, evaluates the events once and rearms below 64. The two paths share a lock only while they apply damage."},
     {"create_thread": {
       "commands": [
         {"set":{"local":"crash_apply_busy"},"value":0},
@@ -70038,12 +70084,12 @@
             {"while": 1, "gt": 0,
               "do": [
                 {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":300},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-300},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":300},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-300},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":300},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-300}
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":250},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-250},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":250},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-250},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":250},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-250}
                 ]},
                 {"set":{"local":"crash_tier_4"},"value":1},
                 {"wait_for":{"local":"crash_tier_4"},"eq":0}
@@ -70054,12 +70100,12 @@
             {"while": 1, "gt": 0,
               "do": [
                 {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":500},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-500},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":500},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-500},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":500},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-500}
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":330},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-330},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":330},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-330},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":330},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-330}
                 ]},
                 {"set":{"local":"crash_tier_5"},"value":1},
                 {"wait_for":{"local":"crash_tier_5"},"eq":0}
@@ -70070,12 +70116,12 @@
             {"while": 1, "gt": 0,
               "do": [
                 {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":800},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-800},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":800},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-800},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":800},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-800}
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":400},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-400},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":400},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-400},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":400},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-400}
                 ]},
                 {"set":{"local":"crash_tier_6"},"value":1},
                 {"wait_for":{"local":"crash_tier_6"},"eq":0}
@@ -70196,15 +70242,15 @@
                       "then": [
                         {"set":{"local":"crash_tier_3"},"value":1}
                     ]},
-                    {"if": {"local":"crash_peak2"}, "gte": 90000,
+                    {"if": {"local":"crash_peak2"}, "gte": 62500,
                       "then": [
                         {"set":{"local":"crash_tier_4"},"value":1}
                     ]},
-                    {"if": {"local":"crash_peak2"}, "gte": 250000,
+                    {"if": {"local":"crash_peak2"}, "gte": 108900,
                       "then": [
                         {"set":{"local":"crash_tier_5"},"value":1}
                     ]},
-                    {"if": {"local":"crash_peak2"}, "gte": 640000,
+                    {"if": {"local":"crash_peak2"}, "gte": 160000,
                       "then": [
                         {"set":{"local":"crash_tier_6"},"value":1}
                     ]},
@@ -71318,6 +71364,7 @@
             {"if": {"local":"CREW_DEAD_1"}, "ne": 1,
               "then": [
                 {"set":{"local":"CREW_DEAD_1"},"value":1},
+                {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
                 {"set":{"local":"CREW_CRIT_1"},"value":1},
                 {"set":{"local":"CREW_LOCK_1"},"value":1},
                 {"set":{"local":"CREW_ANN_1"},"value":1},
@@ -71361,6 +71408,7 @@
             {"if": {"local":"CREW_DEAD_2"}, "ne": 1,
               "then": [
                 {"set":{"local":"CREW_DEAD_2"},"value":1},
+                {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
                 {"set":{"local":"CREW_CRIT_2"},"value":1},
                 {"set":{"local":"CREW_LOCK_2"},"value":1},
                 {"set":{"local":"CREW_ANN_2"},"value":1},
@@ -71404,6 +71452,7 @@
             {"if": {"local":"CREW_DEAD_3"}, "ne": 1,
               "then": [
                 {"set":{"local":"CREW_DEAD_3"},"value":1},
+                {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
                 {"set":{"local":"CREW_CRIT_3"},"value":1},
                 {"set":{"local":"CREW_LOCK_3"},"value":1},
                 {"set":{"local":"CREW_ANN_3"},"value":1},
@@ -71447,6 +71496,7 @@
             {"if": {"local":"CREW_DEAD_4"}, "ne": 1,
               "then": [
                 {"set":{"local":"CREW_DEAD_4"},"value":1},
+                {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
                 {"set":{"local":"CREW_CRIT_4"},"value":1},
                 {"set":{"local":"CREW_LOCK_4"},"value":1},
                 {"set":{"local":"CREW_ANN_4"},"value":1},
@@ -71490,6 +71540,7 @@
             {"if": {"local":"CREW_DEAD_5"}, "ne": 1,
               "then": [
                 {"set":{"local":"CREW_DEAD_5"},"value":1},
+                {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
                 {"set":{"local":"CREW_CRIT_5"},"value":1},
                 {"set":{"local":"CREW_LOCK_5"},"value":1},
                 {"set":{"local":"CREW_ANN_5"},"value":1},

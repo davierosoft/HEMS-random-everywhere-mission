@@ -1373,6 +1373,15 @@
   "objective1": [
     {"set":{"var":["L:RELEASE_BUILD","number"]},"value":169},
     {"call_macro":"start location diagnostics"},
+    {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
+    {"set":{"local":"START_PHASE_SEEN"},"value":{"var":["L:DISPATCH_PHASE","number"]}},
+    {"set":{"local":"START_SECOND_SEEN"},"value":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}},
+    {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
+      "then": [
+        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":100},
+        {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"mission_start","actor":"dispatch","target":"phase","state":"phase_seen={local:START_PHASE_SEEN} second_accepted={local:START_SECOND_SEEN}"}},
     {"set":{"local":"PUBLIC_USED_TITLES"},"value":[]},
     {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0},
     {"set":{"local":"CARLS_DF_SAR_PLB_PERSON_ACTIVE"},"value":"no"},
@@ -1510,8 +1519,6 @@
         {"set":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"value":{"global":"FUEL_START"}},
         {"set":{"local":"FUEL_UPDATED"},"value":"done"},
         {"set_rescuetrack":null},
-        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":100},
-        {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100},
         {"if": {"global":"STATION_1"}, "eq": null,
           "then": [
             {"set":{"global":"STATION_1"},"value":90}
@@ -1670,6 +1677,14 @@
         {"if": {"global":"ORGAN_TOTAL"}, "eq": null,
           "then": [
             {"set":{"global":"ORGAN_TOTAL"},"value":0}
+        ]},
+        {"if": {"global":"CREW_KILLED_TOTAL"}, "eq": null,
+          "then": [
+            {"set":{"global":"CREW_KILLED_TOTAL"},"value":0}
+        ]},
+        {"if": {"global":"PATIENTS_KILLED_TOTAL"}, "eq": null,
+          "then": [
+            {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":0}
         ]},
         {"if": {"global":"COMPLETED_MISSIONS"}, "eq": null,
           "then": [

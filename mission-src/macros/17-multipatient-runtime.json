@@ -1138,6 +1138,15 @@
           ]}, "eq": 1,
           "then": [
             {"set":{"param":"score"},"value":{"clamp":[{"subtract":[{"param":"patient","path":"lifescore"},{"param":"damage"}]},0,100]}},
+            {"if": {
+              "and": [
+                {"require":{"param":"score"},"eq":0},
+                {"require":{"param":"patient","path":"lifescore"},"gt":0}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":{"add":[{"global":"PATIENTS_KILLED_TOTAL"},1]}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"patient_impact","actor":"crew","target":"patient","state":"patient killed by impact damage={param:damage}"}}
+            ]},
             {"set":{"param":"medical"},"value":{"param":"patient","path":"medical"}},
             {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"param":"score"}}}]}},
             {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"subtract":[{"param":"medical","path":"SPO2"},{"multiply":[{"param":"damage"},0.4]}]},0,100]},"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"multiply":[{"param":"damage"},4]}]},0,220]},"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"multiply":[{"param":"damage"},2]}]},0,220]},"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"multiply":[{"param":"damage"},2]}]},0,60]}}}]}},

@@ -44,12 +44,12 @@ Acceleration is in ft/s2 (32 is about 1 g). Two independent paths, so a light im
 | Minor | an axis at 32 | resultant 32 | 0 to 3 | 70 |
 | Minor | the same event | resultant 64 | 3 to 8 | 40 |
 | Crash | an axis at 150, or a resultant of 150 seen by the minor path | 150 | 7 to 20 | 20 |
-| Crash | latch on every axis | 300 | 10 to 30 | none |
-| Crash | latch on every axis | 500 | 10 to 30 | none |
-| Crash | latch on every axis | 800 | 45 to 60, ignores the member lock | none |
+| Crash | latch on every axis | 250 | 10 to 30 | none |
+| Crash | latch on every axis | 330 | 10 to 30 | none |
+| Crash | latch on every axis | 400 | 45 to 60, ignores the member lock | none |
 
 After a trigger the resultant (X2 + Y2 + Z2) is sampled every 0.02 s for 0.3 s (there is no square root, thresholds are squared) and its peak sets every tier it reaches, in addition to the axis latches, because an impact split over several axes does not reach a threshold on any single one. The crash path rearms below 64, the minor path below 32.
-A floor stops that tier from taking a member below it, so only crashes above 300 ft/s2 can kill. `CREW_LIFESCORE_TOTAL_IMPACT` counts the points really removed.
+A floor stops that tier from taking a member below it, so only crashes above 250 ft/s2 can kill. `CREW_LIFESCORE_TOTAL_IMPACT` counts the points really removed.
 
 ## Dispatch phase and RescueTrack
 

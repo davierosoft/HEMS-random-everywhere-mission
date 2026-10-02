@@ -1078,6 +1078,24 @@
   ],
   "end menu": [
     {"call_macro":"refresh crew lifescore report"},
+    {"call_macro":"crew members cap"},
+    {"call_macro":"crew survivors count"},
+    {"set":{"local":"CREW_DEAD_COUNT"},"value":{"subtract":[{"local":"CREW_MEMBER_CAP"},{"local":"CREW_ALIVE_COUNT"}]}},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_ALIVE_COUNT"},"eq":0},
+        {"require":{"local":"CREW_MEMBER_CAP"},"gt":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_DEAD_LABEL"},"value":"ALL CREW MEMBERS"}
+      ],"else": [
+        {"if": {"local":"CREW_DEAD_COUNT"}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_DEAD_LABEL"},"value":"1 CREW MEMBER"}
+          ],"else": [
+            {"set":{"local":"CREW_DEAD_LABEL"},"value":{"text":"{0} CREW MEMBERS","params":[{"local":"CREW_DEAD_COUNT"}]}}
+        ]}
+    ]},
     {"set_dispatch": [
         {"link":"Back to dispatch","commands":[{"set_dispatch_dialog":0},{"sleep":0.2},{"set_briefing_dialog":1}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},
         {"image":"home"},
@@ -1085,7 +1103,7 @@
         {"text":"HEMS R&E Mission generator by Andrewwww COMPLETED","align":"center","show_condition":{"require":{"local":"MISSION_VERSION"},"eq":null}},
         {"image":"bar"},
         {"text":"Congratulation! You completed mission: {0} {1} {2}","color":"green","params":[{"var":["L:OLD_VAR_MISSION_NUMBER","number"]},{"var":["L:OLD_CRASH_VARIABLE","number"]},{"var":["L:OLD_MISSION_SCENE_VARIANT","number"]}],"show_condition":{"require":{"local":"MISSION_FAILED"},"eq":null}},
-        {"text":"MISSION FAILED - CREW MEMBER DECEASED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"}},
+        {"text":"MISSION FAILED - {0} DECEASED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"},"params":[{"local":"CREW_DEAD_LABEL"}]},
         {"text":"MISSION FAILED - CREW MEMBER CRITICALLY INJURED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}},
         {"image":"bar"},
         {"text":"In your work shift you completed a total of {0} missions out of {1} accepted dispatches","params":[{"local":"COMPLETED_TEMP_MISSIONS"},{"local":"STARTED_TEMP_MISSIONS"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},
@@ -1102,6 +1120,8 @@
         {"text":""},
         {"text":"In all your missions a total of {0} patients were alive at destination","params":[{"global":"ALIVE_TOTAL"}]},
         {"text":"In all your missions a total of {0} organ transports were successfully delivered","params":[{"global":"ORGAN_TOTAL"}]},
+        {"text":"In all your missions a total of {0} crew members died because of your piloting","params":[{"global":"CREW_KILLED_TOTAL"}]},
+        {"text":"In all your missions a total of {0} patients died on board because of your piloting","params":[{"global":"PATIENTS_KILLED_TOTAL"}]},
         {"image":"bar"},
         {"image":"bar"},
         {"text":"CREW STATUS REPORT","color":"yellow","align":"center"},
