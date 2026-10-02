@@ -964,7 +964,9 @@ function checkRelease94Regressions() {
   const crewPost = compact(mission.macros['post crew safety message'] || []);
   expectRegression(crewPost.includes('"set_message"') && crewPost.includes('Dispatcher_Messages') && crewPost.includes('UpdateRescueTrack'), 'crew safety alerts must reach tablet, dispatch messages, and RescueTrack');
   const crewEvaluate = compact(mission.macros['evaluate crew lifescore state'] || []);
-  expectRegression(crewEvaluate.includes('"lte":10') && crewEvaluate.includes('crew emergency response'), 'crew emergency response must enforce the LifeScore <=10 threshold');
+  const crewStateEvent = compact(mission.macros['crew member state event'] || []);
+  const crewBatchEvents = compact(mission.macros['crew impact events'] || []);
+  expectRegression(crewEvaluate.includes('crew impact events') && crewStateEvent.includes('"lte":10') && crewStateEvent.includes('"lte":0') && crewBatchEvents.includes('crew emergency response') && crewBatchEvents.includes('crew mission terminated'), 'crew emergency response must enforce the LifeScore <=10 threshold through the member state event and the batch events');
   const crewResponse = compact(mission.macros['crew emergency response'] || []);
   expectRegression(crewResponse.includes('"value":"CREW_FATAL"') && crewResponse.includes('"value":"CREW_CRITICAL"') && crewResponse.includes('replace deceased crew object'), 'crew death and critical injury must both fail the mission through the emergency response');
   const fatalReplacement = compact(mission.macros['replace deceased crew object'] || []);

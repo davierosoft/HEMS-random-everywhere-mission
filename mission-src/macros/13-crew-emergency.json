@@ -29,67 +29,172 @@
         {"set":{"local":"CREW_FIRE_IMPACT_2"},"value":0},
         {"set":{"local":"CREW_FIRE_IMPACT_3"},"value":0},
         {"set":{"local":"CREW_FIRE_IMPACT_4"},"value":0},
-        {"set":{"local":"CREW_FIRE_IMPACT_5"},"value":0}
+        {"set":{"local":"CREW_FIRE_IMPACT_5"},"value":0},
+        {"set":{"local":"CREW_LOCK_1"},"value":0},
+        {"set":{"local":"CREW_CRIT_1"},"value":0},
+        {"set":{"local":"CREW_DEAD_1"},"value":0},
+        {"set":{"local":"CREW_EVAL_1"},"value":0},
+        {"set":{"local":"CREW_ANN_1"},"value":0},
+        {"set":{"local":"CREW_LOCK_2"},"value":0},
+        {"set":{"local":"CREW_CRIT_2"},"value":0},
+        {"set":{"local":"CREW_DEAD_2"},"value":0},
+        {"set":{"local":"CREW_EVAL_2"},"value":0},
+        {"set":{"local":"CREW_ANN_2"},"value":0},
+        {"set":{"local":"CREW_LOCK_3"},"value":0},
+        {"set":{"local":"CREW_CRIT_3"},"value":0},
+        {"set":{"local":"CREW_DEAD_3"},"value":0},
+        {"set":{"local":"CREW_EVAL_3"},"value":0},
+        {"set":{"local":"CREW_ANN_3"},"value":0},
+        {"set":{"local":"CREW_LOCK_4"},"value":0},
+        {"set":{"local":"CREW_CRIT_4"},"value":0},
+        {"set":{"local":"CREW_DEAD_4"},"value":0},
+        {"set":{"local":"CREW_EVAL_4"},"value":0},
+        {"set":{"local":"CREW_ANN_4"},"value":0},
+        {"set":{"local":"CREW_LOCK_5"},"value":0},
+        {"set":{"local":"CREW_CRIT_5"},"value":0},
+        {"set":{"local":"CREW_DEAD_5"},"value":0},
+        {"set":{"local":"CREW_EVAL_5"},"value":0},
+        {"set":{"local":"CREW_ANN_5"},"value":0},
+        {"set":{"local":"CREW_MISSION_TERMINATED"},"value":"no"}
     ]}
   ],
   "apply crew lifescore impact": [
     {"call_macro":"test tracker begin","params":{"test_id":"crew_health"}},
+    {"call_macro":"crew members cap"},
+    {"set":{"local":"crew_member_locked"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"param":"member"},"eq":1},
+        {"require":{"local":"CREW_LOCK_1"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_member_locked"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"member"},"eq":2},
+        {"require":{"local":"CREW_LOCK_2"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_member_locked"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"member"},"eq":3},
+        {"require":{"local":"CREW_LOCK_3"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_member_locked"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"member"},"eq":4},
+        {"require":{"local":"CREW_LOCK_4"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_member_locked"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"member"},"eq":5},
+        {"require":{"local":"CREW_LOCK_5"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_member_locked"},"value":1}
+    ]},
+    {"if": {"param":"force"}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_member_locked"},"value":0}
+    ]},
     {"if": {
       "and": [
         {"require":{"global":"HOIST_SAFETY_MONITOR"},"eq":"yes"},
         {"require":{"param":"score"},"gt":0},
-        {"require":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"}
+        {"require":{"local":"crew_member_locked"},"ne":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"value":{"add":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"param":"score"}]}},
         {"set":{"local":"CREW_LIFESCORE_CURRENT"},"value":100},
         {"if": {
           "and": [
             {"require":{"param":"member"},"eq":1},
-            {"require":{"local":"CREW"},"gte":1}
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":1}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"crew_loss_before"},"value":{"local":"CREW_LIFESCORE_1"}},
             {"set":{"local":"CREW_LIFESCORE_1"},"value":{"clamp":[{"subtract":[{"local":"CREW_LIFESCORE_1"},{"param":"score"}]},0,100]}},
+            {"set":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"value":{"add":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"subtract":[{"local":"crew_loss_before"},{"local":"CREW_LIFESCORE_1"}]}]}},
             {"set":{"local":"CREW_LIFESCORE_CURRENT"},"value":{"local":"CREW_LIFESCORE_1"}}
         ]},
         {"if": {
           "and": [
             {"require":{"param":"member"},"eq":2},
-            {"require":{"local":"CREW"},"gte":2}
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"crew_loss_before"},"value":{"local":"CREW_LIFESCORE_2"}},
             {"set":{"local":"CREW_LIFESCORE_2"},"value":{"clamp":[{"subtract":[{"local":"CREW_LIFESCORE_2"},{"param":"score"}]},0,100]}},
+            {"set":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"value":{"add":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"subtract":[{"local":"crew_loss_before"},{"local":"CREW_LIFESCORE_2"}]}]}},
             {"set":{"local":"CREW_LIFESCORE_CURRENT"},"value":{"local":"CREW_LIFESCORE_2"}}
         ]},
         {"if": {
           "and": [
             {"require":{"param":"member"},"eq":3},
-            {"require":{"local":"CREW"},"gte":3}
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"crew_loss_before"},"value":{"local":"CREW_LIFESCORE_3"}},
             {"set":{"local":"CREW_LIFESCORE_3"},"value":{"clamp":[{"subtract":[{"local":"CREW_LIFESCORE_3"},{"param":"score"}]},0,100]}},
+            {"set":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"value":{"add":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"subtract":[{"local":"crew_loss_before"},{"local":"CREW_LIFESCORE_3"}]}]}},
             {"set":{"local":"CREW_LIFESCORE_CURRENT"},"value":{"local":"CREW_LIFESCORE_3"}}
         ]},
         {"if": {
           "and": [
             {"require":{"param":"member"},"eq":4},
-            {"require":{"local":"CREW"},"gte":4}
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"crew_loss_before"},"value":{"local":"CREW_LIFESCORE_4"}},
             {"set":{"local":"CREW_LIFESCORE_4"},"value":{"clamp":[{"subtract":[{"local":"CREW_LIFESCORE_4"},{"param":"score"}]},0,100]}},
+            {"set":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"value":{"add":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"subtract":[{"local":"crew_loss_before"},{"local":"CREW_LIFESCORE_4"}]}]}},
             {"set":{"local":"CREW_LIFESCORE_CURRENT"},"value":{"local":"CREW_LIFESCORE_4"}}
         ]},
         {"if": {
           "and": [
             {"require":{"param":"member"},"eq":5},
-            {"require":{"local":"CREW"},"gte":5}
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5}
           ]}, "eq": 1,
           "then": [
+            {"set":{"local":"crew_loss_before"},"value":{"local":"CREW_LIFESCORE_5"}},
             {"set":{"local":"CREW_LIFESCORE_5"},"value":{"clamp":[{"subtract":[{"local":"CREW_LIFESCORE_5"},{"param":"score"}]},0,100]}},
+            {"set":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"value":{"add":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"subtract":[{"local":"crew_loss_before"},{"local":"CREW_LIFESCORE_5"}]}]}},
             {"set":{"local":"CREW_LIFESCORE_CURRENT"},"value":{"local":"CREW_LIFESCORE_5"}}
         ]},
         {"call_macro":"refresh crew lifescore report"},
-        {"call_macro":"evaluate crew lifescore state","params":{"member":{"param":"member"},"cause":{"param":"cause"}}}
+        {"set":{"local":"CREW_EVENT_CAUSE"},"value":{"param":"cause"}},
+        {"if": {"param":"member"}, "eq": 1,
+          "then": [
+            {"set":{"local":"CREW_EVAL_1"},"value":1}
+        ]},
+        {"if": {"param":"member"}, "eq": 2,
+          "then": [
+            {"set":{"local":"CREW_EVAL_2"},"value":1}
+        ]},
+        {"if": {"param":"member"}, "eq": 3,
+          "then": [
+            {"set":{"local":"CREW_EVAL_3"},"value":1}
+        ]},
+        {"if": {"param":"member"}, "eq": 4,
+          "then": [
+            {"set":{"local":"CREW_EVAL_4"},"value":1}
+        ]},
+        {"if": {"param":"member"}, "eq": 5,
+          "then": [
+            {"set":{"local":"CREW_EVAL_5"},"value":1}
+        ]},
+        {"if": {"param":"defer"}, "ne": 1,
+          "then": [
+            {"call_macro":"crew impact events"}
+        ]}
       ],"else": [
         {"set":{"local":"crash_trace_member"},"value":{"param":"member"}},
         {"set":{"local":"crash_trace_score"},"value":{"param":"score"}},
@@ -185,6 +290,7 @@
     ]}
   ],
   "start crew lifescore monitor": [
+    {"call_macro":"crew seat tracker start"},
     {"call_macro":"record crew acceleration maxima"},
     {"call_macro":"monitor crew fire exposure"},
     {"call_macro":"monitor aircraft crash impact"},
@@ -315,23 +421,43 @@
             {"sleep":300},
             {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
               "then": [
-                {"if": {"local":"CREW_LIFESCORE_1"}, "lt": 70,
+                {"if": {
+                  "and": [
+                    {"require":{"local":"CREW_LIFESCORE_1"},"lt":70},
+                    {"require":{"local":"CREW_LIFESCORE_1"},"gt":0}
+                  ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"CREW_LIFESCORE_1"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_1"},1]},0,70]}}
                 ]},
-                {"if": {"local":"CREW_LIFESCORE_2"}, "lt": 70,
+                {"if": {
+                  "and": [
+                    {"require":{"local":"CREW_LIFESCORE_2"},"lt":70},
+                    {"require":{"local":"CREW_LIFESCORE_2"},"gt":0}
+                  ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"CREW_LIFESCORE_2"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_2"},1]},0,70]}}
                 ]},
-                {"if": {"local":"CREW_LIFESCORE_3"}, "lt": 70,
+                {"if": {
+                  "and": [
+                    {"require":{"local":"CREW_LIFESCORE_3"},"lt":70},
+                    {"require":{"local":"CREW_LIFESCORE_3"},"gt":0}
+                  ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"CREW_LIFESCORE_3"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_3"},1]},0,70]}}
                 ]},
-                {"if": {"local":"CREW_LIFESCORE_4"}, "lt": 70,
+                {"if": {
+                  "and": [
+                    {"require":{"local":"CREW_LIFESCORE_4"},"lt":70},
+                    {"require":{"local":"CREW_LIFESCORE_4"},"gt":0}
+                  ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"CREW_LIFESCORE_4"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_4"},1]},0,70]}}
                 ]},
-                {"if": {"local":"CREW_LIFESCORE_5"}, "lt": 70,
+                {"if": {
+                  "and": [
+                    {"require":{"local":"CREW_LIFESCORE_5"},"lt":70},
+                    {"require":{"local":"CREW_LIFESCORE_5"},"gt":0}
+                  ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"CREW_LIFESCORE_5"},"value":{"clamp":[{"add":[{"local":"CREW_LIFESCORE_5"},1]},0,70]}}
                 ]},
@@ -341,75 +467,38 @@
     ]}}
   ],
   "post crew safety message": [
-    {"set":{"local":"Dispatcher_text"},"value":{"text":"CREW SAFETY - member {0}: LifeScore {1}/100. {2}. Cause: {3}","params":[{"param":"member"},{"param":"score"},{"param":"status"},{"param":"cause"}]}},
     {"set_message":{"text":"CREW SAFETY - member {0}: LifeScore {1}/100. {2}. Cause: {3}","params":[{"param":"member"},{"param":"score"},{"param":"status"},{"param":"cause"}]}},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
-    {"set":{"local":"Dispatcher_text"},"value":""},
-    {"call_macro":"UpdateRescueTrack"}
+    {"if": {"param":"rescuetrack"}, "ne": "no",
+      "then": [
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"CREW SAFETY - member {0}: LifeScore {1}/100. {2}. Cause: {3}","params":[{"param":"member"},{"param":"score"},{"param":"status"},{"param":"cause"}]}},
+        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":""},
+        {"call_macro":"UpdateRescueTrack"}
+    ]}
   ],
   "evaluate crew lifescore state": [
     {"if": {"param":"member"}, "eq": 1,
       "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":{"local":"CREW_LIFESCORE_ALERT_1"}}
+        {"set":{"local":"CREW_EVAL_1"},"value":1}
     ]},
     {"if": {"param":"member"}, "eq": 2,
       "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":{"local":"CREW_LIFESCORE_ALERT_2"}}
+        {"set":{"local":"CREW_EVAL_2"},"value":1}
     ]},
     {"if": {"param":"member"}, "eq": 3,
       "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":{"local":"CREW_LIFESCORE_ALERT_3"}}
+        {"set":{"local":"CREW_EVAL_3"},"value":1}
     ]},
     {"if": {"param":"member"}, "eq": 4,
       "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":{"local":"CREW_LIFESCORE_ALERT_4"}}
+        {"set":{"local":"CREW_EVAL_4"},"value":1}
     ]},
     {"if": {"param":"member"}, "eq": 5,
       "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":{"local":"CREW_LIFESCORE_ALERT_5"}}
+        {"set":{"local":"CREW_EVAL_5"},"value":1}
     ]},
-    {"if": {"local":"CREW_LIFESCORE_CURRENT"}, "lte": 10,
-      "then": [
-        {"call_macro":"crew emergency response","params":{"member":{"param":"member"},"cause":{"param":"cause"},"score":{"local":"CREW_LIFESCORE_CURRENT"}}}
-      ],"else": [
-        {"if": {"local":"CREW_LIFESCORE_CURRENT"}, "lt": 50,
-          "then": [
-            {"if": {"local":"CREW_LIFESCORE_ALERT_LEVEL"}, "lt": 2,
-              "then": [
-                {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":2},
-                {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"local":"CREW_LIFESCORE_CURRENT"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"param":"cause"}}}
-            ]}
-          ],"else": [
-            {"if": {"local":"CREW_LIFESCORE_CURRENT"}, "lt": 100,
-              "then": [
-                {"if": {"local":"CREW_LIFESCORE_ALERT_LEVEL"}, "lt": 1,
-                  "then": [
-                    {"set":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"value":1},
-                    {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"local":"CREW_LIFESCORE_CURRENT"},"status":"suffering from injury or hazardous exposure","cause":{"param":"cause"}}}
-                ]}
-            ]}
-        ]}
-    ]},
-    {"if": {"param":"member"}, "eq": 1,
-      "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_1"},"value":{"local":"CREW_LIFESCORE_ALERT_LEVEL"}}
-    ]},
-    {"if": {"param":"member"}, "eq": 2,
-      "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_2"},"value":{"local":"CREW_LIFESCORE_ALERT_LEVEL"}}
-    ]},
-    {"if": {"param":"member"}, "eq": 3,
-      "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_3"},"value":{"local":"CREW_LIFESCORE_ALERT_LEVEL"}}
-    ]},
-    {"if": {"param":"member"}, "eq": 4,
-      "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_4"},"value":{"local":"CREW_LIFESCORE_ALERT_LEVEL"}}
-    ]},
-    {"if": {"param":"member"}, "eq": 5,
-      "then": [
-        {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":{"local":"CREW_LIFESCORE_ALERT_LEVEL"}}
-    ]}
+    {"set":{"local":"CREW_EVENT_CAUSE"},"value":{"param":"cause"}},
+    {"call_macro":"crew impact events"}
   ],
   "apply object crew lifescore impact": [
     {"set":{"local":"CREW_IMPACT_OBJECT"},"value":{"param":"object"}},
@@ -573,6 +662,10 @@
       {"wait_for":{"has_location":"hospital_user"},"eq":1},
       {"wait_for":{"local":"CREW_EMERGENCY_ROUTE_FALLBACK"},"eq":"yes"}
     ]},
+    {"if": {"local":"CREW_MISSION_TERMINATED"}, "eq": "yes",
+      "then": [
+        {"return":0}
+    ]},
     {"if": {"has_location":"hospital_user"}, "eq": 1,
       "then": [
         {"create_location": "hospital",
@@ -590,6 +683,10 @@
         {"and": [
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":1}
+        ]},
+        {"if": {"local":"CREW_MISSION_TERMINATED"}, "eq": "yes",
+          "then": [
+            {"return":0}
         ]},
         {"set":{"var":["L:READY","number"]},"value":0},
         {"set_message":{"text":"Crew emergency: personnel are deboarding for immediate hospital admission."}},
@@ -621,18 +718,22 @@
             {"set":{"local":"CREW_EMERGENCY_FATAL"},"value":"yes"},
             {"set":{"local":"HOIST_FATAL_EVENT"},"value":"yes"},
             {"set":{"local":"MISSION_FAILED"},"value":"CREW_FATAL"},
-            {"call_macro":"replace deceased crew object"},
-            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"DECEASED - mission cancelled immediately; return for emergency handover","cause":{"param":"cause"}}}
+            {"call_macro":"replace deceased crew object"}
           ],"else": [
-            {"set":{"local":"MISSION_FAILED"},"value":"CREW_CRITICAL"},
-            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"CRITICAL CONDITION - mission cancelled; all scene personnel return aboard","cause":{"param":"cause"}}}
+            {"set":{"local":"MISSION_FAILED"},"value":"CREW_CRITICAL"}
         ]},
         {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":0},
         {"set":{"local":"MISSION_PHASE"},"value":8},
         {"set":{"local":"MISSION_END_WAITING"},"value":0},
         {"set":{"local":"HOIST_OUT"},"value":0},
-        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
-        {"call_macro":"Update_raw from dispatchphase"},
+        {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
+          "then": [
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+              "then": [
+                {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
+                {"call_macro":"Update_raw from dispatchphase"}
+            ]}
+        ]},
         {"set_hover_display":{"range":0}},
         {"create_thread": {
           "commands": [
@@ -731,74 +832,49 @@
     }
   ],
   "crew presence flags": [
-    {"#comment":"Presence per member from the aircraft LVARs. Pilot and copilot: IMPL_PILOT0 and IMPL_PILOT1, 0 = present, 1 = absent. Rear seats: SDK_CABIN_PAX_1/2/3, 1 = present. SDK_CABIN_PAX_5: 0 no stretcher, 1 empty stretcher, 2 stretcher with patient. Member order follows the boarding: CREW 3 = pilot, copilot, pax3; CREW 4 = pilot, copilot, pax1, pax3; CREW 5 adds pax2."},
+    {"#comment":"Presence per person aboard. Pilot from L:IMPL_PILOT0 (0 = present). Copilot, medic and the rear crew come from the seat tracker, which follows every person between seats. SDK_CABIN_PAX_5: 0 no stretcher, 1 empty stretcher, 2 stretcher with patient."},
+    {"call_macro":"crew seat tracker tick"},
     {"set":{"local":"CREW_PRESENT_1"},"value":0},
     {"set":{"local":"CREW_PRESENT_2"},"value":0},
     {"set":{"local":"CREW_PRESENT_3"},"value":0},
     {"set":{"local":"CREW_PRESENT_4"},"value":0},
     {"set":{"local":"CREW_PRESENT_5"},"value":0},
     {"set":{"local":"CREW_PATIENT_ABOARD"},"value":0},
-    {"if": {
-      "and": [
-        {"require":{"local":"CREW"},"gte":1}
-      ]}, "eq": 1,
+    {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
       "then": [
-        {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_1"},"value":1}
-        ]}
+        {"set":{"local":"CREW_PRESENT_1"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":2}
+        {"require":{"local":"CREW_OUT_2"},"eq":0},
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":2}
       ]}, "eq": 1,
       "then": [
-        {"if": {"var":["L:{local:HXX}_IMPL_PILOT1","number"]}, "eq": 0,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_2"},"value":1}
-        ]}
+        {"set":{"local":"CREW_PRESENT_2"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"eq":3}
+        {"require":{"local":"CREW_OUT_3"},"eq":0},
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":3}
       ]}, "eq": 1,
       "then": [
-        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_3"},"value":1}
-        ]}
+        {"set":{"local":"CREW_PRESENT_3"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"eq":4}
+        {"require":{"local":"CREW_OUT_4"},"eq":0},
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":4}
       ]}, "eq": 1,
       "then": [
-        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_3"},"value":1}
-        ]},
-        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_4"},"value":1}
-        ]}
+        {"set":{"local":"CREW_PRESENT_4"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":5}
+        {"require":{"local":"CREW_OUT_5"},"eq":0},
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":5}
       ]}, "eq": 1,
       "then": [
-        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_3"},"value":1}
-        ]},
-        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_4"},"value":1}
-        ]},
-        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}, "eq": 1,
-          "then": [
-            {"set":{"local":"CREW_PRESENT_5"},"value":1}
-        ]}
+        {"set":{"local":"CREW_PRESENT_5"},"value":1}
     ]},
     {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]}, "eq": 2,
       "then": [
@@ -809,7 +885,6 @@
     {"call_macro":"crew presence flags"},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":1},
         {"require":{"local":"CREW_PRESENT_1"},"eq":1}
       ]}, "eq": 1,
       "then": [
@@ -830,21 +905,33 @@
                   "if": {"param":"score"},
                   "eq": -3,
                   "then": {"floor":{"rand":[3,9]}},
-                  "else": {"param":"score"}
+                  "else": {
+                    "if": {"param":"score"},
+                    "eq": -4,
+                    "then": {"floor":{"rand":[7,21]}},
+                    "else": {"param":"score"}
+                  }
                 }
               }
             }
           }
         },
+        {"if": {"param":"floor"}, "gt": 0,
+          "then": [
+            {"set":{"local":"crash_member_room"},"value":{"subtract":[{"local":"CREW_LIFESCORE_1"},{"param":"floor"}]}},
+            {"if": {"local":"crash_member_room"}, "lt": {"local":"crash_member_score"},
+              "then": [
+                {"set":{"local":"crash_member_score"},"value":{"clamp":[{"local":"crash_member_room"},0,100]}}
+            ]}
+        ]},
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"local":"crash_member_score"},"cause":{"param":"cause"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
         ]}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":2},
         {"require":{"local":"CREW_PRESENT_2"},"eq":1}
       ]}, "eq": 1,
       "then": [
@@ -865,21 +952,33 @@
                   "if": {"param":"score"},
                   "eq": -3,
                   "then": {"floor":{"rand":[3,9]}},
-                  "else": {"param":"score"}
+                  "else": {
+                    "if": {"param":"score"},
+                    "eq": -4,
+                    "then": {"floor":{"rand":[7,21]}},
+                    "else": {"param":"score"}
+                  }
                 }
               }
             }
           }
         },
+        {"if": {"param":"floor"}, "gt": 0,
+          "then": [
+            {"set":{"local":"crash_member_room"},"value":{"subtract":[{"local":"CREW_LIFESCORE_2"},{"param":"floor"}]}},
+            {"if": {"local":"crash_member_room"}, "lt": {"local":"crash_member_score"},
+              "then": [
+                {"set":{"local":"crash_member_score"},"value":{"clamp":[{"local":"crash_member_room"},0,100]}}
+            ]}
+        ]},
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"local":"crash_member_score"},"cause":{"param":"cause"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
         ]}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":3},
         {"require":{"local":"CREW_PRESENT_3"},"eq":1}
       ]}, "eq": 1,
       "then": [
@@ -900,21 +999,33 @@
                   "if": {"param":"score"},
                   "eq": -3,
                   "then": {"floor":{"rand":[3,9]}},
-                  "else": {"param":"score"}
+                  "else": {
+                    "if": {"param":"score"},
+                    "eq": -4,
+                    "then": {"floor":{"rand":[7,21]}},
+                    "else": {"param":"score"}
+                  }
                 }
               }
             }
           }
         },
+        {"if": {"param":"floor"}, "gt": 0,
+          "then": [
+            {"set":{"local":"crash_member_room"},"value":{"subtract":[{"local":"CREW_LIFESCORE_3"},{"param":"floor"}]}},
+            {"if": {"local":"crash_member_room"}, "lt": {"local":"crash_member_score"},
+              "then": [
+                {"set":{"local":"crash_member_score"},"value":{"clamp":[{"local":"crash_member_room"},0,100]}}
+            ]}
+        ]},
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"local":"crash_member_score"},"cause":{"param":"cause"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
         ]}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":4},
         {"require":{"local":"CREW_PRESENT_4"},"eq":1}
       ]}, "eq": 1,
       "then": [
@@ -935,21 +1046,33 @@
                   "if": {"param":"score"},
                   "eq": -3,
                   "then": {"floor":{"rand":[3,9]}},
-                  "else": {"param":"score"}
+                  "else": {
+                    "if": {"param":"score"},
+                    "eq": -4,
+                    "then": {"floor":{"rand":[7,21]}},
+                    "else": {"param":"score"}
+                  }
                 }
               }
             }
           }
         },
+        {"if": {"param":"floor"}, "gt": 0,
+          "then": [
+            {"set":{"local":"crash_member_room"},"value":{"subtract":[{"local":"CREW_LIFESCORE_4"},{"param":"floor"}]}},
+            {"if": {"local":"crash_member_room"}, "lt": {"local":"crash_member_score"},
+              "then": [
+                {"set":{"local":"crash_member_score"},"value":{"clamp":[{"local":"crash_member_room"},0,100]}}
+            ]}
+        ]},
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"local":"crash_member_score"},"cause":{"param":"cause"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
         ]}
     ]},
     {"if": {
       "and": [
-        {"require":{"local":"CREW"},"gte":5},
         {"require":{"local":"CREW_PRESENT_5"},"eq":1}
       ]}, "eq": 1,
       "then": [
@@ -970,16 +1093,29 @@
                   "if": {"param":"score"},
                   "eq": -3,
                   "then": {"floor":{"rand":[3,9]}},
-                  "else": {"param":"score"}
+                  "else": {
+                    "if": {"param":"score"},
+                    "eq": -4,
+                    "then": {"floor":{"rand":[7,21]}},
+                    "else": {"param":"score"}
+                  }
                 }
               }
             }
           }
         },
+        {"if": {"param":"floor"}, "gt": 0,
+          "then": [
+            {"set":{"local":"crash_member_room"},"value":{"subtract":[{"local":"CREW_LIFESCORE_5"},{"param":"floor"}]}},
+            {"if": {"local":"crash_member_room"}, "lt": {"local":"crash_member_score"},
+              "then": [
+                {"set":{"local":"crash_member_score"},"value":{"clamp":[{"local":"crash_member_room"},0,100]}}
+            ]}
+        ]},
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"local":"crash_member_score"},"cause":{"param":"cause"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
         ]}
     ]},
     {"if": {"local":"CREW_PATIENT_ABOARD"}, "eq": 1,
@@ -1001,7 +1137,12 @@
                   "if": {"param":"score"},
                   "eq": -3,
                   "then": {"floor":{"rand":[3,9]}},
-                  "else": {"param":"score"}
+                  "else": {
+                    "if": {"param":"score"},
+                    "eq": -4,
+                    "then": {"floor":{"rand":[7,21]}},
+                    "else": {"param":"score"}
+                  }
                 }
               }
             }
@@ -1014,11 +1155,12 @@
     ]}
   ],
   "monitor aircraft crash impact": [
-    {"#comment":"Aircraft impact in tiers, one logic for every acceleration level. The first wait_for (32 ft/s2, about 1 g) starts the event; one latch thread per higher threshold (64, 97, 193, 386, 600) records that the threshold was crossed, even for a single-sample spike. After a 0.3 s settle the single worker applies, in order, an injury to each present person per crossed tier so applications never race: 1 g 0 to 3, 2 g 3 to 8, then 10 to 30 at 97, 193 and 386, and 45 to 60 at 600. Latches are cleared when the aircraft calms down."},
+    {"#comment":"Aircraft impacts on two independent paths so that a light impact never blinds the crash path. Minor path: an axis at 32 ft/s2 (about 1 g) samples the resultant X2 + Y2 + Z2 every 0.02 s for 0.3 s and applies 0 to 3 (not below 70) and, from a resultant of 64, 3 to 8 (not below 40); it rearms as soon as the aircraft calms below 32. Crash path: an axis at 150 or a resultant of 150 seen by the minor path samples the same way, takes the tier latches of 300, 500 and 800 on every axis, applies 7 to 20 (not below 20) at 150, 10 to 30 at 300 and 500 and 45 to 60 at 800 (ignores the member lock), starts the failures, evaluates the events once and rearms below 64. The two paths share a lock only while they apply damage."},
     {"create_thread": {
       "commands": [
-        {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"yes"},
-        {"set":{"local":"crash_tier_2"},"value":0},
+        {"set":{"local":"crash_apply_busy"},"value":0},
+        {"set":{"local":"crash_vec_trigger"},"value":0},
+        {"set":{"local":"crash_vec_peak2"},"value":0},
         {"set":{"local":"crash_tier_3"},"value":0},
         {"set":{"local":"crash_tier_4"},"value":0},
         {"set":{"local":"crash_tier_5"},"value":0},
@@ -1028,44 +1170,12 @@
             {"while": 1, "gt": 0,
               "do": [
                 {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":64},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-64},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":64},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-64},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":64},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-64}
-                ]},
-                {"set":{"local":"crash_tier_2"},"value":1},
-                {"wait_for":{"local":"crash_tier_2"},"eq":0}
-            ]}
-        ]}},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":97},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-97},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":97},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-97},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":97},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-97}
-                ]},
-                {"set":{"local":"crash_tier_3"},"value":1},
-                {"wait_for":{"local":"crash_tier_3"},"eq":0}
-            ]}
-        ]}},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":193},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-193},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":193},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-193},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":193},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-193}
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":300},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-300},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":300},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-300},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":300},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-300}
                 ]},
                 {"set":{"local":"crash_tier_4"},"value":1},
                 {"wait_for":{"local":"crash_tier_4"},"eq":0}
@@ -1076,12 +1186,12 @@
             {"while": 1, "gt": 0,
               "do": [
                 {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":386},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-386},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":386},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-386},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":386},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-386}
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":500},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-500},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":500},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-500},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":500},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-500}
                 ]},
                 {"set":{"local":"crash_tier_5"},"value":1},
                 {"wait_for":{"local":"crash_tier_5"},"eq":0}
@@ -1092,21 +1202,21 @@
             {"while": 1, "gt": 0,
               "do": [
                 {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":600},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-600},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":600},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-600},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":600},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-600}
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":800},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-800},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":800},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-800},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":800},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-800}
                 ]},
                 {"set":{"local":"crash_tier_6"},"value":1},
                 {"wait_for":{"local":"crash_tier_6"},"eq":0}
             ]}
         ]}},
-        {"while": 1, "gt": 0,
-          "do": [
-            {"if": {"local":"CRASH_IMPACT_ARMED"}, "eq": "yes",
-              "then": [
+        {"create_thread": {
+          "commands": [
+            {"while": 1, "gt": 0,
+              "do": [
                 {"or": [
                   {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":32},
                   {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-32},
@@ -1115,42 +1225,52 @@
                   {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":32},
                   {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-32}
                 ]},
-                {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"no"},
-                {"call_macro":"crew presence flags"},
-                {"set":{"local":"crash_trace_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                {"set":{"local":"crash_trace_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                {"set":{"local":"crash_trace_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_detected accel X={local:crash_trace_x} Y={local:crash_trace_y} Z={local:crash_trace_z} crew={local:CREW} present={local:CREW_PRESENT_1}{local:CREW_PRESENT_2}{local:CREW_PRESENT_3}{local:CREW_PRESENT_4}{local:CREW_PRESENT_5} patient={local:CREW_PATIENT_ABOARD} emergency={local:CREW_EMERGENCY_ACTIVE} total_before={local:CREW_LIFESCORE_TOTAL_IMPACT}"}},
-                {"sleep":0.3},
-                {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-2,"cause":"MINOR AIRCRAFT IMPACT"}},
-                {"if": {"local":"crash_tier_2"}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-3,"cause":"MODERATE AIRCRAFT IMPACT"}}
+                {"try": [
+                    {"set":{"local":"minor_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"minor_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"minor_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_detected accel X={local:minor_x} Y={local:minor_y} Z={local:minor_z}"}},
+                    {"set":{"local":"minor_peak2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
+                    {"set":{"local":"minor_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"minor_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"minor_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"minor_sample"},"value":0},
+                    {"while": {"local":"minor_sample"}, "lt": 15,
+                      "do": [
+                        {"sleep":0.02},
+                        {"set":{"local":"minor_mag2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
+                        {"if": {"local":"minor_mag2"}, "gt": {"local":"minor_peak2"},
+                          "then": [
+                            {"set":{"local":"minor_peak2"},"value":{"local":"minor_mag2"}},
+                            {"set":{"local":"minor_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                            {"set":{"local":"minor_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                            {"set":{"local":"minor_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}}
+                        ]},
+                        {"set":{"local":"minor_sample"},"value":{"add":[{"local":"minor_sample"},1]}}
+                    ]},
+                    {"if": {"local":"minor_peak2"}, "gte": 22500,
+                      "then": [
+                        {"set":{"local":"crash_vec_peak2"},"value":{"local":"minor_peak2"}},
+                        {"set":{"local":"crash_vec_trigger"},"value":1}
+                    ]},
+                    {"set":{"local":"minor_peak2_round"},"value":{"round":{"local":"minor_peak2"},"to":0}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_peak peak2={local:minor_peak2_round} at X={local:minor_peak_x} Y={local:minor_peak_y} Z={local:minor_peak_z}"}},
+                    {"wait_for":{"local":"crash_apply_busy"},"eq":0},
+                    {"set":{"local":"crash_apply_busy"},"value":1},
+                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-2,"cause":"MINOR AIRCRAFT IMPACT","floor":70}},
+                    {"if": {"local":"minor_peak2"}, "gte": 4096,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-3,"cause":"MODERATE AIRCRAFT IMPACT","floor":40}}
+                    ]},
+                    {"call_macro":"crew impact events"},
+                    {"set":{"local":"crash_apply_busy"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_applied total_after={local:CREW_LIFESCORE_TOTAL_IMPACT} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}}
+                  ],
+                  "catch": [
+                    {"set":{"local":"crash_apply_busy"},"value":0},
+                    {"set":{"local":"minor_error"},"value":{"param":"$ERROR"}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_error {local:minor_error}"}}
                 ]},
-                {"if": {"local":"crash_tier_3"}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"AIRCRAFT CRASH IMPACT"}},
-                    {"set_message":{"text":"Impact detected. Crew shaken but conscious."}}
-                ]},
-                {"if": {"local":"crash_tier_4"}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"SEVERE AIRCRAFT CRASH IMPACT"}},
-                    {"set_message":{"text":"Severe impact detected. Crew injuries reported."}}
-                ]},
-                {"if": {"local":"crash_tier_5"}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"HEAVY AIRCRAFT CRASH IMPACT"}},
-                    {"set_message":{"text":"Heavy impact detected. Serious crew injuries likely."}}
-                ]},
-                {"if": {"local":"crash_tier_6"}, "eq": 1,
-                  "then": [
-                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-1,"cause":"CATASTROPHIC AIRCRAFT CRASH IMPACT"}},
-                    {"set_message":{"text":"Catastrophic impact detected. Crew casualties likely."}}
-                ]},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_applied tiers=1{local:crash_tier_2}{local:crash_tier_3}{local:crash_tier_4}{local:crash_tier_5}{local:crash_tier_6} total_after={local:CREW_LIFESCORE_TOTAL_IMPACT} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}}
-            ]},
-            {"if": {"local":"CRASH_IMPACT_ARMED"}, "eq": "no",
-              "then": [
                 {"and": [
                   {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":32},
                   {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":32},
@@ -1158,17 +1278,1312 @@
                   {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":-32},
                   {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":-32},
                   {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":-32}
+                ]}
+            ]}
+        ]}},
+        {"create_thread": {
+          "commands": [
+            {"while": 1, "gt": 0,
+              "do": [
+                {"or": [
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":150},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-150},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":150},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-150},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":150},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-150},
+                  {"wait_for":{"local":"crash_vec_trigger"},"eq":1}
                 ]},
-                {"sleep":3},
-                {"set":{"local":"crash_tier_2"},"value":0},
+                {"set":{"local":"crash_vec_trigger"},"value":0},
+                {"try": [
+                    {"call_macro":"crew presence flags"},
+                    {"set":{"local":"crash_trace_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"crash_trace_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"crash_trace_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_detected accel X={local:crash_trace_x} Y={local:crash_trace_y} Z={local:crash_trace_z} crew={local:CREW} present={local:CREW_PRESENT_1}{local:CREW_PRESENT_2}{local:CREW_PRESENT_3}{local:CREW_PRESENT_4}{local:CREW_PRESENT_5} patient={local:CREW_PATIENT_ABOARD} emergency={local:CREW_EMERGENCY_ACTIVE} total_before={local:CREW_LIFESCORE_TOTAL_IMPACT}"}},
+                    {"set":{"local":"crash_peak2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
+                    {"set":{"local":"crash_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"crash_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"crash_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
+                    {"set":{"local":"crash_sample"},"value":0},
+                    {"while": {"local":"crash_sample"}, "lt": 15,
+                      "do": [
+                        {"sleep":0.02},
+                        {"set":{"local":"crash_mag2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
+                        {"if": {"local":"crash_mag2"}, "gt": {"local":"crash_peak2"},
+                          "then": [
+                            {"set":{"local":"crash_peak2"},"value":{"local":"crash_mag2"}},
+                            {"set":{"local":"crash_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
+                            {"set":{"local":"crash_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
+                            {"set":{"local":"crash_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}}
+                        ]},
+                        {"set":{"local":"crash_sample"},"value":{"add":[{"local":"crash_sample"},1]}}
+                    ]},
+                    {"if": {"local":"crash_vec_peak2"}, "gt": {"local":"crash_peak2"},
+                      "then": [
+                        {"set":{"local":"crash_peak2"},"value":{"local":"crash_vec_peak2"}}
+                    ]},
+                    {"set":{"local":"crash_vec_peak2"},"value":0},
+                    {"if": {"local":"crash_peak2"}, "gte": 22500,
+                      "then": [
+                        {"set":{"local":"crash_tier_3"},"value":1}
+                    ]},
+                    {"if": {"local":"crash_peak2"}, "gte": 90000,
+                      "then": [
+                        {"set":{"local":"crash_tier_4"},"value":1}
+                    ]},
+                    {"if": {"local":"crash_peak2"}, "gte": 250000,
+                      "then": [
+                        {"set":{"local":"crash_tier_5"},"value":1}
+                    ]},
+                    {"if": {"local":"crash_peak2"}, "gte": 640000,
+                      "then": [
+                        {"set":{"local":"crash_tier_6"},"value":1}
+                    ]},
+                    {"set":{"local":"crash_peak2_round"},"value":{"round":{"local":"crash_peak2"},"to":0}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_peak peak2={local:crash_peak2_round} at X={local:crash_peak_x} Y={local:crash_peak_y} Z={local:crash_peak_z}"}},
+                    {"wait_for":{"local":"crash_apply_busy"},"eq":0},
+                    {"set":{"local":"crash_apply_busy"},"value":1},
+                    {"if": {"local":"crash_tier_3"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-4,"cause":"AIRCRAFT CRASH IMPACT","floor":20}},
+                        {"set_message":{"text":"Impact detected. Crew shaken but conscious."}}
+                    ]},
+                    {"if": {"local":"crash_tier_4"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"SEVERE AIRCRAFT CRASH IMPACT"}},
+                        {"set_message":{"text":"Severe impact detected. Crew injuries reported."}}
+                    ]},
+                    {"if": {"local":"crash_tier_5"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"HEAVY AIRCRAFT CRASH IMPACT"}},
+                        {"set_message":{"text":"Heavy impact detected. Serious crew injuries likely."}}
+                    ]},
+                    {"if": {"local":"crash_tier_6"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-1,"cause":"CATASTROPHIC AIRCRAFT CRASH IMPACT","force":1}},
+                        {"set_message":{"text":"Catastrophic impact detected. Crew casualties likely."}}
+                    ]},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage first_tier_applied"}},
+                    {"set":{"local":"crash_fail_4"},"value":{"local":"crash_tier_4"}},
+                    {"set":{"local":"crash_fail_5"},"value":{"local":"crash_tier_5"}},
+                    {"set":{"local":"crash_fail_6"},"value":{"local":"crash_tier_6"}},
+                    {"create_thread": {
+                      "commands": [
+                        {"if": {"local":"crash_fail_4"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"crash random failures","params":{"count":{"floor":{"rand":[1,3]}},"fires":"no"}}
+                        ]},
+                        {"if": {"local":"crash_fail_5"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"crash random failures","params":{"count":1,"fires":"yes"}}
+                        ]},
+                        {"if": {"local":"crash_fail_6"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"crash random failures","params":{"count":1,"fires":"yes"}}
+                        ]}
+                    ]}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage tiers_and_failures_done"}},
+                    {"call_macro":"crew impact events"},
+                    {"set":{"local":"crash_apply_busy"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_applied tiers={local:crash_tier_3}{local:crash_tier_4}{local:crash_tier_5}{local:crash_tier_6} total_after={local:CREW_LIFESCORE_TOTAL_IMPACT} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage cycle_done"}}
+                  ],
+                  "catch": [
+                    {"set":{"local":"crash_apply_busy"},"value":0},
+                    {"set":{"local":"crash_error"},"value":{"param":"$ERROR"}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"worker_error {local:crash_error}"}}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"rearm_wait"}},
+                {"and": [
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":64},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":64},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":64},
+                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":-64},
+                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":-64},
+                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":-64}
+                ]},
                 {"set":{"local":"crash_tier_3"},"value":0},
                 {"set":{"local":"crash_tier_4"},"value":0},
                 {"set":{"local":"crash_tier_5"},"value":0},
                 {"set":{"local":"crash_tier_6"},"value":0},
-                {"set":{"local":"CRASH_IMPACT_ARMED"},"value":"yes"}
-            ]},
-            {"sleep":0.1}
+                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"rearmed"}}
+            ]}
+        ]}}
+    ]}}
+  ],
+  "crew members cap": [
+    {"set":{"local":"CREW_MEMBER_CAP"},"value":{"local":"CREW"}},
+    {"if": {
+      "and": [
+        {"require":{"local":"HELIRESCUER_BOARDED"},"gt":0},
+        {"require":{"local":"CREW"},"lt":5}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_MEMBER_CAP"},"value":{"clamp":[{"add":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"}]},0,5]}}
+    ]}
+  ],
+  "crew survivors count": [
+    {"set":{"local":"CREW_ALIVE_COUNT"},"value":0},
+    {"set":{"local":"CREW_ALIVE_PILOT"},"value":0},
+    {"set":{"local":"CREW_ALIVE_COPILOT"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":1},
+        {"require":{"local":"CREW_LIFESCORE_1"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_ALIVE_COUNT"},"value":{"add":[{"local":"CREW_ALIVE_COUNT"},1]}},
+        {"set":{"local":"CREW_ALIVE_PILOT"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":2},
+        {"require":{"local":"CREW_LIFESCORE_2"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_ALIVE_COUNT"},"value":{"add":[{"local":"CREW_ALIVE_COUNT"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":3},
+        {"require":{"local":"CREW_LIFESCORE_3"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_ALIVE_COUNT"},"value":{"add":[{"local":"CREW_ALIVE_COUNT"},1]}},
+        {"set":{"local":"CREW_ALIVE_COPILOT"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":4},
+        {"require":{"local":"CREW_LIFESCORE_4"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_ALIVE_COUNT"},"value":{"add":[{"local":"CREW_ALIVE_COUNT"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_MEMBER_CAP"},"gte":5},
+        {"require":{"local":"CREW_LIFESCORE_5"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_ALIVE_COUNT"},"value":{"add":[{"local":"CREW_ALIVE_COUNT"},1]}}
+    ]}
+  ],
+  "crew seat tracker tick": [
+    {"#comment":"Who sits where. Persons keep their identity while moving between seats. A seat vacated and a seat filled in the same tick is a move; with several candidates the cabin-right seat takes the rear crew member first. A person leaving without a filled seat is outside; a filled seat without a mover takes the outside person by seat affinity (FO 3, P3 2, P1 4, P2 5)."},
+    {"if": {"local":"SEAT_FO"}, "eq": null,
+      "then": [
+        {"set":{"local":"SEAT_FO"},"value":0},
+        {"set":{"local":"SEAT_P1"},"value":0},
+        {"set":{"local":"SEAT_P2"},"value":0},
+        {"set":{"local":"SEAT_P3"},"value":0},
+        {"set":{"local":"CREW_OUT_2"},"value":1},
+        {"set":{"local":"CREW_OUT_3"},"value":1},
+        {"set":{"local":"CREW_OUT_4"},"value":1},
+        {"set":{"local":"CREW_OUT_5"},"value":1},
+        {"set":{"local":"CREW_SEAT_SIG"},"value":""}
+    ]},
+    {"call_macro":"crew members cap"},
+    {"set":{"local":"SEAT_NOW_FO"},"value":{"if":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]},"eq":0,"then":1,"else":0}},
+    {"set":{"local":"SEAT_NOW_P1"},"value":{"if":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]},"eq":1,"then":1,"else":0}},
+    {"set":{"local":"SEAT_NOW_P2"},"value":{"if":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]},"eq":1,"then":1,"else":0}},
+    {"set":{"local":"SEAT_NOW_P3"},"value":{"if":{"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]},"eq":1,"then":1,"else":0}},
+    {"set":{"local":"SEAT_MOVED_2"},"value":0},
+    {"set":{"local":"SEAT_MOVED_3"},"value":0},
+    {"set":{"local":"SEAT_MOVED_4"},"value":0},
+    {"set":{"local":"SEAT_MOVED_5"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_FO"},"eq":2},
+        {"require":{"local":"SEAT_NOW_FO"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_2"},"value":1},
+        {"set":{"local":"CREW_OUT_2"},"value":1},
+        {"set":{"local":"SEAT_FO"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_FO"},"eq":3},
+        {"require":{"local":"SEAT_NOW_FO"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_3"},"value":1},
+        {"set":{"local":"CREW_OUT_3"},"value":1},
+        {"set":{"local":"SEAT_FO"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_FO"},"eq":4},
+        {"require":{"local":"SEAT_NOW_FO"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_4"},"value":1},
+        {"set":{"local":"CREW_OUT_4"},"value":1},
+        {"set":{"local":"SEAT_FO"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_FO"},"eq":5},
+        {"require":{"local":"SEAT_NOW_FO"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_5"},"value":1},
+        {"set":{"local":"CREW_OUT_5"},"value":1},
+        {"set":{"local":"SEAT_FO"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P1"},"eq":2},
+        {"require":{"local":"SEAT_NOW_P1"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_2"},"value":1},
+        {"set":{"local":"CREW_OUT_2"},"value":1},
+        {"set":{"local":"SEAT_P1"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P1"},"eq":3},
+        {"require":{"local":"SEAT_NOW_P1"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_3"},"value":1},
+        {"set":{"local":"CREW_OUT_3"},"value":1},
+        {"set":{"local":"SEAT_P1"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P1"},"eq":4},
+        {"require":{"local":"SEAT_NOW_P1"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_4"},"value":1},
+        {"set":{"local":"CREW_OUT_4"},"value":1},
+        {"set":{"local":"SEAT_P1"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P1"},"eq":5},
+        {"require":{"local":"SEAT_NOW_P1"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_5"},"value":1},
+        {"set":{"local":"CREW_OUT_5"},"value":1},
+        {"set":{"local":"SEAT_P1"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P2"},"eq":2},
+        {"require":{"local":"SEAT_NOW_P2"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_2"},"value":1},
+        {"set":{"local":"CREW_OUT_2"},"value":1},
+        {"set":{"local":"SEAT_P2"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P2"},"eq":3},
+        {"require":{"local":"SEAT_NOW_P2"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_3"},"value":1},
+        {"set":{"local":"CREW_OUT_3"},"value":1},
+        {"set":{"local":"SEAT_P2"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P2"},"eq":4},
+        {"require":{"local":"SEAT_NOW_P2"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_4"},"value":1},
+        {"set":{"local":"CREW_OUT_4"},"value":1},
+        {"set":{"local":"SEAT_P2"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P2"},"eq":5},
+        {"require":{"local":"SEAT_NOW_P2"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_5"},"value":1},
+        {"set":{"local":"CREW_OUT_5"},"value":1},
+        {"set":{"local":"SEAT_P2"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P3"},"eq":2},
+        {"require":{"local":"SEAT_NOW_P3"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_2"},"value":1},
+        {"set":{"local":"CREW_OUT_2"},"value":1},
+        {"set":{"local":"SEAT_P3"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P3"},"eq":3},
+        {"require":{"local":"SEAT_NOW_P3"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_3"},"value":1},
+        {"set":{"local":"CREW_OUT_3"},"value":1},
+        {"set":{"local":"SEAT_P3"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P3"},"eq":4},
+        {"require":{"local":"SEAT_NOW_P3"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_4"},"value":1},
+        {"set":{"local":"CREW_OUT_4"},"value":1},
+        {"set":{"local":"SEAT_P3"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P3"},"eq":5},
+        {"require":{"local":"SEAT_NOW_P3"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_MOVED_5"},"value":1},
+        {"set":{"local":"CREW_OUT_5"},"value":1},
+        {"set":{"local":"SEAT_P3"},"value":0}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P2"},"eq":0},
+        {"require":{"local":"SEAT_NOW_P2"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_PICK"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_4"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_2"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_3"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_5"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_5"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_3"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_4"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_2"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P2"},"value":2},
+            {"set":{"local":"CREW_OUT_2"},"value":0},
+            {"set":{"local":"SEAT_MOVED_2"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P2"},"value":3},
+            {"set":{"local":"CREW_OUT_3"},"value":0},
+            {"set":{"local":"SEAT_MOVED_3"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P2"},"value":4},
+            {"set":{"local":"CREW_OUT_4"},"value":0},
+            {"set":{"local":"SEAT_MOVED_4"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P2"},"value":5},
+            {"set":{"local":"CREW_OUT_5"},"value":0},
+            {"set":{"local":"SEAT_MOVED_5"},"value":0}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P1"},"eq":0},
+        {"require":{"local":"SEAT_NOW_P1"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_PICK"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_4"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_3"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_2"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_5"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_4"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_3"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_5"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_2"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P1"},"value":2},
+            {"set":{"local":"CREW_OUT_2"},"value":0},
+            {"set":{"local":"SEAT_MOVED_2"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P1"},"value":3},
+            {"set":{"local":"CREW_OUT_3"},"value":0},
+            {"set":{"local":"SEAT_MOVED_3"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P1"},"value":4},
+            {"set":{"local":"CREW_OUT_4"},"value":0},
+            {"set":{"local":"SEAT_MOVED_4"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P1"},"value":5},
+            {"set":{"local":"CREW_OUT_5"},"value":0},
+            {"set":{"local":"SEAT_MOVED_5"},"value":0}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_P3"},"eq":0},
+        {"require":{"local":"SEAT_NOW_P3"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_PICK"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_2"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_4"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_5"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_3"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_2"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_4"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_3"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_5"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P3"},"value":2},
+            {"set":{"local":"CREW_OUT_2"},"value":0},
+            {"set":{"local":"SEAT_MOVED_2"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P3"},"value":3},
+            {"set":{"local":"CREW_OUT_3"},"value":0},
+            {"set":{"local":"SEAT_MOVED_3"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P3"},"value":4},
+            {"set":{"local":"CREW_OUT_4"},"value":0},
+            {"set":{"local":"SEAT_MOVED_4"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_P3"},"value":5},
+            {"set":{"local":"CREW_OUT_5"},"value":0},
+            {"set":{"local":"SEAT_MOVED_5"},"value":0}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"SEAT_FO"},"eq":0},
+        {"require":{"local":"SEAT_NOW_FO"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"SEAT_PICK"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_3"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_2"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_4"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"SEAT_MOVED_5"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_3"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":3}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_2"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":2}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_4"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":4}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":0},
+            {"require":{"local":"CREW_OUT_5"},"eq":1},
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_PICK"},"value":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_FO"},"value":2},
+            {"set":{"local":"CREW_OUT_2"},"value":0},
+            {"set":{"local":"SEAT_MOVED_2"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":3}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_FO"},"value":3},
+            {"set":{"local":"CREW_OUT_3"},"value":0},
+            {"set":{"local":"SEAT_MOVED_3"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_FO"},"value":4},
+            {"set":{"local":"CREW_OUT_4"},"value":0},
+            {"set":{"local":"SEAT_MOVED_4"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"SEAT_PICK"},"eq":5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"SEAT_FO"},"value":5},
+            {"set":{"local":"CREW_OUT_5"},"value":0},
+            {"set":{"local":"SEAT_MOVED_5"},"value":0}
+        ]}
+    ]},
+    {"set":{"local":"CREW_SEAT_SIG_NOW"},"value":{"text":"FO={0} P1={1} P2={2} P3={3}","params":[{"local":"SEAT_FO"},{"local":"SEAT_P1"},{"local":"SEAT_P2"},{"local":"SEAT_P3"}]}},
+    {"if": {"local":"CREW_SEAT_SIG_NOW"}, "ne": {"local":"CREW_SEAT_SIG"},
+      "then": [
+        {"set":{"local":"CREW_SEAT_SIG"},"value":{"local":"CREW_SEAT_SIG_NOW"}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crew_seats","actor":"crew","target":"crew_health","state":"seats {local:CREW_SEAT_SIG_NOW} out 2={local:CREW_OUT_2} 3={local:CREW_OUT_3} 4={local:CREW_OUT_4} 5={local:CREW_OUT_5} cap={local:CREW_MEMBER_CAP}"}}
+    ]}
+  ],
+  "crew seat tracker start": [
+    {"create_thread": {
+      "commands": [
+        {"while": {"local":"CREW_LIFESCORE_MONITOR_ACTIVE"}, "eq": "yes",
+          "do": [
+            {"call_macro":"crew seat tracker tick"},
+            {"sleep":0.2}
         ]}
     ]}}
+  ],
+  "crew member event announce": [
+    {"#comment":"Announces a critical condition or a death to the survivors: dispatcher/RescueTrack message and on-screen message. The first event also announces the abort."},
+    {"if": {"param":"member"}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_role_name"},"value":"PILOT"}
+    ]},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"local":"crew_role_name"},"value":"MEDIC"}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"local":"crew_role_name"},"value":"COPILOT"}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"set":{"local":"crew_role_name"},"value":"CREW 4"}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"set":{"local":"crew_role_name"},"value":"CREW 5"}
+    ]},
+    {"if": {"param":"kind"}, "eq": "death",
+      "then": [
+        {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
+          "then": [
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"DECEASED - mission cancelled immediately; return for emergency handover","cause":{"param":"cause"}}},
+            {"set_message":{"text":"CREW LOSS: {0} deceased. Mission aborted, fly to the hospital.","params":[{"local":"crew_role_name"}]}}
+          ],"else": [
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"DECEASED","cause":{"param":"cause"}}},
+            {"set_message":{"text":"CREW LOSS: {0} deceased.","params":[{"local":"crew_role_name"}]}}
+        ]}
+      ],"else": [
+        {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
+          "then": [
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"CRITICAL CONDITION - mission cancelled; all scene personnel return aboard","cause":{"param":"cause"}}},
+            {"set_message":{"text":"CREW CRITICAL: {0}. Mission aborted, fly to the hospital.","params":[{"local":"crew_role_name"}]}}
+          ],"else": [
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"CRITICAL CONDITION","cause":{"param":"cause"}}},
+            {"set_message":{"text":"CREW CRITICAL: {0}.","params":[{"local":"crew_role_name"}]}}
+        ]}
+    ]}
+  ],
+  "crew mission terminated": [
+    {"if": {"local":"CREW_MISSION_TERMINATED"}, "ne": "yes",
+      "then": [
+        {"#comment":"Status 7 (unavailable for dispatch) only with automatic status reports (DISPATCHER_AUTO 0), through Update_raw from dispatchphase, which updates RescueTrack in the language of the active status table. Phases 5 and 6 are avoided: the NEW DISPATCH thread answers them with ready dispatch, which reopens the briefing page."},
+        {"set":{"local":"CREW_MISSION_TERMINATED"},"value":"yes"},
+        {"set":{"local":"CREW_EMERGENCY_ACTIVE"},"value":"yes"},
+        {"set":{"local":"CREW_EMERGENCY_FATAL"},"value":"yes"},
+        {"set":{"local":"HOIST_FATAL_EVENT"},"value":"yes"},
+        {"set":{"local":"MISSION_FAILED"},"value":"CREW_FATAL"},
+        {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":0},
+        {"set":{"local":"MISSION_PHASE"},"value":8},
+        {"set":{"local":"HOIST_OUT"},"value":0},
+        {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
+          "then": [
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+              "then": [
+                {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
+                {"call_macro":"Update_raw from dispatchphase"}
+            ]}
+        ]},
+        {"set_hover_display":{"range":0}},
+        {"set_dispatch_dialog":0},
+        {"set_briefing_dialog":0},
+        {"if": {"local":"CREW_ALIVE_COUNT"}, "eq": 0,
+          "then": [
+            {"set_message":{"text":"MISSION FAILED - ALL CREW DECEASED. Operation terminated."}}
+          ],"else": [
+            {"set_message":{"text":"MISSION FAILED - PILOT AND COPILOT DECEASED. Operation terminated."}}
+        ]},
+        {"set":{"local":"CREW_TERMINATED_ACK"},"value":"no"},
+        {"if": {"local":"CREW_ALIVE_COUNT"}, "eq": 0,
+          "then": [
+            {"wait_modal": {
+                "title": "MISSION FAILED",
+                "text": "All crew members are deceased. The operation is terminated.",
+                "options": [
+                  {"text":"VIEW REPORT","style":"primary","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+              ]}
+            }
+          ],"else": [
+            {"wait_modal": {
+                "title": "MISSION FAILED",
+                "text": "Pilot and copilot are deceased. The operation is terminated.",
+                "options": [
+                  {"text":"VIEW REPORT","style":"primary","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+              ]}
+            }
+        ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"mission_terminated alive={local:CREW_ALIVE_COUNT} pilot={local:CREW_ALIVE_PILOT} copilot={local:CREW_ALIVE_COPILOT}"}},
+        {"set":{"local":"MISSION_END_WAITING"},"value":1},
+        {"call_macro":"end menu"},
+        {"set_dispatch_dialog":1}
+    ]}
+  ],
+  "crew member state event": [
+    {"if": {"local":"crew_event_member"}, "eq": 1,
+      "then": [
+        {"if": {"local":"CREW_LIFESCORE_1"}, "lte": 0,
+          "then": [
+            {"if": {"local":"CREW_DEAD_1"}, "ne": 1,
+              "then": [
+                {"set":{"local":"CREW_DEAD_1"},"value":1},
+                {"set":{"local":"CREW_CRIT_1"},"value":1},
+                {"set":{"local":"CREW_LOCK_1"},"value":1},
+                {"set":{"local":"CREW_ANN_1"},"value":1},
+                {"set":{"local":"CREW_ANN_KIND_1"},"value":"death"}
+            ]}
+          ],"else": [
+            {"if": {"local":"CREW_LIFESCORE_1"}, "lte": 10,
+              "then": [
+                {"if": {"local":"CREW_CRIT_1"}, "ne": 1,
+                  "then": [
+                    {"set":{"local":"CREW_CRIT_1"},"value":1},
+                    {"set":{"local":"CREW_LOCK_1"},"value":1},
+                    {"set":{"local":"CREW_ANN_1"},"value":1},
+                    {"set":{"local":"CREW_ANN_KIND_1"},"value":"critical"}
+                ]}
+              ],"else": [
+                {"if": {"local":"CREW_LIFESCORE_1"}, "lt": 50,
+                  "then": [
+                    {"if": {"local":"CREW_LIFESCORE_ALERT_1"}, "lt": 2,
+                      "then": [
+                        {"set":{"local":"CREW_LIFESCORE_ALERT_1"},"value":2},
+                        {"call_macro":"post crew safety message","params":{"member":1,"score":{"local":"CREW_LIFESCORE_1"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                    ]}
+                  ],"else": [
+                    {"if": {"local":"CREW_LIFESCORE_1"}, "lt": 100,
+                      "then": [
+                        {"if": {"local":"CREW_LIFESCORE_ALERT_1"}, "lt": 1,
+                          "then": [
+                            {"set":{"local":"CREW_LIFESCORE_ALERT_1"},"value":1},
+                            {"call_macro":"post crew safety message","params":{"member":1,"score":{"local":"CREW_LIFESCORE_1"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        ]}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"crew_event_member"}, "eq": 2,
+      "then": [
+        {"if": {"local":"CREW_LIFESCORE_2"}, "lte": 0,
+          "then": [
+            {"if": {"local":"CREW_DEAD_2"}, "ne": 1,
+              "then": [
+                {"set":{"local":"CREW_DEAD_2"},"value":1},
+                {"set":{"local":"CREW_CRIT_2"},"value":1},
+                {"set":{"local":"CREW_LOCK_2"},"value":1},
+                {"set":{"local":"CREW_ANN_2"},"value":1},
+                {"set":{"local":"CREW_ANN_KIND_2"},"value":"death"}
+            ]}
+          ],"else": [
+            {"if": {"local":"CREW_LIFESCORE_2"}, "lte": 10,
+              "then": [
+                {"if": {"local":"CREW_CRIT_2"}, "ne": 1,
+                  "then": [
+                    {"set":{"local":"CREW_CRIT_2"},"value":1},
+                    {"set":{"local":"CREW_LOCK_2"},"value":1},
+                    {"set":{"local":"CREW_ANN_2"},"value":1},
+                    {"set":{"local":"CREW_ANN_KIND_2"},"value":"critical"}
+                ]}
+              ],"else": [
+                {"if": {"local":"CREW_LIFESCORE_2"}, "lt": 50,
+                  "then": [
+                    {"if": {"local":"CREW_LIFESCORE_ALERT_2"}, "lt": 2,
+                      "then": [
+                        {"set":{"local":"CREW_LIFESCORE_ALERT_2"},"value":2},
+                        {"call_macro":"post crew safety message","params":{"member":2,"score":{"local":"CREW_LIFESCORE_2"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                    ]}
+                  ],"else": [
+                    {"if": {"local":"CREW_LIFESCORE_2"}, "lt": 100,
+                      "then": [
+                        {"if": {"local":"CREW_LIFESCORE_ALERT_2"}, "lt": 1,
+                          "then": [
+                            {"set":{"local":"CREW_LIFESCORE_ALERT_2"},"value":1},
+                            {"call_macro":"post crew safety message","params":{"member":2,"score":{"local":"CREW_LIFESCORE_2"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        ]}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"crew_event_member"}, "eq": 3,
+      "then": [
+        {"if": {"local":"CREW_LIFESCORE_3"}, "lte": 0,
+          "then": [
+            {"if": {"local":"CREW_DEAD_3"}, "ne": 1,
+              "then": [
+                {"set":{"local":"CREW_DEAD_3"},"value":1},
+                {"set":{"local":"CREW_CRIT_3"},"value":1},
+                {"set":{"local":"CREW_LOCK_3"},"value":1},
+                {"set":{"local":"CREW_ANN_3"},"value":1},
+                {"set":{"local":"CREW_ANN_KIND_3"},"value":"death"}
+            ]}
+          ],"else": [
+            {"if": {"local":"CREW_LIFESCORE_3"}, "lte": 10,
+              "then": [
+                {"if": {"local":"CREW_CRIT_3"}, "ne": 1,
+                  "then": [
+                    {"set":{"local":"CREW_CRIT_3"},"value":1},
+                    {"set":{"local":"CREW_LOCK_3"},"value":1},
+                    {"set":{"local":"CREW_ANN_3"},"value":1},
+                    {"set":{"local":"CREW_ANN_KIND_3"},"value":"critical"}
+                ]}
+              ],"else": [
+                {"if": {"local":"CREW_LIFESCORE_3"}, "lt": 50,
+                  "then": [
+                    {"if": {"local":"CREW_LIFESCORE_ALERT_3"}, "lt": 2,
+                      "then": [
+                        {"set":{"local":"CREW_LIFESCORE_ALERT_3"},"value":2},
+                        {"call_macro":"post crew safety message","params":{"member":3,"score":{"local":"CREW_LIFESCORE_3"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                    ]}
+                  ],"else": [
+                    {"if": {"local":"CREW_LIFESCORE_3"}, "lt": 100,
+                      "then": [
+                        {"if": {"local":"CREW_LIFESCORE_ALERT_3"}, "lt": 1,
+                          "then": [
+                            {"set":{"local":"CREW_LIFESCORE_ALERT_3"},"value":1},
+                            {"call_macro":"post crew safety message","params":{"member":3,"score":{"local":"CREW_LIFESCORE_3"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        ]}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"crew_event_member"}, "eq": 4,
+      "then": [
+        {"if": {"local":"CREW_LIFESCORE_4"}, "lte": 0,
+          "then": [
+            {"if": {"local":"CREW_DEAD_4"}, "ne": 1,
+              "then": [
+                {"set":{"local":"CREW_DEAD_4"},"value":1},
+                {"set":{"local":"CREW_CRIT_4"},"value":1},
+                {"set":{"local":"CREW_LOCK_4"},"value":1},
+                {"set":{"local":"CREW_ANN_4"},"value":1},
+                {"set":{"local":"CREW_ANN_KIND_4"},"value":"death"}
+            ]}
+          ],"else": [
+            {"if": {"local":"CREW_LIFESCORE_4"}, "lte": 10,
+              "then": [
+                {"if": {"local":"CREW_CRIT_4"}, "ne": 1,
+                  "then": [
+                    {"set":{"local":"CREW_CRIT_4"},"value":1},
+                    {"set":{"local":"CREW_LOCK_4"},"value":1},
+                    {"set":{"local":"CREW_ANN_4"},"value":1},
+                    {"set":{"local":"CREW_ANN_KIND_4"},"value":"critical"}
+                ]}
+              ],"else": [
+                {"if": {"local":"CREW_LIFESCORE_4"}, "lt": 50,
+                  "then": [
+                    {"if": {"local":"CREW_LIFESCORE_ALERT_4"}, "lt": 2,
+                      "then": [
+                        {"set":{"local":"CREW_LIFESCORE_ALERT_4"},"value":2},
+                        {"call_macro":"post crew safety message","params":{"member":4,"score":{"local":"CREW_LIFESCORE_4"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                    ]}
+                  ],"else": [
+                    {"if": {"local":"CREW_LIFESCORE_4"}, "lt": 100,
+                      "then": [
+                        {"if": {"local":"CREW_LIFESCORE_ALERT_4"}, "lt": 1,
+                          "then": [
+                            {"set":{"local":"CREW_LIFESCORE_ALERT_4"},"value":1},
+                            {"call_macro":"post crew safety message","params":{"member":4,"score":{"local":"CREW_LIFESCORE_4"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        ]}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"crew_event_member"}, "eq": 5,
+      "then": [
+        {"if": {"local":"CREW_LIFESCORE_5"}, "lte": 0,
+          "then": [
+            {"if": {"local":"CREW_DEAD_5"}, "ne": 1,
+              "then": [
+                {"set":{"local":"CREW_DEAD_5"},"value":1},
+                {"set":{"local":"CREW_CRIT_5"},"value":1},
+                {"set":{"local":"CREW_LOCK_5"},"value":1},
+                {"set":{"local":"CREW_ANN_5"},"value":1},
+                {"set":{"local":"CREW_ANN_KIND_5"},"value":"death"}
+            ]}
+          ],"else": [
+            {"if": {"local":"CREW_LIFESCORE_5"}, "lte": 10,
+              "then": [
+                {"if": {"local":"CREW_CRIT_5"}, "ne": 1,
+                  "then": [
+                    {"set":{"local":"CREW_CRIT_5"},"value":1},
+                    {"set":{"local":"CREW_LOCK_5"},"value":1},
+                    {"set":{"local":"CREW_ANN_5"},"value":1},
+                    {"set":{"local":"CREW_ANN_KIND_5"},"value":"critical"}
+                ]}
+              ],"else": [
+                {"if": {"local":"CREW_LIFESCORE_5"}, "lt": 50,
+                  "then": [
+                    {"if": {"local":"CREW_LIFESCORE_ALERT_5"}, "lt": 2,
+                      "then": [
+                        {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":2},
+                        {"call_macro":"post crew safety message","params":{"member":5,"score":{"local":"CREW_LIFESCORE_5"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                    ]}
+                  ],"else": [
+                    {"if": {"local":"CREW_LIFESCORE_5"}, "lt": 100,
+                      "then": [
+                        {"if": {"local":"CREW_LIFESCORE_ALERT_5"}, "lt": 1,
+                          "then": [
+                            {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":1},
+                            {"call_macro":"post crew safety message","params":{"member":5,"score":{"local":"CREW_LIFESCORE_5"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        ]}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "crew impact events": [
+    {"#comment":"Evaluates every member marked after an impact once, with the final scores of the batch: alerts, critical and death events, survivors, the abort and the mission termination."},
+    {"call_macro":"crew members cap"},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"events_enter eval={local:CREW_EVAL_1}/{local:CREW_EVAL_2}/{local:CREW_EVAL_3}/{local:CREW_EVAL_4}/{local:CREW_EVAL_5} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3} dead={local:CREW_DEAD_1}/{local:CREW_DEAD_2}/{local:CREW_DEAD_3} lock={local:CREW_LOCK_1}/{local:CREW_LOCK_2}/{local:CREW_LOCK_3}"}},
+    {"if": {"local":"CREW_EVAL_1"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_EVAL_1"},"value":0},
+        {"set":{"local":"crew_event_member"},"value":1},
+        {"call_macro":"crew member state event"}
+    ]},
+    {"if": {"local":"CREW_EVAL_2"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_EVAL_2"},"value":0},
+        {"set":{"local":"crew_event_member"},"value":2},
+        {"call_macro":"crew member state event"}
+    ]},
+    {"if": {"local":"CREW_EVAL_3"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_EVAL_3"},"value":0},
+        {"set":{"local":"crew_event_member"},"value":3},
+        {"call_macro":"crew member state event"}
+    ]},
+    {"if": {"local":"CREW_EVAL_4"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_EVAL_4"},"value":0},
+        {"set":{"local":"crew_event_member"},"value":4},
+        {"call_macro":"crew member state event"}
+    ]},
+    {"if": {"local":"CREW_EVAL_5"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_EVAL_5"},"value":0},
+        {"set":{"local":"crew_event_member"},"value":5},
+        {"call_macro":"crew member state event"}
+    ]},
+    {"call_macro":"crew survivors count"},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"events_survivors alive={local:CREW_ALIVE_COUNT} pilot={local:CREW_ALIVE_PILOT} copilot={local:CREW_ALIVE_COPILOT} ann={local:CREW_ANN_1}/{local:CREW_ANN_2}/{local:CREW_ANN_3}/{local:CREW_ANN_4}/{local:CREW_ANN_5} emergency={local:CREW_EMERGENCY_ACTIVE}"}},
+    {"set":{"local":"crew_first_member"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"crew_first_member"},"eq":0},
+        {"require":{"local":"CREW_ANN_1"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_first_member"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"crew_first_member"},"eq":0},
+        {"require":{"local":"CREW_ANN_2"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_first_member"},"value":2}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"crew_first_member"},"eq":0},
+        {"require":{"local":"CREW_ANN_3"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_first_member"},"value":3}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"crew_first_member"},"eq":0},
+        {"require":{"local":"CREW_ANN_4"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_first_member"},"value":4}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"crew_first_member"},"eq":0},
+        {"require":{"local":"CREW_ANN_5"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_first_member"},"value":5}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"crew_first_member"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"events first={local:crew_first_member} alive={local:CREW_ALIVE_COUNT} pilot={local:CREW_ALIVE_PILOT} copilot={local:CREW_ALIVE_COPILOT} ann={local:CREW_ANN_1}/{local:CREW_ANN_2}/{local:CREW_ANN_3}/{local:CREW_ANN_4}/{local:CREW_ANN_5}"}}
+    ]},
+    {"if": {
+      "or": [
+        {"require":{"local":"CREW_ALIVE_COUNT"},"eq":0},
+        {"and":[{"require":{"local":"CREW_ALIVE_PILOT"},"eq":0},{"require":{"local":"CREW_ALIVE_COPILOT"},"eq":0}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"crew_first_member"},"gt":0}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"crew mission terminated"}
+        ]}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"local":"crew_first_member"},"gt":0}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"CREW_ANN_1"}, "eq": 1,
+              "then": [
+                {"call_macro":"crew member event announce","params":{"member":1,"kind":{"local":"CREW_ANN_KIND_1"},"score":{"local":"CREW_LIFESCORE_1"},"cause":{"local":"CREW_EVENT_CAUSE"}}}
+            ]},
+            {"if": {"local":"CREW_ANN_2"}, "eq": 1,
+              "then": [
+                {"call_macro":"crew member event announce","params":{"member":2,"kind":{"local":"CREW_ANN_KIND_2"},"score":{"local":"CREW_LIFESCORE_2"},"cause":{"local":"CREW_EVENT_CAUSE"}}}
+            ]},
+            {"if": {"local":"CREW_ANN_3"}, "eq": 1,
+              "then": [
+                {"call_macro":"crew member event announce","params":{"member":3,"kind":{"local":"CREW_ANN_KIND_3"},"score":{"local":"CREW_LIFESCORE_3"},"cause":{"local":"CREW_EVENT_CAUSE"}}}
+            ]},
+            {"if": {"local":"CREW_ANN_4"}, "eq": 1,
+              "then": [
+                {"call_macro":"crew member event announce","params":{"member":4,"kind":{"local":"CREW_ANN_KIND_4"},"score":{"local":"CREW_LIFESCORE_4"},"cause":{"local":"CREW_EVENT_CAUSE"}}}
+            ]},
+            {"if": {"local":"CREW_ANN_5"}, "eq": 1,
+              "then": [
+                {"call_macro":"crew member event announce","params":{"member":5,"kind":{"local":"CREW_ANN_KIND_5"},"score":{"local":"CREW_LIFESCORE_5"},"cause":{"local":"CREW_EVENT_CAUSE"}}}
+            ]},
+            {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
+              "then": [
+                {"if": {"local":"crew_first_member"}, "eq": 1,
+                  "then": [
+                    {"call_macro":"crew emergency response","params":{"member":1,"cause":{"local":"CREW_EVENT_CAUSE"},"score":{"local":"CREW_LIFESCORE_1"}}}
+                ]},
+                {"if": {"local":"crew_first_member"}, "eq": 2,
+                  "then": [
+                    {"call_macro":"crew emergency response","params":{"member":2,"cause":{"local":"CREW_EVENT_CAUSE"},"score":{"local":"CREW_LIFESCORE_2"}}}
+                ]},
+                {"if": {"local":"crew_first_member"}, "eq": 3,
+                  "then": [
+                    {"call_macro":"crew emergency response","params":{"member":3,"cause":{"local":"CREW_EVENT_CAUSE"},"score":{"local":"CREW_LIFESCORE_3"}}}
+                ]},
+                {"if": {"local":"crew_first_member"}, "eq": 4,
+                  "then": [
+                    {"call_macro":"crew emergency response","params":{"member":4,"cause":{"local":"CREW_EVENT_CAUSE"},"score":{"local":"CREW_LIFESCORE_4"}}}
+                ]},
+                {"if": {"local":"crew_first_member"}, "eq": 5,
+                  "then": [
+                    {"call_macro":"crew emergency response","params":{"member":5,"cause":{"local":"CREW_EVENT_CAUSE"},"score":{"local":"CREW_LIFESCORE_5"}}}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"set":{"local":"CREW_ANN_1"},"value":0},
+    {"set":{"local":"CREW_ANN_2"},"value":0},
+    {"set":{"local":"CREW_ANN_3"},"value":0},
+    {"set":{"local":"CREW_ANN_4"},"value":0},
+    {"set":{"local":"CREW_ANN_5"},"value":0}
   ]
 }

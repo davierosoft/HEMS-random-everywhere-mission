@@ -7589,7 +7589,7 @@
             {"wait_for":{"global":"ENGINE_FAILURES_ENABLED"},"eq":"yes"},
             {"sleep":[120,3600]},
             {"set":{"var":["L:CPL{local:VCP}9","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}9","number"]},1]}},
-            {"set":{"var":["L:FAILURE","number"]},"value":{"floor":{"rand":[1,300]}}},
+            {"call_macro":"apply aircraft failure","params":{"code":{"var":["L:FAILURE","number"]}}},
             {"sleep":1}
         ]}
     ]}},
@@ -7715,10 +7715,7 @@
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":0},
     {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
       "then": [
-        {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
-          "then": [
-            {"call_macro":"apply hoist crew lifescore impact","params":{"score":100,"cause":"FATAL HOIST IMPACT"}}
-        ]}
+        {"call_macro":"apply hoist crew lifescore impact","params":{"score":100,"cause":"FATAL HOIST IMPACT"}}
     ]}
   ],
   "apply hoist crew lifescore impact": [
@@ -7733,6 +7730,148 @@
         ]}
       ],"else": [
         {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"param":"score"},"cause":{"param":"cause"}}}
+    ]}
+  ],
+  "apply aircraft failure": [
+    {"#comment":"One aircraft failure by code, restored from the original 0.997 failure engine (codes 1 to 28). Used by the random in-flight failure and by the crash tiers."},
+    {"if": {"param":"code"}, "eq": 1,
+      "then": [
+        {"set":{"var":["GENERAL ENG FAILED:1","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 2,
+      "then": [
+        {"set":{"var":["GENERAL ENG FAILED:2","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 3,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FADEC1","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 4,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FADEC2","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 5,
+      "then": [
+        {"set":{"var":["ENG ON FIRE:1","number"]},"value":1},
+        {"sleep":[0.5,3]},
+        {"set":{"var":["L:CPL{local:VCP}7","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}7","number"]},1]}}
+    ]},
+    {"if": {"param":"code"}, "eq": 6,
+      "then": [
+        {"set":{"var":["ENG ON FIRE:2","number"]},"value":1},
+        {"sleep":[0.5,3]},
+        {"set":{"var":["L:CPL{local:VCP}7","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}7","number"]},1]}}
+    ]},
+    {"if": {"param":"code"}, "eq": 7,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_HYD1_LOWPRESS","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 8,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_HYD2_LOWPRESS","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 9,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FUEL_F","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 10,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FUEL_A","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 11,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_AP1","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 12,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_AP2","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 13,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_BKUP","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 14,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_APCP","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 15,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_MGB_CHIP","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 16,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FADEC1","number"]},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 17,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FADEC2","number"]},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 18,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_PERSIST_DAMAGE_TGB_PCT","number"]},"value":100}
+    ]},
+    {"if": {"param":"code"}, "eq": 19,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_PERSIST_DAMAGE_MGB_PCT","number"]},"value":100}
+    ]},
+    {"if": {"param":"code"}, "eq": 20,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FUEL_F","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 21,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FUEL_A","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 22,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_AP1","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 23,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_AP2","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 24,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_BKUP","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 25,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_APCP","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 26,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_MGB_CHIP","number"]},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 27,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FADEC1","number"]},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 28,
+      "then": [
+        {"set":{"var":["L:{local:HXX}_FAIL_FADEC2","number"]},"value":2}
+    ]}
+  ],
+  "crash random failures": [
+    {"#comment":"Random aircraft failures caused by a crash tier. With fires no, the engine fire codes 5 and 6 are skipped (only the higher tiers may set the engines on fire). Needs the failure setting ENGINE_FAILURES_ENABLED to be yes."},
+    {"if": {"global":"ENGINE_FAILURES_ENABLED"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crash_failure_left"},"value":{"param":"count"}},
+        {"while": {"local":"crash_failure_left"}, "gt": 0,
+          "do": [
+            {"set":{"local":"crash_failure_code"},"value":{"floor":{"rand":[1,29]}}},
+            {"if": {"param":"fires"}, "ne": "yes",
+              "then": [
+                {"set":{"local":"crash_failure_code"},"value":{"floor":{"rand":[1,27]}}},
+                {"if": {"local":"crash_failure_code"}, "gt": 4,
+                  "then": [
+                    {"set":{"local":"crash_failure_code"},"value":{"add":[{"local":"crash_failure_code"},2]}}
+                ]}
+            ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"failure code={local:crash_failure_code}"}},
+            {"call_macro":"apply aircraft failure","params":{"code":{"local":"crash_failure_code"}}},
+            {"set":{"local":"crash_failure_left"},"value":{"subtract":[{"local":"crash_failure_left"},1]}},
+            {"sleep":1}
+        ]}
     ]}
   ]
 }
