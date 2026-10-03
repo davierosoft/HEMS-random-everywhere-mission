@@ -59,7 +59,10 @@
     ]}
   ],
   "apply crew lifescore impact": [
-    {"call_macro":"test tracker begin","params":{"test_id":"crew_health"}},
+    {"set":{"local":"CREW_TEST_TRACK_DUE"},"value":1},
+    {"set":{"local":"trace_member"},"value":{"param":"member"}},
+    {"set":{"local":"trace_score"},"value":{"param":"score"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"member_apply m={local:trace_member} score={local:trace_score}"}},
     {"call_macro":"crew members cap"},
     {"set":{"local":"crew_member_locked"},"value":0},
     {"if": {
@@ -200,7 +203,24 @@
         {"set":{"local":"crash_trace_score"},"value":{"param":"score"}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_discarded member={local:crash_trace_member} score={local:crash_trace_score} safety={global:HOIST_SAFETY_MONITOR} emergency={local:CREW_EMERGENCY_ACTIVE}"}}
     ]},
-    {"call_macro":"test tracker complete","params":{"test_id":"crew_health"}}
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"member_applied m={local:trace_member} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}}
+  ],
+  "record crew health test": [
+    {"#comment":"Test tracker bookkeeping for the crew health test. It opens and saves the Debug_Table file, so it runs in its own thread and never inside the damage path (the 169.12 stall happened right where every damage application opened that table)."},
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"CREW_TEST_TRACK_DUE"},"value":0},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"sleep":1},
+            {"if": {"local":"CREW_TEST_TRACK_DUE"}, "eq": 1,
+              "then": [
+                {"set":{"local":"CREW_TEST_TRACK_DUE"},"value":0},
+                {"call_macro":"test tracker begin","params":{"test_id":"crew_health"}},
+                {"call_macro":"test tracker complete","params":{"test_id":"crew_health"}}
+            ]}
+        ]}
+    ]}}
   ],
   "refresh crew lifescore report": [
     {"set":{"local":"CREW_LIFESCORE_STATUS_1"},"value":"FIT"},
@@ -290,11 +310,21 @@
     ]}
   ],
   "start crew lifescore monitor": [
-    {"call_macro":"crew seat tracker start"},
-    {"call_macro":"record crew acceleration maxima"},
-    {"call_macro":"monitor crew fire exposure"},
-    {"call_macro":"monitor aircraft crash impact"},
-    {"call_macro":"recover crew lifescore over time"}
+    {"#comment":"A second start in the same mission pass would double every impact (two monitors apply the damage twice), so it is refused and traced. L:CREW_MONITOR_STARTS counts the starts for the whole flight."},
+    {"set":{"local":"CREW_MONITOR_START_N"},"value":{"add":[{"var":["L:CREW_MONITOR_STARTS","number"]},1]}},
+    {"if": {"local":"CREW_MONITOR_RUNNING"}, "eq": 1,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"monitor_start_refused n={local:CREW_MONITOR_START_N}"}}
+      ],"else": [
+        {"set":{"local":"CREW_MONITOR_RUNNING"},"value":1},
+        {"set":{"var":["L:CREW_MONITOR_STARTS","number"]},"value":{"local":"CREW_MONITOR_START_N"}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"monitor_started n={local:CREW_MONITOR_START_N}"}},
+        {"call_macro":"crew seat tracker start"},
+        {"call_macro":"record crew acceleration maxima"},
+        {"call_macro":"monitor crew fire exposure"},
+        {"call_macro":"monitor aircraft crash impact"},
+        {"call_macro":"recover crew lifescore over time"}
+    ]}
   ],
   "record crew acceleration maxima": [
     {"create_thread": {
@@ -467,11 +497,50 @@
     ]}}
   ],
   "post crew safety message": [
-    {"set_message":{"text":"CREW SAFETY - member {0}: LifeScore {1}/100. {2}. Cause: {3}","params":[{"param":"member"},{"param":"score"},{"param":"status"},{"param":"cause"}]}},
+    {"#comment":"Short crew status: the role instead of the member number and no score. The status always ends with a period."},
+    {"set":{"local":"crew_post_role"},"value":"CREW"},
+    {"if": {"param":"member"}, "eq": 1,
+      "then": [
+        {"set":{"local":"crew_post_role"},"value":"PILOT"}
+    ]},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"local":"crew_post_role"},"value":"MEDIC"}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"local":"crew_post_role"},"value":"COPILOT"}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"set":{"local":"crew_post_role"},"value":"CREW 4"}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"set":{"local":"crew_post_role"},"value":"CREW 5"}
+    ]},
+    {"set_message":{"text":"CREW: {0} {1} Cause: {2}","params":[{"local":"crew_post_role"},{"param":"status"},{"param":"cause"}]}},
     {"if": {"param":"rescuetrack"}, "ne": "no",
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":{"text":"CREW SAFETY - member {0}: LifeScore {1}/100. {2}. Cause: {3}","params":[{"param":"member"},{"param":"score"},{"param":"status"},{"param":"cause"}]}},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"CREW: {0} {1} Cause: {2}","params":[{"local":"crew_post_role"},{"param":"status"},{"param":"cause"}]}},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""},
         {"call_macro":"UpdateRescueTrack"}
     ]}
@@ -678,7 +747,7 @@
         {"call_macro":"routeupdate"},
         {"wait_for":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"eq":"yes"},
         {"set":{"var":["L:READY","number"]},"value":1},
-        {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"MISSION ABORTED - crew secured; fly directly to the selected hospital","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
+        {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"Mission aborted, crew secured. Direct to hospital.","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
         {"wait_for":{"location":"hospital_user","var":"distance"},"lt":0.3},
         {"and": [
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
@@ -691,12 +760,12 @@
         {"set":{"var":["L:READY","number"]},"value":0},
         {"set_message":{"text":"Crew emergency: personnel are deboarding for immediate hospital admission."}},
         {"call_macro":"crew emergency hospital admission"},
-        {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"hospital handover completed; mission and shift terminated","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
+        {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"Handover completed. Shift terminated.","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
         {"set":{"local":"MISSION_END_WAITING"},"value":1},
         {"call_macro":"end menu"},
         {"set_dispatch_dialog":1}
       ],"else": [
-        {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"no hospital available from the query; immediate return to base","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
+        {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"No hospital found. Returning to base.","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
         {"set":{"var":["L:BACK_TO_HOSPITAL","number"]},"value":1},
         {"call_macro":"return to base"},
         {"set":{"local":"MISSION_END_WAITING"},"value":1},
@@ -882,6 +951,8 @@
     ]}
   ],
   "apply aircraft crash lifescore impact": [
+    {"set":{"local":"trace_cause"},"value":{"param":"cause"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"apply_enter cause={local:trace_cause}"}},
     {"call_macro":"crew presence flags"},
     {"if": {
       "and": [
@@ -927,7 +998,8 @@
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":1,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}},
+            {"sleep":0.02}
         ]}
     ]},
     {"if": {
@@ -974,7 +1046,8 @@
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":2,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}},
+            {"sleep":0.02}
         ]}
     ]},
     {"if": {
@@ -1021,7 +1094,8 @@
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":3,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}},
+            {"sleep":0.02}
         ]}
     ]},
     {"if": {
@@ -1068,7 +1142,8 @@
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":4,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}},
+            {"sleep":0.02}
         ]}
     ]},
     {"if": {
@@ -1115,7 +1190,8 @@
         {"if": {"local":"crash_member_score"}, "gt": 0,
           "then": [
             {"set":{"local":"CREW_ACCELERATION_DAMAGE"},"value":{"local":"crash_member_score"}},
-            {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}}
+            {"call_macro":"apply crew lifescore impact","params":{"member":5,"score":{"local":"crash_member_score"},"cause":{"param":"cause"},"defer":1,"force":{"param":"force"}}},
+            {"sleep":0.02}
         ]}
     ]},
     {"if": {"local":"CREW_PATIENT_ABOARD"}, "eq": 1,
@@ -1152,264 +1228,434 @@
           "then": [
             {"call_macro":"multipatient registry acceleration impact","params":{"damage":{"local":"crash_patient_score"}}}
         ]}
-    ]}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"apply_exit"}}
   ],
   "monitor aircraft crash impact": [
-    {"#comment":"Aircraft impacts on two independent paths so that a light impact never blinds the crash path. Minor path: an axis at 32 ft/s2 (about 1 g) samples the resultant X2 + Y2 + Z2 every 0.02 s for 0.3 s and applies 0 to 3 (not below 70) and, from a resultant of 64, 3 to 8 (not below 40); it rearms as soon as the aircraft calms below 32. Crash path: an axis at 150 or a resultant of 150 seen by the minor path samples the same way, takes the tier latches of 250, 330 and 400 on every axis, applies 7 to 20 (not below 20) at 150, 10 to 30 at 250 and 330 and 45 to 60 at 400 (ignores the member lock), starts the failures, evaluates the events once and rearms below 64. The two paths share a lock only while they apply damage."},
+    {"#comment":"Starts the impact model: initial state, velocity history and the loop. There is deliberately no watchdog that restarts the loop: a stalled thread must be explained, not hidden (the 169.12 stall is still under investigation). Stages are traced so that the last row shows where a thread stops."},
+    {"set":{"local":"cm_tick"},"value":0},
+    {"set":{"local":"cm_minor_armed"},"value":1},
+    {"set":{"local":"cm_crash_armed"},"value":1},
+    {"set":{"local":"cm_calm_minor"},"value":0},
+    {"set":{"local":"cm_calm_crash"},"value":0},
+    {"set":{"local":"crash_tier_3"},"value":0},
+    {"set":{"local":"crash_tier_4"},"value":0},
+    {"set":{"local":"crash_tier_5"},"value":0},
+    {"set":{"local":"crash_tier_6"},"value":0},
+    {"set":{"local":"cm_vx"},"value":{"var":["VELOCITY WORLD X","Feet per second"]}},
+    {"set":{"local":"cm_vy"},"value":{"var":["VELOCITY WORLD Y","Feet per second"]}},
+    {"set":{"local":"cm_vz"},"value":{"var":["VELOCITY WORLD Z","Feet per second"]}},
+    {"set":{"local":"cm_h1_x"},"value":{"local":"cm_vx"}},
+    {"set":{"local":"cm_h1_y"},"value":{"local":"cm_vy"}},
+    {"set":{"local":"cm_h1_z"},"value":{"local":"cm_vz"}},
+    {"set":{"local":"cm_h2_x"},"value":{"local":"cm_vx"}},
+    {"set":{"local":"cm_h2_y"},"value":{"local":"cm_vy"}},
+    {"set":{"local":"cm_h2_z"},"value":{"local":"cm_vz"}},
+    {"set":{"local":"cm_h3_x"},"value":{"local":"cm_vx"}},
+    {"set":{"local":"cm_h3_y"},"value":{"local":"cm_vy"}},
+    {"set":{"local":"cm_h3_z"},"value":{"local":"cm_vz"}},
+    {"set":{"local":"cm_td"},"value":0},
+    {"set":{"local":"cm_td_prev"},"value":0},
+    {"set":{"local":"cm_td_sq"},"value":0},
+    {"set":{"local":"cm_td_hit"},"value":0},
+    {"set":{"local":"cm_v_hit"},"value":0},
+    {"set":{"local":"cm_sig_hit"},"value":0},
+    {"set":{"local":"cm_d1"},"value":0},
+    {"set":{"local":"cm_agl_now"},"value":0},
+    {"set":{"local":"cm_hb"},"value":0},
+    {"set":{"local":"cm_ignore"},"value":0},
+    {"set":{"local":"cm_slew"},"value":0},
+    {"set":{"local":"cm_slew_hold"},"value":0},
+    {"try": [
+        {"set":{"local":"cm_td_prev"},"value":{"var":["PLANE TOUCHDOWN NORMAL VELOCITY","Feet per second"]}}
+      ],
+      "catch": [
+        {"set":{"local":"cm_td_prev"},"value":0}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"velocity_probe X={local:cm_vx} Y={local:cm_vy} Z={local:cm_vz} td={local:cm_td_prev}"}},
+    {"set":{"local":"crash_event_log"},"value":{"create_array":0}},
+    {"set":{"local":"crash_event_count"},"value":0},
+    {"set":{"local":"pr_crash"},"value":0},
+    {"set":{"local":"pr_touch"},"value":0},
+    {"set":{"local":"pr_ground"},"value":0},
+    {"set":{"local":"pr_agl"},"value":0},
+    {"set":{"local":"pr_vs"},"value":0},
+    {"set":{"local":"pr_gs"},"value":0},
+    {"set":{"local":"pr_vy0"},"value":0},
+    {"set":{"local":"pr_vy"},"value":0},
+    {"call_macro":"record crew health test"},
+    {"call_macro":"crash monitor loop"}
+  ],
+  "crash monitor loop": [
+    {"#comment":"One thread for the whole impact model, so there is no lock to leave stuck and no state shared between paths. Every tick (0.02 s) it reads the acceleration and the world velocity. Minor injuries: acceleration resultant of 80 ft/s2 (about 2.5 g), 0 to 3 (not below 70), plus 3 to 8 (not below 40) from 120 ft/s2; it rearms below 60. Crash tiers (rearm below 64): 150 ft/s2 or 25 ft/s lost gives 7 to 20 (not below 20); the loss of world velocity within about 0.2 s then gives 10 to 30 at 50 ft/s, 10 to 30 with failures and fires at 90 ft/s and 45 to 60 at 150 ft/s (ignores the member lock). The crash path has two more triggers that do not depend on catching an acceleration spike (a single-frame spike can fall between two ticks): a new simulator touchdown speed (PLANE TOUCHDOWN NORMAL VELOCITY changes and its square reaches 625) and a loss of 25 ft/s of world velocity within one tick below 100 ft above ground; either one grades the impact with the same squared-velocity table. Above 150 ft/s the crash is fatal for everyone aboard (score 100, ignores the member lock). While slew mode is active (IS SLEW ACTIVE, which also covers the repositioning done by the mission itself) and for 15 ticks after it, every trigger is suppressed, so a teleport is never taken for an impact; the height guard and the unchanged velocity during a pause are secondary. The damage chain is long, and the 169.16 test showed a RangeError (Maximum call stack size exceeded) at the catastrophic tier, after the three previous tiers had run in the same pass without a sleep: the stack of a thread only unwinds at a sleep, so every damage application (and every member inside it) is followed by a short sleep, and the catch starts with one so that its own trace cannot overflow. An error in a tick is caught and traced, and the loop goes on. Every impact traces probe_trigger and probe_after (L:CRASH, the simulator touchdown velocity, on-ground, height, vertical speed, ground speed, world vertical velocity before and now) to compare the signals in a test; a probe error is caught on its own and cannot stop the injuries."},
     {"create_thread": {
       "commands": [
-        {"set":{"local":"crash_apply_busy"},"value":0},
-        {"set":{"local":"crash_vec_trigger"},"value":0},
-        {"set":{"local":"crash_vec_peak2"},"value":0},
-        {"set":{"local":"crash_tier_3"},"value":0},
-        {"set":{"local":"crash_tier_4"},"value":0},
-        {"set":{"local":"crash_tier_5"},"value":0},
-        {"set":{"local":"crash_tier_6"},"value":0},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":250},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-250},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":250},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-250},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":250},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-250}
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"monitor_loop_started"}},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"sleep":0.02},
+            {"try": [
+                {"set":{"local":"cm_tick"},"value":{"add":[{"local":"cm_tick"},1]}},
+                {"set":{"local":"cm_ax"},"value":{"var":["ACCELERATION BODY X","Feet per second squared"]}},
+                {"set":{"local":"cm_ay"},"value":{"var":["ACCELERATION BODY Y","Feet per second squared"]}},
+                {"set":{"local":"cm_az"},"value":{"var":["ACCELERATION BODY Z","Feet per second squared"]}},
+                {"set":{"local":"cm_mag2"},"value":{"add":[{"multiply":[{"local":"cm_ax"},{"local":"cm_ax"}]},{"multiply":[{"local":"cm_ay"},{"local":"cm_ay"}]},{"multiply":[{"local":"cm_az"},{"local":"cm_az"}]}]}},
+                {"set":{"local":"cm_vx"},"value":{"var":["VELOCITY WORLD X","Feet per second"]}},
+                {"set":{"local":"cm_vy"},"value":{"var":["VELOCITY WORLD Y","Feet per second"]}},
+                {"set":{"local":"cm_vz"},"value":{"var":["VELOCITY WORLD Z","Feet per second"]}},
+                {"set":{"local":"cm_hb"},"value":{"add":[{"local":"cm_hb"},1]}},
+                {"if": {"local":"cm_hb"}, "gte": 500,
+                  "then": [
+                    {"set":{"local":"cm_hb"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"loop_alive tick={local:cm_tick} td={local:cm_td_prev}"}}
                 ]},
-                {"set":{"local":"crash_tier_4"},"value":1},
-                {"wait_for":{"local":"crash_tier_4"},"eq":0}
-            ]}
-        ]}},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":330},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-330},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":330},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-330},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":330},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-330}
-                ]},
-                {"set":{"local":"crash_tier_5"},"value":1},
-                {"wait_for":{"local":"crash_tier_5"},"eq":0}
-            ]}
-        ]}},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":400},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-400},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":400},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-400},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":400},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-400}
-                ]},
-                {"set":{"local":"crash_tier_6"},"value":1},
-                {"wait_for":{"local":"crash_tier_6"},"eq":0}
-            ]}
-        ]}},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":32},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-32},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":32},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-32},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":32},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-32}
-                ]},
+                {"set":{"local":"cm_td_hit"},"value":0},
+                {"set":{"local":"cm_v_hit"},"value":0},
                 {"try": [
-                    {"set":{"local":"minor_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"minor_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"minor_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_detected accel X={local:minor_x} Y={local:minor_y} Z={local:minor_z}"}},
-                    {"set":{"local":"minor_peak2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
-                    {"set":{"local":"minor_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"minor_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"minor_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"minor_sample"},"value":0},
-                    {"while": {"local":"minor_sample"}, "lt": 15,
-                      "do": [
-                        {"sleep":0.02},
-                        {"set":{"local":"minor_mag2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
-                        {"if": {"local":"minor_mag2"}, "gt": {"local":"minor_peak2"},
-                          "then": [
-                            {"set":{"local":"minor_peak2"},"value":{"local":"minor_mag2"}},
-                            {"set":{"local":"minor_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                            {"set":{"local":"minor_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                            {"set":{"local":"minor_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}}
-                        ]},
-                        {"set":{"local":"minor_sample"},"value":{"add":[{"local":"minor_sample"},1]}}
-                    ]},
-                    {"if": {"local":"minor_peak2"}, "gte": 22500,
-                      "then": [
-                        {"set":{"local":"crash_vec_peak2"},"value":{"local":"minor_peak2"}},
-                        {"set":{"local":"crash_vec_trigger"},"value":1}
-                    ]},
-                    {"set":{"local":"minor_peak2_round"},"value":{"round":{"local":"minor_peak2"},"to":0}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_peak peak2={local:minor_peak2_round} at X={local:minor_peak_x} Y={local:minor_peak_y} Z={local:minor_peak_z}"}},
-                    {"wait_for":{"local":"crash_apply_busy"},"eq":0},
-                    {"set":{"local":"crash_apply_busy"},"value":1},
-                    {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-2,"cause":"MINOR AIRCRAFT IMPACT","floor":70}},
-                    {"if": {"local":"minor_peak2"}, "gte": 4096,
-                      "then": [
-                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-3,"cause":"MODERATE AIRCRAFT IMPACT","floor":40}}
-                    ]},
-                    {"call_macro":"crew impact events"},
-                    {"set":{"local":"crash_apply_busy"},"value":0},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_applied total_after={local:CREW_LIFESCORE_TOTAL_IMPACT} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}}
+                    {"set":{"local":"cm_td"},"value":{"var":["PLANE TOUCHDOWN NORMAL VELOCITY","Feet per second"]}},
+                    {"set":{"local":"cm_agl_now"},"value":{"var":["PLANE ALT ABOVE GROUND","feet"]}}
                   ],
                   "catch": [
-                    {"set":{"local":"crash_apply_busy"},"value":0},
-                    {"set":{"local":"minor_error"},"value":{"param":"$ERROR"}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"minor_error {local:minor_error}"}}
+                    {"set":{"local":"cm_td"},"value":{"local":"cm_td_prev"}},
+                    {"set":{"local":"cm_agl_now"},"value":9999}
                 ]},
-                {"and": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":32},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":32},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":32},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":-32},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":-32},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":-32}
-                ]}
-            ]}
-        ]}},
-        {"create_thread": {
-          "commands": [
-            {"while": 1, "gt": 0,
-              "do": [
-                {"or": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gte":150},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lte":-150},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gte":150},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lte":-150},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gte":150},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lte":-150},
-                  {"wait_for":{"local":"crash_vec_trigger"},"eq":1}
+                {"set":{"local":"cm_td_sq"},"value":{"multiply":[{"local":"cm_td"},{"local":"cm_td"}]}},
+                {"set":{"local":"cm_td_diff"},"value":{"subtract":[{"local":"cm_td"},{"local":"cm_td_prev"}]}},
+                {"set":{"local":"cm_td_diff2"},"value":{"multiply":[{"local":"cm_td_diff"},{"local":"cm_td_diff"}]}},
+                {"if": {"local":"cm_td_diff2"}, "gt": 0.01,
+                  "then": [
+                    {"set":{"local":"cm_td_prev"},"value":{"local":"cm_td"}},
+                    {"if": {"local":"cm_td_sq"}, "gte": 625,
+                      "then": [
+                        {"set":{"local":"cm_td_hit"},"value":1}
+                    ]}
                 ]},
-                {"set":{"local":"crash_vec_trigger"},"value":0},
+                {"set":{"local":"cm_d1"},"value":{"add":[{"multiply":[{"subtract":[{"local":"cm_vx"},{"local":"cm_h1_x"}]},{"subtract":[{"local":"cm_vx"},{"local":"cm_h1_x"}]}]},{"multiply":[{"subtract":[{"local":"cm_vy"},{"local":"cm_h1_y"}]},{"subtract":[{"local":"cm_vy"},{"local":"cm_h1_y"}]}]},{"multiply":[{"subtract":[{"local":"cm_vz"},{"local":"cm_h1_z"}]},{"subtract":[{"local":"cm_vz"},{"local":"cm_h1_z"}]}]}]}},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"cm_d1"},"gte":625},
+                    {"require":{"local":"cm_agl_now"},"lt":100}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_v_hit"},"value":1}
+                ]},
+                {"set":{"local":"cm_sig_hit"},"value":{"add":[{"local":"cm_td_hit"},{"local":"cm_v_hit"}]}},
                 {"try": [
+                    {"set":{"local":"cm_slew"},"value":{"var":["IS SLEW ACTIVE","bool"]}}
+                  ],
+                  "catch": [
+                    {"set":{"local":"cm_slew"},"value":0}
+                ]},
+                {"if": {"local":"cm_slew"}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_slew_hold"},"value":15}
+                ]},
+                {"if": {"local":"cm_slew_hold"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"cm_slew_hold"},"value":{"subtract":[{"local":"cm_slew_hold"},1]}},
+                    {"set":{"local":"cm_mag2"},"value":0},
+                    {"set":{"local":"cm_td_hit"},"value":0},
+                    {"set":{"local":"cm_v_hit"},"value":0},
+                    {"set":{"local":"cm_sig_hit"},"value":0}
+                ]},
+                {"if": {"local":"cm_mag2"}, "lt": 3600,
+                  "then": [
+                    {"set":{"local":"cm_calm_minor"},"value":{"add":[{"local":"cm_calm_minor"},1]}}
+                  ],"else": [
+                    {"set":{"local":"cm_calm_minor"},"value":0}
+                ]},
+                {"if": {"local":"cm_mag2"}, "lt": 4096,
+                  "then": [
+                    {"set":{"local":"cm_calm_crash"},"value":{"add":[{"local":"cm_calm_crash"},1]}}
+                  ],"else": [
+                    {"set":{"local":"cm_calm_crash"},"value":0}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"cm_minor_armed"},"eq":0},
+                    {"require":{"local":"cm_calm_minor"},"gte":3}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_minor_armed"},"value":1}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"cm_crash_armed"},"eq":0},
+                    {"require":{"local":"cm_calm_crash"},"gte":3}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_crash_armed"},"value":1},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"rearmed"}}
+                ]},
+                {"set":{"local":"cm_do_minor"},"value":0},
+                {"set":{"local":"cm_do_crash"},"value":0},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"cm_minor_armed"},"eq":1},
+                    {"require":{"local":"cm_mag2"},"gte":6400}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_do_minor"},"value":1}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"cm_crash_armed"},"eq":1},
+                    {"require":{"local":"cm_mag2"},"gte":22500}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_do_crash"},"value":1}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"cm_crash_armed"},"eq":1},
+                    {"require":{"local":"cm_sig_hit"},"gte":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"cm_do_crash"},"value":1}
+                ]},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"cm_do_minor"},"eq":1},
+                    {"require":{"local":"cm_do_crash"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
                     {"call_macro":"crew presence flags"},
-                    {"set":{"local":"crash_trace_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"crash_trace_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"crash_trace_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_detected accel X={local:crash_trace_x} Y={local:crash_trace_y} Z={local:crash_trace_z} crew={local:CREW} present={local:CREW_PRESENT_1}{local:CREW_PRESENT_2}{local:CREW_PRESENT_3}{local:CREW_PRESENT_4}{local:CREW_PRESENT_5} patient={local:CREW_PATIENT_ABOARD} emergency={local:CREW_EMERGENCY_ACTIVE} total_before={local:CREW_LIFESCORE_TOTAL_IMPACT}"}},
-                    {"set":{"local":"crash_peak2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
-                    {"set":{"local":"crash_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"crash_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"crash_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}},
-                    {"set":{"local":"crash_sample"},"value":0},
-                    {"while": {"local":"crash_sample"}, "lt": 15,
+                    {"set":{"local":"cm_peak2"},"value":{"local":"cm_mag2"}},
+                    {"set":{"local":"cm_px"},"value":{"round":{"local":"cm_ax"},"to":0}},
+                    {"set":{"local":"cm_py"},"value":{"round":{"local":"cm_ay"},"to":0}},
+                    {"set":{"local":"cm_pz"},"value":{"round":{"local":"cm_az"},"to":0}},
+                    {"set":{"local":"cm_rx"},"value":{"local":"cm_h3_x"}},
+                    {"set":{"local":"cm_ry"},"value":{"local":"cm_h3_y"}},
+                    {"set":{"local":"cm_rz"},"value":{"local":"cm_h3_z"}},
+                    {"set":{"local":"cm_dv2"},"value":{"add":[{"multiply":[{"subtract":[{"local":"cm_vx"},{"local":"cm_rx"}]},{"subtract":[{"local":"cm_vx"},{"local":"cm_rx"}]}]},{"multiply":[{"subtract":[{"local":"cm_vy"},{"local":"cm_ry"}]},{"subtract":[{"local":"cm_vy"},{"local":"cm_ry"}]}]},{"multiply":[{"subtract":[{"local":"cm_vz"},{"local":"cm_rz"}]},{"subtract":[{"local":"cm_vz"},{"local":"cm_rz"}]}]}]}},
+                    {"if": {"local":"cm_d1"}, "gt": {"local":"cm_dv2"},
+                      "then": [
+                        {"set":{"local":"cm_dv2"},"value":{"local":"cm_d1"}}
+                    ]},
+                    {"if": {"local":"cm_td_hit"}, "eq": 1,
+                      "then": [
+                        {"if": {"local":"cm_td_sq"}, "gt": {"local":"cm_dv2"},
+                          "then": [
+                            {"set":{"local":"cm_dv2"},"value":{"local":"cm_td_sq"}}
+                        ]}
+                    ]},
+                    {"set":{"local":"cm_td_round"},"value":{"round":{"local":"cm_td"},"to":1}},
+                    {"set":{"local":"cm_d1_round"},"value":{"round":{"local":"cm_d1"},"to":0}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_detected accel X={local:cm_px} Y={local:cm_py} Z={local:cm_pz} minor={local:cm_do_minor} crash={local:cm_do_crash} td_hit={local:cm_td_hit} td={local:cm_td_round} v_hit={local:cm_v_hit} d1={local:cm_d1_round} agl={local:cm_agl_now} tick={local:cm_tick} crew={local:CREW} present={local:CREW_PRESENT_1}{local:CREW_PRESENT_2}{local:CREW_PRESENT_3}{local:CREW_PRESENT_4}{local:CREW_PRESENT_5} patient={local:CREW_PATIENT_ABOARD} emergency={local:CREW_EMERGENCY_ACTIVE} total_before={local:CREW_LIFESCORE_TOTAL_IMPACT}"}},
+                    {"try": [
+                        {"set":{"local":"pr_crash"},"value":{"var":["L:CRASH","number"]}},
+                        {"set":{"local":"pr_touch"},"value":{"round":{"var":["PLANE TOUCHDOWN NORMAL VELOCITY","Feet per second"]},"to":1}},
+                        {"set":{"local":"pr_ground"},"value":{"var":["SIM ON GROUND","bool"]}},
+                        {"set":{"local":"pr_agl"},"value":{"round":{"var":["PLANE ALT ABOVE GROUND","feet"]},"to":0}},
+                        {"set":{"local":"pr_vs"},"value":{"round":{"var":["VERTICAL SPEED","Feet per minute"]},"to":0}},
+                        {"set":{"local":"pr_gs"},"value":{"round":{"var":["GROUND VELOCITY","Feet per second"]},"to":0}},
+                        {"set":{"local":"pr_vy0"},"value":{"round":{"local":"cm_ry"},"to":0}},
+                        {"set":{"local":"pr_vy"},"value":{"round":{"var":["VELOCITY WORLD Y","Feet per second"]},"to":0}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"probe_trigger L_CRASH={local:pr_crash} touchdown={local:pr_touch} onground={local:pr_ground} agl={local:pr_agl} vs={local:pr_vs} gs={local:pr_gs} vy_before={local:pr_vy0} vy_now={local:pr_vy}"}}
+                      ],
+                      "catch": [
+                        {"set":{"local":"pr_error"},"value":{"param":"$ERROR"}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"probe_error {local:pr_error}"}}
+                    ]},
+                    {"set":{"local":"cm_sample"},"value":0},
+                    {"while": {"local":"cm_sample"}, "lt": 6,
                       "do": [
                         {"sleep":0.02},
-                        {"set":{"local":"crash_mag2"},"value":{"add":[{"multiply":[{"var":["ACCELERATION BODY X","Feet per second squared"]},{"var":["ACCELERATION BODY X","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Y","Feet per second squared"]},{"var":["ACCELERATION BODY Y","Feet per second squared"]}]},{"multiply":[{"var":["ACCELERATION BODY Z","Feet per second squared"]},{"var":["ACCELERATION BODY Z","Feet per second squared"]}]}]}},
-                        {"if": {"local":"crash_mag2"}, "gt": {"local":"crash_peak2"},
+                        {"set":{"local":"cm_ax"},"value":{"var":["ACCELERATION BODY X","Feet per second squared"]}},
+                        {"set":{"local":"cm_ay"},"value":{"var":["ACCELERATION BODY Y","Feet per second squared"]}},
+                        {"set":{"local":"cm_az"},"value":{"var":["ACCELERATION BODY Z","Feet per second squared"]}},
+                        {"set":{"local":"cm_mag2"},"value":{"add":[{"multiply":[{"local":"cm_ax"},{"local":"cm_ax"}]},{"multiply":[{"local":"cm_ay"},{"local":"cm_ay"}]},{"multiply":[{"local":"cm_az"},{"local":"cm_az"}]}]}},
+                        {"set":{"local":"cm_vx"},"value":{"var":["VELOCITY WORLD X","Feet per second"]}},
+                        {"set":{"local":"cm_vy"},"value":{"var":["VELOCITY WORLD Y","Feet per second"]}},
+                        {"set":{"local":"cm_vz"},"value":{"var":["VELOCITY WORLD Z","Feet per second"]}},
+                        {"set":{"local":"cm_dvs"},"value":{"add":[{"multiply":[{"subtract":[{"local":"cm_vx"},{"local":"cm_rx"}]},{"subtract":[{"local":"cm_vx"},{"local":"cm_rx"}]}]},{"multiply":[{"subtract":[{"local":"cm_vy"},{"local":"cm_ry"}]},{"subtract":[{"local":"cm_vy"},{"local":"cm_ry"}]}]},{"multiply":[{"subtract":[{"local":"cm_vz"},{"local":"cm_rz"}]},{"subtract":[{"local":"cm_vz"},{"local":"cm_rz"}]}]}]}},
+                        {"if": {"local":"cm_dvs"}, "gt": {"local":"cm_dv2"},
                           "then": [
-                            {"set":{"local":"crash_peak2"},"value":{"local":"crash_mag2"}},
-                            {"set":{"local":"crash_peak_x"},"value":{"round":{"var":["ACCELERATION BODY X","Feet per second squared"]},"to":0}},
-                            {"set":{"local":"crash_peak_y"},"value":{"round":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"to":0}},
-                            {"set":{"local":"crash_peak_z"},"value":{"round":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"to":0}}
+                            {"set":{"local":"cm_dv2"},"value":{"local":"cm_dvs"}}
                         ]},
-                        {"set":{"local":"crash_sample"},"value":{"add":[{"local":"crash_sample"},1]}}
-                    ]},
-                    {"if": {"local":"crash_vec_peak2"}, "gt": {"local":"crash_peak2"},
-                      "then": [
-                        {"set":{"local":"crash_peak2"},"value":{"local":"crash_vec_peak2"}}
-                    ]},
-                    {"set":{"local":"crash_vec_peak2"},"value":0},
-                    {"if": {"local":"crash_peak2"}, "gte": 22500,
-                      "then": [
-                        {"set":{"local":"crash_tier_3"},"value":1}
-                    ]},
-                    {"if": {"local":"crash_peak2"}, "gte": 62500,
-                      "then": [
-                        {"set":{"local":"crash_tier_4"},"value":1}
-                    ]},
-                    {"if": {"local":"crash_peak2"}, "gte": 108900,
-                      "then": [
-                        {"set":{"local":"crash_tier_5"},"value":1}
-                    ]},
-                    {"if": {"local":"crash_peak2"}, "gte": 160000,
-                      "then": [
-                        {"set":{"local":"crash_tier_6"},"value":1}
-                    ]},
-                    {"set":{"local":"crash_peak2_round"},"value":{"round":{"local":"crash_peak2"},"to":0}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_peak peak2={local:crash_peak2_round} at X={local:crash_peak_x} Y={local:crash_peak_y} Z={local:crash_peak_z}"}},
-                    {"wait_for":{"local":"crash_apply_busy"},"eq":0},
-                    {"set":{"local":"crash_apply_busy"},"value":1},
-                    {"if": {"local":"crash_tier_3"}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-4,"cause":"AIRCRAFT CRASH IMPACT","floor":20}},
-                        {"set_message":{"text":"Impact detected. Crew shaken but conscious."}}
-                    ]},
-                    {"if": {"local":"crash_tier_4"}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"SEVERE AIRCRAFT CRASH IMPACT"}},
-                        {"set_message":{"text":"Severe impact detected. Crew injuries reported."}}
-                    ]},
-                    {"if": {"local":"crash_tier_5"}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"HEAVY AIRCRAFT CRASH IMPACT"}},
-                        {"set_message":{"text":"Heavy impact detected. Serious crew injuries likely."}}
-                    ]},
-                    {"if": {"local":"crash_tier_6"}, "eq": 1,
-                      "then": [
-                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-1,"cause":"CATASTROPHIC AIRCRAFT CRASH IMPACT","force":1}},
-                        {"set_message":{"text":"Catastrophic impact detected. Crew casualties likely."}}
-                    ]},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage first_tier_applied"}},
-                    {"set":{"local":"crash_fail_4"},"value":{"local":"crash_tier_4"}},
-                    {"set":{"local":"crash_fail_5"},"value":{"local":"crash_tier_5"}},
-                    {"set":{"local":"crash_fail_6"},"value":{"local":"crash_tier_6"}},
-                    {"create_thread": {
-                      "commands": [
-                        {"if": {"local":"crash_fail_4"}, "eq": 1,
+                        {"if": {"local":"cm_mag2"}, "gt": {"local":"cm_peak2"},
                           "then": [
-                            {"call_macro":"crash random failures","params":{"count":{"floor":{"rand":[1,3]}},"fires":"no"}}
+                            {"set":{"local":"cm_peak2"},"value":{"local":"cm_mag2"}},
+                            {"set":{"local":"cm_px"},"value":{"round":{"local":"cm_ax"},"to":0}},
+                            {"set":{"local":"cm_py"},"value":{"round":{"local":"cm_ay"},"to":0}},
+                            {"set":{"local":"cm_pz"},"value":{"round":{"local":"cm_az"},"to":0}}
                         ]},
-                        {"if": {"local":"crash_fail_5"}, "eq": 1,
+                        {"set":{"local":"cm_sample"},"value":{"add":[{"local":"cm_sample"},1]}}
+                    ]},
+                    {"set":{"local":"cm_peak2_round"},"value":{"round":{"local":"cm_peak2"},"to":0}},
+                    {"set":{"local":"cm_dv2_round"},"value":{"round":{"local":"cm_dv2"},"to":0}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_peak peak2={local:cm_peak2_round} dv2={local:cm_dv2_round} at X={local:cm_px} Y={local:cm_py} Z={local:cm_pz}"}},
+                    {"try": [
+                        {"set":{"local":"pr_crash"},"value":{"var":["L:CRASH","number"]}},
+                        {"set":{"local":"pr_touch"},"value":{"round":{"var":["PLANE TOUCHDOWN NORMAL VELOCITY","Feet per second"]},"to":1}},
+                        {"set":{"local":"pr_ground"},"value":{"var":["SIM ON GROUND","bool"]}},
+                        {"set":{"local":"pr_agl"},"value":{"round":{"var":["PLANE ALT ABOVE GROUND","feet"]},"to":0}},
+                        {"set":{"local":"pr_vs"},"value":{"round":{"var":["VERTICAL SPEED","Feet per minute"]},"to":0}},
+                        {"set":{"local":"pr_gs"},"value":{"round":{"var":["GROUND VELOCITY","Feet per second"]},"to":0}},
+                        {"set":{"local":"pr_vy0"},"value":{"round":{"local":"cm_ry"},"to":0}},
+                        {"set":{"local":"pr_vy"},"value":{"round":{"var":["VELOCITY WORLD Y","Feet per second"]},"to":0}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"probe_after L_CRASH={local:pr_crash} touchdown={local:pr_touch} onground={local:pr_ground} agl={local:pr_agl} vs={local:pr_vs} gs={local:pr_gs} vy_before={local:pr_vy0} vy_now={local:pr_vy}"}}
+                      ],
+                      "catch": [
+                        {"set":{"local":"pr_error"},"value":{"param":"$ERROR"}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"probe_error {local:pr_error}"}}
+                    ]},
+                    {"#comment":"A spike of acceleration alone is not an impact: a soft touchdown or a hoist jolt gives 120 to 170 ft/s2 for a frame with almost no change of velocity (169.20 test: 144 and 174 ft/s2 with 2 and 6 ft/s lost at 0.5 to 2.6 ft/s of descent). Without the touchdown or velocity trigger, the acceleration triggers count only when the velocity changed by at least 10 ft/s (dv2 100) in the window; otherwise the event is traced as ignored and both paths wait to be rearmed."},
+                    {"set":{"local":"cm_ignore"},"value":0},
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"cm_sig_hit"},"eq":0},
+                        {"require":{"local":"cm_dv2"},"lt":100}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"cm_ignore"},"value":1},
+                        {"set":{"local":"cm_do_minor"},"value":0},
+                        {"set":{"local":"cm_do_crash"},"value":0},
+                        {"set":{"local":"cm_minor_armed"},"value":0},
+                        {"set":{"local":"cm_calm_minor"},"value":0},
+                        {"set":{"local":"cm_crash_armed"},"value":0},
+                        {"set":{"local":"cm_calm_crash"},"value":0},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_ignored peak2={local:cm_peak2_round} dv2={local:cm_dv2_round}"}}
+                    ]},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage minor_apply_start"}},
+                    {"if": {"local":"cm_do_minor"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-2,"cause":"MINOR AIRCRAFT IMPACT","floor":70}},
+                        {"sleep":0.02},
+                        {"if": {"local":"cm_peak2"}, "gte": 14400,
                           "then": [
-                            {"call_macro":"crash random failures","params":{"count":1,"fires":"yes"}}
-                        ]},
-                        {"if": {"local":"crash_fail_6"}, "eq": 1,
-                          "then": [
-                            {"call_macro":"crash random failures","params":{"count":1,"fires":"yes"}}
+                            {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-3,"cause":"MODERATE AIRCRAFT IMPACT","floor":40}},
+                            {"sleep":0.02}
                         ]}
-                    ]}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage tiers_and_failures_done"}},
+                    ]},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage minor_applied"}},
+                    {"set":{"local":"crash_tier_3"},"value":0},
+                    {"set":{"local":"crash_tier_4"},"value":0},
+                    {"set":{"local":"crash_tier_5"},"value":0},
+                    {"set":{"local":"crash_tier_6"},"value":0},
+                    {"if": {"local":"cm_crash_armed"}, "eq": 1,
+                      "then": [
+                        {"if": {
+                          "or": [
+                            {"require":{"local":"cm_peak2"},"gte":22500},
+                            {"require":{"local":"cm_dv2"},"gte":625}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"crash_tier_3"},"value":1}
+                        ]},
+                        {"if": {"local":"cm_dv2"}, "gte": 2500,
+                          "then": [
+                            {"set":{"local":"crash_tier_4"},"value":1}
+                        ]},
+                        {"if": {"local":"cm_dv2"}, "gte": 8100,
+                          "then": [
+                            {"set":{"local":"crash_tier_5"},"value":1}
+                        ]},
+                        {"if": {"local":"cm_dv2"}, "gte": 22500,
+                          "then": [
+                            {"set":{"local":"crash_tier_6"},"value":1}
+                        ]},
+                        {"if": {"local":"crash_tier_3"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"apply aircraft crash lifescore impact","params":{"score":-4,"cause":"AIRCRAFT CRASH IMPACT","floor":20}},
+                            {"sleep":0.02},
+                            {"set_message":{"text":"Impact detected. Crew shaken but conscious."}}
+                        ]},
+                        {"if": {"local":"crash_tier_4"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"SEVERE AIRCRAFT CRASH IMPACT"}},
+                            {"sleep":0.02},
+                            {"set_message":{"text":"Severe impact detected. Crew injuries reported."}}
+                        ]},
+                        {"if": {"local":"crash_tier_5"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"apply aircraft crash lifescore impact","params":{"score":0,"cause":"HEAVY AIRCRAFT CRASH IMPACT"}},
+                            {"sleep":0.02},
+                            {"set_message":{"text":"Heavy impact detected. Serious crew injuries likely."}}
+                        ]},
+                        {"if": {"local":"crash_tier_6"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"apply aircraft crash lifescore impact","params":{"score":100,"cause":"CATASTROPHIC AIRCRAFT CRASH IMPACT","force":1}},
+                            {"sleep":0.02},
+                            {"set_message":{"text":"Catastrophic impact detected. Crew casualties likely."}}
+                        ]},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage first_tier_applied"}},
+                        {"set":{"local":"crash_fail_4"},"value":{"local":"crash_tier_4"}},
+                        {"set":{"local":"crash_fail_5"},"value":{"local":"crash_tier_5"}},
+                        {"set":{"local":"crash_fail_6"},"value":{"local":"crash_tier_6"}},
+                        {"create_thread": {
+                          "commands": [
+                            {"if": {"local":"crash_fail_4"}, "eq": 1,
+                              "then": [
+                                {"call_macro":"crash random failures","params":{"count":{"floor":{"rand":[1,3]}},"fires":"no"}}
+                            ]},
+                            {"if": {"local":"crash_fail_5"}, "eq": 1,
+                              "then": [
+                                {"call_macro":"crash random failures","params":{"count":1,"fires":"yes"}}
+                            ]},
+                            {"if": {"local":"crash_fail_6"}, "eq": 1,
+                              "then": [
+                                {"call_macro":"crash random failures","params":{"count":1,"fires":"yes"}}
+                            ]}
+                        ]}},
+                        {"if": {
+                          "or": [
+                            {"require":{"local":"crash_tier_3"},"eq":1},
+                            {"require":{"local":"crash_tier_4"},"eq":1},
+                            {"require":{"local":"crash_tier_5"},"eq":1},
+                            {"require":{"local":"crash_tier_6"},"eq":1}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"cm_crash_armed"},"value":0},
+                            {"set":{"local":"cm_calm_crash"},"value":0}
+                        ]}
+                    ]},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage events_start"}},
+                    {"sleep":0.02},
                     {"call_macro":"crew impact events"},
-                    {"set":{"local":"crash_apply_busy"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage events_done"}},
+                    {"if": {"local":"cm_do_minor"}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"cm_minor_armed"},"value":0},
+                        {"set":{"local":"cm_calm_minor"},"value":0}
+                    ]},
                     {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"impact_applied tiers={local:crash_tier_3}{local:crash_tier_4}{local:crash_tier_5}{local:crash_tier_6} total_after={local:CREW_LIFESCORE_TOTAL_IMPACT} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3}"}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"stage cycle_done"}}
-                  ],
-                  "catch": [
-                    {"set":{"local":"crash_apply_busy"},"value":0},
-                    {"set":{"local":"crash_error"},"value":{"param":"$ERROR"}},
-                    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"worker_error {local:crash_error}"}}
-                ]},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"rearm_wait"}},
-                {"and": [
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"lt":64},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"lt":64},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"lt":64},
-                  {"wait_for":{"var":["ACCELERATION BODY X","Feet per second squared"]},"gt":-64},
-                  {"wait_for":{"var":["ACCELERATION BODY Y","Feet per second squared"]},"gt":-64},
-                  {"wait_for":{"var":["ACCELERATION BODY Z","Feet per second squared"]},"gt":-64}
-                ]},
-                {"set":{"local":"crash_tier_3"},"value":0},
-                {"set":{"local":"crash_tier_4"},"value":0},
-                {"set":{"local":"crash_tier_5"},"value":0},
-                {"set":{"local":"crash_tier_6"},"value":0},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"rearmed"}}
+                    {"if": {"local":"crash_event_count"}, "lt": 300,
+                      "then": [
+                        {"set":{"local":"crash_event_count"},"value":{"add":[{"local":"crash_event_count"},1]}},
+                        {"modify_array":{"local":"crash_event_log"},"append":{"create_struct":{"seq":{"local":"crash_event_count"},"time":{"var":["L:MISSION_TIME","number"]},"ax":{"local":"cm_px"},"ay":{"local":"cm_py"},"az":{"local":"cm_pz"},"peak2":{"local":"cm_peak2_round"},"dv2":{"local":"cm_dv2_round"},"td":{"local":"cm_td_round"},"d1":{"local":"cm_d1_round"},"tick":{"local":"cm_tick"},"minor":{"local":"cm_do_minor"},"crash":{"local":"cm_do_crash"},"ign":{"local":"cm_ignore"},"tiers":{"text":"{0}{1}{2}{3}","params":[{"local":"crash_tier_3"},{"local":"crash_tier_4"},{"local":"crash_tier_5"},{"local":"crash_tier_6"}]},"total_after":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"score1":{"local":"CREW_LIFESCORE_1"},"score2":{"local":"CREW_LIFESCORE_2"},"score3":{"local":"CREW_LIFESCORE_3"},"L_CRASH":{"local":"pr_crash"},"touchdown":{"local":"pr_touch"},"onground":{"local":"pr_ground"},"agl":{"local":"pr_agl"},"vs":{"local":"pr_vs"},"gs":{"local":"pr_gs"},"vy_before":{"local":"pr_vy0"},"vy_now":{"local":"pr_vy"}}}}
+                    ]},
+                    {"set":{"local":"cm_vx"},"value":{"var":["VELOCITY WORLD X","Feet per second"]}},
+                    {"set":{"local":"cm_vy"},"value":{"var":["VELOCITY WORLD Y","Feet per second"]}},
+                    {"set":{"local":"cm_vz"},"value":{"var":["VELOCITY WORLD Z","Feet per second"]}},
+                    {"set":{"local":"cm_h1_x"},"value":{"local":"cm_vx"}},
+                    {"set":{"local":"cm_h1_y"},"value":{"local":"cm_vy"}},
+                    {"set":{"local":"cm_h1_z"},"value":{"local":"cm_vz"}},
+                    {"set":{"local":"cm_h2_x"},"value":{"local":"cm_vx"}},
+                    {"set":{"local":"cm_h2_y"},"value":{"local":"cm_vy"}},
+                    {"set":{"local":"cm_h2_z"},"value":{"local":"cm_vz"}},
+                    {"set":{"local":"cm_h3_x"},"value":{"local":"cm_vx"}},
+                    {"set":{"local":"cm_h3_y"},"value":{"local":"cm_vy"}},
+                    {"set":{"local":"cm_h3_z"},"value":{"local":"cm_vz"}}
+                  ],"else": [
+                    {"set":{"local":"cm_h3_x"},"value":{"local":"cm_h2_x"}},
+                    {"set":{"local":"cm_h3_y"},"value":{"local":"cm_h2_y"}},
+                    {"set":{"local":"cm_h3_z"},"value":{"local":"cm_h2_z"}},
+                    {"set":{"local":"cm_h2_x"},"value":{"local":"cm_h1_x"}},
+                    {"set":{"local":"cm_h2_y"},"value":{"local":"cm_h1_y"}},
+                    {"set":{"local":"cm_h2_z"},"value":{"local":"cm_h1_z"}},
+                    {"set":{"local":"cm_h1_x"},"value":{"local":"cm_vx"}},
+                    {"set":{"local":"cm_h1_y"},"value":{"local":"cm_vy"}},
+                    {"set":{"local":"cm_h1_z"},"value":{"local":"cm_vz"}}
+                ]}
+              ],
+              "catch": [
+                {"sleep":0.02},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"monitor_error_caught"}},
+                {"set":{"local":"cm_error"},"value":{"param":"$ERROR"}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"monitor_error {local:cm_error}"}}
             ]}
-        ]}}
+        ]}
     ]}}
   ],
   "crew members cap": [
@@ -2144,19 +2390,19 @@
       "then": [
         {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
           "then": [
-            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"DECEASED - mission cancelled immediately; return for emergency handover","cause":{"param":"cause"}}},
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"deceased. Mission aborted, proceed to hospital. Accident report required.","cause":{"param":"cause"}}},
             {"set_message":{"text":"CREW LOSS: {0} deceased. Mission aborted, fly to the hospital.","params":[{"local":"crew_role_name"}]}}
           ],"else": [
-            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"DECEASED","cause":{"param":"cause"}}},
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"deceased.","cause":{"param":"cause"}}},
             {"set_message":{"text":"CREW LOSS: {0} deceased.","params":[{"local":"crew_role_name"}]}}
         ]}
       ],"else": [
         {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
           "then": [
-            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"CRITICAL CONDITION - mission cancelled; all scene personnel return aboard","cause":{"param":"cause"}}},
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"critical. Mission aborted, all aboard. Accident report required.","cause":{"param":"cause"}}},
             {"set_message":{"text":"CREW CRITICAL: {0}. Mission aborted, fly to the hospital.","params":[{"local":"crew_role_name"}]}}
           ],"else": [
-            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"CRITICAL CONDITION","cause":{"param":"cause"}}},
+            {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"critical.","cause":{"param":"cause"}}},
             {"set_message":{"text":"CREW CRITICAL: {0}.","params":[{"local":"crew_role_name"}]}}
         ]}
     ]}
@@ -2170,6 +2416,14 @@
         {"set":{"local":"CREW_EMERGENCY_FATAL"},"value":"yes"},
         {"set":{"local":"HOIST_FATAL_EVENT"},"value":"yes"},
         {"set":{"local":"MISSION_FAILED"},"value":"CREW_FATAL"},
+        {"if": {
+          "or": [
+            {"require":{"local":"CREW_ALIVE_PILOT"},"eq":1},
+            {"require":{"local":"CREW_ALIVE_COPILOT"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"MISSION_FAILED"},"value":"CREW_CRITICAL"}
+        ]},
         {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":0},
         {"set":{"local":"MISSION_PHASE"},"value":8},
         {"set":{"local":"HOIST_OUT"},"value":0},
@@ -2188,7 +2442,12 @@
           "then": [
             {"set_message":{"text":"MISSION FAILED - ALL CREW DECEASED. Operation terminated."}}
           ],"else": [
-            {"set_message":{"text":"MISSION FAILED - PILOT AND COPILOT DECEASED. Operation terminated."}}
+            {"if": {"local":"MISSION_FAILED"}, "eq": "CREW_CRITICAL",
+              "then": [
+                {"set_message":{"text":"MISSION FAILED - PILOT AND COPILOT INCAPACITATED. Operation terminated."}}
+              ],"else": [
+                {"set_message":{"text":"MISSION FAILED - PILOT AND COPILOT DECEASED. Operation terminated."}}
+            ]}
         ]},
         {"set":{"local":"CREW_TERMINATED_ACK"},"value":"no"},
         {"if": {"local":"CREW_ALIVE_COUNT"}, "eq": 0,
@@ -2197,17 +2456,28 @@
                 "title": "MISSION FAILED",
                 "text": "All crew members are deceased. The operation is terminated.",
                 "options": [
-                  {"text":"VIEW REPORT","style":"primary","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+                  {"text":"VIEW REPORT","style":"danger","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
               ]}
             }
           ],"else": [
-            {"wait_modal": {
-                "title": "MISSION FAILED",
-                "text": "Pilot and copilot are deceased. The operation is terminated.",
-                "options": [
-                  {"text":"VIEW REPORT","style":"primary","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
-              ]}
-            }
+            {"if": {"local":"MISSION_FAILED"}, "eq": "CREW_CRITICAL",
+              "then": [
+                {"wait_modal": {
+                    "title": "MISSION FAILED",
+                    "text": "Pilot and copilot are incapacitated. The operation is terminated.",
+                    "options": [
+                      {"text":"VIEW REPORT","style":"danger","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+                  ]}
+                }
+              ],"else": [
+                {"wait_modal": {
+                    "title": "MISSION FAILED",
+                    "text": "Pilot and copilot are deceased. The operation is terminated.",
+                    "options": [
+                      {"text":"VIEW REPORT","style":"danger","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+                  ]}
+                }
+            ]}
         ]},
         {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"mission_terminated alive={local:CREW_ALIVE_COUNT} pilot={local:CREW_ALIVE_PILOT} copilot={local:CREW_ALIVE_COPILOT}"}},
         {"set":{"local":"MISSION_END_WAITING"},"value":1},
@@ -2224,6 +2494,7 @@
               "then": [
                 {"set":{"local":"CREW_DEAD_1"},"value":1},
                 {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
+                {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"yes"},
                 {"set":{"local":"CREW_CRIT_1"},"value":1},
                 {"set":{"local":"CREW_LOCK_1"},"value":1},
                 {"set":{"local":"CREW_ANN_1"},"value":1},
@@ -2245,7 +2516,7 @@
                     {"if": {"local":"CREW_LIFESCORE_ALERT_1"}, "lt": 2,
                       "then": [
                         {"set":{"local":"CREW_LIFESCORE_ALERT_1"},"value":2},
-                        {"call_macro":"post crew safety message","params":{"member":1,"score":{"local":"CREW_LIFESCORE_1"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        {"call_macro":"post crew safety message","params":{"member":1,"score":{"local":"CREW_LIFESCORE_1"},"status":"deteriorating, medical assessment required.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                     ]}
                   ],"else": [
                     {"if": {"local":"CREW_LIFESCORE_1"}, "lt": 100,
@@ -2253,7 +2524,7 @@
                         {"if": {"local":"CREW_LIFESCORE_ALERT_1"}, "lt": 1,
                           "then": [
                             {"set":{"local":"CREW_LIFESCORE_ALERT_1"},"value":1},
-                            {"call_macro":"post crew safety message","params":{"member":1,"score":{"local":"CREW_LIFESCORE_1"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                            {"call_macro":"post crew safety message","params":{"member":1,"score":{"local":"CREW_LIFESCORE_1"},"status":"injured or exposed.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                         ]}
                     ]}
                 ]}
@@ -2268,6 +2539,7 @@
               "then": [
                 {"set":{"local":"CREW_DEAD_2"},"value":1},
                 {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
+                {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"yes"},
                 {"set":{"local":"CREW_CRIT_2"},"value":1},
                 {"set":{"local":"CREW_LOCK_2"},"value":1},
                 {"set":{"local":"CREW_ANN_2"},"value":1},
@@ -2289,7 +2561,7 @@
                     {"if": {"local":"CREW_LIFESCORE_ALERT_2"}, "lt": 2,
                       "then": [
                         {"set":{"local":"CREW_LIFESCORE_ALERT_2"},"value":2},
-                        {"call_macro":"post crew safety message","params":{"member":2,"score":{"local":"CREW_LIFESCORE_2"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        {"call_macro":"post crew safety message","params":{"member":2,"score":{"local":"CREW_LIFESCORE_2"},"status":"deteriorating, medical assessment required.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                     ]}
                   ],"else": [
                     {"if": {"local":"CREW_LIFESCORE_2"}, "lt": 100,
@@ -2297,7 +2569,7 @@
                         {"if": {"local":"CREW_LIFESCORE_ALERT_2"}, "lt": 1,
                           "then": [
                             {"set":{"local":"CREW_LIFESCORE_ALERT_2"},"value":1},
-                            {"call_macro":"post crew safety message","params":{"member":2,"score":{"local":"CREW_LIFESCORE_2"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                            {"call_macro":"post crew safety message","params":{"member":2,"score":{"local":"CREW_LIFESCORE_2"},"status":"injured or exposed.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                         ]}
                     ]}
                 ]}
@@ -2312,6 +2584,7 @@
               "then": [
                 {"set":{"local":"CREW_DEAD_3"},"value":1},
                 {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
+                {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"yes"},
                 {"set":{"local":"CREW_CRIT_3"},"value":1},
                 {"set":{"local":"CREW_LOCK_3"},"value":1},
                 {"set":{"local":"CREW_ANN_3"},"value":1},
@@ -2333,7 +2606,7 @@
                     {"if": {"local":"CREW_LIFESCORE_ALERT_3"}, "lt": 2,
                       "then": [
                         {"set":{"local":"CREW_LIFESCORE_ALERT_3"},"value":2},
-                        {"call_macro":"post crew safety message","params":{"member":3,"score":{"local":"CREW_LIFESCORE_3"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        {"call_macro":"post crew safety message","params":{"member":3,"score":{"local":"CREW_LIFESCORE_3"},"status":"deteriorating, medical assessment required.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                     ]}
                   ],"else": [
                     {"if": {"local":"CREW_LIFESCORE_3"}, "lt": 100,
@@ -2341,7 +2614,7 @@
                         {"if": {"local":"CREW_LIFESCORE_ALERT_3"}, "lt": 1,
                           "then": [
                             {"set":{"local":"CREW_LIFESCORE_ALERT_3"},"value":1},
-                            {"call_macro":"post crew safety message","params":{"member":3,"score":{"local":"CREW_LIFESCORE_3"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                            {"call_macro":"post crew safety message","params":{"member":3,"score":{"local":"CREW_LIFESCORE_3"},"status":"injured or exposed.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                         ]}
                     ]}
                 ]}
@@ -2356,6 +2629,7 @@
               "then": [
                 {"set":{"local":"CREW_DEAD_4"},"value":1},
                 {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
+                {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"yes"},
                 {"set":{"local":"CREW_CRIT_4"},"value":1},
                 {"set":{"local":"CREW_LOCK_4"},"value":1},
                 {"set":{"local":"CREW_ANN_4"},"value":1},
@@ -2377,7 +2651,7 @@
                     {"if": {"local":"CREW_LIFESCORE_ALERT_4"}, "lt": 2,
                       "then": [
                         {"set":{"local":"CREW_LIFESCORE_ALERT_4"},"value":2},
-                        {"call_macro":"post crew safety message","params":{"member":4,"score":{"local":"CREW_LIFESCORE_4"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        {"call_macro":"post crew safety message","params":{"member":4,"score":{"local":"CREW_LIFESCORE_4"},"status":"deteriorating, medical assessment required.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                     ]}
                   ],"else": [
                     {"if": {"local":"CREW_LIFESCORE_4"}, "lt": 100,
@@ -2385,7 +2659,7 @@
                         {"if": {"local":"CREW_LIFESCORE_ALERT_4"}, "lt": 1,
                           "then": [
                             {"set":{"local":"CREW_LIFESCORE_ALERT_4"},"value":1},
-                            {"call_macro":"post crew safety message","params":{"member":4,"score":{"local":"CREW_LIFESCORE_4"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                            {"call_macro":"post crew safety message","params":{"member":4,"score":{"local":"CREW_LIFESCORE_4"},"status":"injured or exposed.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                         ]}
                     ]}
                 ]}
@@ -2400,6 +2674,7 @@
               "then": [
                 {"set":{"local":"CREW_DEAD_5"},"value":1},
                 {"set":{"global":"CREW_KILLED_TOTAL"},"value":{"add":[{"global":"CREW_KILLED_TOTAL"},1]}},
+                {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"yes"},
                 {"set":{"local":"CREW_CRIT_5"},"value":1},
                 {"set":{"local":"CREW_LOCK_5"},"value":1},
                 {"set":{"local":"CREW_ANN_5"},"value":1},
@@ -2421,7 +2696,7 @@
                     {"if": {"local":"CREW_LIFESCORE_ALERT_5"}, "lt": 2,
                       "then": [
                         {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":2},
-                        {"call_macro":"post crew safety message","params":{"member":5,"score":{"local":"CREW_LIFESCORE_5"},"status":"CONDITION DETERIORATING - immediate medical assessment required","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                        {"call_macro":"post crew safety message","params":{"member":5,"score":{"local":"CREW_LIFESCORE_5"},"status":"deteriorating, medical assessment required.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                     ]}
                   ],"else": [
                     {"if": {"local":"CREW_LIFESCORE_5"}, "lt": 100,
@@ -2429,7 +2704,7 @@
                         {"if": {"local":"CREW_LIFESCORE_ALERT_5"}, "lt": 1,
                           "then": [
                             {"set":{"local":"CREW_LIFESCORE_ALERT_5"},"value":1},
-                            {"call_macro":"post crew safety message","params":{"member":5,"score":{"local":"CREW_LIFESCORE_5"},"status":"suffering from injury or hazardous exposure","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
+                            {"call_macro":"post crew safety message","params":{"member":5,"score":{"local":"CREW_LIFESCORE_5"},"status":"injured or exposed.","cause":{"local":"CREW_EVENT_CAUSE"},"rescuetrack":"no"}}
                         ]}
                     ]}
                 ]}
@@ -2521,10 +2796,29 @@
       "then": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"events first={local:crew_first_member} alive={local:CREW_ALIVE_COUNT} pilot={local:CREW_ALIVE_PILOT} copilot={local:CREW_ALIVE_COPILOT} ann={local:CREW_ANN_1}/{local:CREW_ANN_2}/{local:CREW_ANN_3}/{local:CREW_ANN_4}/{local:CREW_ANN_5}"}}
     ]},
+    {"#comment":"Pilot and copilot (or the only pilot when there is no copilot) are not fit to fly when dead or critical: a single pilot with one trained technical crew member can land only while the second one is fit, so both unfit ends the mission as with two deaths."},
+    {"set":{"local":"CREW_PILOTS_UNFIT"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_LIFESCORE_1"},"lte":10},
+        {"require":{"local":"CREW_LIFESCORE_3"},"lte":10}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_PILOTS_UNFIT"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_LIFESCORE_1"},"lte":10},
+        {"require":{"local":"CREW_MEMBER_CAP"},"lt":3}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_PILOTS_UNFIT"},"value":1}
+    ]},
     {"if": {
       "or": [
         {"require":{"local":"CREW_ALIVE_COUNT"},"eq":0},
-        {"and":[{"require":{"local":"CREW_ALIVE_PILOT"},"eq":0},{"require":{"local":"CREW_ALIVE_COPILOT"},"eq":0}],"eq":1}
+        {"and":[{"require":{"local":"CREW_ALIVE_PILOT"},"eq":0},{"require":{"local":"CREW_ALIVE_COPILOT"},"eq":0}],"eq":1},
+        {"require":{"local":"CREW_PILOTS_UNFIT"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"if": {
@@ -2589,6 +2883,7 @@
     {"set":{"local":"CREW_ANN_2"},"value":0},
     {"set":{"local":"CREW_ANN_3"},"value":0},
     {"set":{"local":"CREW_ANN_4"},"value":0},
-    {"set":{"local":"CREW_ANN_5"},"value":0}
+    {"set":{"local":"CREW_ANN_5"},"value":0},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"events_exit"}}
   ]
 }

@@ -1,3 +1,47 @@
+## Release 0.997 169.22
+
+- Ground operations stall diagnostics (checkpoint ring, state watcher with stall detection, NR gate and crew spawn logging, snapshot persistence); ambulance scene parking retreats in a single leg
+
+## Release 0.997 169.21
+
+- Second dispatch hand-off fixed: the dispatch preview now refreshes the saved accident location for rescue-routed scenes, and the six rescue-only residential generators anchor the accident location, so the scene, landing spot, ambulance and flight plan destination coincide. Diagnostics added for second dispatch and custom or reload launches (dispatch hand-off log, corrected location coordinates, snapshot fields). Crash detection: first acceleration threshold raised and acceleration-only spikes without velocity change ignored. Message clock selectable (UTC or local) with Z or L suffix, ETA as clock time, time of death, deceased page tab fix, fire service reports including scene-defined fires. Runtime behaviour pending.
+
+## Release 0.997 169.20
+
+- Dispatch and RescueTrack messages rewritten shorter and more professional, with typos and unit ambiguity fixed. New dispatcher messages: patient deceased on board, patient handed over to ED, fire service scene safety (fire, smoke or safe) and fire out, police scene secured, crew status with role and accident report notice. Time of death kept in simulator time and shown in the medical page, and a minimal page for the deceased found on scene. Runtime behaviour pending.
+
+## Release 0.997 169.19
+
+- Police request on a death: the police are requested for a deceased on scene or a patient who dies on scene only when POLICE_AVAIL is 0 (no police) and not in multiplayer, where the dispatcher decides. POLICE_AVAIL 1 (police already on scene) and 2 (police on the way from the station) are left alone. Runtime behaviour pending.
+
+## Release 0.997 169.18
+
+- Realism of deaths and injuries. The MISSION FAILED button is red. A critical or dead medic stops the effect of the manual treatments. A random deceased on scene and a patient who dies on scene request the police. Pilot and copilot both dead or critical end the mission (incapacitated text when somebody is alive). The end report shows the patient death cause (piloting, clinical deterioration, hoist loss) and a notice to the aviation accident investigation authority after a crew death or critical injury. Runtime behaviour pending.
+
+## Release 0.997 169.17
+
+- The crash damage chain overflowed the stack in the 169.16 test (RangeError: Maximum call stack size exceeded at the catastrophic tier, so no death event and no MISSION FAILED modal followed). The stack of a thread unwinds only at a sleep, so every crash damage application, every member inside it and the start of crew impact events and of the loop catch are now followed or preceded by a 0.02 s sleep. The SINGLE PLAYER or MULTIPLAYER selection message is cleared as soon as the selection is made. Runtime behaviour pending.
+
+## Release 0.997 169.16
+
+- Crash detection no longer depends on catching a single-frame acceleration spike. The crash monitor loop adds two triggers to the crash path: a new simulator touchdown speed (PLANE TOUCHDOWN NORMAL VELOCITY changes and reaches 25 ft/s) and a one-tick world velocity loss of 25 ft/s below 100 ft above ground, both graded with the squared-velocity tier table. A crash above 150 ft/s is fatal for everyone aboard. While slew mode is active (IS SLEW ACTIVE) and for 15 ticks after it every trigger is suppressed. Each impact row reports td_hit, td, v_hit, d1, height and tick, and a loop_alive row is traced every 500 ticks. Runtime behaviour pending.
+
+## Release 0.997 169.15
+
+- The damage path no longer touches any file, to find why the impact thread stopped in the 169.12 test. apply crew lifescore impact called test tracker begin at its start and test tracker complete at its end for every member, and both open (and the second saves) the Debug_Table file; both stalls happened at that point and the traces stop right before the chain. The two calls are now a flag (CREW_TEST_TRACK_DUE) handled by the new macro record crew health test in its own thread, started with the monitor. Every call of the chain is traced (apply_enter, member_apply, member_applied, apply_exit, events_exit and the stages of the loop), the catch of the loop leaves monitor_error_caught before reading $ERROR, and every impact is appended to the in-memory array crash_event_log (up to 300 records with acceleration, peak, dv2, tiers, scores and the signal probes), copied by the snapshot with no file access of its own. The watchdog is disabled: a stalled thread must be explained, not restarted. Runtime behaviour pending.
+
+## Release 0.997 169.14
+
+- Impact signal probes for choosing the detection strategy with data. Every impact of the single-thread loop traces probe_trigger and probe_after with L:CRASH, the simulator touchdown velocity (PLANE TOUCHDOWN NORMAL VELOCITY), SIM ON GROUND, PLANE ALT ABOVE GROUND, VERTICAL SPEED, GROUND VELOCITY and the world vertical velocity before and now, next to the acceleration peak and dv2 already traced. Each probe runs in its own try, so a variable the helicopter does not expose is traced as probe_error and cannot stop the injuries. The 169.13 loop, watchdog and thresholds are unchanged. Runtime behaviour pending.
+
+## Release 0.997 169.13
+
+- Impact model rebuilt as a single thread after the 169.12 test, where one minute and ten impacts left the crew health unchanged: a minor impact applied its injury and then left the shared lock crash_apply_busy set, so every later impact waited for it. The loop (new macro crash monitor loop, 0.02 s per tick) has no lock and no state shared between paths, catches and traces the error of a tick (monitor_error) and goes on; a watchdog restarts it (monitor_stalled) if its tick stops advancing, except while a crew termination waits for the report. Minor injuries start from an acceleration resultant of 64 ft/s2 (0 to 3, floor 70) and 96 ft/s2 (3 to 8, floor 40), because collective inputs read 34 to 54 ft/s2; rearm below 48. The crash tiers keep 150 ft/s2 or 25 ft/s lost, then 50, 90 and 150 ft/s of world velocity lost, now measured on a 0.12 s window from the velocity 0.06 s earlier. Runtime behaviour pending.
+
+## Release 0.997 169.12
+
+- Crash severity now comes from the loss of world velocity (VELOCITY WORLD X/Y/Z, reference 0.05 to 0.1 s before the trigger, sampled every 0.02 s for 0.3 s) instead of the acceleration peak, because in the 169.11 test a 20000 ft/min nose-down impact read only 287 ft/s2 and the crew survived while a scrape along the ground read 502 ft/s2 and killed everyone. Tier 150 comes from 150 ft/s2 or 25 ft/s lost; 50, 90 and 150 ft/s lost give 10 to 30, 10 to 30 with failures and fires, and 45 to 60 ignoring the member lock. The acceleration latches of 250, 330 and 400 are removed; dv2 is traced for tuning. Every crew death sets the global CREW_DEATH_REPAIR_PENDING and the next mission start repairs the helicopter (new macro reset aircraft failures, covering every variable of the failure table) and restarts the crew shift. The crew now reports active failures to the technician at deboarding even without the CRASH, VNE, FLI or persistent damage flags (DEBOARD_FAILURES_PRESENT). The crew monitors refuse a second start in the same mission pass and trace monitor_started or monitor_start_refused with a flight-long counter, to find why the 169.11 test applied the damage twice. Runtime behaviour pending.
+
 ## Release 0.997 169.11
 
 - Crash tiers lowered after the 169.10 test, where two impacts of about 430 ft/s2 left the crew alive: the latches and the sampled vector peak now use 250 (10 to 30), 330 (10 to 30, fires possible) and 400 (45 to 60, ignores the member lock), with 150 (floor 20) and the minor path unchanged. The persistent L:DISPATCH_PHASE is reset to 100 (same condition as before) at the start of objective1, before any wait or slow call, so a phase 5 or 6 left by the previous mission can no longer make NEW DISPATCH hand out a dispatch during the initialization; mission_start trace added. The mission failed screen names the deceased crew (ALL CREW MEMBERS or the number) instead of a single crew member. New career statistics CREW_KILLED_TOTAL (crew deaths) and PATIENTS_KILLED_TOTAL (loaded patients killed by an impact), initialized, shown in the end report and cleared by reset stats. Runtime behaviour pending.

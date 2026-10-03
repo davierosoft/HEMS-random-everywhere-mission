@@ -62,10 +62,10 @@ function assertBaselineSceneStop(macro, parking, ambulance, stopDistance) {
 const ambulance1 = source.Ambulance1;
 if (!Array.isArray(ambulance1)) fail('Ambulance1 macro is missing');
 
-if (!findAvailabilityCondition(ambulance1, 2, 'is on the way to the accident site')) {
+if (!findAvailabilityCondition(ambulance1, 2, 'en route, ETA')) {
   fail('the en-route Dispatch message must be emitted only while AMBU_AVAIL is 2');
 }
-if (!findAvailabilityCondition(ambulance1, 1, 'Ambulance crew arrived at accident location')) {
+if (!findAvailabilityCondition(ambulance1, 1, 'Ambulance on scene.')) {
   fail('the arrival Dispatch message must be emitted only while AMBU_AVAIL is 1');
 }
 if (!hasExactNode(ambulance1, (node) => node.sleep?.[0] === 15 && node.sleep?.[1] === 30)) {
@@ -98,7 +98,7 @@ if (hasExactNode(ambulance1SceneParking, (node) => node.drive_object?.name === '
 if (hasExactNode(ambulance2, (node) => node.wait_for?.local === 'ambu1_dispatch_announced' && node.eq === 'yes')) {
   fail('the second ambulance route must not wait for the first ambulance announcement');
 }
-if (!containsText(ambulance2, "Ambulance '{0}' is following ambulance '{1}'. TTG:{2:TIME} min")) {
+if (!containsText(ambulance2, "Ambulance {0} en route behind {1}, ETA {2:TIME}{3}.")) {
   fail('the second ambulance Dispatch text must describe its following role');
 }
 if (containsText(ambulance2, 'Ambulances {0} and {1} dispatched to the accident site')) {

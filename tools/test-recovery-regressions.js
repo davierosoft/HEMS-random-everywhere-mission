@@ -188,11 +188,23 @@ class Diagnostics extends Live {
   query(q, p) {
     if (q?.static === 'Debug_Auto_Table') return 'automatic';
     if (q?.fn === 'get_time_string') return '12:00:00';
-    if (q?.location && ['lat', 'lon'].includes(q.var)) return this.locations[q.location][q.var === 'lat' ? 0 : 1];
+    // A bare location reference is only meaningful as the value of an LVAR write (see commands below).
+    if (q?.location && q.var === undefined && Object.keys(q).length === 1) return this.locations[q.location];
     // HPG distance queries against absent scene objects are boundary inputs here.
     if (q?.location && q.var === 'distance:m') return 0;
     if (q?.object) return this.objects.has(this.query(q.object, p)) ? 1 : -1;
     return super.query(q, p);
+  }
+  commands(list, p) {
+    for (const command of list) {
+      const target = command.set?.var?.[0];
+      if (target && command.value?.location && command.value.var === undefined && Object.keys(command.value).length === 1) {
+        // Writing an LVAR from a location publishes "<name> LAT" and "<name> LON" (the mechanism used by the PRE_* variables).
+        const location = this.locations[command.value.location];
+        assert.ok(location, `Unknown location ${command.value.location}`);
+        this.locals[target] = 0; this.locals[`${target} LAT`] = location[0]; this.locals[`${target} LON`] = location[1];
+      } else super.commands([command], p);
+    }
   }
 }
 {
@@ -210,8 +222,9 @@ class Diagnostics extends Live {
     for (const command of commands) { if (command.save_table) saves++; originalCommands([command], p); }
   };
   h.sleepHook = scene => {
-    if (++tick === 1) {
-      assert.equal(scene.savedTables.automatic.valid, 'yes');
+    if (++tick === 1) assert.equal(scene.savedTables.automatic.valid, 'yes');
+    // Coordinates are read one cycle after the LVAR was written from the location.
+    if (tick === 2) {
       assert.equal(scene.locals['L:DIAG_rescue_location_LAT'], 45.5);
       assert.equal(scene.locals['L:DIAG_rescue_location_LON'], 8.25);
     }

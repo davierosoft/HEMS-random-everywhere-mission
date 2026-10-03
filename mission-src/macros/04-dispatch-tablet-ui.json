@@ -682,7 +682,7 @@
     {"set":{"var":["L:Dispatch","number"]},"value":1},
     {"call_macro":"dispatch ringtone"},
     {"call_macro":"Mission description"},
-    {"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
+    {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
     {"sleep":0.1},
     {"if": {"local":"prelocation"}, "eq": "yes",
       "then": [
@@ -690,9 +690,45 @@
     ]},
     {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
       "then": [
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        }
       ],"else": [
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"userA"}}}}
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"userA"}
+            }
+          }
+        }
     ]},
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"}
@@ -1050,12 +1086,12 @@
         {"text":"Buttons disabled, no location set","color":"red","show_condition":{"and":[{"require":{"has_location":"location_temp"},"eq":0},{"require":{"local":"ctab1"},"eq":0}],"eq":1}},
         {"text":"Select desired option to start the mission.","show_condition":{"and":[{"require":{"has_location":"location_temp"},"eq":1},{"require":{"local":"ctab1"},"eq":0}],"eq":1}},
         {"buttonbar":[{"text":"Are queries skipped?: {0}","params":[{"global":"SKIP_QUERY"}],"show_condition":{"require":{"has_location":"location_temp"},"eq":1}},{"title":"SKIP OSM QUERIES","select_condition":{"and":[{"require":{"global":"SKIP_QUERY"},"eq":"yes"},{"require":{"var":["L:SKIP_QUERY","number"]},"eq":1}],"eq":1},"commands":[{"if":{"var":["L:SKIP_QUERY","number"]},"eq":0,"then":[{"set":{"var":["L:SKIP_QUERY","number"]},"value":1},{"set":{"global":"SKIP_QUERY"},"value":"yes"}],"else":[{"set":{"var":["L:SKIP_QUERY","number"]},"value":0},{"set":{"global":"SKIP_QUERY"},"value":"no"}]}]}],"show_condition":{"require":{"local":"has_temp_location"},"ne":"no"}},
-        {"buttonbar":[{"title":"START SEL. MISSN @CUSTOM LOC","color":"green","size":"large","eq":"yes","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"commands":[{"if":{"var":["L:SKIP_QUERY","number"]},"eq":1,"then":[{"set":{"local":"skip_query"},"value":"yes"},{"set":{"local":"query_skipped"},"value":"yes"}],"else":[{"set":{"local":"skip_query"},"value":"no"},{"set":{"local":"query_skipped"},"value":null}]},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"call_macro":"missionupdate"},{"set_dispatch_dialog":0},{"set":{"local":"roadnodequerydistance"},"value":300},{"sleep":1},{"if":{"local":"location_name"},"eq":"userA","then":[{"create_location":"userA","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_userA"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":{"local":"userA_name"}}]},{"if":{"local":"location_name"},"eq":"accident_location","then":[{"create_location":"accident_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_accident_location"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":"accident_location_Name"}]},{"if":{"local":"location_name"},"eq":"rescue_location","then":[{"create_location":"rescue_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"HEMS mission_type"},{"create_location":"accident_location","zones":[{"zone":{"location":{"bearing":0,"dist":10,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_accident_location"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":"rescue_location_Name"}]},{"sleep":1},{"if":{"local":"Query"},"eq":"Query random apartm detatched hotel","then":[{"call_macro":"query closest residential rescue team"}]},{"if":{"and":[{"require":{"local":"MISSION_SCENE_TYPE"},"eq":17},{"require":{"local":"MISSION_NUMBER"},"eq":1}]},"eq":1,"then":[{"call_macro":"Query random train custom"}]},{"call_macro":"Mission description"},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":0},{"sleep":0.5},{"set":{"local":"MISSION_PHASE"},"value":2},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},{"sleep":0.1},{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},{"set":{"local":"Dispatcher_text"},"value":""},{"call_macro":"UpdateRescueTrack"},{"if":{"local":"MISSION_NUMBER"},"ne":4,"then":[{"call_macro":"Query accident location country"}],"else":[{"call_macro":"Query userA country"}]}],"show_condition":{"require":{"local":"has_temp_location"},"ne":"no"}},{"title":"START SEL. MISSN @CUSTOM LOC","size":"large","eq":"yes","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"commands":[],"show_condition":{"and":[{"require":{"local":"has_temp_location"},"eq":"no"},{"require":{"local":"ctab1"},"eq":0}],"eq":1}},{"title":"START INJURED ONLY","size":"large","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"commands":[{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set_dispatch_dialog":0},{"create_location":"accident_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_accident_location"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":"accident_location_Name"},{"set":{"local":"VAR_MISSION_NUMBER"},"value":0},{"sleep":0.5},{"call_macro":"missionupdate"},{"set":{"local":"roadnodequerydistance"},"value":500},{"call_macro":"Mission description"},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},{"sleep":0.1},{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},{"set":{"local":"Dispatcher_text"},"value":""},{"call_macro":"UpdateRescueTrack"},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"}],"show_condition":{"require":{"local":"has_temp_location"},"ne":"no"}}]},
+        {"buttonbar":[{"title":"START SEL. MISSN @CUSTOM LOC","color":"green","size":"large","eq":"yes","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"commands":[{"if":{"var":["L:SKIP_QUERY","number"]},"eq":1,"then":[{"set":{"local":"skip_query"},"value":"yes"},{"set":{"local":"query_skipped"},"value":"yes"}],"else":[{"set":{"local":"skip_query"},"value":"no"},{"set":{"local":"query_skipped"},"value":null}]},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"call_macro":"missionupdate"},{"set_dispatch_dialog":0},{"set":{"local":"roadnodequerydistance"},"value":300},{"sleep":1},{"if":{"local":"location_name"},"eq":"userA","then":[{"create_location":"userA","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_userA"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":{"local":"userA_name"}}]},{"if":{"local":"location_name"},"eq":"accident_location","then":[{"create_location":"accident_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_accident_location"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":"accident_location_Name"}]},{"if":{"local":"location_name"},"eq":"rescue_location","then":[{"create_location":"rescue_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"HEMS mission_type"},{"create_location":"accident_location","zones":[{"zone":{"location":{"bearing":0,"dist":10,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_accident_location"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":"rescue_location_Name"}]},{"sleep":1},{"if":{"local":"Query"},"eq":"Query random apartm detatched hotel","then":[{"call_macro":"query closest residential rescue team"}]},{"if":{"and":[{"require":{"local":"MISSION_SCENE_TYPE"},"eq":17},{"require":{"local":"MISSION_NUMBER"},"eq":1}]},"eq":1,"then":[{"call_macro":"Query random train custom"}]},{"call_macro":"Mission description"},{"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":0},{"sleep":0.5},{"set":{"local":"MISSION_PHASE"},"value":2},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},{"sleep":0.1},{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"text":"{0:TIME}{1}","params":[{"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}]},"text":{"local":"Dispatcher_text"}}}},{"set":{"local":"Dispatcher_text"},"value":""},{"call_macro":"UpdateRescueTrack"},{"if":{"local":"MISSION_NUMBER"},"ne":4,"then":[{"call_macro":"Query accident location country"}],"else":[{"call_macro":"Query userA country"}]}],"show_condition":{"require":{"local":"has_temp_location"},"ne":"no"}},{"title":"START SEL. MISSN @CUSTOM LOC","size":"large","eq":"yes","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"commands":[],"show_condition":{"and":[{"require":{"local":"has_temp_location"},"eq":"no"},{"require":{"local":"ctab1"},"eq":0}],"eq":1}},{"title":"START INJURED ONLY","size":"large","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"commands":[{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set_dispatch_dialog":0},{"create_location":"accident_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"location_temp"}}}]},{"set":{"local":"location_diagnostic_source_macro"},"value":"HEMS mission_type"},{"set":{"local":"location_diagnostic_writer_accident_location"},"value":"HEMS mission_type"},{"copy_stringtoken":"location_temp_Name","to":"accident_location_Name"},{"set":{"local":"VAR_MISSION_NUMBER"},"value":0},{"sleep":0.5},{"call_macro":"missionupdate"},{"set":{"local":"roadnodequerydistance"},"value":500},{"call_macro":"Mission description"},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},{"sleep":0.1},{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"text":"{0:TIME}{1}","params":[{"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}]},"text":{"local":"Dispatcher_text"}}}},{"set":{"local":"Dispatcher_text"},"value":""},{"call_macro":"UpdateRescueTrack"},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"}],"show_condition":{"require":{"local":"has_temp_location"},"ne":"no"}}]},
         {"text":"Actual full scene: {0}","params":[{"local":"accident_description"}],"color":"yellow","show_condition":{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":0}},
         {"image":"bar","show_condition":{"require":{"local":"ctab1"},"eq":0}},
         {"buttonbar":[{"text":"POI type (for patient transfer only)"},{"title":"HOSPITAL HELIPAD","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"select_condition":{"require":{"var":["L:POI_TYPE","number"]},"eq":2},"commands":[{"set":{"var":["L:POI_TYPE","number"]},"value":2}]},{"title":"OTHER","disabled_condition":{"require":{"local":"has_temp_location"},"eq":"no"},"select_condition":{"require":{"var":["L:POI_TYPE","number"]},"ne":2},"commands":[{"set":{"var":["L:POI_TYPE","number"]},"value":0}]}],"show_condition":{"require":{"local":"ctab1"},"eq":0}},
         {"image":"bar"},
-        {"buttonbar":[{"title":"RECEIVE SELECTED DISPATCH @ RANDOM LOCATION","size":"large","eq":"yes","commands":[{"set_dispatch_dialog":0},{"set":{"var":["L:SKIP_QUERY","number"]},"value":0},{"set":{"local":"skip_query"},"value":"no"},{"set":{"local":"query_skipped"},"value":null},{"set":{"local":"queryfailed"},"value":null},{"set":{"local":"lock_random_dispatch"},"value":1},{"set_message":{"text":"DOWNLOADING, PLEASE WAIT..."}},{"set":{"local":"DISPLAY_DISPATCH"},"value":0},{"if":{"global":"BOARDING_HOLD_GLOBAL"},"eq":0,"then":[{"set":{"local":"BOARDING_HOLD"},"value":0}]},{"set":{"local":"DISPLAY_DISPATCH"},"value":1},{"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},{"set":{"var":["L:Dispatch","number"]},"value":1},{"if":{"and":[{"require":{"global":"RINGONCE"},"eq":1},{"require":{"local":"ringed"},"eq":1}]},"ne":1,"then":[{"call_macro":"dispatch ringtone"},{"set":{"local":"ringed"},"value":1}]},{"call_macro":"Mission description"},{"sleep":0.5},{"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},{"sleep":0.1},{"if":{"local":"prelocation"},"eq":"yes","then":[{"call_macro":"accident location pregenerator"}]},{"if":{"local":"MISSION_NUMBER"},"ne":4,"then":[{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}],"else":[{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"userA"}}}}]},{"set":{"local":"Dispatcher_text"},"value":""},{"set_briefing_dialog":1},{"call_macro":"UpdateRescueTrack"}]}]},
+        {"buttonbar":[{"title":"RECEIVE SELECTED DISPATCH @ RANDOM LOCATION","size":"large","eq":"yes","commands":[{"set_dispatch_dialog":0},{"set":{"var":["L:SKIP_QUERY","number"]},"value":0},{"set":{"local":"skip_query"},"value":"no"},{"set":{"local":"query_skipped"},"value":null},{"set":{"local":"queryfailed"},"value":null},{"set":{"local":"lock_random_dispatch"},"value":1},{"set_message":{"text":"DOWNLOADING, PLEASE WAIT..."}},{"set":{"local":"DISPLAY_DISPATCH"},"value":0},{"if":{"global":"BOARDING_HOLD_GLOBAL"},"eq":0,"then":[{"set":{"local":"BOARDING_HOLD"},"value":0}]},{"set":{"local":"DISPLAY_DISPATCH"},"value":1},{"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},{"set":{"var":["L:Dispatch","number"]},"value":1},{"if":{"and":[{"require":{"global":"RINGONCE"},"eq":1},{"require":{"local":"ringed"},"eq":1}]},"ne":1,"then":[{"call_macro":"dispatch ringtone"},{"set":{"local":"ringed"},"value":1}]},{"call_macro":"Mission description"},{"sleep":0.5},{"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},{"sleep":0.1},{"if":{"local":"prelocation"},"eq":"yes","then":[{"call_macro":"accident location pregenerator"}]},{"if":{"local":"MISSION_NUMBER"},"ne":4,"then":[{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"text":"{0:TIME}{1}","params":[{"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}]},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}],"else":[{"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"text":"{0:TIME}{1}","params":[{"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}]},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"userA"}}}}]},{"set":{"local":"Dispatcher_text"},"value":""},{"set_briefing_dialog":1},{"call_macro":"UpdateRescueTrack"}]}]},
         {"text":"SELECT A MISSION: Selects a specific mission to be executed (either for custom or random locations)"},
         {"text":"SINGLE/TYPE DISABLE: Disables/Enables single or groups of missions from random dispatches"},
         {"text":"Note: Disabled mission(s) remain selectable from SELECT A MISSION"},
@@ -1105,6 +1141,8 @@
         {"text":"Congratulation! You completed mission: {0} {1} {2}","color":"green","params":[{"var":["L:OLD_VAR_MISSION_NUMBER","number"]},{"var":["L:OLD_CRASH_VARIABLE","number"]},{"var":["L:OLD_MISSION_SCENE_VARIANT","number"]}],"show_condition":{"require":{"local":"MISSION_FAILED"},"eq":null}},
         {"text":"MISSION FAILED - {0} DECEASED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"},"params":[{"local":"CREW_DEAD_LABEL"}]},
         {"text":"MISSION FAILED - CREW MEMBER CRITICALLY INJURED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}},
+        {"text":"Death or serious injury of crew: notify the aviation accident investigation authority (ANSV) and the operator.","color":"red","show_condition":{"or":[{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"},{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}],"eq":1}},
+        {"text":"Patient death cause: {0}","color":"red","params":[{"local":"PATIENT_DEATH_CAUSE"}],"show_condition":{"require":{"local":"PATIENT_DEATH_CAUSE"},"ne":null}},
         {"image":"bar"},
         {"text":"In your work shift you completed a total of {0} missions out of {1} accepted dispatches","params":[{"local":"COMPLETED_TEMP_MISSIONS"},{"local":"STARTED_TEMP_MISSIONS"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},
         {"text":"Your work shift is over, thank you for your service!","show_condition":{"require":{"local":"MISSION_VERSION"},"eq":null}},
@@ -1184,6 +1222,9 @@
         {"text":"Status reports to dispatcher are sent:","align":"center"},
         {"buttonbar":[{"title":" AUTOMATICALLY ","select_condition":{"require":{"global":"DISPATCHER_AUTO"},"eq":0},"commands":[{"set":{"global":"DISPATCHER_AUTO"},"value":0},{"set":{"local":"DISPATCHER_AUTO"},"value":0}]},{"title":" MANUALLY ","select_condition":{"require":{"global":"DISPATCHER_AUTO"},"eq":1},"commands":[{"set":{"global":"DISPATCHER_AUTO"},"value":1},{"set":{"local":"DISPATCHER_AUTO"},"value":1}]}]},
         {"text":"Status report disagree. L{0}G{1}. If L is 1 status report is forced by multiplayer to manual.","params":[{"local":"DISPATCHER_AUTO"},{"global":"DISPATCHER_AUTO"}],"color":"gray","show_condition":{"require":{"global":"DISPATCHER_AUTO"},"ne":{"local":"DISPATCHER_AUTO"}}},
+        {"text":" ","align":"center"},
+        {"text":"Time of messages, ETA and time of death (simulator clock):","align":"center"},
+        {"buttonbar":[{"title":" UTC (Z) ","select_condition":{"require":{"global":"CLOCK_MODE"},"ne":"local"},"commands":[{"set":{"global":"CLOCK_MODE"},"value":"utc"}]},{"title":" LOCAL (L) ","select_condition":{"require":{"global":"CLOCK_MODE"},"eq":"local"},"commands":[{"set":{"global":"CLOCK_MODE"},"value":"local"}]}]},
         {"image":"bar"}
     ]}
   ],
@@ -1468,6 +1509,11 @@
         {"set":{"local":"medical_display_diagnosis"},"value":{"local":"diagnosis1"}},
         {"set":{"local":"medical_display_status"},"value":{"local":"consciousness1"}},
         {"set":{"local":"medical_display_patientlife"},"value":{"local":"patientlife"}},
+        {"if": {"local":"patientlife"}, "eq": "died",
+          "then": [
+            {"call_macro":"record patient death time","params":{"patient":1}}
+        ]},
+        {"set":{"local":"medical_display_death_time"},"value":{"local":"DEATH_TIME_1"}},
         {"set":{"local":"medical_display_visited"},"value":{"local":"crewvisiting1"}},
         {"set":{"local":"medical_display_lifescore"},"value":{"local":"LIFESCORE"}},
         {"set":{"local":"medical_display_code"},"value":{"var":["L:HEALTH","number"]}},
@@ -1557,6 +1603,11 @@
         {"set":{"local":"medical_display_diagnosis"},"value":{"local":"diagnosis2"}},
         {"set":{"local":"medical_display_status"},"value":{"local":"consciousness2"}},
         {"set":{"local":"medical_display_patientlife"},"value":{"local":"patientlife2"}},
+        {"if": {"local":"patientlife2"}, "eq": "died",
+          "then": [
+            {"call_macro":"record patient death time","params":{"patient":2}}
+        ]},
+        {"set":{"local":"medical_display_death_time"},"value":{"local":"DEATH_TIME_2"}},
         {"set":{"local":"medical_display_visited"},"value":{"if":{"or":[{"require":{"local":"crewvisiting2"},"eq":"yes"},{"require":{"local":"P2_MEDICAL_ASSESSMENT_COMPLETE"},"eq":"yes"}]},"eq":1,"then":"yes","else":"no"}},
         {"set":{"local":"medical_display_lifescore"},"value":{"local":"LIFESCORE2"}},
         {"set":{"local":"medical_display_code"},"value":{"var":["L:HEALTH2","number"]}},
@@ -1646,6 +1697,11 @@
         {"set":{"local":"medical_display_diagnosis"},"value":{"local":"diagnosis3"}},
         {"set":{"local":"medical_display_status"},"value":{"local":"consciousness3"}},
         {"set":{"local":"medical_display_patientlife"},"value":{"local":"patientlife3"}},
+        {"if": {"local":"patientlife3"}, "eq": "died",
+          "then": [
+            {"call_macro":"record patient death time","params":{"patient":3}}
+        ]},
+        {"set":{"local":"medical_display_death_time"},"value":{"local":"DEATH_TIME_3"}},
         {"set":{"local":"medical_display_visited"},"value":{"if":{"or":[{"require":{"local":"crewvisiting3"},"eq":"yes"},{"require":{"local":"P3_MEDICAL_ASSESSMENT_COMPLETE"},"eq":"yes"}]},"eq":1,"then":"yes","else":"no"}},
         {"set":{"local":"medical_display_lifescore"},"value":{"local":"LIFESCORE3"}},
         {"set":{"local":"medical_display_code"},"value":{"var":["L:HEALTH3","number"]}},
@@ -1754,7 +1810,9 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"TEMP_CRITICAL"},"value":1}
-    ]}
+    ]},
+    {"#comment":"Every render of a patient page leaves the deceased-on-scene tab unselected."},
+    {"set":{"local":"poordead_page_open"},"value":0}
   ],
   "select medical patient page": [
     {"set":{"local":"medical_display_patient"},"value":{"param":"patient"}},

@@ -757,17 +757,54 @@
                 ]},
                 {"call_macro":"Mission description"},
                 {"sleep":0.5},
-                {"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
+                {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
                 {"sleep":0.1},
+                {"call_macro":"trace dispatch handoff","params":{"stage":"randomized"}},
                 {"if": {"local":"prelocation"}, "eq": "yes",
                   "then": [
                     {"call_macro":"accident location pregenerator"}
                 ]},
                 {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
                   "then": [
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"global":"GRPNAME"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"},
+                          "waypoint": {"location":"accident_location"}
+                        }
+                      }
+                    }
                   ],"else": [
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"userA"}}}}
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"global":"GRPNAME"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"},
+                          "waypoint": {"location":"userA"}
+                        }
+                      }
+                    }
                 ]},
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
@@ -781,6 +818,7 @@
     ]}}
   ],
   "CUSTOM_MISSION": [
+    {"call_macro":"trace dispatch handoff","params":{"stage":"custom_mission_start"}},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]}},
     {"set":{"local":"CRASH_VARIABLE"},"value":{"var":["L:CUS_CRASH_VARIABLE","number"]}},
@@ -788,6 +826,7 @@
     {"call_macro":"missionupdate CUSTOM"},
     {"call_macro":"accident location pregenerator CUSTOM"},
     {"call_macro":"accident location pregenerator multiplayer map"},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"custom_pregenerated"}},
     {"call_macro":"Mission dispatch"},
     {"call_macro":"multiplayer resveh"}
   ],
@@ -1162,8 +1201,25 @@
         {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - ground units have taken over. Return to base."},
         {"set_objective_title":"DISPATCH CANCELLED","color":"red"},
         {"set_message":{"text":"Ground units report all {0} casualties stable. HEMS intervention is no longer required; dispatch cancelled.","params":[{"local":"HELOVICTIMS"}]}},
-        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ground units report all {0} casualties stable. HEMS intervention is no longer required; dispatch cancelled. please return to base","params":[{"local":"HELOVICTIMS"}]}},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ground units: all {0} casualties stable. HEMS not required, dispatch cancelled. Return to base.","params":[{"local":"HELOVICTIMS"}]}},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""},
         {"call_macro":"UpdateRescueTrack"},
         {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
@@ -1382,6 +1438,20 @@
         {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":100}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"mission_start","actor":"dispatch","target":"phase","state":"phase_seen={local:START_PHASE_SEEN} second_accepted={local:START_SECOND_SEEN}"}},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"objective1_start"}},
+    {"set":{"local":"CREW_MONITOR_RUNNING"},"value":0},
+    {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":null},
+    {"set":{"local":"DEATH_TIME_1"},"value":null},
+    {"set":{"local":"DEATH_TIME_2"},"value":null},
+    {"set":{"local":"DEATH_TIME_3"},"value":null},
+    {"#comment":"A crew member died in the previous mission: the helicopter and the crew are repaired before the new one starts, as no real operator would fly again with severe failures and a lost crew."},
+    {"if": {"global":"CREW_DEATH_REPAIR_PENDING"}, "eq": "yes",
+      "then": [
+        {"call_macro":"reset aircraft failures"},
+        {"set":{"local":"CREW_LIFESCORE_SHIFT_ACTIVE"},"value":"no"},
+        {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"no"},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"mission_start","actor":"crew","target":"repair","state":"failures_reset_after_crew_death"}}
+    ]},
     {"set":{"local":"PUBLIC_USED_TITLES"},"value":[]},
     {"set":{"local":"PUBLIC_SELECTOR_LOCK"},"value":0},
     {"set":{"local":"CARLS_DF_SAR_PLB_PERSON_ACTIVE"},"value":"no"},
@@ -1685,6 +1755,10 @@
         {"if": {"global":"PATIENTS_KILLED_TOTAL"}, "eq": null,
           "then": [
             {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":0}
+        ]},
+        {"if": {"global":"CREW_DEATH_REPAIR_PENDING"}, "eq": null,
+          "then": [
+            {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"no"}
         ]},
         {"if": {"global":"COMPLETED_MISSIONS"}, "eq": null,
           "then": [
@@ -2682,7 +2756,8 @@
             {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}},
             {"call_macro":"timefororgantransport"}
         ]},
-        {"call_macro":"missionupdate"}
+        {"call_macro":"missionupdate"},
+        {"call_macro":"trace dispatch handoff","params":{"stage":"objective1_rebuilt"}}
     ]},
     {"sleep":0.2},
     {"if": {
@@ -2965,7 +3040,8 @@
                     {"set_dispatch_dialog":1},
                     {"sleep":1},
                     {"wait_for":{"local":"letsgo"},"eq":"yes"},
-                    {"set_dispatch_dialog":0}
+                    {"set_dispatch_dialog":0},
+                    {"set_message":{"text":""}}
                   ],"else": [
                     {"set_dispatch_dialog":0}
                 ]}
@@ -3054,7 +3130,7 @@
             {"set":{"local":"DISPLAY_DISPATCH"},"value":1},
             {"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},
             {"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},
-            {"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
+            {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
             {"set":{"local":"DISPLAY_DISPATCH"},"value":1},
             {"sleep":2},
             {"set":{"var":["L:LOADSTART","number"]},"value":70},
@@ -3072,10 +3148,45 @@
                   "then": [
                     {"call_macro":"shared repeated block 035"}
                   ],"else": [
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"userA"}}}}
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"global":"GRPNAME"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"},
+                          "waypoint": {"location":"userA"}
+                        }
+                      }
+                    }
                 ]}
               ],"else": [
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"global":"GRPNAME"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                }
             ]},
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"call_macro":"UpdateRescueTrack"},
@@ -3166,21 +3277,38 @@
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 1,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1}."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. {local:AGE1} {local:SEX1}, {local:consciousness1}."},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 2,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1},{local:AGE2} {local:SEX2} {local:consciousness2}."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}."},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 3,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured,{local:AGE1} {local:SEX1} {local:consciousness1},{local:AGE2} {local:SEX2} {local:consciousness2},{local:AGE3} {local:SEX3} {local:consciousness3}"},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}."},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"set":{"local":"SEX_TIME"},"value":1},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"global":"GRPNAME"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"},
                 {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}}
@@ -3325,6 +3453,7 @@
   ],
   "objective4": [
     {"set":{"local":"landing_spot_watchdog_active"},"value":"no"},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"scene_ready"}},
     {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
     {"create_thread": {
       "commands": [
@@ -5044,7 +5173,7 @@
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
     {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
     {"set_message":{"text":"INCOMING NEW MESSAGE..."}},
-    {"set":{"local":"Dispatcher_text"},"value":"NEW DISPATCH RECEIVED, CHK TABLET"},
+    {"set":{"local":"Dispatcher_text"},"value":"New dispatch. See tablet."},
     {"set_message":{"text":"DOWNLOADING NEW DISPATCH, PLEASE WAIT..."}},
     {"set_dispatch_dialog":0},
     {"set_briefing_dialog":0},
@@ -5091,7 +5220,25 @@
     {"sleep":[3,7]},
     {"if": {"has_location":"accident_location"}, "eq": 1,
       "then": [
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        }
     ]},
     {"if": {
       "and": [
@@ -5099,7 +5246,25 @@
         {"require":{"has_location":"accident_location"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"rescue_location"}}}}
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"rescue_location"}
+            }
+          }
+        }
     ]},
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"},
@@ -5185,7 +5350,25 @@
   ],
   "UpdateRescuemsg": [
     {"set":{"local":"Dispatcher_text"},"value":{"struct":{"static":"CARLSmessages"},"index":{"var":["L:CARLS_STS_MSG","number"]}}},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":"NONE"}}},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"global":"GRPNAME"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"},
+          "waypoint": "NONE"
+        }
+      }
+    },
     {"call_macro":"UpdateRescueTrack"}
   ],
   "Update_dispatchphase from raw": [
@@ -5242,6 +5425,7 @@
           "then": [
             {"call_macro":"snapshot base marshall"},
             {"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"accept_second"}},
             {"set":{"local":"MISSION_PHASE"},"value":2},
             {"set_briefing_dialog":0},
             {"set":{"local":"SUBMITTED"},"value":0},
@@ -5289,7 +5473,7 @@
         {"if": {"local":"DISPLAY_DISPATCH"}, "ne": 1,
           "then": [
             {"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},
-            {"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
+            {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
             {"set":{"local":"DISPLAY_DISPATCH"},"value":1},
             {"sleep":2},
             {"if": {"local":"prelocation"}, "eq": "yes",
@@ -5302,10 +5486,45 @@
                   "then": [
                     {"call_macro":"shared repeated block 035"}
                   ],"else": [
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"userA"}}}}
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"global":"GRPNAME"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"},
+                          "waypoint": {"location":"userA"}
+                        }
+                      }
+                    }
                 ]}
               ],"else": [
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"global":"GRPNAME"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                }
             ]},
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"call_macro":"UpdateRescueTrack"},

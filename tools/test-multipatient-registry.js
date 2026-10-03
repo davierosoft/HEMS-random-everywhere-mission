@@ -11,7 +11,7 @@ const source = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/m
 const operators = ['eq', 'ne', 'gt', 'gte', 'lt', 'lte'];
 class Returned { constructor(value) { this.value = value; } }
 class HpgRegistry {
-  constructor(macros = source, retainLiteralArrays = false) { this.macros = macros; this.locals = {}; this.messages = []; this.locations = {}; this.seed = 1; this.tables = {}; this.savedTables = {}; this.retainLiteralArrays = retainLiteralArrays; this.literalArrays = new WeakMap(); }
+  constructor(macros = source, retainLiteralArrays = false) { this.macros = macros; this.locals = {}; this.globals = {}; this.messages = []; this.locations = {}; this.seed = 1; this.tables = {}; this.savedTables = {}; this.retainLiteralArrays = retainLiteralArrays; this.literalArrays = new WeakMap(); }
   compare(a, node, params) {
     const ops = operators.filter(k => Object.hasOwn(node, k));
     assert.equal(ops.length, 1, `Exactly one comparison required: ${JSON.stringify(node)}`);
@@ -26,13 +26,16 @@ class HpgRegistry {
       return this.literalArrays.get(q);
     }
     if (Object.hasOwn(q, 'create_array')) return new Array(this.query(q.create_array, p)).fill(null);
-    if (Array.isArray(q.var)) return this.locals[q.var[0]] ?? null;
+    if (Array.isArray(q.var)) return this.locals[q.var[0]] ?? (['E:LOCAL TIME', 'E:ZULU TIME'].includes(q.var[0]) ? 0 : null);
+    if (Object.hasOwn(q, 'global')) return this.globals[q.global] ?? null;
+    if (q.fn === 'get_time_string') return '00:00';
     if (Object.hasOwn(q, 'local') || Object.hasOwn(q, 'param')) {
       const value = Object.hasOwn(q, 'local') ? this.locals[q.local] : p[q.param];
       return (Object.hasOwn(q, 'path') ? value?.[q.path] : value) ?? null;
     }
     if (q.require) return this.compare(this.query(q.require, p), q, p);
     if (q.floor !== undefined) return Math.floor(this.query(q.floor, p));
+    if (q.round !== undefined) { const scale = 10 ** (q.to ?? 0); return Math.round((this.query(q.round, p) ?? 0) * scale) / scale; }
     if (q.rand) {
       this.seed = (Math.imul(this.seed, 1664525) + 1013904223) >>> 0;
       const [a, b] = q.rand.map(x => this.query(x, p));
@@ -87,6 +90,8 @@ class HpgRegistry {
         }
       } else if (c.if) {
         this.commands(this.compare(this.query(c.if, p), c, p) ? c.then : (c.else || []), p);
+      } else if (c.while) {
+        for (let guard = 0; this.compare(this.query(c.while, p), c, p); guard += 1) { assert.ok(guard < 10000, 'while loop did not terminate'); this.commands(c.do, p); }
       } else if (c.for_each) {
         this.query(c.for_each, p).forEach((item, index) => { p.$item = item; p.$index = index; this.commands(c.do, p); });
       } else if (c.switch) {
@@ -121,6 +126,13 @@ class HpgRegistry {
     }
   }
   call(name, params = {}) {
+    if (name === 'UpdateRescueTrack' && !this.macros[name]) return;
+    if (!this.macros[name] && ['record patient death time', 'post dispatcher message', 'clock now'].includes(name)) {
+      // Helpers owned by the patient medical module: run the real source, not a copy.
+      const helper = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/07-patient-medical.json'), 'utf8'))[name];
+      this.commands(helper, params); return;
+    }
+    if (name === 'Police1' && !this.macros[name]) { this.policeRequests = (this.policeRequests || 0) + 1; return; }
     assert.ok(this.macros[name], `Unknown macro ${name}`);
     try { this.commands(this.macros[name], params); } catch (e) { if (e instanceof Returned) return e.value; throw e; }
   }
@@ -279,7 +291,7 @@ for (let count = 1; count <= 5; count++) {
   assert.equal(p.active, 0); assert.equal(p.resource, 'none');
 }
 {
-  const h = create(); add(h, 1, 1, 6); add(h, 2, 50, 2);
+  const h = create(); h.locals.POLICE_AVAIL = 0; h.locals.Dispatcher_Messages = []; h.globals.GRPNAME = 'DISPATCH'; h.locals['E:LOCAL TIME'] = 52320; h.locals['E:ZULU TIME'] = 52320; add(h, 1, 1, 6); add(h, 2, 50, 2);
   h.locals.patients.forEach(p => {p.cpr_eligible = 1; p.clinical_owner = 'HEMS';});
   const acquire = slot => h.call('multipatient registry CPR acquire', {slot, provider: 'HEMS', timeout_seconds: 30});
   assert.equal(acquire(1), 1); assert.equal(acquire(2), 0, 'Single CPR lease');
@@ -290,6 +302,16 @@ for (let count = 1; count <= 5; count++) {
   h.call('multipatient registry tick', {seconds: 30});
   assert.equal(h.locals.active_cpr_slot, 0, 'CPR timeout releases lease');
   assert.equal(h.messages.length, 1, 'Death emitted exactly once');
+  assert.equal(h.policeRequests, 1, 'A death on scene requests the police once'); assert.equal(h.locals.DEATH_TIME_1, 52320, 'Time of death follows the simulator clock (seconds, shown with the TIME format)'); assert.equal(h.locals.POLICE_AVAIL, 2); assert.equal(h.locals.PATIENT_DEATH_CAUSE, 'CLINICAL DETERIORATION');
+  assert.equal(h.locals.Dispatcher_Messages.length, 1, 'The dispatcher announces the police request once'); assert.equal(h.locals.Dispatcher_Messages[0].from, 'DISPATCH'); assert.match(h.locals.Dispatcher_Messages[0].text, /Police informed and en route/);
+}
+{
+  for (const [planned, player] of [[1, 'single'], [2, 'single'], [0, 'multiplayer']]) {
+    const h = create(); h.locals.POLICE_AVAIL = planned; h.locals.player = player; add(h, 1, 1, 6);
+    h.call('multipatient registry tick', {seconds: 10});
+    assert.equal(h.locals.patients[0].transport_state, 'died');
+    assert.equal(h.policeRequests || 0, 0, 'Police on scene (1), on the way (2) or a multiplayer dispatcher is left alone'); assert.equal(h.locals.POLICE_AVAIL, planned);
+  }
 }
 // Prove that the stale-generation assertion catches a realistic regression.
 {

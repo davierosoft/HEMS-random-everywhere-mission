@@ -44,11 +44,11 @@ const multipatient = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/mac
 const ambulanceDispatch = JSON.stringify(ground.Ambulance1) + JSON.stringify(ground.Ambulance2);
 const ambulance1Parking = JSON.stringify(ground.park_ambulance1_scene);
 const ambulance2Parking = JSON.stringify(ground.park_ambulance2_scene);
-requireTrue(ambulanceDispatch.includes("Ambulance '{0}' is following ambulance '{1}'. TTG:{2:TIME} min") && ambulanceDispatch.includes('ambuname2'), 'two-ambulance dispatch must announce both units by identifier, following role, and formatted TTG');
+requireTrue(ambulanceDispatch.includes("Ambulance {0} en route behind {1}, ETA {2:TIME}{3}.") && ambulanceDispatch.includes('ambuname2'), 'two-ambulance dispatch must announce both units by identifier, following role, and formatted TTG');
 requireTrue(!ambulanceDispatch.includes('has reached the scene. Crew requires further assistance'), 'ambulance 1 arrival must not overwrite the two-ambulance status with the single-unit message');
 requireTrue(ambulance1Parking.includes('is still en route') && ambulance1Parking.includes('ambuname2'), 'ambulance 1 arrival must identify ambulance 2 as still en route');
 requireTrue(ambulance2Parking.includes('is still en route') && ambulance2Parking.includes('ambuname'), 'ambulance 2 arrival must identify ambulance 1 as still en route');
-requireTrue(ambulance2Parking.includes("Ambulance '{0}' crew arrived at the accident location.") && ambulance2Parking.includes('"local":"ambuname2"'), 'the second arrival must identify the actual ambulance crew rather than DISPATCH');
+requireTrue(ambulance2Parking.includes("Ambulance {0} on scene.") && ambulance2Parking.includes('"local":"ambuname2"'), 'the second arrival must identify the actual ambulance crew rather than DISPATCH');
 requireTrue(ambulance1Parking.includes('"param":"stop_only"') && ambulance2Parking.includes('"param":"stop_only"'), 'route-stop workers must stop only; parking maneuvers must remain in the owning route thread');
 requireTrue(!ambulanceDispatch.includes('"from":"DISPATCH"'), 'ambulance status messages must be attributed to the responding ambulance');
 const ambulance1CrewFlow = scene['ambustretcher full'];

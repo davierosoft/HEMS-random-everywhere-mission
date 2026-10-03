@@ -3154,8 +3154,26 @@
                         {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                         {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                         {"set":{"local":"ambumessage"},"value":"Ambulance '{local:ambuname}' on the way to the accident. No advanced paramedic on board"},
-                        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance on the way. TTG:{0:TIME} min","params":[{"round":{"local":"ambu_adjusted_time"},"to":1}]}},
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                        {"call_macro":"eta clock","params":{"seconds":{"local":"ambu_adjusted_time"}}},
+                        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance en route, ETA {0:TIME}{1}.","params":[{"local":"ETA_CLOCK"},{"local":"CLOCK_SUFFIX"}]}},
+                        {"modify_array": {"local":"Dispatcher_Messages"},
+                          "prepend": {
+                            "create_struct": {
+                              "from": {"local":"ambuname"},
+                              "time": {
+                                "text": "{0:TIME}{1}",
+                                "params": [
+                                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                  {"if": {"global":"CLOCK_MODE"},
+                                    "eq": "local",
+                                    "then": "L",
+                                    "else": "Z"
+                                  }
+                              ]},
+                              "text": {"local":"Dispatcher_text"}
+                            }
+                          }
+                        },
                         {"set":{"local":"Dispatcher_text"},"value":""},
                         {"call_macro":"UpdateRescueTrack"}
                     ]}},
@@ -3214,9 +3232,27 @@
                         {"wait_for":{"local":"closest_ambu_parked"},"eq":"yes"},
                         {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                         {"set":{"local":"cdistance"},"value":{"tofixed":{"location":"ambulance1","var":"distance:km","to":"accident_location"},"digits":1}},
-                        {"set":{"local":"Dispatcher_text"},"value":"Ambulance '{local:cambuname}', crew arrived close to accident location, distance is {local:cdistance} km"},
-                        {"set":{"local":"ambumessage"},"value":"Ambulance '{local:cambuname}', crew arrived close to accident location, distance is {local:cdistance} km"},
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"closest_ambupolice_meetpnt"}}}},
+                        {"set":{"local":"Dispatcher_text"},"value":"Ambulance {local:cambuname} arrived {local:cdistance} km from site."},
+                        {"set":{"local":"ambumessage"},"value":"Ambulance {local:cambuname} arrived {local:cdistance} km from site."},
+                        {"modify_array": {"local":"Dispatcher_Messages"},
+                          "prepend": {
+                            "create_struct": {
+                              "from": {"local":"ambuname"},
+                              "time": {
+                                "text": "{0:TIME}{1}",
+                                "params": [
+                                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                  {"if": {"global":"CLOCK_MODE"},
+                                    "eq": "local",
+                                    "then": "L",
+                                    "else": "Z"
+                                  }
+                              ]},
+                              "text": {"local":"Dispatcher_text"},
+                              "waypoint": {"location":"closest_ambupolice_meetpnt"}
+                            }
+                          }
+                        },
                         {"set":{"local":"Dispatcher_text"},"value":""},
                         {"call_macro":"UpdateRescueTrack"}
                     ]}},
@@ -3322,8 +3358,26 @@
                     {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                     {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew is on the way to accident site. As accident site may be off road, if it's needed, we will define a nearby area where rescue team can support your operations"},
-                    {"set":{"local":"Dispatcher_text"},"value":{"text":"Police on the way. TTG:{0:TIME} min","params":[{"round":{"local":"poli_adjusted_time"},"to":1}]}},
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                    {"call_macro":"eta clock","params":{"seconds":{"local":"poli_adjusted_time"}}},
+                    {"set":{"local":"Dispatcher_text"},"value":{"text":"Police en route, ETA {0:TIME}{1}.","params":[{"local":"ETA_CLOCK"},{"local":"CLOCK_SUFFIX"}]}},
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"local":"poliname"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"}
+                        }
+                      }
+                    },
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
                 ]}},
@@ -3386,8 +3440,26 @@
                 {"point_object":"policeman2","to":"closest_ambupolice_meetpnt"},
                 {"set":{"local":"cpdistance"},"value":{"tofixed":{"location":"police7","var":"distance:km","to":"accident_location"},"digits":1}},
                 {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew arrived at location"},
-                {"set":{"local":"Dispatcher_text"},"value":"Police crew arrived close to accident location, distance is {local:cpdistance} km"},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"closest_ambupolice_meetpnt"}}}},
+                {"set":{"local":"Dispatcher_text"},"value":"Police arrived {local:cpdistance} km from site."},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"poliname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"},
+                      "waypoint": {"location":"closest_ambupolice_meetpnt"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"},
                 {"sleep":1}
@@ -3686,6 +3758,7 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
+    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
@@ -3928,6 +4001,7 @@
     ]}},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
+    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
     {"sleep":2},
@@ -4185,6 +4259,7 @@
     ]}},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
+    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
     {"sleep":2},
@@ -5327,6 +5402,7 @@
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":5.5},{"bearing":185,"dist":4},{"bearing":200,"dist":2}],"VAR1":10,"speed":2}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set_message":{"text":"Patient unloading completed"}},
+    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
     {"if": {"local":"LIFESCORE"}, "gt": 3,
       "then": [
         {"set":{"var":["L:PAX3{local:VCP}11","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}11","number"]},1]}}
@@ -5969,6 +6045,7 @@
     {"trigger":["H:{local:HXX}_SDK_HOIST_CONTROL_MODE_AUTO"]},
     {"set":{"var":["L:{local:VCP}10","number"]},"value":{"add":[{"var":["L:{local:VCP}10","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
+    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
     {"create_thread": {

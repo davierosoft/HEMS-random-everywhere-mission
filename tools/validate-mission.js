@@ -586,12 +586,15 @@ function checkRelease91Regressions() {
       const condition = compact(button.show_condition || {});
       expectRegression(condition.includes('medical_display_manual_active'), 'manual treatment button must require the displayed active patient');
     });
-    const patientSelectors = collect(medicalPage, (item) => Array.isArray(item.buttonbar) && item.buttonbar.map((button) => button.title).join(',') === 'Patient 1,Patient 2,Patient 3');
+    const patientSelectors = collect(medicalPage, (item) => Array.isArray(item.buttonbar) && item.buttonbar.map((button) => button.title).join(',').replace(/,Deceased$/, '') === 'Patient 1,Patient 2,Patient 3');
     expectRegression(patientSelectors.length >= 2, 'Medical page must expose Patient 1/2/3 selectors in both live and closed views');
     patientSelectors.forEach((selector) => {
       expectRegression(!selector.show_condition, 'patient selector must remain available outside manual-treatment mode');
-      selector.buttonbar.forEach((button, index) => {
+      selector.buttonbar.filter((button) => button.title !== 'Deceased').forEach((button, index) => {
         expectRegression(compact(button.commands || []).includes('select medical patient page'), `patient selector Patient ${index + 1} must select the requested clinical record`);
+      });
+      selector.buttonbar.filter((button) => button.title === 'Deceased').forEach((button) => {
+        expectRegression(compact(button.commands || []).includes('deceased scene page') && compact(button.show_condition || {}).includes('randomdeadmsg'), 'the Deceased tab must open the deceased page and appear only when a deceased is reported');
       });
     });
   }
@@ -1103,7 +1106,7 @@ function checkRelease100TestTracker() {
     {
       "id": "crew_health",
       "label": "TEST CREW HEALTH: WITH CREW HEALTH ACTIVE, CHECK THE CREW ON SCENE",
-      "macro": "apply crew lifescore impact"
+      "macro": "record crew health test"
     },
     {
       "id": "crew_emergency",

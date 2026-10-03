@@ -67,6 +67,7 @@
                     {"if": {"local":"crewvisitended"}, "ne": "yes",
                       "then": [
                         {"set_message":{"text":"Fire engine crew secured the area for rescue team, cleared to go"}},
+                        {"call_macro":"post dispatcher message","params":{"text":"Fire service reports: fire out, scene safe for HEMS."}},
                         {"set":{"var":["L:CPL{local:VCP}18","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}18","number"]},1]}}
                     ]}
                 ]}
@@ -136,6 +137,41 @@
                 ]},
                 {"set":{"local":"ORANGE_TARGET_SMOKE_ACTIVE"},"value":"no"}
             ]}
+        ]}},
+        {"#comment":"The fire service reports the safety of the scene when its engine is on scene (FIREENGINE_AVAIL 1) and HEMS is within 650 m: a VFXA state of 2 or more (the limit used for the crew fire exposure) means not safe, and the effect type says which hazard it is: fire for VFX 5 to 12 (the H145 fire objects), smoke for every other type. The end of the fire is reported below, where the area is cleared."},
+        {"create_thread": {
+          "commands": [
+            {"wait_for":{"object":"INJURED","var":"distance:m"},"lt":650},
+            {"wait_for":{"local":"FIREENGINE_AVAIL"},"eq":1},
+            {"sleep":3},
+            {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene safe, no fire, no smoke."},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"VFXA"},"eq":1},
+                {"require":{"object":"VFXA","var":"VAR 1"},"gte":2}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene NOT safe, smoke on site."}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"VFXA"},"eq":1},
+                {"require":{"object":"VFXA","var":"VAR 1"},"gte":2},
+                {"require":{"local":"VFX"},"gt":4},
+                {"require":{"local":"VFX"},"lte":12}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene NOT safe, fire active."}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"has_object":"trailer"},"eq":1},
+                {"require":{"object":"trailer","var":"VAR 1"},"gt":0}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene NOT safe, fire active."}
+            ]},
+            {"call_macro":"post dispatcher message","params":{"text":{"local":"fire_report_text"}}}
         ]}}
       ],"else": [
         {"call_macro":"random VFX OLD"}
@@ -1876,12 +1912,29 @@
                       ],"else": [
                         {"set_message":{"text":"Ambulance {local:ambuname}: Reporting single injured,{local:consciousness1}. Ambulance crew have no critical care paramedic on board. HEMS doctor required. Patient check and stabilization are in progress, if patient conditions allow, he will be transported by ambulance."}}
                     ]},
-                    {"set":{"local":"Dispatcher_text"},"value":"Update: Single injured,{local:AGE1} {local:SEX1} {local:consciousness1}. Critical care paramedic required, Requiring HEMS doctor intervention ASAP. Ambulance transportation is possible if HEMS doctor allows"}
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: 1 injured, {local:AGE1} {local:SEX1}, {local:consciousness1}. HEMS doctor needed. Ambulance transport if doctor agrees."}
                   ],"else": [
                     {"set_message":{"text":"Ambulance {local:ambuname}: Reporting single person involved, no breath, no pulse. CPR in progress, HEMS medic intervention required ASAP"}},
-                    {"set":{"local":"Dispatcher_text"},"value":"Update: Single person involved,{local:AGE1} {local:SEX1} no vital signs. Critical care paramedic required ASAP."}
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: 1 person, {local:AGE1} {local:SEX1}, no vital signs. Advanced crew needed."}
                 ]},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"ambuname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]},
@@ -1893,9 +1946,26 @@
                   ],"else": [
                     {"set_message":{"text":"Ambulance {local:ambuname}: Reporting two casualties. Ambulance crew have no critical care paramedic on board. Requiring HEMS doctor intervention ASAP. Checks and stabilization of both  are in progress, if needed one will be transported by ambulance, the other by HEMS"}}
                 ]},
-                {"set":{"local":"Dispatcher_text"},"value":"Update:{local:HELOVICTIMS} Injureds// First injured,{local:AGE1} {local:SEX1} {local:consciousness1}// Second injured {local:AGE2} {local:SEX2} {local:consciousness2}// Critical care paramedic required, Checks and stabilization of both are in progress. HEMS and ambulance transportation are foreseen"},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. Advanced crew needed, stabilisation in progress. HEMS and ambulance transport planned."},
                 {"call_macro":"append poordead to victim message"},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"ambuname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]},
@@ -1907,9 +1977,26 @@
                   ],"else": [
                     {"set_message":{"text":"Ambulance {local:ambuname}: Reporting three casualties. Ambulance crew have no critical care paramedic on board. Requiring HEMS doctor intervention ASAP. Patients transportation via both ambulances and HEMS is foreseen"}}
                 ]},
-                {"set":{"local":"Dispatcher_text"},"value":"Update:{local:HELOVICTIMS} Injureds// First injured,{local:AGE1} {local:SEX1} {local:consciousness1}// Second injured {local:AGE2} {local:SEX2} {local:consciousness2}// Third injured {local:AGE3} {local:SEX3} {local:consciousness3}// Critical care paramedic required, checks and stabilization of all are in progress. HEMS and ambulance transportation are foreseen"},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}. Advanced crew needed, stabilisation in progress. HEMS and ambulance transport planned."},
                 {"call_macro":"append poordead to victim message"},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"ambuname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]},
@@ -1921,8 +2008,25 @@
                 {"if": {"local":"HELOVICTIMS"}, "eq": 1,
                   "then": [
                     {"set_message":{"text":"Ambulance {local:ambuname}: Arrived on scene, HEMS crew already boarded the patient, ambulance free for further dispatches"}},
-                    {"set":{"local":"Dispatcher_text"},"value":"Update:Patient boarded by HEMS crew, ambulance free for further dispatches"},
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: patient on HEMS. Ambulance released."},
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"local":"ambuname"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"}
+                        }
+                      }
+                    },
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
                 ]}
@@ -1930,8 +2034,25 @@
                 {"if": {"local":"HELOVICTIMS"}, "eq": 1,
                   "then": [
                     {"set_message":{"text":"Ambulance {local:ambuname}: Arrived on scene, the patient died before rescue team arrival"}},
-                    {"set":{"local":"Dispatcher_text"},"value":"Update: Patient died before rescue team arrival, ambulance unavailable for burocratical reasons."},
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: patient deceased before arrival. Police informed, scene not to be disturbed."},
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"local":"ambuname"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"}
+                        }
+                      }
+                    },
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
                 ]}
@@ -1944,9 +2065,26 @@
                   ],"else": [
                     {"set_message":{"text":"Ambulance {local:ambuname}:  Reporting 2 casualties, both stabilized by HEMS crew. We will transport the remaining one with the ambulance"}}
                 ]},
-                {"set":{"local":"Dispatcher_text"},"value":"Update:{local:HELOVICTIMS} Injureds, First injured already rescued by HEMS crew; Second injured {local:AGE2} {local:SEX2} {local:consciousness2} stabilized by HEMS crew, will be transported by ambulance"},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1 on HEMS. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, stabilised by HEMS, ground transport."},
                 {"call_macro":"append poordead to victim message"},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"ambuname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]},
@@ -1958,9 +2096,26 @@
                   ],"else": [
                     {"set_message":{"text":"Ambulance {local:ambuname}:  Reporting three casualties and an ambulance with no critical care paramedic. Casualties have been stabilized by HEMS crew, one will be transported by ambulance. Another ambulance is required"}}
                 ]},
-                {"set":{"local":"Dispatcher_text"},"value":"Update:{local:HELOVICTIMS} Injureds, First injured already rescued by HEMS; Second injured {local:AGE2} {local:SEX2} {local:consciousness2} will be transported by ambulance; Third injured {local:AGE3} {local:SEX3} {local:consciousness3} requires ambulance transportation. Patients are stable."},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1 on HEMS. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, ground transport. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}, ground transport. Patients stable."},
                 {"call_macro":"append poordead to victim message"},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"ambuname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                },
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]}
@@ -2127,7 +2282,7 @@
             {"set":{"var":["L:HOLD","number"]},"value":1},
             {"if": {"local":"patientlife"}, "eq": "died",
               "then": [
-                {"set_message":{"text":"Patient {0} has passed away. Time of death was logged, Victim will be transported by ground vehicles","params":[{"local":"patientid"}]}}
+                {"set_message":{"text":"Patient {0} deceased, time logged. No HEMS transport.","params":[{"local":"patientid"}]}}
               ],"else": [
                 {"set_message":{"text":"Doctor: Patient is stable enough for being transported by ambulance. We can return to base"}}
             ]},
@@ -2546,7 +2701,7 @@
         {"set":{"local":"ambulance_patient_transfer_state"},"value":"loading"},
         {"if": {"local":"patientlife"}, "eq": "died",
           "then": [
-            {"set_message":{"text":"Patient {0} has passed away. Time of death was logged, Victim will be transported by ground vehicles","params":[{"local":"patientid"}]}}
+            {"set_message":{"text":"Patient {0} deceased, time logged. No HEMS transport.","params":[{"local":"patientid"}]}}
           ],"else": [
             {"set_message":{"text":"Doctor: Patient is stable enough for being transported by ambulance. We can return to base"}}
         ]},
@@ -3836,6 +3991,7 @@
             {"if": {"local":"crewvisitended"}, "ne": "yes",
               "then": [
                 {"set_message":{"text":"Fire engine crew secured the area for rescue team, you're cleared to go"}},
+                {"call_macro":"post dispatcher message","params":{"text":"Fire service reports: fire out, scene safe for HEMS."}},
                 {"set":{"var":["L:CPL{local:VCP}18","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}18","number"]},1]}}
             ]}
         ]}
@@ -6953,32 +7109,122 @@
     {"set":{"local":"airplane_fire_sender"},"value":"Airport fire service"},
     {"if": {"has_object":"ambulance1"}, "eq": 1,
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":"Airport ambulance present at the aircraft emergency landing site (arrival time logged). {local:rescuetrack_patient_status}"},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"airplane_ambulance_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"Airport ambulance on scene (time logged). {local:rescuetrack_patient_status}"},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"airplane_ambulance_sender"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""}
     ]},
     {"if": {"has_object":"ambulance6"}, "eq": 1,
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":"Second airport ambulance present at the aircraft emergency landing site (arrival time logged). {local:rescuetrack_patient_status}"},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"airplane_second_ambulance_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"2nd airport ambulance on scene (time logged). {local:rescuetrack_patient_status}"},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"airplane_second_ambulance_sender"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""}
     ]},
     {"if": {"has_object":"police"}, "eq": 1,
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":"Airport police present at the aircraft emergency landing site (arrival time logged). {local:rescuetrack_patient_status}"},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"airplane_police_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"Airport police on scene (time logged). {local:rescuetrack_patient_status}"},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"airplane_police_sender"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""}
     ]},
     {"if": {"has_object":"firetruck1"}, "eq": 1,
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":"Airport fire service present at the aircraft emergency landing site (arrival time logged). {local:rescuetrack_patient_status}"},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"airplane_fire_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"Airport fire service on scene (time logged). {local:rescuetrack_patient_status}"},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"airplane_fire_sender"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""}
     ]},
     {"if": {"has_object":"firetruck2"}, "eq": 1,
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":"Second airport fire engine present at the aircraft emergency landing site (arrival time logged). {local:rescuetrack_patient_status}"},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"airplane_fire_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"2nd airport fire engine on scene (time logged). {local:rescuetrack_patient_status}"},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"airplane_fire_sender"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""}
     ]},
     {"call_macro":"UpdateRescueTrack"}

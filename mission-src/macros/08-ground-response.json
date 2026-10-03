@@ -526,10 +526,27 @@
                 {"set":{"local":"ambulance_previsit_patient_loaded"},"value":"yes"},
                 {"if": {"var":["L:DISPATCH_ENDED","number"]}, "eq": 0,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Patient temporarily sheltered in the ambulance. Clinical visits and transport allocation remain pending."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Patient sheltered in ambulance. Assessment and transport pending."},
                     {"if": {"local":"AMBU_AVAIL"}, "eq": 1,
                       "then": [
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+                        {"modify_array": {"local":"Dispatcher_Messages"},
+                          "prepend": {
+                            "create_struct": {
+                              "from": {"local":"ambuname"},
+                              "time": {
+                                "text": "{0:TIME}{1}",
+                                "params": [
+                                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                  {"if": {"global":"CLOCK_MODE"},
+                                    "eq": "local",
+                                    "then": "L",
+                                    "else": "Z"
+                                  }
+                              ]},
+                              "text": {"local":"Dispatcher_text"}
+                            }
+                          }
+                        }
                     ]},
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
@@ -613,8 +630,25 @@
         {"set":{"local":"ambulance_previsit_patient_loaded"},"value":"yes"},
         {"if": {"var":["L:DISPATCH_ENDED","number"]}, "eq": 0,
           "then": [
-            {"set":{"local":"Dispatcher_text"},"value":"Ambulance {local:ambuname}: patient loaded on board. Awaiting HEMS doctor assessment."},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+            {"set":{"local":"Dispatcher_text"},"value":"Ambulance {local:ambuname}: patient aboard, awaiting HEMS doctor."},
+            {"modify_array": {"local":"Dispatcher_Messages"},
+              "prepend": {
+                "create_struct": {
+                  "from": {"local":"ambuname"},
+                  "time": {
+                    "text": "{0:TIME}{1}",
+                    "params": [
+                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                      {"if": {"global":"CLOCK_MODE"},
+                        "eq": "local",
+                        "then": "L",
+                        "else": "Z"
+                      }
+                  ]},
+                  "text": {"local":"Dispatcher_text"}
+                }
+              }
+            },
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"call_macro":"UpdateRescueTrack"}
         ]},
@@ -1062,7 +1096,7 @@
             {"set":{"object":"ambulance1","var":"VAR 1"},"value":1}
           ],"else": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"park_ambulance1_scene","state":"turn_back_start"}},
-            {"drive_object":{"name":"ambulance1","to":[{"bearing2":180,"dist":5,"object":"ambulance1"},{"bearing2":90,"dist":3,"object":"ambulance1"}],"VAR1":1,"speed":2}},
+            {"drive_object":{"name":"ambulance1","to":[{"bearing2":270,"dist":5,"object":"ambulance1"}],"VAR1":1,"speed":2}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"park_ambulance1_scene","state":"turn_back_done"}},
             {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
             {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":0}
@@ -1631,8 +1665,25 @@
             {"require":{"local":"ambulance2_arrival_message_sent"},"ne":"yes"}
           ]}, "eq": 1,
           "then": [
-            {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance '{0}' crew arrived at the accident location.","params":[{"local":"ambuname2"}]}},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname2"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+            {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance {0} on scene.","params":[{"local":"ambuname2"}]}},
+            {"modify_array": {"local":"Dispatcher_Messages"},
+              "prepend": {
+                "create_struct": {
+                  "from": {"local":"ambuname2"},
+                  "time": {
+                    "text": "{0:TIME}{1}",
+                    "params": [
+                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                      {"if": {"global":"CLOCK_MODE"},
+                        "eq": "local",
+                        "then": "L",
+                        "else": "Z"
+                      }
+                  ]},
+                  "text": {"local":"Dispatcher_text"}
+                }
+              }
+            },
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"set":{"local":"ambulance2_arrival_message_sent"},"value":"yes"},
             {"call_macro":"UpdateRescueTrack"}
@@ -1698,7 +1749,7 @@
             {"set":{"object":"ambulance2","var":"VAR 1"},"value":1}
           ],"else": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance2","target":"park_ambulance2_scene","state":"turn_back_start"}},
-            {"drive_object":{"name":"ambulance2","to":[{"bearing2":180,"dist":5,"object":"ambulance2"},{"bearing2":270,"dist":3,"object":"ambulance2"}],"VAR1":1,"speed":2}},
+            {"drive_object":{"name":"ambulance2","to":[{"bearing2":90,"dist":5,"object":"ambulance2"}],"VAR1":1,"speed":2}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance2","target":"park_ambulance2_scene","state":"turn_back_done"}},
             {"set":{"object":"ambulance2","var":"VAR 1"},"value":1},
             {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":0}
@@ -1721,8 +1772,25 @@
             {"require":{"local":"ambulance2_arrival_message_sent"},"ne":"yes"}
           ]}, "eq": 1,
           "then": [
-            {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance '{0}' crew arrived at the accident location.","params":[{"local":"ambuname2"}]}},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname2"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+            {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance {0} on scene.","params":[{"local":"ambuname2"}]}},
+            {"modify_array": {"local":"Dispatcher_Messages"},
+              "prepend": {
+                "create_struct": {
+                  "from": {"local":"ambuname2"},
+                  "time": {
+                    "text": "{0:TIME}{1}",
+                    "params": [
+                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                      {"if": {"global":"CLOCK_MODE"},
+                        "eq": "local",
+                        "then": "L",
+                        "else": "Z"
+                      }
+                  ]},
+                  "text": {"local":"Dispatcher_text"}
+                }
+              }
+            },
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"set":{"local":"ambulance2_arrival_message_sent"},"value":"yes"},
             {"call_macro":"UpdateRescueTrack"}
@@ -2873,8 +2941,26 @@
                       "then": [
                         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Ambulance1","state":"wait_local.ambu_adjusted_time_ne_null"}},
                         {"wait_for":{"local":"ambu_adjusted_time"},"ne":null},
-                        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance '{0}' is on the way to the accident site. TTG: {1:TIME} min","params":[{"local":"ambuname"},{"round":{"local":"ambu_adjusted_time"},"to":1}]}},
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                        {"call_macro":"eta clock","params":{"seconds":{"local":"ambu_adjusted_time"}}},
+                        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance {0} en route, ETA {1:TIME}{2}.","params":[{"local":"ambuname"},{"local":"ETA_CLOCK"},{"local":"CLOCK_SUFFIX"}]}},
+                        {"modify_array": {"local":"Dispatcher_Messages"},
+                          "prepend": {
+                            "create_struct": {
+                              "from": {"local":"ambuname"},
+                              "time": {
+                                "text": "{0:TIME}{1}",
+                                "params": [
+                                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                  {"if": {"global":"CLOCK_MODE"},
+                                    "eq": "local",
+                                    "then": "L",
+                                    "else": "Z"
+                                  }
+                              ]},
+                              "text": {"local":"Dispatcher_text"}
+                            }
+                          }
+                        },
                         {"set":{"local":"Dispatcher_text"},"value":""},
                         {"call_macro":"UpdateRescueTrack"}
                     ]},
@@ -3180,8 +3266,25 @@
                         {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
                         {"if": {"local":"AMBU_AVAIL"}, "eq": 1,
                           "then": [
-                            {"set":{"local":"Dispatcher_text"},"value":"Ambulance crew arrived at accident location"},
-                            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                            {"set":{"local":"Dispatcher_text"},"value":"Ambulance on scene."},
+                            {"modify_array": {"local":"Dispatcher_Messages"},
+                              "prepend": {
+                                "create_struct": {
+                                  "from": {"local":"ambuname"},
+                                  "time": {
+                                    "text": "{0:TIME}{1}",
+                                    "params": [
+                                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                      {"if": {"global":"CLOCK_MODE"},
+                                        "eq": "local",
+                                        "then": "L",
+                                        "else": "Z"
+                                      }
+                                  ]},
+                                  "text": {"local":"Dispatcher_text"}
+                                }
+                              }
+                            },
                             {"set":{"local":"Dispatcher_text"},"value":""},
                             {"call_macro":"UpdateRescueTrack"}
                         ]}
@@ -3313,20 +3416,32 @@
             {"wait_for":{"param":"hasambuchoice"},"eq":true},
             {"if": {"local":"AMBU_AVAIL"}, "eq": 2,
               "then": [
-                {"set": {"local":"Dispatcher_text"},
-                  "value": {
-                    "text": "Ambulance '{0}' is following ambulance '{1}'. TTG:{2:TIME} min",
-                    "params": [
-                      {"local":"ambuname"},
-                      {"local":"ambuname2"},
-                      {"if": {"local":"ambu_adjusted_time"},
-                        "ne": null,
-                        "then": {"round":{"local":"ambu_adjusted_time"},"to":1},
-                        "else": "pending"
-                      }
-                  ]}
+                {"if": {"local":"ambu_adjusted_time"}, "ne": null,
+                  "then": [
+                    {"call_macro":"eta clock","params":{"seconds":{"local":"ambu_adjusted_time"}}}
+                  ],"else": [
+                    {"set":{"local":"ETA_CLOCK"},"value":"pending"},
+                    {"set":{"local":"CLOCK_SUFFIX"},"value":""}
+                ]},
+                {"set":{"local":"Dispatcher_text"},"value":{"text":"Ambulance {0} en route behind {1}, ETA {2:TIME}{3}.","params":[{"local":"ambuname"},{"local":"ambuname2"},{"local":"ETA_CLOCK"},{"local":"CLOCK_SUFFIX"}]}},
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"ambuname2"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
                 },
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname2"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
                 {"set":{"local":"Dispatcher_text"},"value":""},
                 {"call_macro":"UpdateRescueTrack"}
             ]},
@@ -3515,9 +3630,26 @@
         {"if": {"local":"CLOSEST_AMBULANCE"}, "ne": 0,
           "then": [
             {"set":{"local":"ambumessage"},"value":"Ambulance '{local:cambuname}', with no advanced paramedic on board, is not able to reach the accident site. In case of need, the crew will be ready at nearby location"},
-            {"set":{"local":"Dispatcher_text"},"value":"Ambulance, with no advanced paramedic on board, is not able to reach the accident site. The crew will park at nearby location to provide assistance."}
+            {"set":{"local":"Dispatcher_text"},"value":"Ambulance (no advanced crew) cannot reach the site. Holding nearby."}
         ]},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"cambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"cambuname"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""},
         {"call_macro":"UpdateRescueTrack"}
     ]}},
@@ -3599,8 +3731,25 @@
           "commands": [
             {"set":{"local":"ambu1started"},"value":"yes"},
             {"set":{"local":"ambumessage"},"value":"Ambulance '{local:ambuname}' has reached the scene. Crew requires further assistance"},
-            {"set":{"local":"Dispatcher_text"},"value":"Ambulance crew arrived on site"},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+            {"set":{"local":"Dispatcher_text"},"value":"Ambulance on scene."},
+            {"modify_array": {"local":"Dispatcher_Messages"},
+              "prepend": {
+                "create_struct": {
+                  "from": {"local":"ambuname"},
+                  "time": {
+                    "text": "{0:TIME}{1}",
+                    "params": [
+                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                      {"if": {"global":"CLOCK_MODE"},
+                        "eq": "local",
+                        "then": "L",
+                        "else": "Z"
+                      }
+                  ]},
+                  "text": {"local":"Dispatcher_text"}
+                }
+              }
+            },
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"call_macro":"UpdateRescueTrack"}
         ]}},
@@ -3799,8 +3948,25 @@
             ]},
             {"wait_for":{"param":"hasfirenamechoice"},"eq":true},
             {"set":{"local":"firemessage"},"value":"Fire engine '{local:firename}' crew arrived at location"},
-            {"set":{"local":"Dispatcher_text"},"value":"Fire engine crew arrived at location"},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"firename"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+            {"set":{"local":"Dispatcher_text"},"value":"Fire service on scene."},
+            {"modify_array": {"local":"Dispatcher_Messages"},
+              "prepend": {
+                "create_struct": {
+                  "from": {"local":"firename"},
+                  "time": {
+                    "text": "{0:TIME}{1}",
+                    "params": [
+                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                      {"if": {"global":"CLOCK_MODE"},
+                        "eq": "local",
+                        "then": "L",
+                        "else": "Z"
+                      }
+                  ]},
+                  "text": {"local":"Dispatcher_text"}
+                }
+              }
+            },
             {"set":{"local":"Dispatcher_text"},"value":""},
             {"call_macro":"UpdateRescueTrack"}
         ]}},
@@ -4046,8 +4212,25 @@
                         {"wait_for":{"local":"poli1arrived"},"eq":"yes"},
                         {"call_macro":"deploy_police_crew"},
                         {"set":{"local":"polimessage"},"value":"Police '{local:poliname}' crew arrived at location"},
-                        {"set":{"local":"Dispatcher_text"},"value":"Police crew arrived at scene"},
-                        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                        {"set":{"local":"Dispatcher_text"},"value":"Police on scene, scene secured."},
+                        {"modify_array": {"local":"Dispatcher_Messages"},
+                          "prepend": {
+                            "create_struct": {
+                              "from": {"local":"poliname"},
+                              "time": {
+                                "text": "{0:TIME}{1}",
+                                "params": [
+                                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                  {"if": {"global":"CLOCK_MODE"},
+                                    "eq": "local",
+                                    "then": "L",
+                                    "else": "Z"
+                                  }
+                              ]},
+                              "text": {"local":"Dispatcher_text"}
+                            }
+                          }
+                        },
                         {"set":{"local":"Dispatcher_text"},"value":""},
                         {"call_macro":"UpdateRescueTrack"}
                     ]}}
@@ -4223,6 +4406,7 @@
     {"set":{"local":"police_lz_move_lock"},"value":"no"}
   ],
   "police_preposition_to_landing_spot": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"lz_macro_entered","detail":{"text":"state={0} custom={1} phase={2}","params":[{"local":"police_lz_transfer_state"},{"local":"customLZ"},{"local":"MISSION_PHASE"}]}}},
     {"if": {
       "and": [
         {"require":{"local":"MISSION_PHASE"},"lte":7},
@@ -4235,110 +4419,161 @@
         {"set":{"local":"police_lz_force_pickup"},"value":"no"},
         {"create_thread": {
           "commands": [
-            {"wait_for":{"has_location":"landing_spot"},"eq":1},
-            {"wait_for":{"has_object":"injured_human"},"eq":1},
-            {"wait_for":{"has_object":"police"},"eq":1},
-            {"wait_for":{"has_location":"POLWP"},"eq":1},
-            {"if": {
-              "and": [
-                {"require":{"local":"police_lz_transfer_state"},"eq":"pending"},
-                {"require":{"local":"MISSION_PHASE"},"lte":7},
-                {"require":{"local":"customLZ"},"eq":"yes"},
-                {"require":{"local":"policeloadingenabled"},"ne":"no"},
-                {"require":{"location":"landing_spot","var":"distance:m","to":"injured_human"},"gt":{"local":"police_bring_crew_min_dist"}}
-              ]}, "eq": 1,
-              "then": [
-                {"set":{"local":"police_lz_force_pickup"},"value":"yes"}
-            ]},
-            {"wait_for":{"local":"POLICE_AVAIL"},"eq":1},
-            {"if": {"local":"police_lz_transfer_state"}, "eq": "pending",
-              "then": [
+            {"try": [
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_thread_started","detail":{"text":"state={0} phase={1}","params":[{"local":"police_lz_transfer_state"},{"local":"MISSION_PHASE"}]}}},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('has_location':'landing_spot')"}},
+                {"wait_for":{"has_location":"landing_spot"},"eq":1},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('has_location':'landing_spot')"}},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('has_object':'injured_human')"}},
+                {"wait_for":{"has_object":"injured_human"},"eq":1},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('has_object':'injured_human')"}},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('has_object':'police')"}},
+                {"wait_for":{"has_object":"police"},"eq":1},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('has_object':'police')"}},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('has_location':'POLWP')"}},
+                {"wait_for":{"has_location":"POLWP"},"eq":1},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('has_location':'POLWP')"}},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_police_cond","detail":{"text":"cust={0} lz_vs_visit_m={1} min={2} pavail={3} force={4} police={5} p1={6} state={7} visit={8}","params":[{"local":"customLZ"},{"round":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"to":1},{"local":"police_bring_crew_min_dist"},{"local":"POLICE_AVAIL"},{"local":"police_lz_force_pickup"},{"has_object":"police"},{"local":"poli1started"},{"local":"police_lz_transfer_state"},{"local":"HEMS_VISIT_OBJECT"}]}}},
                 {"if": {
                   "and": [
+                    {"require":{"local":"police_lz_transfer_state"},"eq":"pending"},
                     {"require":{"local":"MISSION_PHASE"},"lte":7},
                     {"require":{"local":"customLZ"},"eq":"yes"},
                     {"require":{"local":"policeloadingenabled"},"ne":"no"},
                     {"require":{"location":"landing_spot","var":"distance:m","to":"injured_human"},"gt":{"local":"police_bring_crew_min_dist"}}
                   ]}, "eq": 1,
                   "then": [
-                    {"set":{"local":"police_lz_transfer_state"},"value":"moving"},
-                    {"set":{"local":"police_lz_force_pickup"},"value":"yes"},
-                    {"set":{"local":"police_lz_move_lock"},"value":"yes"},
-                    {"call_macro":"police_landing_spot_departure_notice"},
-                    {"create_location": "polly",
-                      "zones": [
-                        {"zone":{"location":{"bearing":90,"dist":30,"heading":0,"object":"landing_spot"}}}
-                    ]},
-                    {"call_macro":"legacy scene routing check"},
-                    {"set":{"local":"rd_polya"},"value":"yes"},
-                    {"if": {"local":"legacy_scene_routing"}, "eq": "no",
-                      "then": [
-                        {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
-                        {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
-                        {"if": {"local":"route_check_value"}, "gt": 0,
-                          "then": [
-                            {"set":{"local":"rd_polya"},"value":"no"}
-                        ]}
-                    ]},
-                    {"call_macro":"legacy scene routing check"},
-                    {"set":{"local":"rd_polyb"},"value":"yes"},
-                    {"if": {"local":"legacy_scene_routing"}, "eq": "no",
-                      "then": [
-                        {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
-                        {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
-                        {"if": {"local":"route_check_value"}, "gt": 0,
-                          "then": [
-                            {"set":{"local":"rd_polyb"},"value":"no"}
-                        ]}
-                    ]},
-                    {"if": {"local":"rd_polya"}, "eq": "no",
-                      "then": [
-                        {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}}
-                    ]},
-                    {"sleep":1},
-                    {"set":{"object":"police","var":"VAR 1"},"value":1},
-                    {"if": {"has_object":"policeman"}, "eq": 1,
-                      "then": [
-                        {"wait_for":{"object":"policeman","var":"VELOCITY Z"},"eq":0},
-                        {"drive_object":{"name":"policeman","to":[{"bearing2":270,"dist":2,"object":"police"}],"VAR1":1,"speed":5}},
-                        {"sleep":[2,5]},
-                        {"set":{"object":"policeman","var":"VAR 1"},"value":0},
-                        {"move_object":"policeman","to":{"bearing":2,"dist":2,"heading":0,"object":"SOUL_BUOY"}},
-                        {"call_macro":"policeman2_keep_clear_of_vehicles"}
-                    ]},
-                    {"wait_for":{"local":"police_lz_departure_delay_done"},"eq":"yes"},
-                    {"create_thread": {
-                      "commands": [
-                        {"call_macro":"police_restart_at_slow_speed"}
-                    ]}},
-                    {"if": {"local":"rd_polya"}, "eq": "yes",
-                      "then": [
-                        {"call_macro":"drive police safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"polly"},24.6]},120]}}}
-                      ],"else": [
-                        {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
-                    ]},
-                    {"wait_for":{"object":"police","var":"VELOCITY Z"},"eq":0},
-                    {"if": {"location":"landing_spot","var":"distance:m","to":"police"}, "lt": 20,
-                      "then": [
-                        {"call_macro":"drive police safe","params":{"to":[{"bearing":90,"dist":25,"heading":0,"object":"landing_spot"}],"fallback":{"bearing":90,"dist":25,"heading":0,"object":"landing_spot"},"speed":3,"var1":1,"timeout":360}},
-                        {"wait_for":{"object":"police","var":"VELOCITY Z"},"eq":0}
-                    ]},
-                    {"set":{"object":"police","var":"VAR 1"},"value":0},
-                    {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew is waiting at the selected HEMS landing area."},
-                    {"set":{"local":"Dispatcher_text"},"value":"Police crew is waiting at the selected HEMS landing area."},
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
-                    {"set":{"local":"Dispatcher_text"},"value":""},
-                    {"call_macro":"UpdateRescueTrack"},
-                    {"set":{"local":"police_lz_transfer_state"},"value":"ready"},
-                    {"set":{"local":"police_lz_pickup_ready"},"value":"yes"},
-                    {"set":{"local":"police_lz_force_pickup"},"value":"yes"},
-                    {"set":{"local":"police_lz_move_lock"},"value":"no"}
+                    {"call_macro":"ground ops checkpoint","params":{"id":"lz_police_cond_true"}},
+                    {"set":{"local":"police_lz_force_pickup"},"value":"yes"}
                   ],"else": [
-                    {"set":{"local":"police_lz_transfer_state"},"value":"idle"},
-                    {"set":{"local":"police_lz_pickup_ready"},"value":"no"},
-                    {"set":{"local":"police_lz_force_pickup"},"value":"no"},
-                    {"set":{"local":"police_lz_move_lock"},"value":"no"}
-                ]}
+                    {"call_macro":"ground ops checkpoint","params":{"id":"lz_police_cond_false"}}
+                ]},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('local':'POLICE_AVAIL')"}},
+                {"wait_for":{"local":"POLICE_AVAIL"},"eq":1},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('local':'POLICE_AVAIL')"}},
+                {"if": {"local":"police_lz_transfer_state"}, "eq": "pending",
+                  "then": [
+                    {"call_macro":"ground ops checkpoint","params":{"id":"lz_police_cond","detail":{"text":"cust={0} lz_vs_visit_m={1} min={2} pavail={3} force={4} police={5} p1={6} state={7} visit={8}","params":[{"local":"customLZ"},{"round":{"location":"landing_spot","var":"distance:m","to":"{local:HEMS_VISIT_OBJECT}"},"to":1},{"local":"police_bring_crew_min_dist"},{"local":"POLICE_AVAIL"},{"local":"police_lz_force_pickup"},{"has_object":"police"},{"local":"poli1started"},{"local":"police_lz_transfer_state"},{"local":"HEMS_VISIT_OBJECT"}]}}},
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"MISSION_PHASE"},"lte":7},
+                        {"require":{"local":"customLZ"},"eq":"yes"},
+                        {"require":{"local":"policeloadingenabled"},"ne":"no"},
+                        {"require":{"location":"landing_spot","var":"distance:m","to":"injured_human"},"gt":{"local":"police_bring_crew_min_dist"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"call_macro":"ground ops checkpoint","params":{"id":"lz_police_cond_true"}},
+                        {"set":{"local":"police_lz_transfer_state"},"value":"moving"},
+                        {"set":{"local":"police_lz_force_pickup"},"value":"yes"},
+                        {"set":{"local":"police_lz_move_lock"},"value":"yes"},
+                        {"call_macro":"police_landing_spot_departure_notice"},
+                        {"create_location": "polly",
+                          "zones": [
+                            {"zone":{"location":{"bearing":90,"dist":30,"heading":0,"object":"landing_spot"}}}
+                        ]},
+                        {"call_macro":"legacy scene routing check"},
+                        {"set":{"local":"rd_polya"},"value":"yes"},
+                        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                          "then": [
+                            {"create_route":{"name":"polya","query":{"to":"polly","from":"police","type":"car"}}},
+                            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                            {"if": {"local":"route_check_value"}, "gt": 0,
+                              "then": [
+                                {"set":{"local":"rd_polya"},"value":"no"}
+                            ]}
+                        ]},
+                        {"call_macro":"legacy scene routing check"},
+                        {"set":{"local":"rd_polyb"},"value":"yes"},
+                        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+                          "then": [
+                            {"create_route":{"name":"polyb","query":{"to":"POLWP","from":"polly","type":"car"}}},
+                            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+                            {"if": {"local":"route_check_value"}, "gt": 0,
+                              "then": [
+                                {"set":{"local":"rd_polyb"},"value":"no"}
+                            ]}
+                        ]},
+                        {"if": {"local":"rd_polya"}, "eq": "no",
+                          "then": [
+                            {"draw_route":"polya","stroke":{"width":2,"color":"#9A9A9A"}}
+                        ]},
+                        {"sleep":1},
+                        {"set":{"object":"police","var":"VAR 1"},"value":1},
+                        {"if": {"has_object":"policeman"}, "eq": 1,
+                          "then": [
+                            {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('object':'policeman','var':'VELOCITY Z')"}},
+                            {"wait_for":{"object":"policeman","var":"VELOCITY Z"},"eq":0},
+                            {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('object':'policeman','var':'VELOCITY Z')"}},
+                            {"call_macro":"ground ops checkpoint","params":{"id":"lz_drive_start","detail":"policeman"}},
+                            {"drive_object":{"name":"policeman","to":[{"bearing2":270,"dist":2,"object":"police"}],"VAR1":1,"speed":5}},
+                            {"call_macro":"ground ops checkpoint","params":{"id":"lz_drive_done","detail":"policeman"}},
+                            {"sleep":[2,5]},
+                            {"set":{"object":"policeman","var":"VAR 1"},"value":0},
+                            {"move_object":"policeman","to":{"bearing":2,"dist":2,"heading":0,"object":"SOUL_BUOY"}},
+                            {"call_macro":"policeman2_keep_clear_of_vehicles"}
+                        ]},
+                        {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('local':'police_lz_departure_delay_done')"}},
+                        {"wait_for":{"local":"police_lz_departure_delay_done"},"eq":"yes"},
+                        {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('local':'police_lz_departure_delay_done')"}},
+                        {"create_thread": {
+                          "commands": [
+                            {"call_macro":"police_restart_at_slow_speed"}
+                        ]}},
+                        {"if": {"local":"rd_polya"}, "eq": "yes",
+                          "then": [
+                            {"call_macro":"drive police safe","params":{"to":["polly"],"fallback":"polly","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"police","var":"distance:m","to":"polly"},24.6]},120]}}}
+                          ],"else": [
+                            {"call_macro":"drive police safe multiplier","params":{"to":"polya","fallback":"polly","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+                        ]},
+                        {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('object':'police','var':'VELOCITY Z')"}},
+                        {"wait_for":{"object":"police","var":"VELOCITY Z"},"eq":0},
+                        {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('object':'police','var':'VELOCITY Z')"}},
+                        {"if": {"location":"landing_spot","var":"distance:m","to":"police"}, "lt": 20,
+                          "then": [
+                            {"call_macro":"drive police safe","params":{"to":[{"bearing":90,"dist":25,"heading":0,"object":"landing_spot"}],"fallback":{"bearing":90,"dist":25,"heading":0,"object":"landing_spot"},"speed":3,"var1":1,"timeout":360}},
+                            {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait","detail":"('object':'police','var':'VELOCITY Z')"}},
+                            {"wait_for":{"object":"police","var":"VELOCITY Z"},"eq":0},
+                            {"call_macro":"ground ops checkpoint","params":{"id":"lz_wait_ok","detail":"('object':'police','var':'VELOCITY Z')"}}
+                        ]},
+                        {"set":{"object":"police","var":"VAR 1"},"value":0},
+                        {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew is waiting at the selected HEMS landing area."},
+                        {"set":{"local":"Dispatcher_text"},"value":"Police at landing site."},
+                        {"modify_array": {"local":"Dispatcher_Messages"},
+                          "prepend": {
+                            "create_struct": {
+                              "from": {"local":"poliname"},
+                              "time": {
+                                "text": "{0:TIME}{1}",
+                                "params": [
+                                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                                  {"if": {"global":"CLOCK_MODE"},
+                                    "eq": "local",
+                                    "then": "L",
+                                    "else": "Z"
+                                  }
+                              ]},
+                              "text": {"local":"Dispatcher_text"}
+                            }
+                          }
+                        },
+                        {"set":{"local":"Dispatcher_text"},"value":""},
+                        {"call_macro":"UpdateRescueTrack"},
+                        {"set":{"local":"police_lz_transfer_state"},"value":"ready"},
+                        {"set":{"local":"police_lz_pickup_ready"},"value":"yes"},
+                        {"set":{"local":"police_lz_force_pickup"},"value":"yes"},
+                        {"set":{"local":"police_lz_move_lock"},"value":"no"}
+                      ],"else": [
+                        {"call_macro":"ground ops checkpoint","params":{"id":"lz_police_cond_false"}},
+                        {"set":{"local":"police_lz_transfer_state"},"value":"idle"},
+                        {"set":{"local":"police_lz_pickup_ready"},"value":"no"},
+                        {"set":{"local":"police_lz_force_pickup"},"value":"no"},
+                        {"set":{"local":"police_lz_move_lock"},"value":"no"}
+                    ]}
+                ]},
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_thread_body_end"}}
+              ],
+              "catch": [
+                {"call_macro":"ground ops checkpoint","params":{"id":"lz_thread_EXCEPTION","detail":{"param":"$ERROR"}}}
             ]}
         ]}}
     ]}
@@ -4571,8 +4806,25 @@
       "commands": [
         {"sleep":3},
         {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew is repositioning to the selected HEMS landing area."},
-        {"set":{"local":"Dispatcher_text"},"value":"Police crew is repositioning to the selected HEMS landing area."},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"Police moving to landing site."},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"poliname"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""},
         {"call_macro":"UpdateRescueTrack"}
     ]}},
@@ -4589,14 +4841,32 @@
     {"if": {"local":"POLICE_AVAIL"}, "eq": 2,
       "then": [
         {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew is on the way to accident site."},
-        {"set":{"local":"Dispatcher_text"},"value":{"text":"Police on the way. TTG:{0:TIME} min","params":[{"round":{"local":"poli_adjusted_time"},"to":1}]}}
+        {"call_macro":"eta clock","params":{"seconds":{"local":"poli_adjusted_time"}}},
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"Police en route, ETA {0:TIME}{1}.","params":[{"local":"ETA_CLOCK"},{"local":"CLOCK_SUFFIX"}]}}
     ]},
     {"if": {"local":"POLICE_AVAIL"}, "eq": 1,
       "then": [
         {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew arrived at location"},
-        {"set":{"local":"Dispatcher_text"},"value":"Police crew arrived at location"}
+        {"set":{"local":"Dispatcher_text"},"value":"Police on scene, scene secured."}
     ]},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"local":"poliname"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"}
+        }
+      }
+    },
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"}
   ],
@@ -4646,14 +4916,32 @@
                     {"if": {"local":"FIREENGINE_AVAIL"}, "eq": 2,
                       "then": [
                         {"set":{"local":"firemessage"},"value":"Fire engine '{local:firename}' crew is on the way to the accident location"},
-                        {"set":{"local":"Dispatcher_text"},"value":{"text":"Fire engine crew on the way. TTG:{0:TIME} min","params":[{"round":{"local":"fire_adjusted_time"},"to":1}]}}
+                        {"call_macro":"eta clock","params":{"seconds":{"local":"fire_adjusted_time"}}},
+                        {"set":{"local":"Dispatcher_text"},"value":{"text":"Fire service en route, ETA {0:TIME}{1}.","params":[{"local":"ETA_CLOCK"},{"local":"CLOCK_SUFFIX"}]}}
                     ]},
                     {"if": {"local":"FIREENGINE_AVAIL"}, "eq": 1,
                       "then": [
                         {"set":{"local":"firemessage"},"value":"Fire engine '{local:firename}' crew arrived at location"},
-                        {"set":{"local":"Dispatcher_text"},"value":"Fire engine crew arrived at location"}
+                        {"set":{"local":"Dispatcher_text"},"value":"Fire service on scene."}
                     ]},
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"firename"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"local":"firename"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"}
+                        }
+                      }
+                    },
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
                 ]}},
@@ -4842,9 +5130,26 @@
                     {"call_macro":"ground crew runtime trace","params":{"macro":"fire_ops","actor":"firetruck1","target":"Firetruck1","state":"park_returned arrived={local:fire1arrived} parked={local:fire1_parked} parking={local:fire1_parking}"}},
                     {"wait_for":{"local":"fire1arrived"},"eq":"yes"},
                     {"call_macro":"deploy_firetruck1_crew"},
-                    {"set":{"local":"Dispatcher_text"},"value":"Fire engine crew arrived at scene"},
+                    {"set":{"local":"Dispatcher_text"},"value":"Fire service on scene."},
                     {"set":{"local":"firemessage"},"value":"Fire engine '{local:firename}' crew arrived at location"},
-                    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"firename"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+                    {"modify_array": {"local":"Dispatcher_Messages"},
+                      "prepend": {
+                        "create_struct": {
+                          "from": {"local":"firename"},
+                          "time": {
+                            "text": "{0:TIME}{1}",
+                            "params": [
+                              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                              {"if": {"global":"CLOCK_MODE"},
+                                "eq": "local",
+                                "then": "L",
+                                "else": "Z"
+                              }
+                          ]},
+                          "text": {"local":"Dispatcher_text"}
+                        }
+                      }
+                    },
                     {"set":{"local":"Dispatcher_text"},"value":""},
                     {"call_macro":"UpdateRescueTrack"}
                   ],"else": [
@@ -7085,8 +7390,25 @@
     {"set":{"object":"ambulance1","var":"VAR 2"},"value":0},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambulance1 stand down","state":"wait_min_time"}},
     {"wait_for":{"var":["L:MISSION_TIME","number"]},"gte":{"local":"ambulance1_standdown_depart_after"}},
-    {"set":{"local":"Dispatcher_text"},"value":"Ambulance crew has no patient to transport and is leaving the scene"},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+    {"set":{"local":"Dispatcher_text"},"value":"Ambulance clear, no patient to transport."},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"local":"ambuname"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"}
+        }
+      }
+    },
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"},
     {"if": {"has_location":"ambu_station"}, "ne": 1,

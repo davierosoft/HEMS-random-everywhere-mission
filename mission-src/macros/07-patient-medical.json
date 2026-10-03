@@ -327,14 +327,121 @@
           "commands": [
             {"create_object":{"name":"poordead","title":{"struct":{"static":"deadmen"},"index":{"floor":{"rand":[0,{"struct":{"static":"deadmen"},"path":"length"}]}}},"location":{"bearing":230,"dist":3,"heading":30,"object":"accident_location"}}},
             {"sleep":[1,120]},
-            {"set":{"local":"randomdeadmsg"},"value":"1 deceased reported on scene."}
+            {"set":{"local":"randomdeadmsg"},"value":"1 deceased reported on scene."},
+            {"call_macro":"clock now"},
+            {"set":{"local":"POORDEAD_REPORT_TIME"},"value":{"local":"CLOCK_NOW_S"}},
+            {"#comment":"A death on scene belongs to the police: the body is not moved and the unit is requested exactly as with the Request police button, which is available only when the scene has no police (POLICE_AVAIL 0); police already on scene (1) or already on the way from the station (2) is left alone, and in multiplayer the dispatcher decides."},
+            {"if": {
+              "and": [
+                {"require":{"local":"POLICE_AVAIL"},"eq":0},
+                {"require":{"local":"player"},"ne":"multiplayer"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"POLICE_AVAIL"},"value":2},
+                {"call_macro":"Police1"},
+                {"call_macro":"post dispatcher message","params":{"text":"Deceased reported on scene. Police informed and en route. Scene under investigation: do not move the body."}}
+            ]},
+            {"set_message":{"text":"Deceased on scene. Police informed and en route. Scene under investigation."}}
         ]}}
     ]}
+  ],
+  "deceased scene page": [
+    {"#comment":"Minimal page for the deceased found on scene (poordead): same header and tabs as the patient pages, reported time, police status and the scene rule. Patients keep their own pages: the patient tabs select the patient and draw the patient page again, because selecting alone only changes the displayed record and would leave this page on screen."},
+    {"set":{"local":"poordead_page_open"},"value":1},
+    {"if": {"local":"POORDEAD_REPORT_TIME"}, "eq": null,
+      "then": [
+        {"call_macro":"clock now"},
+        {"set":{"local":"POORDEAD_REPORT_TIME"},"value":{"local":"CLOCK_NOW_S"}}
+    ]},
+    {"set":{"local":"poordead_police_text"},"value":"not requested"},
+    {"if": {"local":"POLICE_AVAIL"}, "eq": 2,
+      "then": [
+        {"set":{"local":"poordead_police_text"},"value":"informed, en route"}
+    ]},
+    {"if": {"local":"POLICE_AVAIL"}, "eq": 1,
+      "then": [
+        {"set":{"local":"poordead_police_text"},"value":"on scene"}
+    ]},
+    {"set_dispatch": [
+        {"image":"homebar","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"ne":"yes"}},
+        {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
+        {"link":"Back to dispatch screen","align":"right","commands":[{"call_macro":"Mission dispatch"}]},
+        {"text":"DECEASED ON SCENE","color":"yellow","align":"center"},
+        {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}},{"call_macro":"patient health"}]},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}},{"call_macro":"patient health"}],"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}},{"call_macro":"patient health"}],"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}},{"title":"Deceased","commands":[{"call_macro":"deceased scene page"}],"select_condition":{"require":{"local":"poordead_page_open"},"eq":1}}]},
+        {"text":"Dispatch: {0}","params":[{"local":"accident_name"}]},
+        {"text":"Status: DECEASED","color":"red"},
+        {"text":"Reported: {0:TIME}{1}","params":[{"local":"POORDEAD_REPORT_TIME"},{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}],"show_condition":{"require":{"local":"POORDEAD_REPORT_TIME"},"ne":null}},
+        {"text":"Police: {0}","params":[{"local":"poordead_police_text"}]},
+        {"text":"Body not to be moved. Scene under investigation. No HEMS transport.","color":"gray"},
+        {"image":"bar"}
+    ]}
+  ],
+  "clock now": [
+    {"#comment":"The clock chosen in the dispatch control page: CLOCK_MODE local gives the simulator local time (E:LOCAL TIME, suffix L), anything else the simulator UTC (E:ZULU TIME, suffix Z). CLOCK_NOW_S is the whole seconds since midnight and CLOCK_SUFFIX the letter."},
+    {"set":{"local":"CLOCK_NOW_S"},"value":{"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}}},
+    {"set":{"local":"CLOCK_SUFFIX"},"value":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}}
+  ],
+  "eta clock": [
+    {"#comment":"Arrival time of a vehicle as a time of day on the chosen clock (see clock now): the clock plus the travel time in seconds, wrapped at midnight, in ETA_CLOCK; the letter is in CLOCK_SUFFIX. It is shown with the TIME format."},
+    {"call_macro":"clock now"},
+    {"set":{"local":"eta_clock_raw"},"value":{"add":[{"local":"CLOCK_NOW_S"},{"floor":{"param":"seconds"}}]}},
+    {"set":{"local":"ETA_CLOCK"},"value":{"subtract":[{"local":"eta_clock_raw"},{"multiply":[{"floor":{"divide":[{"local":"eta_clock_raw"},86400]}},86400]}]}}
+  ],
+  "record patient death time": [
+    {"#comment":"Time of death of patients 1 to 3 (seconds since midnight on the clock chosen in the dispatch control page, shown with the TIME format and the clock letter), kept in a local at the death (registry events) or at the first visit or display of the dead patient, and shown in the medical page. The first value wins."},
+    {"if": {"param":"patient"}, "eq": 1,
+      "then": [
+        {"if": {"local":"DEATH_TIME_1"}, "eq": null,
+          "then": [
+            {"call_macro":"clock now"},
+            {"set":{"local":"DEATH_TIME_1"},"value":{"local":"CLOCK_NOW_S"}}
+        ]}
+    ]},
+    {"if": {"param":"patient"}, "eq": 2,
+      "then": [
+        {"if": {"local":"DEATH_TIME_2"}, "eq": null,
+          "then": [
+            {"call_macro":"clock now"},
+            {"set":{"local":"DEATH_TIME_2"},"value":{"local":"CLOCK_NOW_S"}}
+        ]}
+    ]},
+    {"if": {"param":"patient"}, "eq": 3,
+      "then": [
+        {"if": {"local":"DEATH_TIME_3"}, "eq": null,
+          "then": [
+            {"call_macro":"clock now"},
+            {"set":{"local":"DEATH_TIME_3"},"value":{"local":"CLOCK_NOW_S"}}
+        ]}
+    ]}
+  ],
+  "post dispatcher message": [
+    {"#comment":"Posts one message from the dispatcher in the RescueTrack list. The list entry carries the time, so it is also the log."},
+    {"set":{"local":"Dispatcher_text"},"value":{"param":"text"}},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"global":"GRPNAME"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"}
+        }
+      }
+    },
+    {"set":{"local":"Dispatcher_text"},"value":""},
+    {"call_macro":"UpdateRescueTrack"}
   ],
   "append poordead to victim message": [
     {"if": {"local":"randomdeadmsg"}, "ne": null,
       "then": [
-        {"set":{"local":"Dispatcher_text"},"value":{"text":"{0} // 1 deceased on scene (total casualties: {1})","params":[{"local":"Dispatcher_text"},{"add":[{"local":"HELOVICTIMS"},1]}]}}
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"{0} // 1 deceased on scene. Total casualties: {1}.","params":[{"local":"Dispatcher_text"},{"add":[{"local":"HELOVICTIMS"},1]}]}}
     ]}
   ],
   "organ life decrease": [
@@ -781,7 +888,7 @@
             {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
             {"link":"Back to dispatch screen","align":"right","commands":[{"call_macro":"Mission dispatch"}]},
             {"text":"PATIENT {0} CLINICAL RECORD","color":"yellow","align":"center","params":[{"local":"medical_display_patient"}]},
-            {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":1}},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":2},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":3},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}}]},
+            {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":1}},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":2},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":3},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}},{"title":"Deceased","commands":[{"call_macro":"deceased scene page"}],"select_condition":{"require":{"local":"poordead_page_open"},"eq":1},"show_condition":{"require":{"local":"randomdeadmsg"},"ne":null}}]},
             {"text":"Visits completed. Patient entrusted to ground transport.","color":"green"},
             {"text":"Live medical updates ended. The closing report remains available in Debug and Capture Snapshot."}
         ]},
@@ -962,7 +1069,7 @@
         {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
         {"link":"Back to dispatch screen","align":"right","commands":[{"call_macro":"Mission dispatch"}]},
         {"text":"PATIENT {0} CLINICAL RECORD","color":"yellow","align":"center","params":[{"local":"medical_display_patient"}]},
-        {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":1}},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":2},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":3},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}}]},
+        {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":1}},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":2},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":3},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}},{"title":"Deceased","commands":[{"call_macro":"deceased scene page"}],"select_condition":{"require":{"local":"poordead_page_open"},"eq":1},"show_condition":{"require":{"local":"randomdeadmsg"},"ne":null}}]},
         {"text":"VIEW ONLY - PATIENT {0} IS CURRENTLY UNDER ACTIVE TREATMENT.","color":"gray","params":[{"local":"manual_active_patient"}],"show_condition":{"and":[{"require":{"local":"manual_active_patient"},"gt":0},{"require":{"local":"medical_display_patient"},"ne":{"local":"manual_active_patient"}}],"eq":1}},
         {"text":"Patient: {0}, {1}yrs, {2}","params":[{"local":"medical_display_name"},{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
         {"text":"Patient: UNKNOWN , UNK, UNK","show_condition":{"require":{"local":"medical_display_visited"},"eq":"no"}},
@@ -1000,6 +1107,7 @@
         {"describe_icon":"body_temperature","description":"BODY TEMPERATURE: {0}C","params":[{"tofixed":{"local":"medical_display_temp"},"digits":1}],"show_condition":{"and":[{"require":{"local":"medical_display_temp"},"gte":35},{"require":{"local":"medical_display_temp"},"lte":38.5},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"describe_icon":"body_temperature","description":"BODY TEMPERATURE: {0}C","params":[{"tofixed":{"local":"medical_display_temp"},"digits":1}],"show_condition":{"and":[{"require":{"local":"TEMP_CRITICAL"},"eq":1},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1},"color":"red"},
         {"text":"Patient has died.","color":"red","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"yes"},{"require":{"local":"medical_display_lifescore"},"lt":0.5},{"require":{"local":"medical_display_patientlife"},"eq":"died"},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"local":"MISSION_PHASE"},"gte":7},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
+        {"text":"Time of death: {0:TIME}{1}","color":"red","params":[{"local":"medical_display_death_time"},{"if":{"global":"CLOCK_MODE"},"eq":"local","then":"L","else":"Z"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"yes"},{"require":{"local":"medical_display_lifescore"},"lt":0.5},{"require":{"local":"medical_display_patientlife"},"eq":"died"},{"require":{"local":"medical_display_death_time"},"ne":null},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"local":"MISSION_PHASE"},"gte":7},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"description":"GCS: E: {0} // V: {1} // M: {2} // Total: {3}/15","params":[{"round":{"local":"medical_display_gcs_eye"},"to":0},{"round":{"local":"medical_display_gcs_verbal"},"to":0},{"round":{"local":"medical_display_gcs_motor"},"to":0},{"round":{"local":"medical_display_gcs_total"},"to":0},{"local":"medical_display_code"}],"show_condition":{"and":[{"require":{"local":"medical_display_gcs_total"},"gte":13},{"require":{"local":"medical_display_gcs_any_nt"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1},"color":"green","text":"GCS E:{0} V:{1} M:{2} T:{3}/15-------CODE:{4}"},
         {"description":"GCS: E: {0} // V: {1} // M: {2} // Total: {3}/15","params":[{"round":{"local":"medical_display_gcs_eye"},"to":0},{"round":{"local":"medical_display_gcs_verbal"},"to":0},{"round":{"local":"medical_display_gcs_motor"},"to":0},{"round":{"local":"medical_display_gcs_total"},"to":0},{"local":"medical_display_code"}],"show_condition":{"and":[{"require":{"local":"medical_display_gcs_total"},"gte":9},{"require":{"local":"medical_display_gcs_total"},"lte":12},{"require":{"local":"medical_display_gcs_any_nt"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1},"color":"yellow","text":"GCS E:{0} V:{1} M:{2} T:{3}/15-------CODE:{4}"},
         {"description":"GCS: E: {0} // V: {1} // M: {2} // Total: {3}/15","params":[{"round":{"local":"medical_display_gcs_eye"},"to":0},{"round":{"local":"medical_display_gcs_verbal"},"to":0},{"round":{"local":"medical_display_gcs_motor"},"to":0},{"round":{"local":"medical_display_gcs_total"},"to":0},{"local":"medical_display_code"}],"show_condition":{"and":[{"require":{"local":"medical_display_gcs_total"},"lte":8},{"require":{"local":"medical_display_gcs_any_nt"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1},"color":"red","text":"GCS E:{0} V:{1} M:{2} T:{3}/15-------CODE:{4}"},
@@ -2267,17 +2375,17 @@
           "then": [
             {"if": {"local":"HELOVICTIMS"}, "eq": 1,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injured// {local:AGE1} {local:SEX1} {local:consciousness1}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. {local:AGE1} {local:SEX1}, {local:consciousness1}."},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 2,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injureds// {local:AGE1} {local:SEX1} {local:consciousness1}// {local:AGE2} {local:SEX2} {local:consciousness2}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}."},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 3,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Injured update:{local:HELOVICTIMS} injureds// {local:AGE1} {local:SEX1} {local:consciousness1}// {local:AGE2} {local:SEX2} {local:consciousness2}// {local:AGE3} {local:SEX3} {local:consciousness3}"},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}."},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {
@@ -2288,7 +2396,24 @@
               "then": [
                 {"set":{"local":"SEX_TIME"},"value":1},
                 {"set":{"local":"rescuediagnosis"},"value":"Received by: {local:poliname} Text: {local:Dispatcher_text}."},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"poliname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"poliname"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                }
             ]},
             {"if": {
               "and": [
@@ -2298,7 +2423,24 @@
               "then": [
                 {"set":{"local":"SEX_TIME"},"value":1},
                 {"set":{"local":"rescuediagnosis"},"value":"Received by: {local:firename} Text: {local:Dispatcher_text}."},
-                {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"firename"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+                {"modify_array": {"local":"Dispatcher_Messages"},
+                  "prepend": {
+                    "create_struct": {
+                      "from": {"local":"firename"},
+                      "time": {
+                        "text": "{0:TIME}{1}",
+                        "params": [
+                          {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                          {"if": {"global":"CLOCK_MODE"},
+                            "eq": "local",
+                            "then": "L",
+                            "else": "Z"
+                          }
+                      ]},
+                      "text": {"local":"Dispatcher_text"}
+                    }
+                  }
+                }
             ]}
         ]},
         {"if": {"param":"rescuesendstatus"}, "eq": "ambulance",
@@ -2306,17 +2448,17 @@
             {"set":{"local":"SEX_TIME"},"value":1},
             {"if": {"local":"HELOVICTIMS"}, "eq": 1,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update:{local:HELOVICTIMS} injured// {local:AGE1} {local:SEX1} {local:consciousness1} symptoms:{local:medical_symptoms1}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} injured. {local:AGE1} {local:SEX1}, {local:consciousness1}. Symptoms: {local:medical_symptoms1}."},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 2,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update:{local:HELOVICTIMS} injureds// {local:AGE1} {local:SEX1} {local:consciousness1} symptoms:{local:medical_symptoms1}// {local:AGE2} {local:SEX2} {local:consciousness2} symptoms:{local:generic_pathology2}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}."},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 3,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update:{local:HELOVICTIMS} injureds// {local:AGE1} {local:SEX1} {local:consciousness1} symptoms:{local:medical_symptoms1}// {local:AGE2} {local:SEX2} {local:consciousness2} symptoms:{local:generic_pathology2}// {local:AGE3} {local:SEX3} {local:consciousness3} symptoms:{local:generic_pathology3}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}, symptoms: {local:generic_pathology3}."},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {
@@ -2327,7 +2469,24 @@
               "then": [
                 {"set":{"local":"rescuediagnosis"},"value":"Received by: {local:ambuname} Text: {local:Dispatcher_text}."}
             ]},
-            {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"ambuname"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}}
+            {"modify_array": {"local":"Dispatcher_Messages"},
+              "prepend": {
+                "create_struct": {
+                  "from": {"local":"ambuname"},
+                  "time": {
+                    "text": "{0:TIME}{1}",
+                    "params": [
+                      {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                      {"if": {"global":"CLOCK_MODE"},
+                        "eq": "local",
+                        "then": "L",
+                        "else": "Z"
+                      }
+                  ]},
+                  "text": {"local":"Dispatcher_text"}
+                }
+              }
+            }
         ]},
         {"if": {"param":"announce"}, "ne": 0,
           "then": [
@@ -2378,9 +2537,26 @@
     {"set":{"var":["L:MISSION_HOIST","number"]},"value":0},
     {"set":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"value":0},
     {"set":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"value":0},
-    {"set":{"local":"Dispatcher_text"},"value":{"text":"DISPATCH RECEIVED:{0}{1}{2}{3}{4},{5}. Check tablet for more info","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
+    {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
     {"sleep":2},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"global":"GRPNAME"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"}
+        }
+      }
+    },
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"},
     {"set":{"local":"MISSION_PHASE"},"value":4}
@@ -2827,7 +3003,12 @@
   ],
   "apply patient1 medical action effect": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"apply patient1 medical action effect","state":"apply_entered"}},
-    {"if": {"local":"patientlife"}, "ne": "died",
+    {"set":{"local":"medical_action_effect_outcome"},"value":"no effect - medic incapacitated"},
+    {"if": {
+      "and": [
+        {"require":{"local":"patientlife"},"ne":"died"},
+        {"require":{"local":"CREW_CRIT_2"},"ne":1}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"medical_action_effect_outcome"},"value":"no immediate change"},
         {"if": {"local":"medical_action_effect_profile"}, "ne": "assessment",
@@ -3656,7 +3837,12 @@
   ],
   "apply patient2 medical action effect": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"apply patient2 medical action effect","state":"apply_entered"}},
-    {"if": {"local":"patientlife2"}, "ne": "died",
+    {"set":{"local":"medical_action_effect_outcome"},"value":"no effect - medic incapacitated"},
+    {"if": {
+      "and": [
+        {"require":{"local":"patientlife2"},"ne":"died"},
+        {"require":{"local":"CREW_CRIT_2"},"ne":1}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"medical_action_effect_outcome"},"value":"no immediate change"},
         {"if": {"local":"medical_action_effect_profile"}, "ne": "assessment",
@@ -3826,7 +4012,12 @@
   ],
   "apply patient3 medical action effect": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"apply patient3 medical action effect","state":"apply_entered"}},
-    {"if": {"local":"patientlife3"}, "ne": "died",
+    {"set":{"local":"medical_action_effect_outcome"},"value":"no effect - medic incapacitated"},
+    {"if": {
+      "and": [
+        {"require":{"local":"patientlife3"},"ne":"died"},
+        {"require":{"local":"CREW_CRIT_2"},"ne":1}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"medical_action_effect_outcome"},"value":"no immediate change"},
         {"if": {"local":"medical_action_effect_profile"}, "ne": "assessment",

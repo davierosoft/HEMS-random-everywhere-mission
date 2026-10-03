@@ -148,6 +148,15 @@ Retain the existing P1-P3 matrix for all nine patient/resource combinations, man
 3. Separately hold both `ECP MAIN` switches in IDLE for more than 30 continuous seconds. The operation must pass even if NR has not met the configured threshold. Interrupt either the NR-below-84 or both-IDLE condition before 30 seconds and confirm its timer restarts rather than passing early.
 4. In Debug Center SUMMARY and a captured snapshot, verify the NR gate shows one `WAITING` entry followed by `PASSED`. For a safety bypass, the PASSED entry must state whether it was the below-84-percent or both-IDLE path.
 
+## Ground operations stall diagnostics
+
+Use after any report where the crew does not deboard (tablet stays on "Beginning ground operations, please wait..." and the marshal keeps signalling). Capture a snapshot from Debug Center while stalled; an automatic snapshot (`automatic_event` `ground_ops_stall`) is also written 60 seconds after the last checkpoint once the rotor gate has passed.
+
+1. `ground_ops_checkpoint_log` (ring of 600) lists every step in order with mission time, PC time, NR, ground flag, `HOISTED`, `STEP`, `HOLD`, phase and crew count. The **last row** is the line the operation reached: ids start with `go_` (ground ops), `c45_` / `c3_` (4-5 and 3 crew chain), `nr_gate_` (NR gate, one `nr_gate_wait` row every 10 s with NR, thresholds and both bypass timers), `spawn_` (crew object creation) and `lz_` (police landing-spot preposition). `*_EXCEPTION` rows carry the error text of a command that threw inside the diagnostic `try`.
+2. `ground_ops_watch_log` (ring of 300) holds one full state per change, plus a `STALL after checkpoint <id>` row. `ground_ops_state` is the live state at capture time: NR, both `ECP MAIN` switches, traces, gate state, spawn state and `CREATED` values, distances landing spot to accident and injured, the police/landing-spot flags. A local that was never written reads `<unset>`.
+3. Reading rule: the last checkpoint id names the command after which nothing ran. If it is `*_wait` or `*_or_wait`, the wait condition is in the detail column; compare it with `ground_ops_state`.
+4. Static PASS covers only structure and the production macros on a minimal interpreter; the stall itself stays PENDING until reproduced in the simulator.
+
 ## Marshal waypoint overrides and three-crew destination deboarding
 
 1. With a generic destination hospital and the global destination marshal setting enabled, approach from more than 150 m and then land inside the guidance area. The marshal must keep its wind alignment while farther than 150 m, then must not be repositioned by wind inside 150 m.

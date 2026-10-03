@@ -136,4 +136,31 @@ for (const macroName of ['park_firetruck1', 'park_firetruck2']) {
   }
 }
 
+const shared = JSON.parse(fs.readFileSync('mission-src/macros/14-shared-runtime.json', 'utf8'));
+const generators = JSON.parse(fs.readFileSync('mission-src/macros/21-poi-location-generators.json', 'utf8'));
+const preAccidentWrites = [];
+(function collectPreAccident(value, conditions = []) {
+  if (Array.isArray(value)) return value.forEach((item) => collectPreAccident(item, conditions));
+  if (!value || typeof value !== 'object') return;
+  if (value.set?.var?.[0] === 'L:PRE_ACCIDENT_LOCATION') preAccidentWrites.push({ value: value.value, conditions });
+  const next = value.if ? [...conditions, JSON.stringify(value.if)] : conditions;
+  for (const child of Object.values(value)) collectPreAccident(child, next);
+})(shared.refresh_unaccepted_dispatch_map);
+if (preAccidentWrites.length !== 1) throw new Error('refresh_unaccepted_dispatch_map must write L:PRE_ACCIDENT_LOCATION exactly once');
+const [preAccidentWrite] = preAccidentWrites;
+if (JSON.stringify(preAccidentWrite.value) !== '{"location":"accident_location"}') {
+  throw new Error('L:PRE_ACCIDENT_LOCATION must mirror the real accident_location, never rescue_location: the accident/rescue gap is closed at generation, not masked');
+}
+if (preAccidentWrite.conditions.some((condition) => condition.includes('location_name'))) {
+  throw new Error('L:PRE_ACCIDENT_LOCATION must be refreshed on every dispatch preview, independently of location_name; otherwise a rescue_location preview leaves a stale value that objective1 rebuilds after a second dispatch');
+}
+for (const name of ['Query random train_station', 'Query random factory', 'Query random nursing home', 'Query random doctor_office', 'Query random supermarket', 'Query random garden']) {
+  const macro = generators[name];
+  if (!Array.isArray(macro)) throw new Error(`missing generator ${name}`);
+  const anchor = findCreatedLocation(macro, 'accident_location');
+  if (anchor?.zones?.[0]?.zone?.location?.object !== 'rescue_location') {
+    throw new Error(`${name} creates only rescue_location and must anchor accident_location to it`);
+  }
+}
+
 console.log(JSON.stringify({ result: 'PASS', residentialScenes: residentialData.length, hotelForcedIds: [...expectedHotelMissionIds], injuredCounts, fireBranch: 'HELOVICTIMS=3', patientMoves: patientMoves.length, fire: 'accident_location', fireTruckRoute: 'nearest_road_to_accident_location', hospital: 'ambu_station', maxDistanceKm: distanceGuard.gt }, null, 2));

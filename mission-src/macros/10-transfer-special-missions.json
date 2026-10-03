@@ -1282,8 +1282,26 @@
           "then": [
             {"set":{"local":"midway_amb_sender"},"value":{"local":"ambuname"}}
         ]},
-        {"set":{"local":"Dispatcher_text"},"value":"Ambulance crew arrived at the selected midway meeting point (arrival time logged). {local:rescuetrack_patient_status}"},
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"midway_amb_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"LAMBU"}}}},
+        {"set":{"local":"Dispatcher_text"},"value":"Ambulance at meeting point (time logged). {local:rescuetrack_patient_status}"},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"local":"midway_amb_sender"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"LAMBU"}
+            }
+          }
+        },
         {"set":{"local":"Dispatcher_text"},"value":""},
         {"call_macro":"UpdateRescueTrack"},
         {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},

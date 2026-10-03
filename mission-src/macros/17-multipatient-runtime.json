@@ -371,7 +371,23 @@
                 {"call_macro":"multipatient registry CPR release","params":{"slot":{"param":"patient","path":"slot"},"reason":"DEATH"}},
                 {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"active":0,"death_recorded":1,"transport_state":"died","resource":"none","clinical_owner":"none","reservation_deadline":0,"reservation_generation":{"add":[{"param":"patient","path":"reservation_generation"},1]}}}]}},
                 {"call_macro":"multipatient registry event","params":{"patient":{"param":"patient"},"event":"DIED"}},
-                {"set_message":{"text":"Patient P{0} has died.","params":[{"param":"patient","path":"slot"}],"color":"red"}}
+                {"if": {"local":"PATIENT_DEATH_CAUSE"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
+                ]},
+                {"call_macro":"record patient death time","params":{"patient":{"param":"patient","path":"slot"}}},
+                {"set_message":{"text":"Patient P{0} has died.","params":[{"param":"patient","path":"slot"}],"color":"red"}},
+                {"#comment":"A patient who dies on scene before loading: the time of death is logged and the police are requested once (the body is not transported by the helicopter and the scene is not touched), as with the Request police button, only when the scene has no police (POLICE_AVAIL 0; 1 is police already on scene, 2 is police on the way from the station) and not in multiplayer, where the dispatcher decides."},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"POLICE_AVAIL"},"eq":0},
+                    {"require":{"local":"player"},"ne":"multiplayer"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"POLICE_AVAIL"},"value":2},
+                    {"call_macro":"Police1"},
+                    {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on scene. Police informed and en route. Scene under investigation: do not move the body."}}
+                ]}
             ]}
         ]},
         {"if": {
@@ -1145,6 +1161,7 @@
               ]}, "eq": 1,
               "then": [
                 {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":{"add":[{"global":"PATIENTS_KILLED_TOTAL"},1]}},
+                {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"PILOTING (IMPACT DAMAGE)"},
                 {"call_macro":"ground crew runtime trace","params":{"macro":"patient_impact","actor":"crew","target":"patient","state":"patient killed by impact damage={param:damage}"}}
             ]},
             {"set":{"param":"medical"},"value":{"param":"patient","path":"medical"}},
@@ -1964,7 +1981,24 @@
       "then": [
         {"set":{"local":"Dispatcher_text"},"value":{"text":"{0}: visits completed, 3 patients// {1}// {2}// {3}.","params":[{"local":"multipatient_rescuetrack_label"},{"local":"rescuetrack_patient1"},{"local":"rescuetrack_patient2"},{"local":"rescuetrack_patient3"}]}}
     ]},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"local":"multipatient_rescuetrack_sender"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"local":"multipatient_rescuetrack_sender"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"}
+        }
+      }
+    },
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"}
   ],
@@ -4897,6 +4931,19 @@
                     {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"death_recorded":1,"active":0,"transport_state":"died","resource":"none","reservation_generation":{"add":[{"param":"record","path":"reservation_generation"},1]}}}]}},
                     {"set":{"local":"patientlife"},"value":"died"},
                     {"call_macro":"multipatient registry event","params":{"patient":{"param":"record"},"event":"DIED"}},
+                    {"if": {"local":"PATIENT_DEATH_CAUSE"}, "eq": null,
+                      "then": [
+                        {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
+                    ]},
+                    {"call_macro":"record patient death time","params":{"patient":1}},
+                    {"if": {
+                      "and": [
+                        {"require":{"var":["L:RESCUED","number"]},"ne":0},
+                        {"require":{"var":["L:SAVED","number"]},"ne":1}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on board. Continuing to destination."}}
+                    ]},
                     {"set_message":{"text":"Patient 1 died."}}
                 ]}
             ]},
@@ -4991,6 +5038,19 @@
                     {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"death_recorded":1,"active":0,"transport_state":"died","resource":"none","reservation_generation":{"add":[{"param":"record","path":"reservation_generation"},1]}}}]}},
                     {"set":{"local":"patientlife2"},"value":"died"},
                     {"call_macro":"multipatient registry event","params":{"patient":{"param":"record"},"event":"DIED"}},
+                    {"if": {"local":"PATIENT_DEATH_CAUSE"}, "eq": null,
+                      "then": [
+                        {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
+                    ]},
+                    {"call_macro":"record patient death time","params":{"patient":2}},
+                    {"if": {
+                      "and": [
+                        {"require":{"var":["L:RESCUED","number"]},"ne":0},
+                        {"require":{"var":["L:SAVED","number"]},"ne":1}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on board. Continuing to destination."}}
+                    ]},
                     {"set_message":{"text":"Patient 2 died."}}
                 ]}
             ]},
@@ -5085,6 +5145,19 @@
                     {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"death_recorded":1,"active":0,"transport_state":"died","resource":"none","reservation_generation":{"add":[{"param":"record","path":"reservation_generation"},1]}}}]}},
                     {"set":{"local":"patientlife3"},"value":"died"},
                     {"call_macro":"multipatient registry event","params":{"patient":{"param":"record"},"event":"DIED"}},
+                    {"if": {"local":"PATIENT_DEATH_CAUSE"}, "eq": null,
+                      "then": [
+                        {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
+                    ]},
+                    {"call_macro":"record patient death time","params":{"patient":3}},
+                    {"if": {
+                      "and": [
+                        {"require":{"var":["L:RESCUED","number"]},"ne":0},
+                        {"require":{"var":["L:SAVED","number"]},"ne":1}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on board. Continuing to destination."}}
+                    ]},
                     {"set_message":{"text":"Patient 3 died."}}
                 ]}
             ]},
@@ -5803,7 +5876,24 @@
         {"set":{"local":"multipatient_rescuetrack_patient_status"},"value":{"text":"Patient 3: {0}","params":[{"local":"patientlife3"}]}}
     ]},
     {"set":{"local":"Dispatcher_text"},"value":{"text":"{0} patient {1} visit {2}. {3}","params":[{"param":"provider"},{"param":"patient"},{"param":"result"},{"local":"multipatient_rescuetrack_patient_status"}]}},
-    {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"param":"provider"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"}}}},
+    {"modify_array": {"local":"Dispatcher_Messages"},
+      "prepend": {
+        "create_struct": {
+          "from": {"param":"provider"},
+          "time": {
+            "text": "{0:TIME}{1}",
+            "params": [
+              {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+              {"if": {"global":"CLOCK_MODE"},
+                "eq": "local",
+                "then": "L",
+                "else": "Z"
+              }
+          ]},
+          "text": {"local":"Dispatcher_text"}
+        }
+      }
+    },
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"}
   ],

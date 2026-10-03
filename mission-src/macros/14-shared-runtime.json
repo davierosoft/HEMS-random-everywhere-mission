@@ -348,11 +348,19 @@
                 {"if": {
                   "and": [
                     {"require":{"local":"has_location"},"eq":"yes"},
+                    {"require":{"local":"MISSION_NUMBER"},"ne":4},
+                    {"require":{"has_location":"accident_location"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"var":["L:PRE_ACCIDENT_LOCATION","number"]},"value":{"location":"accident_location"}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"has_location"},"eq":"yes"},
                     {"require":{"local":"location_name"},"eq":"accident_location"}
                   ]}, "eq": 1,
                   "then": [
-                    {"set_map":{"add":{"point":{"location":"accident_location","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}},
-                    {"set":{"var":["L:PRE_ACCIDENT_LOCATION","number"]},"value":{"location":"accident_location"}}
+                    {"set_map":{"add":{"point":{"location":"accident_location","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}}
                 ]},
                 {"if": {
                   "and": [
@@ -372,7 +380,10 @@
                     {"set_map":{"add":{"point":{"location":"userA","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}},
                     {"set":{"var":["L:PRE_USERA","number"]},"value":{"location":"userA"}}
                 ]}
-            ]}
+            ]},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"preview_done"}}
+          ],"else": [
+            {"call_macro":"trace dispatch handoff","params":{"stage":"preview_superseded"}}
         ]}
     ]}}
   ],
@@ -1466,7 +1477,25 @@
   "shared repeated block 035": [
     {"if": {"has_location":"accident_location"}, "eq": 1,
       "then": [
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"accident_location"}}}}
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"accident_location"}
+            }
+          }
+        }
     ]},
     {"if": {
       "and": [
@@ -1474,7 +1503,25 @@
         {"require":{"has_location":"accident_location"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"modify_array":{"local":"Dispatcher_Messages"},"prepend":{"create_struct":{"from":{"global":"GRPNAME"},"time":{"fn":"get_time_string"},"text":{"local":"Dispatcher_text"},"waypoint":{"location":"rescue_location"}}}}
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"},
+              "waypoint": {"location":"rescue_location"}
+            }
+          }
+        }
     ]}
   ],
   "shared repeated block 036": [
@@ -1998,6 +2045,7 @@
     {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"yes"}
   ],
   "crew spawn launch": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"spawn_launch","detail":{"param":"crew_name"}}},
     {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"launch_requested"},
@@ -2012,6 +2060,7 @@
     ]}
   ],
   "crew spawn wait": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"spawn_wait_enter","detail":{"param":"crew_name"}}},
     {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"waiting_created_flag"},
@@ -2058,9 +2107,11 @@
     ]},
     {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":{"if":{"param":"crew_spawn_state"},"eq":"created","then":"created","else":"recovered_created"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_HAS_OBJECT"},"value":{"has_object":{"param":"crew_name"}}},
-    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}}
+    {"set":{"local":"CREW_SPAWN_DEBUG_CREATED_VAR"},"value":{"object":{"param":"crew_name"},"var":"CREATED"}},
+    {"call_macro":"ground ops checkpoint","params":{"id":"spawn_wait_done","detail":{"text":"{0}: {1}","params":[{"param":"crew_name"},{"param":"crew_spawn_state"}]}}}
   ],
   "crew spawn failure": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"spawn_failure","detail":{"text":"{0}: {1}","params":[{"param":"crew_name"},{"param":"error"}]}}},
     {"set":{"local":"CREW_SPAWN_DEBUG_NAME"},"value":{"param":"crew_name"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_LOCATION_KEY"},"value":{"param":"crew_name"}},
     {"set":{"local":"CREW_SPAWN_DEBUG_STATE"},"value":"create_object_failed"},
@@ -2076,8 +2127,16 @@
     {"set":{"local":"gndops_idle_bypass_seconds"},"value":0},
     {"set":{"local":"gndops_nr_gate_reason"},"value":null},
     {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"WAITING: {0}; NR < {1}; safety bypass after 30s","params":[{"param":"source"},{"local":"gndopsNR"}]}},
+    {"set":{"local":"gndops_nr_gate_tick"},"value":10},
+    {"call_macro":"ground ops checkpoint","params":{"id":"nr_gate_enter","detail":{"text":"source={0} need<{1} rpm={2}","params":[{"param":"source"},{"local":"gndopsNR"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"while": {"local":"gndops_nr_gate_state"}, "ne": "passed",
       "do": [
+        {"set":{"local":"gndops_nr_gate_tick"},"value":{"add":[{"local":"gndops_nr_gate_tick"},1]}},
+        {"if": {"local":"gndops_nr_gate_tick"}, "gte": 10,
+          "then": [
+            {"set":{"local":"gndops_nr_gate_tick"},"value":0},
+            {"call_macro":"ground ops checkpoint","params":{"id":"nr_gate_wait","detail":{"text":"rpm={0} need<{1} bypass_s={2} idle_s={3} ecp={4}/{5} gnd={6}","params":[{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1},{"local":"gndopsNR"},{"local":"gndops_nr_bypass_seconds"},{"local":"gndops_idle_bypass_seconds"},{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]},{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]},{"var":["SIM ON GROUND","bool"]}]}}}
+        ]},
         {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "lt": {"local":"gndopsNR"},
           "then": [
             {"set":{"local":"gndops_nr_gate_state"},"value":"passed"},
@@ -2117,7 +2176,8 @@
             {"sleep":1}
         ]}
     ]},
-    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}}
+    {"set":{"local":"gndops_nr_gate_log"},"value":{"text":"PASSED: {0}; {1}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"}]}},
+    {"call_macro":"ground ops checkpoint","params":{"id":"nr_gate_passed","detail":{"text":"{0}; {1}; rpm={2}","params":[{"param":"source"},{"local":"gndops_nr_gate_reason"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}}
   ],
   "legacy scene routing check": [
     {"#comment":"Straight-line (legacy) scene approach for rescue vehicles: active when SKIP QUERY is on or the route mode is legacy. No OSM route is created or drawn; ETA is distance / fixed speed."},
