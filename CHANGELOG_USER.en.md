@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.46. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.48. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-It also covers the Mission Companion app up to version 0.10, which speaks the voices of the mission and updates itself and the mission.
+It also covers the Mission Companion app up to version 0.13, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.46, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.48, still need final simulator confirmation.
 
 ## FIXES
 
@@ -338,6 +338,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 169.46.
 - **Test:** Start several dispatches in a row, also with a slow map service: no error banner appears and the location is found.
 
+### Hospital team speaks when the crew arrives
+
+- At the hospital the call and the greeting of the hospital team now start when your crew meets the ground crew at the helipad, as the patient is handed over. Before, the team spoke after the handover message, when the patient was already unloaded.
+- **Build history:** 0.997 169.47.
+- **Test:** Deliver a patient to a hospital helipad and listen: the hospital team speaks while the crew and the ground crew meet, before the message that the patient was handed over.
+
+### Search radius shown in the place-search warning
+
+- When the mission cannot find a suitable place and widens the search, the warning now shows the radius it tried instead of an empty gap in the text.
+- **Build history:** 0.997 169.47.
+- **Test:** Start a dispatch in an area with few roads and read the warning on the tablet: the radius is written in meters.
+
 ## UI
 
 ### Persistent troubleshooting snapshots
@@ -462,6 +474,14 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The estimate of the doctor's visit includes the deployment, the loading and the return, and is cleared when the crew diverts. The progress text of the ground operations is written under the grey bar.
 - **Build history:** 0.997 169.27.
 - **Test:** Start a doctor visit, read the estimate, then divert and check that it disappears.
+
+### Simpler Mission Companion window
+
+- The Mission Companion (0.12 and 0.13) shows only the main controls: Start and Stop service, the log and the language on the first tab, and a box Show advanced options in the footer shows the rest. The tabs are drawn in blue and stand out, and the master volume is now on the Volume tab. The Tools tab has two boxes, Work folder and Mission index.
+- A new Updates tab opens when you press Check for updates, which moved to the footer. You choose to update both, only the mission or only the program. The button, the tab and the status line turn amber when something newer is published.
+- The Test buttons of the app (voices, Piper voices, Radio effect) always play at full volume, also when the mission is not running or its volume is low, so a new installation can be set up.
+- **Build history:** Mission Companion app 0.11, 0.12, 0.13.
+- **Test:** Start the app: the first tab is short; tick Show advanced options to see the rest; press Check for updates and verify that the Updates tab opens; press a Test button with no simulator running and hear it.
 
 ## NEW FUNCTIONS
 
@@ -761,6 +781,22 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** Mission Companion app 0.10.
 - **Test:** Publish nothing: press Check for updates and What's new; with a newer release the question shows its notes and Not now closes it without downloading.
 
+### Radio, intercom and voices by distance
+
+- With the Mission Companion 0.12 the sound follows where people are. The intercom of the helicopter has a click and the hiss you set; a radio call has the beep and a little more hiss; a call from an external radio, such as the dispatcher or the hospital, has a double beep and more hiss. The dispatcher is heard with the battery on, or when the helicopter is at its start base, and not otherwise. The crew carries radios and is heard with the battery off too.
+- Technicians, ground units and patients speak by voice: heard normally up to 30 m from the helicopter, very low up to 100 m, and not beyond, while someone is aboard. When nobody is aboard everybody is outside together and the voices keep their normal level. A technician next to the helicopter with the pilot aboard and the battery on speaks over the intercom.
+- The Radio effect tab of the app explains the three sounds and has four test buttons.
+- **Build history:** 0.997 169.47, Mission Companion app 0.12.
+- **Test:** With the app and the mission, listen to the dispatcher with the battery on and off at the base and away from it; walk away from the helicopter with the crew outside and listen to the technician at 10, 50 and 150 m.
+
+### Translated voice packs
+
+- The checklists (377 spoken rows) and the readings of the dispatch description by the dispatcher now exist as keyed texts, so a voice pack in another language speaks them too, and the voices no longer mix English and the new language. A pack without a text speaks it in English and the log of the app says so.
+- The Voice packs tab of the Mission Companion 0.13 compares every pack with the base pack EN: a pack with missing texts, made for another version of the base pack or too old for the mission is shown in red, with the count and the first keys. The button New translation writes the base pack as a file to translate, and Add missing texts adds the new English texts to your pack after an update. The active pack of the tab is used for every spoken line of the mission.
+- The texts on the tablet, the buttons and the names of places stay in English, and the voices must be chosen in the language of the pack.
+- **Build history:** 0.997 169.48, Mission Companion app 0.13.
+- **Test:** Install a pack with a few translated checklist rows, choose it in the Voice packs tab and start a checklist: the translated rows are spoken in your language and the others in English; check that a pack with missing texts is shown in red.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -799,5 +835,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 168.130-168.147:** Independent multi-patient ambulance/HEMS choreography, rebuilt orange smoke marker, per-action RescueTrack attribution, the vehicle-circling fix, and corrected vitals/temperature display.
 - **0.997 168.148-169.0:** Portable, self-contained save files, save disabled during active ground/hoist work, the hoist too-low altitude callout, the livery-vs-saved-settings load choice, expanded crew safety scoring (sustained fire, hoist ground-contact speed, sustained hoist overspeed/bank/excess load, aircraft crash, gradual recovery), corrected livery hints and full Reset to Default/Reset Stats coverage in Settings, the briefing screen reopening over an open menu, and the flickering dispatch location marker. Still to be confirmed in the simulator.
 - **0.997 169.1-169.26:** Dispatch marker and briefing fixes, consistent second-dispatch scene, vehicle arrival without road routes and tidy parking, reliable crash detection with injuries for everyone aboard and aircraft failures from light to heavy with a fuel leakage, crew losses (medic, both pilots, repair after a death), clearer dispatch and RescueTrack messages with the selectable clock, crew names and lifescores on the dispatch page, the mission failed report, police and dispatcher reports after a death, the crew emergency (divert or continue, hospital handover, base scene), end of the mission under your control, the grey progress bar, and the previous mission troubleshooting file. Still to be confirmed in the simulator.
-- **Mission Companion app 0.9-0.10 (this release):** No firewall question at every start, the Clean-up by category, the setup program, and the chatter level, the silent options and the mute of the dead crew, then the update check with its release notes window for the mission and for the program.
-- **0.997 169.27-169.46 (this release):** Scene parking by lane and the police drop-off fixes, the crew that no longer walks off, patients protected before the arrival with the optional Life Score freeze, crash damage kept on the patient, the crew emergency refinements (no question with a patient aboard, hospital handover of the casualties, senders of the messages, critical and deceased rows), dispatch statistics only when known, light long missions, hoist cable accidents and sheltered single patient, the reset failures button, new search-and-rescue clues and missions 65 to 68, performance settings, road routes for the rescue vehicles, the flight manual checklists with the IFR procedures, the dispatch status keys, payload weights, the Mission Companion voice mode with crew chatter and the male or female technician, then the second dispatch built on its own location, the ambulance crew and patients in every dispatch, the distant ambulance that no longer takes a patient it cannot reach, the loading that is carried through, the sheltered patient for every crew, and fewer false errors. Still to be confirmed in the simulator.
+- **Mission Companion app 0.9-0.13 (this release):** No firewall question at every start, the Clean-up by category, the setup program, and the chatter level, the silent options and the mute of the dead crew, then the update check with its release notes window for the mission and for the program. Then the simpler window with the Updates tab and the choice of what to update (0.11, 0.12), the sound rules of the radio, the intercom and the distance (0.12), and the translated voice packs with the comparison against the base pack (0.13).
+- **0.997 169.27-169.48 (this release):** Scene parking by lane and the police drop-off fixes, the crew that no longer walks off, patients protected before the arrival with the optional Life Score freeze, crash damage kept on the patient, the crew emergency refinements (no question with a patient aboard, hospital handover of the casualties, senders of the messages, critical and deceased rows), dispatch statistics only when known, light long missions, hoist cable accidents and sheltered single patient, the reset failures button, new search-and-rescue clues and missions 65 to 68, performance settings, road routes for the rescue vehicles, the flight manual checklists with the IFR procedures, the dispatch status keys, payload weights, the Mission Companion voice mode with crew chatter and the male or female technician, then the second dispatch built on its own location, the ambulance crew and patients in every dispatch, the distant ambulance that no longer takes a patient it cannot reach, the loading that is carried through, the sheltered patient for every crew, and fewer false errors. Still to be confirmed in the simulator. Then the hospital team that speaks when the crew meets the ground crew and the radius shown in the place-search warning (169.47), and the keyed checklist and dispatch texts for translated voice packs (169.48).

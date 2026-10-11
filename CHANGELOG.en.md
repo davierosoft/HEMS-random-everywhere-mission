@@ -1,3 +1,21 @@
+## Release 0.997 169.48
+
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.47 plus 169.48
+- Translatable voice texts: keys for the checklist rows and the dispatch descriptions (Mission Companion 0.13)
+- Checklists (macros/22-checklists.json): every one of the 377 spoken rows is now {"speak":"<text:CHK.<macro>.<nn>>English"} (key CHK + the macro name without spaces + a number that is never reused). The English stays: it is spoken when the active pack has no such key. The macros differ from 169.47 only by the prefix (verified by stripping it). test-checklist-coverage.js ignores the tag when it measures the speech time.
+- Dispatch reading (voice read dispatch): the description is spoken as <actor8><radio><text:DSC.{0}.{1}>{2} with VAR_MISSION_NUMBER (= ID_CARD of the incident), CRASH_VARIABLE (variant 1-4) and the description shown on the tablet; it was <plain>{0}. and had no key. The Companion checks the English against the one of its base pack under that key and speaks the English when they differ. DSC is the prefix because DSP.* already exists in pack EN (dispatcher messages). The final period of the reading is no longer added by the mission.
+- Vehicle of the search missions 65-67 (SAR car dispatch text): it keeps sar_desc_base (the description before the vehicle sentence), sar_veh_color and sar_veh_model; voice read dispatch reads the base description by its key and then the vehicle sentence apart as <text:DSC.VEH>Vehicle: ...//colour//model (pack text Vehicle: {0} {1}.). The tablet text is unchanged. Colour and model stay in English.
+- tools/voice-texts.js (check / assign / sync) and tools/voice-texts.json (666 texts: 377 rows, 288 descriptions, 1 template); gate tools/test-voice-texts.js registered in check-workspace.js; rule in AGENTS.md (a spoken text is a pack message or has a key; new rows: assign, sync; new incidents need a unique ID_CARD; the base pack of the Companion must get the same texts, node tools/sync-pack-texts.js there). docs/architecture/VOICE_APP_MODE.md describes the design.
+- Runtime: PENDING in the simulator (the reading of the description with its key, the vehicle sentence, a translated pack).
+
+## Release 0.997 169.47
+
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.46 plus 169.47
+- Context for the radio rules of the Mission Companion 0.12 (intercom, radio, external radio, voice by distance): voice context publish also writes L:HMC_CREW_EXIST (the crew members that exist, bits as L:HMC_CREW_PRESENT), L:HMC_AT_BASE (1 while the local wifiinrange is in, within 300 m of the start base: the dispatcher reaches the crew radios with the battery off), L:HMC_ZONE_TECH (nearest of engineera and engineer) and L:HMC_ZONE_GROUND (nearest of marshall, ambumedic and ambumedic3): 0 no object, 1 up to 5 m, 2 up to 30 m, 3 up to 100 m, 4 beyond, measured from the user aircraft by the new macros voice zone nearest and voice zone class (the distance query is in a try: an error never stops the seat tracker loop). The change signature is now a text of all the values. The battery master is not published: the Companion reads L:H145_SDK_OH_BATTERY_MASTER.
+- Hospital dialog (voice hospital handover: HOS.WEL, HOS.HND, HOS.THX or HOS.ORG) now starts when the crew meets the ground crew, in the five unloading variants (Ambulance destination1, destination2, destination hoist, User destination1, User destination hoist), before the message Patient handed over to ED; it started after it, with the patient already unloaded.
+- ERR99 (Query random nodes with sampling) shows the radius: the params sat next to the value of the set, so the engine never replaced the placeholder (the same defect as ERR101 in the original mission; ERR101 was fixed in 169.46); it is now a text formatter.
+- Tests: tools/test-radio-context.js (context variables, signature, zone helpers, dialog timing); test-tester-report-guards.js rejects any set that keeps params next to a text value. Runtime: PENDING in the simulator.
+
 ## Release 0.997 169.46
 
 - The build rewrites the version check macro with the release number; the other macros, the threads root and the data technicians listed here were already delivered in 0.997 169.23 to 169.45 and still differ from the scope baseline snapshot of 2026-10-07T21:43Z.

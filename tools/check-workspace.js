@@ -53,6 +53,8 @@ const scripts = [
   'test-hoist-patient-loading.js',
   'test-hvar-command-compatibility.js',
   'test-aircraft-profile-presets.js',
+  'test-radio-context.js',
+  'test-voice-texts.js',
   'validate-user-changelog.js',
   'test-workspace-tools.js',
 ];

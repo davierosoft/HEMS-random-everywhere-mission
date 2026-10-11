@@ -1452,7 +1452,7 @@
       "then": [
         {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
         {"set_message":{"text":"ERR99 Dispatch: FAILED to find a suitable accident location after {0} attempts. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"MAX_ATTEMPTS"}]}},
-        {"set":{"local":"queryfailed"},"value":"ERR99 FAILED to find a suitable location within {0} meters. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"SAMPLE_RADIUS"}]}
+        {"set":{"local":"queryfailed"},"value":{"text":"ERR99 FAILED to find a suitable location within {0} meters. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"SAMPLE_RADIUS"}]}}
       ],"else": [
         {"set_message":{"text":"Accident location created ({0} attempts)","params":[{"param":"ATTEMPTS_COUNT"}]}}
     ]}
@@ -3939,6 +3939,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_start"}},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher3"},{"bearing2":90,"dist":2,"object":"ambustretcher3"},{"bearing2":180,"dist":2,"object":"ambustretcher3"},{"bearing2":270,"dist":2,"object":"ambustretcher3"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_done"}},
+    {"call_macro":"voice hospital handover"},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
     {"sleep":2},
     {"create_object":{"name":"bagg","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher3"}}},
@@ -3959,7 +3960,6 @@
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
     {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
-    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
@@ -4165,6 +4165,7 @@
     {"drive_object":{"name":"ambustretcher3","to":[{"bearing":200,"dist":1}],"VAR1":1,"speed":6}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher3","target":"Ambulance destination2","state":"drive_done"}},
     {"set":{"object":"ambustretcher3","var":"VAR 1"},"value":0},
+    {"call_macro":"voice hospital handover"},
     {"sleep":2.5},
     {"create_thread": {
       "commands": [
@@ -4199,7 +4200,6 @@
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
     {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
-    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"sleep":2},
     {"create_thread": {
@@ -4422,6 +4422,7 @@
     {"drive_object":{"name":"ambustretcher3","to":[{"bearing":30,"dist":7},{"bearing":140,"dist":6},{"bearing":160,"dist":3.5},{"bearing":40,"dist":3}],"VAR1":1,"speed":6}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher3","target":"Ambulance destination hoist","state":"drive_done"}},
     {"set":{"object":"ambustretcher3","var":"VAR 1"},"value":0},
+    {"call_macro":"voice hospital handover"},
     {"sleep":2.5},
     {"create_thread": {
       "commands": [
@@ -4455,7 +4456,6 @@
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
     {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
-    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"call_macro":"set station weight","params":{"station":5,"occupied":0}},
     {"sleep":2},
@@ -5583,6 +5583,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_start"}},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher"},{"bearing2":90,"dist":2,"object":"ambustretcher"},{"bearing2":180,"dist":2,"object":"ambustretcher"},{"bearing2":270,"dist":2,"object":"ambustretcher"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_done"}},
+    {"call_macro":"voice hospital handover"},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
     {"sleep":2},
     {"create_object":{"name":"bag","title":"Airbus H145 Medical Bag","location":{"bearing2":270,"dist":1,"object":"ambustretcher"}}},
@@ -5602,7 +5603,6 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set_message":{"text":"Patient unloading completed"}},
     {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
-    {"call_macro":"voice hospital handover"},
     {"if": {"local":"LIFESCORE"}, "gt": 3,
       "then": [
         {"set":{"var":["L:PAX3{local:VCP}11","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}11","number"]},1]}}
@@ -6225,6 +6225,7 @@
     {"drive_object":{"name":"ambustretcher","to":[{"bearing":30,"dist":7},{"bearing":140,"dist":6},{"bearing":160,"dist":3.5},{"bearing":40,"dist":3}],"VAR1":1,"speed":6}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"User destination hoist","state":"drive_done"}},
     {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
+    {"call_macro":"voice hospital handover"},
     {"sleep":2.5},
     {"create_object":{"name":"bagg","title":"Airbus H145 Medical Bag","location":{"bearing2":90,"dist":1,"object":"ambustretcher"}}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"bagg","target":"User destination hoist","state":"created"}},
@@ -6252,7 +6253,6 @@
     {"set":{"var":["L:{local:VCP}10","number"]},"value":{"add":[{"var":["L:{local:VCP}10","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
     {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
-    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"call_macro":"set station weight","params":{"station":5,"occupied":0}},
     {"create_thread": {

@@ -1038,7 +1038,7 @@
     ]}
   ],
   "voice read dispatch": [
-    {"#comment":"The dispatcher (actor 8, always on the radio) reads the dispatch description and objective shown on the tablet; <plain> keeps any tag of the text out of the way. Then the crew briefing. Only with the Mission Companion (voice code APP). Mission description runs for every dispatch received (first, next, custom menu); vrd_last stops a second reading of the same text."},
+    {"#comment":"The dispatcher (actor 8, external radio) reads the dispatch description and objective shown on the tablet. The description is a text with a key, DSC.<incident ID_CARD>.<variant 1-4>, so a translated pack of the Mission Companion speaks its own text; the shown English follows the key and is spoken when the pack has no such text or it does not match. The vehicle of the missions 65-67 is read apart (DSC.VEH). Then the crew briefing. Only with the Mission Companion (voice code APP). Mission description runs for every dispatch received (first, next, custom menu); vrd_last stops a second reading of the same text."},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -1047,7 +1047,18 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"vrd_last"},"value":{"local":"accident_description"}},
-        {"speak":{"text":"<actor8><radio><plain>{0}.","params":[{"local":"accident_description"}]}},
+        {"set":{"local":"vrd_text"},"value":{"local":"accident_description"}},
+        {"set":{"local":"vrd_veh"},"value":0},
+        {"if": {"local":"accident_description"}, "eq": {"local":"sar_desc_final"},
+          "then": [
+            {"set":{"local":"vrd_text"},"value":{"local":"sar_desc_base"}},
+            {"set":{"local":"vrd_veh"},"value":1}
+        ]},
+        {"speak":{"text":"<actor8><radio><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+        {"if": {"local":"vrd_veh"}, "eq": 1,
+          "then": [
+            {"speak":{"text":"<actor8><radio><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+        ]},
         {"call_macro":"voice objective"},
         {"sleep":1},
         {"call_macro":"voice briefing chat"}
@@ -1729,7 +1740,7 @@
     ]}
   ],
   "voice hospital handover": [
-    {"#comment":"At the handover of the patient at the hospital (after the tablet message Patient handed over to ED): the hospital team welcomes the crew, the doctor gives the handover and the hospital thanks. Pack EN HOS.WEL, HOS.HND, HOS.THX (HOS.ORG for an organ)."},
+    {"#comment":"At the handover of the patient at the hospital, started when the crew meets the ground crew (the stretcher team next to the helicopter, before the unloading is finished and before the tablet message Patient handed over to ED): the hospital team welcomes the crew, the doctor gives the handover and the hospital thanks. Pack EN HOS.WEL, HOS.HND, HOS.THX (HOS.ORG for an organ)."},
     {"create_thread": {
       "commands": [
         {"sleep":1},
@@ -1954,7 +1965,7 @@
     ]}
   ],
   "voice context publish": [
-    {"#comment":"Context for the radio rule of the Mission Companion, published only in voice app mode (L:AUDIOINHIBIT not 0) and only when it changes: L:HMC_HELI_OFF 1 = battery master off and rotor stopped; L:HMC_CREW_PRESENT = bit 0 pilot, 1 copilot, 2 doctor, 3 HEMS1, 4 HEMS2 aboard (the seat tracker CREW_OUT_n flags); L:HMC_CTX_VALID 1 = both are published. The program decides: helicopter off = voice, inside and outside = radio, everybody outside = voice. L:HMC_CREW_MUTE (same bits) = crew members who must not speak: dead (CREW_DEAD_n 1) or hurt so badly (CREW_LIFESCORE_n below 15) that they are out of the conversation; the Companion keeps their lines silent. L:HMC_CHAT_MAX = the highest option number the Companion may choose for a message (the setting CREW CHATTER: FULL 6, REDUCED 3 = professional wording and the futile lines at their default, MINIMAL 1 = the default wording only, the futile lines silent); it is part of the change signature."},
+    {"#comment":"Context for the radio rule of the Mission Companion, published only in voice app mode (L:AUDIOINHIBIT not 0) and only when it changes: L:HMC_HELI_OFF 1 = battery master off and rotor stopped; L:HMC_CREW_PRESENT = bit 0 pilot, 1 copilot, 2 doctor, 3 HEMS1, 4 HEMS2 aboard (the seat tracker CREW_OUT_n flags); L:HMC_CTX_VALID 1 = both are published. The program decides how a line is heard (intercom, radio, external radio, voice, far voice, nothing: rules in the Companion, docs/architecture/VOICE_APP_MODE.md). L:HMC_CREW_EXIST = same bits as CREW_PRESENT for the crew members that exist (CREW_MEMBER_CAP), aboard or not; L:HMC_AT_BASE = 1 while the helicopter is in the wifi range of the start base (local wifiinrange = in), where the dispatcher reaches the crew radios even with the battery off; L:HMC_ZONE_TECH and L:HMC_ZONE_GROUND = zone of the nearest technician (engineera, engineer) and of the nearest ground unit or hospital staff (marshall, ambumedic, ambumedic3) from the helicopter: 1 up to 5 m, 2 up to 30 m, 3 up to 100 m, 4 beyond, 0 no such object (macros voice zone nearest, voice zone class). The battery master is not published: the Companion reads the aircraft variable L:H145_SDK_OH_BATTERY_MASTER. All of them are part of the change signature. L:HMC_CREW_MUTE (same bits) = crew members who must not speak: dead (CREW_DEAD_n 1) or hurt so badly (CREW_LIFESCORE_n below 15) that they are out of the conversation; the Companion keeps their lines silent. L:HMC_CHAT_MAX = the highest option number the Companion may choose for a message (the setting CREW CHATTER: FULL 6, REDUCED 3 = professional wording and the futile lines at their default, MINIMAL 1 = the default wording only, the futile lines silent); it is part of the change signature."},
     {"if": {"var":["L:AUDIOINHIBIT","number"]}, "ne": 0,
       "then": [
         {"set":{"local":"vc_off"},"value":0},
@@ -2044,6 +2055,39 @@
           "then": [
             {"set":{"local":"vc_mute"},"value":{"add":[{"local":"vc_mute"},16]}}
         ]},
+        {"set":{"local":"vc_exist"},"value":1},
+        {"if": {"local":"CREW_MEMBER_CAP"}, "gte": 2,
+          "then": [
+            {"set":{"local":"vc_exist"},"value":{"add":[{"local":"vc_exist"},4]}}
+        ]},
+        {"if": {"local":"CREW_MEMBER_CAP"}, "gte": 3,
+          "then": [
+            {"set":{"local":"vc_exist"},"value":{"add":[{"local":"vc_exist"},2]}}
+        ]},
+        {"if": {"local":"CREW_MEMBER_CAP"}, "gte": 4,
+          "then": [
+            {"set":{"local":"vc_exist"},"value":{"add":[{"local":"vc_exist"},8]}}
+        ]},
+        {"if": {"local":"CREW_MEMBER_CAP"}, "gte": 5,
+          "then": [
+            {"set":{"local":"vc_exist"},"value":{"add":[{"local":"vc_exist"},16]}}
+        ]},
+        {"set":{"local":"vc_base"},"value":0},
+        {"if": {"local":"wifiinrange"}, "eq": "in",
+          "then": [
+            {"set":{"local":"vc_base"},"value":1}
+        ]},
+        {"set":{"local":"vz_best"},"value":9999},
+        {"call_macro":"voice zone nearest","params":{"object":"engineera"}},
+        {"call_macro":"voice zone nearest","params":{"object":"engineer"}},
+        {"call_macro":"voice zone class"},
+        {"set":{"local":"vc_zt"},"value":{"local":"vz_zone"}},
+        {"set":{"local":"vz_best"},"value":9999},
+        {"call_macro":"voice zone nearest","params":{"object":"marshall"}},
+        {"call_macro":"voice zone nearest","params":{"object":"ambumedic"}},
+        {"call_macro":"voice zone nearest","params":{"object":"ambumedic3"}},
+        {"call_macro":"voice zone class"},
+        {"set":{"local":"vc_zg"},"value":{"local":"vz_zone"}},
         {"set":{"local":"vc_chat"},"value":6},
         {"if": {"global":"CREW_CHATTER"}, "eq": 1,
           "then": [
@@ -2053,7 +2097,7 @@
           "then": [
             {"set":{"local":"vc_chat"},"value":1}
         ]},
-        {"set":{"local":"vc_sig"},"value":{"add":[{"multiply":[{"local":"vc_chat"},1000000]},{"multiply":[{"local":"vc_off"},10000]},{"multiply":[{"local":"vc_mute"},100]},{"local":"vc_mask"}]}},
+        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"}]}},
         {"if": {"local":"vc_sig"}, "ne": {"local":"vc_last_sig"},
           "then": [
             {"set":{"local":"vc_last_sig"},"value":{"local":"vc_sig"}},
@@ -2061,7 +2105,45 @@
             {"set":{"var":["L:HMC_CREW_PRESENT","number"]},"value":{"local":"vc_mask"}},
             {"set":{"var":["L:HMC_CREW_MUTE","number"]},"value":{"local":"vc_mute"}},
             {"set":{"var":["L:HMC_CHAT_MAX","number"]},"value":{"local":"vc_chat"}},
+            {"set":{"var":["L:HMC_CREW_EXIST","number"]},"value":{"local":"vc_exist"}},
+            {"set":{"var":["L:HMC_AT_BASE","number"]},"value":{"local":"vc_base"}},
+            {"set":{"var":["L:HMC_ZONE_TECH","number"]},"value":{"local":"vc_zt"}},
+            {"set":{"var":["L:HMC_ZONE_GROUND","number"]},"value":{"local":"vc_zg"}},
             {"set":{"var":["L:HMC_CTX_VALID","number"]},"value":1}
+        ]}
+    ]}
+  ],
+  "voice zone nearest": [
+    {"if": {"has_object":{"param":"object"}}, "eq": 1,
+      "then": [
+        {"try": [
+            {"set":{"local":"vz_d"},"value":{"location":{"param":"object"},"var":"distance:m","to":"$USER"}},
+            {"if": {"local":"vz_d"}, "lt": {"local":"vz_best"},
+              "then": [
+                {"set":{"local":"vz_best"},"value":{"local":"vz_d"}}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"vz_d"},"value":9999}
+        ]}
+    ]}
+  ],
+  "voice zone class": [
+    {"set":{"local":"vz_zone"},"value":0},
+    {"if": {"local":"vz_best"}, "lt": 9999,
+      "then": [
+        {"set":{"local":"vz_zone"},"value":4},
+        {"if": {"local":"vz_best"}, "lte": 100,
+          "then": [
+            {"set":{"local":"vz_zone"},"value":3}
+        ]},
+        {"if": {"local":"vz_best"}, "lte": 30,
+          "then": [
+            {"set":{"local":"vz_zone"},"value":2}
+        ]},
+        {"if": {"local":"vz_best"}, "lte": 5,
+          "then": [
+            {"set":{"local":"vz_zone"},"value":1}
         ]}
     ]}
   ],

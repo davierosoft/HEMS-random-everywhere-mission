@@ -13,7 +13,7 @@ const requireTrue = (condition, message) => { if (!condition) failures.push(mess
 
 const SPEECH_RATE = 2.3; // words per second of the voice, spelled letters count as words
 const SPEECH_LEAD = 0.4;
-const speechSeconds = (text) => SPEECH_LEAD + text.replace(/[^A-Za-z0-9\s.']/g, ' ').split(/\s+/).filter(Boolean).length / SPEECH_RATE;
+const speechSeconds = (text) => SPEECH_LEAD + text.replace(/<text:[^<>]*>/g, '').replace(/[^A-Za-z0-9\s.']/g, ' ').split(/\s+/).filter(Boolean).length / SPEECH_RATE;
 const PAGE_ROWS = 26; // rows a page may show: the interior check showed 27 rows up to its step 12
 const STEMS = ['interior', 'quickprep', 'quickavionics', 'quickheating', 'quickpoweroff', 'afterheating', 'afterengstartckl1', 'afterengstartckl2', 'takeoffproc', 'prelanding', 'landing', 'shutdown', 'ifr'];
 const PAGES = Object.keys(macros).filter((name) => /ckl[0-9a-z]*$/.test(name) && STEMS.some((stem) => name.startsWith(stem)));

@@ -66,6 +66,14 @@ assert.equal(failed.length, 1, 'one ERR101 text');
 assert.ok(failed[0].value && failed[0].value.text && /within \{0\} meters/.test(failed[0].value.text) && Array.isArray(failed[0].value.params), 'ERR101 formats SAMPLE_RADIUS through a text formatter');
 assert.ok(!('params' in failed[0]), 'no params next to the set command');
 
+// 2b. a set command whose value is a text with {0}.. placeholders formats it inside value ({"text":..,"params":[..]}): params next to value are ignored and the
+// placeholder is shown as it is (ERR101 and ERR99 of the original mission showed "{0} meters")
+const siblingParams = [];
+for (const file of fs.readdirSync(path.join(__dirname, '..', 'mission-src', 'macros')).filter((name) => name.endsWith('.json'))) {
+  walk(read(file), (node) => { if (node.set && 'params' in node && typeof node.value === 'string' && /\{[0-9]\}/.test(node.value)) siblingParams.push(`${file}: ${node.value.slice(0, 40)}`); });
+}
+assert.deepEqual(siblingParams, [], 'no set command keeps its params next to a text value');
+
 // 3. RescueTrack macros that name a static from RESCUETRACK_ID call the guard first
 const life = read('11-mission-lifecycle.json');
 const guard = life['rescuetrack id guard'];
