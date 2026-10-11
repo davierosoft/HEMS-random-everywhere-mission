@@ -1,0 +1,321 @@
+{"EXTERNAL XML AUDIO ENABLE":     {
+      "commands": [
+        {"sleep":10},
+        {"set":{"var":["L:TEMPAUDIOINHIBIT","number"]},"value":{"var":["L:AUDIOINHIBIT","number"]}},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"sleep":1},
+            {"#comment":"VCP follows L:AUDIOINHIBIT every second (not only when the value changes): the simulator resets the LVAR to 0 when a flight or a mission is loaded and the Companion writes 1 again a moment later, so a change event can be missed and VCP would stay on the wav pack while the Companion plays the voices."},
+            {"if": {"var":["L:AUDIOINHIBIT","number"]}, "eq": 0,
+              "then": [
+                {"if": {"local":"VCP"}, "ne": {"global":"VOICEPACK"},
+                  "then": [
+                    {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":0},
+                {"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":100},
+                {"require":{"local":"VCP"},"ne":"APP"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"VCP"},"value":"APP"},
+                {"call_macro":"voice app connect"}
+            ]},
+            {"set":{"var":["L:TEMPAUDIOINHIBIT","number"]},"value":{"var":["L:AUDIOINHIBIT","number"]}}
+        ]}
+    ]},
+  "FUEL START UPDT":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"and": [
+              {"wait_for":{"global":"FUEL_MODE"},"eq":"real"},
+              {"wait_for":{"local":"FUEL_UPDATED"},"eq":"done"},
+              {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":10}
+            ]},
+            {"set":{"global":"FUEL_START"},"value":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]}},
+            {"sleep":30}
+        ]}
+    ]},
+  "FUEL HOSE CONNECTED":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"and": [
+              {"wait_for":{"local":"fuel truck arrived"},"eq":"yes"},
+              {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
+              {"wait_for":{"var":["L:Collective","number"]},"gt":35},
+              {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":80}
+            ]},
+            {"set":{"var":["L:CPL{local:VCP}60","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}60","number"]},1]}},
+            {"sleep":10},
+            {"wait_for":{"var":["L:Collective","number"]},"lte":35},
+            {"or": [
+              {"wait_for":{"local":"fuel truck arrived"},"ne":"yes"},
+              {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
+              {"wait_for":{"var":["L:Collective","number"]},"lte":35}
+            ]}
+        ]}
+    ]},
+  "RESCUETRACKUPDATEFROMDMG":     {
+      "commands": [
+        {"sleep":5},
+        {"set":{"local":"DISPATCH_PHASE_RAW_PREV"},"value":{"var":["L:DISPATCH_PHASE_RAW","number"]}},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"and": [
+              {"wait_for":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100},
+              {"wait_for":{"local":"DISPATCH_PHASE_RAW_PREV"},"ne":{"var":["L:DISPATCH_PHASE_RAW","number"]}}
+            ]},
+            {"set":{"local":"DISPATCH_PHASE_RAW_PREV"},"value":{"var":["L:DISPATCH_PHASE_RAW","number"]}},
+            {"call_macro":"Update_dispatchphase from raw"},
+            {"sleep":0.5}
+        ]}
+    ]},
+  "ALTCONV":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"set":{"var":["L:ALTCOPY","number"]},"value":{"var":["PLANE ALTITUDE","feet"]}},
+            {"sleep":60}
+        ]}
+    ]},
+  "WIFI":     {
+      "commands": [
+        {"or": [
+          {"wait_for":{"has_location":"custom_center_location"},"eq":1},
+          {"wait_for":{"has_location":"mission_start_location"},"eq":1}
+        ]},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"if": {
+              "and": [
+                {"require":{"global":"location_ref"},"eq":"custom_center_location"},
+                {"require":{"has_location":"custom_center_location"},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"wait_for":{"location":"custom_center_location","var":"distance:m"},"lte":300},
+                {"set":{"local":"wifiinrange"},"value":"in"},
+                {"wait_for":{"location":"custom_center_location","var":"distance:m"},"gt":300},
+                {"set":{"local":"wifiinrange"},"value":"out"},
+                {"set":{"local":"wificonnect"},"value":"Disconnected"}
+              ],"else": [
+                {"wait_for":{"location":"mission_start_location","var":"distance:m"},"lte":300},
+                {"set":{"local":"wifiinrange"},"value":"in"},
+                {"wait_for":{"location":"mission_start_location","var":"distance:m"},"gt":300},
+                {"set":{"local":"wificonnect"},"value":"Disconnected"},
+                {"set":{"local":"wifiinrange"},"value":"out"}
+            ]},
+            {"sleep":[3,10]}
+        ]}
+    ]},
+  "TABLET 5G connection":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"if": {"global":"TABLET_5G_ENABLED"}, "eq": "yes",
+              "then": [
+                {"set":{"local":"TABLET_5G_FORCED"},"value":"yes"},
+                {"set":{"local":"wificonnect"},"value":"Connected"},
+                {"if": {"local":"TABLET_5G_NOTICE_STATE"}, "ne": "shown",
+                  "then": [
+                    {"set":{"local":"TABLET_5G_NOTICE_STATE"},"value":"shown"},
+                    {"set":{"local":"TABLET_5G_DISPATCH_NOTICE"},"value":"visible"},
+                    {"create_thread": {
+                      "commands": [
+                        {"sleep":5},
+                        {"if": {"global":"TABLET_5G_ENABLED"}, "eq": "yes",
+                          "then": [
+                            {"set":{"local":"TABLET_5G_DISPATCH_NOTICE"},"value":"hidden"}
+                        ]}
+                    ]}}
+                ]}
+              ],"else": [
+                {"if": {"local":"TABLET_5G_FORCED"}, "eq": "yes",
+                  "then": [
+                    {"set":{"local":"wificonnect"},"value":"Disconnected"},
+                    {"set":{"local":"TABLET_5G_FORCED"},"value":"no"}
+                ]},
+                {"set":{"local":"TABLET_5G_DISPATCH_NOTICE"},"value":"hidden"},
+                {"set":{"local":"TABLET_5G_NOTICE_STATE"},"value":"idle"}
+            ]},
+            {"sleep":1}
+        ]}
+    ]},
+  "HOC connection":     {
+      "commands": [
+        {"or": [
+          {"wait_for":{"has_location":"custom_center_location"},"eq":1},
+          {"wait_for":{"has_location":"mission_start_location"},"eq":1}
+        ]},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"or": [
+              {"wait_for":{"local":"wificonnect"},"eq":"Connected"},
+              {"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+            ]},
+            {"sleep":[1,2]},
+            {"set":{"local":"HOCconnection"},"value":"Connected"},
+            {"and": [
+              {"wait_for":{"local":"wificonnect"},"ne":"Connected"},
+              {"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}
+            ]},
+            {"set":{"local":"HOCconnection"},"value":"Disconnected"}
+        ]}
+    ]},
+  "Acceptdispatch 0":     {
+      "commands": [
+        {"sleep":13},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":0},
+            {"call_macro":"accept_dispatch"},
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":0}
+        ]}
+    ]},
+  "Ready dispatch 5":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":5},
+            {"call_macro":"Update_raw from dispatchphase"},
+            {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":5}
+        ]}
+    ]},
+  "Ready dispatch 6":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":6},
+            {"call_macro":"Update_raw from dispatchphase"},
+            {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":6}
+        ]}
+    ]},
+  "Stop dispatch 7":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":7},
+            {"call_macro":"Update_raw from dispatchphase"},
+            {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
+            {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}
+        ]}
+    ]},
+  "NEW DISPATCH":     {
+      "commands": [
+        {"sleep":5},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+        {"if": {"local":"player"}, "eq": "singleplayer",
+          "then": [
+            {"while": 1, "gt": 0,
+              "do": [
+                {"or": [
+                  {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":5},
+                  {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":6}
+                ]},
+                {"call_macro":"ready dispatch"}
+            ]}
+          ],"else": [
+            {"if": {"local":"player"}, "eq": "multiplayer",
+              "then": [
+                {"wait_for":{"var":["L:VAR_SEND_DISPATCH","number"]},"gt":0}
+            ]},
+            {"or": [
+              {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":5},
+              {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":6}
+            ]},
+            {"call_macro":"ready dispatch"}
+        ]}
+    ]},
+  "DISPATCH MFD DISPLAY":     {
+      "commands": [
+        {"sleep":5},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"local":"DISPLAY_DISPATCH"},"eq":0},
+            {"wait_for":{"local":"DISPLAY_DISPATCH"},"eq":1},
+            {"set":{"var":["L:{local:HXX}_SDK_IS_DISPATCH_MESSAGE","number"]},"value":1}
+        ]}
+    ]},
+  "DISPATCH MFD DISPLAY SECOND DISPATCH":     {
+      "commands": [
+        {"sleep":5},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"local":"SECOND_DISPATCH"},"ne":0},
+            {"set":{"var":["L:{local:HXX}_SDK_IS_DISPATCH_MESSAGE","number"]},"value":1}
+        ]}
+    ]},
+  "DISPATCH MFD DELETE":     {
+      "commands": [
+        {"sleep":5},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:{local:HXX}_SDK_IS_DISPATCH_MESSAGE","number"]},"eq":1},
+            {"sleep":30},
+            {"set":{"var":["L:{local:HXX}_SDK_IS_DISPATCH_MESSAGE","number"]},"value":0}
+        ]}
+    ]},
+  "STATION WEIGHTS":     {
+      "commands": [
+        {"wait_for":{"local":"HXX"},"ne":null},
+        {"sleep":20},
+        {"call_macro":"station weights read"},
+        {"call_macro":"station weights recompute"},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"or":[{"wait_for":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]},"ne":{"local":"SW_P1"}},{"wait_for":{"var":["L:{local:HXX}_IMPL_PILOT0","number"]},"ne":{"local":"SW_P2"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]},"ne":{"local":"SW_P3"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]},"ne":{"local":"SW_P4"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]},"ne":{"local":"SW_P5"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]},"ne":{"local":"SW_P6"}},{"wait_for":{"global":"STATION_1"},"ne":{"local":"SW_S1"}},{"wait_for":{"global":"STATION_2"},"ne":{"local":"SW_S2"}},{"wait_for":{"global":"STATION_3"},"ne":{"local":"SW_S3"}},{"wait_for":{"global":"STATION_4"},"ne":{"local":"SW_S4"}},{"wait_for":{"global":"STATION_5"},"ne":{"local":"SW_S5"}},{"wait_for":{"global":"STATION_6"},"ne":{"local":"SW_S6"}},{"wait_for":{"global":"KIT_WEIGHTS"},"ne":{"local":"SW_OPT"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HISL","number"]},"ne":{"local":"SW_K1"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]},"ne":{"local":"SW_K2"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_CAPS","number"]},"ne":{"local":"SW_K3"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_RADOME","number"]},"ne":{"local":"SW_K4"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_TOP","number"]},"ne":{"local":"SW_K5"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_BOTTOM","number"]},"ne":{"local":"SW_K6"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_SKID","number"]},"ne":{"local":"SW_K7"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SKI","number"]},"ne":{"local":"SW_K8"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SETTLING_PREVENTERS","number"]},"ne":{"local":"SW_K9"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_LONG","number"]},"ne":{"local":"SW_K10"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_EMERGENCY_FLOATS","number"]},"ne":{"local":"SW_K11"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_IBF_INSTALLED","number"]},"ne":{"local":"SW_K12"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_AIRCONDITIONING","number"]},"ne":{"local":"SW_K13"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_ADELT","number"]},"ne":{"local":"SW_K14"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_ACAS","number"]},"ne":{"local":"SW_K15"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HTAWS","number"]},"ne":{"local":"SW_K16"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HMD","number"]},"ne":{"local":"SW_K17"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_FUELFLOWSENSOR","number"]},"ne":{"local":"SW_K18"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SECOND_LANDING_LIGHT","number"]},"ne":{"local":"SW_K19"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_CHIN_WINDOW_PLATES","number"]},"ne":{"local":"SW_K20"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_COCKPIT_SUN_VISORS","number"]},"ne":{"local":"SW_K21"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_COCKPIT_FABRIC_GLARESHIELDS","number"]},"ne":{"local":"SW_K22"}}],"eq":1},
+            {"call_macro":"station weights read"},
+            {"call_macro":"station weights recompute"},
+            {"sleep":0.5}
+        ]}
+    ]},
+  "ambulance patient report snapshot":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"if": {
+              "and": [
+                {"require":{"local":"ambulance_patient_report_finalized"},"ne":"yes"},
+                {"or":[{"require":{"local":"whobringpatient"},"eq":"ambulance"},{"require":{"local":"whobringpatient"},"eq":"ambudoc"}],"eq":1},
+                {"require":{"local":"crewvisitended"},"eq":"yes"}
+              ]},
+              "then": [
+                {"if": {"local":"CPBPM"}, "ne": 0,
+                  "then": [
+                    {"set":{"local":"ambulance_final_hr"},"value":{"local":"CPBPM"}}
+                  ],"else": [
+                    {"set":{"local":"ambulance_final_hr"},"value":{"local":"BPM"}}
+                ]},
+                {"set":{"local":"ambulance_final_spo2"},"value":{"local":"SPO2"}},
+                {"set":{"local":"ambulance_final_bp_sys"},"value":{"local":"BP_SYS"}},
+                {"set":{"local":"ambulance_final_bp_dia"},"value":{"local":"BP_DIA"}},
+                {"set":{"local":"ambulance_final_rr"},"value":{"local":"RR"}},
+                {"set":{"local":"ambulance_final_temp"},"value":{"local":"TEMP"}},
+                {"set":{"local":"ambulance_final_gcs_eye"},"value":{"local":"GCS_EYE"}},
+                {"set":{"local":"ambulance_final_gcs_verbal"},"value":{"local":"GCS_VERBAL"}},
+                {"set":{"local":"ambulance_final_gcs_motor"},"value":{"local":"GCS_MOTOR"}},
+                {"set":{"local":"ambulance_final_gcs_total"},"value":{"local":"GCS_TOTAL"}},
+                {"set":{"local":"ambulance_final_gcs_any_nt"},"value":{"local":"GCS_ANY_NT"}},
+                {"set":{"local":"ambulance_final_code"},"value":{"var":["L:HEALTH","number"]}},
+                {"if": {"local":"whobringpatient"}, "eq": "ambudoc",
+                  "then": [
+                    {"set":{"local":"ambulance_final_provider"},"value":"AMBULANCE CREW + HEMS DOCTOR"}
+                  ],"else": [
+                    {"set":{"local":"ambulance_final_provider"},"value":"AMBULANCE CREW"}
+                ]},
+                {"set":{"local":"ambulance_patient_report_finalized"},"value":"yes"}
+              ],
+              "eq": 1
+            },
+            {"sleep":0.5}
+        ]}
+    ]}
+}

@@ -1,0 +1,273 @@
+{"CARLS STARTUP":     {
+      "commands": [
+        {"sleep":1},
+        {"if": {"var":["L:CARLS_State","number"]}, "eq": 2,
+          "then": [
+            {"if": {"var":["L:CUS_CARLS_AUTOCONNECT","number"]}, "ne": 0,
+              "then": [
+                {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":1},
+                {"sleep":0.5}
+            ]},
+            {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+            {"set_carls_radio":{"LSK":["DF","","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],{"item":["Push call to","connect"],"show_condition":{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":0}},{"item":["&nbsp;","Connecting to grp"],"show_condition":{"require":{"var":["L:CARLS_CONNECTED","number"]},"gt":1}}]}},
+            {"call_macro":"CARLS buttons"},
+            {"create_event_handler": "MISSION_RADIO_CARLS_PICK",
+              "commands": [
+                {"if": {"var":["L:CARLS_CONNECTED","number"]}, "ne": 1,
+                  "then": [
+                    {"set_message":{"text":"CONNECTING TO DOC..."}},
+                    {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+                    {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":2},
+                    {"set_carls_radio":{"LSK":["DF","","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Connecting to grp"]]}},
+                    {"sleep":[3,10]},
+                    {"call_macro":"CARLS buttons"},
+                    {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":1}
+                ]}
+            ]}
+        ]},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:CARLS_State","number"]},"eq":0},
+            {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":0},
+            {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+            {"set_carls_radio":{"LSK":["","",""],"RSK":["","",""],"Items":[["",""],["",""],["",""]]}},
+            {"wait_for":{"var":["L:CARLS_State","number"]},"ne":0},
+            {"sleep":1},
+            {"set_carls_radio":{"LSK":["","",""],"RSK":["","",""],"Items":[["",""],["","Loading..."],["",""]]}},
+            {"sleep":4},
+            {"set_carls_radio":{"LSK":["","",""],"RSK":["","",""],"Items":[["","elektronik-labor"],["CARLS","HBE767 M"],[" Radio ctrl sys","PBIT in progress..."]]}},
+            {"sleep":{"global":"CARLSPBIT"}},
+            {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+            {"set_carls_radio":{"LSK":["DF","","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["Push call to","connect"]]}},
+            {"call_macro":"CARLS buttons"},
+            {"create_event_handler": "MISSION_RADIO_CARLS_PICK",
+              "commands": [
+                {"if": {"var":["L:CARLS_CONNECTED","number"]}, "ne": 1,
+                  "then": [
+                    {"set_message":{"text":"CONNECTING TO DOC..."}},
+                    {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+                    {"set_carls_radio":{"LSK":["DF","","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Connecting to grp"]]}},
+                    {"sleep":[3,10]},
+                    {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":1}
+                ]}
+            ]},
+            {"wait_for":{"var":["L:CARLS_State","number"]},"eq":0},
+            {"set_message":{"text":"DISCONNECTED FROM DOC"}},
+            {"set_carls_radio":{"LSK":["","",""],"RSK":["","",""],"Items":[["",""],["",""],["",""]]}}
+        ]}
+    ]},
+  "CARLS HOME":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"and": [
+              {"wait_for":{"var":["L:CARLS_PAGE","number"]},"ne":0},
+              {"wait_for":{"var":["L:CARLS_State","number"]},"eq":2}
+            ]},
+            {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+            {"call_macro":"CARLS buttons"},
+            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 0,
+              "then": [
+                {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+                {"call_macro":"CARLS buttons"},
+                {"set_carls_radio":{"LSK":["DF","","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["Push call to","connect"]]}}
+            ]},
+            {"if": {"var":["L:CUS_CARLS_AUTOCONNECT","number"]}, "ne": 0,
+              "then": [
+                {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":1},
+                {"sleep":0.5}
+            ]},
+            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+              "then": [
+                {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+                {"call_macro":"CARLS buttons"},
+                {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Connected "]]}}
+            ]},
+            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 2,
+              "then": [
+                {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+                {"call_macro":"CARLS buttons"},
+                {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Connecting to grp"]]}}
+            ]}
+        ]}
+    ]},
+  "CARLS connected":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},
+            {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+            {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+            {"call_macro":"CARLS buttons"},
+            {"set_message":{"text":"SUCCESSFULLY CONNECTED TO DOC!"}},
+            {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Connected "]]}},
+            {"create_event_handler": "MISSION_RADIO_CARLS_HANG",
+              "commands": [
+                {"if": {"var":["L:CARLS_CONNECTED","number"]}, "ne": 0,
+                  "then": [
+                    {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+                    {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Disconnecting"]]}},
+                    {"sleep":[1,4]},
+                    {"set_message":{"text":"CARLS DISCONNECTED FROM DOC"}},
+                    {"set":{"var":["L:CARLS_CONNECTED","number"]},"value":0}
+                ]}
+            ]},
+            {"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":0},
+            {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+            {"set_carls_radio":{"LSK":["DF","","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["Push call to","connect"]]}}
+        ]}
+    ]},
+  "CARLS popup":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:CARLS_TEMP","number"]},"eq":1},
+            {"sleep":0.3},
+            {"set":{"var":["L:CARLS_PAGE","number"]},"value":0},
+            {"set":{"var":["L:CARLS_TEMP","number"]},"value":0},
+            {"call_macro":"CARLS buttons"},
+            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "ne": 0,
+              "then": [
+                {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["Sending request","Connected"]]}},
+                {"sleep":[3,7]},
+                {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["Request sent","Connected"]]}},
+                {"sleep":5},
+                {"set_carls_radio":{"LSK":["DF","STS","MSG"],"RSK":["GRP","MOD","STP"],"Items":[["",""],[{"text":"{0}","params":[{"global":"GRPNAME"}]},{"text":"{0}","params":[{"global":"GRPNUM"}]}],["&nbsp;","Connected"]]}}
+            ]}
+        ]}
+    ]},
+  "CARLS STS":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"and": [
+              {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":2},
+              {"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+            ]},
+            {"call_macro":"CARLS buttons"},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 0,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 0"],["PREDEF MSG:","Accepted dsptc"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 1,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 1"],["PREDEF MSG:","OTW to scene"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 2,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 2"],["PREDEF MSG:","At scene"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 3,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 3"],["PREDEF MSG:","OTW to hospt"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 4,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 4"],["PREDEF MSG:","At hospital"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 5,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 5"],["PREDEF MSG:","Available"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 6,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 6"],["PREDEF MSG:","At home b."],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 7,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 7"],["PREDEF MSG:","Not Availb"],["TX: Sent","RX: Ackwn."]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 8,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","No prst"],["PREDEF MSG:","None"],["TX: Sent","RX: No answer"]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 9,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","No prst"],["PREDEF MSG:","None"],["TX: Sent","RX: No answer"]]}}
+            ]},
+            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 100,
+              "then": [
+                {"if": {"var":["L:CARLS_CONNECTED","number"]}, "ne": 0,
+                  "then": [
+                    {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","No Action"],["Connected to",{"text":"{0} DATA","params":[{"global":"GRPNUM"}]}],["TX: GO","RX: GO"]]}}
+                ]},
+                {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 0,
+                  "then": [
+                    {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["&nbsp;","&nbsp;"],["Not connected",{"text":"{0} DATA","params":[{"global":"GRPNUM"}]}],["TX: --","RX: --"]]}}
+                ]}
+            ]}
+        ]}
+    ]},
+  "CARLS GRP":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":4},
+            {"call_macro":"CARLS buttons"},
+            {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["",""],["",""],["",""]]}},
+            {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[[{"struct":{"static":"GRPN"},"index":0},{"struct":{"static":"GRPID"},"index":0}],[{"struct":{"static":"GRPN"},"index":1},{"struct":{"static":"GRPID"},"index":1}],[{"struct":{"static":"GRPN"},"index":2},{"struct":{"static":"GRPID"},"index":2}],[{"struct":{"static":"GRPN"},"index":3},{"struct":{"static":"GRPID"},"index":3}],[{"struct":{"static":"GRPN"},"index":4},{"struct":{"static":"GRPID"},"index":4}],[{"struct":{"static":"GRPN"},"index":5},{"struct":{"static":"GRPID"},"index":5}],[{"struct":{"static":"GRPN"},"index":6},{"struct":{"static":"GRPID"},"index":6}],[{"struct":{"static":"GRPN"},"index":7},{"struct":{"static":"GRPID"},"index":7}],[{"struct":{"static":"GRPN"},"index":8},{"struct":{"static":"GRPID"},"index":8}],[{"struct":{"static":"GRPN"},"index":9},{"struct":{"static":"GRPID"},"index":9}],[{"struct":{"static":"GRPN"},"index":10},{"struct":{"static":"GRPID"},"index":10}],[{"struct":{"static":"GRPN"},"index":11},{"struct":{"static":"GRPID"},"index":11}],[{"struct":{"static":"GRPN"},"index":12},{"struct":{"static":"GRPID"},"index":12}],[{"struct":{"static":"GRPN"},"index":13},{"struct":{"static":"GRPID"},"index":13}],[{"struct":{"static":"GRPN"},"index":14},{"struct":{"static":"GRPID"},"index":14}],[{"struct":{"static":"GRPN"},"index":15},{"struct":{"static":"GRPID"},"index":15}]]}},
+            {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":0}
+        ]}
+    ]},
+  "CARLS STP":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"or": [
+              {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":6},
+              {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":12}
+            ]},
+            {"wait_for":{"var":["L:CARLS_TEMP","number"]},"eq":2},
+            {"call_macro":"CARLS buttons"},
+            {"set":{"var":["L:CARLS_TEMP","number"]},"value":0},
+            {"if": {"var":["L:CARLS_PAGE","number"]}, "eq": 6,
+              "then": [
+                {"if": {"global":"DISPATCHER_AUTO"}, "eq": 0,
+                  "then": [
+                    {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["DISPATCH MODE","AUTO"],["PRESET MSGs","VIEW/EDIT ->"],["",""]]}}
+                ]},
+                {"if": {"global":"DISPATCHER_AUTO"}, "eq": 1,
+                  "then": [
+                    {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["DISPATCH MODE","MANUAL"],["PRESET MSGs","VIEW/EDIT ->"],["",""]]}}
+                ]}
+            ]},
+            {"if": {"var":["L:CARLS_PAGE","number"]}, "eq": 12,
+              "then": [
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["",""],["",""],["",""]]}},
+                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["KEY 0","Accept dsptc"],["KEY 1","OTW to scene"],["KEY 2","At scene"],["KEY 3","OTW to hosptl"],["KEY 4","At hospital"],["KEY 5","Available"],["KEY 6","At Home b."],["KEY 7","Not availbl"]]}}
+            ]},
+            {"sleep":1}
+        ]}
+    ]},
+  "CARLS DF":     {
+      "commands": [
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"var":["L:CARLS_PAGE","number"]},"eq":13},
+            {"call_macro":"CARLS buttons"},
+            {"call_macro":"CARLS DF render"},
+            {"while": {"var":["L:CARLS_PAGE","number"]}, "eq": 13,
+              "do": [
+                {"if": {
+                  "and": [
+                    {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
+                    {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":1},
+                    {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"global":"CARLS_DF_LAST_INPUT_TIME"}]},"gte":1.5}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"CARLS DF timeout"}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
+                    {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
+                    {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"global":"CARLS_DF_LAST_INPUT_TIME"}]},"gte":5}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"CARLS DF timeout"}
+                ]},
+                {"sleep":0.25}
+            ]}
+        ]}
+    ]}
+}

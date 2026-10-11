@@ -102,7 +102,7 @@ const fireExposureJson = JSON.stringify(mission.macros['monitor crew fire exposu
 const hoistJson = JSON.stringify(mission.macros['apply hoist crew lifescore impact']);
 const hoistDownJson = JSON.stringify(mission.macros['hoist down']);
 const hoistRiskJson = JSON.stringify(mission.macros['start hoist out risk monitor']);
-const hoistFatalJson = JSON.stringify(mission.macros['hoist out fatal failure']);
+const hoistFatalJson = JSON.stringify(mission.macros['hoist cable casualty']);
 const attachedRiskJson = JSON.stringify(mission.macros['start hoist attached risk monitor']);
 const bootstrapJson = JSON.stringify(mission.macros['normalize crew health simulation setting']);
 assert(monitorJson.includes('"call_macro":"record crew acceleration maxima"'), 'crew monitor does not retain acceleration maxima recording');
@@ -124,12 +124,12 @@ assert(['6400', '22500', '3600'].every((squared) => crashMonitorJson.includes('"
 assert(!crashMonitorJson.includes('"require":{"var":["ACCELERATION BODY') && crashMonitorJson.includes('"local":"cm_mag2"'), 'crash impact severity must come from the sampled window, not from the first sample after the trigger');
 assert(['[10,31]', '[45,61]', '[0,4]', '[3,9]', '[7,21]'].every((range) => crashApplyJson.includes(`"floor":{"rand":${range}}`)) && crashApplyJson.includes('"local":"crash_member_score"'), 'crash injury is not drawn at random for each present person (0-3 at 1 g, 3-8 at 2 g, 7-20 at 150, 10-30 at 250 and 330, 45-60 at 400)');
 assert(fireExposureJson.includes('"object":"pax3","member":2'), 'pax3 exposure is not mapped to medical crew member 2');
-assert(hoistJson.includes('"member":3') && hoistJson.includes('"member":4') && hoistJson.includes('"member":5'), 'hoist impact is not mapped to operator and helirescuer LifeScores 3, 4, and 5');
+assert(hoistJson.includes('"local":"hoist_member"') && hoistJson.includes('"value":2') && !hoistJson.includes('"member":3') && !hoistJson.includes('CREW_LIFESCORE_3'), 'the copilot (member 3) is never on the cable: the hoisted crew member is the medic (member 2) and a helirescuer is member 4 or 5');
 assert(hoistRiskJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistRiskJson.includes('"eq":"yes"'), 'hoist-out LifeScore monitoring is not gated by YES');
-assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"eq":"yes"'), 'fatal hoist loss is not gated by YES');
+assert(hoistFatalJson.includes('"global":"HOIST_SAFETY_MONITOR"') && hoistFatalJson.includes('"ne":"yes"'), 'hoist cable casualties are not gated by YES');
 assert(attachedRiskJson.includes('"local":"HOIST_CREW_ON_CABLE"') && attachedRiskJson.includes('"gt":0'), 'attached hoist operator monitor is not tied to the cable state');
 assert(attachedRiskJson.includes('"local":"HOIST_IMPACT_RATE_FPS"') && attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator monitor does not derive risk from measured descent rate');
-assert(!attachedRiskJson.includes('ACCELERATION BODY'), 'attached hoist operator monitor must not use aircraft acceleration as a hoist proxy');
+assert(!attachedRiskJson.includes('ACCELERATION BODY'), 'the attached hoist operator ground-impact monitor stays on the measured descent rate; the aircraft accelerations belong to the separate hoist cable stress monitor');
 assert(attachedRiskJson.includes('"fn":"hoist_get_distance_from_ground:ft"'), 'attached hoist operator ground-impact monitor is missing');
 assert(hoistDownJson.includes('"local":"HOIST_CREW_ON_CABLE"') && hoistDownJson.includes('"start hoist attached risk monitor"'), 'hoist-down cable procedure does not start the attached-person monitor');
 assert(bootstrapJson.includes('"eq":"active"') && bootstrapJson.includes('"value":"yes"'), 'crew health bootstrap does not restore the canonical enabled value');
@@ -143,6 +143,7 @@ assert(ordinary.locals.CREW_EMERGENCY_ACTIVE === 'no', 'ordinary impact incorrec
 assert(ordinary.locals.CREW_LIFESCORE_ALERT_3 === 1, 'first injury/exposure warning was not recorded');
 
 const helirescuerOne = initialState(100);
+helirescuerOne.locals.CREW = 3;
 helirescuerOne.locals.HELIRESCUER_BOARDED = 1;
 helirescuerOne.locals.HOIST_CABLE_PERSON_TYPE = 'helirescuer';
 helirescuerOne.params = { score: 1, cause: 'TEST HELIRESCUER IMPACT' };
@@ -150,6 +151,7 @@ execute(mission.macros['apply hoist crew lifescore impact'], helirescuerOne);
 assert(helirescuerOne.locals.CREW_LIFESCORE_4 === 99 && helirescuerOne.locals.CREW_LIFESCORE_3 === 100, 'first helirescuer impact was not assigned to member 4');
 
 const helirescuerTwo = initialState(100);
+helirescuerTwo.locals.CREW = 3;
 helirescuerTwo.locals.HELIRESCUER_BOARDED = 2;
 helirescuerTwo.locals.HOIST_CABLE_PERSON_TYPE = 'helirescuer';
 helirescuerTwo.params = { score: 1, cause: 'TEST HELIRESCUER IMPACT' };
@@ -164,12 +166,16 @@ assert(disabled.locals.CREW_EMERGENCY_ACTIVE === 'no', 'disabled crew-health sim
 
 const disabledHoistFatal = initialState(100);
 disabledHoistFatal.globals.HOIST_SAFETY_MONITOR = 'disabled';
-execute(mission.macros['hoist out fatal failure'], disabledHoistFatal);
-assert(disabledHoistFatal.locals.CREW_LIFESCORE_3 === 100, 'disabled crew-health simulation lost the hoist operator');
+disabledHoistFatal.locals.CREW = 3;
+disabledHoistFatal.params = { score: 100, cause: 'FATAL HOIST IMPACT' };
+execute(mission.macros['apply hoist crew lifescore impact'], disabledHoistFatal);
+assert(disabledHoistFatal.locals.CREW_LIFESCORE_2 === 100, 'disabled crew-health simulation lost the hoist operator');
 
 const activeHoistFatal = initialState(100);
-execute(mission.macros['hoist out fatal failure'], activeHoistFatal);
-assert(activeHoistFatal.locals.CREW_LIFESCORE_3 === 0, 'active crew-health simulation did not apply fatal hoist loss');
+activeHoistFatal.locals.CREW = 3;
+activeHoistFatal.params = { score: 100, cause: 'FATAL HOIST IMPACT' };
+execute(mission.macros['apply hoist crew lifescore impact'], activeHoistFatal);
+assert(activeHoistFatal.locals.CREW_LIFESCORE_2 === 0 && activeHoistFatal.locals.CREW_LIFESCORE_3 === 100, 'active crew-health simulation did not apply the fatal hoist loss to the medic (member 2) and left the copilot alone');
 
 const critical = initialState(11);
 apply(critical, 1);
@@ -239,23 +245,24 @@ assert(JSON.stringify(mission.macros['crew impact events']).includes('crew missi
 const originalMission = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'starting point', 'baseline-0.997-original-fully-functional.json'), 'utf8'));
 const originalBranches = originalMission.macros['failure engine'][0].create_thread.commands[0].do.filter((c) => c.if && c.if.var && c.if.var[0] === 'L:FAILURE');
 const failureTable = mission.macros['apply aircraft failure'].filter((c) => c.if);
-assert(originalBranches.length === 28 && failureTable.length === 28, 'the aircraft failure table must keep the 28 original codes');
+assert(originalBranches.length === 28 && failureTable.length === 39, 'the aircraft failure table must keep the 28 original codes and add the 11 codes 30 to 40 (the fuel leakage code 29 has its own macro; tools/test-failure-ladder.js)');
+assert(failureTable.slice(28).map((branch) => branch.eq).join(',') === '30,31,32,33,34,35,36,37,38,39,40', 'the added failure codes must be 30 to 40, after the original ones');
 assert(originalBranches.every((branch, index) => JSON.stringify(branch.then) === JSON.stringify(failureTable[index].then) && branch.eq === failureTable[index].eq), 'an aircraft failure code does not match the original damage');
 const failureEngineJson = JSON.stringify(mission.macros['failure engine']);
 assert(failureEngineJson.includes('"global":"ENGINE_FAILURES_ENABLED"') && !failureEngineJson.includes('"global":"DIFFICULTY"') && failureEngineJson.includes('"call_macro":"apply aircraft failure"') && failureEngineJson.includes('"sleep":[120,3600]'), 'failure engine must apply the L:FAILURE code under ENGINE_FAILURES_ENABLED');
 const crashFailureJson = JSON.stringify(mission.macros['crash random failures']);
-assert(crashFailureJson.includes('"global":"ENGINE_FAILURES_ENABLED"') && crashFailureJson.includes('"floor":{"rand":[1,29]}') && crashFailureJson.includes('"floor":{"rand":[1,27]}') && crashFailureJson.includes('"add":[{"local":"crash_failure_code"},2]'), 'crash failures must draw codes 1 to 28 and skip the engine fires 5 and 6 unless fires is yes');
+assert(crashFailureJson.includes('"global":"ENGINE_FAILURES_ENABLED"') && crashFailureJson.includes('"call_macro":"apply ladder failure"') && crashFailureJson.includes('"first":{"param":"first"},"last":{"param":"last"}'), 'crash failures must draw from the severity ladder between the levels first and last (the 28 original codes stay in apply aircraft failure)');
 const failureThread = crashMonitorJson.slice(crashMonitorJson.indexOf('"local":"crash_fail_4"},"eq":1'));
 assert(['crash_fail_4', 'crash_fail_5', 'crash_fail_6'].every((flag) => crashMonitorJson.includes('"set":{"local":"' + flag + '"}')), 'the crash failures must snapshot the tier latches before the single failure thread');
 assert((crashMonitorJson.match(/"call_macro":"crash random failures"/g) || []).length === 3 && !crashMonitorJson.slice(0, crashMonitorJson.indexOf('"local":"crash_fail_4"')).includes('crash random failures'), 'crash failures must be applied by one sequential thread: threads sharing the failure locals overwrite each other');
-assert(failureThread.includes('"fires":"no"') && failureThread.includes('"rand":[1,3]') && failureThread.indexOf('"fires":"no"') < failureThread.indexOf('"fires":"yes"'), 'the 193 tier must apply 1 to 2 failures without engine fires, before the higher tiers');
-assert((failureThread.match(/"count":1,"fires":"yes"/g) || []).length === 2, 'the 386 and 600 tiers must apply one failure each, engine fires allowed');
+assert(failureThread.includes('"first":1,"last":10') && failureThread.includes('"rand":[1,3]') && failureThread.indexOf('"first":1,"last":10') < failureThread.indexOf('"first":7,"last":11'), 'the severe tier must apply 1 to 2 failures from the lightest to the engine failure (ladder levels 1 to 10, no engine fire), before the higher tiers');
+assert((failureThread.match(/"count":1,"first":7,"last":11/g) || []).length === 2, 'the two highest tiers must apply one failure each from the fuel failures to the engine fire (ladder levels 7 to 11)');
 assert(crashMonitorJson.includes('"local":"cm_peak2"') && [6400, 14400, 22500].every((squared) => crashMonitorJson.includes('"gte":' + squared)) && crashMonitorJson.includes('impact_peak'), 'an impact split over several axes must reach the acceleration tiers through the sampled resultant, and the peak must be traced');
 assert(['625', '2500', '8100', '22500'].every((squared) => crashMonitorJson.includes('"local":"cm_dv2"') && crashMonitorJson.includes('"gte":' + squared)) && ['X', 'Y', 'Z'].every((axis) => crashMonitorJson.includes('VELOCITY WORLD ' + axis)) && crashMonitorJson.includes('dv2={local:cm_dv2_round}'), 'the crash tiers above 150 must come from the sampled loss of world velocity (25, 50, 90 and 150 ft/s squared), not from the acceleration peak, and the loss must be traced');
 assert(!/"local":"crash_peak2"\},"gte":(62500|108900|160000)/.test(crashMonitorJson), 'an acceleration peak alone must not reach the severe, heavy or catastrophic tiers: a scrape along the ground reads more than a dive');
 assert(crashMonitorJson.includes('"try":[') && crashMonitorJson.includes('monitor_error') && ['first_tier_applied', 'minor_applied', 'impact_applied'].every((stageName) => crashMonitorJson.includes(stageName)), 'the impact loop must catch an error of a tick, trace it and go on, and trace its stages');
 const terminatedJson = JSON.stringify(mission.macros['crew mission terminated']);
-const abortJson = JSON.stringify(mission.macros['crew emergency response']);
+const abortJson = JSON.stringify(mission.macros['crew emergency divert']);
 const unavailableGate = '{"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"}]}]}';
 assert(terminatedJson.includes(unavailableGate) && abortJson.includes(unavailableGate), 'a crew abort or termination must set the status to unavailable (7) with Update_raw from dispatchphase, only when status reports are automatic and not over an existing 7');
 assert(!/"L:DISPATCH_PHASE","number"\]\},"value":[56]/.test(terminatedJson + abortJson), 'a crew abort or termination must never mark the helicopter available (5 or 6): the NEW DISPATCH thread would reopen the briefing and the crew cannot take a dispatch');
@@ -274,7 +281,7 @@ const failureTargets = new Set();
 }(mission.macros['apply aircraft failure']));
 const repairJson = JSON.stringify(mission.macros['reset aircraft failures']);
 assert(failureTargets.size >= 16 && [...failureTargets].every((name) => repairJson.includes('{"set":{"var":["' + name + '","number"]},"value":0}')), 'the repair macro must clear every failure and persistent damage that the failure table sets');
-assert(JSON.stringify(mission.macros['crew member state event']).split('"global":"CREW_DEATH_REPAIR_PENDING"').length === 6, 'every crew death must mark the helicopter and crew for repair at the next mission start');
+assert(JSON.stringify(mission.macros['crew member state event']).split('"global":"CREW_DEATH_REPAIR_PENDING"').length === 11, 'every crew death and every critical member must mark the helicopter and crew for repair at the next mission start');
 const objective1Json = JSON.stringify(mission.macros.objective1);
 assert(objective1Json.includes('{"if":{"global":"CREW_DEATH_REPAIR_PENDING"},"eq":"yes","then":[{"call_macro":"reset aircraft failures"}') && objective1Json.includes('"global":"CREW_DEATH_REPAIR_PENDING"},"value":"no"'), 'the mission start must repair the helicopter and clear the flag after a crew death');
 const startMonitorJson = JSON.stringify(mission.macros['start crew lifescore monitor']);
@@ -289,12 +296,21 @@ assert(crashApplyJson.includes('"crash_member_room"') && crashApplyJson.includes
 const floorOf = (cause) => { const m = crashMonitorJson.match(new RegExp('"score":-?\\d+,"cause":"' + cause + '"(?:,"floor":(\\d+))?')); return m ? Number(m[1] || 0) : -1; };
 assert(floorOf('MINOR AIRCRAFT IMPACT') === 70 && floorOf('MODERATE AIRCRAFT IMPACT') === 40 && floorOf('AIRCRAFT CRASH IMPACT') === 20, 'the survival floors must be 70, 40 and 20 for the first three tiers');
 assert(floorOf('SEVERE AIRCRAFT CRASH IMPACT') === 0 && floorOf('HEAVY AIRCRAFT CRASH IMPACT') === 0 && floorOf('CATASTROPHIC AIRCRAFT CRASH IMPACT') === 0, 'the 250, 330 and 400 tiers must have no floor');
-assert(!crashMonitorJson.includes('"sleep":1}') && !crashMonitorJson.includes('wait_for'), 'the impact loop must not hold a fixed cooldown or wait on a condition another thread can leave unset: rearming follows the acceleration only');
+// Only two waits are allowed in the impact loop and both read a source no other thread writes: the Settings option "Crew health simulation"
+// (the loop sleeps while it is off) and the altitude gate (PLANE ALT ABOVE GROUND / SIM ON GROUND of the simulator, see docs/architecture/PERFORMANCE_OPTIONS.md).
+const loopWaits = [];
+(function collectWaits(node) {
+  if (Array.isArray(node)) return node.forEach(collectWaits);
+  if (!node || typeof node !== 'object') return;
+  if (node.wait_for !== undefined) loopWaits.push(JSON.stringify(node.wait_for));
+  Object.values(node).forEach(collectWaits);
+}([mission.macros['monitor aircraft crash impact'], mission.macros['crash monitor loop']]));
+const allowedWait = (text) => text === '{"global":"HOIST_SAFETY_MONITOR"}' || /^\{"var":\["(PLANE ALT ABOVE GROUND|SIM ON GROUND)","[A-Za-z]+"\]\}$/.test(text);
+assert(!crashMonitorJson.includes('"sleep":1}') && loopWaits.every(allowedWait), 'the impact loop must not hold a fixed cooldown or wait on a condition another thread can leave unset: rearming follows the acceleration only (the only waits are the crew health option and the altitude gate sensors)');
 assert(['probe_trigger', 'probe_after', 'PLANE TOUCHDOWN NORMAL VELOCITY', 'SIM ON GROUND', 'PLANE ALT ABOVE GROUND', 'VERTICAL SPEED', 'GROUND VELOCITY', 'L:CRASH'].every((name) => crashMonitorJson.includes(name)) && (crashMonitorJson.match(/probe_error/g) || []).length === 2, 'every impact must trace the alternative signals, each probe inside its own try so that it cannot stop the injuries');
 const crashChainJson = ['apply aircraft crash lifescore impact', 'apply crew lifescore impact', 'crew impact events'].map((name) => JSON.stringify(mission.macros[name])).join('');
 assert(!/open_table|save_table|"call_macro":"test tracker/.test(crashChainJson), 'the damage path must not touch the test tables');
-const recordJson = JSON.stringify(mission.macros['record crew health test']);
-assert(recordJson.includes('"call_macro":"test tracker begin"') && recordJson.includes('"call_macro":"test tracker complete"') && recordJson.includes('"test_id":"crew_health"') && JSON.stringify(mission.macros['monitor aircraft crash impact']).includes('"call_macro":"record crew health test"') && JSON.stringify(mission.macros['apply crew lifescore impact']).includes('"local":"CREW_TEST_TRACK_DUE"'), 'the crew health test bookkeeping must run in its own thread, started with the monitor and requested by the damage path with a flag');
+assert(mission.macros['record crew health test'] === undefined && !JSON.stringify(mission.macros['apply crew lifescore impact']).includes('CREW_TEST_TRACK') && !JSON.stringify(mission.macros['monitor aircraft crash impact']).includes('record crew health test'), 'the Test Tracker bookkeeping of the crew health test (own thread and flag) was removed with the tracker');
 assert(['monitor_error_caught', 'stage minor_apply_start', 'stage events_start', 'stage events_done'].every((name) => crashMonitorJson.includes(name)) && crashChainJson.includes('apply_enter') && crashChainJson.includes('apply_exit') && crashChainJson.includes('member_apply') && crashChainJson.includes('member_applied') && crashChainJson.includes('events_exit') && crashMonitorJson.indexOf('monitor_error_caught') < crashMonitorJson.indexOf('"local":"cm_error"'), 'every call of the damage chain must be traced, and the caught error must leave a constant row before $ERROR is read');
 assert(crashMonitorJson.includes('"local":"crash_event_log"') && crashMonitorJson.includes('"local":"crash_event_count"') && JSON.stringify(mission.macros['capture crew movement snapshot']).includes('"key":"crash_event_log"'), 'every impact must be kept in the in-memory event log, which the snapshot copies without any file access of its own');
 assert(crashMonitorJson.includes('"local":"cm_minor_armed"') && crashMonitorJson.includes('"local":"cm_crash_armed"') && !crashMonitorJson.includes('crash_apply_busy'), 'a light impact must not blind the crash tiers: two arming states in one loop, and no shared lock');
@@ -311,9 +327,9 @@ assert(impactEventsJson.includes('"local":"CREW_PILOTS_UNFIT"') && impactEventsJ
 const medicGate = [1, 2, 3].map((n) => JSON.stringify(mission.macros['apply patient' + n + ' medical action effect'])).join('');
 assert((medicGate.match(/"require":\{"local":"CREW_CRIT_2"\},"ne":1/g) || []).length === 3, 'the treatment effects of the three patients must not apply while the medic is critical or dead');
 const deadSceneJson = JSON.stringify(mission.macros['random deads']);
-assert(deadSceneJson.includes('"call_macro":"Police1"') && deadSceneJson.includes('"local":"POLICE_AVAIL"},"value":2') && deadSceneJson.includes('"local":"POLICE_AVAIL"},"eq":0') && deadSceneJson.includes('"local":"player"},"ne":"multiplayer"') && deadSceneJson.includes('Police informed and en route'), 'a deceased on scene must request the police once, as the Request police button does');
+assert(deadSceneJson.includes('"call_macro":"Police1"') && deadSceneJson.includes('"local":"POLICE_AVAIL"},"value":2') && deadSceneJson.includes('"local":"POLICE_AVAIL"},"eq":0') && deadSceneJson.includes('"local":"player"},"ne":"multiplayer"') && deadSceneJson.includes('Deceased on scene. Requesting police.') && deadSceneJson.includes('"from":"crew"') && deadSceneJson.includes('Copy. Police tasked.'), 'a deceased on scene must request the police once, as the Request police button does: the crew asks, the dispatcher answers');
 const sceneDeathJson = JSON.stringify(mission.macros['multipatient registry tick']);
-assert(sceneDeathJson.includes('"call_macro":"Police1"') && sceneDeathJson.includes('"local":"POLICE_AVAIL"},"eq":0') && sceneDeathJson.includes('"local":"player"},"ne":"multiplayer"') && sceneDeathJson.includes('Police informed and en route') && sceneDeathJson.includes('CLINICAL DETERIORATION'), 'a patient who dies on scene must request the police once and leave a cause');
+assert(sceneDeathJson.includes('"call_macro":"Police1"') && sceneDeathJson.includes('"local":"POLICE_AVAIL"},"eq":0') && sceneDeathJson.includes('"local":"player"},"ne":"multiplayer"') && sceneDeathJson.includes('Requesting police.') && sceneDeathJson.includes('Police tasked.') && sceneDeathJson.includes('CLINICAL DETERIORATION'), 'a patient who dies on scene must request the police once and leave a cause');
 const deathCauseJson = JSON.stringify(mission.macros['multipatient registry acceleration impact']) + JSON.stringify(mission.macros['multipatient registry live physiology step']) + JSON.stringify(mission.macros['Hoisting back up']);
 assert(['PILOTING (IMPACT DAMAGE)', 'CLINICAL DETERIORATION', 'HOIST LOSS (HIGH SPEED)'].every((cause) => deathCauseJson.includes(cause)), 'a patient death aboard must record its cause: piloting, clinical deterioration or a hoist loss');
 const reportMenuJson = JSON.stringify(mission.macros['end menu']);
@@ -321,17 +337,22 @@ assert(reportMenuJson.includes('Patient death cause: {0}') && reportMenuJson.inc
 const j = (name) => JSON.stringify(mission.macros[name]);
 assert(j('post dispatcher message').includes('"modify_array":{"local":"Dispatcher_Messages"}') && j('post dispatcher message').includes('"global":"GRPNAME"') && j('post dispatcher message').includes('UpdateRescueTrack'), 'the dispatcher helper must post one RescueTrack message from the dispatcher');
 assert(j('record patient death time').includes('clock now') && !mission.macros['sim time text'] && !j('record patient death time').includes('get_time_string') && !j('random deads').includes('get_time_string') && j('record patient death time').includes('DEATH_TIME_1') && j('record patient death time').includes('DEATH_TIME_3') && j('sync medical patient display').includes('medical_display_death_time') && j('patient health').includes('Time of death: {0:TIME}{1}') && j('multipatient registry tick').includes('record patient death time'), 'the time of death must be kept at the death or the visit and shown in the medical page');
-assert(['multipatient registry live physiology step'].every((n) => (j(n).match(/Patient deceased on board\. Continuing to destination\./g) || []).length === 3), 'a death aboard must reach the dispatcher');
-assert(j('Ambulance destination1').includes('Patient handed over to ED.') && j('User destination1').includes('Patient handed over to ED.'), 'the hospital handover must reach the dispatcher');
+assert(['multipatient registry live physiology step'].every((n) => (j(n).match(/"from":"crew","text":"Patient deceased on board\. Continuing to destination\./g) || []).length === 3), 'a death aboard must reach the dispatcher, reported by the crew');
+assert(j('Ambulance destination1').includes('"from":"crew","text":"Patient handed over to ED."') && j('User destination1').includes('"from":"crew","text":"Patient handed over to ED."'), 'the hospital handover must reach the dispatcher, reported by the crew');
+// who knows says: the helicopter crew is the sender -OUT-, the units on scene their call sign, the dispatcher only what it decides or answers
+assert(j('post crew safety message').includes('"from":"-OUT-"') && !j('post crew safety message').includes('GRPNAME'), 'the crew status is a message of the crew (-OUT-), never of the dispatcher');
+assert(['crew', 'fire', 'police', 'ambulance'].every((from) => j('post dispatcher message').includes(`"param":"from"},"eq":"${from}"`)) && j('post dispatcher message').includes('"-OUT-"') && j('post dispatcher message').includes('"local":"post_from"'), 'the dispatcher helper chooses the sender: crew -OUT-, fire, police, ambulance, otherwise the dispatcher');
+assert(!j('crew emergency choice').includes('post crew safety message') && j('crew emergency choice').startsWith('[{"#comment"') && j('crew emergency choice').indexOf('"set_dispatch_dialog":0') < j('crew emergency choice').indexOf('"set_modal"'), 'the Divert or Continue question is on screen only (not a radio message) and the dispatch page is hidden before the modal');
+assert(!JSON.stringify(mission.macros).includes('crew secured. Direct to hospital') && !JSON.stringify(mission.macros).includes('Divert to hospital or continue: choose on the tablet') && !JSON.stringify(mission.macros).includes('Handover completed. Return to base.","cause"'), 'no message tells the dispatcher a question of the simulator');
 assert(j('Police1').includes('Police on scene, scene secured.') && j('police_rescuetrack_ontheway-arrived').includes('Police on scene, scene secured.'), 'the police arrival must say that the scene is secured');
 assert(j('post crew safety message').includes('crew_post_role') && !j('post crew safety message').includes('LifeScore') && j('crew member event announce').includes('Accident report required.'), 'crew messages must use the role, no LifeScore, and the first loss must ask for the accident report');
 const fireJson = JSON.stringify(mission.macros['random VFX']);
-assert(['Fire service reports: scene NOT safe, fire active.', 'Fire service reports: scene NOT safe, smoke on site.', 'Fire service reports: scene safe, no fire, no smoke.', 'Fire service reports: fire out, scene safe for HEMS.'].every((text) => fireJson.includes(text)) && fireJson.includes('"local":"FIREENGINE_AVAIL"},"eq":1'), 'the fire service must report the safety of the scene at its arrival and the end of the fire to the dispatcher');
+assert(['Scene NOT safe, fire active.', 'Scene NOT safe, smoke on site.', 'Scene safe, no fire, no smoke.', 'Fire out, scene safe for HEMS.'].every((text) => fireJson.includes(text)) && fireJson.includes('"local":"FIREENGINE_AVAIL"},"eq":1') && fireJson.includes('"params":{"from":"fire"'), 'the fire service must report the safety of the scene at its arrival and the end of the fire, with its own call sign as the sender');
 const deadPageJson = JSON.stringify(mission.macros['deceased scene page']);
 assert(deadPageJson.includes('DECEASED ON SCENE') && deadPageJson.includes('"image":"homebar"') && deadPageJson.includes('Back to dispatch screen') && deadPageJson.includes('POORDEAD_REPORT_TIME') && (JSON.stringify(mission.macros['patient health']).match(/"title":"Deceased"/g) || []).length === 2 && JSON.stringify(mission.macros['random deads']).includes('POORDEAD_REPORT_TIME'), 'the deceased found on scene must have a minimal page with the header and tabs of the patient pages');
 assert(crashMonitorJson.includes('impact_ignored') && crashMonitorJson.includes('"local":"cm_ignore"') && crashMonitorJson.includes('{"require":{"local":"cm_sig_hit"},"eq":0}') && crashMonitorJson.includes('{"require":{"local":"cm_dv2"},"lt":100}'), 'an acceleration spike without the touchdown or velocity trigger and without a real change of velocity must be ignored, so a soft touchdown does not hurt the crew');
 assert(j('clock now').includes('E:ZULU TIME') && j('clock now').includes('E:LOCAL TIME') && j('clock now').includes('CLOCK_MODE') && j('eta clock').includes('clock now') && j('eta clock').includes('86400') && ['closest ambulance', 'Ambulance1', 'Ambulance2', 'Firetruck1', 'police_rescuetrack_ontheway-arrived'].every((name) => j(name).includes('"call_macro":"eta clock"') && j(name).includes('"local":"ETA_CLOCK"')) && !/ETA \{\d:TIME\}[^"]*","params":\[(\{"round")/.test(j('closest ambulance') + j('Ambulance1') + j('Firetruck1')), 'every vehicle ETA must be a time of day (the simulator UTC clock plus the travel time), not a duration');
-assert(j('truck vs car').includes('Fire service reports: fire out, scene safe for HEMS.') && j('random VFX').includes('"object":"trailer","var":"VAR 1"},"gt":0') && j('random VFX').includes('fire_report_text'), 'the fire service report must cover the truck scene (trailer) and report its fire out');
+assert(j('truck vs car').includes('Fire out, scene safe for HEMS.') && j('truck vs car').includes('"from":"fire"') && j('random VFX').includes('"object":"trailer","var":"VAR 1"},"gt":0') && j('random VFX').includes('fire_report_text'), 'the fire service report must cover the truck scene (trailer) and report its fire out');
 const stampLeft = Object.entries(mission.macros).filter(([name, macro]) => name !== 'capture crew movement snapshot' && JSON.stringify(macro).includes('"time":{"fn":"get_time_string"}')).map(([name]) => name);
 assert(stampLeft.length <= 2 && JSON.stringify(mission.macros['post dispatcher message']).includes('"global":"CLOCK_MODE"') && JSON.stringify(mission.macros['dispatch control']).includes('"set":{"global":"CLOCK_MODE"},"value":"local"') && JSON.stringify(mission.macros['dispatch control']).includes('"set":{"global":"CLOCK_MODE"},"value":"utc"'), 'dispatcher message times must follow the clock chosen in the dispatch control page (UTC Z or local L), and the setting must exist');
 assert(crashMonitorJson.includes('"IS SLEW ACTIVE","bool"') && crashMonitorJson.includes('"local":"cm_slew_hold"') && crashMonitorJson.indexOf('"IS SLEW ACTIVE"') < crashMonitorJson.indexOf('"local":"cm_calm_minor"},"value":{"add"'), 'while slew mode is active (and for a few ticks after it) every impact trigger must be suppressed, before any threshold is evaluated');

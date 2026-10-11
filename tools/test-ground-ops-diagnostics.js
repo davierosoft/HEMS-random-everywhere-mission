@@ -110,6 +110,7 @@ const Live = context.module.exports;
 class Harness extends Live {
   query(q, p) {
     if (q?.static === 'Debug_Auto_Table') return 'automatic';
+    if (q?.static === 'Debug_Dispatch_Table') return 'dispatch';
     if (q?.fn === 'get_time_string') return '12:00:00';
     if (q?.location && q.var === 'distance:m') return 12.34;
     if (q?.object && typeof q.object === 'string' && q.var === 'distance:m') return 5.5;
@@ -172,6 +173,8 @@ class Harness extends Live {
   h.locals.ground_ops_post_rotor = 1;
   let tick = 0;
   h.sleepHook = (scene) => {
+    const last = scene.events.at(-1);
+    if (last?.[0] === 'sleep' && last[1] !== 2) return; // the short sleeps between the heavy snapshot calls of a stall only unwind the stack
     tick += 1;
     if (tick === 2) scene.locals['L:MISSION_TIME'] = 520;
     if (tick === 3) scene.locals['L:MISSION_TIME'] = 600;

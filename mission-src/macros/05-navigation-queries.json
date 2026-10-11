@@ -490,6 +490,10 @@
     {"set_map":{"remove":{"point":{"id":"location_temp_icon"}}}},
     {"set_map":{"remove":{"point":{"id":"ringSAR"}}}},
     {"set_map":{"remove":{"point":{"id":"SAR_start_location_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"sar_last_contact_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"sar_route_a"}}}},
+    {"set_map":{"remove":{"point":{"id":"sar_route_b"}}}},
+    {"set_map":{"remove":{"line":{"id":"sar_route_line"}}}},
     {"if": {"has_location":"accident_location"}, "eq": 1,
       "then": [
         {"create_location": "accident_location",
@@ -601,10 +605,36 @@
               "zones": [
                 {"zone":{"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[500,{"global":"SAR_MAX_RADIUS"}]},"object":"accident_location"}}}
             ]},
-            {"if": {"global":"SAR_RING"}, "ne": 0,
+            {"set":{"local":"sar_route_preview"},"value":"no"},
+            {"set":{"local":"sar_page_mode"},"value":null},
+            {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 65,
               "then": [
-                {"set_map":{"add":{"point":{"location":"SAR_start_location","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOrSURBVEhLzZdNSFRRFIBnRlOcGUVERx1/Rh0nQcUKJafAHDPUSIKYtBmzIDdlGKNhEtqmQAVr107BQs2oXTt3LVy1adsqoT+CNrUog2i4nXPm3PHd9968GbWgD+47P/fcc+977/68Z7NC4MVOKhuIdCBibm4+zrqGSCSK4bIYEDa324012319p38kfDuYNnGwNK0EhAzICDE+PvGK9b0hGhsbi8Lh86b3SI6qqqqHZCVIBpFSX1//nqwESgatIbxerygrKyNfVlbWb3Lixe/3f0fJKBkQDqo3HYNE5OXloVOWtFDg7OxcF+vWTE/fuQwio8yAGldZWTnf0tLyhk3C4XAoQV5vxTdWJRl1hkGWgZazCV4ea2lYX396aHn50Tk2JfqeFTsaHTKOzOfzLa2tPTnBphmTeOno6LC8LSI/P38bhAxM3+BfoO19VyOgYJgXJHt7+0IogbSJMu1FrKys+lhPOQ9kMr0kNjc3nawmUQKys7MVGxa2rv6AKC0tLWKT0AYowRKn04l+WScKCgo+sW6JtpEp+AyUzNDTY1Ryc3PNGpKvoaHhrtTTIfr7+7+wbok2m2lml8uFflkn7Hb7Tlx7e1DfyNKG3f0IqwoiFhs/i4rL5ZaHFzWE10r7MyPg+dxjfQfYPGQvtGRTEQqF0j4TmYgkTqLh4Us4ZLRlXRKzqaw9y23xeNy2tbX1GlT0K3V7pra2VgwOXjjDpi0QOLhRU1NjGN1fgdeRGBgYxLtA5KOgDldX145LW665wsJCsj0eD9n7hZJVVFRknCwnJ4faOJ00d3cNNcbS2RmiaWmBjE0JvC6cwpyv0zLWEviwOwqCEsE6OIk+2NJEdbWPdiXY4vDkTjsgK2RjfYJdJw2Hwx9AqNtFApkr83zNzc0f+fPWQF2dP9ja2hZkU6G4uFhMTt56zqY1gUBgC4TZyExHC7P8MwhZRyUSiTwDmWRq6vZLEGbtyTc0dPFnwgQWFu4vghD6o6y8vPyX/isNaWtrewFCJqcSDB4rAKlgtzsE7BFf2ST4tRhyEiUlJWJxcekqmxJqMD09cyVhpqenp3cDhNAPPhTqmsFXw6YBOTIlAH4OzCZTJuBjfsu6hPLrPxIM4N9Id/epMTaJWCyWXIZwXNEyRJ0LPr2Uy3Bs7Ma7pqamB2xaozl58RSy3Ijwp8PjKTV0qAXO2ORGBP8/y+TcJdTYbDJaQG247A/4Fr+mmwNK8tHR6/IvKukbGRk5jPrExM0o2v8xNtsfLJxLWK3H1AkAAAAASUVORK5CYII=","id":"SAR_start_location_icon"}}}},
-                {"set_map":{"add":{"point":{"location":"SAR_start_location","id":"ringSAR","stroke":{"width":0.2,"color":"red"},"fill":{"color":"rgba(255, 0, 0, 0.2)"},"range":{"global":"SAR_MAX_RADIUS"}}}}}
+                {"#comment":"Mission 65 has no ring: the dispatch shows the start of the trip (SAR icon, label START), the destination (label DEST) and a straight line between them. Both points are plain geometry, no OSM query. The loading replaces the line with the real route and keeps the two points."},
+                {"if": {"has_location":"accident_location"}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sar_route_brg"},"value":{"floor":{"rand":[0,360]}}},
+                    {"set":{"local":"sar_route_len"},"value":{"floor":{"rand":[25000,40001]}}},
+                    {"create_location": "sar_route_a",
+                      "zones": [
+                        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+                    ]},
+                    {"create_location": "sar_route_b",
+                      "zones": [
+                        {"zone":{"location":{"bearing":{"local":"sar_route_brg"},"dist":{"local":"sar_route_len"},"object":"accident_location"}}}
+                    ]},
+                    {"set_map":{"add":{"point":{"location":"sar_route_a","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOrSURBVEhLzZdNSFRRFIBnRlOcGUVERx1/Rh0nQcUKJafAHDPUSIKYtBmzIDdlGKNhEtqmQAVr107BQs2oXTt3LVy1adsqoT+CNrUog2i4nXPm3PHd9968GbWgD+47P/fcc+977/68Z7NC4MVOKhuIdCBibm4+zrqGSCSK4bIYEDa324012319p38kfDuYNnGwNK0EhAzICDE+PvGK9b0hGhsbi8Lh86b3SI6qqqqHZCVIBpFSX1//nqwESgatIbxerygrKyNfVlbWb3Lixe/3f0fJKBkQDqo3HYNE5OXloVOWtFDg7OxcF+vWTE/fuQwio8yAGldZWTnf0tLyhk3C4XAoQV5vxTdWJRl1hkGWgZazCV4ea2lYX396aHn50Tk2JfqeFTsaHTKOzOfzLa2tPTnBphmTeOno6LC8LSI/P38bhAxM3+BfoO19VyOgYJgXJHt7+0IogbSJMu1FrKys+lhPOQ9kMr0kNjc3nawmUQKys7MVGxa2rv6AKC0tLWKT0AYowRKn04l+WScKCgo+sW6JtpEp+AyUzNDTY1Ryc3PNGpKvoaHhrtTTIfr7+7+wbok2m2lml8uFflkn7Hb7Tlx7e1DfyNKG3f0IqwoiFhs/i4rL5ZaHFzWE10r7MyPg+dxjfQfYPGQvtGRTEQqF0j4TmYgkTqLh4Us4ZLRlXRKzqaw9y23xeNy2tbX1GlT0K3V7pra2VgwOXjjDpi0QOLhRU1NjGN1fgdeRGBgYxLtA5KOgDldX145LW665wsJCsj0eD9n7hZJVVFRknCwnJ4faOJ00d3cNNcbS2RmiaWmBjE0JvC6cwpyv0zLWEviwOwqCEsE6OIk+2NJEdbWPdiXY4vDkTjsgK2RjfYJdJw2Hwx9AqNtFApkr83zNzc0f+fPWQF2dP9ja2hZkU6G4uFhMTt56zqY1gUBgC4TZyExHC7P8MwhZRyUSiTwDmWRq6vZLEGbtyTc0dPFnwgQWFu4vghD6o6y8vPyX/isNaWtrewFCJqcSDB4rAKlgtzsE7BFf2ST4tRhyEiUlJWJxcekqmxJqMD09cyVhpqenp3cDhNAPPhTqmsFXw6YBOTIlAH4OzCZTJuBjfsu6hPLrPxIM4N9Id/epMTaJWCyWXIZwXNEyRJ0LPr2Uy3Bs7Ma7pqamB2xaozl58RSy3Ijwp8PjKTV0qAXO2ORGBP8/y+TcJdTYbDJaQG247A/4Fr+mmwNK8tHR6/IvKukbGRk5jPrExM0o2v8xNtsfLJxLWK3H1AkAAAAASUVORK5CYII=","id":"sar_route_a"}}}},
+                    {"set_map":{"add":{"point":{"location":"sar_route_a","text":"ORIGN"}}}},
+                    {"set_map":{"add":{"point":{"location":"sar_route_b","text":"TO-PT"}}}},
+                    {"set_map":{"add":{"line":{"points":["sar_route_a","sar_route_b"],"stroke":{"color":"#FCBA03","width":2},"id":"sar_route_line"}}}},
+                    {"set":{"local":"sar_route_preview"},"value":"yes"},
+                    {"set":{"local":"sar_page_mode"},"value":"start"}
+                ]}
+              ],"else": [
+                {"if": {"global":"SAR_RING"}, "ne": 0,
+                  "then": [
+                    {"set_map":{"add":{"point":{"location":"SAR_start_location","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOrSURBVEhLzZdNSFRRFIBnRlOcGUVERx1/Rh0nQcUKJafAHDPUSIKYtBmzIDdlGKNhEtqmQAVr107BQs2oXTt3LVy1adsqoT+CNrUog2i4nXPm3PHd9968GbWgD+47P/fcc+977/68Z7NC4MVOKhuIdCBibm4+zrqGSCSK4bIYEDa324012319p38kfDuYNnGwNK0EhAzICDE+PvGK9b0hGhsbi8Lh86b3SI6qqqqHZCVIBpFSX1//nqwESgatIbxerygrKyNfVlbWb3Lixe/3f0fJKBkQDqo3HYNE5OXloVOWtFDg7OxcF+vWTE/fuQwio8yAGldZWTnf0tLyhk3C4XAoQV5vxTdWJRl1hkGWgZazCV4ea2lYX396aHn50Tk2JfqeFTsaHTKOzOfzLa2tPTnBphmTeOno6LC8LSI/P38bhAxM3+BfoO19VyOgYJgXJHt7+0IogbSJMu1FrKys+lhPOQ9kMr0kNjc3nawmUQKys7MVGxa2rv6AKC0tLWKT0AYowRKn04l+WScKCgo+sW6JtpEp+AyUzNDTY1Ryc3PNGpKvoaHhrtTTIfr7+7+wbok2m2lml8uFflkn7Hb7Tlx7e1DfyNKG3f0IqwoiFhs/i4rL5ZaHFzWE10r7MyPg+dxjfQfYPGQvtGRTEQqF0j4TmYgkTqLh4Us4ZLRlXRKzqaw9y23xeNy2tbX1GlT0K3V7pra2VgwOXjjDpi0QOLhRU1NjGN1fgdeRGBgYxLtA5KOgDldX145LW665wsJCsj0eD9n7hZJVVFRknCwnJ4faOJ00d3cNNcbS2RmiaWmBjE0JvC6cwpyv0zLWEviwOwqCEsE6OIk+2NJEdbWPdiXY4vDkTjsgK2RjfYJdJw2Hwx9AqNtFApkr83zNzc0f+fPWQF2dP9ja2hZkU6G4uFhMTt56zqY1gUBgC4TZyExHC7P8MwhZRyUSiTwDmWRq6vZLEGbtyTc0dPFnwgQWFu4vghD6o6y8vPyX/isNaWtrewFCJqcSDB4rAKlgtzsE7BFf2ST4tRhyEiUlJWJxcekqmxJqMD09cyVhpqenp3cDhNAPPhTqmsFXw6YBOTIlAH4OzCZTJuBjfsu6hPLrPxIM4N9Id/epMTaJWCyWXIZwXNEyRJ0LPr2Uy3Bs7Ma7pqamB2xaozl58RSy3Ijwp8PjKTV0qAXO2ORGBP8/y+TcJdTYbDJaQG247A/4Fr+mmwNK8tHR6/IvKukbGRk5jPrExM0o2v8xNtsfLJxLWK3H1AkAAAAASUVORK5CYII=","id":"SAR_start_location_icon"}}}},
+                    {"set_map":{"add":{"point":{"location":"SAR_start_location","id":"ringSAR","stroke":{"width":0.2,"color":"red"},"fill":{"color":"rgba(255, 0, 0, 0.2)"},"range":{"global":"SAR_MAX_RADIUS"}}}}}
+                ]}
             ]}
         ]},
         {"set":{"local":"accident_primary_valid"},"value":"no"},
@@ -636,7 +666,8 @@
     {"if": {
       "and": [
         {"require":{"local":"MISSION_NUMBER"},"ne":4},
-        {"require":{"local":"has_location"},"eq":"yes"}
+        {"require":{"local":"has_location"},"eq":"yes"},
+        {"require":{"local":"SAR"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"Query accident location country"}
@@ -695,8 +726,12 @@
     ]},
     {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
       "then": [
-        {"call_macro":"Query accident location country"},
-        {"wait_for":{"local":"accident_nation_query_done"},"eq":1}
+        {"#comment":"Mission 65 moves the victim along a route in SAR map and route, so its country is asked there, after the final accident_location is known and before the scene macros."},
+        {"if": {"local":"VAR_MISSION_NUMBER"}, "ne": 65,
+          "then": [
+            {"call_macro":"Query accident location country"},
+            {"wait_for":{"local":"accident_nation_query_done"},"eq":1}
+        ]}
       ],"else": [
         {"call_macro":"Query userA country"},
         {"wait_for":{"local":"userA_nation_query_done"},"eq":1}
@@ -708,7 +743,6 @@
     {"set_modal":{}}
   ],
   "routeupdate": [
-    {"call_macro":"test tracker begin","params":{"test_id":"route_guidance"}},
     {"if": {"local":"routeupdate_lock"}, "eq": null,
       "then": [
         {"set":{"local":"routeupdate_lock"},"value":0}
@@ -780,8 +814,7 @@
         ]},
         {"set_map":{"remove":{"line":{"id":"ROUTE"}}}}
     ]},
-    {"set":{"local":"routeupdate_lock"},"value":0},
-    {"call_macro":"test tracker complete","params":{"test_id":"route_guidance"}}
+    {"set":{"local":"routeupdate_lock"},"value":0}
   ],
   "legcolor": [
     {"if": {"global":"NOCONNEXT"}, "eq": 1,
@@ -846,11 +879,137 @@
     {"call_macro":"legcolor"}
   ],
   "SAR map and route": [
+    {"if": {"local":"sar_route_generation"}, "eq": null,
+      "then": [
+        {"set":{"local":"sar_route_generation"},"value":0}
+    ]},
+    {"set":{"local":"sar_route_known"},"value":"no"},
+    {"set":{"local":"sar_route_real"},"value":"no"},
+    {"set":{"local":"sar_page_mode"},"value":null},
+    {"set":{"local":"sar_was_reload"},"value":{"var":["L:CUS_SAR_reload","number"]}},
     {"set_map":{"remove":{"point":{"id":"ringSAR"}}}},
     {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
     {"set_map":{"remove":{"point":{"id":"location_temp_icon"}}}},
     {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
     {"set_map":{"remove":{"point":{"id":"SAR_start_location_icon"}}}},
+    {"set_map":{"remove":{"point":{"id":"sar_last_contact_icon"}}}},
+    {"if": {
+      "and": [
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":65},
+        {"require":{"local":"query_skipped"},"ne":"yes"}
+      ]}, "eq": 1,
+      "then": [
+        {"#comment":"Mission 65: the start A (the queried road point) and the destination B (25-40 km away) come from the dispatch preview (sar_route_preview), or are created here when the preview did not run. One car route A to B; the victim and the car move to a random route entry between the first third and nine tenths of the route, the straight line of the preview is removed and replaced by the route, the START and DEST points stay. If the router fails the line stays and the victim moves to a random point of the line (no car, no road is known). No ring or ring icon is drawn: LAST CONTACT, at one third, is the flight plan target. Everything is decided here, before the scene macros and the savetemp of objective4."},
+        {"set":{"local":"sar_route_generation"},"value":{"add":[{"local":"sar_route_generation"},1]}},
+        {"if": {"local":"sar_route_preview"}, "ne": "yes",
+          "then": [
+            {"set":{"local":"sar_route_brg"},"value":{"floor":{"rand":[0,360]}}},
+            {"set":{"local":"sar_route_len"},"value":{"floor":{"rand":[25000,40001]}}},
+            {"create_location": "sar_route_a",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+            ]},
+            {"create_location": "sar_route_b",
+              "zones": [
+                {"zone":{"location":{"bearing":{"local":"sar_route_brg"},"dist":{"local":"sar_route_len"},"object":"accident_location"}}}
+            ]},
+            {"set_map":{"add":{"point":{"location":"sar_route_a","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOrSURBVEhLzZdNSFRRFIBnRlOcGUVERx1/Rh0nQcUKJafAHDPUSIKYtBmzIDdlGKNhEtqmQAVr107BQs2oXTt3LVy1adsqoT+CNrUog2i4nXPm3PHd9968GbWgD+47P/fcc+977/68Z7NC4MVOKhuIdCBibm4+zrqGSCSK4bIYEDa324012319p38kfDuYNnGwNK0EhAzICDE+PvGK9b0hGhsbi8Lh86b3SI6qqqqHZCVIBpFSX1//nqwESgatIbxerygrKyNfVlbWb3Lixe/3f0fJKBkQDqo3HYNE5OXloVOWtFDg7OxcF+vWTE/fuQwio8yAGldZWTnf0tLyhk3C4XAoQV5vxTdWJRl1hkGWgZazCV4ea2lYX396aHn50Tk2JfqeFTsaHTKOzOfzLa2tPTnBphmTeOno6LC8LSI/P38bhAxM3+BfoO19VyOgYJgXJHt7+0IogbSJMu1FrKys+lhPOQ9kMr0kNjc3nawmUQKys7MVGxa2rv6AKC0tLWKT0AYowRKn04l+WScKCgo+sW6JtpEp+AyUzNDTY1Ryc3PNGpKvoaHhrtTTIfr7+7+wbok2m2lml8uFflkn7Hb7Tlx7e1DfyNKG3f0IqwoiFhs/i4rL5ZaHFzWE10r7MyPg+dxjfQfYPGQvtGRTEQqF0j4TmYgkTqLh4Us4ZLRlXRKzqaw9y23xeNy2tbX1GlT0K3V7pra2VgwOXjjDpi0QOLhRU1NjGN1fgdeRGBgYxLtA5KOgDldX145LW665wsJCsj0eD9n7hZJVVFRknCwnJ4faOJ00d3cNNcbS2RmiaWmBjE0JvC6cwpyv0zLWEviwOwqCEsE6OIk+2NJEdbWPdiXY4vDkTjsgK2RjfYJdJw2Hwx9AqNtFApkr83zNzc0f+fPWQF2dP9ja2hZkU6G4uFhMTt56zqY1gUBgC4TZyExHC7P8MwhZRyUSiTwDmWRq6vZLEGbtyTc0dPFnwgQWFu4vghD6o6y8vPyX/isNaWtrewFCJqcSDB4rAKlgtzsE7BFf2ST4tRhyEiUlJWJxcekqmxJqMD09cyVhpqenp3cDhNAPPhTqmsFXw6YBOTIlAH4OzCZTJuBjfsu6hPLrPxIM4N9Id/epMTaJWCyWXIZwXNEyRJ0LPr2Uy3Bs7Ma7pqamB2xaozl58RSy3Ijwp8PjKTV0qAXO2ORGBP8/y+TcJdTYbDJaQG247A/4Fr+mmwNK8tHR6/IvKukbGRk5jPrExM0o2v8xNtsfLJxLWK3H1AkAAAAASUVORK5CYII=","id":"sar_route_a"}}}},
+            {"set_map":{"add":{"point":{"location":"sar_route_a","text":"ORIGN"}}}},
+            {"set_map":{"add":{"point":{"location":"sar_route_b","text":"TO-PT"}}}}
+        ]},
+        {"create_route":{"name":"sar_route_1","query":{"to":"sar_route_b","from":"sar_route_a","type":"car"}}},
+        {"set":{"local":"sar_route_d1"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+        {"if": {"local":"sar_route_d1"}, "gt": 0,
+          "then": [
+            {"set":{"param":"sar_rt"},"value":{"route":"sar_route_1"}},
+            {"set":{"local":"sar_route_n"},"value":{"struct":{"param":"sar_rt"},"path":"length"}},
+            {"if": {"local":"sar_route_n"}, "gte": 12,
+              "then": [
+                {"set":{"local":"sar_route_lc_i"},"value":{"floor":{"divide":[{"local":"sar_route_n"},3]}}},
+                {"set":{"local":"sar_route_hi_i"},"value":{"floor":{"multiply":[{"local":"sar_route_n"},0.9]}}},
+                {"set":{"local":"sar_route_pick_i"},"value":{"floor":{"rand":[{"local":"sar_route_lc_i"},{"local":"sar_route_hi_i"}]}}},
+                {"set":{"param":"sar_e0"},"value":{"struct":{"param":"sar_rt"},"index":0}},
+                {"set":{"param":"sar_e1"},"value":{"struct":{"param":"sar_rt"},"index":{"subtract":[{"local":"sar_route_n"},1]}}},
+                {"set":{"param":"sar_lc"},"value":{"struct":{"param":"sar_rt"},"index":{"local":"sar_route_lc_i"}}},
+                {"set":{"param":"sar_pk"},"value":{"struct":{"param":"sar_rt"},"index":{"local":"sar_route_pick_i"}}},
+                {"set":{"param":"sar_nx"},"value":{"struct":{"param":"sar_rt"},"index":{"add":[{"local":"sar_route_pick_i"},1]}}},
+                {"create_location": "sar_route_start",
+                  "zones": [
+                    {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"sar_e0"},"index":0},{"struct":{"param":"sar_e0"},"index":1}]}}}}
+                ]},
+                {"set":{"local":"sar_route_chk"},"value":{"object":"sar_route_start","var":"distance:m","to":"sar_route_a"}},
+                {"#comment":"A route table entry left by an earlier mission would start far from A: it is accepted only when its first entry is within 2000 m of A."},
+                {"if": {"local":"sar_route_chk"}, "lte": 2000,
+                  "then": [
+                    {"create_location": "sar_route_end",
+                      "zones": [
+                        {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"sar_e1"},"index":0},{"struct":{"param":"sar_e1"},"index":1}]}}}}
+                    ]},
+                    {"create_location": "sar_last_contact",
+                      "zones": [
+                        {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"sar_lc"},"index":0},{"struct":{"param":"sar_lc"},"index":1}]}}}}
+                    ]},
+                    {"create_location": "sar_route_next",
+                      "zones": [
+                        {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"sar_nx"},"index":0},{"struct":{"param":"sar_nx"},"index":1}]}}}}
+                    ]},
+                    {"create_location": "accident_location",
+                      "zones": [
+                        {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"sar_pk"},"index":0},{"struct":{"param":"sar_pk"},"index":1}]}}}}
+                    ]},
+                    {"set":{"local":"location_diagnostic_source_macro"},"value":"SAR map and route"},
+                    {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"SAR map and route"},
+                    {"set":{"local":"sar_route_known"},"value":"yes"},
+                    {"set":{"local":"sar_route_real"},"value":"yes"},
+                    {"set_map":{"remove":{"line":{"id":"sar_route_line"}}}},
+                    {"create_thread": {
+                      "commands": [
+                        {"#comment":"The line appears after the loading (MISSION_PHASE 4) and only for the mission that created it; a new mission reload clears it."},
+                        {"set":{"param":"gen"},"value":{"local":"sar_route_generation"}},
+                        {"wait_for":{"local":"MISSION_PHASE"},"gt":3},
+                        {"if": {"local":"sar_route_generation"}, "eq": {"param":"gen"},
+                          "then": [
+                            {"draw_route":"sar_route_1","stroke":{"width":3,"color":"#FCBA03"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+        ]},
+        {"if": {"local":"sar_route_known"}, "ne": "yes",
+          "then": [
+            {"#comment":"No route: the straight line of the preview stays (it is added here when the preview did not run) and the victim moves to a random point of it, between one third and nine tenths; LAST CONTACT is at one third. No car: no road is known."},
+            {"set":{"local":"sar_line_pick"},"value":{"floor":{"multiply":[{"local":"sar_route_len"},{"rand":[0.34,0.9]}]}}},
+            {"set":{"local":"sar_line_third"},"value":{"floor":{"divide":[{"local":"sar_route_len"},3]}}},
+            {"create_location": "accident_location",
+              "zones": [
+                {"zone":{"location":{"bearing":{"local":"sar_route_brg"},"dist":{"local":"sar_line_pick"},"object":"sar_route_a"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"SAR map and route"},
+            {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"SAR map and route"},
+            {"create_location": "sar_last_contact",
+              "zones": [
+                {"zone":{"location":{"bearing":{"local":"sar_route_brg"},"dist":{"local":"sar_line_third"},"object":"sar_route_a"}}}
+            ]},
+            {"create_location": "sar_route_start",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"sar_route_a"}}}
+            ]},
+            {"create_location": "sar_route_end",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"sar_route_b"}}}
+            ]},
+            {"set_map":{"add":{"line":{"points":["sar_route_a","sar_route_b"],"stroke":{"color":"#FCBA03","width":2},"id":"sar_route_line"}}}},
+            {"set":{"local":"sar_route_known"},"value":"yes"}
+        ]},
+        {"set":{"local":"sar_page_mode"},"value":"contact"}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 65,
+      "then": [
+        {"#comment":"The country is asked here for mission 65, after the final accident_location and before the scene macros that read NATION."},
+        {"call_macro":"Query accident location country"},
+        {"wait_for":{"local":"accident_nation_query_done"},"eq":1}
+    ]},
+    {"set":{"local":"sar_route_preview"},"value":"no"},
     {"if": {"var":["L:CUS_SAR_reload","number"]}, "ne": 1,
       "then": [
         {"create_location": "SAR_start_location",
@@ -864,21 +1023,46 @@
             {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_SAR_START LAT","number"]},{"var":["L:CUS_SAR_START LON","number"]}]}}}}
         ]}
     ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"query_skipped"},"ne":"yes"},
+        {"require":{"has_location":"sar_anchor_location"},"eq":1},
+        {"require":{"or":[{"require":{"local":"VAR_MISSION_NUMBER"},"eq":66},{"require":{"local":"VAR_MISSION_NUMBER"},"eq":68}]},"eq":1},
+        {"require":{"local":"sar_was_reload"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"create_location": "SAR_start_location",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"sar_anchor_location"}}}
+        ]}
+    ]},
     {"set":{"local":"location_name"},"value":"SAR_start_location"},
+    {"if": {"local":"sar_route_known"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"location_name"},"value":"sar_last_contact"}
+    ]},
     {"set":{"local":"FPL_NMBR"},"value":4},
     {"call_macro":"routeupdate"},
     {"call_macro":"legcolor"},
     {"set_message":{"text":"Last known position:<br /> {0:LOCATION} ({1})","params":["SAR_start_location",{"local":"userA_nation"}]}},
-    {"set_map":{"add":{"point":{"location":"SAR_start_location","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOrSURBVEhLzZdNSFRRFIBnRlOcGUVERx1/Rh0nQcUKJafAHDPUSIKYtBmzIDdlGKNhEtqmQAVr107BQs2oXTt3LVy1adsqoT+CNrUog2i4nXPm3PHd9968GbWgD+47P/fcc+977/68Z7NC4MVOKhuIdCBibm4+zrqGSCSK4bIYEDa324012319p38kfDuYNnGwNK0EhAzICDE+PvGK9b0hGhsbi8Lh86b3SI6qqqqHZCVIBpFSX1//nqwESgatIbxerygrKyNfVlbWb3Lixe/3f0fJKBkQDqo3HYNE5OXloVOWtFDg7OxcF+vWTE/fuQwio8yAGldZWTnf0tLyhk3C4XAoQV5vxTdWJRl1hkGWgZazCV4ea2lYX396aHn50Tk2JfqeFTsaHTKOzOfzLa2tPTnBphmTeOno6LC8LSI/P38bhAxM3+BfoO19VyOgYJgXJHt7+0IogbSJMu1FrKys+lhPOQ9kMr0kNjc3nawmUQKys7MVGxa2rv6AKC0tLWKT0AYowRKn04l+WScKCgo+sW6JtpEp+AyUzNDTY1Ryc3PNGpKvoaHhrtTTIfr7+7+wbok2m2lml8uFflkn7Hb7Tlx7e1DfyNKG3f0IqwoiFhs/i4rL5ZaHFzWE10r7MyPg+dxjfQfYPGQvtGRTEQqF0j4TmYgkTqLh4Us4ZLRlXRKzqaw9y23xeNy2tbX1GlT0K3V7pra2VgwOXjjDpi0QOLhRU1NjGN1fgdeRGBgYxLtA5KOgDldX145LW665wsJCsj0eD9n7hZJVVFRknCwnJ4faOJ00d3cNNcbS2RmiaWmBjE0JvC6cwpyv0zLWEviwOwqCEsE6OIk+2NJEdbWPdiXY4vDkTjsgK2RjfYJdJw2Hwx9AqNtFApkr83zNzc0f+fPWQF2dP9ja2hZkU6G4uFhMTt56zqY1gUBgC4TZyExHC7P8MwhZRyUSiTwDmWRq6vZLEGbtyTc0dPFnwgQWFu4vghD6o6y8vPyX/isNaWtrewFCJqcSDB4rAKlgtzsE7BFf2ST4tRhyEiUlJWJxcekqmxJqMD09cyVhpqenp3cDhNAPPhTqmsFXw6YBOTIlAH4OzCZTJuBjfsu6hPLrPxIM4N9Id/epMTaJWCyWXIZwXNEyRJ0LPr2Uy3Bs7Ma7pqamB2xaozl58RSy3Ijwp8PjKTV0qAXO2ORGBP8/y+TcJdTYbDJaQG247A/4Fr+mmwNK8tHR6/IvKukbGRk5jPrExM0o2v8xNtsfLJxLWK3H1AkAAAAASUVORK5CYII=","id":"SAR_start_location"}}}},
-    {"set_map":{"add":{"point":{"location":"SAR_start_location","text":"LAST KNOWN POS"}}}},
-    {"if": {"global":"SAR_RING"}, "ne": 0,
+    {"if": {"local":"sar_route_known"}, "eq": "yes",
       "then": [
-        {"set_map":{"add":{"point":{"location":"SAR_start_location","id":"ringSAR","stroke":{"width":2,"color":"red"},"fill":{"color":"rgba(204, 255, 0, 0)"},"range":{"global":"SAR_MAX_RADIUS"}}}}},
-        {"create_thread": {
-          "commands": [
-            {"wait_for":{"local":"MISSION_PHASE"},"gt":8},
-            {"set_map":{"remove":{"point":{"id":"ringSAR"}}}}
-        ]}}
+        {"set_message":{"text":"Last contact:<br /> {0:LOCATION} ({1})<br />Probable route: from {2:LOCATION} to {3:LOCATION}","params":["sar_last_contact",{"local":"accident_nation"},"sar_route_start","sar_route_end"]}},
+        {"set_map":{"add":{"point":{"location":"sar_last_contact","text":"LAST CONTACT","id":"sar_last_contact_icon"}}}}
+    ]},
+    {"if": {"local":"sar_route_known"}, "ne": "yes",
+      "then": [
+        {"set_map":{"add":{"point":{"location":"SAR_start_location","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAOrSURBVEhLzZdNSFRRFIBnRlOcGUVERx1/Rh0nQcUKJafAHDPUSIKYtBmzIDdlGKNhEtqmQAVr107BQs2oXTt3LVy1adsqoT+CNrUog2i4nXPm3PHd9968GbWgD+47P/fcc+977/68Z7NC4MVOKhuIdCBibm4+zrqGSCSK4bIYEDa324012319p38kfDuYNnGwNK0EhAzICDE+PvGK9b0hGhsbi8Lh86b3SI6qqqqHZCVIBpFSX1//nqwESgatIbxerygrKyNfVlbWb3Lixe/3f0fJKBkQDqo3HYNE5OXloVOWtFDg7OxcF+vWTE/fuQwio8yAGldZWTnf0tLyhk3C4XAoQV5vxTdWJRl1hkGWgZazCV4ea2lYX396aHn50Tk2JfqeFTsaHTKOzOfzLa2tPTnBphmTeOno6LC8LSI/P38bhAxM3+BfoO19VyOgYJgXJHt7+0IogbSJMu1FrKys+lhPOQ9kMr0kNjc3nawmUQKys7MVGxa2rv6AKC0tLWKT0AYowRKn04l+WScKCgo+sW6JtpEp+AyUzNDTY1Ryc3PNGpKvoaHhrtTTIfr7+7+wbok2m2lml8uFflkn7Hb7Tlx7e1DfyNKG3f0IqwoiFhs/i4rL5ZaHFzWE10r7MyPg+dxjfQfYPGQvtGRTEQqF0j4TmYgkTqLh4Us4ZLRlXRKzqaw9y23xeNy2tbX1GlT0K3V7pra2VgwOXjjDpi0QOLhRU1NjGN1fgdeRGBgYxLtA5KOgDldX145LW665wsJCsj0eD9n7hZJVVFRknCwnJ4faOJ00d3cNNcbS2RmiaWmBjE0JvC6cwpyv0zLWEviwOwqCEsE6OIk+2NJEdbWPdiXY4vDkTjsgK2RjfYJdJw2Hwx9AqNtFApkr83zNzc0f+fPWQF2dP9ja2hZkU6G4uFhMTt56zqY1gUBgC4TZyExHC7P8MwhZRyUSiTwDmWRq6vZLEGbtyTc0dPFnwgQWFu4vghD6o6y8vPyX/isNaWtrewFCJqcSDB4rAKlgtzsE7BFf2ST4tRhyEiUlJWJxcekqmxJqMD09cyVhpqenp3cDhNAPPhTqmsFXw6YBOTIlAH4OzCZTJuBjfsu6hPLrPxIM4N9Id/epMTaJWCyWXIZwXNEyRJ0LPr2Uy3Bs7Ma7pqamB2xaozl58RSy3Ijwp8PjKTV0qAXO2ORGBP8/y+TcJdTYbDJaQG247A/4Fr+mmwNK8tHR6/IvKukbGRk5jPrExM0o2v8xNtsfLJxLWK3H1AkAAAAASUVORK5CYII=","id":"SAR_start_location"}}}},
+        {"set_map":{"add":{"point":{"location":"SAR_start_location","text":"LAST KNOWN POS"}}}},
+        {"if": {"global":"SAR_RING"}, "ne": 0,
+          "then": [
+            {"set_map":{"add":{"point":{"location":"SAR_start_location","id":"ringSAR","stroke":{"width":2,"color":"red"},"fill":{"color":"rgba(204, 255, 0, 0)"},"range":{"global":"SAR_MAX_RADIUS"}}}}},
+            {"create_thread": {
+              "commands": [
+                {"wait_for":{"local":"MISSION_PHASE"},"gt":8},
+                {"set_map":{"remove":{"point":{"id":"ringSAR"}}}}
+            ]}}
+        ]}
     ]},
     {"if": {"global":"SAR_HISTORY"}, "ne": 0,
       "then": [
@@ -1289,7 +1473,20 @@
         ]},
         {"set":{"param":"my_data"},"value":null},
         {"osm_query_data":{"param":"QUERY"},"location":{"param":"CENTER_AREA"},"size":{"param":"SAMPLE_RADIUS"},"result":"my_data"},
-        {"wait_for":{"param":"my_data"},"ne":null},
+        {"set":{"param":"osm_wait_ticks"},"value":0},
+        {"while": {
+          "and": [
+            {"require":{"param":"my_data"},"eq":null},
+            {"require":{"param":"osm_wait_ticks"},"lt":20}
+          ]}, "eq": true,
+          "do": [
+            {"sleep":0.5},
+            {"set":{"param":"osm_wait_ticks"},"value":{"add":[{"param":"osm_wait_ticks"},1]}}
+        ]},
+        {"if": {"param":"my_data"}, "eq": null,
+          "then": [
+            {"debug_write":"OSM query: no answer in 10 s, next attempt."}
+        ]},
         {"sleep":0.05},
         {"debug_write":{"text":"my_data is of type {0}","params":[{"typeof":{"param":"my_data"}}]}},
         {"set":{"param":"elements"},"value":{"struct":{"param":"my_data"},"path":"elements"}},
@@ -1467,7 +1664,7 @@
     {"if": {"param":"LOCATION_FOUND"}, "eq": 0,
       "then": [
         {"set_message":{"text":"ERR101 FAILED to find a suitable location after {0} attempts.Please report the error to the dev.","params":[{"param":"ATTEMPTS_COUNT"}]}},
-        {"set":{"local":"queryfailed"},"value":"ERR101 FAILED to find a suitable location within {0} meters. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"SAMPLE_RADIUS"}]}
+        {"set":{"local":"queryfailed"},"value":{"text":"ERR101 FAILED to find a suitable location within {0} meters. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"SAMPLE_RADIUS"}]}}
     ]}
   ],
   "Query dispatcher position custom": [
@@ -2160,7 +2357,16 @@
         {"sleep":0.1},
         {"set":{"param":"closest_node"},"value":null},
         {"osm_query_data":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|unclassified|residential|living_street|service|tertiary|(motorway|trunk|primary|secondary|tertiary|)_link)$\"];(._;>;);out;","location":"accident_location","size":{"local":"counter"},"result":"my_data"},
-        {"wait_for":{"param":"my_data"},"ne":null},
+        {"set":{"param":"osm_wait_ticks"},"value":0},
+        {"while": {
+          "and": [
+            {"require":{"param":"my_data"},"eq":null},
+            {"require":{"param":"osm_wait_ticks"},"lt":20}
+          ]}, "eq": true,
+          "do": [
+            {"sleep":0.5},
+            {"set":{"param":"osm_wait_ticks"},"value":{"add":[{"param":"osm_wait_ticks"},1]}}
+        ]},
         {"sleep":1},
         {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
         {"for_each": {"param":"my_ways"},
@@ -2983,9 +3189,7 @@
         "click_commands": [
           {"destroy_user_action":"accept_loki"},
           {"destroy_user_action":"reject_loki"},
-          {"set":{"local":"ACCEPT"},"value":1},
-          {"set":{"local":"landing_spot_watchdog_active"},"value":"no"},
-          {"set":{"local":"landing_spot_watchdog_status"},"value":"disabled_manual"}
+          {"set":{"local":"ACCEPT"},"value":1}
       ]}
     },
     {"create_user_action": {
@@ -3641,7 +3845,6 @@
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}
     ]},
     {"set":{"var":["L:PAX1_MOVE","number"]},"value":0},
@@ -3660,7 +3863,6 @@
             {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
             {"set":{"object":"pax1","var":"VAR 1"},"value":0},
             {"trigger":"H:{local:HXX}_SDK_PAX_1_OFF"},
-            {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},
             {"sleep":0.5},
             {"drive_object":{"name":"pax1","to":[{"bearing":315,"dist":4.5},{"bearing":330,"dist":5.5},{"bearing":340,"dist":8}],"VAR1":2,"speed":5}},
             {"set":{"object":"pax1","var":"VAR 1"},"value":0},
@@ -3675,7 +3877,6 @@
             {"open_door":"pax_left"},
             {"sleep":0.5},
             {"set":{"var":["H:{local:HXX}_SDK_PAX_1_ON","number"]},"value":0},
-            {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
             {"destroy_object":"pax1"},
             {"sleep":0.5},
             {"close_door":"pax_left"}
@@ -3701,7 +3902,6 @@
             {"set":{"object":"pax1","var":"VAR 1"},"value":14},
             {"trigger":"H:{local:HXX}_SDK_PILOT_FO_OFF"},
             {"set":{"local":"COPILOT"},"value":0},
-            {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":0},
             {"sleep":0.5},
             {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},{"bearing":340,"dist":7},{"bearing":350,"dist":8.5}],"VAR1":16,"speed":5}},
             {"set":{"object":"pax1","var":"VAR 1"},"value":14},
@@ -3758,7 +3958,8 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
-    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
+    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_EJECT"},
@@ -3771,7 +3972,6 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
     {"sleep":2},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
     {"sleep":4.5},
     {"close_door":"cargo_right"},
     {"sleep":0.25},
@@ -3803,12 +4003,10 @@
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":2}},
     {"if": {"local":"CREW"}, "eq": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
     ]},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -3940,7 +4138,6 @@
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}
     ]},
     {"sleep":1},
@@ -4001,9 +4198,9 @@
     ]}},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
-    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
+    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
     {"sleep":2},
     {"create_thread": {
       "commands": [
@@ -4067,12 +4264,10 @@
     {"sleep":0.2},
     {"if": {"local":"CREW"}, "eq": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
     ]},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -4212,7 +4407,7 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},
+    {"call_macro":"set station weight","params":{"station":6,"occupied":0}},
     {"sleep":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Ambulance destination hoist","state":"wait_local.closestretcherarrived_eq_step1"}},
     {"wait_for":{"local":"closestretcherarrived"},"eq":"step1"},
@@ -4259,9 +4454,10 @@
     ]}},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
-    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
+    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
+    {"call_macro":"set station weight","params":{"station":5,"occupied":0}},
     {"sleep":2},
     {"create_thread": {
       "commands": [
@@ -4289,12 +4485,12 @@
     {"sleep":0.2},
     {"if": {"local":"CREW"}, "eq": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
+        {"call_macro":"set station weight","params":{"station":4,"occupied":1}},
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
+        {"call_macro":"set station weight","params":{"station":6,"occupied":1}},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
     ]},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -4542,18 +4738,6 @@
     {"sleep":0.1},
     {"set":{"local":"FPL_NMBR"},"value":8},
     {"call_macro":"routeupdate"},
-    {"if": {"local":"CREW"}, "eq": 3,
-      "then": [
-        {"call_macro":"test tracker complete","params":{"test_id":"destination_preload_fpl8","option":"3 CREW","options":["3 CREW","4 CREW","5 CREW"]}}
-    ]},
-    {"if": {"local":"CREW"}, "eq": 4,
-      "then": [
-        {"call_macro":"test tracker complete","params":{"test_id":"destination_preload_fpl8","option":"4 CREW","options":["3 CREW","4 CREW","5 CREW"]}}
-    ]},
-    {"if": {"local":"CREW"}, "eq": 5,
-      "then": [
-        {"call_macro":"test tracker complete","params":{"test_id":"destination_preload_fpl8","option":"5 CREW","options":["3 CREW","4 CREW","5 CREW"]}}
-    ]},
     {"wait_for":{"var":["L:HOISTED","number"]},"eq":1},
     {"set":{"var":["L:STAT_TOG","number"]},"value":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"var":["L:MISSION_TIME_OFFSET","number"]}]}},
     {"if": {"local":"whobringpatient"}, "ne": "organ",
@@ -4570,6 +4754,19 @@
     {"sleep":1},
     {"if": {"local":"whobringpatient"}, "ne": "organ",
       "then": [
+        {"create_thread": {
+          "commands": [
+            {"#comment":"A patient that dies on the way is met by the police at the destination: checked when the destination is near, not when the route is set."},
+            {"wait_for":{"location":"hospital_user","var":"distance"},"lt":2},
+            {"if": {"local":"patientlife"}, "eq": "died",
+              "then": [
+                {"create_location": "ccs_site",
+                  "zones": [
+                    {"zone":{"location":{"bearing":0,"dist":0,"object":"hospital_user"}}}
+                ]},
+                {"call_macro":"deceased patient police scene"}
+            ]}
+        ]}},
         {"if": {"local":"HOIST_OUT"}, "eq": 0,
           "then": [
             {"if": {"var":["L:DEBOARD","number"]}, "lt": 6,
@@ -4595,17 +4792,12 @@
                   {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
                   {"if": {"local":"CREW"}, "eq": 4,
                     "then": [
-                      {"trigger":["H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON"]},
-                      {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
-                      {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":0}
+                      {"trigger":["H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON"]}
                   ]},
                   {"if": {"local":"CREW"}, "eq": 5,
                     "then": [
-                      {"trigger":["H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON","H:{local:HXX}_SDK_PAX_3_ON"]},
-                      {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
-                      {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}}
+                      {"trigger":["H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON","H:{local:HXX}_SDK_PAX_3_ON"]}
                   ]},
-                  {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"global":"STATION_5"}},
                   {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_PATIENT"},
                   {"set_message":{"text":"Patient loading completed"}},
                   {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}},
@@ -4944,7 +5136,6 @@
     {"sleep":0.5},
     {"destroy_object":"hoist_creww"},
     {"trigger":["H:{local:HXX}_SDK_PAX_3_ON"]},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
     {"sleep":0.5},
     {"close_door":"pax_right"},
     {"set":{"var":["L:READY","number"]},"value":0},
@@ -5050,8 +5241,10 @@
         ]}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"user destination scene predefined1","state":"move_object"}},
         {"move_object":"ambumedic","to":{"bearing":0,"dist":0,"heading":240,"object":"DMED"}},
+        {"point_object":"ambumedic","to":"hospital_user"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"user destination scene predefined1","state":"move_object"}},
-        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":240,"object":"DSTR"}}
+        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":240,"object":"DSTR"}},
+        {"point_object":"ambustretcher","to":"hospital_user"}
     ]}}
   ],
   "User destination1": [
@@ -5203,8 +5396,10 @@
         {"set":{"object":"ambulance5","var":"VAR 1"},"value":0},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"move_object"}},
         {"move_object":"ambumedic","to":{"bearing":0,"dist":0,"heading":240,"object":"DMED"}},
+        {"point_object":"ambumedic","to":"hospital_user"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"User destination1","state":"move_object"}},
-        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":240,"object":"DSTR"}}
+        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":240,"object":"DSTR"}},
+        {"point_object":"ambustretcher","to":"hospital_user"}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:_local:HXX__SDK_ROTOR_RPM_lt_81"}},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":81},
@@ -5250,6 +5445,8 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:_local:HXX__SDK_ROTOR_RPM_lt_10"}},
         {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10}
     ]},
+    {"#comment":"A crew casualty never walks here. crew hospital scene stretchers (rotor stopped, before the ground team moves) extracts the casualties in parallel with this unloading and sets CHS_MEDIC_HURT / CHS_PAPER_HURT: when the medic (hoist_crew seat) is a casualty its seat triggers are skipped and hoist_crew is hospital staff, when the member who does the paperwork is a casualty the paperwork is skipped."},
+    {"call_macro":"crew hospital scene stretchers"},
     {"create_thread": {
       "commands": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_start"}},
@@ -5275,95 +5472,97 @@
     ]},
     {"call_macro":"crew spawn wait","params":{"crew_name":"hoist_crew","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
-    {"if": {"local":"CREW"}, "eq": 5,
+    {"if": {"local":"CHS_MEDIC_HURT"}, "ne": "yes",
       "then": [
-        {"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}
-    ]},
-    {"if": {"local":"CREW"}, "ne": 5,
-      "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},
-        {"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}
+        {"if": {"local":"CREW"}, "eq": 5,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_2_OFF"}
+        ]},
+        {"if": {"local":"CREW"}, "ne": 5,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}
+        ]}
     ]},
     {"set":{"var":["L:PAX1_MOVE","number"]},"value":0},
-    {"if": {"local":"CREW"}, "ne": 3,
+    {"if": {"local":"CHS_PAPER_HURT"}, "ne": "yes",
       "then": [
-        {"create_thread": {
-          "commands": [
-            {"open_door":"pax_left"},
-            {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-            {"try": [
-                {"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lpaxdoor"}}
-              ],
-              "catch": [
-                {"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}
-            ]},
-            {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":0},
-            {"trigger":"H:{local:HXX}_SDK_PAX_1_OFF"},
-            {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":0},
-            {"sleep":0.5},
-            {"drive_object":{"name":"pax1","to":[{"bearing":315,"dist":4.5},{"bearing":330,"dist":5.5},{"bearing":340,"dist":8}],"VAR1":2,"speed":5}},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":0},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_start"}},
-            {"drive_object":{"name":"ambumedic","to":[{"bearing":335,"dist":11},{"bearing":340,"dist":9}],"VAR1":1,"speed":5}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_done"}},
-            {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:PAX1_MOVE_eq_1"}},
-            {"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_local.PAPERWORK_eq_0"}},
-            {"wait_for":{"local":"PAPERWORK"},"eq":0},
-            {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lpaxdoor"],"VAR1":2,"speed":5}},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":0},
-            {"sleep":0.5},
-            {"open_door":"pax_left"},
-            {"sleep":0.5},
-            {"set":{"var":["H:{local:HXX}_SDK_PAX_1_ON","number"]},"value":0},
-            {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"global":"STATION_3"}},
-            {"destroy_object":"pax1"},
-            {"sleep":0.5},
-            {"close_door":"pax_left"}
-        ]}}
-    ]},
-    {"if": {"local":"CREW"}, "eq": 3,
-      "then": [
-        {"create_thread": {
-          "commands": [
-            {"open_door":"cockpit_left"},
-            {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-            {"try": [
-                {"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lcocdoor"}}
-              ],
-              "catch": [
-                {"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}
-            ]},
-            {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-            {"set":{"object":"pax1","var":"COUPLED"},"value":0},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":14},
-            {"set":{"object":"pax1","var":"VAR 2"},"value":3},
-            {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":14},
-            {"trigger":"H:{local:HXX}_SDK_PILOT_FO_OFF"},
-            {"set":{"local":"COPILOT"},"value":0},
-            {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":0},
-            {"sleep":0.5},
-            {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},{"bearing":340,"dist":7},{"bearing":350,"dist":8.5}],"VAR1":16,"speed":5}},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":14},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_start"}},
-            {"drive_object":{"name":"ambumedic","to":[{"bearing":335,"dist":11},{"bearing":340,"dist":9}],"VAR1":1,"speed":5}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_done"}},
-            {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:PAX1_MOVE_eq_1"}},
-            {"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_local.PAPERWORK_eq_0"}},
-            {"wait_for":{"local":"PAPERWORK"},"eq":0},
-            {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lcocdoor"],"VAR1":16,"speed":5}},
-            {"set":{"object":"pax1","var":"VAR 1"},"value":14},
-            {"open_door":"cockpit_left"},
-            {"sleep":0.5},
-            {"set":{"var":["H:{local:HXX}_SDK_PILOT_FO_ON","number"]},"value":0},
-            {"destroy_object":"pax1"},
-            {"close_door":"cockpit_left"}
-        ]}}
+        {"if": {"local":"CREW"}, "ne": 3,
+          "then": [
+            {"create_thread": {
+              "commands": [
+                {"open_door":"pax_left"},
+                {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+                {"try": [
+                    {"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lpaxdoor"}}
+                  ],
+                  "catch": [
+                    {"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}
+                ]},
+                {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":0},
+                {"trigger":"H:{local:HXX}_SDK_PAX_1_OFF"},
+                {"sleep":0.5},
+                {"drive_object":{"name":"pax1","to":[{"bearing":315,"dist":4.5},{"bearing":330,"dist":5.5},{"bearing":340,"dist":8}],"VAR1":2,"speed":5}},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":0},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_start"}},
+                {"drive_object":{"name":"ambumedic","to":[{"bearing":335,"dist":11},{"bearing":340,"dist":9}],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_done"}},
+                {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:PAX1_MOVE_eq_1"}},
+                {"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_local.PAPERWORK_eq_0"}},
+                {"wait_for":{"local":"PAPERWORK"},"eq":0},
+                {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lpaxdoor"],"VAR1":2,"speed":5}},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":0},
+                {"sleep":0.5},
+                {"open_door":"pax_left"},
+                {"sleep":0.5},
+                {"set":{"var":["H:{local:HXX}_SDK_PAX_1_ON","number"]},"value":0},
+                {"destroy_object":"pax1"},
+                {"sleep":0.5},
+                {"close_door":"pax_left"}
+            ]}}
+        ]},
+        {"if": {"local":"CREW"}, "eq": 3,
+          "then": [
+            {"create_thread": {
+              "commands": [
+                {"open_door":"cockpit_left"},
+                {"call_macro":"crew spawn launch","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+                {"try": [
+                    {"create_object":{"name":"pax1","title":"$TITLE Crew","fallback_title":"Airbus H145 ADAC Crew","location":"lcocdoor"}}
+                  ],
+                  "catch": [
+                    {"call_macro":"crew spawn failure","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew","error":{"param":"$ERROR"}}}
+                ]},
+                {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+                {"set":{"object":"pax1","var":"COUPLED"},"value":0},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":14},
+                {"set":{"object":"pax1","var":"VAR 2"},"value":3},
+                {"call_macro":"crew spawn wait","params":{"crew_name":"pax1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":14},
+                {"trigger":"H:{local:HXX}_SDK_PILOT_FO_OFF"},
+                {"set":{"local":"COPILOT"},"value":0},
+                {"sleep":0.5},
+                {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},{"bearing":340,"dist":7},{"bearing":350,"dist":8.5}],"VAR1":16,"speed":5}},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":14},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_start"}},
+                {"drive_object":{"name":"ambumedic","to":[{"bearing":335,"dist":11},{"bearing":340,"dist":9}],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination1","state":"drive_done"}},
+                {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:PAX1_MOVE_eq_1"}},
+                {"wait_for":{"var":["L:PAX1_MOVE","number"]},"eq":1},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_local.PAPERWORK_eq_0"}},
+                {"wait_for":{"local":"PAPERWORK"},"eq":0},
+                {"drive_object":{"name":"pax1","to":[{"bearing":320,"dist":4},"lcocdoor"],"VAR1":16,"speed":5}},
+                {"set":{"object":"pax1","var":"VAR 1"},"value":14},
+                {"open_door":"cockpit_left"},
+                {"sleep":0.5},
+                {"set":{"var":["H:{local:HXX}_SDK_PILOT_FO_ON","number"]},"value":0},
+                {"destroy_object":"pax1"},
+                {"close_door":"cockpit_left"}
+            ]}}
+        ]}
     ]},
     {"sleep":1},
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":2}},
@@ -5402,7 +5601,8 @@
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":5.5},{"bearing":185,"dist":4},{"bearing":200,"dist":2}],"VAR1":10,"speed":2}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set_message":{"text":"Patient unloading completed"}},
-    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
+    {"call_macro":"voice hospital handover"},
     {"if": {"local":"LIFESCORE"}, "gt": 3,
       "then": [
         {"set":{"var":["L:PAX3{local:VCP}11","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}11","number"]},1]}}
@@ -5421,7 +5621,6 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
     {"sleep":2},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_RETRACT"},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
     {"sleep":4.5},
     {"close_door":"cargo_right"},
     {"sleep":0.25},
@@ -5552,15 +5751,16 @@
     {"wait_for":{"local":"PAPERWORK"},"eq":0},
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":10,"dist":2}],"VAR1":2,"speed":2}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
-    {"if": {"local":"CREW"}, "eq": 5,
+    {"if": {"local":"CHS_MEDIC_HURT"}, "ne": "yes",
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
-        {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
-    ]},
-    {"if": {"local":"CREW"}, "ne": 5,
-      "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
-        {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
+        {"if": {"local":"CREW"}, "eq": 5,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
+        ]},
+        {"if": {"local":"CREW"}, "ne": 5,
+          "then": [
+            {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
+        ]}
     ]},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,
       "then": [
@@ -5670,8 +5870,10 @@
     {"sleep":0.2},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"user destination scene predefined2","state":"move_object"}},
     {"move_object":"ambumedic","to":{"bearing":0,"dist":0,"heading":181,"object":"DMED"}},
+    {"point_object":"ambumedic","to":"hospital_user"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"user destination scene predefined2","state":"move_object"}},
-    {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":181,"object":"DSTR"}}
+    {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":181,"object":"DSTR"}},
+    {"point_object":"ambustretcher","to":"hospital_user"}
   ],
   "user destination hoist predefined": [
     {"create_location": "DAMBWP",
@@ -5786,8 +5988,10 @@
         ]}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"user destination hoist predefined","state":"move_object"}},
         {"move_object":"ambumedic","to":{"bearing":0,"dist":0,"heading":181,"object":"DMED"}},
+        {"point_object":"ambumedic","to":"hospital_user"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"user destination hoist predefined","state":"move_object"}},
-        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":181,"object":"DSTR"}}
+        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":181,"object":"DSTR"}},
+        {"point_object":"ambustretcher","to":"hospital_user"}
     ]}}
   ],
   "User destination hoist": [
@@ -5940,8 +6144,10 @@
         {"set":{"object":"ambulance5","var":"VAR 1"},"value":0},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"move_object"}},
         {"move_object":"ambumedic","to":{"bearing":0,"dist":0,"heading":181,"object":"DMED"}},
+        {"point_object":"ambumedic","to":"hospital_user"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"User destination hoist","state":"move_object"}},
-        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":181,"object":"DSTR"}}
+        {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":181,"object":"DSTR"}},
+        {"point_object":"ambustretcher","to":"hospital_user"}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination hoist","state":"wait_var.L:_local:HXX__SDK_ROTOR_RPM_lt_81"}},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":81},
@@ -6009,7 +6215,7 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},
+    {"call_macro":"set station weight","params":{"station":6,"occupied":0}},
     {"sleep":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"User destination hoist","state":"drive_start"}},
     {"drive_object":{"name":"ambustretcher","to":[{"closest":["DSTR","DMED","DAMBWP","DRUP"],"to":"$USER"}],"VAR1":1,"speed":6}},
@@ -6031,7 +6237,7 @@
     {"set":{"local":"HOIST_OUT"},"value":0},
     {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
     {"set":{"object":"ambustretcher","var":"VAR 2"},"value":3},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
+    {"call_macro":"set station weight","params":{"station":5,"occupied":0}},
     {"sleep":1},
     {"destroy_object":"bagg"},
     {"if": {"local":"LIFESCORE"}, "gt": 1,
@@ -6045,9 +6251,10 @@
     {"trigger":["H:{local:HXX}_SDK_HOIST_CONTROL_MODE_AUTO"]},
     {"set":{"var":["L:{local:VCP}10","number"]},"value":{"add":[{"var":["L:{local:VCP}10","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
-    {"call_macro":"post dispatcher message","params":{"text":"Patient handed over to ED."}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
+    {"call_macro":"voice hospital handover"},
     {"set":{"var":["L:SAVED","number"]},"value":1},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":0},
+    {"call_macro":"set station weight","params":{"station":5,"occupied":0}},
     {"create_thread": {
       "commands": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_start"}},
@@ -6211,12 +6418,12 @@
     {"sleep":0.2},
     {"if": {"local":"CREW"}, "eq": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
+        {"call_macro":"set station weight","params":{"station":4,"occupied":1}},
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
+        {"call_macro":"set station weight","params":{"station":6,"occupied":1}},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
     ]},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,
@@ -6533,7 +6740,6 @@
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":0},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_OFF"}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":"wait_local.ambustretcher_step_eq_yes"}},
@@ -6694,7 +6900,7 @@
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":"wait_var.VELOCITY_Z_eq_0"}},
                 {"wait_for":{"object":"ambustretcher","var":"VELOCITY Z"},"eq":0},
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"Organ destination1","state":"point_object"}},
-                {"point_object":"ambustretcher","to":[{"bearing2":180,"dist":6,"object":"ambulance5"},"ambulance5"]},
+                {"point_object":"ambustretcher","to":"ambulance5"},
                 {"sleep":0.2},
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"box","target":"Organ destination1","state":"move_object"}},
                 {"move_object":"box","to":{"bearing2":0,"dist":0.3,"heading":100,"object":"ambustretcher"}},
@@ -6763,12 +6969,10 @@
     {"sleep":0.5},
     {"if": {"local":"CREW"}, "eq": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"global":"STATION_4"}},
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
     ]},
     {"if": {"local":"CREW"}, "ne": 5,
       "then": [
-        {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"global":"STATION_6"}},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"}
     ]},
     {"if": {"has_object":"hoist_crew"}, "eq": 1,

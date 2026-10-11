@@ -86,10 +86,10 @@ for (const name of ['savetemp', 'save1', 'save2', 'save3']) {
   const date = commands.find((entry) => entry.set?.local === 'SAVE_LOCAL_DATE');
   requireTrue(date?.value?.function === 'toLocaleDateString' && !JSON.stringify(date.value).includes('string:join'), `${name} serializes a date object instead of a display string`);
 }
-const slots = saves['savegame page'][6].set_dispatch;
+const slots = saves['savegame page'].find((command) => Array.isArray(command.set_dispatch)).set_dispatch;
 for (const slot of [1, 2, 3]) {
   const rows = slots.filter((entry) => entry.description?.startsWith(`SLOT ${slot}:`));
-  requireTrue(rows.length === 2 && rows.every((entry) => entry.description === `SLOT ${slot}: {0}{1} {2}` && entry.params?.[1]?.if?.global === `SAVENAME${slot}` && entry.params?.[1]?.then === ''), `empty save slot ${slot} still renders an undefined timestamp`);
+  requireTrue(rows.length === 2 && rows.every((entry) => entry.description === `SLOT ${slot}: {0}{1} {2}` && (entry.params?.[1]?.if?.global === `SAVENAME${slot}` || (entry.params?.[1]?.if?.table?.static === `Mission_Save_Slot${slot}` && entry.params?.[1]?.if?.key === 'SAVENAME')) && entry.params?.[1]?.then === ''), `empty save slot ${slot} still renders an undefined timestamp`);
 }
 
 // Prove that this gate rejects the old P2/P3-to-P1 aliasing pattern.

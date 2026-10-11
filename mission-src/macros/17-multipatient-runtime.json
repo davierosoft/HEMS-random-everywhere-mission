@@ -89,6 +89,30 @@
     {"return":null}
   ],
   "multipatient registry event": [
+    {"if": {"param":"event"}, "eq": "DIED",
+      "then": [
+        {"call_macro":"voice patient died"}
+    ]},
+    {"if": {"param":"event"}, "eq": "DIED",
+      "then": [
+        {"call_macro": "ground ops checkpoint",
+          "params": {
+            "id": "pat_died",
+            "detail": {
+              "text": "clock {0} phase {1} user_dist_scene {2} life {3}",
+              "params": [
+                {"local":"patient_registry_clock"},
+                {"local":"MISSION_PHASE"},
+                {"if": {"has_location":"accident_location"},
+                  "eq": 1,
+                  "then": {"round":{"location":"accident_location","var":"distance:m","to":"$USER"},"to":1},
+                  "else": -1
+                },
+                {"local":"LIFESCORE"}
+            ]}
+          }
+        }
+    ]},
     {"set":{"local":"patient_registry_event"},"value":{"text":"T{0} P{1}: {2}","params":[{"local":"patient_registry_clock"},{"param":"patient","path":"slot"},{"param":"event"}]}},
     {"modify_array":{"param":"patient","path":"history"},"append":{"create_struct":{"time":{"local":"patient_registry_clock"},"event":{"param":"event"}}}},
     {"if": {"struct":{"param":"patient","path":"history"},"path":"length"}, "gt": 64,
@@ -385,8 +409,9 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"POLICE_AVAIL"},"value":2},
+                    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene. Requesting police."}},
                     {"call_macro":"Police1"},
-                    {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on scene. Police informed and en route. Scene under investigation: do not move the body."}}
+                    {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
                 ]}
             ]}
         ]},
@@ -417,34 +442,6 @@
     ]},
     {"set":{"local":"patient_registry_summary"},"value":{"string:join":{"param":"lines"},"delimiter":"<br />"}}
   ],
-  "multipatient registry compatibility check": [
-    {"#comment":"Non-destructive HPG smoke test: only scratch params, no patients/crew/mission flags changed."},
-    {"set":{"local":"patient_registry_sdk_check"},"value":"RUNNING"},
-    {"set":{"local":"patient_registry_sdk_samples"},"value":{"create_array":0}},
-    {"set":{"param":"passed"},"value":0},
-    {"try": [
-        {"for_each": {"create_array":5},
-          "do": [
-            {"call_macro":"multipatient registry SDK probe","params":{"iteration":{"add":[{"param":"$index"},1]}},"result":"sample"},
-            {"modify_array":{"local":"patient_registry_sdk_samples"},"append":{"param":"sample"}},
-            {"if": {"param":"sample","path":"passed"}, "eq": 1,
-              "then": [
-                {"set":{"param":"passed"},"value":{"add":[{"param":"passed"},1]}}
-            ]}
-        ]},
-        {"if": {"param":"passed"}, "eq": 5,
-          "then": [
-            {"set":{"local":"patient_registry_sdk_check"},"value":"PASS: 5/5 fresh-record and history checks"}
-          ],"else": [
-            {"set":{"local":"patient_registry_sdk_check"},"value":{"text":"FAIL: {0}/5 checks passed; see sdk_samples","params":[{"param":"passed"}]}}
-        ]}
-      ],
-      "catch": [
-        {"set":{"local":"patient_registry_sdk_check"},"value":{"text":"FAIL: {0}","params":[{"param":"$ERROR"}]}}
-    ]},
-    {"call_macro":"multipatient registry capture"},
-    {"call_macro":"multipatient registry page"}
-  ],
   "multipatient registry diagnostics": [
     {"call_macro":"multipatient registry tablet refresh","params":{"slot":{"local":"medical_display_patient"}}},
     {"set":{"param":"records"},"value":{"local":"patients"}},
@@ -463,42 +460,6 @@
         {"set":{"param":"sdk"},"value":"NOT RUN"}
     ]},
     {"return":{"json:stringify":{"create_struct":{"service":{"param":"service"},"sdk_check":{"param":"sdk"},"sdk_samples":{"local":"patient_registry_sdk_samples"},"patients":{"param":"records"},"capacity":{"local":"PATIENT_CAPACITY"},"clock":{"local":"patient_registry_clock"},"event":{"local":"patient_registry_event"},"active_cpr_slot":{"local":"active_cpr_slot"},"cpr_deadline":{"local":"patient_cpr_deadline"},"requests":{"local":"patient_registry_requests"},"summary":{"local":"patient_registry_summary"},"tablet_policy":{"local":"patient_tablet_policy"},"tablet_reports":{"local":"patient_tablet_reports"},"tablet_report_archive":{"local":"patient_tablet_report_archive"},"tablet_enabled":{"local":"patient_tablet_enabled"},"tablet_visits":{"local":"patient_tablet_visits"},"cpr_generation":{"local":"patient_cpr_generation"},"cpr_timeout":{"local":"patient_cpr_timeout"}}}}}
-  ],
-  "multipatient registry page": [
-    {"call_macro":"multipatient registry diagnostics","result":"diagnostics"},
-    {"set":{"local":"patient_registry_display"},"value":{"param":"diagnostics"}},
-    {"if": {"local":"patient_registry_sdk_check"}, "eq": null,
-      "then": [
-        {"set":{"local":"patient_registry_sdk_check"},"value":"NOT RUN"}
-    ]},
-    {"if": {"local":"patient_registry_capture_status"}, "eq": null,
-      "then": [
-        {"set":{"local":"patient_registry_capture_status"},"value":"NOT CAPTURED"}
-    ]},
-    {"set_dispatch": [
-        {"link":"Back to Debug Center","commands":[{"call_macro":"debug page"}]},
-        {"text":"MULTI-PATIENT REGISTRY DIAGNOSTICS","color":"green"},
-        {"text":"Preparation only: the five-patient scene and transport conversion is not activated in this build."},
-        {"link":"RUN NON-DESTRUCTIVE SDK CHECK","commands":[{"call_macro":"multipatient registry compatibility check"}]},
-        {"text":"SDK CHECK: {0}","params":[{"local":"patient_registry_sdk_check"}]},
-        {"text":"REGISTRY SNAPSHOT: {0}","params":[{"local":"patient_registry_capture_status"}]},
-        {"text":"The check result is saved automatically in the patient_registry snapshot field."},
-        {"text":"{0}","params":[{"local":"patient_registry_display"}]}
-    ]}
-  ],
-  "multipatient registry capture": [
-    {"#comment":"The main Debug snapshot is saved BEFORE this optional extension. Never let registry serialization block the existing snapshot."},
-    {"try": [
-        {"call_macro":"multipatient registry diagnostics","result":"diagnostics"},
-        {"open_table":{"static":"Debug_Table"}},
-        {"set":{"table":{"static":"Debug_Table"},"key":"patient_registry"},"value":{"param":"diagnostics"}},
-        {"save_table":{"static":"Debug_Table"}},
-        {"set":{"local":"patient_registry_capture_status"},"value":"SAVED"}
-      ],
-      "catch": [
-        {"set":{"local":"patient_registry_capture_status"},"value":{"text":"FAILED: {0}","params":[{"param":"$ERROR"}]}},
-        {"set_message":{"text":"Registry snapshot extension failed: {0}","params":[{"local":"patient_registry_capture_status"}],"color":"red"}}
-    ]}
   ],
   "multipatient registry from profile": [
     {"#comment":"One intake adapter for every physical slot. Preserve original pathology data; no P4/P5 copies."},
@@ -974,28 +935,6 @@
     ]},
     {"return":{"create_struct":{"success":1,"reason":"Verified graph path","path":{"param":"path"},"distance_m":{"param":"finish","path":"cost"}}}}
   ],
-  "multipatient registry SDK probe": [
-    {"#comment":"Fresh allocations on EVERY call; do not mutate literal arrays held in a command definition."},
-    {"set":{"param":"record"},"value":{"create_struct":{"value":0,"history":{"create_array":0}}}},
-    {"set":{"param":"before_value"},"value":{"param":"record","path":"value"}},
-    {"set":{"param":"before_length"},"value":{"struct":{"param":"record","path":"history"},"path":"length"}},
-    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"value":1}}]}},
-    {"modify_array":{"param":"record","path":"history"},"append":"probe"},
-    {"set":{"param":"other"},"value":{"create_struct":{"value":2,"history":{"create_array":0}}}},
-    {"set":{"param":"passed"},"value":0},
-    {"if": {
-      "and": [
-        {"require":{"param":"before_value"},"eq":0},
-        {"require":{"param":"before_length"},"eq":0},
-        {"require":{"param":"record","path":"value"},"eq":1},
-        {"require":{"struct":{"param":"record","path":"history"},"path":"length"},"eq":1},
-        {"require":{"struct":{"param":"other","path":"history"},"path":"length"},"eq":0}
-      ]}, "eq": 1,
-      "then": [
-        {"set":{"param":"passed"},"value":1}
-    ]},
-    {"return":{"create_struct":{"iteration":{"param":"iteration"},"passed":{"param":"passed"},"value_before":{"param":"before_value"},"value_after":{"param":"record","path":"value"},"history_before":{"param":"before_length"},"history_after":{"struct":{"param":"record","path":"history"},"path":"length"},"other_history":{"struct":{"param":"other","path":"history"},"path":"length"}}}}
-  ],
   "multipatient registry tablet decision": [
     {"if": {"param":"records","path":"length"}, "ne": {"param":"expected_count"},
       "then": [
@@ -1146,10 +1085,24 @@
     {"for_each": {"local":"patients"},
       "do": [
         {"set":{"param":"patient"},"value":{"param":"$item"}},
+        {"#comment":"The patients that are loaded take the impact. With the slot param the patient of that slot takes it too whatever its transport state (the HEMS patient on the hoist cable is not loaded yet); with the cause param the death cause is that text."},
+        {"set":{"param":"impact_ok"},"value":0},
+        {"if": {"param":"patient","path":"transport_state"}, "eq": "loaded",
+          "then": [
+            {"set":{"param":"impact_ok"},"value":1}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"param":"slot"},"gt":0},
+            {"require":{"param":"slot"},"eq":{"param":"patient","path":"slot"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"impact_ok"},"value":1}
+        ]},
         {"if": {
           "and": [
             {"require":{"param":"patient","path":"active"},"eq":1},
-            {"require":{"param":"patient","path":"transport_state"},"eq":"loaded"},
+            {"require":{"param":"impact_ok"},"eq":1},
             {"require":{"param":"patient","path":"death_recorded"},"eq":0}
           ]}, "eq": 1,
           "then": [
@@ -1161,11 +1114,24 @@
               ]}, "eq": 1,
               "then": [
                 {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":{"add":[{"global":"PATIENTS_KILLED_TOTAL"},1]}},
-                {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"PILOTING (IMPACT DAMAGE)"},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"patient_impact","actor":"crew","target":"patient","state":"patient killed by impact damage={param:damage}"}}
+                {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":{"if":{"param":"cause"},"eq":null,"then":"PILOTING (IMPACT DAMAGE)","else":{"param":"cause"}}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"patient_impact","actor":"crew","target":"patient","state":{"text":"patient killed by impact slot={0} damage={1}","params":[{"param":"patient","path":"slot"},{"param":"damage"}]}}}
             ]},
             {"set":{"param":"medical"},"value":{"param":"patient","path":"medical"}},
             {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"param":"score"}}}]}},
+            {"#comment":"The physiology pump rewrites the registry lifescore from the local LIFESCORE/LIFESCORE2/LIFESCORE3 every tick, so the impact must lower the local score too or the damage is erased by the next tick (169.26 log: patient killed twice by impact and still alive at 20.57)."},
+            {"if": {"param":"patient","path":"slot"}, "eq": 1,
+              "then": [
+                {"set":{"local":"LIFESCORE"},"value":{"param":"score"}}
+            ]},
+            {"if": {"param":"patient","path":"slot"}, "eq": 2,
+              "then": [
+                {"set":{"local":"LIFESCORE2"},"value":{"param":"score"}}
+            ]},
+            {"if": {"param":"patient","path":"slot"}, "eq": 3,
+              "then": [
+                {"set":{"local":"LIFESCORE3"},"value":{"param":"score"}}
+            ]},
             {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"subtract":[{"param":"medical","path":"SPO2"},{"multiply":[{"param":"damage"},0.4]}]},0,100]},"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"multiply":[{"param":"damage"},4]}]},0,220]},"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"multiply":[{"param":"damage"},2]}]},0,220]},"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"multiply":[{"param":"damage"},2]}]},0,60]}}}]}},
             {"if": {"param":"score"}, "lt": 18,
               "then": [
@@ -1466,14 +1432,28 @@
         ]}
     ]},
     {"try": [
-        {"call_macro":"multipatient registry crew drive closest","params":{"actor":{"param":"actor"},"object":{"param":"object"}}},
-        {"if": {"param":"side"}, "eq": 270,
+        {"set":{"param":"shelter_skip"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"ambulance_shelter_state"},"eq":"sheltered"},
+            {"require":{"param":"object"},"eq":"injured_human"},
+            {"require":{"or":[{"require":{"param":"actor"},"eq":"ambumedic7"},{"require":{"param":"actor"},"eq":"hoist_crew"},{"require":{"param":"actor"},"eq":"pax3"}]},"eq":1}
+          ]}, "eq": 1,
           "then": [
-            {"call_macro":"multipatient registry crew movement sample","params":{"actor":{"param":"actor"},"object":{"param":"object"},"phase":"before_drive","side":270}},
-            {"call_macro":"multipatient registry crew drive side","params":{"actor":{"param":"actor"},"object":{"param":"object"},"side":270}}
+            {"call_macro":"ambulance shelter approach","params":{"actor":{"param":"actor"},"side":{"param":"side"}},"result":"shelter_skip"}
           ],"else": [
-            {"call_macro":"multipatient registry crew movement sample","params":{"actor":{"param":"actor"},"object":{"param":"object"},"phase":"before_drive","side":90}},
-            {"call_macro":"multipatient registry crew drive side","params":{"actor":{"param":"actor"},"object":{"param":"object"},"side":90}}
+            {"call_macro":"multipatient registry crew drive closest","params":{"actor":{"param":"actor"},"object":{"param":"object"}}}
+        ]},
+        {"if": {"param":"shelter_skip"}, "ne": 2,
+          "then": [
+            {"if": {"param":"side"}, "eq": 270,
+              "then": [
+                {"call_macro":"multipatient registry crew movement sample","params":{"actor":{"param":"actor"},"object":{"param":"object"},"phase":"before_drive","side":270}},
+                {"call_macro":"multipatient registry crew drive side","params":{"actor":{"param":"actor"},"object":{"param":"object"},"side":270}}
+              ],"else": [
+                {"call_macro":"multipatient registry crew movement sample","params":{"actor":{"param":"actor"},"object":{"param":"object"},"phase":"before_drive","side":90}},
+                {"call_macro":"multipatient registry crew drive side","params":{"actor":{"param":"actor"},"object":{"param":"object"},"side":90}}
+            ]}
         ]}
       ],
       "catch": [
@@ -1984,7 +1964,12 @@
     {"modify_array": {"local":"Dispatcher_Messages"},
       "prepend": {
         "create_struct": {
-          "from": {"local":"multipatient_rescuetrack_sender"},
+          "from": {
+            "if": {"local":"multipatient_rescuetrack_sender"},
+            "eq": "HEMS",
+            "then": "-OUT-",
+            "else": {"local":"multipatient_rescuetrack_sender"}
+          },
           "time": {
             "text": "{0:TIME}{1}",
             "params": [
@@ -2896,6 +2881,8 @@
     {"return":1}
   ],
   "multipatient registry live initialize": [
+    {"set":{"local":"LIFE_NEAR_LATCH"},"value":0},
+    {"set":{"local":"patient_prearrival_logged"},"value":null},
     {"set":{"local":"cpr_active"},"value":0},
     {"set":{"local":"cpr_armed"},"value":0},
     {"set":{"local":"cpr_manual_stop"},"value":0},
@@ -2909,6 +2896,10 @@
     {"set":{"local":"HEMS_PATIENT_NUMBER"},"value":0},
     {"set":{"local":"HEMS_PATIENT_OBJECT"},"value":null},
     {"set":{"local":"HEMS_DECISION_STATE"},"value":"waiting_for_all_visits"},
+    {"#comment":"A ground provider left by an earlier dispatch makes crew eligibility answer assigned for that patient: neither crew visited patient 1 of the next dispatch (tester report 2026-10-11). Cleared before the restore, which sets the providers of a saved mission."},
+    {"set":{"local":"P1_GROUND_PROVIDER"},"value":null},
+    {"set":{"local":"P2_GROUND_PROVIDER"},"value":null},
+    {"set":{"local":"P3_GROUND_PROVIDER"},"value":null},
     {"call_macro":"multipatient registry live restore open"},
     {"set":{"local":"patient_live_mode"},"value":1},
     {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":null},
@@ -3135,6 +3126,75 @@
         {"return":0}
     ]}
   ],
+  "multipatient registry ambulance reach": [
+    {"#comment":"May this parked ambulance take this patient? The stretcher walks from the vehicle to the patient and back, so an ambulance that stopped on a distant road (an off-road patient, a route that ends far from the scene: park_ambulance1_scene also parks when the vehicle stops by itself) cannot transport him, and the registry must leave him to HEMS instead of reserving him for a ground crew that would walk for minutes or never arrive. Distance from the vehicle to the patient object against ambulance_patient_reach_m (150 m, set here once: a normal parking is within about 40 m of the accident and the casualties lie within about 100 m of it). Returns 1 when the check cannot be made (a missing vehicle or patient), so it never blocks on missing data."},
+    {"if": {"local":"ambulance_patient_reach_m"}, "eq": null,
+      "then": [
+        {"set":{"local":"ambulance_patient_reach_m"},"value":150}
+    ]},
+    {"set":{"param":"patient_object"},"value":null},
+    {"if": {"param":"patient"}, "eq": 1,
+      "then": [
+        {"set":{"param":"patient_object"},"value":"injured_human"}
+    ]},
+    {"if": {"param":"patient"}, "eq": 2,
+      "then": [
+        {"set":{"param":"patient_object"},"value":"injured_human2"}
+    ]},
+    {"if": {"param":"patient"}, "eq": 3,
+      "then": [
+        {"set":{"param":"patient_object"},"value":"injured_human3"}
+    ]},
+    {"if": {"param":"patient_object"}, "eq": null,
+      "then": [
+        {"return":1}
+    ]},
+    {"if": {"has_object":{"param":"vehicle"}}, "ne": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"if": {"has_object":{"param":"patient_object"}}, "ne": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"set":{"param":"distance_m"},"value":{"round":{"location":{"param":"vehicle"},"var":"distance:m","to":{"param":"patient_object"}},"to":1}},
+    {"set":{"param":"reach"},"value":1},
+    {"if": {"param":"distance_m"}, "gt": {"local":"ambulance_patient_reach_m"},
+      "then": [
+        {"set":{"param":"reach"},"value":0}
+    ]},
+    {"set": {"param":"state"},
+      "value": {
+        "text": "patient {0} {1} distance_m {2} limit_m {3}",
+        "params": [
+          {"param":"patient"},
+          {"if": {"param":"reach"},
+            "eq": 1,
+            "then": "reachable",
+            "else": "blocked"
+          },
+          {"param":"distance_m"},
+          {"local":"ambulance_patient_reach_m"}
+      ]}
+    },
+    {"if": {"param":"vehicle"}, "eq": "ambulance1",
+      "then": [
+        {"if": {"local":"ambulance1_reach_last"}, "ne": {"param":"state"},
+          "then": [
+            {"set":{"local":"ambulance1_reach_last"},"value":{"param":"state"}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
+        ]}
+    ]},
+    {"if": {"param":"vehicle"}, "eq": "ambulance2",
+      "then": [
+        {"if": {"local":"ambulance2_reach_last"}, "ne": {"param":"state"},
+          "then": [
+            {"set":{"local":"ambulance2_reach_last"},"value":{"param":"state"}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
+        ]}
+    ]},
+    {"return":{"param":"reach"}}
+  ],
   "multipatient registry live reserve": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry live reserve","state":"call_multipatient_registry_live_sync"}},
     {"call_macro":"multipatient registry live sync"},
@@ -3174,6 +3234,18 @@
               "then": [
                 {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry live reserve","state":"call_multipatient_registry_live_ground_suitability"}},
                 {"call_macro":"multipatient registry live ground suitability","params":{"patient":1},"result":"ground"},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"resource"},"ne":"hems"},
+                    {"require":{"param":"ground"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"resource"},"patient":1},"result":"reach"},
+                    {"if": {"param":"reach"}, "ne": 1,
+                      "then": [
+                        {"set":{"param":"ground"},"value":0}
+                    ]}
+                ]},
                 {"set":{"param":"rank"},"value":{"param":"ground"}},
                 {"if": {
                   "or": [
@@ -3222,6 +3294,18 @@
               "then": [
                 {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry live reserve","state":"call_multipatient_registry_live_ground_suitability"}},
                 {"call_macro":"multipatient registry live ground suitability","params":{"patient":2},"result":"ground"},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"resource"},"ne":"hems"},
+                    {"require":{"param":"ground"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"resource"},"patient":2},"result":"reach"},
+                    {"if": {"param":"reach"}, "ne": 1,
+                      "then": [
+                        {"set":{"param":"ground"},"value":0}
+                    ]}
+                ]},
                 {"set":{"param":"rank"},"value":{"param":"ground"}},
                 {"if": {
                   "or": [
@@ -3270,6 +3354,18 @@
               "then": [
                 {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry live reserve","state":"call_multipatient_registry_live_ground_suitability"}},
                 {"call_macro":"multipatient registry live ground suitability","params":{"patient":3},"result":"ground"},
+                {"if": {
+                  "and": [
+                    {"require":{"param":"resource"},"ne":"hems"},
+                    {"require":{"param":"ground"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"resource"},"patient":3},"result":"reach"},
+                    {"if": {"param":"reach"}, "ne": 1,
+                      "then": [
+                        {"set":{"param":"ground"},"value":0}
+                    ]}
+                ]},
                 {"set":{"param":"rank"},"value":{"param":"ground"}},
                 {"if": {
                   "or": [
@@ -3380,7 +3476,8 @@
             {"return":0}
         ]},
         {"set":{"param":"shelter"},"value":{"param":"record","path":"shelter"}},
-        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":null,"location":{"param":"record","path":"object"}}}]}}
+        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":null,"location":{"param":"record","path":"object"}}}]}},
+        {"call_macro":"ambulance shelter release","params":{"reason":"ticket"}}
     ]},
     {"if": {"param":"ticket","path":"slot"}, "eq": 1,
       "then": [
@@ -3389,10 +3486,7 @@
             {"set":{"local":"HEMS_PREPARE_TRACE"},"value":"FAIL: slot1_injured_human_missing"},
             {"return":0}
         ]},
-        {"if": {"param":"ticket","path":"resource"}, "ne": "hems",
-          "then": [
-            {"call_macro":"from_any_injured_to_ready_for_transport"}
-        ]},
+        {"call_macro":"from_any_injured_to_ready_for_transport"},
         {"if": {"param":"ticket","path":"resource"}, "eq": "hems",
           "then": [
             {"set":{"local":"HEMS_PATIENT_VAR_COMPATIBLE"},"value":{"local":"var_compatible1"}}
@@ -3405,10 +3499,7 @@
             {"set":{"local":"HEMS_PREPARE_TRACE"},"value":"FAIL: slot2_injured_human2_missing"},
             {"return":0}
         ]},
-        {"if": {"param":"ticket","path":"resource"}, "ne": "hems",
-          "then": [
-            {"call_macro":"from_any_injured2_to_ready_for_transport"}
-        ]},
+        {"call_macro":"from_any_injured2_to_ready_for_transport"},
         {"if": {"param":"ticket","path":"resource"}, "eq": "hems",
           "then": [
             {"set":{"local":"HEMS_PATIENT_VAR_COMPATIBLE"},"value":{"local":"var_compatible2"}}
@@ -3421,10 +3512,7 @@
             {"set":{"local":"HEMS_PREPARE_TRACE"},"value":"FAIL: slot3_injured_human3_missing"},
             {"return":0}
         ]},
-        {"if": {"param":"ticket","path":"resource"}, "ne": "hems",
-          "then": [
-            {"call_macro":"from_any_injured3_to_ready_for_transport"}
-        ]},
+        {"call_macro":"from_any_injured3_to_ready_for_transport"},
         {"if": {"param":"ticket","path":"resource"}, "eq": "hems",
           "then": [
             {"set":{"local":"HEMS_PATIENT_VAR_COMPATIBLE"},"value":{"local":"var_compatible3"}}
@@ -3469,6 +3557,7 @@
       ],"else": [
         {"set":{"local":"ambulance2_transport_ticket"},"value":{"param":"ticket"}}
     ]},
+    {"wait_for":{"local":"ambulance_shelter_state"},"ne":"loading"},
     {"call_macro":"multipatient registry live ensure stretcher","params":{"vehicle":{"param":"resource"}}},
     {"call_macro":"multipatient registry live ground load","params":{"ticket":{"param":"ticket"},"vehicle":{"param":"resource"},"medic":{"param":"medic"},"stretcher":{"param":"stretcher"}},"result":"ok"},
     {"if": {"param":"ok"}, "ne": 1,
@@ -3485,7 +3574,6 @@
   ],
   "multipatient registry live ground load": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"live_ground_load","actor":{"param":"medic"},"target":{"param":"vehicle"},"state":"started"}},
-    {"call_macro":"test tracker begin","params":{"test_id":"ambulance_handover"}},
     {"call_macro":"multipatient registry live ticket valid","params":{"ticket":{"param":"ticket"}},"result":"valid"},
     {"if": {"param":"valid"}, "ne": 1,
       "then": [
@@ -3504,6 +3592,18 @@
       "then": [
         {"return":0}
     ]},
+    {"set":{"param":"patient_object"},"value":{"param":"record","path":"object"}},
+    {"set":{"param":"trace_vehicle_m"},"value":-1},
+    {"set":{"param":"trace_landing_m"},"value":-1},
+    {"if": {"has_object":{"param":"patient_object"}}, "eq": 1,
+      "then": [
+        {"set":{"param":"trace_vehicle_m"},"value":{"round":{"location":{"param":"vehicle"},"var":"distance:m","to":{"param":"patient_object"}},"to":1}},
+        {"if": {"has_location":"landing_spot"}, "eq": 1,
+          "then": [
+            {"set":{"param":"trace_landing_m"},"value":{"round":{"location":"landing_spot","var":"distance:m","to":{"param":"patient_object"}},"to":1}}
+        ]}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"live_ground_load","actor":{"param":"medic"},"target":{"param":"vehicle"},"state":{"text":"vehicle_to_patient_m {0} hems_landing_to_patient_m {1}","params":[{"param":"trace_vehicle_m"},{"param":"trace_landing_m"}]}}},
     {"call_macro":"multipatient registry live prepare patient","params":{"ticket":{"param":"ticket"}},"result":"ok"},
     {"if": {"param":"ok"}, "ne": 1,
       "then": [
@@ -3512,12 +3612,21 @@
     {"call_macro":"multipatient registry live ground load objects","params":{"vehicle":{"param":"vehicle"},"record":{"param":"record"},"ticket":{"param":"ticket"}},"result":"objects_loaded"},
     {"if": {"param":"objects_loaded"}, "ne": 1,
       "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"live_ground_load","actor":{"param":"medic"},"target":{"param":"vehicle"},"state":"objects_not_loaded"}},
         {"return":0}
     ]},
     {"call_macro":"multipatient registry live sync"},
     {"call_macro":"multipatient registry submit","params":{"operation":"transition","arguments":{"create_struct":{"ticket":{"param":"ticket"},"from":"loading","to":"loaded"}}},"result":"ok"},
     {"if": {"param":"ok"}, "ne": 1,
       "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"live_ground_load","actor":{"param":"medic"},"target":{"param":"vehicle"},"state":"transition_loaded_rejected_retry"}},
+        {"sleep":1},
+        {"call_macro":"multipatient registry live sync"},
+        {"call_macro":"multipatient registry submit","params":{"operation":"transition","arguments":{"create_struct":{"ticket":{"param":"ticket"},"from":"loading","to":"loaded"}}},"result":"ok"}
+    ]},
+    {"if": {"param":"ok"}, "ne": 1,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"live_ground_load","actor":{"param":"medic"},"target":{"param":"vehicle"},"state":"transition_loaded_failed"}},
         {"return":0}
     ]},
     {"if": {"param":"ticket","path":"slot"}, "eq": 1,
@@ -3664,7 +3773,6 @@
       "then": [
         {"set":{"local":"P3_AMBULANCE_STAGE"},"value":"transported"}
     ]},
-    {"call_macro":"test tracker complete","params":{"test_id":"ambulance_handover"}},
     {"return":{"param":"ok"}}
   ],
   "multipatient registry live hems loaded": [
@@ -4882,6 +4990,41 @@
   "multipatient registry live physiology step": [
     {"call_macro":"multipatient registry live sync"},
     {"set":{"local":"patient_registry_clock"},"value":{"add":[{"local":"patient_registry_clock"},{"param":"seconds"}]}},
+    {"#comment":"Before the crew reaches the patient (MISSION_PHASE below 8) and within PATIENT_PREARRIVAL_GRACE_S seconds of the registry clock (default 1800), the decay runs at half speed, as the original did for a patient not on the hoist, and no patient falls below PATIENT_PREARRIVAL_FLOOR (default 8): the dispatch distance and the start-up time of the helicopter must not kill the patient before the crew arrives. Later the full rate applies."},
+    {"if": {"local":"PATIENT_PREARRIVAL_GRACE_S"}, "eq": null,
+      "then": [
+        {"set":{"local":"PATIENT_PREARRIVAL_GRACE_S"},"value":1800}
+    ]},
+    {"if": {"local":"PATIENT_PREARRIVAL_FLOOR"}, "eq": null,
+      "then": [
+        {"set":{"local":"PATIENT_PREARRIVAL_FLOOR"},"value":8}
+    ]},
+    {"set":{"param":"decay_seconds"},"value":{"param":"seconds"}},
+    {"if": {
+      "and": [
+        {"require":{"local":"MISSION_PHASE"},"lt":8},
+        {"require":{"local":"patient_registry_clock"},"lt":{"local":"PATIENT_PREARRIVAL_GRACE_S"}}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"decay_seconds"},"value":{"multiply":[{"param":"seconds"},0.5]}}
+    ]},
+    {"#comment":"Option LIFE_FREEZE_NEAR (yes): no decay while the helicopter is farther than 2 NM (3704 m) from accident_location and the crew has not reached the patient; the first time it is within 2 NM LIFE_NEAR_LATCH stays 1 for the rest of the dispatch (reset by multipatient registry live initialize)."},
+    {"if": {
+      "and": [
+        {"require":{"global":"LIFE_FREEZE_NEAR"},"eq":"yes"},
+        {"require":{"local":"MISSION_PHASE"},"lt":8},
+        {"require":{"local":"LIFE_NEAR_LATCH"},"ne":1},
+        {"require":{"has_location":"accident_location"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"location":"accident_location","var":"distance:m","to":"$USER"}, "lte": 3704,
+          "then": [
+            {"set":{"local":"LIFE_NEAR_LATCH"},"value":1},
+            {"call_macro":"ground ops checkpoint","params":{"id":"pat_freeze_end","detail":{"text":"within 2 NM of the scene, registry clock {0}","params":[{"local":"patient_registry_clock"}]}}}
+          ],"else": [
+            {"set":{"param":"decay_seconds"},"value":0}
+        ]}
+    ]},
     {"if": {
       "and": [
         {"require":{"local":"active_cpr_slot"},"gt":0},
@@ -4909,7 +5052,21 @@
               "then": [
                 {"set":{"local":"P1_DECR_RATE"},"value":1}
             ]},
-            {"set":{"local":"LIFESCORE"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE"},{"divide":[{"multiply":[{"local":"P1_DECR_RATE"},{"param":"seconds"}]},60]}]},0,100]}},
+            {"set":{"local":"LIFESCORE"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE"},{"divide":[{"multiply":[{"local":"P1_DECR_RATE"},{"param":"decay_seconds"}]},60]}]},0,100]}},
+            {"if": {
+              "and": [
+                {"require":{"local":"MISSION_PHASE"},"lt":8},
+                {"require":{"local":"patient_registry_clock"},"lt":{"local":"PATIENT_PREARRIVAL_GRACE_S"}},
+                {"require":{"local":"LIFESCORE"},"lt":{"local":"PATIENT_PREARRIVAL_FLOOR"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"LIFESCORE"},"value":{"local":"PATIENT_PREARRIVAL_FLOOR"}},
+                {"if": {"local":"patient_prearrival_logged"}, "ne": {"local":"patient_live_generation"},
+                  "then": [
+                    {"set":{"local":"patient_prearrival_logged"},"value":{"local":"patient_live_generation"}},
+                    {"call_macro":"ground ops checkpoint","params":{"id":"pat_floor_hold","detail":{"text":"{0} held at the floor {1} before the crew arrived, registry clock {2}, phase {3}","params":["LIFESCORE",{"local":"PATIENT_PREARRIVAL_FLOOR"},{"local":"patient_registry_clock"},{"local":"MISSION_PHASE"}]}}}
+                ]}
+            ]},
             {"call_macro":"update patient1 physiology"},
             {"set":{"local":"registry_physio_stage"},"value":"assign_1_slot1"},
             {"if": {"param":"record"}, "eq": null,
@@ -4942,7 +5099,7 @@
                         {"require":{"var":["L:SAVED","number"]},"ne":1}
                       ]}, "eq": 1,
                       "then": [
-                        {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on board. Continuing to destination."}}
+                        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
                     ]},
                     {"set_message":{"text":"Patient 1 died."}}
                 ]}
@@ -5016,7 +5173,21 @@
               "then": [
                 {"set":{"local":"P2_DECR_RATE"},"value":1}
             ]},
-            {"set":{"local":"LIFESCORE2"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE2"},{"divide":[{"multiply":[{"local":"P2_DECR_RATE"},{"param":"seconds"}]},60]}]},0,100]}},
+            {"set":{"local":"LIFESCORE2"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE2"},{"divide":[{"multiply":[{"local":"P2_DECR_RATE"},{"param":"decay_seconds"}]},60]}]},0,100]}},
+            {"if": {
+              "and": [
+                {"require":{"local":"MISSION_PHASE"},"lt":8},
+                {"require":{"local":"patient_registry_clock"},"lt":{"local":"PATIENT_PREARRIVAL_GRACE_S"}},
+                {"require":{"local":"LIFESCORE2"},"lt":{"local":"PATIENT_PREARRIVAL_FLOOR"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"LIFESCORE2"},"value":{"local":"PATIENT_PREARRIVAL_FLOOR"}},
+                {"if": {"local":"patient_prearrival_logged"}, "ne": {"local":"patient_live_generation"},
+                  "then": [
+                    {"set":{"local":"patient_prearrival_logged"},"value":{"local":"patient_live_generation"}},
+                    {"call_macro":"ground ops checkpoint","params":{"id":"pat_floor_hold","detail":{"text":"{0} held at the floor {1} before the crew arrived, registry clock {2}, phase {3}","params":["LIFESCORE2",{"local":"PATIENT_PREARRIVAL_FLOOR"},{"local":"patient_registry_clock"},{"local":"MISSION_PHASE"}]}}}
+                ]}
+            ]},
             {"call_macro":"update patient2 physiology"},
             {"set":{"local":"registry_physio_stage"},"value":"assign_4_slot2"},
             {"if": {"param":"record"}, "eq": null,
@@ -5049,7 +5220,7 @@
                         {"require":{"var":["L:SAVED","number"]},"ne":1}
                       ]}, "eq": 1,
                       "then": [
-                        {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on board. Continuing to destination."}}
+                        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
                     ]},
                     {"set_message":{"text":"Patient 2 died."}}
                 ]}
@@ -5123,7 +5294,21 @@
               "then": [
                 {"set":{"local":"P3_DECR_RATE"},"value":1}
             ]},
-            {"set":{"local":"LIFESCORE3"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE3"},{"divide":[{"multiply":[{"local":"P3_DECR_RATE"},{"param":"seconds"}]},60]}]},0,100]}},
+            {"set":{"local":"LIFESCORE3"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE3"},{"divide":[{"multiply":[{"local":"P3_DECR_RATE"},{"param":"decay_seconds"}]},60]}]},0,100]}},
+            {"if": {
+              "and": [
+                {"require":{"local":"MISSION_PHASE"},"lt":8},
+                {"require":{"local":"patient_registry_clock"},"lt":{"local":"PATIENT_PREARRIVAL_GRACE_S"}},
+                {"require":{"local":"LIFESCORE3"},"lt":{"local":"PATIENT_PREARRIVAL_FLOOR"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"LIFESCORE3"},"value":{"local":"PATIENT_PREARRIVAL_FLOOR"}},
+                {"if": {"local":"patient_prearrival_logged"}, "ne": {"local":"patient_live_generation"},
+                  "then": [
+                    {"set":{"local":"patient_prearrival_logged"},"value":{"local":"patient_live_generation"}},
+                    {"call_macro":"ground ops checkpoint","params":{"id":"pat_floor_hold","detail":{"text":"{0} held at the floor {1} before the crew arrived, registry clock {2}, phase {3}","params":["LIFESCORE3",{"local":"PATIENT_PREARRIVAL_FLOOR"},{"local":"patient_registry_clock"},{"local":"MISSION_PHASE"}]}}}
+                ]}
+            ]},
             {"call_macro":"update patient3 physiology"},
             {"set":{"local":"registry_physio_stage"},"value":"assign_7_slot3"},
             {"if": {"param":"record"}, "eq": null,
@@ -5156,7 +5341,7 @@
                         {"require":{"var":["L:SAVED","number"]},"ne":1}
                       ]}, "eq": 1,
                       "then": [
-                        {"call_macro":"post dispatcher message","params":{"text":"Patient deceased on board. Continuing to destination."}}
+                        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
                     ]},
                     {"set_message":{"text":"Patient 3 died."}}
                 ]}
@@ -5770,6 +5955,7 @@
     {"return":{"param":"ok"}}
   ],
   "multipatient registry live recover worker": [
+    {"call_macro":"ambulance shelter release","params":{"reason":"recover"}},
     {"call_macro":"multipatient registry get","params":{"slot":{"param":"ticket","path":"slot"}},"result":"record"},
     {"if": {"param":"record"}, "eq": null,
       "then": [
@@ -5796,6 +5982,7 @@
       "then": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"live_recover","actor":"n/a","target":"injured_human","state":"move_start"}},
         {"move_object":"injured_human","to":"accident_location"},
+        {"call_macro":"landing spot follow injured"},
         {"set":{"object":"injured_human","var":"VAR 1"},"value":1},
         {"if": {"object":"injured_human","var":"distance:m","to":"accident_location"}, "lt": 5,
           "then": [
@@ -5831,23 +6018,6 @@
     {"call_macro":"multipatient registry submit","params":{"operation":"live_recover","arguments":{"create_struct":{"ticket":{"param":"ticket"}}}},"result":"ok"},
     {"return":{"param":"ok"}}
   ],
-  "multipatient registry live shelter commit": [
-    {"if": {"has_object":"ambustretcher7"}, "ne": 1,
-      "then": [
-        {"return":0}
-    ]},
-    {"if": {"has_object":"ambulance1"}, "ne": 1,
-      "then": [
-        {"return":0}
-    ]},
-    {"if": {"location":"ambustretcher7","var":"distance:m","to":"ambulance1"}, "gt": 2,
-      "then": [
-        {"return":0}
-    ]},
-    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance1","location":"ambulance1"}}]}},
-    {"set":{"local":"ambulance_previsit_decision"},"value":"shelter"},
-    {"return":1}
-  ],
   "multipatient registry CPR renew": [
     {"if": {
       "or": [
@@ -5879,7 +6049,12 @@
     {"modify_array": {"local":"Dispatcher_Messages"},
       "prepend": {
         "create_struct": {
-          "from": {"param":"provider"},
+          "from": {
+            "if": {"param":"provider"},
+            "eq": "HEMS",
+            "then": "-OUT-",
+            "else": {"param":"provider"}
+          },
           "time": {
             "text": "{0:TIME}{1}",
             "params": [
@@ -6008,7 +6183,62 @@
         {"set":{"object":"pax3","var":"VAR 1"},"value":1}
     ]}
   ],
+  "multipatient registry crew at approach point": [
+    {"#comment":"1 when the HEMS crew member (hoist_crew or pax3) already stands within 3 m of one of the four approach points LUP, RUP, RDWN, LDWN. The first ground-ops walk ends on the closest of these points, so the next drive to the closest point would be a zero-length route, which sends the walker off into the distance (tester snapshot of 2026-10-10, quad SAR 169.39: 213 s and 330 m away before the side drive brought the crew back). A missing location reads as unavailable and counts as not near."},
+    {"set":{"param":"at_point"},"value":0},
+    {"if": {
+      "or": [
+        {"require":{"param":"actor"},"eq":"hoist_crew"},
+        {"require":{"param":"actor"},"eq":"pax3"}
+      ]}, "eq": 1,
+      "then": [
+        {"try": [
+            {"if": {
+              "and": [
+                {"require":{"location":"LUP","var":"distance:m","to":{"param":"actor"}},"gte":0},
+                {"require":{"location":"LUP","var":"distance:m","to":{"param":"actor"}},"lt":3}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"at_point"},"value":1}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"location":"RUP","var":"distance:m","to":{"param":"actor"}},"gte":0},
+                {"require":{"location":"RUP","var":"distance:m","to":{"param":"actor"}},"lt":3}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"at_point"},"value":1}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"location":"RDWN","var":"distance:m","to":{"param":"actor"}},"gte":0},
+                {"require":{"location":"RDWN","var":"distance:m","to":{"param":"actor"}},"lt":3}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"at_point"},"value":1}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"location":"LDWN","var":"distance:m","to":{"param":"actor"}},"gte":0},
+                {"require":{"location":"LDWN","var":"distance:m","to":{"param":"actor"}},"lt":3}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"at_point"},"value":1}
+            ]}
+          ],
+          "catch": [
+            {"set":{"param":"at_point"},"value":0}
+        ]}
+    ]},
+    {"return":{"param":"at_point"}}
+  ],
   "multipatient registry crew drive closest": [
+    {"call_macro":"multipatient registry crew at approach point","params":{"actor":{"param":"actor"}},"result":"closest_near"},
+    {"if": {"param":"closest_near"}, "eq": 1,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"crew_move","actor":{"param":"actor"},"target":"approach point","state":"already_at_approach_point_skip_closest_drive"}},
+        {"return":1}
+    ]},
     {"if": {"param":"actor"}, "eq": "ambumedic7",
       "then": [
         {"if": {"location":"ambumedic7","var":"distance:m","to":"ambulance1"}, "lte": 12,
@@ -6043,17 +6273,17 @@
           ],"else": [
             {"if": {"param":"actor"}, "eq": "hoist_crew",
               "then": [
-                {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
+                {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
                 {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
               ],"else": [
                 {"if": {"param":"actor"}, "eq": "pax3",
                   "then": [
                     {"if": {"local":"CREW"}, "eq": 3,
                       "then": [
-                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":4}},
+                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":5}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":14}
                       ],"else": [
-                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":4}},
+                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":5}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                     ]}
                 ]}
@@ -6099,23 +6329,23 @@
               ],"else": [
                 {"if": {"param":"actor"}, "eq": "hoist_crew",
                   "then": [
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":4}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":2}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
                   ],"else": [
                     {"if": {"param":"actor"}, "eq": "pax3",
                       "then": [
                         {"if": {"local":"CREW"}, "eq": 3,
                           "then": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":4}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":2}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":14}
                           ],"else": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":4}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":2}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                         ]}
                     ]}
@@ -6147,23 +6377,23 @@
               ],"else": [
                 {"if": {"param":"actor"}, "eq": "hoist_crew",
                   "then": [
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":4}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":2}},
+                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
                   ],"else": [
                     {"if": {"param":"actor"}, "eq": "pax3",
                       "then": [
                         {"if": {"local":"CREW"}, "eq": 3,
                           "then": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":4}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":2}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":14}
                           ],"else": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":4}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":2}},
+                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
                             {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                         ]}
                     ]}
@@ -6505,21 +6735,45 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher7","target":"ambulance1","state":"patient_packed_stretcher_var2_3"}},
         {"set":{"object":"ambulance1","var":"VAR 2"},"value":1},
         {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":1,"target":"ambustretcher7"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"multipatient registry live ground load objects","state":"drive_start"}},
-        {"drive_object":{"name":"ambustretcher7","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher7"},{"bearing":0,"dist":0,"object":{"local":"AMBU1_X"}},{"bearing2":180,"dist":6,"object":"ambulance1"},"ambulance1"],"VAR1":1,"speed":5}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"multipatient registry live ground load objects","state":"drive_done"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher7","target":"ambulance1","state":"stretcher_drive_to_vehicle_done"}},
-        {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
-        {"if": {"location":"ambustretcher7","var":"distance:m","to":"ambulance1"}, "gt": 4,
+        {"if": {"has_object":"ambustretcher7"}, "eq": 1,
           "then": [
-            {"return":0}
+            {"try": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                {"drive_object":{"name":"ambustretcher7","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher7"},{"bearing":0,"dist":0,"object":{"local":"AMBU1_X"}},{"bearing2":180,"dist":6,"object":"ambulance1"},"ambulance1"],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"multipatient registry live ground load objects","state":"drive_done"}}
+              ],
+              "catch": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"multipatient registry live ground load objects","state":{"text":"stretcher_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+            ]}
         ]},
-        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance1","location":"ambulance1"}}]}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher7","target":"ambulance1","state":"stretcher_drive_to_vehicle_done"}},
+        {"if": {"has_object":"ambustretcher7"}, "eq": 1,
+          "then": [
+            {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher7","target":"ambulance1","state":{"text":"stretcher_after_drive_distance_to_vehicle {0}","params":[{"round":{"location":"ambustretcher7","var":"distance:m","to":"ambulance1"},"to":1}]}}}
+        ]},
+        {"try": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance1","location":"ambulance1"}}]}}
+          ],
+          "catch": [
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher7","target":"ambulance1","state":{"text":"record_shelter_error {0}","params":[{"param":"$ERROR"}]}}}
+        ]},
         {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":1,"target":"ambumedic7"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"multipatient registry live ground load objects","state":"drive_start"}},
-        {"drive_object":{"name":"ambumedic7","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic7"},{"bearing":0,"dist":0,"object":{"local":"AMBU1_X"}},{"bearing2":180,"dist":6,"object":"ambulance1"},"ambulance1"],"VAR1":1,"speed":4}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"multipatient registry live ground load objects","state":"drive_done"}},
-        {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0}
+        {"if": {"has_object":"ambumedic7"}, "eq": 1,
+          "then": [
+            {"try": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                {"drive_object":{"name":"ambumedic7","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic7"},{"bearing":0,"dist":0,"object":{"local":"AMBU1_X"}},{"bearing2":180,"dist":6,"object":"ambulance1"},"ambulance1"],"VAR1":1,"speed":4}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"multipatient registry live ground load objects","state":"drive_done"}}
+              ],
+              "catch": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"multipatient registry live ground load objects","state":{"text":"medic_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+            ]},
+            {"if": {"has_object":"ambumedic7"}, "eq": 1,
+              "then": [
+                {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0}
+            ]}
+        ]}
       ],"else": [
         {"if": {"has_object":"ambustretcher2"}, "eq": 0,
           "then": [
@@ -6540,20 +6794,45 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"patient_packed_stretcher_var2_3"}},
         {"set":{"object":"ambulance2","var":"VAR 2"},"value":1},
         {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambustretcher2"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_start"}},
-        {"drive_object":{"name":"ambustretcher2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":5}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_done"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"stretcher_drive_to_vehicle_done"}},
-        {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
-        {"if": {"location":"ambustretcher2","var":"distance:m","to":"ambulance2"}, "gt": 4,
+        {"if": {"has_object":"ambustretcher2"}, "eq": 1,
           "then": [
-            {"return":0}
+            {"try": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                {"drive_object":{"name":"ambustretcher2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_done"}}
+              ],
+              "catch": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":{"text":"stretcher_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+            ]}
         ]},
-        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance2","location":"ambulance2"}}]}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"stretcher_drive_to_vehicle_done"}},
+        {"if": {"has_object":"ambustretcher2"}, "eq": 1,
+          "then": [
+            {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":{"text":"stretcher_after_drive_distance_to_vehicle {0}","params":[{"round":{"location":"ambustretcher2","var":"distance:m","to":"ambulance2"},"to":1}]}}}
+        ]},
+        {"try": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance2","location":"ambulance2"}}]}}
+          ],
+          "catch": [
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":{"text":"record_shelter_error {0}","params":[{"param":"$ERROR"}]}}}
+        ]},
         {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambumedic2"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_start"}},
-        {"drive_object":{"name":"ambumedic2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":4}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_done"}}
+        {"if": {"has_object":"ambumedic2"}, "eq": 1,
+          "then": [
+            {"try": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                {"drive_object":{"name":"ambumedic2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":4}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_done"}}
+              ],
+              "catch": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":{"text":"medic_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+            ]},
+            {"if": {"has_object":"ambumedic2"}, "eq": 1,
+              "then": [
+                {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
+            ]}
+        ]}
     ]},
     {"return":1}
   ],
@@ -6632,8 +6911,58 @@
         {"set":{"local":"ground_crew_runtime_trace"},"value":{"create_array":0}},
         {"set":{"local":"ground_crew_runtime_trace_sequence"},"value":0}
     ]},
-    {"set":{"local":"ground_crew_runtime_trace_sequence"},"value":{"add":[{"local":"ground_crew_runtime_trace_sequence"},1]}},
-    {"modify_array":{"local":"ground_crew_runtime_trace"},"append":{"create_struct":{"sequence":{"local":"ground_crew_runtime_trace_sequence"},"time":{"var":["L:MISSION_TIME","number"]},"macro":{"param":"macro"},"actor":{"param":"actor"},"target":{"param":"target"},"state":{"param":"state"}}}}
+    {"#comment":"Bounded ring (4000 rows). The registry polling breadcrumbs (hems_visit rows of live reserve, crew eligibility and crew barrier, about 90 percent of all rows in the 169.26 tester logs) are recorded one in 20: an unbounded array grew by 2 to 3 rows per second, 2 MB after 90 minutes, and every automatic snapshot copied it whole (a stuck mission ended with RangeError: Maximum call stack size exceeded)."},
+    {"set":{"param":"record"},"value":1},
+    {"if": {"param":"macro"}, "eq": "hems_visit",
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"param":"target"},"eq":"multipatient registry live reserve"},
+            {"require":{"param":"target"},"eq":"multipatient registry crew eligibility"},
+            {"require":{"param":"target"},"eq":"multipatient registry crew barrier"}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"ground_crew_runtime_trace_noise"}, "eq": null,
+              "then": [
+                {"set":{"local":"ground_crew_runtime_trace_noise"},"value":0}
+            ]},
+            {"set":{"local":"ground_crew_runtime_trace_noise"},"value":{"add":[{"local":"ground_crew_runtime_trace_noise"},1]}},
+            {"set":{"param":"record"},"value":0},
+            {"if": {"local":"ground_crew_runtime_trace_noise"}, "gte": 20,
+              "then": [
+                {"set":{"local":"ground_crew_runtime_trace_noise"},"value":0},
+                {"set":{"param":"record"},"value":1}
+            ]}
+        ]}
+    ]},
+    {"#comment":"Log level (settings page, PERFORMANCE). BASIC drops the rows marked level adv and the chatty channels (registry polling, vehicle parking, seat tracker, movement samples); everything that explains a crash, a casualty, a transport, a stall or a mission step is kept in both levels."},
+    {"if": {"global":"PERF_LOG_LEVEL"}, "eq": "basic",
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"param":"level"},"eq":"adv"},
+            {"require":{"param":"macro"},"eq":"hems_visit"},
+            {"require":{"param":"macro"},"eq":"fire_ops"},
+            {"require":{"param":"macro"},"eq":"police_ops"},
+            {"require":{"param":"macro"},"eq":"scene_ops"},
+            {"require":{"param":"macro"},"eq":"crew_seats"},
+            {"require":{"param":"macro"},"eq":"crew_move"},
+            {"require":{"param":"macro"},"eq":"crew_tour"},
+            {"require":{"param":"macro"},"eq":"stretcher_move"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"record"},"value":0}
+        ]}
+    ]},
+    {"if": {"param":"record"}, "eq": 1,
+      "then": [
+        {"set":{"local":"ground_crew_runtime_trace_sequence"},"value":{"add":[{"local":"ground_crew_runtime_trace_sequence"},1]}},
+        {"modify_array":{"local":"ground_crew_runtime_trace"},"append":{"create_struct":{"sequence":{"local":"ground_crew_runtime_trace_sequence"},"time":{"var":["L:MISSION_TIME","number"]},"macro":{"param":"macro"},"actor":{"param":"actor"},"target":{"param":"target"},"state":{"param":"state"}}}},
+        {"if": {"struct":{"local":"ground_crew_runtime_trace"},"path":"length"}, "gt": 4000,
+          "then": [
+            {"modify_array":{"local":"ground_crew_runtime_trace"},"removeIndex":0}
+        ]}
+    ]}
   ],
   "multipatient registry assistant dispatch": [
     {"#comment":"Starts the assistant crew movement in its own worker so the primary crew never waits for it. CREW_ASSISTANT_BUSY is the buffer: the next dispatch, and the end of a tour, wait for the previous assistant move to finish."},

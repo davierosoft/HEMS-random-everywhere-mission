@@ -510,7 +510,7 @@ function checkDebugSummaryLayout() {
   const section = (row) => compact(row.show_condition || {});
   expectRegression(rows.some((row) => row.text === 'SMOKE | MODE {0} | REALISTIC {1}' && section(row).includes('"INVENTORY"')), 'smoke diagnostics must be in Inventory');
   expectRegression(rows.filter((row) => /^DF STATIONS|^EMERGENCY DF/.test(String(row.text || ''))).every((row) => section(row).includes('"GUIDANCE"')), 'DF diagnostics must be in Guidance');
-  expectRegression(rows.some((row) => row.text === 'CREW HEALTH | P:{0} M:{1} H:{2} | IMPACT:{3} | FATAL:{4}' && section(row).includes('"MEDICAL"')), 'crew health diagnostics must be in Medical');
+  expectRegression(rows.some((row) => /^CREW HEALTH \| /.test(String(row.text || '')) && section(row).includes('"MEDICAL"')), 'crew health diagnostics must be in Medical');
   const dateCapture = (key, variable) => collect(manualSnapshotCommands(), (command) => command.set?.table?.static === 'Debug_Table' && command.set.key === key && JSON.stringify(command.value) === JSON.stringify({ var: [variable, 'number'] }));
   expectRegression(dateCapture('date_year', 'E:LOCAL YEAR').length === 1 && dateCapture('date_month', 'E:LOCAL MONTH OF YEAR').length === 1 && dateCapture('date_day', 'E:LOCAL DAY OF MONTH').length === 1, 'snapshot date must use simulator local year, month, and day');
 }
@@ -521,8 +521,6 @@ function checkRuntimeStateInitialization() {
   const handover = mission.macros["ambulance clinical handover"] || [];
   const dfUpdate = mission.macros["DF emergency beacon update"] || [];
   const plbPersonal = mission.macros["ELT plb_person"] || [];
-  const trackerPage = mission.macros["test tracker page"] || [];
-  const trackerFailure = mission.macros["test tracker request failed comment"] || [];
   const profileStore = mission.macros["store aircraft profile on file"] || [];
   const findSet = (commands, name) => commands.findIndex((command) => command.set?.local === name);
   const findSetValue = (commands, name, value) => commands.findIndex((command) => command.set?.local === name && JSON.stringify(command.value) === JSON.stringify(value));
@@ -532,7 +530,7 @@ function checkRuntimeStateInitialization() {
   expectRegression(Number.isInteger(releaseBuild), 'mission title must end in a numeric build');
   expectRegression(findVarSetValue(objective1, 'L:RELEASE_BUILD', releaseBuild) >= 0, 'objective1 must initialize L:RELEASE_BUILD from the mission title build');
 
-  [["PUBLIC_USED_TITLES", []], ["PUBLIC_SELECTOR_LOCK", 0], ["CARLS_DF_SAR_PLB_PERSON_ACTIVE", "no"], ["DF_EMERGENCY_RX_RANGE_M", 0], ["test_tracker_selected_id", null], ["test_tracker_selected_label", null], ["test_tracker_failure_comment", null]].forEach(([name, value]) => {
+  [["PUBLIC_USED_TITLES", []], ["PUBLIC_SELECTOR_LOCK", 0], ["CARLS_DF_SAR_PLB_PERSON_ACTIVE", "no"], ["DF_EMERGENCY_RX_RANGE_M", 0]].forEach(([name, value]) => {
     expectRegression(findSetValue(objective1, name, value) >= 0, "objective1 must initialize " + name);
   });
 
@@ -540,10 +538,9 @@ function checkRuntimeStateInitialization() {
   const lockGuard = selector.findIndex((command) => command.if?.local === "PUBLIC_SELECTOR_LOCK" && command.eq === null);
   const lockWait = selector.findIndex((command) => command.wait_for?.local === "PUBLIC_SELECTOR_LOCK");
   const lockRelease = selector.findIndex((command) => command.set?.local === "PUBLIC_SELECTOR_LOCK" && command.value === 0);
-  const trackerComplete = selector.findIndex((command) => command.call_macro === "test tracker complete");
   const resultReturn = selector.findIndex((command) => command.return?.param === "unique_public_candidate");
   expectRegression(usedTitlesGuard >= 0 && lockGuard >= 0 && lockWait > lockGuard, "public-title selector must initialize its array and lock before waiting");
-  expectRegression(lockRelease > lockWait && trackerComplete > lockRelease && resultReturn > trackerComplete, "public-title selector must release lock and complete tracking before return");
+  expectRegression(lockRelease > lockWait && resultReturn > lockRelease, "public-title selector must release lock before return");
 
   const liveReserve = mission.macros['multipatient registry live reserve'] || [];
   const barrierIndex = liveReserve.findIndex(command => command.call_macro === 'multipatient registry crew barrier');
@@ -556,11 +553,6 @@ function checkRuntimeStateInitialization() {
   expectRegression(findSetValue(plbPersonal, "CARLS_DF_SAR_PLB_PERSON_ACTIVE", "yes") >= 0, "ELT plb_person must set its active state before starting its thread");
   ["AIRCRAFT_PROFILE_STORE_ACTIVE", "AIRCRAFT_PROFILE_STORE_SLOT", "AIRCRAFT_PROFILE_STORE_DISPLAY_NAME"].forEach((name, index) => {
     expectRegression(findSet(profileStore, name) === index, "profile-store temporary " + name + " must be assigned before it is used");
-  });
-  const trackerValues = trackerPage.map((command, index) => ({ command, index })).filter(({ command }) => command.set?.local?.startsWith("test_tracker_") && (command.set.local.includes("_state_") || command.set.local.includes("_comment_")));
-  expectRegression(trackerValues.length === 72 && trackerValues.every(({ command, index }) => trackerPage[index + 1]?.if?.local === command.set.local && trackerPage[index + 1]?.eq === null), "Test Tracker must initialize every displayed state and comment before rendering it");
-  ["test_tracker_selected_id", "test_tracker_selected_label", "test_tracker_failure_comment"].forEach((name) => {
-    expectRegression(findSet(trackerFailure, name) >= 0, "failure-comment flow must initialize " + name);
   });
 }
 
@@ -603,8 +595,8 @@ function checkRelease91Regressions() {
   const selectedPatientText = compact(selectedPatient || []);
   expectRegression(selectedPatientText.includes('"medical_display_patient"') && selectedPatientText.includes('"param":"patient"') && selectedPatientText.includes('sync medical patient display'), 'patient selector must retain the requested patient and refresh that clinical record');
   expectRegression(!selectedPatientText.includes('crewvisiting'), 'manual patient selection must not be overwritten by an active HEMS visit');
-  const visitGate = compact(mission.macros['patient clinical visit gate'] || []);
-  expectRegression(visitGate.includes('"medical_display_patient"') && visitGate.includes('"param":"patient"') && visitGate.includes('sync medical patient display'), 'an HEMS clinical visit must automatically focus its patient record');
+  const visitGate = compact(mission.macros['crew physical HEMS assessment'] || []);
+  expectRegression(visitGate.includes('"local":"medical_display_patient"') && visitGate.includes('sync medical patient display') && !Object.hasOwn(mission.macros, 'patient clinical visit gate'), 'an HEMS clinical visit must automatically focus its patient record (crew physical HEMS assessment; the unused clinical visit gate is removed)');
 
   const debugPage = mission.macros['debug page'];
   expectRegression(Array.isArray(debugPage), 'debug page macro must exist');
@@ -649,11 +641,17 @@ function checkRelease91Regressions() {
     expectRegression(text.includes('"object":"ambustretcher2","var":"VAR 2"},"value":3'), `secondary ambulance patient ${patient} must show the casualty on the ambulance stretcher`);
   });
 
-  const previsitLoad = compact(mission.macros['ambulance previsit load'] || []);
-  expectRegression(previsitLoad.includes('from_any_injured_to_ready_for_transport'), 'previsit loading must normalize a non-standard casualty');
-  expectRegression(!previsitLoad.includes('"move_object":"injured_human"'), 'previsit loading must not move a casualty directly into the ambulance');
-  expectRegression(previsitLoad.includes('"object":"ambustretcher7","var":"VAR 2"},"value":3'), 'previsit loading must show the casualty on the ambulance stretcher');
-
+  // Ambulance shelter (replaces the pre-visit load): the patient travels on the stretcher, never dragged or destroyed; only the hidden identity anchor is repositioned.
+  const shelter = compact(mission.macros['ambulance shelter patient'] || []);
+  expectRegression(shelter.includes('"object":"ambustretcher7","var":"VAR 2"},"value":3'), 'shelter must show the casualty on the ambulance stretcher');
+  const shelterMacros = ['ambulance shelter patient', 'ambulance shelter release', 'ambulance shelter abort'].map((name) => compact(mission.macros[name] || [])).join('');
+  expectRegression(!shelterMacros.includes('"destroy_object":"injured_human"'), 'shelter must not destroy the casualty');
+  const anchorDrives = [];
+  const findAnchorDrives = (node) => { if (Array.isArray(node)) node.forEach(findAnchorDrives); else if (node && typeof node === 'object') { if (node.drive_object?.name === 'injured_human') anchorDrives.push(node.drive_object); Object.values(node).forEach(findAnchorDrives); } };
+  ['ambulance shelter patient', 'ambulance shelter release'].forEach((name) => findAnchorDrives(mission.macros[name] || []));
+  expectRegression(anchorDrives.length === 2 && anchorDrives.every((drive) => drive.VAR1 === -1), 'the casualty object is driven only hidden (VAR1 -1), never visibly dragged');
+  expectRegression(!shelter.includes('"move_object"') && shelter.includes('"drive_object":{"name":"injured_human"') && shelter.includes('"VAR1":-1'), 'shelter drives the hidden identity anchor (VAR1 -1) along the stretcher way, so the drive decides its final heading; it is never moved with move_object');
+  expectRegression(mission.macros['ambulance previsit load'] === undefined && mission.macros['ambulance previsit monitor'] === undefined && mission.macros['multipatient registry live shelter commit'] === undefined, 'the legacy pre-visit load and shelter commit (they destroyed the identity anchor) must stay removed');
   ['from_any_injured_to_ready_for_transport', 'from_any_injured2_to_ready_for_transport', 'from_any_injured3_to_ready_for_transport'].forEach((name) => {
     const helper = compact(mission.macros[name] || []);
     expectRegression(helper.includes('"var":"VAR 1"},"value":1'), `${name} must set packed VAR 1 before stretcher transfer`);
@@ -704,10 +702,35 @@ function checkRelease91Regressions() {
   const acquireIndex = visitText.indexOf('"call_macro":"multipatient registry crew acquire"');
   const assessmentIndex = visitText.indexOf('"call_macro":"ambulance assess patient"');
   expectRegression(movementIndex >= 0 && acquireIndex >= 0 && assessmentIndex > movementIndex && assessmentIndex > acquireIndex, 'physical movement and ownership check must precede assessment');
-  const postStretcherWalk = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":1.5}';
+  const postStretcherWalkPrefix = '"drive_object":{"name":"hoist_crew","to":[{"bearing":185,"dist":1.5}],"VAR1":3,"speed":';
+  const postStretcherWalk = `${postStretcherWalkPrefix}4}`;
   const postStretcherStanding = postStretcherWalk.replace('"VAR1":3', '"VAR1":1');
-  expectRegression(countMatches(compact(mission.macros['3 crew ground ops'] || []), postStretcherWalk) === 1, '3 crew post-stretcher return must walk before cargo doors close');
-  expectRegression(countMatches(compact(mission.macros['4 or 5 crew ground ops'] || []), postStretcherWalk) === 1, '4/5 crew post-stretcher return must walk before cargo doors close');
+  // The original medic never walked slower than 3 km/h on the ground; the walk must also not crawl.
+  const postStretcherWalkOk = (name) => {
+    const text = compact(mission.macros[name] || []);
+    const speeds = [...text.matchAll(new RegExp(`${postStretcherWalkPrefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([0-9.]+)\\}`, 'g'))].map((match) => Number(match[1]));
+    return speeds.length === 1 && speeds[0] >= 3;
+  };
+  // Crew walking speed limits belong to a whole drive and only to a very short one (under 2 m, never above 3 km/h);
+  // a longer route runs at walking speed, so a crew walk below 3 is accepted only as a single short offset approach.
+  const crewWalkNames = new Set(['hoist_crew', 'hpax1', 'hpax2', 'pax3']);
+  // Accepted: one offset point under 2 m from an object, or the original first step off the helicopter (one helicopter-relative point within 3 m).
+  const shortOffsetOnly = (to) => Array.isArray(to) && to.length === 1 && to[0] && typeof to[0] === 'object'
+    && ((typeof to[0].object === 'string' && to[0].dist < 2) || (to[0].object === undefined && to[0].bearing !== undefined && to[0].dist <= 3));
+  const slowCrewDrives = [];
+  for (const [macroName, commands] of Object.entries(mission.macros)) {
+    for (const drive of collect(commands, (item) => item.drive_object && crewWalkNames.has(item.drive_object.name) && [3, 16].includes(item.drive_object.VAR1)).map((item) => item.drive_object)) {
+      if (typeof drive.speed === 'number' && drive.speed < 3 && !shortOffsetOnly(drive.to)) slowCrewDrives.push(`${macroName}:${drive.name}@${drive.speed}`);
+    }
+  }
+  expectRegression(slowCrewDrives.length === 0, `crew walk slower than 3 km/h on a route that is not a whole very short drive (under 2 m): ${slowCrewDrives.slice(0, 6).join(', ')}`);
+  const backUpText = compact(mission.macros['Hoisting back up'] || []);
+  const hookIndex = backUpText.indexOf('"H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_ON"');
+  expectRegression(hookIndex >= 0 && ['injured_human', 'injured_human2', 'injured_human3'].every((name) => backUpText.indexOf(`"destroy_object":"${name}"`, hookIndex) > hookIndex), 'the ground casualty must be destroyed when it is hooked, not left beside the hook');
+  const preparePatient = compact(mission.macros['multipatient registry live prepare patient'] || []);
+  expectRegression(!preparePatient.includes('"ne":"hems"'), 'the HEMS resource must pack the casualty (ready-for-transport) like every other resource');
+  expectRegression(postStretcherWalkOk('3 crew ground ops'), '3 crew post-stretcher return must walk before cargo doors close');
+  expectRegression(postStretcherWalkOk('4 or 5 crew ground ops'), '4/5 crew post-stretcher return must walk before cargo doors close');
   expectRegression(!compact(mission.macros['3 crew ground ops'] || []).includes(postStretcherStanding) && !compact(mission.macros['4 or 5 crew ground ops'] || []).includes(postStretcherStanding), 'post-stretcher return must not use the standing animation');
 
   const flush = compact(mission.macros['flush mission preset'] || []);
@@ -779,7 +802,8 @@ function checkAircraftProfileRegression() {
     AIRCRAFT_PROFILE_ACTIVE: 'DEFAULT', AIRCRAFT_PROFILE_SLOT: 'Aircraft_Profile_Table0',
     ENGINE_FAILURES_ENABLED: 'yes', ORANGE_TARGET_SMOKE: 'auto', TARGET_GUIDANCE_RANGE: 'wide',
     HOIST_SAFETY_MONITOR: 'yes', HOIST_CONTROL_PROFILE: 'auto', AUTO_FPL_NAV_SOURCE: 'yes',
-    TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100
+    TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100,
+    PERF_SAMPLING: 'fast', PERF_ALTITUDE_GATE: 'yes', PERF_LOG_LEVEL: 'advanced', KIT_WEIGHTS: 'no', LIFE_FREEZE_NEAR: 'no'
   };
   Object.entries(firstRun).forEach(([key, value]) => {
     const owner = key === 'AIRCRAFT_PROFILE_ACTIVE' || key === 'AIRCRAFT_PROFILE_SLOT' ? 'ensure aircraft profile defaults' : 'aircraft factory DEFAULT';
@@ -815,6 +839,38 @@ function checkAircraftProfileRegression() {
   ['FLIGHT ASSISTS', 'Helicopter failures', 'Orange smoke marker', 'Target Position window on tablet', 'Crew health simulation', 'Winch control mode', 'GTN(TDS) NAV SOURCE', 'Teleport assist'].forEach((token) => {
     expectRegression(settingsText.includes(token), `Settings must expose individual flight-assist option: ${token}`);
   });
+  for (const monitorName of ['record crew acceleration maxima', 'monitor crew fire exposure', 'recover crew lifescore over time', 'crash monitor loop']) {
+    expectRegression(compact(mission.macros[monitorName] || []).includes('"wait_for":{"global":"HOIST_SAFETY_MONITOR"},"eq":"yes"'), `${monitorName} must wait while the crew health simulation is off`);
+  }
+  // Factory values of the PERFORMANCE options: ROOKIE PILOT samples light, the other profiles fast, altitude gate ON everywhere, log ADVANCED everywhere.
+  const perfFactory = { DEFAULT: ['fast', 'yes'], 'ROOKIE PILOT': ['light', 'yes'], 'EXPERT PILOT': ['fast', 'yes'], 'EXPERT HEMS': ['fast', 'yes'] };
+  for (const [profileName, [sampling, gate]] of Object.entries(perfFactory)) {
+    const factoryText = compact(mission.macros[`aircraft factory ${profileName}`] || []);
+    expectRegression(factoryText.includes(`"set":{"global":"PERF_SAMPLING"},"value":"${sampling}"`) && factoryText.includes(`"set":{"global":"PERF_ALTITUDE_GATE"},"value":"${gate}"`) && factoryText.includes('"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"'), `factory profile ${profileName} must set PERF_SAMPLING=${sampling}, PERF_ALTITUDE_GATE=${gate}, PERF_LOG_LEVEL=advanced`);
+  }
+  // Factory values of LIFE_FREEZE_NEAR: on for the profiles with a long dispatch range (ROOKIE PILOT, EXPERT PILOT 60 km, EXPERT HEMS 50 km), off for DEFAULT (35 km)
+  for (const [profileName, value] of Object.entries({ DEFAULT: 'no', 'ROOKIE PILOT': 'yes', 'EXPERT PILOT': 'yes', 'EXPERT HEMS': 'yes' })) {
+    expectRegression(compact(mission.macros[`aircraft factory ${profileName}`] || []).includes(`"set":{"global":"LIFE_FREEZE_NEAR"},"value":"${value}"`), `factory profile ${profileName} must set LIFE_FREEZE_NEAR=${value}`);
+  }
+  // PERFORMANCE section: three persistent options, each description names the lightest choice, defaults reach every profile layer
+  const settingsDispatchItems = (mission.macros.settings || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
+  const performanceLink = settingsDispatchItems.findIndex((item) => item.link === '+ PERFORMANCE');
+  expectRegression(performanceLink > 0 && settingsDispatchItems[performanceLink - 1]?.image === 'bar' && settingsDispatchItems.some((item) => item.link === '- PERFORMANCE'), 'Settings must expose a collapsible PERFORMANCE section separated by a bar');
+  const performanceItems = settingsDispatchItems.slice(performanceLink, performanceLink + 10);
+  const performanceText = compact(performanceItems);
+  ['Impact monitor sampling', 'Impact monitor altitude gate', 'Log level', 'PERF_SAMPLING', 'PERF_ALTITUDE_GATE', 'PERF_LOG_LEVEL'].forEach((token) => {
+    expectRegression(performanceText.includes(token), `PERFORMANCE section must expose ${token}`);
+  });
+  expectRegression((performanceText.match(/is the lightest for performance/g) || []).length === 3, 'each PERFORMANCE option must say which choice is the lightest for performance');
+  expectRegression(/^[\x20-\x7e]*$/.test(performanceText), 'PERFORMANCE texts must be ASCII only');
+  for (const [key, values] of [['PERF_SAMPLING', ['fast', 'balanced', 'light']], ['PERF_ALTITUDE_GATE', ['yes', 'no']], ['PERF_LOG_LEVEL', ['advanced', 'basic']]]) {
+    for (const value of values) expectRegression(performanceText.includes(`"set":{"global":"${key}"},"value":"${value}"`), `PERFORMANCE section must offer ${key}=${value}`);
+    for (const macroName of ['aircraft factory DEFAULT', 'aircraft factory ROOKIE PILOT', 'aircraft factory EXPERT PILOT', 'aircraft factory EXPERT HEMS']) {
+      expectRegression(compact(mission.macros[macroName] || []).includes(`"set":{"global":"${key}"}`), `${macroName} must set ${key}`);
+    }
+    expectRegression(compact(mission.macros.resetdefault || []).includes(`"set":{"global":"${key}"},"value":null`), `resetdefault must clear ${key}`);
+    expectRegression(compact(mission.macros.objective1 || []).includes(`"if":{"global":"${key}"},"eq":null`), `objective1 must default ${key}`);
+  }
   const linked = compact(mission.macros['apply linked aircraft profile'] || []);
   ['Config_Table0', 'Config_Table1', 'Config_Table2', 'Config_Table3', 'Config_Table4', 'Config_Table5'].forEach((table) => {
     expectRegression(linked.includes(table), `linked aircraft profile must resolve ${table}`);
@@ -841,15 +897,14 @@ function checkAircraftProfileRegression() {
     'MISSION_GUIDANCE_OVERRIDE', 'RINGONCE', 'LOWFUELTHRSLD', 'NOCONNEXT', 'CARLSPBIT', 'CARLS_DF_TUNING_MODE',
     'TABLET_5G_ENABLED', 'startpage', 'ambu_force', 'poli_force', 'fire_force', 'ENGINE_FAILURES_ENABLED',
     'ORANGE_TARGET_SMOKE', 'TARGET_GUIDANCE_RANGE', 'HOIST_SAFETY_MONITOR', 'HOIST_CONTROL_PROFILE',
-    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED'
+    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED', 'PERF_SAMPLING', 'PERF_ALTITUDE_GATE', 'PERF_LOG_LEVEL', 'KIT_WEIGHTS', 'LIFE_FREEZE_NEAR', 'CREW_CHATTER'
   ]);
   const savedProfileKeys = new Set(collect(mission.macros['save custom aircraft profile'] || [], (item) => item.set?.table && typeof item.set.key === 'string').map((item) => item.set.key));
   const loadedProfileKeys = new Set(collect(mission.macros['load custom aircraft profile'] || [], (item) => item.table && typeof item.key === 'string').map((item) => item.key));
   expectRegression([...savedProfileKeys].filter((key) => key !== 'saved_at').every((key) => loadedProfileKeys.has(key)), 'every saved aircraft-profile setting must be reloadable');
   expectRegression([...loadedProfileKeys].every((key) => savedProfileKeys.has(key)), 'aircraft-profile loading must not request unsaved setting keys');
-  ['link aircraft profile to mission', 'unlink aircraft profile'].forEach((name) => {
-    expectRegression(compact(mission.macros[name] || []).includes('save_table') && compact(mission.macros[name] || []).includes('Aircraft_Profile_Links'), `${name} must persist the reciprocal link table`);
-  });
+  expectRegression(compact(mission.macros['link aircraft profile to mission'] || []).includes('save_table') && compact(mission.macros['link aircraft profile to mission'] || []).includes('Aircraft_Profile_Links'), 'link aircraft profile to mission must persist the reciprocal link table (it also removes the link when the selected MSN LIST is pressed again)');
+  expectRegression(!Object.hasOwn(mission.macros, 'unlink aircraft profile'), 'the unused unlink aircraft profile macro is removed: the link macro already toggles and clears the other links of the profile');
 
   const marksCustom = (commands) => Array.isArray(commands) && commands.some((command) => command.call_macro === 'mark aircraft profile custom');
   const directSettings = collect(mission.macros.settings || [], (item) => Array.isArray(item.commands) && item.commands.some((command) => command.set && profileKeys.has(command.set.global)));
@@ -865,7 +920,7 @@ function checkAircraftProfileRegression() {
 function checkRelease94Regressions() {
   const allText = compact(mission);
   const endpointLvar = 'L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION';
-  ['normalize orange target smoke setting', 'create orange smoke marker', 'evaluate realistic orange smoke scene', 'arm realistic orange smoke', 'initialize crew lifescores for shift', 'apply crew lifescore impact', 'refresh crew lifescore report', 'start crew lifescore monitor', 'hoist out fatal failure', 'start hoist out risk monitor'].forEach((name) => {
+  ['normalize orange target smoke setting', 'create orange smoke marker', 'evaluate realistic orange smoke scene', 'arm realistic orange smoke', 'initialize crew lifescores for shift', 'apply crew lifescore impact', 'refresh crew lifescore report', 'start crew lifescore monitor', 'hoist cable casualty', 'start hoist out risk monitor'].forEach((name) => {
     expectRegression(Array.isArray(mission.macros[name]), `release 94 macro must exist: ${name}`);
   });
   const smokeControls = collect(mission.macros.settings || [], (item) => Array.isArray(item.buttonbar) && item.buttonbar.some((button) => button.title === 'NEVER'));
@@ -950,9 +1005,11 @@ function checkRelease94Regressions() {
   // Cross-task CARLS DF behavior is enforced by tools/validate-df-release.js.
 
   const crewEmergencyMacros = [
-    'post crew safety message', 'evaluate crew lifescore state', 'apply object crew lifescore impact',
+    'post crew safety message', 'apply crew lifescore impact', 'apply object crew lifescore impact',
     'apply hoist crew lifescore impact', 'replace deceased crew object', 'board crew after emergency',
-    'crew emergency hospital admission', 'crew emergency route to care', 'crew emergency response'
+    'crew emergency route to care', 'crew emergency response', 'crew casualty destination scene', 'crew casualty load member', 'crew casualty pilot walk', 'crew casualty plan', 'crew casualty scene vehicles',
+    'crew emergency choice', 'crew emergency continue', 'crew emergency divert', 'crew emergency destination menu', 'crew emergency ambulance prime', 'crew emergency return to base', 'crew hospital arrival', 'crew hospital finish', 'crew hospital unload', 'crew hospital police watch', 'crew hospital ambulance call', 'crew base scene need',
+    'crew hospital unload 1', 'crew hospital unload 2', 'crew hospital unload 3', 'crew hospital unload 4', 'crew hospital deliver walk 1', 'crew hospital deliver ambulance 1'
   ];
   crewEmergencyMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), `crew emergency macro must exist: ${name}`));
   const crewImpact = compact(mission.macros['apply crew lifescore impact'] || []);
@@ -962,11 +1019,11 @@ function checkRelease94Regressions() {
   const crewFireExposure = compact(mission.macros['monitor crew fire exposure'] || []);
   const crewMonitorAndRecorder = `${crewMonitor}${crewRecorder}${crewFireExposure}`;
   expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","var":"distance:m","to":"VFXA"') && crewMonitorAndRecorder.includes('"object":"hoist_crew","var":"distance:m","to":"VFXA"'), 'scene exposure must use each ground operator distance to the active hazard');
-  expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","member":2') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":3') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":4') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"member":5'), 'crew role mapping must preserve medical crew 2, hoist operator 3, and helirescuer members 4/5');
+  expectRegression(crewMonitorAndRecorder.includes('"object":"pax3","member":2') && compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"local":"hoist_member"') && !compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('CREW_LIFESCORE_3'), 'crew role mapping must keep the medic (member 2) as the hoisted crew member, helirescuers as members 4/5, and never the copilot (member 3)');
   expectRegression(!crewMonitorAndRecorder.includes('"object":"VFXA","var":"distance:m"'), 'scene exposure must never use helicopter-to-smoke distance as crew exposure');
   const crewPost = compact(mission.macros['post crew safety message'] || []);
   expectRegression(crewPost.includes('"set_message"') && crewPost.includes('Dispatcher_Messages') && crewPost.includes('UpdateRescueTrack'), 'crew safety alerts must reach tablet, dispatch messages, and RescueTrack');
-  const crewEvaluate = compact(mission.macros['evaluate crew lifescore state'] || []);
+  const crewEvaluate = compact(mission.macros['apply crew lifescore impact'] || []);
   const crewStateEvent = compact(mission.macros['crew member state event'] || []);
   const crewBatchEvents = compact(mission.macros['crew impact events'] || []);
   expectRegression(crewEvaluate.includes('crew impact events') && crewStateEvent.includes('"lte":10') && crewStateEvent.includes('"lte":0') && crewBatchEvents.includes('crew emergency response') && crewBatchEvents.includes('crew mission terminated'), 'crew emergency response must enforce the LifeScore <=10 threshold through the member state event and the batch events');
@@ -976,8 +1033,8 @@ function checkRelease94Regressions() {
   ['pax3', 'pax1', 'pax2', 'hoist_crew'].forEach((name) => {
     expectRegression(fatalReplacement.includes(`"destroy_object":"${name}"`) && fatalReplacement.includes(`"name":"${name}"`) && fatalReplacement.includes('"static":"deadmen"') && !fatalReplacement.includes('Airbus H145 Medic Stretcher'), `deceased ground object ${name} must be replaced in place with a dead asset under the same name`);
   });
-  const fatalStop = compact(mission.macros['stop fatal hoist operation'] || []);
-  expectRegression(fatalStop.includes('HOIST_OBJ_HUMAN_1_OFF') && fatalStop.includes('HOIST_OBJ_HUMAN_1_BAG_OFF') && fatalStop.includes('HOIST_OBJ_STRETCHER_OFF') && fatalStop.includes('set_dispatch_dialog') && fatalStop.includes('set_briefing_dialog') && fatalStop.includes('END MISSION'), 'fatal hoist handling must switch hoist objects off, close mission dialogs, and offer END MISSION');
+  const operatorLost = compact(mission.macros['hoist cable operator lost'] || []);
+  expectRegression(operatorLost.includes('HOIST_OBJ_HUMAN_1_OFF') && operatorLost.includes('HOIST_OBJ_HUMAN_1_BAG_OFF') && operatorLost.includes('"call_macro":"hoist cable fall position"') && operatorLost.includes('"local":"CREW_FATAL_ON_HOOK"') && operatorLost.includes('"call_macro":"apply hoist crew lifescore impact"'), 'a hoist operator lost from the cable must release the cable objects at the fall position or stay on the hook, and then take the fatal LifeScore impact');
   const hoistOutMonitor = compact(mission.macros['start hoist out risk monitor'] || []);
   const hoistAttachedMonitor = compact(mission.macros['start hoist attached risk monitor'] || []);
   expectRegression(hoistOutMonitor.includes('HOIST_GROUND_RATE_FPS') && hoistOutMonitor.includes('hoist_get_distance_from_ground:ft') && !hoistOutMonitor.includes('ACCELERATION BODY'), 'hoist-out monitor must use measured descent rate instead of aircraft acceleration');
@@ -987,15 +1044,19 @@ function checkRelease94Regressions() {
   expectRegression(emergencyBoarding.includes('CREW_EMERGENCY_FATAL') && emergencyBoarding.includes('CREW_IMPACT_OBJECT'), 'fatal boarding must leave only the deceased packaged object on scene while boarding survivors');
   const emergencyRoute = compact(mission.macros['crew emergency route to care'] || []);
   expectRegression(emergencyRoute.includes('Query closest hospital') && emergencyRoute.includes('user hospital WP') && emergencyRoute.includes('"local":"FPL_NMBR"') && emergencyRoute.includes('"value":8'), 'critical/fatal crew emergency must route to the nearest hospital');
-  expectRegression(emergencyRoute.includes('CREW_EMERGENCY_ROUTE_FALLBACK') && emergencyRoute.includes('return to base'), 'crew emergency must fall back to base if no hospital query result is available');
-  const hospitalAdmission = compact(mission.macros['crew emergency hospital admission'] || []);
-  expectRegression(hospitalAdmission.includes('hospital_door') && hospitalAdmission.includes('"hospital"') && hospitalAdmission.includes('"destroy_object":"pax3"'), 'surviving operators must deboard and enter the hospital building');
+  expectRegression(emergencyRoute.includes('crew emergency destination menu') && emergencyRoute.includes('CREW_DEST_CONFIRMED') && !emergencyRoute.includes('"call_macro":"return to base"'), 'crew emergency must let the user confirm or change the hospital from the menu, never fall back to base');
+  expectRegression(mission.macros['crew emergency hospital admission'] === undefined, 'the unused hospital admission macro (surviving operators walking into the hospital) must stay removed');
+  const hospitalUnload = compact(mission.macros['crew hospital unload'] || []) + compact(mission.macros['crew hospital unload 1'] || []) + compact(mission.macros['crew hospital deliver walk 1'] || []);
+  expectRegression(hospitalUnload.includes('chs_str_1') && hospitalUnload.includes('hospital_wp3') && hospitalUnload.includes('hospital_door') && !hospitalUnload.includes('crew casualty scene vehicles'), 'the hospital arrival of a crew emergency must unload the critical crew with one stretcher each along the hospital waypoints, without an ambulance and police scene');
+  expectRegression(emergencyRoute.includes('manual_hospital_destination_setup') && emergencyRoute.includes('crew hospital arrival') && compact(mission.macros['crew emergency divert'] || []).includes('crew emergency route to care') && compact(mission.macros['crew emergency choice'] || []).includes('Continue mission'), 'a critical crew member lets the user divert or continue, the diversion goes to the hospital with the patient flow when a patient is aboard');
+  const baseScene = compact(mission.macros['crew casualty destination scene'] || []) + compact(mission.macros['crew casualty load member'] || []) + compact(mission.macros['crew base scene need'] || []);
+  expectRegression(baseScene.includes('crew casualty scene vehicles') && baseScene.includes('ccs_stretcher') && baseScene.includes('CREW_POLICE_LIMIT'), 'the base scene must park the police (and the ambulance for a casualty aboard) and load the stretcher');
   const hoistRisk = compact(mission.macros['start hoist out risk monitor'] || []);
   expectRegression(hoistRisk.includes('apply hoist crew lifescore impact') && !hoistRisk.includes('apply crew lifescore impact'), 'hoist risk must damage only the exposed hoist operator');
   const fatalArrays = [];
   const collectFatalArrays = (value) => {
     if (Array.isArray(value)) {
-      if (value.some((command) => command?.call_macro === 'hoist out fatal failure')) fatalArrays.push(value);
+      if (value.some((command) => command?.call_macro === 'hoist cable casualty' && command.params?.subject === 'both')) fatalArrays.push(value);
       value.forEach(collectFatalArrays);
       return;
     }
@@ -1003,10 +1064,34 @@ function checkRelease94Regressions() {
   };
   collectFatalArrays(mission.macros['Hoisting back up'] || []);
   expectRegression(fatalArrays.length === 3 && fatalArrays.every((commands) => {
-    const fatalIndex = commands.findIndex((command) => command?.call_macro === 'hoist out fatal failure');
+    const fatalIndex = commands.findIndex((command) => command?.call_macro === 'hoist cable casualty' && command.params?.subject === 'both');
     const resetIndex = commands.findIndex((command) => command?.set?.local === 'HOIST_OUT' && command?.value === 0);
     return resetIndex < 0 || fatalIndex < resetIndex;
-  }), 'all legacy hoist fatal branches must call failure before clearing HOIST_OUT');
+  }), 'all three hoist out fatal branches (speed, bank, load) must call the cable casualty for both people before clearing HOIST_OUT');
+  // Hoist cable casualties (docs/architecture/HOIST_CABLE_CASUALTIES.md): the cable flags belong to the callers, the casualty macro decides injury, death and the hook, the stress monitor reads the aircraft.
+  // The default landing spot is created once and moved only by the user: no watchdog (it is not in the 0.997 baseline); after an injured_human relocation one call updates it once.
+  expectRegression(!Object.hasOwn(mission.macros, 'landing spot watchdog') && !JSON.stringify(mission.macros).includes('landing_spot_watchdog'), 'the landing spot watchdog is removed: nothing may rewrite the landing spot in the background');
+  const followMacro = compact(mission.macros['landing spot follow injured'] || []);
+  expectRegression(followMacro.includes('"local":"landing_spot_follow"') && followMacro.includes('"local":"customLZ"},"ne":"yes"') && followMacro.includes('"create_location":"landing_spot"') && !/"(while|create_thread|sleep|wait_for)"/.test(followMacro), 'landing spot follow injured must be a one-shot update guarded by landing_spot_follow and customLZ, with no loop, thread or wait');
+  expectRegression(compact(mission.macros['shared repeated block 027'] || []).includes('"set":{"local":"landing_spot_follow"},"value":"yes"') && compact(mission.macros.objective1 || []).includes('"set":{"local":"landing_spot_follow"},"value":"no"'), 'only the default landing spot created at the injured follows it: block 027 arms landing_spot_follow, objective1 clears it');
+  expectRegression(['ambulance shelter patient', 'ambulance shelter release', 'ambulance shelter abort', 'multipatient registry live recover worker', 'truck vs car', 'BUS stop', 'train'].every((name) => compact(mission.macros[name] || []).includes('"call_macro":"landing spot follow injured"')) && !compact(mission.macros['landing spot selection'] || []).includes('landing spot follow injured'), 'every injured_human relocation after the default spot calls the one-shot update; the user choosing the spot never does');
+  const hoistingWait = compact(mission.macros['HOISTING'] || []);
+  const ambulanceWorker = compact(mission.macros['ambustretcher full'] || []);
+  expectRegression(hoistingWait.includes('"wait_for":{"var":["L:AMBUSTRETCHERFULL","number"]},"eq":0') && hoistingWait.includes('"wait_for":{"var":["L:STEP","number"]},"gt":6'), 'the HEMS wait for the ambulance operations (L:STEP above 6) must also end when the ambulance clears L:AMBUSTRETCHERFULL: an ambulance without a patient never sets that step and HEMS and ambulance wait for each other');
+  expectRegression(/"call_macro":"ambulance1 stand down"/.test(ambulanceWorker) && ambulanceWorker.indexOf('"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0') > -1 && ambulanceWorker.indexOf('"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0') < ambulanceWorker.indexOf('"call_macro":"ambulance1 stand down"'), 'the ambulance that stands down (no patient to transport) must clear L:AMBUSTRETCHERFULL before the stand down');
+  const cableCasualty = compact(mission.macros['hoist cable casualty'] || []);
+  expectRegression(cableCasualty.includes('"global":"HOIST_SAFETY_MONITOR"') && cableCasualty.includes('"local":"HOIST_CABLE_BUSY"') && cableCasualty.includes('"floor":20') && cableCasualty.includes('"call_macro":"hoist cable operator lost"') && cableCasualty.includes('"call_macro":"hoist cable patient lost"') && cableCasualty.includes('"rand":[0,100]'), 'the hoist cable casualty must be gated and locked, leave an injured operator at 20 or more, and draw the hook release and the deaths');
+  expectRegression(mission.macros['hoist cable stress monitor'] === undefined && !compact(mission.macros['start hoist attached risk monitor'] || []).includes('ACCELERATION BODY'), 'the temporary hoist has no acceleration model (the operator died in normal hoist operations of the earlier versions): only the ground impact monitor on the measured descent rate and the original hoist out ladders');
+  const cableWatch = compact(mission.macros['hoist cable injured watch'] || []);
+  expectRegression(cableWatch.includes('"call_macro":"hoist cable release injured"') && cableWatch.includes('"fn":"hoist_get_distance_from_ground:ft"') && cableWatch.includes('"macro":"hoist_cable"'), 'an operator hurt on the way down must be watched until the hook rests on the ground, released, and every step traced');
+  expectRegression(compact(mission.macros['hoist cable fall position'] || []).includes('"object":"$USER"') && compact(mission.macros['hoist cable patient lost'] || []).includes('"title":"Airbus H145 Injured Human"') && compact(mission.macros['hoist cable patient lost'] || []).includes('"value":1'), 'a person that the hook lets go appears at the user aircraft, the lost patient is the injured packed in the stretcher');
+  const hoistDownFirst = (mission.macros['hoist down'] || []).find((command) => command?.set?.local === 'HOIST_CREW_ON_CABLE');
+  expectRegression(hoistDownFirst === undefined || hoistDownFirst.value !== 1, 'hoist down must not put a person on the cable by itself: its callers say it with person 1');
+  expectRegression(compact(mission.macros['hoist down'] || []).includes('"param":"person"'), 'hoist down must read the person param');
+  expectRegression(compact(mission.macros['apply hoist crew lifescore impact'] || []).includes('"param":"floor"'), 'the hoist impact must accept a LifeScore floor');
+  expectRegression(compact(mission.macros['multipatient registry acceleration impact'] || []).includes('"param":"slot"'), 'the registry impact must reach the HEMS patient on the cable by its slot');
+  expectRegression(compact(mission.macros['replace deceased crew object'] || []).includes('"local":"CREW_FATAL_ON_HOOK"'), 'a hoist operator that dies on the hook must leave no dead asset on the ground');
+  expectRegression(compact(mission.macros.objective1 || []).includes('"call_macro":"hoist cable reset"'), 'every mission must start with a clean cable state');
   const crewReport = compact(mission.macros['refresh crew lifescore report'] || []);
   expectRegression(crewReport.includes('"value":"CRITICAL"') && crewReport.includes('"value":"DECEASED"'), 'crew report must distinguish critical injury from death');
   const endMenuText = compact(mission.macros['end menu'] || []);
@@ -1016,253 +1101,25 @@ function checkRelease94Regressions() {
   expectRegression(crewDebugText.includes('CREW SAFETY / EMERGENCY') && crewDebugText.includes('CREW_FATAL_OBJECT_REPLACED'), 'debug page must expose crew emergency and packaged-object state');
 
 }
-function checkRelease100TestTracker() {
-  const expectedTests = [
-    {
-      "id": "ambulance_spawn",
-      "label": "TEST AMBULANCE: CHECK IT SPAWNS AT THE SCENE AND ARRIVES",
-      "macro": "Ambulance1"
-    },
-    {
-      "id": "ambulance_secondary",
-      "label": "TEST SECOND AMBULANCE: WITH 2 OR 3 PATIENTS, CHECK IT HELPS ANOTHER PATIENT",
-      "macro": "ambulance2 secondary rescue"
-    },
-    {
-      "id": "vehicle_drive_recovery",
-      "label": "TEST EMERGENCY VEHICLES: CHECK THEY DRIVE AND STOP CORRECTLY",
-      "macro": "drive ambulance1 safe"
-    },
-    {
-      "id": "ambulance_handover",
-      "label": "TEST AMBULANCE CARE: CHECK ASSESSMENT STARTS BEFORE HELICOPTER CREW ARRIVES",
-      "macro": "multipatient registry live ground load"
-    },
-    {
-      "id": "dispatch_lifecycle",
-      "label": "TEST END OF MISSION: COMPLETE HANDOVER AND CHECK RETURN TO BASE",
-      "macro": "dispatch cancellation evaluation"
-    },
-    {
-      "id": "dispatch_progress",
-      "label": "TEST DISPATCH: FLY TO THE SCENE AND CHECK MISSION PROGRESSES",
-      "macro": "on-site operations progress monitor"
-    },
-    {
-      "id": "residential_routes",
-      "label": "TEST ROAD SCENE: CHECK THE MAP POINT AND ROUTE REACH THE SCENE",
-      "macro": "random residential road nodes launcher"
-    },
-    {
-      "id": "scene_assets",
-      "label": "TEST SCENE: CHECK PEOPLE AND OBJECTS APPEAR AT THE SCENE",
-      "macro": "select unique public title"
-    },
-    {
-      "id": "manual_patient",
-      "label": "TEST MANUAL CARE: SELECT TREATMENT AND TRANSPORT FOR THE PATIENT",
-      "macro": "manual current patient treatment choice"
-    },
-    {
-      "id": "multipatient",
-      "label": "TEST MULTIPLE PATIENTS: CHECK CARE AND TRANSPORT ORDER",
-      "macro": "initialize multipatient clinical state"
-    },
-    {
-      "id": "patient_physiology",
-      "label": "TEST PATIENT CARE: CHECK VITAL SIGNS AND TREATMENT UPDATE",
-      "macro": "update patient1 physiology"
-    },
-    {
-      "id": "cpr_mcpr",
-      "label": "TEST RESUSCITATION: CHECK PATIENT RESPONSE TO CPR",
-      "macro": "CPR"
-    },
-    {
-      "id": "clinical_report",
-      "label": "TEST PATIENT REPORT: CHECK REPORT IS READY BEFORE TRANSFER",
-      "macro": "rescuetrack patient status summary"
-    },
-    {
-      "id": "pathology_fallback",
-      "label": "TEST PATIENT DETAILS: CHECK SAFE TEXT WHEN INFORMATION IS MISSING",
-      "macro": "ensure pathology1 fallback"
-    },
-    {
-      "id": "preflight",
-      "label": "TEST PRE-FLIGHT: COMPLETE CHECKS AND START THE MISSION",
-      "macro": "beforetockl"
-    },
-    {
-      "id": "three_crew_helirescuer",
-      "label": "TEST RESCUER PICKUP: 3 CREW, CHECK RESCUER BOARDS",
-      "macro": "3 crew SKID LDG"
-    },
-    {
-      "id": "hoist_control",
-      "label": "TEST WINCH: CHECK CONTROLS AND SAFE HEIGHT DURING HOIST",
-      "macro": "HOISTING"
-    },
-    {
-      "id": "crew_health",
-      "label": "TEST CREW HEALTH: WITH CREW HEALTH ACTIVE, CHECK THE CREW ON SCENE",
-      "macro": "record crew health test"
-    },
-    {
-      "id": "crew_emergency",
-      "label": "TEST INJURED CREW: CHECK HOSPITAL ROUTE AND MISSION ENDS",
-      "macro": "crew emergency response"
-    },
-    {
-      "id": "helirescuer_drop",
-      "label": "TEST RESCUER DROP: 3 CREW, CHECK RESCUER LEAVES AND RETURNS",
-      "macro": "drop heli rescuer"
-    },
-    {
-      "id": "ground_ops",
-      "label": "TEST GROUND CREW: CHECK STRETCHER, WALKING AND CARGO DOORS",
-      "macro": "ground ops"
-    },
-    {
-      "id": "manual_marshal",
-      "label": "TEST MANUAL MARSHAL: START IT FROM TECHNICAL PAGE AND CHECK GUIDANCE",
-      "macro": "create technical marshall front"
-    },
-    {
-      "id": "marshal_guidance",
-      "label": "TEST LANDING GUIDANCE: CHECK MARSHAL GUIDES ARRIVAL AND DEPARTURE",
-      "macro": "activate marshall guidance"
-    },
-    {
-      "id": "base_marshal_reload",
-      "label": "TEST BASE GUIDANCE: RESTART THE FLIGHT AND CHECK LANDING GUIDANCE",
-      "macro": "restore reloaded base marshall"
-    },
-    {
-      "id": "route_guidance",
-      "label": "TEST HOSPITAL ROUTE: AFTER BOARDING, CHECK THE ROUTE CHANGES TO HOSPITAL",
-      "macro": "routeupdate"
-    },
-    {
-      "id": "carls_df",
-      "label": "TEST RADIO BEACON: TUNE IT AND CHECK THE DIRECTION INDICATION",
-      "macro": "CARLS DF open"
-    },
-    {
-      "id": "df_stations",
-      "label": "TEST RADIO BEACON SETTINGS: SAVE A STATION, REOPEN IT, CHECK IT REMAINS",
-      "macro": "DF stations save"
-    },
-    {
-      "id": "emergency_df",
-      "label": "TEST EMERGENCY BEACON: MOVE NEAR AND FAR, CHECK SIGNAL APPEARS AND CLEARS",
-      "macro": "DF emergency beacon update"
-    },
-    {
-      "id": "orange_smoke",
-      "label": "TEST ORANGE SMOKE: TRY AUTO, ALWAYS, REALISTIC AND DISABLED",
-      "macro": "create orange smoke marker"
-    },
-    {
-      "id": "tablet_5g",
-      "label": "TEST TABLET CONNECTION: CHECK MESSAGES AND CONNECTION STATUS",
-      "macro": "Mission dispatch"
-    },
-    {
-      "id": "cicers_endpoint",
-      "label": "TEST ONLINE MAP DATA: CHECK THE SELECTED OSM SERVICE CONNECTS",
-      "macro": "CICERS PING"
-    },
-    {
-      "id": "failure_engine",
-      "label": "TEST STARTUP FAILURE: SELECT A FAILURE AND CHECK IT APPEARS",
-      "macro": "failure engine"
-    },
-    {
-      "id": "aircraft_profiles",
-      "label": "TEST AIRCRAFT PROFILES: SELECT CUS.PROFILE 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUS.PROFILE 1",
-      "begin_macro": "settings",
-      "complete_macro": "select custom aircraft profile"
-    },
-    {
-      "id": "mission_presets",
-      "label": "TEST MISSION LIST: CHANGE A MISSION, REOPEN THE LIST, CHECK IT IS SAVED",
-      "macro": "toggle mission preset category"
-    },
-    {
-      "id": "settings_layout",
-      "label": "TEST SETTINGS PAGE: OPEN EACH SECTION AND CHECK ITS OPTIONS",
-      "macro": "settings"
-    },
-    {
-      "id": "destination_preload_fpl8",
-      "label": "TEST HOSPITAL CHOICE: WITH 3, 4 AND 5 CREW, CHOOSE DESTINATION BEFORE LOADING",
-      "begin_macro": "objective7 HEMS",
-      "complete_macro": "User predestination"
-    }
-  ];
-  const requiredMacros = ['test tracker begin', 'test tracker complete', 'test tracker reset', 'test tracker record successful', 'test tracker request failed comment', 'test tracker record failed', 'test tracker page'];
-  requiredMacros.forEach((name) => expectRegression(Array.isArray(mission.macros[name]), 'test tracker macro must exist: ' + name));
-  const trackerPageCommands = mission.macros['test tracker page'] || [];
-  const page = compact(trackerPageCommands);
-  const trackerRows = trackerPageCommands.find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
-  const trackerRenderer = compact(trackerRows);
-  ['RELEASE 0.997 TEST TRACKER', 'IN PROGRESS', 'SUCCESSFUL', 'FAILED', 'test_tracker_failure_comment', 'Debug_Table'].forEach((token) => {
-    expectRegression(page.includes(token), 'test tracker page must expose ' + token);
-  });
-  expectRegression(!page.includes('test_tracker_section') && !trackerRenderer.includes('\"table\":{\"static\":\"Debug_Table\"}'), 'Test Tracker renderer must use one preloaded local state per test, not direct table conditions');
-  const trackerTerminalRows = trackerRows.filter((row) => typeof row.text === 'string' && row.text.endsWith(' FAILED: {0}'));
-  const trackerResetRows = trackerRows.filter((row) => Array.isArray(row.buttonbar) && row.buttonbar.some((button) => button.title === 'RESET'));
-  expectRegression(trackerTerminalRows.length === expectedTests.length && trackerTerminalRows.every((row) => trackerRows[trackerRows.indexOf(row) + 1]?.buttonbar?.[0]?.title === 'RESET' && trackerRows[trackerRows.indexOf(row) + 2]?.text === ' '), 'Test Tracker must include one RESET and one blank separator after each test item');
-  const completedActionBars = trackerRows.filter((row) => row.show_condition?.require?.local?.startsWith('test_tracker_state_') && row.show_condition.eq === 'COMPLETED' && Array.isArray(row.buttonbar));
-  expectRegression(completedActionBars.length === expectedTests.length && completedActionBars.every((row) => ['SUCCESSFUL', 'FAILED', 'RESET'].every((title) => row.buttonbar.some((button) => button.title === title))), 'each completed test must place SUCCESSFUL, FAILED, and RESET on one action row');
-  expectRegression(trackerResetRows.length === expectedTests.length * 2 && trackerResetRows.every((row) => compact(row).includes('test tracker reset')), 'each test item must expose RESET at result selection and after a recorded result');
-  expectRegression(trackerResetRows.filter((row) => !row.show_condition?.require?.local).every((row) => compact(row.show_condition).includes('"ne":"PENDING"') && compact(row.show_condition).includes('"ne":"COMPLETED"')), 'post-result RESET must remain hidden while SUCCESSFUL and FAILED are offered');
+function checkRelease100DebugAndMarshal() {
+  // The Release Test Tracker (page, persistent states, begin/complete call sites) and the Multi-patient registry diagnostics page were removed from the Debug Center.
+  ['test tracker begin', 'test tracker complete', 'test tracker reset', 'test tracker record successful', 'test tracker request failed comment', 'test tracker record failed', 'test tracker page', 'multipatient registry page', 'multipatient registry compatibility check', 'multipatient registry capture', 'multipatient registry SDK probe'].forEach((name) => expectRegression(mission.macros[name] === undefined, 'obsolete debug macro must stay removed: ' + name));
+  expectRegression(!compact(mission).includes('"call_macro":"test tracker'), 'no macro may call the removed Test Tracker');
   const debugPage = compact([mission.macros['debug page'] || [], manualSnapshotCommands()]);
-  expectRegression(debugPage.includes('OPEN TEST TRACKER') && debugPage.includes('test tracker page'), 'Debug Center must link to the Test Tracker');
-  const begin = compact(mission.macros['test tracker begin'] || []);
-  const complete = compact(mission.macros['test tracker complete'] || []);
-  const successful = compact(mission.macros['test tracker record successful'] || []);
-  const failed = compact(mission.macros['test tracker record failed'] || []);
-  const reset = compact(mission.macros['test tracker reset'] || []);
-  expectRegression(reset.includes('PENDING') && reset.includes('test_{0}_comment') && reset.includes('save_table'), 'RESET must restore not-tested state and clear its saved failed comment');
-  expectRegression(begin.includes('test_{0}_state') && begin.includes('IN PROGRESS') && begin.includes('save_table'), 'first execution must persist IN PROGRESS');
-  expectRegression(complete.includes('IN PROGRESS') && complete.includes('COMPLETED') && complete.includes('save_table'), 'sequence completion must persist COMPLETED');
-  expectRegression(successful.includes('SUCCESSFUL') && successful.includes('save_table'), 'successful test result must persist');
-  expectRegression(failed.includes('FAILED') && failed.includes('test_{0}_comment') && failed.includes('save_table'), 'failed test result and comment must persist');
-  expectRegression(complete.includes('test_{0}_option_{1}') && complete.includes('test_tracker_missing_options') && complete.includes('"param":"option"'), 'multi-option tests must remain IN PROGRESS until every required option has been recorded');
-  const orangeMissing = trackerRows.filter((row) => typeof row.text === 'string' && row.text.startsWith('STILL TO TEST:') && compact(row).includes('test_tracker_state_orange_smoke'));
-  const destinationMissing = trackerRows.filter((row) => typeof row.text === 'string' && row.text.startsWith('STILL TO TEST:') && compact(row).includes('test_tracker_state_destination_preload_fpl8'));
-  expectRegression(orangeMissing.length === 4 && destinationMissing.length === 3 && reset.includes('test_{0}_option_{1}'), 'Orange Smoke and hospital choice must list every remaining required condition and clear it on RESET');
-  expectRegression(!page.includes('custom_sar_handoff') && !compact(mission.macros['msn preset loading'] || []).includes('custom_sar_handoff'), 'mission preset loading must never create a false Custom SAR test result');
+  expectRegression(!debugPage.includes('OPEN TEST TRACKER') && !debugPage.includes('MULTI-PATIENT REGISTRY DIAGNOSTICS'), 'Debug Center must no longer link to the Test Tracker or the registry diagnostics');
+  expectRegression(!compact(mission.macros['msn preset loading'] || []).includes('custom_sar_handoff'), 'mission preset loading must never create a false Custom SAR test result');
   expectRegression(debugPage.includes('MISSION ID {0}-{1}-{2}') && debugPage.includes('CREW {0} | PATIENT TRANSPORT') && debugPage.includes('E:LOCAL YEAR') && debugPage.includes('SNAPSHOT DATE') && debugPage.includes('MISSION TIMER AT SNAPSHOT: {0}h {1}m'), 'Summary and snapshot must expose mission identity, crew, transport, date, time, and an hours-and-minutes mission timer');
+  // the manual snapshot buttons and its date are at the top of the Debug Center, whatever the section; the details stay in the summary below
+  const rows = (mission.macros['debug page'] || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
+  const bar = rows.findIndex((row) => row.buttonbar?.[0]?.title === 'CAPTURE SNAPSHOT');
+  const summary = rows.findIndex((row) => row.text === 'PERSISTENT DEBUG SNAPSHOT');
+  const sections = rows.findIndex((row) => row.text === 'ACTIVE VIEW: {0}');
+  expectRegression(bar >= 0 && bar < sections && rows[bar].show_condition === undefined && rows[bar].buttonbar.some((button) => button.title === 'CLEAR SNAPSHOT'), 'Debug Center must offer CAPTURE SNAPSHOT and CLEAR SNAPSHOT above the section buttons, in every section');
+  expectRegression(rows[bar + 1]?.text?.startsWith('SNAPSHOT DATE ') && !compact(rows[bar + 1].show_condition).includes('debug_page_section') && rows[bar + 2]?.text === '(scroll down for more info)', 'the snapshot date and time sit under the buttons, followed by the scroll hint');
+  expectRegression(summary > sections && rows.filter((row) => row.buttonbar?.[0]?.title === 'CAPTURE SNAPSHOT').length === 1 && rows.filter((row) => typeof row.text === 'string' && row.text.startsWith('SNAPSHOT DATE ')).length === 1, 'the snapshot details stay below, without a second button or date row');
   const customMarshal = compact(mission.macros['create technical marshall custom'] || []);
   expectRegression(customMarshal.includes('"create_location":"technical_marshall"') && customMarshal.indexOf('"create_location":"technical_marshall"') < customMarshal.indexOf('"set_user_poi":"technical_marshall"'), 'custom marshal map must be centered on the helicopter before it opens');
-  expectedTests.forEach((test) => {
-    const stateRows = trackerRows.filter((row) => typeof row.text === 'string' && row.show_condition?.require?.local === 'test_tracker_state_' + test.id);
-    const states = ['PENDING', 'IN PROGRESS', 'COMPLETED', 'SUCCESSFUL', 'FAILED'];
-    const expectedText = test.id === 'aircraft_profiles' ? {
-      'PENDING': test.label,
-      'IN PROGRESS': 'TEST AIRCRAFT PROFILES: SWITCH MODE, THEN REOPEN THE SAME CUS.PROFILE - IN PROGRESS',
-      'COMPLETED': 'TEST AIRCRAFT PROFILES: SAME CUS.PROFILE RESTORED - READY: SELECT RESULT',
-      'SUCCESSFUL': 'TEST AIRCRAFT PROFILES: SAME CUS.PROFILE RESTORED - SUCCESSFUL',
-      'FAILED': 'TEST AIRCRAFT PROFILES: CUS.PROFILE NOT RESTORED - FAILED: {0}'
-    } : {
-      'PENDING': test.label,
-      'IN PROGRESS': test.label + ' - IN PROGRESS',
-      'COMPLETED': test.label + ' - READY: SELECT RESULT',
-      'SUCCESSFUL': test.label + ' - SUCCESSFUL',
-      'FAILED': test.label + ' - FAILED: {0}'
-    };
-    expectRegression(stateRows.length === states.length && states.every((state) => stateRows.filter((row) => row.show_condition?.eq === state && row.text === expectedText[state]).length === 1), 'test tracker page must render one clear human-readable current-state row for ' + test.id);
-    const beginMacro = test.begin_macro || test.macro;
-    const completeMacro = test.complete_macro || test.macro;
-    const begun = compact(mission.macros[beginMacro] || []);
-    const completed = compact(mission.macros[completeMacro] || []);
-    expectRegression(begun.includes('test tracker begin') && begun.includes('"test_id":"' + test.id + '"') && completed.includes('test tracker complete') && completed.includes('"test_id":"' + test.id + '"'), 'test tracker must monitor ' + beginMacro + ' and ' + completeMacro + ' for ' + test.id);
-  });
 }
-
 checkRootShape();
 Object.entries(mission.macros).forEach(([name, commands]) => {
   if (!Array.isArray(commands)) errors.push(`macro must be a command array: ${name}`);
@@ -1279,7 +1136,7 @@ checkRuntimeStateInitialization();
 checkRelease91Regressions();
 checkAircraftProfileRegression();
 checkRelease94Regressions();
-checkRelease100TestTracker();
+checkRelease100DebugAndMarshal();
 const dfReleaseGate = validateDfRelease(mission, changelog);
 errors.push(...dfReleaseGate.errors);
 regressionChecks += dfReleaseGate.checks;

@@ -22,69 +22,84 @@
   "start hoist attached risk monitor": [
     {"if": {"global":"HOIST_SAFETY_MONITOR"}, "eq": "yes",
       "then": [
-        {"create_thread": {
-          "commands": [
-            {"set":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"value":"yes"},
-            {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"yes"},
-            {"set":{"local":"HOIST_IMPACT_LOW_FT"},"value":0},
-            {"while": {"local":"HOIST_CREW_ON_CABLE"}, "gt": 0,
-              "do": [
-                {"if": {"local":"HOIST_IMPACT_ARMED"}, "eq": "yes",
-                  "then": [
-                    {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":15},
-                    {"set":{"local":"HOIST_IMPACT_TRIGGERED"},"value":"no"},
-                    {"set":{"local":"HOIST_IMPACT_MONITORING"},"value":1},
-                    {"while": {"local":"HOIST_IMPACT_MONITORING"}, "eq": 1,
-                      "do": [
-                        {"if": {
-                          "or": [
-                            {"require":{"local":"HOIST_CREW_ON_CABLE"},"eq":0},
-                            {"require":{"fn":"hoist_get_distance_from_ground:ft"},"gte":15},
-                            {"require":{"local":"HOIST_IMPACT_TRIGGERED"},"eq":"yes"}
-                          ]}, "eq": 1,
-                          "then": [
-                            {"set":{"local":"HOIST_IMPACT_MONITORING"},"value":0}
-                          ],"else": [
-                            {"set":{"local":"HOIST_IMPACT_PREV_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
-                            {"sleep":0.15},
-                            {"set":{"local":"HOIST_IMPACT_CUR_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
-                            {"set":{"local":"HOIST_IMPACT_RATE_FPS"},"value":{"divide":[{"subtract":[{"local":"HOIST_IMPACT_PREV_FT"},{"local":"HOIST_IMPACT_CUR_FT"}]},0.15]}},
-                            {"if": {"local":"HOIST_IMPACT_CUR_FT"}, "lt": 1.5,
+        {"if": {"local":"HOIST_ATTACHED_ACTIVE"}, "ne": 1,
+          "then": [
+            {"set":{"local":"HOIST_ATTACHED_ACTIVE"},"value":1},
+            {"create_thread": {
+              "commands": [
+                {"set":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"value":"yes"},
+                {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"yes"},
+                {"set":{"local":"HOIST_IMPACT_LOW_FT"},"value":0},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"impact_monitor_start type={local:HOIST_CABLE_PERSON_TYPE} patient={local:HOIST_CABLE_PATIENT} phase={local:HOIST_CABLE_PHASE}"}},
+                {"while": {"local":"HOIST_CREW_ON_CABLE"}, "gt": 0,
+                  "do": [
+                    {"if": {"local":"HOIST_IMPACT_ARMED"}, "eq": "yes",
+                      "then": [
+                        {"or": [
+                          {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":15},
+                          {"wait_for":{"local":"HOIST_CREW_ON_CABLE"},"eq":0}
+                        ]},
+                        {"set":{"local":"HOIST_IMPACT_TRIGGERED"},"value":"no"},
+                        {"set":{"local":"HOIST_IMPACT_MONITORING"},"value":1},
+                        {"while": {"local":"HOIST_IMPACT_MONITORING"}, "eq": 1,
+                          "do": [
+                            {"if": {
+                              "or": [
+                                {"require":{"local":"HOIST_CREW_ON_CABLE"},"eq":0},
+                                {"require":{"fn":"hoist_get_distance_from_ground:ft"},"gte":15},
+                                {"require":{"local":"HOIST_IMPACT_TRIGGERED"},"eq":"yes"}
+                              ]}, "eq": 1,
                               "then": [
-                                {"set":{"local":"HOIST_IMPACT_TRIGGERED"},"value":"yes"},
-                                {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"no"},
-                                {"set":{"local":"HOIST_IMPACT_LOW_FT"},"value":{"local":"HOIST_IMPACT_CUR_FT"}},
-                                {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 12,
+                                {"set":{"local":"HOIST_IMPACT_MONITORING"},"value":0}
+                              ],"else": [
+                                {"set":{"local":"HOIST_IMPACT_PREV_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+                                {"sleep":0.15},
+                                {"set":{"local":"HOIST_IMPACT_CUR_FT"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+                                {"set":{"local":"HOIST_IMPACT_RATE_FPS"},"value":{"divide":[{"subtract":[{"local":"HOIST_IMPACT_PREV_FT"},{"local":"HOIST_IMPACT_CUR_FT"}]},0.15]}},
+                                {"if": {"local":"HOIST_IMPACT_CUR_FT"}, "lt": 1.5,
                                   "then": [
-                                    {"call_macro":"apply hoist crew lifescore impact","params":{"score":100,"cause":"FATAL HOIST OPERATOR GROUND IMPACT"}},
-                                    {"set_message":{"text":"Hoist operator hit the ground at high speed. Fatal impact."}}
-                                  ],"else": [
-                                    {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 7,
+                                    {"set":{"local":"HOIST_IMPACT_TRIGGERED"},"value":"yes"},
+                                    {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"no"},
+                                    {"set":{"local":"HOIST_IMPACT_LOW_FT"},"value":{"local":"HOIST_IMPACT_CUR_FT"}},
+                                    {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": {"local":"HOIST_CABLE_MAX_RATE_FPS"},
                                       "then": [
-                                        {"call_macro":"apply hoist crew lifescore impact","params":{"score":30,"cause":"HARD HOIST OPERATOR GROUND IMPACT"}},
-                                        {"set_message":{"text":"Hoist operator hit the ground hard. Injury sustained."}}
+                                        {"set":{"local":"HOIST_CABLE_MAX_RATE_FPS"},"value":{"local":"HOIST_IMPACT_RATE_FPS"}}
+                                    ]},
+                                    {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"impact_touch rate={local:HOIST_IMPACT_RATE_FPS} h={local:HOIST_IMPACT_CUR_FT} phase={local:HOIST_CABLE_PHASE} patient={local:HOIST_CABLE_PATIENT}"}},
+                                    {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 18,
+                                      "then": [
+                                        {"set":{"local":"HOIST_CABLE_IMPACTS"},"value":{"add":[{"local":"HOIST_CABLE_IMPACTS"},1]}},
+                                        {"call_macro":"hoist cable casualty","params":{"severity":3,"score":100,"cause":"FATAL HOIST OPERATOR GROUND IMPACT","source":"impact","detach":"yes","text":"Hoist operator hit the ground at high speed. Fatal impact."}}
                                       ],"else": [
-                                        {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 4,
+                                        {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 12,
                                           "then": [
-                                            {"call_macro":"apply hoist crew lifescore impact","params":{"score":8,"cause":"HOIST OPERATOR GROUND IMPACT"}},
-                                            {"set_message":{"text":"Hoist operator touched down abruptly."}}
+                                            {"set":{"local":"HOIST_CABLE_IMPACTS"},"value":{"add":[{"local":"HOIST_CABLE_IMPACTS"},1]}},
+                                            {"call_macro":"hoist cable casualty","params":{"severity":2,"score":30,"cause":"HARD HOIST OPERATOR GROUND IMPACT","source":"impact","detach":"yes","text":"Hoist operator hit the ground hard. Injury sustained."}}
+                                          ],"else": [
+                                            {"if": {"local":"HOIST_IMPACT_RATE_FPS"}, "gt": 8,
+                                              "then": [
+                                                {"set":{"local":"HOIST_CABLE_IMPACTS"},"value":{"add":[{"local":"HOIST_CABLE_IMPACTS"},1]}},
+                                                {"call_macro":"hoist cable casualty","params":{"severity":1,"score":8,"cause":"HOIST OPERATOR GROUND IMPACT","source":"impact","detach":"yes","text":"Hoist operator touched down abruptly."}}
+                                            ]}
                                         ]}
                                     ]}
                                 ]}
                             ]}
                         ]}
+                    ]},
+                    {"if": {"local":"HOIST_IMPACT_ARMED"}, "eq": "no",
+                      "then": [
+                        {"or": [
+                          {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"gte":{"add":[{"local":"HOIST_IMPACT_LOW_FT"},3]}},
+                          {"wait_for":{"local":"HOIST_CREW_ON_CABLE"},"eq":0}
+                        ]},
+                        {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"yes"}
                     ]}
                 ]},
-                {"if": {"local":"HOIST_IMPACT_ARMED"}, "eq": "no",
-                  "then": [
-                    {"or": [
-                      {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"gte":{"add":[{"local":"HOIST_IMPACT_LOW_FT"},3]}},
-                      {"wait_for":{"local":"HOIST_CREW_ON_CABLE"},"eq":0}
-                    ]},
-                    {"set":{"local":"HOIST_IMPACT_ARMED"},"value":"yes"}
-                ]}
-            ]}
-        ]}}
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"impact_monitor_end impacts={local:HOIST_CABLE_IMPACTS} max_rate={local:HOIST_CABLE_MAX_RATE_FPS}"}},
+                {"set":{"local":"HOIST_ATTACHED_ACTIVE"},"value":0}
+            ]}}
+        ]}
     ]}
   ]
 }

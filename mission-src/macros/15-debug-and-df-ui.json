@@ -216,6 +216,66 @@
       "then": [
         {"set":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"value":"no"}
     ]},
+    {"if": {"local":"HOIST_CABLE_PHASE"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_PHASE"},"value":"none"}
+    ]},
+    {"if": {"local":"HOIST_CABLE_PERSON_TYPE"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_PERSON_TYPE"},"value":"none"}
+    ]},
+    {"if": {"local":"HOIST_CABLE_INJURED"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_INJURED"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_CABLE_PATIENT"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_PATIENT"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_CABLE_EVENTS"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_EVENTS"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_CABLE_LAST"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_LAST"},"value":"none"}
+    ]},
+    {"if": {"local":"HOIST_CABLE_LAST_CAUSE"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_LAST_CAUSE"},"value":"none"}
+    ]},
+    {"if": {"local":"HOIST_CABLE_DETACH"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_DETACH"},"value":"none"}
+    ]},
+    {"if": {"local":"CREW_FATAL_ON_HOOK"}, "eq": null,
+      "then": [
+        {"set":{"local":"CREW_FATAL_ON_HOOK"},"value":"no"}
+    ]},
+    {"if": {"local":"HOIST_CABLE_IMPACTS"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_IMPACTS"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_CABLE_MAX_RATE_FPS"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_MAX_RATE_FPS"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_CABLE_RELEASES"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_RELEASES"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_INJURED_WATCH"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_INJURED_WATCH"},"value":0}
+    ]},
+    {"if": {"local":"HOIST_ATTACHED_ACTIVE"}, "eq": null,
+      "then": [
+        {"set":{"local":"HOIST_ATTACHED_ACTIVE"},"value":0}
+    ]},
+    {"if": {"local":"CREW_FATAL_POSITION_FIXED"}, "eq": null,
+      "then": [
+        {"set":{"local":"CREW_FATAL_POSITION_FIXED"},"value":"no"}
+    ]},
     {"if": {"local":"CREW_ACCELERATION_MAX_X_POS"}, "eq": null,
       "then": [
         {"set":{"local":"CREW_ACCELERATION_MAX_X_POS"},"value":0}
@@ -245,8 +305,9 @@
         {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
         {"link":"Back to main screen","commands":[{"if":{"local":"prev_page2"},"ne":"none","then":[{"call_macro":"shared repeated block 025"}],"else":[{"if":{"local":"prev_page"},"eq":"briefing","then":[{"call_macro":"shared repeated block 023"}],"else":[{"call_macro":{"local":"prev_page"}}]}]}]},
         {"text":"DEBUG CENTER","color":"green","align":"center"},
-        {"link":"OPEN TEST TRACKER","commands":[{"call_macro":"test tracker page"}]},
-        {"link":"MULTI-PATIENT REGISTRY DIAGNOSTICS","commands":[{"call_macro":"multipatient registry page"}]},
+        {"buttonbar":[{"title":"CAPTURE SNAPSHOT","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"call_macro":"debug page"}]},{"title":"CLEAR SNAPSHOT","commands":[{"set":{"table":{"static":"Debug_Table"},"key":"valid"},"value":null},{"set":{"table":{"static":"Debug_Table"},"key":"patient_registry"},"value":null},{"save_table":{"static":"Debug_Table"}},{"call_macro":"debug page"}]}]},
+        {"text":"SNAPSHOT DATE {0}-{1}-{2} | TIME {3}","color":"gray","params":[{"local":"debug_snapshot_date_year"},{"local":"debug_snapshot_date_month"},{"local":"debug_snapshot_date_day"},{"local":"debug_snapshot_time"}],"show_condition":{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}},
+        {"text":"(scroll down for more info)","color":"gray","align":"center","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}],"eq":1}},
         {"text":"ACTIVE VIEW: {0}","color":"cyan","align":"center","params":[{"local":"debug_page_section"}]},
         {"buttonbar":[{"title":"SUMMARY","select_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},"commands":[{"set":{"local":"debug_page_section"},"value":"SUMMARY"},{"call_macro":"debug page"}]},{"title":"MISSION","select_condition":{"require":{"local":"debug_page_section"},"eq":"MISSION"},"commands":[{"set":{"local":"debug_page_section"},"value":"MISSION"},{"call_macro":"debug page"}]},{"title":"MEDICAL","select_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"commands":[{"set":{"local":"debug_page_section"},"value":"MEDICAL"},{"call_macro":"debug page"}]}]},
         {"buttonbar":[{"title":"GROUND","select_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"commands":[{"set":{"local":"debug_page_section"},"value":"GROUND"},{"call_macro":"debug page"}]},{"title":"GUIDANCE","select_condition":{"require":{"local":"debug_page_section"},"eq":"GUIDANCE"},"commands":[{"set":{"local":"debug_page_section"},"value":"GUIDANCE"},{"call_macro":"debug page"}]},{"title":"INVENTORY","select_condition":{"require":{"local":"debug_page_section"},"eq":"INVENTORY"},"commands":[{"set":{"local":"debug_page_section"},"value":"INVENTORY"},{"call_macro":"debug page"}]}]},
@@ -259,8 +320,9 @@
         {"text":"PATIENT OBJECTS","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
         {"text":"P1/P2/P3 OBJECTS {0}/{1}/{2} | VICTIMS {3}","color":"white","params":[{"has_object":"injured_human"},{"has_object":"injured_human2"},{"has_object":"injured_human3"},{"local":"HELOVICTIMS"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
         {"text":"CREW MONITOR: active {0}; current {1}; alert {2}; damage {3}","params":[{"local":"CREW_LIFESCORE_MONITOR_ACTIVE"},{"local":"CREW_LIFESCORE_CURRENT"},{"local":"CREW_LIFESCORE_ALERT_LEVEL"},{"local":"CREW_ACCELERATION_DAMAGE"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"orange"},
-        {"text":"HOIST RISK: VNE {0}; accel {1}; window {2}; event {3}","params":[{"local":"HOIST_VNE_LIFESCORE_BAND"},{"local":"HOIST_ACCEL_LIFESCORE_BAND"},{"local":"HOIST_GROUND_RISK_WINDOW"},{"local":"HOIST_GROUND_RISK_EVENT"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"orange"},
-        {"text":"HOIST ATTACHED: cable {0}; type {1}; band {2}; cooldown {3}","params":[{"local":"HOIST_CREW_ON_CABLE"},{"local":"HOIST_CABLE_PERSON_TYPE"},{"local":"HOIST_ATTACHED_ACCEL_BAND"},{"local":"CREW_ACCELERATION_COOLDOWN"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"gray"},
+        {"text":"HOIST CABLE: phase {0}; operator {1}; patient {2}; out {3}; type {4}; injured {5}","params":[{"local":"HOIST_CABLE_PHASE"},{"local":"HOIST_CREW_ON_CABLE"},{"local":"HOIST_CABLE_PATIENT"},{"local":"HOIST_OUT"},{"local":"HOIST_CABLE_PERSON_TYPE"},{"local":"HOIST_CABLE_INJURED"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"gray"},
+        {"text":"HOIST IMPACT: monitor {0}/{1}; impacts {2}; max rate {3} ft/s; releases {4}; watch {5}","params":[{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},{"local":"HOIST_ATTACHED_ACTIVE"},{"local":"HOIST_CABLE_IMPACTS"},{"local":"HOIST_CABLE_MAX_RATE_FPS"},{"local":"HOIST_CABLE_RELEASES"},{"local":"HOIST_INJURED_WATCH"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"gray"},
+        {"text":"HOIST CASUALTIES: {0}; last {1}; cause {2}; fall {3}; on hook {4}; position fixed {5}","params":[{"local":"HOIST_CABLE_EVENTS"},{"local":"HOIST_CABLE_LAST"},{"local":"HOIST_CABLE_LAST_CAUSE"},{"local":"HOIST_CABLE_DETACH"},{"local":"CREW_FATAL_ON_HOOK"},{"local":"CREW_FATAL_POSITION_FIXED"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"gray"},
         {"text":"LIFE P1/P2/P3 {0}/{1}/{2}","color":"white","params":[{"local":"LIFESCORE"},{"local":"LIFESCORE2"},{"local":"LIFESCORE3"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
         {"text":"ASTRA {0} | GROUND READY {1}/{2} | HEMS PATIENT P{3}","color":"yellow","params":[{"local":"HEMS_DECISION_STATE"},{"local":"HEMS_GROUND_READY_COUNT"},{"local":"HELOVICTIMS"},{"local":"HEMS_PATIENT_NUMBER"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
         {"text":"AMB DECISION P1/P2/P3 {0}/{1}/{2}","color":"white","params":[{"local":"P1_AMBULANCE_DECISION"},{"local":"P2_AMBULANCE_DECISION"},{"local":"P3_AMBULANCE_DECISION"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
@@ -276,7 +338,6 @@
         {"text":"FLOW PHASE {0} | READY {1} | MIDWAY {2} | PATHOLOGY READY {3}","color":"white","params":[{"local":"MISSION_PHASE"},{"var":["L:READY","number"]},{"var":["L:MIDWAY","number"]},{"local":"pathology_random_ready"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
         {"text":"SAVETEMP {0} | START {1} | END {2}","color":"yellow","params":[{"global":"SAVETEMP_STATUS"},{"global":"SAVETEMP_START_TIMESTAMP"},{"global":"SAVETEMP_END_TIMESTAMP"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
         {"text":"SAVETEMP KEY {0} -> {1} | VALID {2} | SAVE TIME {3}","color":"gray","params":[{"global":"SAVETEMP_START_MISSION_KEY"},{"global":"SAVETEMP_END_MISSION_KEY"},{"global":"SAVEVALID0"},{"global":"SAVE_TIMESTAMP0"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
-        {"text":"LZ WATCHDOG {0} | STATE {1} | DIST M {2} | FIXES {3} | REF {4}","color":"yellow","params":[{"local":"landing_spot_watchdog_discrepancy"},{"local":"landing_spot_watchdog_status"},{"local":"landing_spot_watchdog_distance_m"},{"local":"landing_spot_watchdog_fix_count"},{"local":"landing_spot_watchdog_reference"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
         {"text":"LIVE MISSION SUMMARY","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"MISSION ID {0}-{1}-{2}","color":"white","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"LOAD STATUS {0}% | FLIGHT PLAN {1}","color":"white","params":[{"var":["L:LOAD","number"]},{"local":"FPL_NMBR"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
@@ -317,9 +378,7 @@
         {"text":"QUERY ERROR: {0}","color":"red","params":[{"local":"queryfailed"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"queryfailed"},"ne":null}],"eq":1}},
         {"text":"CANCELLATION NOTICE: {0}","color":"yellow","params":[{"local":"dispatch_cancel_notice"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"dispatch_cancel_notice"},"ne":null}],"eq":1}},
         {"image":"bar","show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
-        {"text":"PERSISTENT DEBUG SNAPSHOT","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
-        {"buttonbar":[{"title":"CAPTURE SNAPSHOT","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"call_macro":"debug page"}]},{"title":"CLEAR SNAPSHOT","commands":[{"set":{"table":{"static":"Debug_Table"},"key":"valid"},"value":null},{"set":{"table":{"static":"Debug_Table"},"key":"patient_registry"},"value":null},{"save_table":{"static":"Debug_Table"}},{"call_macro":"debug page"}]}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
-        {"text":"SNAPSHOT DATE {0}-{1}-{2} | TIME {3}","color":"gray","params":[{"local":"debug_snapshot_date_year"},{"local":"debug_snapshot_date_month"},{"local":"debug_snapshot_date_day"},{"local":"debug_snapshot_time"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}],"eq":1}},
+        {"text":"PERSISTENT DEBUG SNAPSHOT","color":"cyan","align":"center","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}],"eq":1}},
         {"text":"SNAPSHOT MISSION {0}-{1}-{2} | PHASE {3} | LOAD {4}% | FPL {5}","color":"gray","params":[{"local":"debug_snapshot_mission_id"},{"local":"debug_snapshot_variant"},{"local":"debug_snapshot_subvariant"},{"local":"debug_snapshot_phase"},{"local":"debug_snapshot_load"},{"local":"debug_snapshot_fpl"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}],"eq":1}},
         {"text":"SNAPSHOT CHATGPT BUILD: {0}","color":"gray","params":[{"local":"debug_snapshot_release_build"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}],"eq":1}},
         {"text":"MISSION TIMER AT SNAPSHOT: {0}h {1}m","color":"gray","params":[{"floor":{"divide":[{"local":"debug_snapshot_mission_timer"},3600]}},{"floor":{"divide":[{"subtract":[{"local":"debug_snapshot_mission_timer"},{"multiply":[{"floor":{"divide":[{"local":"debug_snapshot_mission_timer"},3600]}},3600]}]},60]}}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"SUMMARY"},{"require":{"local":"debug_snapshot_valid"},"eq":"yes"}],"eq":1}},
@@ -353,9 +412,11 @@
         {"text":"dispatch_cancellation_ready: {0}; ground_units_at_scene: {1}; dispatch_cancellation_lifescore_ok: {2}","params":[{"local":"dispatch_cancellation_ready"},{"local":"ground_units_at_scene"},{"local":"dispatch_cancellation_lifescore_ok"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MISSION"},"color":"gray"},
         {"text":"helicopter_on_scene: {0}; dispatch_cancel_notice: {1}","params":[{"local":"helicopter_on_scene"},{"local":"dispatch_cancel_notice"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MISSION"},"color":"gray"},
         {"image":"bar","show_condition":{"require":{"local":"debug_page_section"},"eq":"MISSION"}},
-        {"text":"AMBULANCE PRE-VISIT","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"cyan"},
-        {"text":"monitor: {0}; active: {1}; patient loaded: {2}; roll: {3}","params":[{"local":"ambulance_previsit_monitor"},{"local":"ambulance_previsit_active"},{"local":"ambulance_previsit_patient_loaded"},{"local":"ambulance_previsit_roll"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
-        {"text":"decision: {0}; preload: {1}; weather force: {2}; forced: {3}","params":[{"local":"ambulance_previsit_decision"},{"local":"ambulance_preload"},{"local":"ambulance_previsit_weather_force"},{"local":"ambulance_previsit_forced"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
+        {"text":"AMBULANCE SHELTER","show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"cyan"},
+        {"text":"state: {0}; reason: {1}; need: {2}; attempts: {3}; anchor leaks: {4}","params":[{"local":"ambulance_shelter_state"},{"local":"ambulance_shelter_reason"},{"local":"ambulance_shelter_need"},{"local":"ambulance_shelter_attempts"},{"local":"ambulance_shelter_leaks"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
+        {"text":"conditions: {0}","params":[{"local":"ambulance_shelter_conds"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
+        {"text":"last step: {0}; sheltered at: {1}; released at: {2}","params":[{"local":"ambulance_shelter_last"},{"local":"ambulance_shelter_at"},{"local":"ambulance_shelter_released_at"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
+        {"text":"preload: {0}; weather force: {1}; forced: {2}","params":[{"local":"ambulance_preload"},{"local":"ambulance_previsit_weather_force"},{"local":"ambulance_previsit_forced"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
         {"text":"weather simvars - precip state: {0}; ambient temperature: {1} C","params":[{"var":["AMBIENT PRECIP STATE","number"]},{"var":["AMBIENT TEMPERATURE","celsius"]}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
         {"text":"eligible: {0}; allowed: {1}; police present: {2}; police arrived: {3}; hospital WP match: {4}; ready: {5}","params":[{"local":"ambulance_previsit_eligible"},{"local":"ambulance_previsit_allowed"},{"local":"ambulance_previsit_police_present"},{"local":"ambulance_previsit_police_arrived"},{"local":"thospital_wp_match"},{"local":"thospital_wp_ready"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MISSION"},{"require":{"local":"debug_relevant_ambulance"},"eq":"yes"}],"eq":1},"color":"gray"},
         {"image":"bar","show_condition":{"require":{"local":"debug_page_section"},"eq":"MISSION"}},
@@ -393,7 +454,7 @@
         {"text":"PATHOLOGY FIRE MODE {0}; RELAX STAGE {1}","params":[{"local":"pathology_fire_mode"},{"local":"pathology_relax_stage"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"hotpink"},
         {"text":"HEART RATE: {0}BPM","params":[{"round":{"local":"BPM"},"to":0}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"hotpink"},
         {"text":"SpO2: {0}%","params":[{"tofixed":{"local":"SPO2"},"digits":1}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"green"},
-        {"text":"CREW HEALTH | P:{0} M:{1} H:{2} | IMPACT:{3} | FATAL:{4}","color":"gray","params":[{"local":"CREW_LIFESCORE_1"},{"local":"CREW_LIFESCORE_2"},{"local":"CREW_LIFESCORE_3"},{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"local":"HOIST_FATAL_EVENT"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},{"require":{"local":"CREW_LIFESCORE_SHIFT_ACTIVE"},"eq":"yes"}],"eq":1}},
+        {"text":"CREW HEALTH | Pilot:{0} Copilot:{1} Medic:{2} HEMS 1:{3} HEMS 2:{4} | IMPACT:{5} | FATAL:{6}","color":"gray","params":[{"local":"CREW_LIFESCORE_1"},{"local":"CREW_LIFESCORE_3"},{"local":"CREW_LIFESCORE_2"},{"local":"CREW_LIFESCORE_4"},{"local":"CREW_LIFESCORE_5"},{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},{"local":"HOIST_FATAL_EVENT"}],"show_condition":{"and":[{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},{"require":{"local":"CREW_LIFESCORE_SHIFT_ACTIVE"},"eq":"yes"}],"eq":1}},
         {"image":"bar","show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"}},
         {"text":"VFX {0}, CIVILS {1}, WAVINGMAN {2}","params":[{"local":"VFX"},{"local":"CIVILS"},{"local":"WAVINGMAN"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"orange"},
         {"text":"CLOSEST_AMBULANCE {0}, local closestambu {2}, ambu1arrived {3}, AMBUSTRETCHERFULL {1}","params":[{"local":"CLOSEST_AMBULANCE"},{"var":["L:AMBUSTRETCHERFULL","number"]},{"local":"closestambu"},{"local":"ambu1arrived"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"GROUND"},"color":"gray"},
@@ -717,10 +778,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":0}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},
-                {"call_macro":"Update_dispatchphase from raw"}
+                {"call_macro":"send dispatch phase","params":{"phase":0}}
             ]}
         ]}
     ]},
@@ -730,16 +794,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":1}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":1},
-                {"call_macro":"Update_dispatchphase from raw"},
-                {"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},
-                {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
-                {"sleep":[1,5]},
-                {"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}},
-                {"sleep":5},
-                {"set_message":{"text":" "}}
+                {"call_macro":"send dispatch phase","params":{"phase":1}}
             ]}
         ]}
     ]},
@@ -749,16 +810,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":2}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":2},
-                {"call_macro":"Update_dispatchphase from raw"},
-                {"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},
-                {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
-                {"sleep":[1,5]},
-                {"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}},
-                {"sleep":5},
-                {"set_message":{"text":" "}}
+                {"call_macro":"send dispatch phase","params":{"phase":2}}
             ]}
         ]}
     ]},
@@ -768,16 +826,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":3}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":3},
-                {"call_macro":"Update_dispatchphase from raw"},
-                {"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},
-                {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
-                {"sleep":[1,5]},
-                {"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}},
-                {"sleep":5},
-                {"set_message":{"text":" "}}
+                {"call_macro":"send dispatch phase","params":{"phase":3}}
             ]}
         ]}
     ]},
@@ -787,16 +842,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":4}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":4},
-                {"call_macro":"Update_dispatchphase from raw"},
-                {"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},
-                {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
-                {"sleep":[1,5]},
-                {"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}},
-                {"sleep":5},
-                {"set_message":{"text":" "}}
+                {"call_macro":"send dispatch phase","params":{"phase":4}}
             ]}
         ]}
     ]},
@@ -806,10 +858,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":5}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":5},
-                {"call_macro":"Update_dispatchphase from raw"}
+                {"call_macro":"send dispatch phase","params":{"phase":5}}
             ]}
         ]}
     ]},
@@ -820,10 +875,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":6}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":6},
-                {"call_macro":"Update_dispatchphase from raw"}
+                {"call_macro":"send dispatch phase","params":{"phase":6}}
             ]}
         ]}
     ]},
@@ -833,10 +891,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":7}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":7},
-                {"call_macro":"Update_dispatchphase from raw"}
+                {"call_macro":"send dispatch phase","params":{"phase":7}}
             ]}
         ]}
     ]},
@@ -846,16 +907,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":8}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":8},
-                {"call_macro":"Update_dispatchphase from raw"},
-                {"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},
-                {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
-                {"sleep":[1,5]},
-                {"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}},
-                {"sleep":5},
-                {"set_message":{"text":" "}}
+                {"call_macro":"send dispatch phase","params":{"phase":8}}
             ]}
         ]}
     ]},
@@ -865,16 +923,13 @@
           "then": [
             {"call_macro":"CARLS DF digit","params":{"digit":9}}
           ],"else": [
-            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:CARLS_PAGE","number"]},"eq":0},
+                {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+              ]}, "eq": 1,
               "then": [
-                {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":9},
-                {"call_macro":"Update_dispatchphase from raw"},
-                {"set_message":{"text":"SENDING TO DISPATCHER, PLEASE WAIT..."}},
-                {"set":{"var":["L:CARLS_TEMP","number"]},"value":1},
-                {"sleep":[1,5]},
-                {"set_message":{"text":"DISPATCHER HAS BEEN NOTIFIED"}},
-                {"sleep":5},
-                {"set_message":{"text":" "}}
+                {"call_macro":"send dispatch phase","params":{"phase":9}}
             ]}
         ]}
     ]},
@@ -1913,36 +1968,6 @@
         {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0}
     ]}
   ],
-  "CARLS DF cursor": [
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 1,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}
-    ]},
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 2,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"}
-    ]},
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 3,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"&nbsp;&nbsp;-&nbsp;&nbsp;&nbsp;&nbsp;"}
-    ]},
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 4,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;&nbsp;"}
-    ]},
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 5,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-&nbsp;"}
-    ]},
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 6,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-"}
-    ]},
-    {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "gte": 7,
-      "then": [
-        {"set":{"local":"CARLS_DF_CURSOR"},"value":"&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;-"}
-    ]}
-  ],
   "CARLS DF render": [
     {"set":{"local":"CARLS_DF_DISPLAY_FREQUENCY"},"value":{"var":["L:CARLS_DF_FREQUENCY","number"]}},
     {"set":{"local":"CARLS_DF_RENDER_SOURCE"},"value":"MAN"},
@@ -2534,7 +2559,6 @@
     ]}
   ],
   "CARLS DF open": [
-    {"call_macro":"test tracker begin","params":{"test_id":"carls_df"}},
     {"if": {"global":"CARLS_DF_INITIALIZED"}, "ne": 1,
       "then": [
         {"set":{"global":"CARLS_DF_FREQUENCY"},"value":118000},
@@ -2589,8 +2613,7 @@
     {"set":{"var":["L:CARLS_PAGE","number"]},"value":13},
     {"call_macro":"CARLS DF assign mission bearing","params":{"frequency":{"var":["L:CARLS_DF_FREQUENCY","number"]}}},
     {"call_macro":"CARLS buttons"},
-    {"call_macro":"CARLS DF render"},
-    {"call_macro":"test tracker complete","params":{"test_id":"carls_df"}}
+    {"call_macro":"CARLS DF render"}
   ],
   "CARLS DF leave": [
     {"set":{"global":"CARLS_DF_EDITING"},"value":0},
@@ -2959,7 +2982,6 @@
     {"call_macro":"DF stations page"}
   ],
   "DF stations save": [
-    {"call_macro":"test tracker begin","params":{"test_id":"df_stations"}},
     {"open_table":{"static":"DF_Stations_Table"}},
     {"call_macro":"DF stations validate","params":{"slot":{"param":"slot"},"name":{"param":"name"},"frequency":{"param":"frequency"},"location":{"param":"location"},"modulation":{"param":"modulation"}}},
     {"if": {
@@ -3097,8 +3119,7 @@
       ],
       "eq": 1
     },
-    {"call_macro":"DF stations page"},
-    {"call_macro":"test tracker complete","params":{"test_id":"df_stations"}}
+    {"call_macro":"DF stations page"}
   ],
   "DF stations delete": [
     {"open_table":{"static":"DF_Stations_Table"}},

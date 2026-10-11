@@ -9,7 +9,8 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const macroDir = path.join(root, 'mission-src', 'macros');
-const TRAFFIC_ROUTES = new Set(['hallo', 'route1', 'route2', 'route3', 'crash_one']); // scenery traffic, not rescue vehicles
+// scenery traffic, the SAR route line (mission 65) and the SAR hint car route: no rescue vehicle follows them; they are used only after a valid $CREATE_ROUTE:DURATION (tools/test-sar-hints-and-missions.js)
+const TRAFFIC_ROUTES = new Set(['hallo', 'route1', 'route2', 'route3', 'crash_one', 'sar_route_1', 'sar_road_route']);
 const FLAG = /^(rd_|ambu_direct_drive$|ambulance2_direct_drive$|poli_direct_drive$|fire_direct_drive$|legacy_scene_routing$)/;
 
 function isIf(node) { return node && typeof node === 'object' && node.if && ('then' in node || 'else' in node); }

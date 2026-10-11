@@ -67,7 +67,7 @@
                     {"if": {"local":"crewvisitended"}, "ne": "yes",
                       "then": [
                         {"set_message":{"text":"Fire engine crew secured the area for rescue team, cleared to go"}},
-                        {"call_macro":"post dispatcher message","params":{"text":"Fire service reports: fire out, scene safe for HEMS."}},
+                        {"call_macro":"post dispatcher message","params":{"from":"fire","text":"Fire out, scene safe for HEMS."}},
                         {"set":{"var":["L:CPL{local:VCP}18","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}18","number"]},1]}}
                     ]}
                 ]}
@@ -144,14 +144,14 @@
             {"wait_for":{"object":"INJURED","var":"distance:m"},"lt":650},
             {"wait_for":{"local":"FIREENGINE_AVAIL"},"eq":1},
             {"sleep":3},
-            {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene safe, no fire, no smoke."},
+            {"set":{"local":"fire_report_text"},"value":"Scene safe, no fire, no smoke."},
             {"if": {
               "and": [
                 {"require":{"has_object":"VFXA"},"eq":1},
                 {"require":{"object":"VFXA","var":"VAR 1"},"gte":2}
               ]}, "eq": 1,
               "then": [
-                {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene NOT safe, smoke on site."}
+                {"set":{"local":"fire_report_text"},"value":"Scene NOT safe, smoke on site."}
             ]},
             {"if": {
               "and": [
@@ -161,7 +161,7 @@
                 {"require":{"local":"VFX"},"lte":12}
               ]}, "eq": 1,
               "then": [
-                {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene NOT safe, fire active."}
+                {"set":{"local":"fire_report_text"},"value":"Scene NOT safe, fire active."}
             ]},
             {"if": {
               "and": [
@@ -169,9 +169,9 @@
                 {"require":{"object":"trailer","var":"VAR 1"},"gt":0}
               ]}, "eq": 1,
               "then": [
-                {"set":{"local":"fire_report_text"},"value":"Fire service reports: scene NOT safe, fire active."}
+                {"set":{"local":"fire_report_text"},"value":"Scene NOT safe, fire active."}
             ]},
-            {"call_macro":"post dispatcher message","params":{"text":{"local":"fire_report_text"}}}
+            {"call_macro":"post dispatcher message","params":{"from":"fire","text":{"local":"fire_report_text"}}}
         ]}}
       ],"else": [
         {"call_macro":"random VFX OLD"}
@@ -1260,7 +1260,10 @@
                     {"sleep":0.5},
                     {"if": {"local":"trafficroads"}, "eq": "1",
                       "then": [
-                        {"create_route":{"name":"route1","query":{"to":"rescue_location","from":"wpt1","type":"car"}}},
+                        {"if": {"local":"route_ready1"}, "ne": "yes",
+                          "then": [
+                            {"create_route":{"name":"route1","query":{"to":"rescue_location","from":"wpt1","type":"car"}}}
+                        ]},
                         {"if": {"var":["L:TESTTRK","number"]}, "eq": 1,
                           "then": [
                             {"draw_route":"route1","stroke":{"width":6,"color":"#FCBA03"}}
@@ -1270,7 +1273,10 @@
                     ]},
                     {"if": {"local":"trafficroads"}, "eq": "2",
                       "then": [
-                        {"create_route":{"name":"route2","query":{"to":"rescue_location","from":"wpt2","type":"car"}}},
+                        {"if": {"local":"route_ready2"}, "ne": "yes",
+                          "then": [
+                            {"create_route":{"name":"route2","query":{"to":"rescue_location","from":"wpt2","type":"car"}}}
+                        ]},
                         {"if": {"var":["L:TESTTRK","number"]}, "eq": 1,
                           "then": [
                             {"draw_route":"route2","stroke":{"width":4,"color":"#FCBA03"}}
@@ -1280,7 +1286,10 @@
                     ]},
                     {"if": {"local":"trafficroads"}, "eq": "3",
                       "then": [
-                        {"create_route":{"name":"route3","query":{"to":"rescue_location","from":"wpt3","type":"car"}}},
+                        {"if": {"local":"route_ready3"}, "ne": "yes",
+                          "then": [
+                            {"create_route":{"name":"route3","query":{"to":"rescue_location","from":"wpt3","type":"car"}}}
+                        ]},
                         {"if": {"var":["L:TESTTRK","number"]}, "eq": 1,
                           "then": [
                             {"draw_route":"route3","stroke":{"width":2,"color":"#FCBA03"}}
@@ -1318,13 +1327,22 @@
             {"create_thread": {
               "commands": [
                 {"wait_for":{"object":"{local:carname1}","var":"distance:m","to":"rescue_location"},"lte":{"local":"cardistance1"}},
-                {"set":{"object":"{local:carname1}","var":"WP INDEX"},"value":0},
-                {"set":{"object":"{local:carname1}","var":"VELOCITY Z"},"value":0}
+                {"if": {"has_object":"{local:carname1}"}, "eq": 1,
+                  "then": [
+                    {"set":{"object":"{local:carname1}","var":"WP INDEX"},"value":0},
+                    {"set":{"object":"{local:carname1}","var":"VELOCITY Z"},"value":0}
+                ]}
             ]}},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"object":"{local:carname1}","var":"VELOCITY Z"},"ne":0},
-                {"set":{"object":"{local:carname1}","var":"VELOCITY Z"},"value":10}
+                {"if": {"has_object":"{local:carname1}"}, "eq": 1,
+                  "then": [
+                    {"wait_for":{"object":"{local:carname1}","var":"VELOCITY Z"},"ne":0},
+                    {"if": {"has_object":"{local:carname1}"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"{local:carname1}","var":"VELOCITY Z"},"value":10}
+                    ]}
+                ]}
             ]}},
             {"drive_object":{"name":"{local:carname1}","to":"route1","speedMultiplier":1.5}},
             {"if": {"object":"{local:carname1}","var":"distance:m","to":"rescue_location"}, "lt": 7,
@@ -1381,13 +1399,22 @@
             {"create_thread": {
               "commands": [
                 {"wait_for":{"object":"{local:carname2}","var":"distance:m","to":"rescue_location"},"lte":{"local":"cardistance2"}},
-                {"set":{"object":"{local:carname2}","var":"WP INDEX"},"value":0},
-                {"set":{"object":"{local:carname2}","var":"VELOCITY Z"},"value":0}
+                {"if": {"has_object":"{local:carname2}"}, "eq": 1,
+                  "then": [
+                    {"set":{"object":"{local:carname2}","var":"WP INDEX"},"value":0},
+                    {"set":{"object":"{local:carname2}","var":"VELOCITY Z"},"value":0}
+                ]}
             ]}},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"object":"{local:carname2}","var":"VELOCITY Z"},"ne":0},
-                {"set":{"object":"{local:carname2}","var":"VELOCITY Z"},"value":10}
+                {"if": {"has_object":"{local:carname2}"}, "eq": 1,
+                  "then": [
+                    {"wait_for":{"object":"{local:carname2}","var":"VELOCITY Z"},"ne":0},
+                    {"if": {"has_object":"{local:carname2}"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"{local:carname2}","var":"VELOCITY Z"},"value":10}
+                    ]}
+                ]}
             ]}},
             {"drive_object":{"name":"{local:carname2}","to":"route2","speedMultiplier":2}},
             {"if": {"object":"{local:carname2}","var":"distance:m","to":"rescue_location"}, "lt": 7,
@@ -1442,13 +1469,22 @@
             {"create_thread": {
               "commands": [
                 {"wait_for":{"object":"{local:carname3}","var":"distance:m","to":"rescue_location"},"lte":{"local":"cardistance3"}},
-                {"set":{"object":"{local:carname3}","var":"WP INDEX"},"value":0},
-                {"set":{"object":"{local:carname3}","var":"VELOCITY Z"},"value":0}
+                {"if": {"has_object":"{local:carname3}"}, "eq": 1,
+                  "then": [
+                    {"set":{"object":"{local:carname3}","var":"WP INDEX"},"value":0},
+                    {"set":{"object":"{local:carname3}","var":"VELOCITY Z"},"value":0}
+                ]}
             ]}},
             {"create_thread": {
               "commands": [
-                {"wait_for":{"object":"{local:carname3}","var":"VELOCITY Z"},"ne":0},
-                {"set":{"object":"{local:carname3}","var":"VELOCITY Z"},"value":10}
+                {"if": {"has_object":"{local:carname3}"}, "eq": 1,
+                  "then": [
+                    {"wait_for":{"object":"{local:carname3}","var":"VELOCITY Z"},"ne":0},
+                    {"if": {"has_object":"{local:carname3}"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"{local:carname3}","var":"VELOCITY Z"},"value":10}
+                    ]}
+                ]}
             ]}},
             {"drive_object":{"name":"{local:carname3}","to":"route3","speedMultiplier":1.5}},
             {"if": {"object":"{local:carname3}","var":"distance:m","to":"rescue_location"}, "lt": 7,
@@ -1484,7 +1520,6 @@
     ]}}
   ],
   "random residential road nodes launcher": [
-    {"call_macro":"test tracker begin","params":{"test_id":"residential_routes"}},
     {"if": {"local":"roadnode_query_generation"}, "eq": null,
       "then": [
         {"set":{"local":"roadnode_query_generation"},"value":0}
@@ -1493,11 +1528,24 @@
     {"set":{"param":"road_generation"},"value":{"local":"roadnode_query_generation"}},
     {"set":{"local":"CONTINUE_LOADING"},"value":"no"},
     {"set":{"local":"roadqueryattempt"},"value":0},
+    {"set":{"local":"route_ready1"},"value":"no"},
+    {"set":{"local":"route_ready2"},"value":"no"},
+    {"set":{"local":"route_ready3"},"value":"no"},
     {"create_thread": {
       "commands": [
         {"if": {"local":"query_skipped"},
           "then": [
-            {"sleep":120}
+            {"set":{"local":"road_wait"},"value":0},
+            {"while": {
+              "and": [
+                {"require":{"local":"CONTINUE_LOADING"},"ne":"yes"},
+                {"require":{"local":"has_accident_location"},"ne":"failed"},
+                {"require":{"local":"road_wait"},"lt":120}
+              ]}, "eq": 1,
+              "do": [
+                {"sleep":1},
+                {"set":{"local":"road_wait"},"value":{"add":[{"local":"road_wait"},1]}}
+            ]}
           ],
           "ne": "yes"
         },
@@ -1544,6 +1592,18 @@
                 {"zone":{"location":{"dist":70,"object":"rescue_location","bearing2":90}}}
             ]},
             {"create_location": "wpt3",
+              "zones": [
+                {"zone":{"location":{"dist":70,"object":"rescue_location","bearing2":270}}}
+            ]},
+            {"create_location": "wph1",
+              "zones": [
+                {"zone":{"location":{"dist":70,"object":"rescue_location","bearing2":0}}}
+            ]},
+            {"create_location": "wph2",
+              "zones": [
+                {"zone":{"location":{"dist":70,"object":"rescue_location","bearing2":90}}}
+            ]},
+            {"create_location": "wph3",
               "zones": [
                 {"zone":{"location":{"dist":70,"object":"rescue_location","bearing2":270}}}
             ]},
@@ -1639,10 +1699,12 @@
       "ne": "yes"
     },
     {"sleep":0.5},
-    {"wait_for":{"local":"CONTINUE_LOADING"},"eq":"yes"},
-    {"call_macro":"test tracker complete","params":{"test_id":"residential_routes"}}
+    {"wait_for":{"local":"CONTINUE_LOADING"},"eq":"yes"}
   ],
   "random crashed launcher": [
+    {"set":{"local":"route_ready1"},"value":"no"},
+    {"set":{"local":"route_ready2"},"value":"no"},
+    {"set":{"local":"route_ready3"},"value":"no"},
     {"if": {"local":"query_skipped"}, "eq": null,
       "then": [
         {"set":{"local":"roadqueryattempt"},"value":0},
@@ -1853,12 +1915,6 @@
     {"set":{"local":"ambulance1_log"},"value":"ambulance1 crew thread entered"},
     {"set":{"local":"ambustretcherarrived"},"value":"no"},
     {"set":{"local":"ambustretcher_returning"},"value":"no"},
-    {"if": {"local":"ambulance_previsit_decision"}, "eq": null,
-      "then": [
-        {"set":{"local":"ambulance_previsit_decision"},"value":"pending"}
-    ]},
-    {"set":{"local":"ambulance_previsit_decision"},"value":"skip"},
-    {"set":{"local":"ambulance_previsit_monitor"},"value":"done"},
     {"create_thread": {
       "commands": [
         {"create_location": "Ambuloc",
@@ -2122,9 +2178,15 @@
         ]},
         {"if": {"local":"patient_live_mode"}, "eq": 1,
           "then": [
+            {"create_thread": {
+              "commands": [
+                {"call_macro":"ambulance shelter monitor"}
+            ]}},
             {"call_macro":"multipatient registry live ground dispatch","params":{"resource":"ambulance1","medic":"ambumedic7","stretcher":"ambustretcher7"},"result":"dispatch_ok"},
             {"if": {"param":"dispatch_ok"}, "ne": 1,
               "then": [
+                {"#comment":"The ambulance has no patient to transport: its crew operations are over, so HOISTING must not wait for L:STEP above 6 that only a transporting ambulance sets."},
+                {"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0},
                 {"call_macro":"ambulance1 stand down"}
             ]},
             {"return":1}
@@ -2194,37 +2256,32 @@
     ]}}
   ],
   "preambustretcher": [
-    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_local.ambulance_previsit_decision_ne_pending"}},
-    {"wait_for":{"local":"ambulance_previsit_decision"},"ne":"pending"},
-    {"if": {"local":"ambulance_previsit_active"}, "ne": "yes",
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_has_object.hoist_crew_eq_1"}},
+    {"wait_for":{"has_object":"hoist_crew"},"eq":1},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_local.crewarrived_eq_yes"}},
+    {"wait_for":{"local":"crewarrived"},"eq":"yes"},
+    {"if": {"local":"crewvisitended"}, "ne": "yes",
       "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_has_object.hoist_crew_eq_1"}},
-        {"wait_for":{"has_object":"hoist_crew"},"eq":1},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_local.crewarrived_eq_yes"}},
-        {"wait_for":{"local":"crewarrived"},"eq":"yes"},
-        {"if": {"local":"crewvisitended"}, "ne": "yes",
-          "then": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"preambustretcher","state":"drive_start"}},
-            {"drive_object":{"name":"ambumedic7","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambumedic7"},{"bearing2":120,"dist":2.5,"object":"hoist_crew"},{"bearing2":120,"dist":0.5,"object":"hoist_crew"}],"VAR1":1,"speed":3}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"preambustretcher","state":"drive_done"}}
-        ]},
-        {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_local.crewvisiting1_eq_yes"}},
-        {"wait_for":{"local":"crewvisiting1"},"eq":"yes"},
-        {"set":{"object":"ambulance1","var":"VAR 2"},"value":0},
-        {"create_object":{"name":"ambustretcher7","title":"Airbus H145 Medic Stretcher","location":"ambulance1"}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"preambustretcher","state":"created"}},
-        {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
-        {"set":{"object":"ambustretcher7","var":"VAR 2"},"value":1},
-        {"set":{"object":"ambustretcher7","var":"COUPLED"},"value":0},
-        {"sleep":1},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"preambustretcher","state":"drive_start"}},
-        {"drive_object":{"name":"ambustretcher7","to":["AMBWP"],"VAR1":1,"speed":4}},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"preambustretcher","state":"drive_done"}},
-        {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_var.L:RESCUED_ne_0"}},
-        {"wait_for":{"var":["L:RESCUED","number"]},"ne":0}
-    ]}
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"preambustretcher","state":"drive_start"}},
+        {"drive_object":{"name":"ambumedic7","to":[{"closest":["INJU12","INJU13","LUP","RUP","RDWN","LDWN"],"to":"ambumedic7"},{"bearing2":120,"dist":2.5,"object":"hoist_crew"},{"bearing2":120,"dist":0.5,"object":"hoist_crew"}],"VAR1":1,"speed":3}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic7","target":"preambustretcher","state":"drive_done"}}
+    ]},
+    {"set":{"object":"ambumedic7","var":"VAR 1"},"value":0},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_local.crewvisiting1_eq_yes"}},
+    {"wait_for":{"local":"crewvisiting1"},"eq":"yes"},
+    {"set":{"object":"ambulance1","var":"VAR 2"},"value":0},
+    {"create_object":{"name":"ambustretcher7","title":"Airbus H145 Medic Stretcher","location":"ambulance1"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"preambustretcher","state":"created"}},
+    {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
+    {"set":{"object":"ambustretcher7","var":"VAR 2"},"value":1},
+    {"set":{"object":"ambustretcher7","var":"COUPLED"},"value":0},
+    {"sleep":1},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"preambustretcher","state":"drive_start"}},
+    {"drive_object":{"name":"ambustretcher7","to":["AMBWP"],"VAR1":1,"speed":4}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"preambustretcher","state":"drive_done"}},
+    {"set":{"object":"ambustretcher7","var":"VAR 1"},"value":0},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"preambustretcher","state":"wait_var.L:RESCUED_ne_0"}},
+    {"wait_for":{"var":["L:RESCUED","number"]},"ne":0}
   ],
   "ambustretcher close": [
     {"if": {"local":"patient_live_mode"}, "eq": 1,
@@ -3345,6 +3402,341 @@
         {"sleep":2}
     ]}
   ],
+  "SAR pick object": [
+    {"#comment":"Deterministic pick of the Nth entry of a kind from the sar_objects static, N = floor(seed * count / 101). Entries needing 30West are skipped when it is not installed. Returns the entry or null."},
+    {"set":{"param":"pick_count"},"value":0},
+    {"for_each": {"static":"sar_objects"},
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"struct":{"param":"$item"},"path":"kind"},"eq":{"param":"kind"}},
+            {"require":{"or":[{"require":{"struct":{"param":"$item"},"path":"needs30west"},"ne":"yes"},{"require":{"local":"30West_installed"},"eq":"OK"}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"pick_count"},"value":{"add":[{"param":"pick_count"},1]}}
+        ]}
+    ]},
+    {"if": {"param":"pick_count"}, "eq": 0,
+      "then": [
+        {"return":null}
+    ]},
+    {"set":{"param":"pick_target"},"value":{"floor":{"multiply":[{"divide":[{"param":"seed"},101]},{"param":"pick_count"}]}}},
+    {"set":{"param":"pick_index"},"value":0},
+    {"set":{"param":"pick_result"},"value":null},
+    {"for_each": {"static":"sar_objects"},
+      "do": [
+        {"if": {
+          "and": [
+            {"require":{"struct":{"param":"$item"},"path":"kind"},"eq":{"param":"kind"}},
+            {"require":{"or":[{"require":{"struct":{"param":"$item"},"path":"needs30west"},"ne":"yes"},{"require":{"local":"30West_installed"},"eq":"OK"}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"param":"pick_index"}, "eq": {"param":"pick_target"},
+              "then": [
+                {"set":{"param":"pick_result"},"value":{"param":"$item"}}
+            ]},
+            {"set":{"param":"pick_index"},"value":{"add":[{"param":"pick_index"},1]}}
+        ]}
+    ]},
+    {"return":{"param":"pick_result"}}
+  ],
+  "SAR hint place": [
+    {"#comment":"One visual hint of the given kind with chance percent, between sar_h_rmin and sar_h_rmax metres from the victim. Cosmetic only: it never touches the sighting logic."},
+    {"set":{"local":"sar_h_roll"},"value":{"floor":{"rand":[0,100]}}},
+    {"if": {"local":"sar_h_roll"}, "lt": {"param":"chance"},
+      "then": [
+        {"call_macro":"SAR pick object","params":{"kind":{"param":"kind"},"seed":{"floor":{"rand":[0,101]}}},"result":"sar_pick"},
+        {"if": {"param":"sar_pick"}, "ne": null,
+          "then": [
+            {"set":{"local":"sar_hint_count"},"value":{"add":[{"local":"sar_hint_count"},1]}},
+            {"if": {"local":"sar_hint_count"}, "lte": 6,
+              "then": [
+                {"set":{"local":"sar_h_title"},"value":{"struct":{"param":"sar_pick"},"path":"title"}},
+                {"set":{"local":"sar_h_fallback"},"value":{"struct":{"param":"sar_pick"},"path":"fallback_title"}},
+                {"set":{"local":"sar_h_brg"},"value":{"floor":{"rand":[0,360]}}},
+                {"set":{"local":"sar_h_dist"},"value":{"floor":{"rand":[{"local":"sar_h_rmin"},{"local":"sar_h_rmax"}]}}},
+                {"set":{"local":"sar_h_hdg"},"value":{"floor":{"rand":[0,360]}}},
+                {"if": {"local":"sar_hint_count"}, "eq": 1,
+                  "then": [
+                    {"create_object":{"name":"sar_hint1","title":{"local":"sar_h_title"},"fallback_title":{"local":"sar_h_fallback"},"location":{"bearing":{"local":"sar_h_brg"},"dist":{"local":"sar_h_dist"},"heading":{"local":"sar_h_hdg"},"object":"accident_location"}}}
+                ]},
+                {"if": {"local":"sar_hint_count"}, "eq": 2,
+                  "then": [
+                    {"create_object":{"name":"sar_hint2","title":{"local":"sar_h_title"},"fallback_title":{"local":"sar_h_fallback"},"location":{"bearing":{"local":"sar_h_brg"},"dist":{"local":"sar_h_dist"},"heading":{"local":"sar_h_hdg"},"object":"accident_location"}}}
+                ]},
+                {"if": {"local":"sar_hint_count"}, "eq": 3,
+                  "then": [
+                    {"create_object":{"name":"sar_hint3","title":{"local":"sar_h_title"},"fallback_title":{"local":"sar_h_fallback"},"location":{"bearing":{"local":"sar_h_brg"},"dist":{"local":"sar_h_dist"},"heading":{"local":"sar_h_hdg"},"object":"accident_location"}}}
+                ]},
+                {"if": {"local":"sar_hint_count"}, "eq": 4,
+                  "then": [
+                    {"create_object":{"name":"sar_hint4","title":{"local":"sar_h_title"},"fallback_title":{"local":"sar_h_fallback"},"location":{"bearing":{"local":"sar_h_brg"},"dist":{"local":"sar_h_dist"},"heading":{"local":"sar_h_hdg"},"object":"accident_location"}}}
+                ]},
+                {"if": {"local":"sar_hint_count"}, "eq": 5,
+                  "then": [
+                    {"create_object":{"name":"sar_hint5","title":{"local":"sar_h_title"},"fallback_title":{"local":"sar_h_fallback"},"location":{"bearing":{"local":"sar_h_brg"},"dist":{"local":"sar_h_dist"},"heading":{"local":"sar_h_hdg"},"object":"accident_location"}}}
+                ]},
+                {"if": {"local":"sar_hint_count"}, "eq": 6,
+                  "then": [
+                    {"create_object":{"name":"sar_hint6","title":{"local":"sar_h_title"},"fallback_title":{"local":"sar_h_fallback"},"location":{"bearing":{"local":"sar_h_brg"},"dist":{"local":"sar_h_dist"},"heading":{"local":"sar_h_hdg"},"object":"accident_location"}}}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "SAR hint road car": [
+    {"#comment":"Parked car on the road closest to the victim, within sar_h_rmax. One short car route in its own thread and no OSM data query: the route starts at the road point closest to the victim and its next entries give the road direction. Nothing is created when the route fails, is a stale table entry or the road is farther than sar_h_rmax. Never called when the query was skipped (manual location)."},
+    {"create_thread": {
+      "commands": [
+        {"set":{"param":"road_brg"},"value":{"floor":{"rand":[0,360]}}},
+        {"set":{"param":"road_goal_dist"},"value":{"floor":{"rand":[600,1201]}}},
+        {"create_location": "sar_road_a",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+        ]},
+        {"create_location": "sar_road_goal",
+          "zones": [
+            {"zone":{"location":{"bearing":{"param":"road_brg"},"dist":{"param":"road_goal_dist"},"object":"accident_location"}}}
+        ]},
+        {"create_route":{"name":"sar_road_route","query":{"to":"sar_road_goal","from":"sar_road_a","type":"car"}}},
+        {"set":{"param":"road_duration"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+        {"if": {"param":"road_duration"}, "gt": 0,
+          "then": [
+            {"set":{"param":"road_rt"},"value":{"route":"sar_road_route"}},
+            {"set":{"param":"road_n"},"value":{"struct":{"param":"road_rt"},"path":"length"}},
+            {"if": {"param":"road_n"}, "gte": 4,
+              "then": [
+                {"set":{"param":"road_e0"},"value":{"struct":{"param":"road_rt"},"index":1}},
+                {"set":{"param":"road_e1"},"value":{"struct":{"param":"road_rt"},"index":3}},
+                {"create_location": "sar_road_spot",
+                  "zones": [
+                    {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"road_e0"},"index":0},{"struct":{"param":"road_e0"},"index":1}]}}}}
+                ]},
+                {"create_location": "sar_road_next",
+                  "zones": [
+                    {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"road_e1"},"index":0},{"struct":{"param":"road_e1"},"index":1}]}}}}
+                ]},
+                {"set":{"param":"road_dist"},"value":{"object":"sar_road_spot","var":"distance:m","to":"accident_location"}},
+                {"if": {"param":"road_dist"}, "lte": {"local":"sar_h_rmax"},
+                  "then": [
+                    {"call_macro":"SAR pick object","params":{"kind":"car","seed":{"floor":{"rand":[0,101]}}},"result":"road_pick"},
+                    {"if": {"param":"road_pick"}, "ne": null,
+                      "then": [
+                        {"create_object":{"name":"sar_hint_car","title":{"struct":{"param":"road_pick"},"path":"title"},"fallback_title":{"struct":{"param":"road_pick"},"path":"fallback_title"},"location":"sar_road_spot"}},
+                        {"point_object":"sar_hint_car","to":"sar_road_next"},
+                        {"move_object":"sar_hint_car","to":{"bearing2":90,"dist":2.5,"heading":0,"object":"sar_hint_car"}},
+                        {"point_object":"sar_hint_car","to":"sar_road_next"}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]}}
+  ],
+  "SAR visual hints": [
+    {"#comment":"Random visual clues around the victim for the SAR missions (tent, fire, bag, bike, dog, quad, skis, parked car...). Radius stays inside the red search ring. Cars and roads are excluded when the location was entered manually (query skipped). Missions 18 and 19 get nothing here: their wreck, ELT and flare already exist."},
+    {"set":{"local":"sar_hint_count"},"value":0},
+    {"set":{"local":"sar_h_rmin"},"value":60},
+    {"set":{"local":"sar_h_rmax"},"value":600},
+    {"if": {
+      "and": [
+        {"require":{"has_location":"SAR_start_location"},"eq":1},
+        {"require":{"global":"SAR_MAX_RADIUS"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"sar_h_rmax"},"value":{"clamp":[{"subtract":[{"global":"SAR_MAX_RADIUS"},{"object":"SAR_start_location","var":"distance:m","to":"accident_location"}]},150,{"multiply":[{"global":"SAR_MAX_RADIUS"},0.6]}]}}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 40,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"tent","chance":35}},
+        {"call_macro":"SAR hint place","params":{"kind":"campfire","chance":25}},
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":30}},
+        {"call_macro":"SAR hint place","params":{"kind":"bike","chance":15}},
+        {"call_macro":"SAR hint place","params":{"kind":"dog","chance":15}},
+        {"if": {"local":"query_skipped"}, "ne": "yes",
+          "then": [
+            {"set":{"local":"sar_h_roll"},"value":{"floor":{"rand":[0,100]}}},
+            {"if": {"local":"sar_h_roll"}, "lt": 40,
+              "then": [
+                {"call_macro":"SAR hint road car"}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 46,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"tent","chance":40}},
+        {"call_macro":"SAR hint place","params":{"kind":"campfire","chance":30}},
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":30}},
+        {"call_macro":"SAR hint place","params":{"kind":"atv","chance":15}},
+        {"call_macro":"SAR hint place","params":{"kind":"bike","chance":10}},
+        {"call_macro":"SAR hint place","params":{"kind":"dog","chance":15}},
+        {"if": {"local":"query_skipped"}, "ne": "yes",
+          "then": [
+            {"set":{"local":"sar_h_roll"},"value":{"floor":{"rand":[0,100]}}},
+            {"if": {"local":"sar_h_roll"}, "lt": 40,
+              "then": [
+                {"call_macro":"SAR hint road car"}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 44,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":40}},
+        {"call_macro":"SAR hint place","params":{"kind":"bike","chance":15}},
+        {"call_macro":"SAR hint place","params":{"kind":"dog","chance":15}},
+        {"if": {"local":"query_skipped"}, "ne": "yes",
+          "then": [
+            {"set":{"local":"sar_h_roll"},"value":{"floor":{"rand":[0,100]}}},
+            {"if": {"local":"sar_h_roll"}, "lt": 35,
+              "then": [
+                {"call_macro":"SAR hint road car"}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 42,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"ski","chance":45}},
+        {"call_macro":"SAR hint place","params":{"kind":"ski","chance":35}},
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":30}},
+        {"call_macro":"SAR hint place","params":{"kind":"snowmobile","chance":15}},
+        {"call_macro":"SAR hint place","params":{"kind":"tent","chance":20}}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 17,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"glider","chance":12}}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 66,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":40}},
+        {"call_macro":"SAR hint place","params":{"kind":"dog","chance":15}}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 67,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":30}},
+        {"call_macro":"SAR hint place","params":{"kind":"tent","chance":20}}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 68,
+      "then": [
+        {"call_macro":"SAR hint place","params":{"kind":"dog","chance":25}},
+        {"call_macro":"SAR hint place","params":{"kind":"bag","chance":20}}
+    ]}
+  ],
+  "SAR car dispatch text": [
+    {"#comment":"Vehicle model and colour for the vehicle missions (65 car, 66 parked car, 67 quad), appended once to the dispatch description. The pick is deterministic from CASUALTY_PERCENTAGE so a reloaded mission keeps the same vehicle; the final text is remembered to stay idempotent across the dispatch refresh flows."},
+    {"set":{"local":"sar_veh_kind"},"value":null},
+    {"if": {
+      "or": [
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":65},
+        {"require":{"local":"VAR_MISSION_NUMBER"},"eq":66}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"sar_veh_kind"},"value":"car"}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 67,
+      "then": [
+        {"set":{"local":"sar_veh_kind"},"value":"atv"}
+    ]},
+    {"if": {"local":"sar_veh_kind"}, "ne": null,
+      "then": [
+        {"if": {"local":"accident_description"}, "ne": {"local":"sar_desc_final"},
+          "then": [
+            {"call_macro":"SAR pick object","params":{"kind":{"local":"sar_veh_kind"},"seed":{"local":"CASUALTY_PERCENTAGE"}},"result":"sar_veh_pick"},
+            {"if": {"param":"sar_veh_pick"}, "ne": null,
+              "then": [
+                {"set":{"local":"sar_veh_title"},"value":{"struct":{"param":"sar_veh_pick"},"path":"title"}},
+                {"set":{"local":"sar_veh_fallback"},"value":{"struct":{"param":"sar_veh_pick"},"path":"fallback_title"}},
+                {"if": {"struct":{"param":"sar_veh_pick"},"path":"color"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"sar_veh_text"},"value":{"text":"Vehicle: {0}.","params":[{"struct":{"param":"sar_veh_pick"},"path":"model"}]}}
+                  ],"else": [
+                    {"set":{"local":"sar_veh_text"},"value":{"text":"Vehicle: {0} {1}.","params":[{"struct":{"param":"sar_veh_pick"},"path":"color"},{"struct":{"param":"sar_veh_pick"},"path":"model"}]}}
+                ]},
+                {"set":{"local":"accident_description"},"value":{"text":"{0} {1}","params":[{"local":"accident_description"},{"local":"sar_veh_text"}]}},
+                {"set":{"local":"sar_desc_final"},"value":{"local":"accident_description"}}
+            ]}
+        ]}
+    ]}
+  ],
+  "SAR OVERDUE VEHICLE": [
+    {"#comment":"Overdue vehicle (65 car, 67 quad). Base locations come from CLIMBER. The vehicle is created at accident_location (the road/track point of the query; for mission 65 the random route entry chosen by SAR map and route), then stays there or is driven a few random metres forward; the injured person is moved next to it. The car is skipped when the location was entered manually (no road is known)."},
+    {"call_macro":"CLIMBER"},
+    {"set":{"local":"sar_veh_kind"},"value":"car"},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 67,
+      "then": [
+        {"set":{"local":"sar_veh_kind"},"value":"atv"}
+    ]},
+    {"if": {"local":"sar_veh_title"}, "eq": null,
+      "then": [
+        {"call_macro":"SAR pick object","params":{"kind":{"local":"sar_veh_kind"},"seed":{"local":"CASUALTY_PERCENTAGE"}},"result":"sar_veh_pick"},
+        {"if": {"param":"sar_veh_pick"}, "ne": null,
+          "then": [
+            {"set":{"local":"sar_veh_title"},"value":{"struct":{"param":"sar_veh_pick"},"path":"title"}},
+            {"set":{"local":"sar_veh_fallback"},"value":{"struct":{"param":"sar_veh_pick"},"path":"fallback_title"}}
+        ]}
+    ]},
+    {"set":{"local":"sar_drive_roll"},"value":{"floor":{"rand":[0,100]}}},
+    {"set":{"local":"sar_drive_dist"},"value":{"floor":{"rand":[8,41]}}},
+    {"if": {
+      "or": [
+        {"require":{"local":"sar_veh_kind"},"eq":"atv"},
+        {"require":{"local":"sar_route_real"},"eq":"yes"}
+      ]}, "eq": 1,
+      "then": [
+        {"create_thread": {
+          "commands": [
+            {"create_object":{"name":"sar_vehicle","title":{"local":"sar_veh_title"},"fallback_title":{"local":"sar_veh_fallback"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+            {"sleep":0.5},
+            {"if": {
+              "and": [
+                {"require":{"local":"VAR_MISSION_NUMBER"},"eq":65},
+                {"require":{"local":"sar_route_real"},"eq":"yes"}
+              ]}, "eq": 1,
+              "then": [
+                {"#comment":"Car aligned with the route direction: it faces the next route entry, then the optional drive follows the road."},
+                {"point_object":"sar_vehicle","to":"sar_route_next"}
+            ]},
+            {"if": {"local":"sar_drive_roll"}, "lt": 50,
+              "then": [
+                {"drive_object":{"name":"sar_vehicle","to":[{"bearing2":0,"dist":{"local":"sar_drive_dist"},"object":"sar_vehicle"}],"VAR1":0,"speed":6}}
+            ]},
+            {"if": {"has_object":"injured_human"}, "eq": 1,
+              "then": [
+                {"#comment":"The injured person lies on the driver side: the left of the car (bearing2 270) where the cars have the steering wheel on the left, the right (90) where they are right hand drive (the United Kingdom, NATION 2). The country is the one asked in SAR map and route."},
+                {"if": {"local":"NATION"}, "eq": 2,
+                  "then": [
+                    {"move_object":"injured_human","to":{"bearing2":90,"dist":3,"heading":{"rand":[0,359]},"object":"sar_vehicle"}}
+                  ],"else": [
+                    {"move_object":"injured_human","to":{"bearing2":270,"dist":3,"heading":{"rand":[0,359]},"object":"sar_vehicle"}}
+                ]},
+                {"create_location": "INJURED",
+                  "zones": [
+                    {"zone":{"location":{"bearing":0,"dist":0,"object":"injured_human"}}}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "SAR PARKED CAR": [
+    {"#comment":"Mission 66: unattended car at the track point found by the query (sar_anchor_location), parked with a random heading. Skipped when the location was entered manually."},
+    {"call_macro":"CLIMBER"},
+    {"set":{"local":"sar_veh_kind"},"value":"car"},
+    {"if": {"local":"sar_veh_title"}, "eq": null,
+      "then": [
+        {"call_macro":"SAR pick object","params":{"kind":"car","seed":{"local":"CASUALTY_PERCENTAGE"}},"result":"sar_veh_pick"},
+        {"if": {"param":"sar_veh_pick"}, "ne": null,
+          "then": [
+            {"set":{"local":"sar_veh_title"},"value":{"struct":{"param":"sar_veh_pick"},"path":"title"}},
+            {"set":{"local":"sar_veh_fallback"},"value":{"struct":{"param":"sar_veh_pick"},"path":"fallback_title"}}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"query_skipped"},"ne":"yes"},
+        {"require":{"has_location":"sar_anchor_location"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"create_object":{"name":"sar_vehicle","title":{"local":"sar_veh_title"},"fallback_title":{"local":"sar_veh_fallback"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"sar_anchor_location"}}}
+    ]}
+  ],
   "CRASH_SITE": [
     {"if": {"local":"halloween"}, "eq": 1,
       "then": [
@@ -3456,6 +3848,10 @@
     {"set":{"var":["L:LOAD","number"]},"value":43},
     {"set_message":{"text":"Cabin preparation, 43% completed... please wait, it can take a while"}},
     {"call_macro":{"local":"scene_macro"}},
+    {"if": {"local":"SAR"}, "eq": "yes",
+      "then": [
+        {"call_macro":"SAR visual hints"}
+    ]},
     {"set":{"var":["L:LOAD","number"]},"value":90},
     {"set_message":{"text":"Cabin preparation, 90% completed... please wait, it can take a while"}},
     {"call_macro":"rescue vehicles"},
@@ -3910,6 +4306,7 @@
           ],"else": [
             {"move_object":"injured_human","to":{"bearing2":90,"dist":4,"heading":{"rand":[330,359]},"object":"wreckedcar1"}}
         ]},
+        {"call_macro":"landing spot follow injured"},
         {"create_location": "in1",
           "zones": [
             {"zone":{"location":{"bearing2":90,"dist":4,"heading":0,"object":"car_crash"}}}
@@ -3991,7 +4388,7 @@
             {"if": {"local":"crewvisitended"}, "ne": "yes",
               "then": [
                 {"set_message":{"text":"Fire engine crew secured the area for rescue team, you're cleared to go"}},
-                {"call_macro":"post dispatcher message","params":{"text":"Fire service reports: fire out, scene safe for HEMS."}},
+                {"call_macro":"post dispatcher message","params":{"from":"fire","text":"Fire out, scene safe for HEMS."}},
                 {"set":{"var":["L:CPL{local:VCP}18","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}18","number"]},1]}}
             ]}
         ]}
@@ -4138,6 +4535,7 @@
       "commands": [
         {"drive_object":{"name":"car_crash","to":[{"bearing":0,"dist":0,"object":"accident_location"}],"VAR1":0,"speed":3}},
         {"move_object":"injured_human","to":{"bearing2":0,"dist":6,"heading":{"rand":[330,359]},"object":"car_crash"}},
+        {"call_macro":"landing spot follow injured"},
         {"create_location": "INJURED",
           "zones": [
             {"zone":{"location":{"bearing":0,"dist":0,"object":"injured_human"}}}
@@ -5736,6 +6134,7 @@
           ],"else": [
             {"move_object":"injured_human","to":{"bearing2":90,"dist":3,"object":"wreckedcar1"}}
         ]},
+        {"call_macro":"landing spot follow injured"},
         {"drive_object":{"name":"car_crash","to":[{"bearing2":0,"dist":45,"object":"car_crash"}],"VAR1":0,"speed":2}}
     ]}},
     {"set":{"var":["L:LOAD","number"]},"value":70},
@@ -6005,11 +6404,6 @@
           "then": [
             {"call_macro":"create orange smoke marker"},
             {"call_macro":"monitor orange smoke proximity"}
-        ]},
-        {"if": {"global":"ORANGE_TARGET_SMOKE"}, "eq": "never",
-          "then": [
-            {"call_macro":"test tracker begin","params":{"test_id":"orange_smoke"}},
-            {"call_macro":"test tracker complete","params":{"test_id":"orange_smoke","option":"disabled","options":["auto","always","realistic","disabled"]}}
         ]}
     ]}
   ],
@@ -6092,6 +6486,10 @@
     {"set":{"var":["L:LOAD","number"]},"value":41},
     {"set_message":{"text":"Cabin preparation, 41% completed... please wait, it can take a while"}},
     {"call_macro":{"local":"scene_macro"}},
+    {"if": {"local":"SAR"}, "eq": "yes",
+      "then": [
+        {"call_macro":"SAR visual hints"}
+    ]},
     {"set":{"var":["L:LOAD","number"]},"value":86},
     {"set_message":{"text":"Cabin preparation, 86% completed... please wait, it can take a while"}},
     {"call_macro":"rescue vehicles"},
@@ -6475,7 +6873,7 @@
     {"set":{"local":"ambu2stopdistance"},"value":9},
     {"set":{"local":"fire1stopdistance"},"value":12},
     {"set":{"local":"fire2stopdistance"},"value":15},
-    {"set":{"local":"ambulance_scene_route_start"},"value":"wpt{local:amburoad}"},
+    {"set":{"local":"ambulance_scene_route_start"},"value":"wph{local:amburoad}"},
     {"set":{"local":"ambulance_scene_route_end"},"value":"wprescue{local:amburoad}"},
     {"set":{"local":"ambulance_scene_heading"},"value":{"bearing":{"from":{"local":"ambulance_scene_route_start"},"to":{"local":"ambulance_scene_route_end"}}}},
     {"if": {"local":"HELOVICTIMS"}, "ne": 3,

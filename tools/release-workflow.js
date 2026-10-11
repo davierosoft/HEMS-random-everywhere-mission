@@ -122,6 +122,24 @@ function replaceArtifactTitle(artifact, oldTitle, newTitle) {
   return artifact.replace(titlePattern, `${match[1]}${JSON.stringify(newTitle)}`);
 }
 
+// The title is a root key of mission-src (root modules), so the build would rewrite the artifact title from the sources.
+function updateSourceTitle(repositoryRoot, oldTitle, newTitle) {
+  const manifestPath = path.join(repositoryRoot, 'mission-src', 'manifest.json');
+  if (!fs.existsSync(manifestPath)) return; // a repository without modular sources keeps the title in the artifact only
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  const titlePattern = /^(\s*"title"\s*:\s*)"([^"\r\n]*)"/m;
+  for (const module of manifest.modules.root || []) {
+    const file = path.join(repositoryRoot, 'mission-src', module.file);
+    const source = fs.readFileSync(file, 'utf8');
+    const match = titlePattern.exec(source);
+    if (!match) continue;
+    if (match[2] !== oldTitle) throw new Error(`source root title in ${module.file} differs from the artifact title`);
+    writeTextAtomic(file, source.replace(titlePattern, `${match[1]}${JSON.stringify(newTitle)}`));
+    return;
+  }
+  throw new Error('mission-src has no root title');
+}
+
 function beginRelease(repositoryRoot, release, note, scope) {
   inspectReleaseCoherence(repositoryRoot, release);
   const currentIntentPath = intentPath(repositoryRoot);
@@ -156,6 +174,7 @@ function beginRelease(repositoryRoot, release, note, scope) {
   updateRuntimeReleaseIdentity(repositoryRoot, release);
   writeTextAtomic(changelogPath, updatedChangelog);
   writeTextAtomic(path.join(repositoryRoot, 'everywhere_all.json'), updatedArtifact);
+  updateSourceTitle(repositoryRoot, identity.mission.title, newTitle);
   const intent = {
     schema: 1,
     kind: 'release',

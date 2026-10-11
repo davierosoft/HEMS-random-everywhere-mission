@@ -1,0 +1,1680 @@
+{
+  "title": "OSM ROAD WALK TEST",
+  "id": "osm_road_walk_test",
+  "start_info": {"icon_src": "", "query": []},
+  "objectives": [
+    {
+      "title": "OSM ROAD WALK TEST",
+      "commands": [
+        {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+        {"set":{"local":"t5_status"},"value":"PENDING"},
+        {"set":{"local":"t6_status"},"value":"PENDING"},
+        {"set":{"local":"t7_status"},"value":"PENDING"},
+        {"set":{"local":"t8_status"},"value":"PENDING"},
+        {"set":{"local":"t9_status"},"value":"PENDING"},
+        {"set":{"local":"t10_status"},"value":"PENDING"},
+        {"set":{"local":"t11_status"},"value":"PENDING"},
+        {"set":{"local":"t12_status"},"value":"PENDING"},
+        {"set":{"local":"t10_a"},"value":""},
+        {"set":{"local":"t10_b"},"value":""},
+        {"set":{"local":"t11_a"},"value":""},
+        {"set":{"local":"t11_b"},"value":""},
+        {"set":{"local":"t12_a"},"value":""},
+        {"set":{"local":"t12_b"},"value":""},
+        {"set":{"local":"t12_c"},"value":""},
+        {"set":{"local":"t12_d"},"value":""},
+        {"set":{"local":"t12_e"},"value":""},
+        {"set":{"local":"t12_f"},"value":""},
+        {"set":{"local":"t12_g"},"value":""},
+        {"set":{"local":"t5_a"},"value":""},
+        {"set":{"local":"t5_b"},"value":""},
+        {"set":{"local":"t5_c"},"value":""},
+        {"set":{"local":"t5_d"},"value":""},
+        {"set":{"local":"t6_info"},"value":""},
+        {"set":{"local":"t7_a"},"value":""},
+        {"set":{"local":"t7_b"},"value":""},
+        {"set":{"local":"t8_a"},"value":""},
+        {"set":{"local":"t8_b"},"value":""},
+        {"set":{"local":"t8_c"},"value":""},
+        {"set":{"local":"t8_d"},"value":""},
+        {"set_briefing_dialog":1},
+        {"wait_for":1,"lt":0}
+      ]
+    }
+  ],
+  "macros": {
+    "walk query": [
+      {"#comment":"Shared step: OSM query around the location heli. Params QUERY and SIZE. Returns the data (param my_data of the call)."},
+      {"set":{"param":"my_data"},"value":null},
+      {"osm_query_data":{"param":"QUERY"},"location":"heli","size":{"param":"SIZE"},"result":"my_data"},
+      {"set":{"param":"wait"},"value":0},
+      {"while":{"and":[{"require":{"param":"my_data"},"eq":null},{"require":{"param":"wait"},"lt":40}]}, "eq":1, "do": [
+          {"sleep":0.5},
+          {"set":{"param":"wait"},"value":{"add":[{"param":"wait"},0.5]}}
+        ]},
+      {"return":{"param":"my_data"}}
+    ],
+    "walk cleanup": [
+      {"#comment":"Destroys every object created by buttons 5, 6 and 7. The test never goes above 12 objects."},
+      {"if":{"has_object":"wk_pole_a"}, "eq":1, "then": [
+          {"destroy_object":"wk_pole_a"}
+        ]},
+      {"if":{"has_object":"wk_pole_b"}, "eq":1, "then": [
+          {"destroy_object":"wk_pole_b"}
+        ]},
+      {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+          {"destroy_object":"wk_walker"}
+        ]},
+      {"if":{"has_object":"wk_m_f60"}, "eq":1, "then": [
+          {"destroy_object":"wk_m_f60"}
+        ]},
+      {"if":{"has_object":"wk_m_f400"}, "eq":1, "then": [
+          {"destroy_object":"wk_m_f400"}
+        ]},
+      {"if":{"has_object":"wk_m_b60"}, "eq":1, "then": [
+          {"destroy_object":"wk_m_b60"}
+        ]},
+      {"if":{"has_object":"wk_m_b400"}, "eq":1, "then": [
+          {"destroy_object":"wk_m_b400"}
+        ]},
+      {"if":{"has_object":"wk_car_a"}, "eq":1, "then": [
+          {"destroy_object":"wk_car_a"}
+        ]},
+      {"if":{"has_object":"wk_car_b"}, "eq":1, "then": [
+          {"destroy_object":"wk_car_b"}
+        ]},
+      {"if":{"has_object":"wk_car_c"}, "eq":1, "then": [
+          {"destroy_object":"wk_car_c"}
+        ]},
+      {"if":{"has_object":"wk_car_d"}, "eq":1, "then": [
+          {"destroy_object":"wk_car_d"}
+        ]},
+      {"if":{"has_object":"wk_slot15"}, "eq":1, "then": [
+          {"destroy_object":"wk_slot15"}
+        ]},
+      {"if":{"has_object":"wk_slot30"}, "eq":1, "then": [
+          {"destroy_object":"wk_slot30"}
+        ]},
+      {"if":{"has_object":"wk_slot45"}, "eq":1, "then": [
+          {"destroy_object":"wk_slot45"}
+        ]},
+      {"set":{"local":"t9_status"},"value":"DONE: test objects removed (map points stay until the mission is restarted)"}
+    ],
+    "walk test arms": [
+      {"#comment":"Button 5: from the heli position (the accident) take the closest road node that is a junction (more than one parent way, like road nodes generator), take its first parent way, and walk the way in both directions for 60 m and 400 m. The result is compared with the current extrapolation (point 60 m / 400 m behind the node on the straight line node -> accident)."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t5_status"},"value":"RUNNING"},
+      {"set":{"local":"t5_a"},"value":""},
+      {"set":{"local":"t5_b"},"value":""},
+      {"set":{"local":"t5_c"},"value":""},
+      {"set":{"local":"t5_d"},"value":""},
+      {"call_macro":"walk cleanup"},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];way({{bbox}})[highway];(._;>;);out;","SIZE":400},"result":"my_data"},
+      {"if":{"param":"my_data"}, "eq":null, "then": [
+          {"set":{"local":"t5_status"},"value":"FAILED: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_closest_nodes":"heli","data":{"param":"my_data"},"result":"my_closest_nodes"},
+          {"set":{"local":"t5_cn"},"value":{"struct":{"param":"my_closest_nodes"},"path":"length"}},
+          {"set":{"param":"closest"},"value":null},
+          {"set":{"local":"t5_junction"},"value":"no"},
+          {"set":{"local":"w_i"},"value":0},
+          {"for_each":{"param":"my_closest_nodes"}, "do": [
+              {"if":{"local":"w_i"}, "gte":40, "then": [
+                  {"break":1}
+                ]},
+              {"osm_get_parent_ways":{"struct":{"param":"$item"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+              {"if":{"struct":{"param":"parents"},"path":"length"}, "gt":1, "then": [
+                  {"set":{"param":"closest"},"value":{"param":"$item"}},
+                  {"set":{"local":"t5_junction"},"value":"yes"},
+                  {"break":1}
+                ]},
+              {"set":{"local":"w_i"},"value":{"add":[{"local":"w_i"},1]}},
+              {"sleep":0.0025}
+            ]},
+          {"if":{"param":"closest"}, "eq":null, "then": [
+              {"set":{"param":"closest"},"value":{"struct":{"param":"my_closest_nodes"},"index":0}}
+            ]},
+          {"osm_get_parent_ways":{"struct":{"param":"closest"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+          {"set":{"local":"t5_parents"},"value":{"struct":{"param":"parents"},"path":"length"}},
+          {"set":{"param":"way"},"value":{"struct":{"param":"parents"},"index":0}},
+          {"osm_get_nodes":{"struct":{"param":"way"},"path":"id"},"data":{"param":"my_data"},"result":"way_nodes"},
+          {"set":{"local":"t5_nodes"},"value":{"struct":{"param":"way_nodes"},"path":"length"}},
+          {"set":{"local":"w_k"},"value":-1},
+          {"set":{"local":"w_i"},"value":0},
+          {"for_each":{"param":"way_nodes"}, "do": [
+              {"if":{"struct":{"param":"$item"},"path":"id"}, "eq":{"struct":{"param":"closest"},"path":"id"}, "then": [
+                  {"set":{"local":"w_k"},"value":{"local":"w_i"}}
+                ]},
+              {"set":{"local":"w_i"},"value":{"add":[{"local":"w_i"},1]}}
+            ]},
+          {"create_location":"wk_node","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"closest"},"path":"lat"},{"struct":{"param":"closest"},"path":"lon"}]}}}}]},
+          {"set":{"local":"t5_node_dist"},"value":{"location":"wk_node","var":"distance:m","to":"heli"}},
+          {"set_map":{"add":{"point":{"location":"wk_node","text":"NODE"}}}},
+          {"create_object":{"name":"wk_walker","title":"Airbus H145 Marker GREEN","location":"wk_node"}},
+          {"sleep":0.5},
+          {"point_object":"wk_walker","to":"heli"},
+          {"move_object":"wk_walker","to":{"bearing2":180,"dist":400,"heading":0,"object":"wk_walker"}},
+          {"sleep":0.3},
+          {"create_location":"wk_x400","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+          {"point_object":"wk_walker","to":"heli"},
+          {"move_object":"wk_walker","to":{"bearing2":0,"dist":340,"heading":0,"object":"wk_walker"}},
+          {"sleep":0.3},
+          {"create_location":"wk_x60","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+          {"set_map":{"add":{"point":{"location":"wk_x60","text":"X60"}}}},
+          {"set_map":{"add":{"point":{"location":"wk_x400","text":"X400"}}}},
+          {"if":{"local":"w_k"}, "lt":0, "then": [
+              {"set":{"local":"t5_status"},"value":"FAILED: the closest node was not found in the nodes of its first way"}
+            ], "else": [
+              {"set":{"local":"w_acc"},"value":0},
+              {"set":{"local":"w_i"},"value":{"local":"w_k"}},
+              {"set":{"local":"w_cp"},"value":0},
+              {"set":{"local":"w_done"},"value":0},
+              {"set":{"local":"w_guard"},"value":0},
+              {"set":{"local":"w_f60_ok"},"value":0},
+              {"set":{"local":"w_f60_st"},"value":-1},
+              {"set":{"local":"w_f60_ex"},"value":-1},
+              {"set":{"local":"w_f400_ok"},"value":0},
+              {"set":{"local":"w_f400_st"},"value":-1},
+              {"set":{"local":"w_f400_ex"},"value":-1},
+              {"set":{"param":"w_node"},"value":{"struct":{"param":"way_nodes"},"index":{"local":"w_i"}}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+              {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+                  {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+                  {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},1]}},
+                  {"if":{"local":"w_j"}, "lt":0, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_j"}, "gte":{"struct":{"param":"way_nodes"},"path":"length"}, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":0, "then": [
+                      {"set":{"param":"w_node"},"value":{"struct":{"param":"way_nodes"},"index":{"local":"w_j"}}},
+                      {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                      {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                      {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                          {"copy_location":"wk_next","to":"wk_prev"},
+                          {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                        ], "else": [
+                          {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                          {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":60}]}, "eq":1, "then": [
+                              {"set":{"local":"w_rem"},"value":{"subtract":[60,{"local":"w_acc"}]}},
+                              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                              {"sleep":0.2},
+                              {"point_object":"wk_walker","to":"wk_next"},
+                              {"sleep":0.1},
+                              {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                              {"sleep":0.3},
+                              {"create_location":"wk_f60","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                              {"copy_location":"wk_prev","to":"wk_f60_a"},
+                              {"copy_location":"wk_next","to":"wk_f60_n"},
+                              {"set":{"local":"w_f60_ok"},"value":1},
+                              {"set":{"local":"w_f60_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_f60"}},
+                              {"set":{"local":"w_cp"},"value":1}
+                            ]},
+                          {"if":{"and":[{"require":{"local":"w_cp"},"eq":1},{"require":{"local":"w_sum"},"gte":400}]}, "eq":1, "then": [
+                              {"set":{"local":"w_rem"},"value":{"subtract":[400,{"local":"w_acc"}]}},
+                              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                              {"sleep":0.2},
+                              {"point_object":"wk_walker","to":"wk_next"},
+                              {"sleep":0.1},
+                              {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                              {"sleep":0.3},
+                              {"create_location":"wk_f400","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                              {"copy_location":"wk_prev","to":"wk_f400_a"},
+                              {"copy_location":"wk_next","to":"wk_f400_n"},
+                              {"set":{"local":"w_f400_ok"},"value":1},
+                              {"set":{"local":"w_f400_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_f400"}},
+                              {"set":{"local":"w_cp"},"value":2}
+                            ]},
+                          {"if":{"local":"w_cp"}, "gte":2, "then": [
+                              {"set":{"local":"w_done"},"value":1}
+                            ], "else": [
+                              {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                              {"copy_location":"wk_next","to":"wk_prev"},
+                              {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                            ]}
+                        ]}
+                    ]},
+                  {"sleep":0.01}
+                ]},
+              {"set":{"local":"w_f_acc"},"value":{"local":"w_acc"}},
+              {"set":{"local":"w_f_end"},"value":{"local":"w_done"}},
+              {"set":{"local":"w_acc"},"value":0},
+              {"set":{"local":"w_i"},"value":{"local":"w_k"}},
+              {"set":{"local":"w_cp"},"value":0},
+              {"set":{"local":"w_done"},"value":0},
+              {"set":{"local":"w_guard"},"value":0},
+              {"set":{"local":"w_b60_ok"},"value":0},
+              {"set":{"local":"w_b60_st"},"value":-1},
+              {"set":{"local":"w_b60_ex"},"value":-1},
+              {"set":{"local":"w_b400_ok"},"value":0},
+              {"set":{"local":"w_b400_st"},"value":-1},
+              {"set":{"local":"w_b400_ex"},"value":-1},
+              {"set":{"param":"w_node"},"value":{"struct":{"param":"way_nodes"},"index":{"local":"w_i"}}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+              {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+                  {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+                  {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},-1]}},
+                  {"if":{"local":"w_j"}, "lt":0, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_j"}, "gte":{"struct":{"param":"way_nodes"},"path":"length"}, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":0, "then": [
+                      {"set":{"param":"w_node"},"value":{"struct":{"param":"way_nodes"},"index":{"local":"w_j"}}},
+                      {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                      {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                      {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                          {"copy_location":"wk_next","to":"wk_prev"},
+                          {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                        ], "else": [
+                          {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                          {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":60}]}, "eq":1, "then": [
+                              {"set":{"local":"w_rem"},"value":{"subtract":[60,{"local":"w_acc"}]}},
+                              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                              {"sleep":0.2},
+                              {"point_object":"wk_walker","to":"wk_next"},
+                              {"sleep":0.1},
+                              {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                              {"sleep":0.3},
+                              {"create_location":"wk_b60","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                              {"copy_location":"wk_prev","to":"wk_b60_a"},
+                              {"copy_location":"wk_next","to":"wk_b60_n"},
+                              {"set":{"local":"w_b60_ok"},"value":1},
+                              {"set":{"local":"w_b60_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_b60"}},
+                              {"set":{"local":"w_cp"},"value":1}
+                            ]},
+                          {"if":{"and":[{"require":{"local":"w_cp"},"eq":1},{"require":{"local":"w_sum"},"gte":400}]}, "eq":1, "then": [
+                              {"set":{"local":"w_rem"},"value":{"subtract":[400,{"local":"w_acc"}]}},
+                              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                              {"sleep":0.2},
+                              {"point_object":"wk_walker","to":"wk_next"},
+                              {"sleep":0.1},
+                              {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                              {"sleep":0.3},
+                              {"create_location":"wk_b400","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                              {"copy_location":"wk_prev","to":"wk_b400_a"},
+                              {"copy_location":"wk_next","to":"wk_b400_n"},
+                              {"set":{"local":"w_b400_ok"},"value":1},
+                              {"set":{"local":"w_b400_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_b400"}},
+                              {"set":{"local":"w_cp"},"value":2}
+                            ]},
+                          {"if":{"local":"w_cp"}, "gte":2, "then": [
+                              {"set":{"local":"w_done"},"value":1}
+                            ], "else": [
+                              {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                              {"copy_location":"wk_next","to":"wk_prev"},
+                              {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                            ]}
+                        ]}
+                    ]},
+                  {"sleep":0.01}
+                ]},
+              {"set":{"local":"w_b_acc"},"value":{"local":"w_acc"}},
+              {"set":{"local":"w_b_end"},"value":{"local":"w_done"}},
+              {"if":{"local":"w_f60_ok"}, "eq":1, "then": [
+                  {"set":{"local":"w_f60_ex"},"value":{"location":"wk_f60","var":"distance:m","to":"wk_x60"}},
+                  {"create_object":{"name":"wk_m_f60","title":"Airbus H145 Marker GREEN","location":"wk_f60"}},
+                  {"set_map":{"add":{"point":{"location":"wk_f60","text":"F60"}}}}
+                ]},
+              {"if":{"local":"w_f400_ok"}, "eq":1, "then": [
+                  {"set":{"local":"w_f400_ex"},"value":{"location":"wk_f400","var":"distance:m","to":"wk_x400"}},
+                  {"create_object":{"name":"wk_m_f400","title":"Airbus H145 Marker GREEN","location":"wk_f400"}},
+                  {"set_map":{"add":{"point":{"location":"wk_f400","text":"F400"}}}}
+                ]},
+              {"if":{"local":"w_b60_ok"}, "eq":1, "then": [
+                  {"set":{"local":"w_b60_ex"},"value":{"location":"wk_b60","var":"distance:m","to":"wk_x60"}},
+                  {"create_object":{"name":"wk_m_b60","title":"Airbus H145 Marker GREEN","location":"wk_b60"}},
+                  {"set_map":{"add":{"point":{"location":"wk_b60","text":"B60"}}}}
+                ]},
+              {"if":{"local":"w_b400_ok"}, "eq":1, "then": [
+                  {"set":{"local":"w_b400_ex"},"value":{"location":"wk_b400","var":"distance:m","to":"wk_x400"}},
+                  {"create_object":{"name":"wk_m_b400","title":"Airbus H145 Marker GREEN","location":"wk_b400"}},
+                  {"set_map":{"add":{"point":{"location":"wk_b400","text":"B400"}}}}
+                ]},
+              {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+                  {"destroy_object":"wk_walker"}
+                ]},
+              {"set":{"local":"t5_a"},"value":{"text":"Junction found: {0} (closest node is node {1} of {2}, on {3} way(s)); node is {4} m from the helicopter","params":[{"local":"t5_junction"},{"local":"w_k"},{"local":"t5_nodes"},{"local":"t5_parents"},{"local":"t5_node_dist"}]}},
+              {"set":{"local":"t5_b"},"value":{"text":"FWD: 60 m -> straight {0} m from the node, extrapolation misses by {1} m | 400 m -> straight {2} m, misses by {3} m | walked {4} m, end code {5}","params":[{"local":"w_f60_st"},{"local":"w_f60_ex"},{"local":"w_f400_st"},{"local":"w_f400_ex"},{"local":"w_f_acc"},{"local":"w_f_end"}]}},
+              {"set":{"local":"t5_c"},"value":{"text":"BACK: 60 m -> straight {0} m from the node, extrapolation misses by {1} m | 400 m -> straight {2} m, misses by {3} m | walked {4} m, end code {5}","params":[{"local":"w_b60_st"},{"local":"w_b60_ex"},{"local":"w_b400_st"},{"local":"w_b400_ex"},{"local":"w_b_acc"},{"local":"w_b_end"}]}},
+              {"set":{"local":"t5_d"},"value":"Legend: -1 = checkpoint not reached; end code 1 = both checkpoints reached, 2 = the way ended first (a second way would be needed); markers F60 F400 B60 B400 are on the road, X60 X400 are the current extrapolation"},
+              {"set":{"local":"t5_status"},"value":"DONE: markers placed, see the lines below (log: table R&E_osm_road_walk_arms)"},
+              {"open_table":{"static":"Osm_Walk_Arms"}},
+              {"clear_table":{"static":"Osm_Walk_Arms"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"heli_lat_lon"},"value":{"create_array":[{"location":"heli","var":"lat"},{"location":"heli","var":"lon"}]}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"node_lat_lon"},"value":{"create_array":[{"struct":{"param":"closest"},"path":"lat"},{"struct":{"param":"closest"},"path":"lon"}]}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"line_a"},"value":{"local":"t5_a"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"line_fwd"},"value":{"local":"t5_b"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"line_back"},"value":{"local":"t5_c"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"f60_straight_m"},"value":{"local":"w_f60_st"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"f60_extrapolation_miss_m"},"value":{"local":"w_f60_ex"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"f400_straight_m"},"value":{"local":"w_f400_st"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"f400_extrapolation_miss_m"},"value":{"local":"w_f400_ex"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"b60_straight_m"},"value":{"local":"w_b60_st"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"b60_extrapolation_miss_m"},"value":{"local":"w_b60_ex"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"b400_straight_m"},"value":{"local":"w_b400_st"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"b400_extrapolation_miss_m"},"value":{"local":"w_b400_ex"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"fwd_walked_m"},"value":{"local":"w_f_acc"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"fwd_end_code"},"value":{"local":"w_f_end"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"back_walked_m"},"value":{"local":"w_b_acc"}},
+              {"set":{"table":{"static":"Osm_Walk_Arms"},"key":"back_end_code"},"value":{"local":"w_b_end"}},
+              {"save_table":{"static":"Osm_Walk_Arms"}}
+            ]}
+        ]}
+    ],
+    "walk test cars": [
+      {"#comment":"Button 6, run after 5: four recognisable vehicles. A SERVICE VAN: created at F60 (F400 if reached) and pointed at the next node (point_object only). B GARBAGE TRUCK: created at B60 (B400), pointed at the node ahead and then driven to it (a drive from a bend may not straighten the vehicle, the pointing before the drive is needed). C FIAT: created at the junction node, pointed at F60, moved 2.5 m to the right and POINTED AGAIN after the move. D FIAT: same as C but 6 m to the right and NOT pointed again after the move (the old test: a move_object with heading 0 resets the heading, the baseline always points again after it). If the explanation is right, A, B and C follow the road and D is turned by a different angle."},
+      {"set":{"local":"t6_status"},"value":"RUNNING"},
+      {"set":{"local":"t6_info"},"value":""},
+      {"if":{"local":"w_k"}, "eq":null, "then": [
+          {"set":{"local":"t6_status"},"value":"FAILED: run button 5 first"}
+        ]},
+      {"if":{"local":"w_f400_ok"}, "eq":1, "then": [
+          {"create_object":{"name":"wk_car_a","title":"Airbus H145 Service Van","location":"wk_f400"}},
+          {"sleep":0.5},
+          {"point_object":"wk_car_a","to":"wk_f400_a"},
+          {"set_map":{"add":{"point":{"location":"wk_f400","text":"VAN"}}}}
+        ], "else": [
+          {"if":{"local":"w_f60_ok"}, "eq":1, "then": [
+              {"create_object":{"name":"wk_car_a","title":"Airbus H145 Service Van","location":"wk_f60"}},
+              {"sleep":0.5},
+              {"point_object":"wk_car_a","to":"wk_f60_a"},
+              {"set_map":{"add":{"point":{"location":"wk_f60","text":"VAN"}}}}
+            ]}
+        ]},
+      {"if":{"local":"w_b400_ok"}, "eq":1, "then": [
+          {"create_object":{"name":"wk_car_b","title":"Airbus H145 Garbage truck","location":"wk_b400"}},
+          {"sleep":0.5},
+          {"point_object":"wk_car_b","to":"wk_b400_a"},
+          {"sleep":0.3},
+          {"set_map":{"add":{"point":{"location":"wk_b400","text":"TRUCK"}}}},
+          {"set":{"local":"t6_info"},"value":"The garbage truck is driving to the node ahead..."},
+          {"create_thread":{"commands":[{"drive_object":{"name":"wk_car_b","to":["wk_b400_a"],"VAR1":0,"speed":20}},{"set":{"local":"t6_info"},"value":"The garbage truck arrived at the node ahead (pointed first, then driven)."}]}}
+        ], "else": [
+          {"if":{"local":"w_b60_ok"}, "eq":1, "then": [
+              {"create_object":{"name":"wk_car_b","title":"Airbus H145 Garbage truck","location":"wk_b60"}},
+              {"sleep":0.5},
+              {"point_object":"wk_car_b","to":"wk_b60_a"},
+              {"sleep":0.3},
+              {"set_map":{"add":{"point":{"location":"wk_b60","text":"TRUCK"}}}},
+              {"set":{"local":"t6_info"},"value":"The garbage truck is driving to the node ahead..."},
+              {"create_thread":{"commands":[{"drive_object":{"name":"wk_car_b","to":["wk_b60_a"],"VAR1":0,"speed":20}},{"set":{"local":"t6_info"},"value":"The garbage truck arrived at the node ahead (pointed first, then driven)."}]}}
+            ]}
+        ]},
+      {"if":{"local":"w_f60_ok"}, "eq":1, "then": [
+          {"create_object":{"name":"wk_car_c","title":"Airbus H145 Fiat","location":"wk_node"}},
+          {"sleep":0.5},
+          {"point_object":"wk_car_c","to":"wk_f60"},
+          {"move_object":"wk_car_c","to":{"bearing2":90,"dist":2.5,"heading":0,"object":"wk_car_c"}},
+          {"sleep":0.3},
+          {"point_object":"wk_car_c","to":"wk_f60"},
+          {"set_map":{"add":{"point":{"location":"wk_node","text":"FIAT-C"}}}},
+          {"create_object":{"name":"wk_car_d","title":"Airbus H145 Fiat","location":"wk_f60"}},
+          {"sleep":0.5},
+          {"point_object":"wk_car_d","to":"wk_f60_a"},
+          {"move_object":"wk_car_d","to":{"bearing2":90,"dist":6,"heading":0,"object":"wk_car_d"}},
+          {"set_map":{"add":{"point":{"location":"wk_f60","text":"FIAT-D"}}}}
+        ]},
+      {"if":{"local":"t6_status"}, "eq":"RUNNING", "then": [
+          {"set":{"local":"t6_status"},"value":"DONE: VAN (pointed), TRUCK (driven), FIAT-C (pointed again after the move), FIAT-D (not pointed again). Which ones follow the road?"}
+        ]}
+    ],
+    "walk test route tail": [
+      {"#comment":"Button 7: stop slots from the route array. Route from a point 600 m away to the helicopter position (the accident), the end snaps to the nearest road. The route is walked backward from its last entry: slots at 15, 30 and 45 m along the route (fire, ambulance, police queue), aligned with the route."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t7_status"},"value":"RUNNING"},
+      {"set":{"local":"t7_a"},"value":""},
+      {"set":{"local":"t7_b"},"value":""},
+      {"call_macro":"walk cleanup"},
+      {"create_location":"wk_route_far","zones":[{"zone":{"location":{"bearing":0,"dist":600,"object":"heli"}}}]},
+      {"create_route":{"name":"wk_route","query":{"to":"heli","from":"wk_route_far","type":"car"}}},
+      {"set":{"local":"t7_duration"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+      {"if":{"local":"t7_duration"}, "gt":0, "then": [
+          {"draw_route":"wk_route","stroke":{"width":3,"color":"#FCBA03"}},
+          {"set":{"param":"rt"},"value":{"route":"wk_route"}},
+          {"set":{"local":"t7_n"},"value":{"struct":{"param":"rt"},"path":"length"}},
+          {"set":{"param":"lastentry"},"value":{"struct":{"param":"rt"},"index":{"subtract":[{"struct":{"param":"rt"},"path":"length"},1]}}},
+          {"create_location":"wk_route_end","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"lastentry"},"index":0},{"struct":{"param":"lastentry"},"index":1}]}}}}]},
+          {"set":{"local":"t7_snap"},"value":{"location":"wk_route_end","var":"distance:m","to":"heli"}},
+          {"set_map":{"add":{"point":{"location":"wk_route_end","text":"RTEND"}}}},
+          {"create_object":{"name":"wk_walker","title":"Airbus H145 Marker GREEN","location":"wk_route_end"}},
+          {"sleep":0.5},
+          {"set":{"local":"w_acc"},"value":0},
+          {"set":{"local":"w_i"},"value":{"subtract":[{"struct":{"param":"rt"},"path":"length"},1]}},
+          {"set":{"local":"w_cp"},"value":0},
+          {"set":{"local":"w_done"},"value":0},
+          {"set":{"local":"w_guard"},"value":0},
+          {"set":{"local":"w_s15_ok"},"value":0},
+          {"set":{"local":"w_s15_st"},"value":-1},
+          {"set":{"local":"w_s15_ex"},"value":-1},
+          {"set":{"local":"w_s30_ok"},"value":0},
+          {"set":{"local":"w_s30_st"},"value":-1},
+          {"set":{"local":"w_s30_ex"},"value":-1},
+          {"set":{"local":"w_s45_ok"},"value":0},
+          {"set":{"local":"w_s45_st"},"value":-1},
+          {"set":{"local":"w_s45_ex"},"value":-1},
+          {"set":{"param":"w_node"},"value":{"struct":{"param":"rt"},"index":{"local":"w_i"}}},
+          {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"index":0},{"struct":{"param":"w_node"},"index":1}]}}}}]},
+          {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+              {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+              {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},-1]}},
+              {"if":{"local":"w_j"}, "lt":0, "then": [
+                  {"set":{"local":"w_done"},"value":2}
+                ]},
+              {"if":{"local":"w_j"}, "gte":{"struct":{"param":"rt"},"path":"length"}, "then": [
+                  {"set":{"local":"w_done"},"value":2}
+                ]},
+              {"if":{"local":"w_done"}, "eq":0, "then": [
+                  {"set":{"param":"w_node"},"value":{"struct":{"param":"rt"},"index":{"local":"w_j"}}},
+                  {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"index":0},{"struct":{"param":"w_node"},"index":1}]}}}}]},
+                  {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                  {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                      {"copy_location":"wk_next","to":"wk_prev"},
+                      {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                    ], "else": [
+                      {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                      {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":15}]}, "eq":1, "then": [
+                          {"set":{"local":"w_rem"},"value":{"subtract":[15,{"local":"w_acc"}]}},
+                          {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                          {"sleep":0.2},
+                          {"point_object":"wk_walker","to":"wk_next"},
+                          {"sleep":0.1},
+                          {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                          {"sleep":0.3},
+                          {"create_location":"wk_s15","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                          {"copy_location":"wk_prev","to":"wk_s15_a"},
+                          {"copy_location":"wk_next","to":"wk_s15_n"},
+                          {"set":{"local":"w_s15_ok"},"value":1},
+                          {"set":{"local":"w_s15_st"},"value":{"location":"wk_route_end","var":"distance:m","to":"wk_s15"}},
+                          {"set":{"local":"w_cp"},"value":1}
+                        ]},
+                      {"if":{"and":[{"require":{"local":"w_cp"},"eq":1},{"require":{"local":"w_sum"},"gte":30}]}, "eq":1, "then": [
+                          {"set":{"local":"w_rem"},"value":{"subtract":[30,{"local":"w_acc"}]}},
+                          {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                          {"sleep":0.2},
+                          {"point_object":"wk_walker","to":"wk_next"},
+                          {"sleep":0.1},
+                          {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                          {"sleep":0.3},
+                          {"create_location":"wk_s30","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                          {"copy_location":"wk_prev","to":"wk_s30_a"},
+                          {"copy_location":"wk_next","to":"wk_s30_n"},
+                          {"set":{"local":"w_s30_ok"},"value":1},
+                          {"set":{"local":"w_s30_st"},"value":{"location":"wk_route_end","var":"distance:m","to":"wk_s30"}},
+                          {"set":{"local":"w_cp"},"value":2}
+                        ]},
+                      {"if":{"and":[{"require":{"local":"w_cp"},"eq":2},{"require":{"local":"w_sum"},"gte":45}]}, "eq":1, "then": [
+                          {"set":{"local":"w_rem"},"value":{"subtract":[45,{"local":"w_acc"}]}},
+                          {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                          {"sleep":0.2},
+                          {"point_object":"wk_walker","to":"wk_next"},
+                          {"sleep":0.1},
+                          {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                          {"sleep":0.3},
+                          {"create_location":"wk_s45","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                          {"copy_location":"wk_prev","to":"wk_s45_a"},
+                          {"copy_location":"wk_next","to":"wk_s45_n"},
+                          {"set":{"local":"w_s45_ok"},"value":1},
+                          {"set":{"local":"w_s45_st"},"value":{"location":"wk_route_end","var":"distance:m","to":"wk_s45"}},
+                          {"set":{"local":"w_cp"},"value":3}
+                        ]},
+                      {"if":{"local":"w_cp"}, "gte":3, "then": [
+                          {"set":{"local":"w_done"},"value":1}
+                        ], "else": [
+                          {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                          {"copy_location":"wk_next","to":"wk_prev"},
+                          {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                        ]}
+                    ]}
+                ]},
+              {"sleep":0.01}
+            ]},
+          {"set":{"local":"w_s_acc"},"value":{"local":"w_acc"}},
+          {"set":{"local":"w_s_end"},"value":{"local":"w_done"}},
+          {"if":{"local":"w_s15_ok"}, "eq":1, "then": [
+              {"create_object":{"name":"wk_slot15","title":"Airbus H145 Fiat","location":"wk_s15"}},
+              {"sleep":0.5},
+              {"point_object":"wk_slot15","to":"wk_s15_a"},
+              {"set_map":{"add":{"point":{"location":"wk_s15","text":"S15"}}}}
+            ]},
+          {"if":{"local":"w_s30_ok"}, "eq":1, "then": [
+              {"create_object":{"name":"wk_slot30","title":"Airbus H145 Fiat","location":"wk_s30"}},
+              {"sleep":0.5},
+              {"point_object":"wk_slot30","to":"wk_s30_a"},
+              {"set_map":{"add":{"point":{"location":"wk_s30","text":"S30"}}}}
+            ]},
+          {"if":{"local":"w_s45_ok"}, "eq":1, "then": [
+              {"create_object":{"name":"wk_slot45","title":"Airbus H145 Fiat","location":"wk_s45"}},
+              {"sleep":0.5},
+              {"point_object":"wk_slot45","to":"wk_s45_a"},
+              {"set_map":{"add":{"point":{"location":"wk_s45","text":"S45"}}}}
+            ]},
+          {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+              {"destroy_object":"wk_walker"}
+            ]},
+          {"set":{"local":"t7_a"},"value":{"text":"Route: {0} entries, duration {1} s; its last point is {2} m from the accident position (snap to the road)","params":[{"local":"t7_n"},{"local":"t7_duration"},{"local":"t7_snap"}]}},
+          {"set":{"local":"t7_b"},"value":{"text":"Slots: 15 m -> straight {0} m from the route end, 30 m -> {1} m, 45 m -> {2} m; walked {3} m, end code {4} (-1 = not reached; 2 = the route is shorter)","params":[{"local":"w_s15_st"},{"local":"w_s30_st"},{"local":"w_s45_st"},{"local":"w_s_acc"},{"local":"w_s_end"}]}},
+          {"set":{"local":"t7_status"},"value":"DONE: cars S15, S30 and S45 placed on the route and aligned with it (log: table R&E_osm_road_walk_route)"},
+          {"open_table":{"static":"Osm_Walk_Route"}},
+          {"clear_table":{"static":"Osm_Walk_Route"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"heli_lat_lon"},"value":{"create_array":[{"location":"heli","var":"lat"},{"location":"heli","var":"lon"}]}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"route_end_lat_lon"},"value":{"create_array":[{"struct":{"param":"lastentry"},"path":"lat"},{"struct":{"param":"lastentry"},"path":"lon"}]}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"entries"},"value":{"local":"t7_n"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"duration_s"},"value":{"local":"t7_duration"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"snap_m"},"value":{"local":"t7_snap"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"slot15_straight_m"},"value":{"local":"w_s15_st"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"slot30_straight_m"},"value":{"local":"w_s30_st"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"slot45_straight_m"},"value":{"local":"w_s45_st"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"walked_m"},"value":{"local":"w_s_acc"}},
+          {"set":{"table":{"static":"Osm_Walk_Route"},"key":"end_code"},"value":{"local":"w_s_end"}},
+          {"save_table":{"static":"Osm_Walk_Route"}}
+        ], "else": [
+          {"set":{"local":"t7_status"},"value":"FAILED: no route (duration null or 0): this is the router-failure fallback case"}
+        ]}
+    ],
+    "walk test power and straights": [
+      {"#comment":"Button 8, by the advised modes: (A) power-line ways within 3000 m and their longest straight run, (B) pole / tower nodes within 3000 m and whether node tags are exposed, (C) longest straight run of the road way through the closest node within 600 m. Only reads data, creates no object."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t8_status"},"value":"RUNNING"},
+      {"set":{"local":"t8_a"},"value":""},
+      {"set":{"local":"t8_b"},"value":""},
+      {"set":{"local":"t8_c"},"value":""},
+      {"set":{"local":"t8_d"},"value":""},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];way({{bbox}})[power~\"^(line|minor_line)$\"];(._;>;);out;","SIZE":3000},"result":"pl_data"},
+      {"if":{"param":"pl_data"}, "eq":null, "then": [
+          {"set":{"local":"t8_a"},"value":"A POWER WAYS: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_all_ways":{"param":"pl_data"},"result":"pl_ways"},
+          {"set":{"local":"t8_pl_count"},"value":{"struct":{"param":"pl_ways"},"path":"length"}},
+          {"if":{"local":"t8_pl_count"}, "eq":0, "then": [
+              {"set":{"local":"t8_a"},"value":"A POWER WAYS: none within 3000 m of the helicopter"}
+            ], "else": [
+              {"set":{"param":"plway"},"value":{"struct":{"param":"pl_ways"},"index":0}},
+              {"osm_get_nodes":{"struct":{"param":"plway"},"path":"id"},"data":{"param":"pl_data"},"result":"pl_nodes"},
+              {"set":{"local":"t8_pl_nodes"},"value":{"struct":{"param":"pl_nodes"},"path":"length"}},
+              {"set":{"local":"t8_pl_power"},"value":{"struct":{"param":"plway"},"path":"tags.power"}},
+              {"set":{"local":"sra_best"},"value":0},
+              {"set":{"local":"sra_cur"},"value":0},
+              {"set":{"local":"sra_s"},"value":0},
+              {"set":{"local":"sra_bs"},"value":0},
+              {"set":{"local":"sra_be"},"value":0},
+              {"set":{"local":"sra_i"},"value":1},
+              {"set":{"local":"sra_len"},"value":{"struct":{"param":"pl_nodes"},"path":"length"}},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"pl_nodes"},"index":0}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"for_each":{"param":"pl_nodes"}, "do": [
+                  {"if":{"local":"sra_i"}, "lt":{"local":"sra_len"}, "then": [
+                      {"set":{"param":"rn"},"value":{"struct":{"param":"pl_nodes"},"index":{"local":"sra_i"}}},
+                      {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                      {"set":{"local":"r_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                      {"if":{"local":"r_seg"}, "gte":1, "then": [
+                          {"set":{"local":"r_b"},"value":{"bearing":{"from":"wk_prev","to":"wk_next"}}},
+                          {"if":{"local":"sra_cur"}, "eq":0, "then": [
+                              {"set":{"local":"sra_rb"},"value":{"local":"r_b"}},
+                              {"set":{"local":"sra_cur"},"value":{"local":"r_seg"}},
+                              {"set":{"local":"sra_s"},"value":{"subtract":[{"local":"sra_i"},1]}}
+                            ], "else": [
+                              {"set":{"local":"r_d"},"value":{"add360":[{"local":"r_b"},{"subtract":[360,{"local":"sra_rb"}]}]}},
+                              {"if":{"or":[{"require":{"local":"r_d"},"lte":4},{"require":{"local":"r_d"},"gte":356}]}, "eq":1, "then": [
+                                  {"set":{"local":"sra_cur"},"value":{"add":[{"local":"sra_cur"},{"local":"r_seg"}]}}
+                                ], "else": [
+                                  {"set":{"local":"sra_rb"},"value":{"local":"r_b"}},
+                                  {"set":{"local":"sra_cur"},"value":{"local":"r_seg"}},
+                                  {"set":{"local":"sra_s"},"value":{"subtract":[{"local":"sra_i"},1]}}
+                                ]}
+                            ]},
+                          {"if":{"local":"sra_cur"}, "gt":{"local":"sra_best"}, "then": [
+                              {"set":{"local":"sra_best"},"value":{"local":"sra_cur"}},
+                              {"set":{"local":"sra_bs"},"value":{"local":"sra_s"}},
+                              {"set":{"local":"sra_be"},"value":{"local":"sra_i"}}
+                            ]}
+                        ]},
+                      {"copy_location":"wk_next","to":"wk_prev"}
+                    ]},
+                  {"set":{"local":"sra_i"},"value":{"add":[{"local":"sra_i"},1]}},
+                  {"sleep":0.005}
+                ]},
+              {"create_location":"wk_pl_a","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"pl_nodes"},"index":{"local":"sra_bs"}}},
+              {"create_location":"wk_pl_s","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"pl_nodes"},"index":{"local":"sra_be"}}},
+              {"create_location":"wk_pl_e","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"local":"t8_pl_dist"},"value":{"location":"wk_pl_s","var":"distance:m","to":"heli"}},
+              {"set_map":{"add":{"point":{"location":"wk_pl_s","text":"PL-S"}}}},
+              {"set_map":{"add":{"point":{"location":"wk_pl_e","text":"PL-E"}}}},
+              {"set":{"local":"t8_a"},"value":{"text":"A POWER WAYS: {0} way(s); first way tag power={1}, {2} nodes; longest straight run (within 4 deg) {3} m, starts {4} m from the helicopter (map PL-S to PL-E)","params":[{"local":"t8_pl_count"},{"local":"t8_pl_power"},{"local":"t8_pl_nodes"},{"local":"sra_best"},{"local":"t8_pl_dist"}]}}
+            ]}
+        ]},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];node({{bbox}})[power~\"^(pole|tower)$\"];out;","SIZE":3000},"result":"pn_data"},
+      {"if":{"param":"pn_data"}, "eq":null, "then": [
+          {"set":{"local":"t8_b"},"value":"B POLE NODES: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_closest_nodes":"heli","data":{"param":"pn_data"},"result":"pn_nodes"},
+          {"set":{"local":"t8_pn_count"},"value":{"struct":{"param":"pn_nodes"},"path":"length"}},
+          {"if":{"local":"t8_pn_count"}, "eq":0, "then": [
+              {"set":{"local":"t8_b"},"value":"B POLE NODES: none within 3000 m of the helicopter"}
+            ], "else": [
+              {"set":{"param":"pn"},"value":{"struct":{"param":"pn_nodes"},"index":0}},
+              {"create_location":"wk_pole1","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"pn"},"path":"lat"},{"struct":{"param":"pn"},"path":"lon"}]}}}}]},
+              {"set":{"local":"t8_pn_dist"},"value":{"location":"wk_pole1","var":"distance:m","to":"heli"}},
+              {"set":{"local":"t8_pn_type"},"value":{"typeof":{"struct":{"param":"pn"},"path":"tags"}}},
+              {"set":{"local":"t8_pn_power"},"value":{"struct":{"param":"pn"},"path":"tags.power"}},
+              {"set_map":{"add":{"point":{"location":"wk_pole1","icon":"mkr","id":"wk_pole1"}}}},
+              {"set_map":{"add":{"point":{"location":"wk_pole1","text":"POLE"}}}},
+              {"set":{"local":"t8_pn_lat"},"value":{"struct":{"param":"pn"},"path":"lat"}},
+              {"set":{"local":"t8_pn_lon"},"value":{"struct":{"param":"pn"},"path":"lon"}},
+              {"set":{"local":"t8_b"},"value":{"text":"B POLE NODES: {0} node(s) returned, closest {1} m away at lat {4} lon {5}; node tags type {2}, tags.power = {3} (null = node tags are not exposed). Log: tables R&E_osm_road_walk_poles (first 40 poles: lat, lon, distance) and R&E_osm_road_walk_power","params":[{"local":"t8_pn_count"},{"local":"t8_pn_dist"},{"local":"t8_pn_type"},{"local":"t8_pn_power"},{"local":"t8_pn_lat"},{"local":"t8_pn_lon"}]}},
+              {"open_table":{"static":"Osm_Walk_Poles"}},
+              {"clear_table":{"static":"Osm_Walk_Poles"}},
+              {"set":{"local":"t8_i"},"value":0},
+              {"for_each":{"param":"pn_nodes"}, "do": [
+                  {"if":{"local":"t8_i"}, "lt":40, "then": [
+                      {"set":{"param":"pnn"},"value":{"param":"$item"}},
+                      {"create_location":"wk_tmp","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"pnn"},"path":"lat"},{"struct":{"param":"pnn"},"path":"lon"}]}}}}]},
+                      {"set":{"table":{"static":"Osm_Walk_Poles"},"key":{"local":"t8_i"}},"value":{"create_array":[{"struct":{"param":"pnn"},"path":"lat"},{"struct":{"param":"pnn"},"path":"lon"},{"location":"wk_tmp","var":"distance:m","to":"heli"}]}}
+                    ]},
+                  {"set":{"local":"t8_i"},"value":{"add":[{"local":"t8_i"},1]}},
+                  {"sleep":0.005}
+                ]},
+              {"save_table":{"static":"Osm_Walk_Poles"}}
+            ]}
+        ]},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];way({{bbox}})[highway];(._;>;);out;","SIZE":600},"result":"rd_data"},
+      {"if":{"param":"rd_data"}, "eq":null, "then": [
+          {"set":{"local":"t8_c"},"value":"C ROAD STRAIGHT RUN: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_closest_nodes":"heli","data":{"param":"rd_data"},"result":"rd_closest"},
+          {"set":{"param":"rdc"},"value":{"struct":{"param":"rd_closest"},"index":0}},
+          {"osm_get_parent_ways":{"struct":{"param":"rdc"},"path":"id"},"data":{"param":"rd_data"},"result":"rd_parents"},
+          {"set":{"param":"rdway"},"value":{"struct":{"param":"rd_parents"},"index":0}},
+          {"osm_get_nodes":{"struct":{"param":"rdway"},"path":"id"},"data":{"param":"rd_data"},"result":"rd_nodes"},
+          {"set":{"local":"t8_rd_nodes"},"value":{"struct":{"param":"rd_nodes"},"path":"length"}},
+          {"set":{"local":"t8_rd_hw"},"value":{"struct":{"param":"rdway"},"path":"tags.highway"}},
+          {"set":{"local":"srb_best"},"value":0},
+          {"set":{"local":"srb_cur"},"value":0},
+          {"set":{"local":"srb_s"},"value":0},
+          {"set":{"local":"srb_bs"},"value":0},
+          {"set":{"local":"srb_be"},"value":0},
+          {"set":{"local":"srb_i"},"value":1},
+          {"set":{"local":"srb_len"},"value":{"struct":{"param":"rd_nodes"},"path":"length"}},
+          {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":0}},
+          {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+          {"for_each":{"param":"rd_nodes"}, "do": [
+              {"if":{"local":"srb_i"}, "lt":{"local":"srb_len"}, "then": [
+                  {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"srb_i"}}},
+                  {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                  {"set":{"local":"r_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                  {"if":{"local":"r_seg"}, "gte":1, "then": [
+                      {"set":{"local":"r_b"},"value":{"bearing":{"from":"wk_prev","to":"wk_next"}}},
+                      {"if":{"local":"srb_cur"}, "eq":0, "then": [
+                          {"set":{"local":"srb_rb"},"value":{"local":"r_b"}},
+                          {"set":{"local":"srb_cur"},"value":{"local":"r_seg"}},
+                          {"set":{"local":"srb_s"},"value":{"subtract":[{"local":"srb_i"},1]}}
+                        ], "else": [
+                          {"set":{"local":"r_d"},"value":{"add360":[{"local":"r_b"},{"subtract":[360,{"local":"srb_rb"}]}]}},
+                          {"if":{"or":[{"require":{"local":"r_d"},"lte":4},{"require":{"local":"r_d"},"gte":356}]}, "eq":1, "then": [
+                              {"set":{"local":"srb_cur"},"value":{"add":[{"local":"srb_cur"},{"local":"r_seg"}]}}
+                            ], "else": [
+                              {"set":{"local":"srb_rb"},"value":{"local":"r_b"}},
+                              {"set":{"local":"srb_cur"},"value":{"local":"r_seg"}},
+                              {"set":{"local":"srb_s"},"value":{"subtract":[{"local":"srb_i"},1]}}
+                            ]}
+                        ]},
+                      {"if":{"local":"srb_cur"}, "gt":{"local":"srb_best"}, "then": [
+                          {"set":{"local":"srb_best"},"value":{"local":"srb_cur"}},
+                          {"set":{"local":"srb_bs"},"value":{"local":"srb_s"}},
+                          {"set":{"local":"srb_be"},"value":{"local":"srb_i"}}
+                        ]}
+                    ]},
+                  {"copy_location":"wk_next","to":"wk_prev"}
+                ]},
+              {"set":{"local":"srb_i"},"value":{"add":[{"local":"srb_i"},1]}},
+              {"sleep":0.005}
+            ]},
+          {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"srb_bs"}}},
+          {"create_location":"wk_rd_s","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+          {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"srb_be"}}},
+          {"create_location":"wk_rd_e","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+          {"set":{"local":"t8_rd_dist"},"value":{"location":"wk_rd_s","var":"distance:m","to":"heli"}},
+          {"set_map":{"add":{"point":{"location":"wk_rd_s","text":"RD-S"}}}},
+          {"set_map":{"add":{"point":{"location":"wk_rd_e","text":"RD-E"}}}},
+          {"set":{"local":"t8_c"},"value":{"text":"C ROAD STRAIGHT RUN: closest way is highway={0}, {1} nodes; longest straight run (within 4 deg) {2} m, starts {3} m from the helicopter (map RD-S to RD-E)","params":[{"local":"t8_rd_hw"},{"local":"t8_rd_nodes"},{"local":"srb_best"},{"local":"t8_rd_dist"}]}}
+        ]},
+      {"set":{"local":"t8_d"},"value":"A straight run of 100 m or more is the criterion for the 30West powerline (6 or 7 poles in line); poles are not placed at random."},
+      {"set":{"local":"t8_status"},"value":"DONE: see the lines below"},
+      {"open_table":{"static":"Osm_Walk_Power"}},
+      {"clear_table":{"static":"Osm_Walk_Power"}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"heli_lat_lon"},"value":{"create_array":[{"location":"heli","var":"lat"},{"location":"heli","var":"lon"}]}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"line_a"},"value":{"local":"t8_a"}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"line_b"},"value":{"local":"t8_b"}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"line_c"},"value":{"local":"t8_c"}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"road_straight_run_m"},"value":{"local":"srb_best"}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"road_straight_run_start_index"},"value":{"local":"srb_bs"}},
+      {"set":{"table":{"static":"Osm_Walk_Power"},"key":"road_straight_run_end_index"},"value":{"local":"srb_be"}},
+      {"save_table":{"static":"Osm_Walk_Power"}}
+    ],
+    "walk test hop": [
+      {"#comment":"Button 12: button 5 with hops to the next way. End code 1 = all checkpoints reached, 3 = limit of 8 hops, 4 = no other way at the end node (dead end), 5 = the end node was not found in the next way."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t12_status"},"value":"RUNNING"},
+      {"set":{"local":"t12_a"},"value":""},
+      {"set":{"local":"t12_b"},"value":""},
+      {"set":{"local":"t12_c"},"value":""},
+      {"set":{"local":"t12_d"},"value":""},
+      {"call_macro":"walk cleanup"},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];way({{bbox}})[highway];(._;>;);out;","SIZE":600},"result":"my_data"},
+      {"if":{"param":"my_data"}, "eq":null, "then": [
+          {"set":{"local":"t12_status"},"value":"FAILED: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_closest_nodes":"heli","data":{"param":"my_data"},"result":"my_closest_nodes"},
+          {"set":{"local":"t12_cn"},"value":{"struct":{"param":"my_closest_nodes"},"path":"length"}},
+          {"set":{"param":"closest"},"value":null},
+          {"set":{"local":"t12_junction"},"value":"no"},
+          {"set":{"local":"w_i"},"value":0},
+          {"for_each":{"param":"my_closest_nodes"}, "do": [
+              {"if":{"local":"w_i"}, "gte":40, "then": [
+                  {"break":1}
+                ]},
+              {"set":{"param":"cand"},"value":{"param":"$item"}},
+              {"osm_get_parent_ways":{"struct":{"param":"cand"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+              {"set":{"local":"t12_arm"},"value":0},
+              {"for_each":{"param":"parents"}, "do": [
+                  {"if":{"struct":{"param":"$item"},"path":"tags.junction"}, "ne":"roundabout", "then": [
+                      {"set":{"local":"t12_arm"},"value":1}
+                    ]}
+                ]},
+              {"if":{"and":[{"require":{"struct":{"param":"parents"},"path":"length"},"gt":1},{"require":{"local":"t12_arm"},"eq":1}]}, "eq":1, "then": [
+                  {"set":{"param":"closest"},"value":{"param":"cand"}},
+                  {"set":{"local":"t12_junction"},"value":"yes"},
+                  {"break":1}
+                ]},
+              {"set":{"local":"w_i"},"value":{"add":[{"local":"w_i"},1]}},
+              {"sleep":0.0025}
+            ]},
+          {"if":{"param":"closest"}, "eq":null, "then": [
+              {"set":{"param":"closest"},"value":{"struct":{"param":"my_closest_nodes"},"index":0}}
+            ]},
+          {"osm_get_parent_ways":{"struct":{"param":"closest"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+          {"set":{"local":"t12_parents"},"value":{"struct":{"param":"parents"},"path":"length"}},
+          {"set":{"param":"way"},"value":null},
+          {"for_each":{"param":"parents"}, "do": [
+              {"set":{"param":"pw"},"value":{"param":"$item"}},
+              {"if":{"param":"way"}, "eq":null, "then": [
+                  {"if":{"struct":{"param":"pw"},"path":"tags.junction"}, "ne":"roundabout", "then": [
+                      {"set":{"param":"way"},"value":{"param":"pw"}}
+                    ]}
+                ]}
+            ]},
+          {"set":{"local":"t12_ring"},"value":"no"},
+          {"if":{"param":"way"}, "eq":null, "then": [
+              {"set":{"param":"way"},"value":{"struct":{"param":"parents"},"index":0}},
+              {"set":{"local":"t12_ring"},"value":"yes"}
+            ]},
+          {"set":{"local":"t12_hw"},"value":{"struct":{"param":"way"},"path":"tags.highway"}},
+          {"set":{"local":"t12_pl"},"value":""},
+          {"for_each":{"param":"parents"}, "do": [
+              {"set":{"param":"pw"},"value":{"param":"$item"}},
+              {"osm_get_nodes":{"struct":{"param":"pw"},"path":"id"},"data":{"param":"my_data"},"result":"pwn"},
+              {"set":{"local":"t12_pl"},"value":{"text":"{0} [way {1} highway={2} junction={3} {4} nodes]","params":[{"local":"t12_pl"},{"struct":{"param":"pw"},"path":"id"},{"struct":{"param":"pw"},"path":"tags.highway"},{"struct":{"param":"pw"},"path":"tags.junction"},{"struct":{"param":"pwn"},"path":"length"}]}}
+            ]},
+          {"osm_get_nodes":{"struct":{"param":"way"},"path":"id"},"data":{"param":"my_data"},"result":"way_nodes"},
+          {"set":{"local":"t12_nodes"},"value":{"struct":{"param":"way_nodes"},"path":"length"}},
+          {"set":{"local":"w_k"},"value":-1},
+          {"set":{"local":"w_i"},"value":0},
+          {"for_each":{"param":"way_nodes"}, "do": [
+              {"if":{"struct":{"param":"$item"},"path":"id"}, "eq":{"struct":{"param":"closest"},"path":"id"}, "then": [
+                  {"set":{"local":"w_k"},"value":{"local":"w_i"}}
+                ]},
+              {"set":{"local":"w_i"},"value":{"add":[{"local":"w_i"},1]}}
+            ]},
+          {"create_location":"wk_node","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"closest"},"path":"lat"},{"struct":{"param":"closest"},"path":"lon"}]}}}}]},
+          {"set":{"local":"t12_node_dist"},"value":{"location":"wk_node","var":"distance:m","to":"heli"}},
+          {"set_map":{"add":{"point":{"location":"wk_node","text":"NODE"}}}},
+          {"create_object":{"name":"wk_walker","title":"Airbus H145 Marker GREEN","location":"wk_node"}},
+          {"sleep":0.5},
+          {"if":{"local":"w_k"}, "lt":0, "then": [
+              {"set":{"local":"t12_status"},"value":"FAILED: the closest node was not found in the nodes of its first way"}
+            ], "else": [
+              {"set":{"param":"arr"},"value":{"param":"way_nodes"}},
+              {"set":{"local":"w_step"},"value":1},
+              {"set":{"local":"w_wayid"},"value":{"struct":{"param":"way"},"path":"id"}},
+              {"set":{"local":"w_acc"},"value":0},
+              {"set":{"local":"w_i"},"value":{"local":"w_k"}},
+              {"set":{"local":"w_cp"},"value":0},
+              {"set":{"local":"w_done"},"value":0},
+              {"set":{"local":"w_fin"},"value":0},
+              {"set":{"local":"w_hops"},"value":0},
+              {"set":{"local":"w_guard2"},"value":0},
+              {"set":{"local":"w_log"},"value":""},
+              {"set":{"local":"w_f60_ok"},"value":0},
+              {"set":{"local":"w_f60_st"},"value":-1},
+              {"set":{"local":"w_f60_ex"},"value":-1},
+              {"set":{"local":"w_f400_ok"},"value":0},
+              {"set":{"local":"w_f400_st"},"value":-1},
+              {"set":{"local":"w_f400_ex"},"value":-1},
+              {"set":{"param":"w_node"},"value":{"struct":{"param":"arr"},"index":{"local":"w_i"}}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+              {"copy_location":"wk_prev","to":"wk_before"},
+              {"while":{"and":[{"require":{"local":"w_fin"},"eq":0},{"require":{"local":"w_guard2"},"lt":12}]}, "eq":1, "do": [
+                  {"set":{"local":"w_guard2"},"value":{"add":[{"local":"w_guard2"},1]}},
+                  {"set":{"local":"w_guard"},"value":0},
+                  {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+                      {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+                      {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},{"local":"w_step"}]}},
+                      {"if":{"local":"w_j"}, "lt":0, "then": [
+                          {"set":{"local":"w_done"},"value":2}
+                        ]},
+                      {"if":{"local":"w_j"}, "gte":{"struct":{"param":"arr"},"path":"length"}, "then": [
+                          {"set":{"local":"w_done"},"value":2}
+                        ]},
+                      {"if":{"local":"w_done"}, "eq":0, "then": [
+                          {"set":{"param":"w_node"},"value":{"struct":{"param":"arr"},"index":{"local":"w_j"}}},
+                          {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                          {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                          {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                              {"copy_location":"wk_prev","to":"wk_before"},
+                              {"copy_location":"wk_next","to":"wk_prev"},
+                              {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                            ], "else": [
+                              {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                              {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":60}]}, "eq":1, "then": [
+                                  {"set":{"local":"w_rem"},"value":{"subtract":[60,{"local":"w_acc"}]}},
+                                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                                  {"sleep":0.2},
+                                  {"point_object":"wk_walker","to":"wk_next"},
+                                  {"sleep":0.1},
+                                  {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                                  {"sleep":0.3},
+                                  {"create_location":"wk_f60","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                                  {"copy_location":"wk_prev","to":"wk_f60_a"},
+                                  {"copy_location":"wk_next","to":"wk_f60_n"},
+                                  {"set":{"local":"w_f60_ok"},"value":1},
+                                  {"set":{"local":"w_f60_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_f60"}},
+                                  {"set":{"local":"w_cp"},"value":1}
+                                ]},
+                              {"if":{"and":[{"require":{"local":"w_cp"},"eq":1},{"require":{"local":"w_sum"},"gte":400}]}, "eq":1, "then": [
+                                  {"set":{"local":"w_rem"},"value":{"subtract":[400,{"local":"w_acc"}]}},
+                                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                                  {"sleep":0.2},
+                                  {"point_object":"wk_walker","to":"wk_next"},
+                                  {"sleep":0.1},
+                                  {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                                  {"sleep":0.3},
+                                  {"create_location":"wk_f400","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                                  {"copy_location":"wk_prev","to":"wk_f400_a"},
+                                  {"copy_location":"wk_next","to":"wk_f400_n"},
+                                  {"set":{"local":"w_f400_ok"},"value":1},
+                                  {"set":{"local":"w_f400_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_f400"}},
+                                  {"set":{"local":"w_cp"},"value":2}
+                                ]},
+                              {"if":{"local":"w_cp"}, "gte":2, "then": [
+                                  {"set":{"local":"w_done"},"value":1}
+                                ], "else": [
+                                  {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                                  {"copy_location":"wk_prev","to":"wk_before"},
+                                  {"copy_location":"wk_next","to":"wk_prev"},
+                                  {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                                ]}
+                            ]}
+                        ]},
+                      {"sleep":0.01}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":1, "then": [
+                      {"set":{"local":"w_fin"},"value":1}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":2, "then": [
+                      {"if":{"local":"w_hops"}, "gte":8, "then": [
+                          {"set":{"local":"w_fin"},"value":1},
+                          {"set":{"local":"w_done"},"value":3}
+                        ], "else": [
+                          {"set":{"param":"endnode"},"value":{"struct":{"param":"arr"},"index":{"local":"w_i"}}},
+                          {"set":{"local":"w_endid"},"value":{"struct":{"param":"endnode"},"path":"id"}},
+                          {"osm_get_parent_ways":{"struct":{"param":"endnode"},"path":"id"},"data":{"param":"my_data"},"result":"hp"},
+                          {"set":{"param":"nextway"},"value":null},
+                          {"set":{"param":"bestarr"},"value":null},
+                          {"set":{"local":"bd"},"value":-1},
+                          {"set":{"local":"b_step"},"value":1},
+                          {"set":{"local":"b_k"},"value":-1},
+                          {"set":{"local":"w_plist"},"value":""},
+                          {"for_each":{"param":"hp"}, "do": [
+                              {"set":{"param":"hw"},"value":{"param":"$item"}},
+                              {"set":{"local":"w_plist"},"value":{"text":"{0} {1}(junction {2})","params":[{"local":"w_plist"},{"struct":{"param":"hw"},"path":"id"},{"struct":{"param":"hw"},"path":"tags.junction"}]}},
+                              {"if":{"and":[{"require":{"struct":{"param":"hw"},"path":"id"},"ne":{"local":"w_wayid"}},{"require":{"struct":{"param":"hw"},"path":"tags.junction"},"ne":"roundabout"}]}, "eq":1, "then": [
+                                  {"osm_get_nodes":{"struct":{"param":"hw"},"path":"id"},"data":{"param":"my_data"},"result":"cn"},
+                                  {"set":{"local":"c_k"},"value":-1},
+                                  {"set":{"local":"c_ix"},"value":0},
+                                  {"set":{"local":"c_total"},"value":0},
+                                  {"set":{"local":"c_cum"},"value":0},
+                                  {"for_each":{"param":"cn"}, "do": [
+                                      {"set":{"param":"w_node"},"value":{"param":"$item"}},
+                                      {"create_location":"wk_cur","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                                      {"if":{"local":"c_ix"}, "gt":0, "then": [
+                                          {"set":{"local":"c_total"},"value":{"add":[{"local":"c_total"},{"location":"wk_cprev","var":"distance:m","to":"wk_cur"}]}}
+                                        ]},
+                                      {"if":{"struct":{"param":"w_node"},"path":"id"}, "eq":{"local":"w_endid"}, "then": [
+                                          {"set":{"local":"c_k"},"value":{"local":"c_ix"}},
+                                          {"set":{"local":"c_cum"},"value":{"local":"c_total"}}
+                                        ]},
+                                      {"copy_location":"wk_cur","to":"wk_cprev"},
+                                      {"set":{"local":"c_ix"},"value":{"add":[{"local":"c_ix"},1]}}
+                                    ]},
+                                  {"if":{"local":"c_k"}, "gte":0, "then": [
+                                      {"set":{"local":"c_n"},"value":{"struct":{"param":"cn"},"path":"length"}},
+                                      {"set":{"local":"c_k1"},"value":{"add":[{"local":"c_k"},1]}},
+                                      {"set":{"local":"c_ahead"},"value":{"subtract":[{"local":"c_total"},{"local":"c_cum"}]}},
+                                      {"if":{"local":"c_k1"}, "lt":{"local":"c_n"}, "then": [
+                                          {"if":{"local":"c_ahead"}, "gt":{"local":"bd"}, "then": [
+                                              {"set":{"local":"bd"},"value":{"local":"c_ahead"}},
+                                              {"set":{"local":"b_step"},"value":1},
+                                              {"set":{"local":"b_k"},"value":{"local":"c_k"}},
+                                              {"set":{"param":"nextway"},"value":{"param":"hw"}},
+                                              {"set":{"param":"bestarr"},"value":{"param":"cn"}}
+                                            ]}
+                                        ]},
+                                      {"if":{"local":"c_k"}, "gt":0, "then": [
+                                          {"if":{"local":"c_cum"}, "gt":{"local":"bd"}, "then": [
+                                              {"set":{"local":"bd"},"value":{"local":"c_cum"}},
+                                              {"set":{"local":"b_step"},"value":-1},
+                                              {"set":{"local":"b_k"},"value":{"local":"c_k"}},
+                                              {"set":{"param":"nextway"},"value":{"param":"hw"}},
+                                              {"set":{"param":"bestarr"},"value":{"param":"cn"}}
+                                            ]}
+                                        ]}
+                                    ]}
+                                ]}
+                            ]},
+                          {"set":{"local":"w_log"},"value":{"text":"{0} [way {1}: {2} nodes, stopped at index {5} (step {6}), end node {7} is on {3} way(s):{8}; chosen way {4}, direction {9}, road ahead {10} m]","params":[{"local":"w_log"},{"local":"w_wayid"},{"struct":{"param":"arr"},"path":"length"},{"struct":{"param":"hp"},"path":"length"},{"struct":{"param":"nextway"},"path":"id"},{"local":"w_i"},{"local":"w_step"},{"local":"w_endid"},{"local":"w_plist"},{"local":"b_step"},{"local":"bd"}]}},
+                          {"if":{"param":"nextway"}, "eq":null, "then": [
+                              {"set":{"local":"w_fin"},"value":1},
+                              {"set":{"local":"w_done"},"value":4}
+                            ], "else": [
+                              {"set":{"param":"arr"},"value":{"param":"bestarr"}},
+                              {"set":{"local":"w_wayid"},"value":{"struct":{"param":"nextway"},"path":"id"}},
+                              {"set":{"local":"w_i"},"value":{"local":"b_k"}},
+                              {"set":{"local":"w_step"},"value":{"local":"b_step"}},
+                              {"set":{"local":"w_hops"},"value":{"add":[{"local":"w_hops"},1]}},
+                              {"set":{"local":"w_done"},"value":0}
+                            ]}
+                        ]}
+                    ]}
+                ]},
+              {"set":{"local":"w_f_acc"},"value":{"local":"w_acc"}},
+              {"set":{"local":"w_f_end"},"value":{"local":"w_done"}},
+              {"set":{"local":"w_f_hops"},"value":{"local":"w_hops"}},
+              {"set":{"local":"w_f_log"},"value":{"local":"w_log"}},
+              {"copy_location":"wk_prev","to":"wk_fend"},
+              {"set":{"param":"arr"},"value":{"param":"way_nodes"}},
+              {"set":{"local":"w_step"},"value":-1},
+              {"set":{"local":"w_wayid"},"value":{"struct":{"param":"way"},"path":"id"}},
+              {"set":{"local":"w_acc"},"value":0},
+              {"set":{"local":"w_i"},"value":{"local":"w_k"}},
+              {"set":{"local":"w_cp"},"value":0},
+              {"set":{"local":"w_done"},"value":0},
+              {"set":{"local":"w_fin"},"value":0},
+              {"set":{"local":"w_hops"},"value":0},
+              {"set":{"local":"w_guard2"},"value":0},
+              {"set":{"local":"w_log"},"value":""},
+              {"set":{"local":"w_b60_ok"},"value":0},
+              {"set":{"local":"w_b60_st"},"value":-1},
+              {"set":{"local":"w_b60_ex"},"value":-1},
+              {"set":{"local":"w_b400_ok"},"value":0},
+              {"set":{"local":"w_b400_st"},"value":-1},
+              {"set":{"local":"w_b400_ex"},"value":-1},
+              {"set":{"param":"w_node"},"value":{"struct":{"param":"arr"},"index":{"local":"w_i"}}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+              {"copy_location":"wk_prev","to":"wk_before"},
+              {"while":{"and":[{"require":{"local":"w_fin"},"eq":0},{"require":{"local":"w_guard2"},"lt":12}]}, "eq":1, "do": [
+                  {"set":{"local":"w_guard2"},"value":{"add":[{"local":"w_guard2"},1]}},
+                  {"set":{"local":"w_guard"},"value":0},
+                  {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+                      {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+                      {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},{"local":"w_step"}]}},
+                      {"if":{"local":"w_j"}, "lt":0, "then": [
+                          {"set":{"local":"w_done"},"value":2}
+                        ]},
+                      {"if":{"local":"w_j"}, "gte":{"struct":{"param":"arr"},"path":"length"}, "then": [
+                          {"set":{"local":"w_done"},"value":2}
+                        ]},
+                      {"if":{"local":"w_done"}, "eq":0, "then": [
+                          {"set":{"param":"w_node"},"value":{"struct":{"param":"arr"},"index":{"local":"w_j"}}},
+                          {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                          {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                          {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                              {"copy_location":"wk_prev","to":"wk_before"},
+                              {"copy_location":"wk_next","to":"wk_prev"},
+                              {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                            ], "else": [
+                              {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                              {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":60}]}, "eq":1, "then": [
+                                  {"set":{"local":"w_rem"},"value":{"subtract":[60,{"local":"w_acc"}]}},
+                                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                                  {"sleep":0.2},
+                                  {"point_object":"wk_walker","to":"wk_next"},
+                                  {"sleep":0.1},
+                                  {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                                  {"sleep":0.3},
+                                  {"create_location":"wk_b60","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                                  {"copy_location":"wk_prev","to":"wk_b60_a"},
+                                  {"copy_location":"wk_next","to":"wk_b60_n"},
+                                  {"set":{"local":"w_b60_ok"},"value":1},
+                                  {"set":{"local":"w_b60_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_b60"}},
+                                  {"set":{"local":"w_cp"},"value":1}
+                                ]},
+                              {"if":{"and":[{"require":{"local":"w_cp"},"eq":1},{"require":{"local":"w_sum"},"gte":400}]}, "eq":1, "then": [
+                                  {"set":{"local":"w_rem"},"value":{"subtract":[400,{"local":"w_acc"}]}},
+                                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                                  {"sleep":0.2},
+                                  {"point_object":"wk_walker","to":"wk_next"},
+                                  {"sleep":0.1},
+                                  {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                                  {"sleep":0.3},
+                                  {"create_location":"wk_b400","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                                  {"copy_location":"wk_prev","to":"wk_b400_a"},
+                                  {"copy_location":"wk_next","to":"wk_b400_n"},
+                                  {"set":{"local":"w_b400_ok"},"value":1},
+                                  {"set":{"local":"w_b400_st"},"value":{"location":"wk_node","var":"distance:m","to":"wk_b400"}},
+                                  {"set":{"local":"w_cp"},"value":2}
+                                ]},
+                              {"if":{"local":"w_cp"}, "gte":2, "then": [
+                                  {"set":{"local":"w_done"},"value":1}
+                                ], "else": [
+                                  {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                                  {"copy_location":"wk_prev","to":"wk_before"},
+                                  {"copy_location":"wk_next","to":"wk_prev"},
+                                  {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                                ]}
+                            ]}
+                        ]},
+                      {"sleep":0.01}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":1, "then": [
+                      {"set":{"local":"w_fin"},"value":1}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":2, "then": [
+                      {"if":{"local":"w_hops"}, "gte":8, "then": [
+                          {"set":{"local":"w_fin"},"value":1},
+                          {"set":{"local":"w_done"},"value":3}
+                        ], "else": [
+                          {"set":{"param":"endnode"},"value":{"struct":{"param":"arr"},"index":{"local":"w_i"}}},
+                          {"set":{"local":"w_endid"},"value":{"struct":{"param":"endnode"},"path":"id"}},
+                          {"osm_get_parent_ways":{"struct":{"param":"endnode"},"path":"id"},"data":{"param":"my_data"},"result":"hp"},
+                          {"set":{"param":"nextway"},"value":null},
+                          {"set":{"param":"bestarr"},"value":null},
+                          {"set":{"local":"bd"},"value":-1},
+                          {"set":{"local":"b_step"},"value":1},
+                          {"set":{"local":"b_k"},"value":-1},
+                          {"set":{"local":"w_plist"},"value":""},
+                          {"for_each":{"param":"hp"}, "do": [
+                              {"set":{"param":"hw"},"value":{"param":"$item"}},
+                              {"set":{"local":"w_plist"},"value":{"text":"{0} {1}(junction {2})","params":[{"local":"w_plist"},{"struct":{"param":"hw"},"path":"id"},{"struct":{"param":"hw"},"path":"tags.junction"}]}},
+                              {"if":{"and":[{"require":{"struct":{"param":"hw"},"path":"id"},"ne":{"local":"w_wayid"}},{"require":{"struct":{"param":"hw"},"path":"tags.junction"},"ne":"roundabout"}]}, "eq":1, "then": [
+                                  {"osm_get_nodes":{"struct":{"param":"hw"},"path":"id"},"data":{"param":"my_data"},"result":"cn"},
+                                  {"set":{"local":"c_k"},"value":-1},
+                                  {"set":{"local":"c_ix"},"value":0},
+                                  {"set":{"local":"c_total"},"value":0},
+                                  {"set":{"local":"c_cum"},"value":0},
+                                  {"for_each":{"param":"cn"}, "do": [
+                                      {"set":{"param":"w_node"},"value":{"param":"$item"}},
+                                      {"create_location":"wk_cur","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                                      {"if":{"local":"c_ix"}, "gt":0, "then": [
+                                          {"set":{"local":"c_total"},"value":{"add":[{"local":"c_total"},{"location":"wk_cprev","var":"distance:m","to":"wk_cur"}]}}
+                                        ]},
+                                      {"if":{"struct":{"param":"w_node"},"path":"id"}, "eq":{"local":"w_endid"}, "then": [
+                                          {"set":{"local":"c_k"},"value":{"local":"c_ix"}},
+                                          {"set":{"local":"c_cum"},"value":{"local":"c_total"}}
+                                        ]},
+                                      {"copy_location":"wk_cur","to":"wk_cprev"},
+                                      {"set":{"local":"c_ix"},"value":{"add":[{"local":"c_ix"},1]}}
+                                    ]},
+                                  {"if":{"local":"c_k"}, "gte":0, "then": [
+                                      {"set":{"local":"c_n"},"value":{"struct":{"param":"cn"},"path":"length"}},
+                                      {"set":{"local":"c_k1"},"value":{"add":[{"local":"c_k"},1]}},
+                                      {"set":{"local":"c_ahead"},"value":{"subtract":[{"local":"c_total"},{"local":"c_cum"}]}},
+                                      {"if":{"local":"c_k1"}, "lt":{"local":"c_n"}, "then": [
+                                          {"if":{"local":"c_ahead"}, "gt":{"local":"bd"}, "then": [
+                                              {"set":{"local":"bd"},"value":{"local":"c_ahead"}},
+                                              {"set":{"local":"b_step"},"value":1},
+                                              {"set":{"local":"b_k"},"value":{"local":"c_k"}},
+                                              {"set":{"param":"nextway"},"value":{"param":"hw"}},
+                                              {"set":{"param":"bestarr"},"value":{"param":"cn"}}
+                                            ]}
+                                        ]},
+                                      {"if":{"local":"c_k"}, "gt":0, "then": [
+                                          {"if":{"local":"c_cum"}, "gt":{"local":"bd"}, "then": [
+                                              {"set":{"local":"bd"},"value":{"local":"c_cum"}},
+                                              {"set":{"local":"b_step"},"value":-1},
+                                              {"set":{"local":"b_k"},"value":{"local":"c_k"}},
+                                              {"set":{"param":"nextway"},"value":{"param":"hw"}},
+                                              {"set":{"param":"bestarr"},"value":{"param":"cn"}}
+                                            ]}
+                                        ]}
+                                    ]}
+                                ]}
+                            ]},
+                          {"set":{"local":"w_log"},"value":{"text":"{0} [way {1}: {2} nodes, stopped at index {5} (step {6}), end node {7} is on {3} way(s):{8}; chosen way {4}, direction {9}, road ahead {10} m]","params":[{"local":"w_log"},{"local":"w_wayid"},{"struct":{"param":"arr"},"path":"length"},{"struct":{"param":"hp"},"path":"length"},{"struct":{"param":"nextway"},"path":"id"},{"local":"w_i"},{"local":"w_step"},{"local":"w_endid"},{"local":"w_plist"},{"local":"b_step"},{"local":"bd"}]}},
+                          {"if":{"param":"nextway"}, "eq":null, "then": [
+                              {"set":{"local":"w_fin"},"value":1},
+                              {"set":{"local":"w_done"},"value":4}
+                            ], "else": [
+                              {"set":{"param":"arr"},"value":{"param":"bestarr"}},
+                              {"set":{"local":"w_wayid"},"value":{"struct":{"param":"nextway"},"path":"id"}},
+                              {"set":{"local":"w_i"},"value":{"local":"b_k"}},
+                              {"set":{"local":"w_step"},"value":{"local":"b_step"}},
+                              {"set":{"local":"w_hops"},"value":{"add":[{"local":"w_hops"},1]}},
+                              {"set":{"local":"w_done"},"value":0}
+                            ]}
+                        ]}
+                    ]}
+                ]},
+              {"set":{"local":"w_b_acc"},"value":{"local":"w_acc"}},
+              {"set":{"local":"w_b_end"},"value":{"local":"w_done"}},
+              {"set":{"local":"w_b_hops"},"value":{"local":"w_hops"}},
+              {"set":{"local":"w_b_log"},"value":{"local":"w_log"}},
+              {"copy_location":"wk_prev","to":"wk_bend"},
+              {"if":{"local":"w_f60_ok"}, "eq":1, "then": [
+                  {"create_object":{"name":"wk_m_f60","title":"Airbus H145 Marker GREEN","location":"wk_f60"}},
+                  {"set_map":{"add":{"point":{"location":"wk_f60","text":"F60"}}}}
+                ]},
+              {"if":{"local":"w_f400_ok"}, "eq":1, "then": [
+                  {"create_object":{"name":"wk_m_f400","title":"Airbus H145 Marker GREEN","location":"wk_f400"}},
+                  {"set_map":{"add":{"point":{"location":"wk_f400","text":"F400"}}}}
+                ]},
+              {"if":{"local":"w_b60_ok"}, "eq":1, "then": [
+                  {"create_object":{"name":"wk_m_b60","title":"Airbus H145 Marker GREEN","location":"wk_b60"}},
+                  {"set_map":{"add":{"point":{"location":"wk_b60","text":"B60"}}}}
+                ]},
+              {"if":{"local":"w_b400_ok"}, "eq":1, "then": [
+                  {"create_object":{"name":"wk_m_b400","title":"Airbus H145 Marker GREEN","location":"wk_b400"}},
+                  {"set_map":{"add":{"point":{"location":"wk_b400","text":"B400"}}}}
+                ]},
+              {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+                  {"destroy_object":"wk_walker"}
+                ]},
+              {"set":{"local":"t12_a"},"value":{"text":"Junction found: {0} (closest node is node {1} of {2} of the start way, highway={5}, on {3} way(s)); node is {4} m from the helicopter; start way is a roundabout ring: {6}","params":[{"local":"t12_junction"},{"local":"w_k"},{"local":"t12_nodes"},{"local":"t12_parents"},{"local":"t12_node_dist"},{"local":"t12_hw"},{"local":"t12_ring"}]}},
+              {"set":{"local":"t12_b"},"value":{"text":"FWD: 60 m -> straight {0} m from the node | 400 m -> straight {1} m | walked {2} m along the roads, {3} hop(s), end code {4}","params":[{"local":"w_f60_st"},{"local":"w_f400_st"},{"local":"w_f_acc"},{"local":"w_f_hops"},{"local":"w_f_end"}]}},
+              {"set":{"local":"t12_c"},"value":{"text":"BACK: 60 m -> straight {0} m from the node | 400 m -> straight {1} m | walked {2} m along the roads, {3} hop(s), end code {4}","params":[{"local":"w_b60_st"},{"local":"w_b400_st"},{"local":"w_b_acc"},{"local":"w_b_hops"},{"local":"w_b_end"}]}},
+              {"set_map":{"add":{"point":{"location":"wk_fend","text":"FEND"}}}},
+              {"set_map":{"add":{"point":{"location":"wk_bend","text":"BEND"}}}},
+              {"set":{"local":"t12_e"},"value":{"text":"Ways at the junction node:{0}","params":[{"local":"t12_pl"}]}},
+              {"set":{"local":"t12_f"},"value":{"text":"FWD ways walked:{0}","params":[{"local":"w_f_log"}]}},
+              {"set":{"local":"t12_g"},"value":{"text":"BACK ways walked:{0}","params":[{"local":"w_b_log"}]}},
+              {"set":{"local":"t12_d"},"value":"Legend: -1 = checkpoint not reached; end code 1 = both reached, 3 = hop limit (8), 4 = dead end, 5 = node not found in the next way; markers F60 F400 B60 B400 are on the roads walked, possibly across a junction. A marker off the road, or a marker on a different road than the one walked from, means the hop chose the wrong way."},
+              {"set":{"local":"t12_status"},"value":"DONE: markers placed, see the lines below"}
+            ]}
+        ]}
+    ],
+    "walk test pole series plain": [
+      {"#comment":"Button 10: two series of the 30West powerline (one object = 9 poles in line) 245 m apart on a straight stretch of road, 8 m to its right, both pointed the same way along the line from A to B (the assets interlock head to tail, so they must not point at each other); mode 'plain'. Scans the major road ways within 1500 m, keeps the nearest straight run of at least 500 m (else the longest). If the title is not installed a green marker is created instead."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t10_status"},"value":"SCANNING"},
+      {"set":{"local":"t10_a"},"value":""},
+      {"set":{"local":"t10_b"},"value":""},
+      {"call_macro":"walk cleanup"},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|tertiary|unclassified)$\"];(._;>;);out;","SIZE":1500},"result":"my_data"},
+      {"if":{"param":"my_data"}, "eq":null, "then": [
+          {"set":{"local":"t10_status"},"value":"FAILED: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
+          {"set":{"local":"pb_total"},"value":{"struct":{"param":"my_ways"},"path":"length"}},
+          {"set":{"local":"pb_cnt"},"value":0},
+          {"set":{"local":"pb_q"},"value":0},
+          {"set":{"local":"pb_len"},"value":0},
+          {"set":{"local":"pb_d"},"value":999999},
+          {"set":{"local":"pb_bs"},"value":0},
+          {"set":{"local":"pb_be"},"value":0},
+          {"set":{"param":"bestway"},"value":null},
+          {"for_each":{"param":"my_ways"}, "do": [
+              {"if":{"local":"pb_cnt"}, "gte":300, "then": [
+                  {"break":1}
+                ]},
+              {"set":{"param":"cw"},"value":{"param":"$item"}},
+              {"osm_get_nodes":{"struct":{"param":"cw"},"path":"id"},"data":{"param":"my_data"},"result":"cand"},
+              {"if":{"struct":{"param":"cand"},"path":"length"}, "gte":2, "then": [
+                  {"set":{"local":"srb_best"},"value":0},
+                  {"set":{"local":"srb_cur"},"value":0},
+                  {"set":{"local":"srb_s"},"value":0},
+                  {"set":{"local":"srb_bs"},"value":0},
+                  {"set":{"local":"srb_be"},"value":0},
+                  {"set":{"local":"srb_i"},"value":1},
+                  {"set":{"local":"srb_len"},"value":{"struct":{"param":"cand"},"path":"length"}},
+                  {"set":{"param":"rn"},"value":{"struct":{"param":"cand"},"index":0}},
+                  {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                  {"for_each":{"param":"cand"}, "do": [
+                      {"if":{"local":"srb_i"}, "lt":{"local":"srb_len"}, "then": [
+                          {"set":{"param":"rn"},"value":{"struct":{"param":"cand"},"index":{"local":"srb_i"}}},
+                          {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                          {"set":{"local":"r_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                          {"if":{"local":"r_seg"}, "gte":1, "then": [
+                              {"set":{"local":"r_b"},"value":{"bearing":{"from":"wk_prev","to":"wk_next"}}},
+                              {"if":{"local":"srb_cur"}, "eq":0, "then": [
+                                  {"set":{"local":"srb_rb"},"value":{"local":"r_b"}},
+                                  {"set":{"local":"srb_cur"},"value":{"local":"r_seg"}},
+                                  {"set":{"local":"srb_s"},"value":{"subtract":[{"local":"srb_i"},1]}}
+                                ], "else": [
+                                  {"set":{"local":"r_d"},"value":{"add360":[{"local":"r_b"},{"subtract":[360,{"local":"srb_rb"}]}]}},
+                                  {"if":{"or":[{"require":{"local":"r_d"},"lte":4},{"require":{"local":"r_d"},"gte":356}]}, "eq":1, "then": [
+                                      {"set":{"local":"srb_cur"},"value":{"add":[{"local":"srb_cur"},{"local":"r_seg"}]}}
+                                    ], "else": [
+                                      {"set":{"local":"srb_rb"},"value":{"local":"r_b"}},
+                                      {"set":{"local":"srb_cur"},"value":{"local":"r_seg"}},
+                                      {"set":{"local":"srb_s"},"value":{"subtract":[{"local":"srb_i"},1]}}
+                                    ]}
+                                ]},
+                              {"if":{"local":"srb_cur"}, "gt":{"local":"srb_best"}, "then": [
+                                  {"set":{"local":"srb_best"},"value":{"local":"srb_cur"}},
+                                  {"set":{"local":"srb_bs"},"value":{"local":"srb_s"}},
+                                  {"set":{"local":"srb_be"},"value":{"local":"srb_i"}}
+                                ]}
+                            ]},
+                          {"copy_location":"wk_next","to":"wk_prev"}
+                        ]},
+                      {"set":{"local":"srb_i"},"value":{"add":[{"local":"srb_i"},1]}},
+                      {"sleep":0.005}
+                    ]},
+                  {"set":{"param":"rn"},"value":{"struct":{"param":"cand"},"index":{"local":"srb_bs"}}},
+                  {"create_location":"wk_cand","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                  {"set":{"local":"cd"},"value":{"location":"wk_cand","var":"distance:m","to":"heli"}},
+                  {"if":{"local":"srb_best"}, "gte":500, "then": [
+                      {"if":{"or":[{"require":{"local":"pb_q"},"eq":0},{"require":{"local":"cd"},"lt":{"local":"pb_d"}}]}, "eq":1, "then": [
+                          {"set":{"local":"pb_q"},"value":1},
+                          {"set":{"local":"pb_d"},"value":{"local":"cd"}},
+                          {"set":{"local":"pb_len"},"value":{"local":"srb_best"}},
+                          {"set":{"local":"pb_bs"},"value":{"local":"srb_bs"}},
+                          {"set":{"local":"pb_be"},"value":{"local":"srb_be"}},
+                          {"set":{"param":"bestway"},"value":{"param":"cw"}}
+                        ]}
+                    ], "else": [
+                      {"if":{"and":[{"require":{"local":"pb_q"},"eq":0},{"require":{"local":"srb_best"},"gt":{"local":"pb_len"}}]}, "eq":1, "then": [
+                          {"set":{"local":"pb_d"},"value":{"local":"cd"}},
+                          {"set":{"local":"pb_len"},"value":{"local":"srb_best"}},
+                          {"set":{"local":"pb_bs"},"value":{"local":"srb_bs"}},
+                          {"set":{"local":"pb_be"},"value":{"local":"srb_be"}},
+                          {"set":{"param":"bestway"},"value":{"param":"cw"}}
+                        ]}
+                    ]}
+                ]},
+              {"set":{"local":"pb_cnt"},"value":{"add":[{"local":"pb_cnt"},1]}}
+            ]},
+          {"if":{"param":"bestway"}, "eq":null, "then": [
+              {"set":{"local":"t10_status"},"value":"FAILED: no usable road way in the data"}
+            ], "else": [
+              {"osm_get_nodes":{"struct":{"param":"bestway"},"path":"id"},"data":{"param":"my_data"},"result":"rd_nodes"},
+              {"set":{"local":"srb_bs"},"value":{"local":"pb_bs"}},
+              {"set":{"local":"srb_be"},"value":{"local":"pb_be"}},
+              {"set":{"local":"srb_best"},"value":{"local":"pb_len"}},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"srb_bs"}}},
+              {"create_location":"wk_rd_s","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"add":[{"local":"srb_bs"},1]}}},
+              {"create_location":"wk_rd_n1","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"local":"t_hw"},"value":{"struct":{"param":"bestway"},"path":"tags.highway"}},
+              {"create_object":{"name":"wk_walker","title":"Airbus H145 Marker GREEN","location":"wk_rd_s"}},
+              {"sleep":0.5},
+              {"set":{"local":"w_acc"},"value":0},
+              {"set":{"local":"w_i"},"value":{"local":"srb_bs"}},
+              {"set":{"local":"w_cp"},"value":0},
+              {"set":{"local":"w_done"},"value":0},
+              {"set":{"local":"w_guard"},"value":0},
+              {"set":{"local":"w_p245_ok"},"value":0},
+              {"set":{"local":"w_p245_st"},"value":-1},
+              {"set":{"local":"w_p245_ex"},"value":-1},
+              {"set":{"param":"w_node"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"w_i"}}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+              {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+                  {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+                  {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},1]}},
+                  {"if":{"local":"w_j"}, "lt":0, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_j"}, "gte":{"struct":{"param":"rd_nodes"},"path":"length"}, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":0, "then": [
+                      {"set":{"param":"w_node"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"w_j"}}},
+                      {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                      {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                      {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                          {"copy_location":"wk_next","to":"wk_prev"},
+                          {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                        ], "else": [
+                          {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                          {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":245}]}, "eq":1, "then": [
+                              {"set":{"local":"w_rem"},"value":{"subtract":[245,{"local":"w_acc"}]}},
+                              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                              {"sleep":0.2},
+                              {"point_object":"wk_walker","to":"wk_next"},
+                              {"sleep":0.1},
+                              {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                              {"sleep":0.3},
+                              {"create_location":"wk_p245","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                              {"copy_location":"wk_prev","to":"wk_p245_a"},
+                              {"copy_location":"wk_next","to":"wk_p245_n"},
+                              {"set":{"local":"w_p245_ok"},"value":1},
+                              {"set":{"local":"w_p245_st"},"value":{"location":"wk_rd_s","var":"distance:m","to":"wk_p245"}},
+                              {"set":{"local":"w_cp"},"value":1}
+                            ]},
+                          {"if":{"local":"w_cp"}, "gte":1, "then": [
+                              {"set":{"local":"w_done"},"value":1}
+                            ], "else": [
+                              {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                              {"copy_location":"wk_next","to":"wk_prev"},
+                              {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                            ]}
+                        ]}
+                    ]},
+                  {"sleep":0.01}
+                ]},
+              {"set":{"local":"w_p_acc"},"value":{"local":"w_acc"}},
+              {"set":{"local":"w_p_end"},"value":{"local":"w_done"}},
+              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_rd_s"}},
+              {"sleep":0.2},
+              {"point_object":"wk_walker","to":"wk_rd_n1"},
+              {"move_object":"wk_walker","to":{"bearing2":90,"dist":8,"heading":0,"object":"wk_walker"}},
+              {"sleep":0.3},
+              {"create_location":"wk_pole_a8","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+              {"set":{"local":"t10_a"},"value":{"text":"Scanned {0} of {1} major road ways; chosen: highway={2}, straight run {3} m (minimum wanted {4} m, qualified {5}), its start is {6} m from the helicopter (map P-A)","params":[{"local":"pb_cnt"},{"local":"pb_total"},{"local":"t_hw"},{"local":"pb_len"},500,{"local":"pb_q"},{"local":"pb_d"}]}},
+              {"if":{"local":"w_p245_ok"}, "eq":1, "then": [
+                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_p245"}},
+                  {"sleep":0.2},
+                  {"point_object":"wk_walker","to":"wk_p245_n"},
+                  {"move_object":"wk_walker","to":{"bearing2":90,"dist":8,"heading":0,"object":"wk_walker"}},
+                  {"sleep":0.3},
+                  {"create_location":"wk_pole_b8","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_pole_a8"}},
+                  {"sleep":0.2},
+                  {"point_object":"wk_walker","to":"wk_pole_b8"},
+                  {"sleep":0.2},
+                  {"create_location":"wk_pole_far","zones":[{"zone":{"location":{"bearing2":0,"dist":490,"heading":0,"object":"wk_walker"}}}]},
+                  {"sleep":0.2},
+                  {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+                      {"destroy_object":"wk_walker"}
+                    ]},
+                  {"create_object":{"name":"wk_pole_a","title":"30West powerline","fallback_title":"Airbus H145 Marker GREEN","location":"wk_pole_a8"}},
+                  {"sleep":0.5},
+                  {"point_object":"wk_pole_a","to":"wk_pole_b8"},
+                  {"set_map":{"add":{"point":{"location":"wk_pole_a8","text":"P-A"}}}},
+                  {"create_object":{"name":"wk_pole_b","title":"30West powerline","fallback_title":"Airbus H145 Marker GREEN","location":"wk_pole_b8"}},
+                  {"sleep":0.5},
+                  {"point_object":"wk_pole_b","to":"wk_pole_far"},
+                  {"set_map":{"add":{"point":{"location":"wk_pole_b8","text":"P-B"}}}},
+                  {"set":{"local":"t_off"},"value":{"location":"wk_pole_a8","var":"distance:m","to":"wk_pole_b8"}},
+                  {"set":{"local":"t_obj"},"value":{"object":"wk_pole_a","var":"distance:m","to":"wk_pole_b"}},
+                  {"set":{"local":"t10_b"},"value":{"text":"Mode plain. Series A and B 245 m apart along the road, 8 m to its right, both pointed the same way, from A toward B and beyond: offset points {0} m apart, objects {1} m apart. Check that the 9 poles of A and B lie on one line, and where they start and end relative to P-A and P-B.","params":[{"local":"t_off"},{"local":"t_obj"}]}},
+                  {"set":{"local":"t10_status"},"value":"DONE: P-A and P-B placed"}
+                ], "else": [
+                  {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+                      {"destroy_object":"wk_walker"}
+                    ]},
+                  {"create_object":{"name":"wk_pole_a","title":"30West powerline","fallback_title":"Airbus H145 Marker GREEN","location":"wk_pole_a8"}},
+                  {"sleep":0.5},
+                  {"point_object":"wk_pole_a","to":"wk_rd_n1"},
+                  {"set_map":{"add":{"point":{"location":"wk_pole_a8","text":"P-A"}}}},
+                  {"set":{"local":"t10_b"},"value":{"text":"Only series A placed: the way ends {0} m after the start of the run (end code {1}), 245 m are not available on this way","params":[{"local":"w_p_acc"},{"local":"w_p_end"}]}},
+                  {"set":{"local":"t10_status"},"value":"PARTIAL: only P-A"}
+                ]}
+            ]}
+        ]}
+    ],
+    "walk test pole series turn": [
+      {"#comment":"Button 11: two series of the 30West powerline (one object = 9 poles in line) 245 m apart on a straight stretch of road, 8 m to its right, both pointed the same way along the line from A to B (the assets interlock head to tail, so they must not point at each other); mode 'turn'. Scans the major road ways within 1500 m, keeps the nearest straight run of at least 500 m (else the longest). If the title is not installed a green marker is created instead."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t11_status"},"value":"SCANNING"},
+      {"set":{"local":"t11_a"},"value":""},
+      {"set":{"local":"t11_b"},"value":""},
+      {"call_macro":"walk cleanup"},
+      {"call_macro":"walk query","params":{"QUERY":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|tertiary|unclassified)$\"];(._;>;);out;","SIZE":1500},"result":"my_data"},
+      {"if":{"param":"my_data"}, "eq":null, "then": [
+          {"set":{"local":"t11_status"},"value":"FAILED: no OSM data after 40 s"}
+        ], "else": [
+          {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
+          {"set":{"local":"pb_total"},"value":{"struct":{"param":"my_ways"},"path":"length"}},
+          {"set":{"local":"pb_cnt"},"value":0},
+          {"set":{"local":"pb_q"},"value":0},
+          {"set":{"local":"pb_len"},"value":0},
+          {"set":{"local":"pb_d"},"value":999999},
+          {"set":{"local":"pb_bs"},"value":0},
+          {"set":{"local":"pb_be"},"value":0},
+          {"set":{"param":"bestway"},"value":null},
+          {"for_each":{"param":"my_ways"}, "do": [
+              {"if":{"local":"pb_cnt"}, "gte":300, "then": [
+                  {"break":1}
+                ]},
+              {"set":{"param":"cw"},"value":{"param":"$item"}},
+              {"osm_get_nodes":{"struct":{"param":"cw"},"path":"id"},"data":{"param":"my_data"},"result":"cand"},
+              {"if":{"struct":{"param":"cand"},"path":"length"}, "gte":2, "then": [
+                  {"set":{"local":"srb_best"},"value":0},
+                  {"set":{"local":"srb_cur"},"value":0},
+                  {"set":{"local":"srb_s"},"value":0},
+                  {"set":{"local":"srb_bs"},"value":0},
+                  {"set":{"local":"srb_be"},"value":0},
+                  {"set":{"local":"srb_i"},"value":1},
+                  {"set":{"local":"srb_len"},"value":{"struct":{"param":"cand"},"path":"length"}},
+                  {"set":{"param":"rn"},"value":{"struct":{"param":"cand"},"index":0}},
+                  {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                  {"for_each":{"param":"cand"}, "do": [
+                      {"if":{"local":"srb_i"}, "lt":{"local":"srb_len"}, "then": [
+                          {"set":{"param":"rn"},"value":{"struct":{"param":"cand"},"index":{"local":"srb_i"}}},
+                          {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                          {"set":{"local":"r_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                          {"if":{"local":"r_seg"}, "gte":1, "then": [
+                              {"set":{"local":"r_b"},"value":{"bearing":{"from":"wk_prev","to":"wk_next"}}},
+                              {"if":{"local":"srb_cur"}, "eq":0, "then": [
+                                  {"set":{"local":"srb_rb"},"value":{"local":"r_b"}},
+                                  {"set":{"local":"srb_cur"},"value":{"local":"r_seg"}},
+                                  {"set":{"local":"srb_s"},"value":{"subtract":[{"local":"srb_i"},1]}}
+                                ], "else": [
+                                  {"set":{"local":"r_d"},"value":{"add360":[{"local":"r_b"},{"subtract":[360,{"local":"srb_rb"}]}]}},
+                                  {"if":{"or":[{"require":{"local":"r_d"},"lte":4},{"require":{"local":"r_d"},"gte":356}]}, "eq":1, "then": [
+                                      {"set":{"local":"srb_cur"},"value":{"add":[{"local":"srb_cur"},{"local":"r_seg"}]}}
+                                    ], "else": [
+                                      {"set":{"local":"srb_rb"},"value":{"local":"r_b"}},
+                                      {"set":{"local":"srb_cur"},"value":{"local":"r_seg"}},
+                                      {"set":{"local":"srb_s"},"value":{"subtract":[{"local":"srb_i"},1]}}
+                                    ]}
+                                ]},
+                              {"if":{"local":"srb_cur"}, "gt":{"local":"srb_best"}, "then": [
+                                  {"set":{"local":"srb_best"},"value":{"local":"srb_cur"}},
+                                  {"set":{"local":"srb_bs"},"value":{"local":"srb_s"}},
+                                  {"set":{"local":"srb_be"},"value":{"local":"srb_i"}}
+                                ]}
+                            ]},
+                          {"copy_location":"wk_next","to":"wk_prev"}
+                        ]},
+                      {"set":{"local":"srb_i"},"value":{"add":[{"local":"srb_i"},1]}},
+                      {"sleep":0.005}
+                    ]},
+                  {"set":{"param":"rn"},"value":{"struct":{"param":"cand"},"index":{"local":"srb_bs"}}},
+                  {"create_location":"wk_cand","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+                  {"set":{"local":"cd"},"value":{"location":"wk_cand","var":"distance:m","to":"heli"}},
+                  {"if":{"local":"srb_best"}, "gte":500, "then": [
+                      {"if":{"or":[{"require":{"local":"pb_q"},"eq":0},{"require":{"local":"cd"},"lt":{"local":"pb_d"}}]}, "eq":1, "then": [
+                          {"set":{"local":"pb_q"},"value":1},
+                          {"set":{"local":"pb_d"},"value":{"local":"cd"}},
+                          {"set":{"local":"pb_len"},"value":{"local":"srb_best"}},
+                          {"set":{"local":"pb_bs"},"value":{"local":"srb_bs"}},
+                          {"set":{"local":"pb_be"},"value":{"local":"srb_be"}},
+                          {"set":{"param":"bestway"},"value":{"param":"cw"}}
+                        ]}
+                    ], "else": [
+                      {"if":{"and":[{"require":{"local":"pb_q"},"eq":0},{"require":{"local":"srb_best"},"gt":{"local":"pb_len"}}]}, "eq":1, "then": [
+                          {"set":{"local":"pb_d"},"value":{"local":"cd"}},
+                          {"set":{"local":"pb_len"},"value":{"local":"srb_best"}},
+                          {"set":{"local":"pb_bs"},"value":{"local":"srb_bs"}},
+                          {"set":{"local":"pb_be"},"value":{"local":"srb_be"}},
+                          {"set":{"param":"bestway"},"value":{"param":"cw"}}
+                        ]}
+                    ]}
+                ]},
+              {"set":{"local":"pb_cnt"},"value":{"add":[{"local":"pb_cnt"},1]}}
+            ]},
+          {"if":{"param":"bestway"}, "eq":null, "then": [
+              {"set":{"local":"t11_status"},"value":"FAILED: no usable road way in the data"}
+            ], "else": [
+              {"osm_get_nodes":{"struct":{"param":"bestway"},"path":"id"},"data":{"param":"my_data"},"result":"rd_nodes"},
+              {"set":{"local":"srb_bs"},"value":{"local":"pb_bs"}},
+              {"set":{"local":"srb_be"},"value":{"local":"pb_be"}},
+              {"set":{"local":"srb_best"},"value":{"local":"pb_len"}},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"srb_bs"}}},
+              {"create_location":"wk_rd_s","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"param":"rn"},"value":{"struct":{"param":"rd_nodes"},"index":{"add":[{"local":"srb_bs"},1]}}},
+              {"create_location":"wk_rd_n1","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"rn"},"path":"lat"},{"struct":{"param":"rn"},"path":"lon"}]}}}}]},
+              {"set":{"local":"t_hw"},"value":{"struct":{"param":"bestway"},"path":"tags.highway"}},
+              {"create_object":{"name":"wk_walker","title":"Airbus H145 Marker GREEN","location":"wk_rd_s"}},
+              {"sleep":0.5},
+              {"set":{"local":"w_acc"},"value":0},
+              {"set":{"local":"w_i"},"value":{"local":"srb_bs"}},
+              {"set":{"local":"w_cp"},"value":0},
+              {"set":{"local":"w_done"},"value":0},
+              {"set":{"local":"w_guard"},"value":0},
+              {"set":{"local":"w_p245_ok"},"value":0},
+              {"set":{"local":"w_p245_st"},"value":-1},
+              {"set":{"local":"w_p245_ex"},"value":-1},
+              {"set":{"param":"w_node"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"w_i"}}},
+              {"create_location":"wk_prev","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+              {"while":{"and":[{"require":{"local":"w_done"},"eq":0},{"require":{"local":"w_guard"},"lt":700}]}, "eq":1, "do": [
+                  {"set":{"local":"w_guard"},"value":{"add":[{"local":"w_guard"},1]}},
+                  {"set":{"local":"w_j"},"value":{"add":[{"local":"w_i"},1]}},
+                  {"if":{"local":"w_j"}, "lt":0, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_j"}, "gte":{"struct":{"param":"rd_nodes"},"path":"length"}, "then": [
+                      {"set":{"local":"w_done"},"value":2}
+                    ]},
+                  {"if":{"local":"w_done"}, "eq":0, "then": [
+                      {"set":{"param":"w_node"},"value":{"struct":{"param":"rd_nodes"},"index":{"local":"w_j"}}},
+                      {"create_location":"wk_next","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"w_node"},"path":"lat"},{"struct":{"param":"w_node"},"path":"lon"}]}}}}]},
+                      {"set":{"local":"w_seg"},"value":{"location":"wk_prev","var":"distance:m","to":"wk_next"}},
+                      {"if":{"local":"w_seg"}, "lt":0.5, "then": [
+                          {"copy_location":"wk_next","to":"wk_prev"},
+                          {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                        ], "else": [
+                          {"set":{"local":"w_sum"},"value":{"add":[{"local":"w_acc"},{"local":"w_seg"}]}},
+                          {"if":{"and":[{"require":{"local":"w_cp"},"eq":0},{"require":{"local":"w_sum"},"gte":245}]}, "eq":1, "then": [
+                              {"set":{"local":"w_rem"},"value":{"subtract":[245,{"local":"w_acc"}]}},
+                              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_prev"}},
+                              {"sleep":0.2},
+                              {"point_object":"wk_walker","to":"wk_next"},
+                              {"sleep":0.1},
+                              {"move_object":"wk_walker","to":{"bearing2":0,"dist":{"local":"w_rem"},"heading":0,"object":"wk_walker"}},
+                              {"sleep":0.3},
+                              {"create_location":"wk_p245","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                              {"copy_location":"wk_prev","to":"wk_p245_a"},
+                              {"copy_location":"wk_next","to":"wk_p245_n"},
+                              {"set":{"local":"w_p245_ok"},"value":1},
+                              {"set":{"local":"w_p245_st"},"value":{"location":"wk_rd_s","var":"distance:m","to":"wk_p245"}},
+                              {"set":{"local":"w_cp"},"value":1}
+                            ]},
+                          {"if":{"local":"w_cp"}, "gte":1, "then": [
+                              {"set":{"local":"w_done"},"value":1}
+                            ], "else": [
+                              {"set":{"local":"w_acc"},"value":{"local":"w_sum"}},
+                              {"copy_location":"wk_next","to":"wk_prev"},
+                              {"set":{"local":"w_i"},"value":{"local":"w_j"}}
+                            ]}
+                        ]}
+                    ]},
+                  {"sleep":0.01}
+                ]},
+              {"set":{"local":"w_p_acc"},"value":{"local":"w_acc"}},
+              {"set":{"local":"w_p_end"},"value":{"local":"w_done"}},
+              {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_rd_s"}},
+              {"sleep":0.2},
+              {"point_object":"wk_walker","to":"wk_rd_n1"},
+              {"move_object":"wk_walker","to":{"bearing2":90,"dist":8,"heading":0,"object":"wk_walker"}},
+              {"sleep":0.3},
+              {"create_location":"wk_pole_a8","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+              {"set":{"local":"t11_a"},"value":{"text":"Scanned {0} of {1} major road ways; chosen: highway={2}, straight run {3} m (minimum wanted {4} m, qualified {5}), its start is {6} m from the helicopter (map P-A)","params":[{"local":"pb_cnt"},{"local":"pb_total"},{"local":"t_hw"},{"local":"pb_len"},500,{"local":"pb_q"},{"local":"pb_d"}]}},
+              {"if":{"local":"w_p245_ok"}, "eq":1, "then": [
+                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_p245"}},
+                  {"sleep":0.2},
+                  {"point_object":"wk_walker","to":"wk_p245_n"},
+                  {"move_object":"wk_walker","to":{"bearing2":90,"dist":8,"heading":0,"object":"wk_walker"}},
+                  {"sleep":0.3},
+                  {"create_location":"wk_pole_b8","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"wk_walker"}}}]},
+                  {"move_object":"wk_walker","to":{"bearing":0,"dist":0,"object":"wk_pole_a8"}},
+                  {"sleep":0.2},
+                  {"point_object":"wk_walker","to":"wk_pole_b8"},
+                  {"sleep":0.2},
+                  {"create_location":"wk_pole_far","zones":[{"zone":{"location":{"bearing2":0,"dist":490,"heading":0,"object":"wk_walker"}}}]},
+                  {"sleep":0.2},
+                  {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+                      {"destroy_object":"wk_walker"}
+                    ]},
+                  {"create_object":{"name":"wk_pole_a","title":"30West powerline","fallback_title":"Airbus H145 Marker GREEN","location":"wk_pole_a8"}},
+                  {"sleep":0.5},
+                  {"point_object":"wk_pole_a","to":"wk_pole_b8"},
+                  {"create_location":"wk_pole_a_side","zones":[{"zone":{"location":{"bearing2":90,"dist":20,"heading":0,"object":"wk_pole_a"}}}]},
+                  {"sleep":0.2},
+                  {"point_object":"wk_pole_a","to":"wk_pole_a_side"},
+                  {"set_map":{"add":{"point":{"location":"wk_pole_a8","text":"P-A"}}}},
+                  {"create_object":{"name":"wk_pole_b","title":"30West powerline","fallback_title":"Airbus H145 Marker GREEN","location":"wk_pole_b8"}},
+                  {"sleep":0.5},
+                  {"point_object":"wk_pole_b","to":"wk_pole_far"},
+                  {"create_location":"wk_pole_b_side","zones":[{"zone":{"location":{"bearing2":90,"dist":20,"heading":0,"object":"wk_pole_b"}}}]},
+                  {"sleep":0.2},
+                  {"point_object":"wk_pole_b","to":"wk_pole_b_side"},
+                  {"set_map":{"add":{"point":{"location":"wk_pole_b8","text":"P-B"}}}},
+                  {"set":{"local":"t_off"},"value":{"location":"wk_pole_a8","var":"distance:m","to":"wk_pole_b8"}},
+                  {"set":{"local":"t_obj"},"value":{"object":"wk_pole_a","var":"distance:m","to":"wk_pole_b"}},
+                  {"set":{"local":"t11_b"},"value":{"text":"Mode turn. Series A and B 245 m apart along the road, 8 m to its right, both pointed the same way, from A toward B and beyond: offset points {0} m apart, objects {1} m apart. Check that the 9 poles of A and B lie on one line, and where they start and end relative to P-A and P-B.","params":[{"local":"t_off"},{"local":"t_obj"}]}},
+                  {"set":{"local":"t11_status"},"value":"DONE: P-A and P-B placed"}
+                ], "else": [
+                  {"if":{"has_object":"wk_walker"}, "eq":1, "then": [
+                      {"destroy_object":"wk_walker"}
+                    ]},
+                  {"create_object":{"name":"wk_pole_a","title":"30West powerline","fallback_title":"Airbus H145 Marker GREEN","location":"wk_pole_a8"}},
+                  {"sleep":0.5},
+                  {"point_object":"wk_pole_a","to":"wk_rd_n1"},
+                  {"create_location":"wk_pole_a_side","zones":[{"zone":{"location":{"bearing2":90,"dist":20,"heading":0,"object":"wk_pole_a"}}}]},
+                  {"sleep":0.2},
+                  {"point_object":"wk_pole_a","to":"wk_pole_a_side"},
+                  {"set_map":{"add":{"point":{"location":"wk_pole_a8","text":"P-A"}}}},
+                  {"set":{"local":"t11_b"},"value":{"text":"Only series A placed: the way ends {0} m after the start of the run (end code {1}), 245 m are not available on this way","params":[{"local":"w_p_acc"},{"local":"w_p_end"}]}},
+                  {"set":{"local":"t11_status"},"value":"PARTIAL: only P-A"}
+                ]}
+            ]}
+        ]}
+    ]
+  },
+  "briefing": [
+    {"text":"OSM ROAD WALK TEST","size":"large","align":"center"},
+    {"text":"Park on the ground within 100-300 m of a road, ideally next to a bend or a side street: the helicopter position is the accident. Buttons 5, 6 and 7 create at most 12 objects; use 9 to remove them. Run 5 before 6."},
+    {"buttonbar":[{"title":"5 WALK THE ROAD FROM THE CLOSEST JUNCTION","commands":[{"call_macro":"walk test arms"}]},{"text":"{0}","params":[{"local":"t5_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t5_a"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t5_b"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t5_c"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t5_d"}],"color":"gray"},
+    {"buttonbar":[{"title":"12 WALK WITH HOPS TO THE NEXT WAY","commands":[{"call_macro":"walk test hop"}]},{"text":"{0}","params":[{"local":"t12_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t12_a"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t12_b"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t12_c"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t12_e"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t12_f"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t12_g"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t12_d"}],"color":"gray"},
+    {"buttonbar":[{"title":"6 VEHICLES: ALIGNMENT METHODS","commands":[{"call_macro":"walk test cars"}]},{"text":"{0}","params":[{"local":"t6_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t6_info"}],"color":"yellow"},
+    {"buttonbar":[{"title":"7 ROUTE TAIL: STOP SLOTS","commands":[{"call_macro":"walk test route tail"}]},{"text":"{0}","params":[{"local":"t7_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t7_a"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t7_b"}],"color":"yellow"},
+    {"buttonbar":[{"title":"8 POWER LINES, POLES, STRAIGHT RUNS","commands":[{"call_macro":"walk test power and straights"}]},{"text":"{0}","params":[{"local":"t8_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t8_a"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t8_b"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t8_c"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t8_d"}],"color":"gray"},
+    {"buttonbar":[{"title":"10 POLE SERIES, POINTED ONLY","commands":[{"call_macro":"walk test pole series plain"}]},{"text":"{0}","params":[{"local":"t10_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t10_a"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t10_b"}],"color":"yellow"},
+    {"buttonbar":[{"title":"11 POLE SERIES, TURNED 90 (CONTROL)","commands":[{"call_macro":"walk test pole series turn"}]},{"text":"{0}","params":[{"local":"t11_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t11_a"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t11_b"}],"color":"yellow"},
+    {"buttonbar":[{"title":"9 REMOVE TEST OBJECTS","commands":[{"call_macro":"walk cleanup"}]},{"text":"{0}","params":[{"local":"t9_status"}],"color":"green"}]}
+  ],
+  "data": {
+    "Osm_Walk_Arms": "R&E_osm_road_walk_arms",
+    "Osm_Walk_Route": "R&E_osm_road_walk_route",
+    "Osm_Walk_Power": "R&E_osm_road_walk_power",
+    "Osm_Walk_Poles": "R&E_osm_road_walk_poles"
+  }
+}

@@ -1309,5 +1309,65 @@
         {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random depot"}
     ]},
     {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random parked car walk": [
+    {"#comment":"Mission 66: the car is at a track point (sar_anchor_location, also the last known position); the victim is on foot, farther away the younger they are (AGE1). Manual locations skip this whole macro."},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random offroad"},
+        {"if": {"has_location":"accident_location"}, "eq": 1,
+          "then": [
+            {"create_location": "sar_anchor_location",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+            ]},
+            {"set":{"local":"sar_walk_max"},"value":900},
+            {"if": {"local":"AGE1"}, "lt": 40,
+              "then": [
+                {"set":{"local":"sar_walk_max"},"value":1500}
+            ]},
+            {"if": {"local":"AGE1"}, "gte": 65,
+              "then": [
+                {"set":{"local":"sar_walk_max"},"value":450}
+            ]},
+            {"create_location": "accident_location",
+              "zones": [
+                {"zone":{"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[120,{"local":"sar_walk_max"}]},"object":"sar_anchor_location"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random parked car walk"},
+            {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random parked car walk"}
+        ]}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random wandering person": [
+    {"#comment":"Mission 68: a house is found (sar_anchor_location, also the last known position); the victim wandered away on foot, farther away the younger they are (AGE1). Manual locations skip this whole macro."},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=detached];(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"LOCATION_NAME":"accident_location"}},
+        {"if": {"has_location":"accident_location"}, "eq": 1,
+          "then": [
+            {"create_location": "sar_anchor_location",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+            ]},
+            {"set":{"local":"sar_walk_max"},"value":700},
+            {"if": {"local":"AGE1"}, "lt": 40,
+              "then": [
+                {"set":{"local":"sar_walk_max"},"value":1200}
+            ]},
+            {"if": {"local":"AGE1"}, "gte": 65,
+              "then": [
+                {"set":{"local":"sar_walk_max"},"value":350}
+            ]},
+            {"create_location": "accident_location",
+              "zones": [
+                {"zone":{"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[120,{"local":"sar_walk_max"}]},"object":"sar_anchor_location"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query random wandering person"},
+            {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"Query random wandering person"}
+        ]}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
   ]
 }

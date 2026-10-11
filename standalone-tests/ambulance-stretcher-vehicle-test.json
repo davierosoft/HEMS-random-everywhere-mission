@@ -1,0 +1,166 @@
+{
+  "title": "AMBULANCE STRETCHER LOAD TEST",
+  "id": "ambulance_stretcher_vehicle_test",
+  "start_info": {"icon_src": "", "query": []},
+  "objectives": [
+    {
+      "title": "AMBULANCE STRETCHER LOAD TEST",
+      "commands": [
+        {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+        {"set":{"local":"t_status"},"value":"READY"},
+        {"set":{"local":"t_idx"},"value":0},
+        {"set":{"local":"t_res_1"},"value":""},
+        {"set":{"local":"t_res_2"},"value":""},
+        {"set":{"local":"t_res_3"},"value":""},
+        {"set":{"local":"t_res_4"},"value":""},
+        {"set":{"local":"t_res_5"},"value":""},
+        {"set":{"local":"t_res_6"},"value":""},
+        {"set":{"local":"t_res_7"},"value":""},
+        {"set":{"local":"t_res_8"},"value":""},
+        {"set":{"local":"t_res_9"},"value":""},
+        {"set":{"local":"t_res_10"},"value":""},
+        {"set":{"local":"t_res_11"},"value":""},
+        {"set":{"local":"t_res_12"},"value":""},
+        {"set_briefing_dialog":1},
+        {"wait_for":1,"lt":0}
+      ]
+    }
+  ],
+  "macros": {
+    "amb test cleanup": [
+      {"if": {"has_object":"tamb"}, "eq": 1,
+        "then": [
+          {"destroy_object":"tamb"}
+      ]},
+      {"if": {"has_object":"tstretcher"}, "eq": 1,
+        "then": [
+          {"destroy_object":"tstretcher"}
+      ]}
+    ],
+    "amb test run all": [
+      {"#comment":"Runs the stretcher load of the mission (ambulance live ground load objects) once for every ambulance model of the mission and writes how close the stretcher ends to the vehicle centre. The mission used to abort the load when this distance was more than 4 m (tester report 2026-10-11, long German ambulance)."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t_status"},"value":"RUNNING"},
+      {"set":{"local":"t_idx"},"value":0},
+      {"open_table":{"static":"Amb_Test_Table"}},
+      {"clear_table":{"static":"Amb_Test_Table"}},
+      {"for_each": {"static":"Amb_Test_Models"},
+        "do": [
+          {"set":{"local":"t_idx"},"value":{"add":[{"local":"t_idx"},1]}},
+          {"set":{"local":"t_title"},"value":{"struct":{"param":"$item"},"path":"title"}},
+          {"set":{"local":"t_res_{local:t_idx}"},"value":{"text":"{0}: running","params":[{"local":"t_title"}]}},
+          {"call_macro":"amb test one"},
+          {"set":{"table":{"static":"Amb_Test_Table"},"key":{"local":"t_title"}},"value":{"local":"t_result"}},
+          {"set":{"local":"t_res_{local:t_idx}"},"value":{"local":"t_result"}}
+      ]},
+      {"save_table":{"static":"Amb_Test_Table"}},
+      {"call_macro":"amb test cleanup"},
+      {"set":{"local":"t_status"},"value":{"text":"DONE: {0} models, table R&E_ambulance_stretcher_test written","params":[{"local":"t_idx"}]}}
+    ],
+    "amb test one": [
+      {"#comment":"One model. Layout as in the mission: ambulance parked 15 m from the accident with its rear toward it, stretcher created 3 m behind the ambulance, walked to the patient, then the exact load drive of the mission (closest of LUP RUP RDWN LDWN, the ambulance side point, 6 m behind, the vehicle). Variant B ends the drive with the closer points of the shelter anchor drive."},
+      {"call_macro":"amb test cleanup"},
+      {"set":{"local":"t_result"},"value":"FAILED: not run"},
+      {"create_location":"t_acc","zones":[{"zone":{"location":{"bearing":0,"dist":60,"object":"heli"}}}]},
+      {"create_location":"t_RUP","zones":[{"zone":{"location":{"bearing":30,"dist":6,"object":"t_acc"}}}]},
+      {"create_location":"t_RDWN","zones":[{"zone":{"location":{"bearing":65,"dist":8,"object":"t_acc"}}}]},
+      {"create_location":"t_LDWN","zones":[{"zone":{"location":{"bearing":300,"dist":8,"object":"t_acc"}}}]},
+      {"create_location":"t_LUP","zones":[{"zone":{"location":{"bearing":325,"dist":8,"object":"t_acc"}}}]},
+      {"create_location":"t_far","zones":[{"zone":{"location":{"bearing":90,"dist":80,"object":"t_acc"}}}]},
+      {"create_location":"t_park","zones":[{"zone":{"location":{"bearing":90,"dist":15,"object":"t_acc"}}}]},
+      {"create_object":{"name":"tamb","title":{"local":"t_title"},"fallback_title":"Airbus H145 Ambulance","location":"t_park"}},
+      {"wait_for":{"has_object":"tamb"},"eq":1},
+      {"sleep":1},
+      {"point_object":"tamb","to":"t_far"},
+      {"sleep":1},
+      {"create_object":{"name":"tstretcher","title":"Airbus H145 Medic Stretcher","location":{"bearing2":180,"dist":3,"object":"tamb"}}},
+      {"wait_for":{"has_object":"tstretcher"},"eq":1},
+      {"sleep":1},
+      {"set":{"object":"tstretcher","var":"COUPLED"},"value":0},
+      {"set":{"object":"tstretcher","var":"VAR 1"},"value":0},
+      {"set":{"object":"tstretcher","var":"VAR 2"},"value":1},
+      {"set":{"local":"t_start"},"value":{"round":{"location":"tstretcher","var":"distance:m","to":"tamb"},"to":1}},
+      {"drive_object":{"name":"tstretcher","to":["t_acc"],"VAR1":1,"speed":5}},
+      {"set":{"object":"tstretcher","var":"VAR 1"},"value":0},
+      {"set":{"object":"tstretcher","var":"VAR 2"},"value":3},
+      {"create_location":"t_X90","zones":[{"zone":{"location":{"bearing2":90,"dist":5,"object":"tamb"}}}]},
+      {"create_location":"t_X270","zones":[{"zone":{"location":{"bearing2":270,"dist":5,"object":"tamb"}}}]},
+      {"create_location":"t_X180","zones":[{"zone":{"location":{"bearing2":180,"dist":12,"object":"tamb"}}}]},
+      {"sleep":0.2},
+      {"set":{"local":"t_X"},"value":"t_X180"},
+      {"if": {"location":"t_X90","var":"distance:m","to":"tstretcher"}, "lt": {"location":"t_X270","var":"distance:m","to":"tstretcher"},
+        "then": [
+          {"if": {"location":"t_X90","var":"distance:m","to":"tstretcher"}, "lt": {"location":"t_X180","var":"distance:m","to":"tstretcher"},
+            "then": [
+              {"set":{"local":"t_X"},"value":"t_X90"}
+          ]}
+        ],"else": [
+          {"if": {"location":"t_X270","var":"distance:m","to":"tstretcher"}, "lt": {"location":"t_X180","var":"distance:m","to":"tstretcher"},
+            "then": [
+              {"set":{"local":"t_X"},"value":"t_X270"}
+          ]}
+      ]},
+      {"set":{"local":"t_from_patient"},"value":{"round":{"location":"tstretcher","var":"distance:m","to":"tamb"},"to":1}},
+      {"try": [
+          {"drive_object":{"name":"tstretcher","to":[{"closest":["t_LUP","t_RUP","t_RDWN","t_LDWN"],"to":"tstretcher"},{"bearing":0,"dist":0,"object":{"local":"t_X"}},{"bearing2":180,"dist":6,"object":"tamb"},"tamb"],"VAR1":1,"speed":5}}
+        ],
+        "catch": [
+          {"set":{"local":"t_result"},"value":{"text":"{0}: variant A drive error {1}","params":[{"local":"t_title"},{"param":"$ERROR"}]}}
+      ]},
+      {"set":{"object":"tstretcher","var":"VAR 1"},"value":0},
+      {"set":{"local":"t_dist_a"},"value":{"round":{"location":"tstretcher","var":"distance:m","to":"tamb"},"to":1}},
+      {"move_object":"tstretcher","to":"t_acc"},
+      {"sleep":1},
+      {"try": [
+          {"drive_object":{"name":"tstretcher","to":[{"closest":["t_LUP","t_RUP","t_RDWN","t_LDWN"],"to":"tstretcher"},{"bearing":0,"dist":0,"object":{"local":"t_X"}},{"bearing2":180,"dist":6,"object":"tamb"},{"bearing2":180,"dist":1,"object":"tamb"},{"bearing2":270,"dist":0.6,"object":"tamb"},"tamb"],"VAR1":1,"speed":5}}
+        ],
+        "catch": [
+          {"set":{"local":"t_result"},"value":{"text":"{0}: variant B drive error {1}","params":[{"local":"t_title"},{"param":"$ERROR"}]}}
+      ]},
+      {"set":{"object":"tstretcher","var":"VAR 1"},"value":0},
+      {"set":{"local":"t_dist_b"},"value":{"round":{"location":"tstretcher","var":"distance:m","to":"tamb"},"to":1}},
+      {"if": {"local":"t_dist_a"}, "gt": 4,
+        "then": [
+          {"set":{"local":"t_result"},"value":{"text":"{0}: A {1} m (old gate 4 m: WOULD HAVE ABORTED), B {2} m, start {3} m, patient to vehicle {4} m","params":[{"local":"t_title"},{"local":"t_dist_a"},{"local":"t_dist_b"},{"local":"t_start"},{"local":"t_from_patient"}]}}
+        ],"else": [
+          {"set":{"local":"t_result"},"value":{"text":"{0}: A {1} m (old gate 4 m: ok), B {2} m, start {3} m, patient to vehicle {4} m","params":[{"local":"t_title"},{"local":"t_dist_a"},{"local":"t_dist_b"},{"local":"t_start"},{"local":"t_from_patient"}]}}
+      ]},
+      {"call_macro":"amb test cleanup"}
+    ]
+  },
+  "briefing": [
+    {"text":"AMBULANCE STRETCHER LOAD TEST","size":"large","align":"center"},
+    {"text":"Park the helicopter on flat ground with 150 m of free space around it and stay still. The test creates, one model after the other, an ambulance 60 m north of the helicopter and its stretcher, walks the stretcher to a patient point and then drives it to the ambulance exactly as the mission does when it loads a patient. It writes how far from the vehicle centre the stretcher ends (A = mission drive, B = closer end points). The old mission aborted the load above 4 m. Models of add-ons that are not installed are drawn with the standard H145 ambulance."},
+    {"buttonbar":[{"title":"RUN ALL AMBULANCE MODELS","commands":[{"create_thread":{"commands":[{"call_macro":"amb test run all"}]}}]},{"text":"{0}","params":[{"local":"t_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"REMOVE TEST OBJECTS","commands":[{"call_macro":"amb test cleanup"}]}]},
+    {"text":"{0}","params":[{"local":"t_res_1"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_2"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_3"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_4"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_5"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_6"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_7"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_8"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_9"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_10"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_11"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t_res_12"}],"color":"yellow"}
+  ],
+  "data": {
+    "Amb_Test_Table": "R&E_ambulance_stretcher_test",
+    "Amb_Test_Models": [
+      {"title":"Airbus H145 Ambulance"},
+      {"title":"30West Ambu Berlin lights"},
+      {"title":"30West Ambu Johanniter lights"},
+      {"title":"DE Ambulance 1 DRK Yellow"},
+      {"title":"DE Ambulance 1 DRK White"},
+      {"title":"US Ambulance 1"},
+      {"title":"UK Ambulance 1"},
+      {"title":"UK Ambulance 2"},
+      {"title":"NL Ambulance 1"},
+      {"title":"IT Ambulance 1"},
+      {"title":"pl-ambulance-1"},
+      {"title":"Airbus H145 FR Pompiers VSAV ON CLOSE"}
+    ]
+  }
+}

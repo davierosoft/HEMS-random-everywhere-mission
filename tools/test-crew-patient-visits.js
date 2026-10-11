@@ -72,6 +72,8 @@ class Scene extends Base {
     if (q?.global) return this.globals[q.global] ?? null;
     if (q?.fn === 'get_time_string') return '00:00:00';
     if (q?.has_object !== undefined) return Number(this.objects.has(this.query(q.has_object, p)));
+    // A bare location reference is a value (for example a message waypoint), not a distance query.
+    if (q?.location && typeof q.location === 'string' && q.var === undefined && Object.keys(q).length === 1) return this.locations[this.text(q.location, p)] ?? null;
     if (q?.location && typeof q.location === 'string') {
       return super.query({ ...q, location: this.text(q.location, p), to: this.text(q.to, p) }, p);
     }
@@ -238,6 +240,10 @@ for (const slot of [1, 2, 3]) {
 {
   const h = new Scene();
   assert.equal(h.call(prefix + 'tour', {resource:'hems', actor:'hoist_crew', provider:'HEMS', walk:3, assistant:'pax3', assistant_walk:16}), 1);
+  // The HEMS crew report is an outgoing message: the inbox sender is -OUT- (never HEMS).
+  const hemsReport = h.locals.Dispatcher_Messages?.find(message => /^HEMS: visit/.test(message.text));
+  assert.ok(hemsReport, 'the HEMS tour must post its RescueTrack report');
+  assert.equal(hemsReport.from, '-OUT-');
   for (const slot of [1,2,3]) {
     const arrivals=h.events.filter(e=>e[0]==='arrival' && e[2]===patientObject(slot));
     assert.ok(arrivals.some(e=>e[1]==='hoist_crew' && e[3]===90));

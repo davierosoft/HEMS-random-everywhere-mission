@@ -1,10 +1,25 @@
 {"hoist up operator+injured": [
+    {"set":{"local":"HOIST_CABLE_PHASE"},"value":"up"},
+    {"set":{"local":"HOIST_CABLE_MEMBER"},"value":2},
+    {"set":{"local":"HOIST_CABLE_OBJECT"},"value":"hoist_crew"},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"up_start person={local:HOIST_CREW_ON_CABLE} patient=1 out={local:HOIST_OUT}"}},
+    {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
+    {"set":{"local":"HOIST_CABLE_PATIENT"},"value":1},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.1,1.5]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:m"},"lt":8},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
-    {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"lt":1}
+    {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"lt":1},
+    {"#comment":"With the hoist out the operator and the patient stay on the hook (HOIST_OUT 1): the baseline speed, bank and load ladders of Hoisting back up take over. Otherwise they are aboard."},
+    {"if": {"local":"HOIST_OUT"}, "eq": 0,
+      "then": [
+        {"set":{"local":"HOIST_CABLE_PATIENT"},"value":0},
+        {"set":{"local":"HOIST_CABLE_PHASE"},"value":""}
+      ],"else": [
+        {"set":{"local":"HOIST_CABLE_PHASE"},"value":"out"}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"up_end patient={local:HOIST_CABLE_PATIENT} phase={local:HOIST_CABLE_PHASE}"}}
   ],
   "random injured": [
     {"sleep":0.2},
@@ -338,8 +353,9 @@
               ]}, "eq": 1,
               "then": [
                 {"set":{"local":"POLICE_AVAIL"},"value":2},
+                {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Deceased on scene. Requesting police."}},
                 {"call_macro":"Police1"},
-                {"call_macro":"post dispatcher message","params":{"text":"Deceased reported on scene. Police informed and en route. Scene under investigation: do not move the body."}}
+                {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
             ]},
             {"set_message":{"text":"Deceased on scene. Police informed and en route. Scene under investigation."}}
         ]}}
@@ -415,12 +431,29 @@
     ]}
   ],
   "post dispatcher message": [
-    {"#comment":"Posts one message from the dispatcher in the RescueTrack list. The list entry carries the time, so it is also the log."},
+    {"#comment":"Posts one message in the RescueTrack list; the list entry carries the time, so it is also the log. The sender is chosen by the optional param from: crew is the helicopter crew reporting to the dispatcher (-OUT-), fire, police and ambulance are the units on scene (their call signs firename, poliname, ambuname), anything else is the dispatcher (GRPNAME). A message belongs to whoever knows the fact: the dispatcher only posts what it decides or what it was told by a crew or a unit before."},
     {"set":{"local":"Dispatcher_text"},"value":{"param":"text"}},
+    {"set":{"local":"post_from"},"value":{"global":"GRPNAME"}},
+    {"if": {"param":"from"}, "eq": "crew",
+      "then": [
+        {"set":{"local":"post_from"},"value":"-OUT-"}
+    ]},
+    {"if": {"param":"from"}, "eq": "fire",
+      "then": [
+        {"set":{"local":"post_from"},"value":{"local":"firename"}}
+    ]},
+    {"if": {"param":"from"}, "eq": "police",
+      "then": [
+        {"set":{"local":"post_from"},"value":{"local":"poliname"}}
+    ]},
+    {"if": {"param":"from"}, "eq": "ambulance",
+      "then": [
+        {"set":{"local":"post_from"},"value":{"local":"ambuname"}}
+    ]},
     {"modify_array": {"local":"Dispatcher_Messages"},
       "prepend": {
         "create_struct": {
-          "from": {"global":"GRPNAME"},
+          "from": {"local":"post_from"},
           "time": {
             "text": "{0:TIME}{1}",
             "params": [
@@ -1180,8 +1213,8 @@
         {"text":"GCS EYE (E): 4 spontaneous | 3 sound | 2 pressure | 1 none | NT not testable","color":"gray","show_condition":{"and":[{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"GCS VERBAL (V): 5 orientated | 4 confused | 3 words | 2 sounds | 1 none | NT intubated/unassessable","color":"gray","show_condition":{"and":[{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"GCS MOTOR (M): 6 obeys | 5 localises | 4 normal flexion | 3 abnormal flexion | 2 extension | 1 none | NT not testable","color":"gray","show_condition":{"and":[{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
-        {"text":"Patient condition is critical. Code {0}, vital signs fading (SpO2 {1}%, HR {2})","params":[{"local":"medical_display_code"},{"tofixed":{"local":"medical_display_spo2"},"digits":1},{"tofixed":{"local":"medical_display_bpm"},"digits":1}],"color":"yellow","show_condition":{"and":[{"require":{"var":["L:RESCUED","number"]},"ne":0},{"require":{"local":"medical_display_lifescore"},"lt":30},{"require":{"local":"medical_display_lifescore"},"gt":0},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"local":"MISSION_PHASE"},"gt":6},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
-        {"text":"Patient conditions: SpO2 {0}% | HR {1} | BP {2}/{3} | RR {4}","params":[{"tofixed":{"local":"medical_display_spo2"},"digits":1},{"tofixed":{"local":"medical_display_bpm"},"digits":1},{"tofixed":{"local":"medical_display_bp_sys"},"digits":1},{"tofixed":{"local":"medical_display_bp_dia"},"digits":1},{"tofixed":{"local":"medical_display_rr"},"digits":1}],"show_condition":{"and":[{"require":{"local":"medical_display_lifescore"},"gte":30},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"}],"eq":1}},
+        {"text":"Patient condition is critical. Code {0}, vital signs fading (SpO2 {1}%, HR {2})","params":[{"local":"medical_display_code"},{"tofixed":{"local":"medical_display_spo2"},"digits":1},{"round":{"local":"medical_display_bpm"},"to":0}],"color":"yellow","show_condition":{"and":[{"require":{"var":["L:RESCUED","number"]},"ne":0},{"require":{"local":"medical_display_lifescore"},"lt":30},{"require":{"local":"medical_display_lifescore"},"gt":0},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"local":"MISSION_PHASE"},"gt":6},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
+        {"text":"Patient conditions: SpO2 {0}% | HR {1} | BP {2}/{3} | RR {4}","params":[{"tofixed":{"local":"medical_display_spo2"},"digits":1},{"round":{"local":"medical_display_bpm"},"to":0},{"round":{"local":"medical_display_bp_sys"},"to":0},{"round":{"local":"medical_display_bp_dia"},"to":0},{"round":{"local":"medical_display_rr"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_lifescore"},"gte":30},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"}],"eq":1}},
         {"slider":{"min":1,"max":100,"local":"medical_display_lifescore"},"commands":[{"call_macro":"multipatient registry manual lifescore override","params":{"slot":{"local":"medical_display_patient"},"score":{"local":"medical_display_lifescore"}}},{"call_macro":"sync medical patient display"}],"show_condition":{"and":[{"require":{"local":"medical_display_lifescore"},"gt":0},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}}
     ]}
   ],
@@ -1194,7 +1227,6 @@
     ]},
     {"set":{"param":"generation"},"value":{"local":"patient_live_generation"}},
     {"call_macro":"multipatient registry live CPR read"},
-    {"call_macro":"test tracker begin","params":{"test_id":"cpr_mcpr"}},
     {"set":{"local":"cpr_provider_present"},"value":0},
     {"if": {"local":"crewvisiting1"}, "eq": "yes",
       "then": [
@@ -1480,8 +1512,7 @@
                 ]}
             ]}
         ]}}
-    ]},
-    {"call_macro":"test tracker complete","params":{"test_id":"cpr_mcpr"}}
+    ]}
   ],
   "Patient status": [
     {"if": {
@@ -1492,7 +1523,7 @@
       "then": [
         {"set":{"local":"medical_display_patient"},"value":{"local":"HEMS_PATIENT_NUMBER"}},
         {"call_macro":"sync medical patient display"},
-        {"set_message":{"text":"Patient {0}: SpO2 {1}%, HR {2}, BP {3}/{4}","params":[{"local":"HEMS_PATIENT_NUMBER"},{"tofixed":{"local":"medical_display_spo2"},"digits":1},{"tofixed":{"local":"medical_display_bpm"},"digits":1},{"tofixed":{"local":"medical_display_bp_sys"},"digits":1},{"tofixed":{"local":"medical_display_bp_dia"},"digits":1}]}},
+        {"set_message":{"text":"Patient {0}: SpO2 {1}%, HR {2}, BP {3}/{4}","params":[{"local":"HEMS_PATIENT_NUMBER"},{"tofixed":{"local":"medical_display_spo2"},"digits":1},{"round":{"local":"medical_display_bpm"},"to":0},{"round":{"local":"medical_display_bp_sys"},"to":0},{"round":{"local":"medical_display_bp_dia"},"to":0}]}},
         {"return":1}
     ]},
     {"call_macro":"consciousness","params":{"rescuesendstatus":"helicopter","announce":1}},
@@ -1554,6 +1585,7 @@
     {"sleep":0.1}
   ],
   "pathology random engine": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"pat_roll_start","detail":{"text":"stale ls={0} life={1} cause={2} clock={3} reload={4} type={5} ready={6}","params":[{"local":"LIFESCORE"},{"local":"patientlife"},{"local":"PATIENT_DEATH_CAUSE"},{"local":"patient_registry_clock"},{"var":["L:RELOADSAVED","number"]},{"local":"PATOLOGY_TYPE"},{"local":"pathology_random_ready"}]}}},
     {"call_macro":"initialize multipatient clinical state"},
     {"set":{"local":"pathology_random_ready"},"value":0},
     {"if": {"local":"PATOLOGY_TYPE"}, "eq": null,
@@ -1967,6 +1999,7 @@
         {"set":{"local":"ambulance_handover_completed_actions"},"value":0},
         {"set":{"local":"ambulance_handover_second_action_roll"},"value":null},
         {"#comment":"AUTO treatment executes synchronously inside the physical visit; MANUAL retains its UI action worker."},
+        {"call_macro":"ground ops checkpoint","params":{"id":"pat_roll_done","detail":{"text":"ls={0} rate={1} type={2} spo2={3} bpm={4} reload={5} variant={6}","params":[{"local":"LIFESCORE"},{"local":"P1_DECR_RATE"},{"local":"PATOLOGY_TYPE"},{"local":"SPO2"},{"local":"BPM"},{"var":["L:RELOADSAVED","number"]},{"local":"CRASH_VARIABLE"}]}}},
         {"set":{"local":"pathology_random_ready"},"value":1}
     ]}},
     {"create_thread": {
@@ -1976,6 +2009,7 @@
     ]}}
   ],
   "halloween pathology random engine": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"pat_roll_start","detail":{"text":"stale ls={0} life={1} cause={2} clock={3} reload={4} type={5} ready={6}","params":[{"local":"LIFESCORE"},{"local":"patientlife"},{"local":"PATIENT_DEATH_CAUSE"},{"local":"patient_registry_clock"},{"var":["L:RELOADSAVED","number"]},{"local":"PATOLOGY_TYPE"},{"local":"pathology_random_ready"}]}}},
     {"set":{"local":"pathology_random_ready"},"value":0},
     {"if": {"local":"PATOLOGY_TYPE"}, "eq": null,
       "then": [
@@ -2211,6 +2245,7 @@
             {"set":{"local":"decr_rate"},"value":{"floor":{"rand":[1,2]}}}
         ]},
         {"call_macro":"ensure pathology1 fallback"},
+        {"call_macro":"ground ops checkpoint","params":{"id":"pat_roll_done","detail":{"text":"ls={0} rate={1} type={2} spo2={3} bpm={4} reload={5} variant={6}","params":[{"local":"LIFESCORE"},{"local":"P1_DECR_RATE"},{"local":"PATOLOGY_TYPE"},{"local":"SPO2"},{"local":"BPM"},{"var":["L:RELOADSAVED","number"]},{"local":"CRASH_VARIABLE"}]}}},
         {"set":{"local":"pathology_random_ready"},"value":1}
     ]}}
   ],
@@ -2562,9 +2597,9 @@
     {"set":{"local":"MISSION_PHASE"},"value":4}
   ],
   "pax3_visits_poordead": [
-    {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"poordead"},{"bearing2":140,"dist":3,"object":"poordead"}],"to":"pax3"}],"VAR1":3,"speed":3}},
+    {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"poordead"},{"bearing2":140,"dist":3,"object":"poordead"}],"to":"pax3"}],"VAR1":3,"speed":4}},
     {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-    {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":0.2,"object":"poordead"},{"bearing2":140,"dist":0.2,"object":"poordead"}],"to":"pax3"}],"VAR1":3,"speed":2}},
+    {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":0.2,"object":"poordead"},{"bearing2":140,"dist":0.2,"object":"poordead"}],"to":"pax3"}],"VAR1":3,"speed":4}},
     {"set":{"object":"pax3","var":"VAR 1"},"value":1},
     {"sleep":1},
     {"set":{"object":"pax3","var":"VAR 1"},"value":5},
@@ -2591,7 +2626,6 @@
     ]}
   ],
   "rescuetrack patient status summary": [
-    {"call_macro":"test tracker begin","params":{"test_id":"clinical_report"}},
     {"set":{"local":"rescuetrack_patient_status"},"value":null},
     {"if": {"local":"HELOVICTIMS"}, "eq": 1,
       "then": [
@@ -2612,8 +2646,7 @@
     {"if": {"local":"randomdeadmsg"}, "ne": null,
       "then": [
         {"set":{"local":"rescuetrack_patient_status"},"value":{"text":"{0} {1}","params":[{"local":"rescuetrack_patient_status"},{"local":"randomdeadmsg"}]}}
-    ]},
-    {"call_macro":"test tracker complete","params":{"test_id":"clinical_report"}}
+    ]}
   ],
   "More casualties": [
     {"if": {"local":"patient_live_mode"}, "eq": 1,
@@ -2857,18 +2890,6 @@
     ]}}
   ],
   "update patient1 physiology": [
-    {"if": {"local":"HEMS_PHYSIO_TRACE"}, "eq": 1,
-      "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"update patient1 physiology","state":"before_test_tracker_begin"}}
-    ]},
-    {"if": {"local":"test_patient_physiology_tracked"}, "ne": 1,
-      "then": [
-        {"call_macro":"test tracker begin","params":{"test_id":"patient_physiology"}}
-    ]},
-    {"if": {"local":"HEMS_PHYSIO_TRACE"}, "eq": 1,
-      "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"update patient1 physiology","state":"after_test_tracker_begin"}}
-    ]},
     {"if": {"var":["L:CPR","number"]}, "eq": 2,
       "then": [
         {"set":{"local":"SPO2"},"value":{"clamp":[{"local":"SPO2"},0,92]}},
@@ -2986,19 +3007,6 @@
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"update patient1 physiology","state":"after_sync_medical_patient_display"}}
         ]}
-    ]},
-    {"if": {"local":"HEMS_PHYSIO_TRACE"}, "eq": 1,
-      "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"update patient1 physiology","state":"before_test_tracker_complete"}}
-    ]},
-    {"if": {"local":"test_patient_physiology_tracked"}, "ne": 1,
-      "then": [
-        {"call_macro":"test tracker complete","params":{"test_id":"patient_physiology"}},
-        {"set":{"local":"test_patient_physiology_tracked"},"value":1}
-    ]},
-    {"if": {"local":"HEMS_PHYSIO_TRACE"}, "eq": 1,
-      "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"update patient1 physiology","state":"after_test_tracker_complete"}}
     ]}
   ],
   "apply patient1 medical action effect": [
@@ -3174,12 +3182,6 @@
         {"call_macro":"update patient1 physiology"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"apply patient1 medical action effect","state":"after_update_physiology"}},
         {"set":{"local":"HEMS_PHYSIO_TRACE"},"value":0}
-    ]}
-  ],
-  "patient1 postvisit wait": [
-    {"if": {"global":"P1_MANUAL_MEDICAL_MODE"}, "ne": "manual",
-      "then": [
-        {"call_macro":"patient_wait_interval","params":{"medium_wait":{"local":"TIME1MED"},"long_wait":{"local":"TIME1LONG"}}}
     ]}
   ],
   "start patient1 manual treatment": [
@@ -4567,7 +4569,6 @@
   ],
   "initialize multipatient clinical state": [
     {"call_macro":"multipatient registry crew reset"},
-    {"call_macro":"test tracker begin","params":{"test_id":"multipatient"}},
     {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
       "then": [
         {"set":{"local":"PATIENT_CAPACITY"},"value":3},
@@ -4643,7 +4644,6 @@
         {"set":{"local":"P3_AMBULANCE_FINAL_CODE"},"value":null},
         {"set":{"local":"P1_HEMS_LOADING_CONFIRMED"},"value":"no"}
     ]},
-    {"call_macro":"test tracker complete","params":{"test_id":"multipatient"}},
     {"call_macro":"multipatient registry live initialize"}
   ],
   "activate next manual patient visit": [
@@ -4843,19 +4843,7 @@
         ]}
     ]}
   ],
-  "patient clinical visit gate": [
-    {"if": {"global":"P1_MANUAL_MEDICAL_MODE"}, "eq": "manual",
-      "then": [
-        {"call_macro":"request manual patient visit","params":{"patient":{"param":"patient"}}}
-      ],"else": [
-        {"set":{"local":"medical_display_patient"},"value":{"param":"patient"}},
-        {"call_macro":"sync medical patient display"},
-        {"sleep":{"param":"short_wait"}}
-    ]},
-    {"call_macro":"multipatient registry tablet mark visit","params":{"patient":{"param":"patient"}}}
-  ],
   "manual current patient treatment choice": [
-    {"call_macro":"test tracker begin","params":{"test_id":"manual_patient"}},
     {"if": {"local":"manual_active_patient"}, "eq": 1,
       "then": [
         {"call_macro":"manual patient1 treatment choice","params":{"correct":{"param":"correct"},"label":{"param":"label"}}}
@@ -4867,8 +4855,7 @@
     {"if": {"local":"manual_active_patient"}, "eq": 3,
       "then": [
         {"call_macro":"manual patient3 treatment choice","params":{"correct":{"param":"correct"},"label":{"param":"label"}}}
-    ]},
-    {"call_macro":"test tracker complete","params":{"test_id":"manual_patient"}}
+    ]}
   ],
   "advance manual patient visit": [
     {"if": {"local":"manual_active_patient"}, "eq": 1,

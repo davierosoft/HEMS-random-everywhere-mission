@@ -1,0 +1,310 @@
+{"set station weight": [
+    {"#comment":"Hoist operations only: the person of station n is hanging on the cable or is being moved by the hoist, which the seat LVARs do not show. Params: station 1-6, occupied 1 or 0. Keeps the flag HOISTOCC_n (the weight stays on the station while the seat LVAR already reads empty, as the person leaves by the cable, and is removed when the person touches the ground) and recomputes the stations. Everything else is followed by the thread STATION WEIGHTS."},
+    {"if": {"param":"station"}, "eq": 1,
+      "then": [
+        {"set":{"global":"HOISTOCC_1"},"value":{"param":"occupied"}}
+    ]},
+    {"if": {"param":"station"}, "eq": 2,
+      "then": [
+        {"set":{"global":"HOISTOCC_2"},"value":{"param":"occupied"}}
+    ]},
+    {"if": {"param":"station"}, "eq": 3,
+      "then": [
+        {"set":{"global":"HOISTOCC_3"},"value":{"param":"occupied"}}
+    ]},
+    {"if": {"param":"station"}, "eq": 4,
+      "then": [
+        {"set":{"global":"HOISTOCC_4"},"value":{"param":"occupied"}}
+    ]},
+    {"if": {"param":"station"}, "eq": 5,
+      "then": [
+        {"set":{"global":"HOISTOCC_5"},"value":{"param":"occupied"}}
+    ]},
+    {"if": {"param":"station"}, "eq": 6,
+      "then": [
+        {"set":{"global":"HOISTOCC_6"},"value":{"param":"occupied"}}
+    ]},
+    {"call_macro":"station weights recompute"}
+  ],
+  "station weights read": [
+    {"#comment":"Remembers what the thread STATION WEIGHTS compares: seat LVARs (SW_P1..6), crew weight settings (SW_S1..6), the option (SW_OPT) and the kit LVARs (SW_K1..22)."},
+    {"set":{"local":"SW_P1"},"value":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]}},
+    {"set":{"local":"SW_P2"},"value":{"var":["L:{local:HXX}_IMPL_PILOT0","number"]}},
+    {"set":{"local":"SW_P3"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}},
+    {"set":{"local":"SW_P4"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]}},
+    {"set":{"local":"SW_P5"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]}},
+    {"set":{"local":"SW_P6"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}},
+    {"set":{"local":"SW_S1"},"value":{"global":"STATION_1"}},
+    {"set":{"local":"SW_S2"},"value":{"global":"STATION_2"}},
+    {"set":{"local":"SW_S3"},"value":{"global":"STATION_3"}},
+    {"set":{"local":"SW_S4"},"value":{"global":"STATION_4"}},
+    {"set":{"local":"SW_S5"},"value":{"global":"STATION_5"}},
+    {"set":{"local":"SW_S6"},"value":{"global":"STATION_6"}},
+    {"set":{"local":"SW_OPT"},"value":{"global":"KIT_WEIGHTS"}},
+    {"set":{"local":"SW_K1"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_HISL","number"]}},
+    {"set":{"local":"SW_K2"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]}},
+    {"set":{"local":"SW_K3"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_CAPS","number"]}},
+    {"set":{"local":"SW_K4"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_RADOME","number"]}},
+    {"set":{"local":"SW_K5"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_TOP","number"]}},
+    {"set":{"local":"SW_K6"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_BOTTOM","number"]}},
+    {"set":{"local":"SW_K7"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_SKID","number"]}},
+    {"set":{"local":"SW_K8"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SKI","number"]}},
+    {"set":{"local":"SW_K9"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SETTLING_PREVENTERS","number"]}},
+    {"set":{"local":"SW_K10"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_LONG","number"]}},
+    {"set":{"local":"SW_K11"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_EMERGENCY_FLOATS","number"]}},
+    {"set":{"local":"SW_K12"},"value":{"var":["L:{local:HXX}_PERSIST_IBF_INSTALLED","number"]}},
+    {"set":{"local":"SW_K13"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_AIRCONDITIONING","number"]}},
+    {"set":{"local":"SW_K14"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_ADELT","number"]}},
+    {"set":{"local":"SW_K15"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_ACAS","number"]}},
+    {"set":{"local":"SW_K16"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_HTAWS","number"]}},
+    {"set":{"local":"SW_K17"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_HMD","number"]}},
+    {"set":{"local":"SW_K18"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_FUELFLOWSENSOR","number"]}},
+    {"set":{"local":"SW_K19"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_SECOND_LANDING_LIGHT","number"]}},
+    {"set":{"local":"SW_K20"},"value":{"var":["L:{local:HXX}_SDK_EQUIP_CHIN_WINDOW_PLATES","number"]}},
+    {"set":{"local":"SW_K21"},"value":{"var":["L:{local:HXX}_PERSIST_COCKPIT_SUN_VISORS","number"]}},
+    {"set":{"local":"SW_K22"},"value":{"var":["L:{local:HXX}_PERSIST_COCKPIT_FABRIC_GLARESHIELDS","number"]}}
+  ],
+  "station weights recompute": [
+    {"#comment":"Payload station n = the person (global STATION_n, 90 kg by default) if the seat LVAR shows someone or the hoist flag HOISTOCC_n is set, plus the kit mass of the station (locals KITT_n). Absolute values: no drift, no accumulation. Stations: 1 copilot (IMPL_PILOT1 = 0), 2 pilot (IMPL_PILOT0 = 0), 3 PAX 1, 4 PAX 2, 6 PAX 3 (SDK_CABIN_PAX_n = 1), 5 stretcher with patient (SDK_CABIN_PAX_5 = 2)."},
+    {"call_macro":"kit weights target"},
+    {"set":{"local":"sw_on"},"value":0},
+    {"if": {"var":["L:{local:HXX}_IMPL_PILOT1","number"]}, "eq": 0,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"if": {"global":"HOISTOCC_1"}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"set":{"local":"sw_w"},"value":{"local":"KITT_1"}},
+    {"if": {"local":"sw_on"}, "eq": 1,
+      "then": [
+        {"if": {"global":"STATION_1"}, "ne": null,
+          "then": [
+            {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_1"}]}}
+        ]}
+    ]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"local":"sw_w"}},
+    {"set":{"local":"sw_on"},"value":0},
+    {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"if": {"global":"HOISTOCC_2"}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"set":{"local":"sw_w"},"value":{"local":"KITT_2"}},
+    {"if": {"local":"sw_on"}, "eq": 1,
+      "then": [
+        {"if": {"global":"STATION_2"}, "ne": null,
+          "then": [
+            {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_2"}]}}
+        ]}
+    ]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"value":{"local":"sw_w"}},
+    {"set":{"local":"sw_on"},"value":0},
+    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"if": {"global":"HOISTOCC_3"}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"set":{"local":"sw_w"},"value":{"local":"KITT_3"}},
+    {"if": {"local":"sw_on"}, "eq": 1,
+      "then": [
+        {"if": {"global":"STATION_3"}, "ne": null,
+          "then": [
+            {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_3"}]}}
+        ]}
+    ]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"value":{"local":"sw_w"}},
+    {"set":{"local":"sw_on"},"value":0},
+    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"if": {"global":"HOISTOCC_4"}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"set":{"local":"sw_w"},"value":{"local":"KITT_4"}},
+    {"if": {"local":"sw_on"}, "eq": 1,
+      "then": [
+        {"if": {"global":"STATION_4"}, "ne": null,
+          "then": [
+            {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_4"}]}}
+        ]}
+    ]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"value":{"local":"sw_w"}},
+    {"set":{"local":"sw_on"},"value":0},
+    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]}, "eq": 2,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"if": {"global":"HOISTOCC_5"}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"set":{"local":"sw_w"},"value":{"local":"KITT_5"}},
+    {"if": {"local":"sw_on"}, "eq": 1,
+      "then": [
+        {"if": {"global":"STATION_5"}, "ne": null,
+          "then": [
+            {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_5"}]}}
+        ]}
+    ]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"value":{"local":"sw_w"}},
+    {"set":{"local":"sw_on"},"value":0},
+    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"if": {"global":"HOISTOCC_6"}, "eq": 1,
+      "then": [
+        {"set":{"local":"sw_on"},"value":1}
+    ]},
+    {"set":{"local":"sw_w"},"value":{"local":"KITT_6"}},
+    {"if": {"local":"sw_on"}, "eq": 1,
+      "then": [
+        {"if": {"global":"STATION_6"}, "ne": null,
+          "then": [
+            {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_6"}]}}
+        ]}
+    ]},
+    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"local":"sw_w"}}
+  ],
+  "kit weights target": [
+    {"#comment":"Mass of the installed kits per station into locals KITT_1..6; zero while the option KIT_WEIGHTS is not yes. Masses are estimates (docs/architecture/KIT_WEIGHTS.md); stations 1/2 cockpit left/right, 3/4 front cabin, 5/6 rear cabin. Kits read from the SDK LVARs (HOOK, WEAPONS_SIGHT and SAFETY_PATCHES have no readable LVAR and carry no mass)."},
+    {"set":{"local":"KITT_1"},"value":0},
+    {"set":{"local":"KITT_2"},"value":0},
+    {"set":{"local":"KITT_3"},"value":0},
+    {"set":{"local":"KITT_4"},"value":0},
+    {"set":{"local":"KITT_5"},"value":0},
+    {"set":{"local":"KITT_6"},"value":0},
+    {"if": {"global":"KIT_WEIGHTS"}, "eq": "yes",
+      "then": [
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_HISL","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},25]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_4"},"value":{"add":[{"local":"KITT_4"},50]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_SKID_CAPS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},1.5]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},1.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_RADOME","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},2]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},2]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_RADOME","number"]}, "eq": 2,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},6]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},6]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_WSPS_TOP","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},2.5]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},2.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_WSPS_BOTTOM","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},2]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},2]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_WSPS_SKID","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},1.5]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},1.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_SKID_SKI","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_3"},"value":{"add":[{"local":"KITT_3"},10]}},
+            {"set":{"local":"KITT_4"},"value":{"add":[{"local":"KITT_4"},10]}},
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},5]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_SKID_SETTLING_PREVENTERS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},5]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_SKID_LONG","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},10]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},10]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_EMERGENCY_FLOATS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_3"},"value":{"add":[{"local":"KITT_3"},10]}},
+            {"set":{"local":"KITT_4"},"value":{"add":[{"local":"KITT_4"},10]}},
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},10]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},10]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_PERSIST_IBF_INSTALLED","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},10]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},10]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_AIRCONDITIONING","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_3"},"value":{"add":[{"local":"KITT_3"},7.5]}},
+            {"set":{"local":"KITT_4"},"value":{"add":[{"local":"KITT_4"},7.5]}},
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},7.5]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},7.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_ADELT","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},3.5]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},3.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_ACAS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},2]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},2]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_HTAWS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},1]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},1]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_HMD","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},2]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},2]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_FUELFLOWSENSOR","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_5"},"value":{"add":[{"local":"KITT_5"},0.5]}},
+            {"set":{"local":"KITT_6"},"value":{"add":[{"local":"KITT_6"},0.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_SECOND_LANDING_LIGHT","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},1]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},1]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_SDK_EQUIP_CHIN_WINDOW_PLATES","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},1]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},1]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_PERSIST_COCKPIT_SUN_VISORS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},0.5]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},0.5]}}
+        ]},
+        {"if": {"var":["L:{local:HXX}_PERSIST_COCKPIT_FABRIC_GLARESHIELDS","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"KITT_1"},"value":{"add":[{"local":"KITT_1"},0.5]}},
+            {"set":{"local":"KITT_2"},"value":{"add":[{"local":"KITT_2"},0.5]}}
+        ]}
+    ]}
+  ]
+}

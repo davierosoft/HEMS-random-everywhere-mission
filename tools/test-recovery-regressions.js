@@ -129,6 +129,7 @@ for (const role of ['marshall', 'pisteur3']) for (const rpm of [19, 20, 40, 79, 
 // Use real fallback commands and record the requested HPG locations.
 for (const skipped of ['yes', 'no', null]) {
   const h = new Live(), created = [];
+  h.maxLoopTicks = 200; // the fallback worker waits up to 120 one-second ticks for the generator before it creates the cardinal points
   h.locations.rescue_location = [45, 8]; h.locals.query_skipped = skipped;
   const run = h.commands.bind(h);
   h.commands = (commands, p) => {
@@ -141,7 +142,7 @@ for (const skipped of ['yes', 'no', null]) {
   h.call('random residential road nodes launcher');
   assert.equal(h.threads.length, skipped === 'yes' ? 1 : 2, 'Only explicit skip suppresses the query worker');
   h.runThread(h.threads[0]);
-  assert.equal(created.length, 6);
+  assert.equal(created.length, 9, 'cardinal fallback: wpt, wph (heading helper) and wprescue for three arms');
   for (const c of created) {
     const offset = c.zones[0].zone.location;
     assert.equal(offset.object, 'rescue_location');
@@ -151,22 +152,8 @@ for (const skipped of ['yes', 'no', null]) {
   assert.equal(h.locals.CONTINUE_LOADING, 'yes');
   assert.equal(h.locals.roadnode_query_status, 'fallback');
 }
-for (const cancel of [false, true]) {
-  const h = new Live(); h.maxLoopTicks = 300;
-  Object.assign(h.locals, {roadnode_query_generation: 7, roadqueryattempt: 0, NATION: 'test'});
-  const query = h.query.bind(h), run = h.commands.bind(h);
-  h.query = (q, p) => q?.static === 'marker posts' ? {test: {title: 'marker'}} : query(q, p);
-  h.commands = (commands, p) => {
-    for (const c of commands) {
-      if (c.osm_query_data) assert.equal(p.my_data, null, 'A new query must clear stale response data');
-      else run([c], p);
-    }
-  };
-  if (cancel) h.sleepHook = scene => { scene.locals.roadnode_query_generation++; };
-  assert.equal(h.call('road nodes generator', {road_generation: 7, my_data: {stale: true}}), 0);
-  assert.equal(h.events.filter(event => event[0] === 'sleep').length, cancel ? 1 : 240);
-  if (!cancel) assert.equal(h.locals.roadnode_query_status, 'query_timeout');
-}
+// The generator no longer queries OSM data (no stale my_data, no 120 s response wait): its routes, failure and
+// restart behaviour are covered by tools/test-road-routes.js.
 for (const initial of [1, -1]) {
   const h = new Live(); h.objects.add('pax1'); let created = initial;
   const query = h.query.bind(h), run = h.commands.bind(h);
@@ -187,6 +174,7 @@ for (const initial of [1, -1]) {
 class Diagnostics extends Live {
   query(q, p) {
     if (q?.static === 'Debug_Auto_Table') return 'automatic';
+    if (q?.static === 'Debug_Prev_Table') return 'previous';
     if (q?.fn === 'get_time_string') return '12:00:00';
     // A bare location reference is only meaningful as the value of an LVAR write (see commands below).
     if (q?.location && q.var === undefined && Object.keys(q).length === 1) return this.locations[q.location];
@@ -239,10 +227,12 @@ class Diagnostics extends Live {
   h.runThread(h.threads[0]);
   assert.equal(h.locals.location_diagnostic_history.length, 0, 'Old-generation monitor must stop');
   h.locals.location_diagnostic_history = Array.from({length: 200}, (_, index) => ({index}));
+  h.locals.location_diagnostic_history_count = 200;
   h.sleepHook = scene => { scene.locals.location_diagnostic_monitor_active = 'no'; };
   h.runThread(h.threads.at(-1));
-  assert.equal(h.locals.location_diagnostic_history.length, 200);
-  assert.equal(h.locals.location_diagnostic_history[0].index, 1, 'History drops the oldest entry');
+  assert.equal(h.locals.location_diagnostic_history.length, 101, 'At 200 rows the history is rebuilt with the newest 100 and the new row is appended');
+  assert.equal(h.locals.location_diagnostic_history[0].index, 100, 'History is a FIFO: the oldest 100 entries are dropped, the newest 100 are kept in order');
+  assert.equal(h.locals.location_diagnostic_history_count, 101, 'The count follows the length');
   assert.equal(h.locals.location_diagnostic_generation, currentGeneration);
   assert.equal(JSON.stringify(h.savedTables.manual), manual);
   const capture = find(h.macros['debug page'], x => x.title === 'CAPTURE SNAPSHOT');

@@ -56,6 +56,10 @@ I comandi disponibili sono:
 | `reindex` | Aggiorna ordine e metadata dopo aggiunte, rinomine o rimozioni intenzionali. |
 | `extract --force` | Rigenera tutti i moduli dall'artefatto; riservato a migrazione o recovery. |
 
+## Aggiornamento 2026-10-09: tutte le sezioni root sono modulari
+
+Lo stato descritto sopra (solo `macros` e `data` modulari, altre sezioni artifact-only, comando `extract`) è superato. `mission-src/` contiene ora ogni sezione root: `macros`, `data`, `threads`, `icons` e le restanti chiavi root (`root`: intestazione, objectives, briefing), con manifest schema 2 (`keyedSections`, `artifactKeyOrder`, un ordine per sezione). L'assemblatore ricostruisce l'intero artefatto dai moduli, `extract` è stato rimosso (era solo la migrazione iniziale) e `locate` e `reindex` coprono tutte le sezioni. Prova della migrazione: la composizione prima e dopo è risultata identica byte per byte. Le checklist sono state spostate in un modulo proprio (`22-checklists.json`).
+
 ## Protezione delle scritture
 
 Le operazioni `extract`, `reindex` e `build` invocano `assertCicersBranch` prima di scrivere. Il progetto ha successivamente adottato un modello a branch singolo: la funzione (nome storico conservato per non toccare ogni chiamante) ora accetta soltanto `main`; qualsiasi altra branch o detached HEAD è respinta.

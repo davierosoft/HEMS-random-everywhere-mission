@@ -9,7 +9,6 @@ const root = path.resolve(__dirname, '..');
 const profiles = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
 const presets = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/02-save-load-presets.json'), 'utf8'));
 const settings = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/04-dispatch-tablet-ui.json'), 'utf8'));
-const tracker = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/16-release-test-tracker.json'), 'utf8'));
 const lifecycle = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/11-mission-lifecycle.json'), 'utf8'));
 const tables = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/data/01-persistence-tables.json'), 'utf8'));
 
@@ -81,14 +80,11 @@ const copyCommand = copyControl.button.commands && copyControl.button.commands[0
 requireTrue(copyCommand && copyCommand.call_macro === 'copy saved aircraft profile to actual set' && !copyCommand.params, 'copy control passes a dynamic destination table');
 for (const label of ['MSN LIST DFLT', 'MSN LIST 1', 'MSN LIST 2', 'MSN LIST 3', 'MSN LIST 4', 'MSN LIST 5']) requireTrue(titles.includes(label), `missing link label ${label}`);
 
-const trackerLabel = 'TEST AIRCRAFT PROFILES: SELECT CUS.PROFILE 1; SETTINGS/MEDICAL OPTIONS: SWITCH AUTOMATIC OR MANUAL; REOPEN CUS.PROFILE 1';
-requireTrue(JSON.stringify(tracker['test tracker page']).includes(trackerLabel), 'Test Tracker does not state the exact aircraft-profile test flow');
-requireTrue(!hasCall(profilePage, 'test tracker begin') && !hasCall(profilePage, 'test tracker complete'), 'opening the profile page changes the test result without verification');
-requireTrue(contains(settings.settings, (entry) => entry && entry.call_macro === 'test tracker begin' && entry.params && entry.params.test_id === 'aircraft_profiles'), 'Medical Options mode switch does not begin the aircraft-profile test');
-requireTrue(contains(settings.settings, (entry) => entry && entry.set && entry.set.table && entry.set.table.static === 'Debug_Table' && entry.set.key === 'test_aircraft_profiles_medical_mode'), 'Medical Options mode switch does not record the expected saved value');
+// The Release Test Tracker was removed: opening the profile page or switching the medical mode writes no test state.
+requireTrue(!hasCall(profilePage, 'test tracker begin') && !hasCall(profilePage, 'test tracker complete'), 'opening the profile page calls the removed Test Tracker');
+requireTrue(!contains(settings.settings, (entry) => entry && ((entry.call_macro && /^test tracker/.test(entry.call_macro)) || (entry.set && entry.set.table && entry.set.table.static === 'Debug_Table'))), 'Medical Options mode switch still writes test state');
 const selectCustom = presets['select custom aircraft profile'];
-requireTrue(contains(selectCustom, (entry) => entry && entry.open_table && entry.open_table.static === 'Debug_Table'), 'custom profile reload does not open test state before reading it');
-requireTrue(contains(selectCustom, (entry) => entry && entry.call_macro === 'test tracker complete' && entry.params && entry.params.test_id === 'aircraft_profiles'), 'custom profile reload does not complete the verified test');
+requireTrue(!contains(selectCustom, (entry) => entry && ((entry.call_macro && /^test tracker/.test(entry.call_macro)) || (entry.open_table && entry.open_table.static === 'Debug_Table'))), 'custom profile reload still reads or completes test state');
 
 const missionTables = ['Config_Table0', 'Config_Table1', 'Config_Table2', 'Config_Table3', 'Config_Table4', 'Config_Table5'];
 const link = presets['link aircraft profile to mission'];

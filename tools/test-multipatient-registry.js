@@ -133,6 +133,8 @@ class HpgRegistry {
       this.commands(helper, params); return;
     }
     if (name === 'Police1' && !this.macros[name]) { this.policeRequests = (this.policeRequests || 0) + 1; return; }
+    if (name === 'ground ops checkpoint' && !this.macros[name]) { this.checkpoints = (this.checkpoints || []).concat(params.id); return; }   // the diagnostic ring of module 19
+    if (name.startsWith('voice ') && !this.macros[name]) { this.voiceCalls = (this.voiceCalls || []).concat(name); return; }   // the voice lines of the Mission Companion (module 03) are not part of the registry
     assert.ok(this.macros[name], `Unknown macro ${name}`);
     try { this.commands(this.macros[name], params); } catch (e) { if (e instanceof Returned) return e.value; throw e; }
   }
@@ -164,21 +166,8 @@ assertFreshMutableArrays(source);
 assert.throws(() => assertFreshMutableArrays({set: {param: 'record'}, value: {create_struct: {history: []}}}), /freshly allocated/);
 
 {
-  const h = new HpgRegistry(); h.locals.MISSION_PHASE = 7;
-  h.call('multipatient registry page');
-  assert.equal(h.locals.patient_registry_sdk_check, 'NOT RUN');
-  h.call('multipatient registry compatibility check');
-  assert.match(h.locals.patient_registry_sdk_check, /^PASS:/);
-  const saved = JSON.parse(h.savedTables.Andrews_debug_snapshots.patient_registry);
-  assert.match(saved.sdk_check, /^PASS:/);
-  assert.equal(h.locals.MISSION_PHASE, 7); assert.equal(h.locals.patients, undefined, 'Probe cannot initialize live patients');
-  const broken = structuredClone(source['multipatient registry page'].find(c => c.set_dispatch).set_dispatch);
-  broken.push({text: '{0}', params: [{param: 'diagnostics'}]});
-  assert.throws(() => assertRendererHasNoCallParams(broken), /Renderer must not read call-scoped params/, 'Reject the exact release-123 failure');
-  const failedProbe = structuredClone(source);
-  failedProbe['multipatient registry SDK probe'].find(c => c.value?.function === 'assign').value.params[0] = { 'json:copy': {param: 'record'} };
-  const failed = new HpgRegistry(failedProbe); failed.call('multipatient registry compatibility check');
-  assert.match(JSON.parse(failed.savedTables.Andrews_debug_snapshots.patient_registry).sdk_check, /^FAIL:/, 'Failure result is also saved without manual capture');
+  // The registry diagnostics page, the SDK compatibility check, its probe and the manual capture were removed from the Debug Center; the registry is saved by the manual snapshot (capture diagnostic snapshot).
+  for (const gone of ['multipatient registry page', 'multipatient registry compatibility check', 'multipatient registry capture', 'multipatient registry SDK probe']) assert.equal(source[gone], undefined, gone + ' stays removed');
   const debug = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros/15-debug-and-df-ui.json'), 'utf8'))['debug page'];
   let captureCall;
   function findCapture(x) {
@@ -226,19 +215,6 @@ assert.throws(() => assertFreshMutableArrays({set: {param: 'record'}, value: {cr
   assert.deepEqual(old.call('probe'), {value: 1, length: 2}, 'Old test could report lost mutation even though scalar mutation succeeded');
   for (const retain of [false, true]) {
     const h = new HpgRegistry(source, retain);
-    for (let batch = 0; batch < 20; batch++) {
-      h.call('multipatient registry compatibility check');
-      assert.equal(h.locals.patient_registry_sdk_check, 'PASS: 5/5 fresh-record and history checks');
-      const saved = JSON.parse(h.savedTables.Andrews_debug_snapshots.patient_registry);
-      assert.equal(saved.sdk_samples.length, 5);
-      assert.deepEqual(saved.sdk_samples.map(s => s.iteration), [1, 2, 3, 4, 5]);
-      for (const sample of saved.sdk_samples) {
-        assert.equal(sample.value_before, 0); assert.equal(sample.value_after, 1);
-        assert.equal(sample.history_before, 0); assert.equal(sample.history_after, 1);
-        assert.equal(sample.other_history, 0); assert.equal(sample.passed, 1);
-      }
-    }
-    assert.equal(h.locals.patients, undefined, 'Repeated diagnostic probes remain non-destructive');
     h.call('multipatient registry initialize');
     for (let slot = 1; slot <= 5; slot++) add(h, slot);
     assert.equal(new Set(h.locals.patients.map(p => p.history)).size, 5, 'Each patient owns a fresh history');
@@ -303,7 +279,7 @@ for (let count = 1; count <= 5; count++) {
   assert.equal(h.locals.active_cpr_slot, 0, 'CPR timeout releases lease');
   assert.equal(h.messages.length, 1, 'Death emitted exactly once');
   assert.equal(h.policeRequests, 1, 'A death on scene requests the police once'); assert.equal(h.locals.DEATH_TIME_1, 52320, 'Time of death follows the simulator clock (seconds, shown with the TIME format)'); assert.equal(h.locals.POLICE_AVAIL, 2); assert.equal(h.locals.PATIENT_DEATH_CAUSE, 'CLINICAL DETERIORATION');
-  assert.equal(h.locals.Dispatcher_Messages.length, 1, 'The dispatcher announces the police request once'); assert.equal(h.locals.Dispatcher_Messages[0].from, 'DISPATCH'); assert.match(h.locals.Dispatcher_Messages[0].text, /Police informed and en route/);
+  assert.equal(h.locals.Dispatcher_Messages.length, 2, 'The crew asks for the police and the dispatcher answers, once each'); assert.equal(h.locals.Dispatcher_Messages[1].from, '-OUT-', 'the report of the death on scene comes from the crew'); assert.match(h.locals.Dispatcher_Messages[1].text, /Requesting police/); assert.equal(h.locals.Dispatcher_Messages[0].from, 'DISPATCH'); assert.match(h.locals.Dispatcher_Messages[0].text, /Police tasked/);
 }
 {
   for (const [planned, player] of [[1, 'single'], [2, 'single'], [0, 'multiplayer']]) {
@@ -441,8 +417,7 @@ for (let count = 1; count <= 5; count++) {
   assert.equal(h.locals.patient_tablet_reports.length, 1);
   assert.equal(h.locals.patient_tablet_reports[0].report.SPO2, 96, 'Closing report is immutable');
   assert.equal(h.locals.patient_tablet_reports[0].closed_at, 120);
-  h.call('multipatient registry capture');
-  const saved = JSON.parse(h.savedTables.Andrews_debug_snapshots.patient_registry);
+  const saved = JSON.parse(h.call('multipatient registry diagnostics'));
   assert.equal(saved.tablet_reports[0].report.SPO2, 96);
   assert.equal(saved.tablet_policy.find(p => p.slot === 2).closed, 1);
   h.call('multipatient registry tablet reset', {preserve_history: 1, disable: 1});
@@ -468,9 +443,10 @@ for (let count = 1; count <= 5; count++) {
   assert.equal(ui['sync medical patient display'][0].call_macro, 'multipatient registry tablet refresh');
   assert.equal(ui['sync medical patient display'].some(command => command.if?.param === 'tablet_closed'), false, 'Display synchronization must not bypass frozen final values');
   assertRendererHasNoCallParams(medical['patient health'][1].then[0].set_dispatch);
-  assert.equal(medical['patient clinical visit gate'].at(-1).call_macro, 'multipatient registry tablet mark visit');
+  assert.ok(!Object.hasOwn(medical, 'patient clinical visit gate'), 'the unused clinical visit gate is removed');
+  assert.ok(JSON.stringify(medical['crew physical HEMS assessment']).includes('"call_macro":"multipatient registry tablet mark visit"'), 'the HEMS assessment marks the visit on the tablet');
   const tabletDecision = JSON.stringify(source['multipatient registry tablet decision']);
   assert.match(tabletDecision, /"ground_confirmed"/, 'Closure remains tied to a physical ground handover');
   assert.doesNotMatch(tabletDecision, /"visit_complete"/, 'Closure must never depend on unrelated unfinished visits');
 }
-console.log('Multi-patient registry PASS: capacities 1-5, reservations, stale-worker fencing, transport, CPR, one-shot death, waypoint paths, physiology parity, per-patient tablet closure, immutable closing reports, renderer lifetime, snapshots and 200 SDK probes. HPG/MSFS integration remains a separate gate.');
+console.log('Multi-patient registry PASS: capacities 1-5, reservations, stale-worker fencing, transport, CPR, one-shot death, waypoint paths, physiology parity, per-patient tablet closure, immutable closing reports, renderer lifetime and snapshots. HPG/MSFS integration remains a separate gate.');

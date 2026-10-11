@@ -1,0 +1,594 @@
+{
+  "briefing": [
+    {
+      "image": "homebar",
+      "show_condition": {"require":{"global":"TABLET_5G_ENABLED"},"ne":"yes"}
+    },
+
+    {
+      "image": "homebar5g",
+      "show_condition": {"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}
+    },
+
+    {
+      "text": "R&E Mission generator {0}{1}{2} - MESSAGE AREA",
+      "params": [{"local":"MISSION_VERSION"},{"local":"DEV_TYPE"},{"local":"DEV_VERSION"}],
+      "align": "center"
+    },
+
+    {
+      "text": " "
+    },
+
+    {
+      "text": "CAUTION CICERS OSM API key will expire in {0:TIME}(...mm:ss)",
+      "params": [{"local":"CICERS_REMAINING_S"}],
+      "align": "center",
+      "color": "orange",
+      "show_condition": {"and":[{"require":{"local":"CICERS_REMAINING_S"},"lt":43200},{"require":{"local":"CICERS_REMAINING_S"},"gt":0}],"eq":1}
+    },
+
+    {
+      "describe_icon": "newico",
+      "color": "green",
+      "description": "New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!",
+      "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
+      "commands": [{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],
+      "align": "center",
+      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"LATEST_RE_VERSION"},"gt":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+    },
+
+    {
+      "describe_icon": "newico",
+      "color": "green",
+      "description": "New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!",
+      "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
+      "commands": [{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],
+      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"LATEST_RE_VERSION"},"eq":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_VERSION"},"ne":{"local":"DEV_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+    },
+
+    {
+      "describe_icon": "newico",
+      "color": "green",
+      "description": "New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!",
+      "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
+      "commands": [{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],
+      "align": "center",
+      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"LATEST_RE_VERSION"},"gt":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+    },
+
+    {
+      "describe_icon": "newico",
+      "color": "green",
+      "description": "New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!",
+      "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
+      "commands": [{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],
+      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"LATEST_RE_VERSION"},"eq":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_VERSION"},"ne":{"local":"DEV_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+    },
+
+    {
+      "text": "Mission version {0} requires H145 base and AP build {1} or above, please update H145",
+      "params": [{"local":"MISSION_VERSION"},{"local":"MINIMUM_VERSION"}],
+      "color": "red",
+      "show_condition": {"require":{"var":["L:{local:HXX}_SDK_BUILD","number"]},"lt":{"local":"MINIMUM_VERSION"}}
+    },
+
+    {
+      "describe_icon": "error",
+      "description": "{0}",
+      "params": [{"local":"queryfailed"}],
+      "color": "red",
+      "show_condition": {"require":{"local":"queryfailed"},"ne":null}
+    },
+
+    {
+      "text": "OSM is slow or hanging, it may fail retrieving location. Consider changing the OSM service before clicking 'NEXT DISPATCH'.'AUTO-TOGGLE' should limit OSM overloads, use it as much as possible.",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"DISPLAY_DISPATCH"},"ne":0},{"require":{"local":"has_location"},"eq":"no"},{"require":{"local":"timer_location"},"ne":null}],"eq":1}
+    },
+
+    {
+      "buttonbar": [{"title":"Overpass DE","select_condition":{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":0},"commands":[{"set":{"global":"DATAQUERYSERVICE"},"value":0},{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":0},{"call_macro":"mark aircraft profile custom"}]},{"title":"Mail.RU","select_condition":{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":1},"commands":[{"set":{"global":"DATAQUERYSERVICE"},"value":1},{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":1},{"call_macro":"mark aircraft profile custom"}]},{"title":"Kumi","select_condition":{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":2},"commands":[{"set":{"global":"DATAQUERYSERVICE"},"value":2},{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":2},{"call_macro":"mark aircraft profile custom"}]},{"title":"CICERS OSM","select_condition":{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":3},"commands":[{"call_macro":"shared repeated block 056"}]},{"title":"AUTO-TOGGLE","select_condition":{"require":{"global":"DATAQUERYSERVICE"},"eq":4},"commands":[{"set":{"global":"DATAQUERYSERVICE"},"value":4},{"if":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"ne":0,"then":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":0}],"else":[{"set":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"value":2}]},{"call_macro":"mark aircraft profile custom"}]}],
+      "show_condition": {"and":[{"require":{"local":"DISPLAY_DISPATCH"},"ne":0},{"require":{"local":"has_location"},"eq":"no"},{"require":{"local":"timer_location"},"ne":null}],"eq":1}
+    },
+
+    {
+      "describe_icon": "download",
+      "description": "CICERS OSM ACTIVE KEY REQUIRED: CLICK HERE",
+      "color": "orange",
+      "commands": [{"open_url":{"local":"LINK4"}}],
+      "show_condition": {"and":[{"require":{"local":"DISPLAY_DISPATCH"},"ne":0},{"require":{"local":"has_location"},"eq":"no"},{"require":{"local":"CICERS_APISTATUS"},"ne":"Active"},{"require":{"local":"timeOSM"},"gt":0}],"eq":1}
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "You closed 'first run description' page without reading/scrolling down and clicking the 'LET'S START!'. Clicking on LET'S START! is mandatory during first start. Click here to re-open Description page",
+      "show_condition": {"require":{"local":"homelock"},"eq":"first"},
+      "commands": [{"set_briefing_dialog":0},{"call_macro":"description"},{"set_dispatch_dialog":1}]
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "68PonyGT HEMS Objects package not found or old version installed",
+      "show_condition": {"require":{"local":"68pony_installed"},"eq":"NO"},
+      "commands": [{"open_url":"https://flightsim.to/file/47913/h145-action-pack-hems-objects"}]
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "Batteroulio French objects package not found, old version installed, or not correctly installed.",
+      "show_condition": {"require":{"local":"batteroulio_installed"},"eq":"NO"},
+      "commands": [{"open_url":"https://flightsim.to/file/42450/pack-vehicules-et-personnages-franais"}]
+    },
+
+    {
+      "text": "If already installed, verify you correctly unzipped 'br-mission-dynamicobjectsample' folder in community, NOT the top level folder 'Pack vehicules FR v2'",
+      "color": "orange",
+      "show_condition": {"require":{"local":"batteroulio_installed"},"eq":"NO"}
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "30West HEMS Objects package not found or old version installed",
+      "show_condition": {"require":{"local":"30West_installed"},"eq":"NO"},
+      "commands": [{"open_url":"https://it.flightsim.to/file/69699/hems-objects"}]
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "Mission basepack not found, if you installed a cumulative mission update (BETA) without previously installing the main package,you MUST go to flightsim.to, download and install stable version, then update with the latest beta",
+      "show_condition": {"require":{"local":"mysounds_installed"},"eq":"NO"},
+      "commands": [{"open_url":"https://it.flightsim.to/file/44159/hpg-airbus-h145-action-pack-hems-random-and-anywhere-mission"}]
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "FUEL HOSE CONNECTED, DAMAGE TO THE HELICOPTER OR FIRE MAY OCCUR. LAND ASAP AND DISCONNECT",
+      "show_condition": {"and":[{"require":{"local":"fuel truck arrived"},"eq":"yes"},{"require":{"var":["SIM ON GROUND","bool"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "{0}",
+      "params": [{"local":"randomize_error"}],
+      "show_condition": {"require":{"local":"randomize_error"},"ne":null}
+    },
+
+    {
+      "describe_icon": "fuellow",
+      "description": "FUEL LOW, Refuel/defuel the helicopter? Actual fuel: {0}Kg",
+      "color": "orange",
+      "params": [{"tofixed":{"var":["FUEL TOTAL QUANTITY WEIGHT","number"]},"digits":0}],
+      "show_condition": {"and":[{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"viewfuel"},"eq":1},{"require":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"lte":{"global":"LOWFUELTHRSLD"}},{"require":{"var":["L:{local:HXX}_PERSIST_FUEL_UNITS","number"]},"eq":0}],"eq":1}
+    },
+
+    {
+      "describe_icon": "fuellow",
+      "description": "FUEL LOW, Refuel/defuel the helicopter? Actual fuel: {0}lbs",
+      "color": "orange",
+      "params": [{"tofixed":{"convert":{"var":["FUEL TOTAL QUANTITY WEIGHT","number"]},"from":"kg","to":"lb"},"digits":0}],
+      "show_condition": {"and":[{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"viewfuel"},"eq":1},{"require":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"lte":{"global":"LOWFUELTHRSLD"}},{"require":{"var":["L:{local:HXX}_PERSIST_FUEL_UNITS","number"]},"eq":1}],"eq":1}
+    },
+
+    {
+      "describe_icon": "fuellow",
+      "description": "FUEL LOW, Refuel/defuel the helicopter? Actual fuel: {0}Kg",
+      "color": "orange",
+      "params": [{"tofixed":{"var":["FUEL TOTAL QUANTITY WEIGHT","number"]},"digits":0}],
+      "show_condition": {"and":[{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"viewfuel"},"eq":1},{"require":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"lte":{"global":"LOWFUELTHRSLD"}},{"require":{"var":["L:{local:HXX}_PERSIST_FUEL_UNITS","number"]},"eq":2}],"eq":1}
+    },
+
+    {
+      "describe_icon": "fuellow",
+      "description": "FUEL LOW, Refuel/defuel the helicopter? Actual fuel: {0}lbs",
+      "color": "orange",
+      "params": [{"tofixed":{"convert":{"var":["FUEL TOTAL QUANTITY WEIGHT","number"]},"from":"kg","to":"lb"},"digits":0}],
+      "show_condition": {"and":[{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"viewfuel"},"eq":1},{"require":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"lte":{"global":"LOWFUELTHRSLD"}},{"require":{"var":["L:{local:HXX}_PERSIST_FUEL_UNITS","number"]},"eq":3}],"eq":1}
+    },
+
+    {
+      "slider": {"min":0,"max":100,"local":"FUEL REQUEST","commands":[{"call_macro":"refueling_slider_debounce"}]},
+      "show_condition": {"and":[{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"viewfuel"},"eq":1},{"require":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]},"lte":{"global":"LOWFUELTHRSLD"}}],"eq":1}
+    },
+
+    {
+      "text": "{0}",
+      "params": [{"local":"fuel msg"}],
+      "color": "yellow",
+      "show_condition": {"require":{"local":"fuel msg"},"ne":null}
+    },
+
+    {
+      "buttonbar": [{"title":"END REFUELLING OPERATIONS","commands":[{"call_macro":"shared repeated block 061"}],"color":"red","disabled_condition":{"require":{"local":"fuel truck arrived"},"eq":null}}],
+      "show_condition": {"and":[{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"fuel msg"},"eq":"Operation completed, free to disconnect fuel truck"}],"eq":1}
+    },
+
+    {
+      "text": "Connected with HEMS Operation Center:{0}/{1}",
+      "params": [{"global":"GRPNUM"},{"global":"GRPNAME"}],
+      "color": "green",
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"local":"HOCconnection"},"eq":"Connected"},{"require":{"local":"player"},"ne":"multiplayer"}],"eq":1}
+    },
+
+    {
+      "text": "CARLS Connected with VIRTUAL AIR RESCUE:{0}/{1}",
+      "params": [{"global":"GRPNUM"},{"global":"GRPNAME"}],
+      "color": "green",
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"player"},"eq":"multiplayer"},{"require":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0}],"eq":1}
+    },
+
+    {
+      "text": "Connected to VIRTUAL AIR RESCUE:{0}/{1} using SIM CARD",
+      "params": [{"global":"GRPNUM"},{"global":"GRPNAME"}],
+      "color": "green",
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1},{"require":{"local":"player"},"eq":"multiplayer"},{"require":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0}],"eq":1}
+    },
+
+    {
+      "text": "CARLS radio disconnected from VIRTUAL AIR RESCUE",
+      "color": "yellow",
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1},{"require":{"local":"player"},"eq":"multiplayer"},{"require":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0}],"eq":1}
+    },
+
+    {
+      "describe_icon": "wifi",
+      "description": "Disconnected from VIRTUAL AIR RESCUE (No active connection)",
+      "params": [{"global":"GRPNUM"},{"global":"GRPNAME"}],
+      "color": "red",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"set_briefing_dialog":0},{"call_macro":"description"},{"set_dispatch_dialog":1},{"sleep":0.5},{"scroll_to_dispatch_item":"MISSION START:"}],
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1},{"require":{"local":"player"},"eq":"multiplayer"},{"require":{"var":["L:SERVICE_CONNECTED","number"]},"eq":0}],"eq":1}
+    },
+
+    {
+      "describe_icon": "wifi",
+      "description": "HEMS Operation Center NOT connected! Check Radio connection on interseat console (Radio On and connected)",
+      "color": "red",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"set_briefing_dialog":0},{"call_macro":"description2"},{"set_dispatch_dialog":1},{"sleep":0.5},{"scroll_to_dispatch_item":"MISSION START:"}],
+      "show_condition": {"and":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1},{"require":{"local":"wificonnect"},"ne":"Connected"},{"require":{"local":"player"},"ne":"multiplayer"}],"eq":1}
+    },
+
+    {
+      "describe_icon": "wifigo",
+      "description": "WIFI CONNECTION AVAILABLE. PUSH HERE TO CONNECT",
+      "color": "yellow",
+      "commands": [{"set":{"local":"wificonnect"},"value":"In progress"},{"sleep":[1,5]},{"set":{"local":"wificonnect"},"value":"Connected"}],
+      "show_condition": {"and":[{"require":{"local":"wifiinrange"},"eq":"in"},{"require":{"local":"wificonnect"},"eq":"Disconnected"},{"require":{"local":"player"},"ne":"multiplayer"},{"require":{"global":"TABLET_5G_ENABLED"},"ne":"yes"}],"eq":1}
+    },
+
+    {
+      "describe_icon": "wifigo",
+      "description": "WIFI CONNECTED. PUSH HERE TO DISCONNECT",
+      "color": "green",
+      "commands": [{"set":{"local":"wificonnect"},"value":"In progress"},{"sleep":[1,3]},{"set":{"local":"wificonnect"},"value":"Disconnected"}],
+      "show_condition": {"and":[{"require":{"local":"wifiinrange"},"eq":"in"},{"require":{"local":"wificonnect"},"eq":"Connected"},{"require":{"local":"player"},"ne":"multiplayer"},{"require":{"global":"TABLET_5G_ENABLED"},"ne":"yes"}],"eq":1}
+    },
+
+    {
+      "text": "{0} Crew members (Set by livery)",
+      "params": [{"local":"CREW"}],
+      "color": "hotpink",
+      "show_condition": {"and":[{"require":{"local":"startpage"},"eq":"mainpage"},{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "text": "Ground ops require engines off (Set by livery)",
+      "color": "hotpink",
+      "show_condition": {"and":[{"require":{"local":"startpage"},"eq":"mainpage"},{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},{"require":{"local":"GNDOPS_ROTOR"},"eq":1},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "text": "Crew won't do paperwork at hospital (Set by livery)",
+      "color": "hotpink",
+      "show_condition": {"and":[{"require":{"local":"startpage"},"eq":"mainpage"},{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},{"require":{"local":"PAPERWORK"},"eq":0},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "text": "Crew WILL do paperwork at hospital (Set by livery)",
+      "color": "hotpink",
+      "show_condition": {"and":[{"require":{"local":"startpage"},"eq":"mainpage"},{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},{"require":{"local":"PAPERWORK"},"eq":1},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "text": "Rescuetrack:{0} has been customized by livery",
+      "params": [{"local":"RESCUETRACK_ID"}],
+      "color": "hotpink",
+      "show_condition": {"and":[{"require":{"local":"startpage"},"eq":"mainpage"},{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "text": "Missions preset {0} has been selected by livery",
+      "params": [{"var":["L:LIVERY_PRESET","number"]}],
+      "color": "hotpink",
+      "show_condition": {"and":[{"require":{"local":"startpage"},"eq":"mainpage"},{"require":{"var":["L:LIVERY_PRESET","number"]},"ne":0},{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1}],"eq":1}
+    },
+
+    {
+      "text": "1 New HEMS Operation Center dispatch received:",
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "1 New HEMS Operation Center dispatch received:",
+      "show_condition": {"and":[{"require":{"local":"DISPLAY_DISPATCH"},"eq":1},{"require":{"local":"newdispatch"},"eq":"done"}],"eq":1}
+    },
+
+    {
+      "image": "bar"
+    },
+
+    {
+      "text": "NO DISPATCH RECEIVED",
+      "color": "gray",
+      "show_condition": {"require":{"local":"DISPLAY_DISPATCH"},"eq":0}
+    },
+
+    {
+      "text": "MISSION IN PROGRESS, CLOSE THIS WINDOW AND OPEN DISPATCH->",
+      "color": "orange",
+      "show_condition": {"and":[{"require":{"local":"DISPLAY_DISPATCH"},"eq":0},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"MISSION_PHASE"},"lt":10}],"eq":1}
+    },
+
+    {
+      "text": "{0}",
+      "params": [{"local":"accident_description"}],
+      "color": "yellow",
+      "show_condition": {"require":{"local":"DISPLAY_DISPATCH"},"eq":1}
+    },
+
+    {
+      "text": "Location: {0:LOCATION}/Dist. {1} NM",
+      "color": "yellow",
+      "params": ["accident_location",{"tofixed":{"object":"accident_location","var":"distance"},"digits":2}],
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"ne":"yes"},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1},{"require":{"local":"has_location"},"eq":"yes"}],"eq":1}
+    },
+
+    {
+      "text": "Location: {0:LOCATION}/Dist. {1} NM",
+      "color": "yellow",
+      "params": ["userA",{"tofixed":{"object":"userA","var":"distance"},"digits":2}],
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":4},{"require":{"local":"SAR"},"ne":"yes"},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1},{"require":{"local":"has_location"},"eq":"yes"}],"eq":1}
+    },
+
+    {
+      "text": "Actually known position is the last position before contact loss. Exact crash site is actually unknown",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":1},{"require":{"local":"MISSION_SCENE_TYPE"},"eq":7},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "ELT signal on 121.5 MHz detected, it may be used in conjunction with DF to find the survivors",
+      "color": "green",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":1},{"require":{"local":"MISSION_SCENE_TYPE"},"eq":7},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "Actually known position is the last position before contact loss. Exact crash site is actually unknown",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":1},{"require":{"local":"MISSION_SCENE_TYPE"},"eq":8},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": " ",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":1},{"require":{"local":"MISSION_SCENE_TYPE"},"eq":8},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "ELT signal on 121.5 MHz detected, it may be used in conjunction with DF to find the survivors",
+      "color": "green",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":1},{"require":{"local":"MISSION_SCENE_TYPE"},"eq":8},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "WARNING: Be sure to be within 90km from closest mountains for this mission.",
+      "color": "yellow",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "WARNING: Be sure to be within 100km from closest mountains for this mission.",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":4},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "The injured may have been extracted from the incident site and gathered by rescuers at the designated rescue location.",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":6},{"require":{"local":"MISSION_SCENE_VARIANT"},"eq":1},{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "The injured may have been extracted from the incident site and gathered by rescuers at the designated rescue location.",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":6},{"require":{"local":"MISSION_SCENE_VARIANT"},"eq":2},{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "The injured may have been extracted from the incident site and gathered by rescuers at the designated rescue location.",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":6},{"require":{"local":"MISSION_SCENE_VARIANT"},"eq":3},{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "WARNING: Be sure to be within 100km from closest high mountains with glaciers for this mission.",
+      "color": "red",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":8},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "text": "(IN1) INJURED ONLY MISSION. A man is asking for medical assistance. No details are provided ",
+      "color": "yellow",
+      "show_condition": {"and":[{"require":{"local":"MISSION_NUMBER"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}
+    },
+
+    {
+      "buttonbar": [{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"HOCconnection"},"eq":"Connected"}],"eq":1}
+    },
+
+    {
+      "buttonbar": [{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],
+      "show_condition": {"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"HOCconnection"},"eq":"Connected"}],"eq":1}
+    },
+
+    {
+      "text": "OSM Service: Overpass DE",
+      "size": "small",
+      "color": "blue",
+      "show_condition": {"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":0},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}
+    },
+
+    {
+      "text": "OSM Service: Mail.RU",
+      "size": "small",
+      "color": "blue",
+      "show_condition": {"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":1},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}
+    },
+
+    {
+      "text": "OSM Service: Kumi",
+      "size": "small",
+      "color": "blue",
+      "show_condition": {"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":2},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}
+    },
+
+    {
+      "text": "OSM Service: CICERS OSM",
+      "size": "small",
+      "color": "blue",
+      "show_condition": {"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":3},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}
+    },
+
+    {
+      "text": "Auto toggle enabled",
+      "size": "small",
+      "color": "blue",
+      "show_condition": {"and":[{"require":{"global":"DATAQUERYSERVICE"},"eq":4},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "You closed Homepage without making a selection between SINGLE PLAYER / MULTIPLAYER. Selection is mandatory if homescreen is displayed. Click here to re-open Homepage",
+      "show_condition": {"require":{"local":"homelock"},"eq":"home"},
+      "commands": [{"set_briefing_dialog":0},{"call_macro":"homepage"},{"set_dispatch_dialog":1}]
+    },
+
+    {
+      "image": "bar"
+    },
+
+    {
+      "link": "+ Quick links (click to show):",
+      "commands": [{"set":{"local":"dtab0"},"value":1}],
+      "show_condition": {"require":{"local":"dtab0"},"eq":0}
+    },
+
+    {
+      "link": "- Quick links (click to hide):",
+      "commands": [{"set":{"local":"dtab0"},"value":0}],
+      "show_condition": {"require":{"local":"dtab0"},"ne":0}
+    },
+
+    {
+      "link": "- TECHNICAL PAGE & GROUND OPS",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"techpage"},{"set_dispatch_dialog":1}],
+      "show_condition": {"require":{"var":["SIM ON GROUND","bool"]},"eq":1}
+    },
+
+    {
+      "link": "- CHECKLISTS PAGE",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"checklist home"},{"set_dispatch_dialog":1}],
+      "show_condition": {"require":{"local":"dtab0"},"ne":0}
+    },
+
+    {
+      "link": "- DISPATCH CONTROL PAGE",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"dispatch control"},{"set_dispatch_dialog":1}],
+      "show_condition": {"require":{"local":"dtab0"},"ne":0}
+    },
+
+    {
+      "link": "- Start boarding procedures",
+      "commands": [{"set":{"local":"BOARDING_HOLD"},"value":0}],
+      "show_condition": {"and":[{"require":{"local":"BOARDING_HOLD"},"eq":1},{"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10}],"eq":1}
+    },
+
+    {
+      "link": "- MULTIPLAYER DEBUG PAGE",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"multiplayer page"},{"set_dispatch_dialog":1}],
+      "show_condition": {"require":{"local":"player"},"eq":"multiplayer"}
+    },
+
+    {
+      "image": "bar"
+    },
+
+    {
+      "link": "- RELOAD A MISSION",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"savegame page"},{"set_dispatch_dialog":1}]
+    },
+
+    {
+      "link": "- SETTINGS",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"settings"},{"set_dispatch_dialog":1}]
+    },
+
+    {
+      "link": "- MANUAL MISSION SELECTION (ADVANCED USERS)",
+      "commands": [{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"mission manual new"},{"set_dispatch_dialog":1}],
+      "show_condition": {"and":[{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":8}],"eq":1}
+    },
+
+    {
+      "link": "- MANUAL MISSION SELECTION (ADVANCED USERS)",
+      "commands": [{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"mission manual new"},{"set_dispatch_dialog":1}],
+      "show_condition": {"and":[{"require":{"local":"SECOND_DISPATCH"},"eq":0},{"require":{"local":"MISSION_PHASE"},"lt":2}],"eq":1}
+    },
+
+    {
+      "text": " "
+    },
+
+    {
+      "text": "Accident maximum range: {0}Km ({1}NM)",
+      "params": [{"tofixed":{"convert":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"from":"m","to":"km"},"digits":2},{"tofixed":{"convert":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"from":"meter","to":"nautical mile"},"digits":2}]
+    },
+
+    {
+      "slider": {"min":2000,"max":120000,"global":"MISSION_ACCIDENT_MAX_RADIUS","commands":[{"call_macro":"min max rng check"},{"call_macro":"mark aircraft profile custom"}]}
+    },
+
+    {
+      "text": "Accident minimum range: {0}Km ({1}NM)",
+      "params": [{"tofixed":{"convert":{"global":"MISSION_ACCIDENT_MIN_RADIUS"},"from":"m","to":"km"},"digits":2},{"tofixed":{"convert":{"global":"MISSION_ACCIDENT_MIN_RADIUS"},"from":"meter","to":"nautical mile"},"digits":2}]
+    },
+
+    {
+      "slider": {"min":500,"max":60000,"global":"MISSION_ACCIDENT_MIN_RADIUS","commands":[{"call_macro":"min max rng check"},{"call_macro":"mark aircraft profile custom"}]}
+    },
+
+    {
+      "buttonbar": [{"text":"Crew members selection (locked during crew boarding) (4 = DEFAULT):"},{"title":"3","select_condition":{"require":{"local":"CREW"},"eq":3},"disabled_condition":{"require":{"var":["L:HOLD","number"]},"eq":1},"commands":[{"call_macro":"shared repeated block 058"},{"call_macro":"mark aircraft profile custom"}]},{"title":"4","select_condition":{"require":{"local":"CREW"},"eq":4},"disabled_condition":{"require":{"var":["L:HOLD","number"]},"eq":1},"commands":[{"call_macro":"shared repeated block 059"},{"call_macro":"mark aircraft profile custom"}]},{"title":"5","select_condition":{"require":{"local":"CREW"},"eq":5},"disabled_condition":{"require":{"var":["L:HOLD","number"]},"eq":1},"commands":[{"call_macro":"shared repeated block 060"},{"call_macro":"mark aircraft profile custom"}]}]
+    },
+
+    {
+      "image": "bar"
+    },
+
+    {
+      "link": "- R&E Mission generator - DESCRIPTION",
+      "commands": [{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"description"},{"set_dispatch_dialog":1}]
+    },
+
+    {
+      "image": "bar"
+    }
+  ]
+}

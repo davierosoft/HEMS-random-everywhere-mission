@@ -249,11 +249,14 @@ function formatSources(repositoryRoot) {
   require('./assert-cicers-branch').assertCicersBranch(repositoryRoot);
   const sourceRoot = path.join(repositoryRoot, 'mission-src');
   const pending = [];
-  for (const section of ['macros', 'data']) {
+  // layout mode per source section: command lists for macros and threads, record layout for the rest
+  const modes = { macros: 'commands', threads: 'commands', data: 'data', icons: 'data', root: 'data' };
+  for (const [section, mode] of Object.entries(modes)) {
     const directory = path.join(sourceRoot, section);
+    if (!fs.existsSync(directory)) continue;
     for (const file of fs.readdirSync(directory).filter((name) => name.endsWith('.json')).sort()) {
       const fullPath = path.join(directory, file);
-      pending.push({ fullPath, formatted: formatSourceText(fs.readFileSync(fullPath, 'utf8'), section === 'data' ? 'data' : 'commands') });
+      pending.push({ fullPath, formatted: formatSourceText(fs.readFileSync(fullPath, 'utf8'), mode) });
     }
   }
   for (const item of pending) fs.writeFileSync(item.fullPath, item.formatted, 'utf8');

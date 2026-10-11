@@ -5,6 +5,10 @@ be repeated before changing a cockpit page.
 
 ## Sources
 
+- [HPG Mission System — documentation index](https://davux.com/docs/missionsys/)
+- [HPG Mission System — OpenStreetMap data (osm_* commands)](https://davux.com/docs/missionsys/TOPIC-OSM.html)
+- [HPG Mission System — working with AI objects](https://davux.com/docs/missionsys/TOPIC-OBJECTS.html)
+- [HPG Mission System — location reference](https://davux.com/docs/missionsys/REFERENCE-LOCATION.html)
 - [HPG Mission System — command reference](https://davux.com/docs/missionsys/REFERENCE-COMMAND.html)
 - [HPG Mission System — query reference](https://davux.com/docs/missionsys/REFERENCE-QUERY.html)
 - [HPG Mission System — briefing and dispatch widgets](https://davux.com/docs/missionsys/TOPIC-WIDGETS.html)

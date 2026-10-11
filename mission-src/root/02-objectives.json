@@ -1,0 +1,73 @@
+{
+  "objectives": [
+    {
+      "title": "Loading... please wait...",
+      "commands": [{"set":{"local":"HXX"},"value":{"fn":"get_aircraft_moniker"}},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"set":{"local":"ambulance_patient_report_finalized"},"value":"no"},{"if":{"has_location":"$MISSION_ENTER_LOCATION"},"eq":1,"then":[{"create_location":"teleport_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_ENTER_LOCATION"}}}]},{"clear_user_poi":1},{"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},{"wait_modal":{"title":"MISSION LOADED FROM MAP","text":"Do you want to teleport the helicopter on selected point?","options":[{"text":"YES","style":"primary","commands":[{"set_message":{"text":"TELEPORTING, PLEASE WAIT..."}},{"sleep":0.5},{"trigger":["K:SLEW_ON"]},{"sleep":0.5},{"teleport_to":"teleport_location"},{"trigger":["K:SLEW_RESET"]},{"sleep":5},{"set":{"var":["A:PLANE ALT ABOVE GROUND","feet"]},"value":0},{"set_message":{"text":"DONE"}},{"set_message":{"text":" "}},{"trigger":["K:SLEW_OFF"]}]},{"text":"NO","style":"","commands":[]}]}}]},{"set_objective_title":"starting DAVIEROSOFT OPERATION CENTER -DOC-","color":"blue"},{"call_macro":"objective1"}]
+    },
+
+    {
+      "title": "PREFLIGHT OPERATIONS, WAIT FOR REAR CREW CLEARANCE!",
+      "commands": [{"if":{"var":["SIM ON GROUND","bool"]},"eq":1,"then":[{"set_objective_title":"PREFLIGHT OPERATIONS, WAIT FOR REAR CREW CLEARANCE!","color":"yellow"}],"else":[{"set_objective_title":"REAR CREW IS PREPARING THE CABIN, FLY STABLE UNTILL REAR CREW CLEARANCE!","color":"yellow"}]},{"call_macro":"objective2"}]
+    },
+
+    {
+      "title": "CABIN READY FOR TAKE OFF!",
+      "commands": [{"if":{"var":["SIM ON GROUND","bool"]},"eq":1,"then":[{"set_objective_title":"CABIN READY FOR TAKE OFF!","color":"green"}],"else":[{"set_objective_title":"CABIN READY, MISSION CAN PROCEED","color":"green"}]},{"call_macro":"objective4"}]
+    },
+
+    {
+      "title": "FLY TO THE LOADING PLACE",
+      "commands": [{"set_objective_title":"FLY TO THE LOADING PLACE","color":"cyan"},{"call_macro":"objective5 transfer"}]
+    },
+
+    {
+      "title": "FLY TO THE ACCIDENT SCENE",
+      "commands": [{"set_objective_title":"FLY TO THE ACCIDENT SCENE","color":"cyan"},{"call_macro":"objective5 HEMS"}]
+    },
+
+    {
+      "title": "APPROACHING LANDING AREA, MEDICAL CREW ADVISED",
+      "commands": [{"set_objective_title":"APPROACHING LANDING AREA, MEDICAL CREW ADVISED","color":"orange"},{"call_macro":"objective6 transfer"}]
+    },
+
+    {
+      "title": "ACCIDENT SCENE IN SIGHT, GET READY FOR EMS!",
+      "commands": [{"set_objective_title":"ACCIDENT SCENE IN SIGHT, GET READY FOR EMS!","color":"orange"},{"call_macro":"objective6 HEMS"}]
+    },
+
+    {
+      "title": "PREPARING FOR RESCUE OPERATION",
+      "commands": [{"set_objective_title":"PREPARING FOR RESCUE OPERATION","color":"orange"},{"call_macro":"objective7 HEMS"}]
+    },
+
+    {
+      "title": "PATIENT LOADED, SET PATIENT DESTINATION",
+      "commands": [{"set_objective_title":"PATIENT LOADED, SET PATIENT DESTINATION","color":"green"},{"if":{"local":"whobringpatient"},"eq":"organ","then":[{"set_objective_title":"ORGAN BOX LOADED, CONFIRM DESTINATION","color":"green"}]},{"call_macro":"objective7 transfer"}]
+    },
+
+    {
+      "title": "REACH SELECTED DESTINATION",
+      "commands": [{"set_objective_title":"REACH SELECTED DESTINATION","color":"yellow"},{"call_macro":"objective8"}]
+    },
+
+    {
+      "title": "OTHER PATIENT RESCUE IN PROGRESS",
+      "commands": [{"set_objective_title":"OTHER PATIENT RESCUE IN PROGRESS","color":"yellow"},{"call_macro":"objective11"}]
+    },
+
+    {
+      "title": "ON THE WAY TO THE DESTINATION",
+      "commands": [{"set_objective_title":"ON THE WAY TO THE DESTINATION","color":"yellow"},{"call_macro":"objective9"}]
+    },
+
+    {
+      "title": "RETURN TO BASE",
+      "commands": [{"set_objective_title":"RETURN TO BASE","color":"yellow"},{"call_macro":"objective10"}]
+    },
+
+    {
+      "title": "MISSION ACCOMPLISHED",
+      "commands": [{"set_objective_title":"MISSION ACCOMPLISHED","color":"green"},{"sleep":0.5},{"wait_for":{"local":"MISSION_END_WAITING"},"eq":1},{"call_macro":"end menu"},{"wait_for":{"local":"MISSION_END_WAITING"},"eq":2}]
+    }
+  ]
+}

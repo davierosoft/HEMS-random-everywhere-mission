@@ -51,6 +51,10 @@ for (const file of files) {
     if (Array.isArray(value.closest) && Array.isArray(value.to)) {
       throw new Error(`${file}: closest waypoint has an array-valued nested to; use a direct location/object target`);
     }
+    // The --fix rewrite is a lazy cross-command regex: it once turned a point_object target into a route array. point_object takes one target.
+    if (value.point_object !== undefined && Array.isArray(value.to)) {
+      throw new Error(`${file}: point_object ${JSON.stringify(value.point_object)} must have a single target, not a route array`);
+    }
     const drive = value.drive_object;
     if (drive && /^ambustretcher/.test(drive.name) && Array.isArray(drive.to)) {
       const final = drive.to[drive.to.length - 1];

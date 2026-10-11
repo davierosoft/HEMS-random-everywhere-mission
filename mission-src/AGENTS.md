@@ -10,5 +10,5 @@
 - After editing, run `node tools/mission-workspace.js build`, inspect the artifact diff immediately, then run `node tools/mission-workspace.js check` and `node tools/release-workflow.js static`.
 - Prove scope with `node tools/check-mission-scope.js check --strict` and explicit allow flags. Any unlisted root key, macro, or data key is blocking.
 - `manifest.json` owns entry order and byte-preserving separators. Do not edit its formatting metadata by hand.
-- After intentionally adding, renaming, or removing a top-level macro/data entry, run `node tools/mission-workspace.js reindex` before `build` and inspect both manifest and artifact diffs.
+- Every root section is modular (`macros`, `data`, `threads`, `icons`, `root`); `locate` finds any entry. After adding, renaming, removing or moving a top-level entry, run `node tools/mission-workspace.js reindex` before `build` and inspect both manifest and artifact diffs.
 - Never place renderer rows at macro command level. Follow `DEVELOPMENT_RELEASE_CHECKLIST.md` for conditions, persistence, CARLS, medical, vehicle, crew, and release rules.

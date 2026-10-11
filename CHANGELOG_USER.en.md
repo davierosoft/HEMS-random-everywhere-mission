@@ -1,8 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.0. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.46. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.0, still need final simulator confirmation.
+It also covers the Mission Companion app up to version 0.10, which speaks the voices of the mission and updates itself and the mission.
+
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.46, still need final simulator confirmation.
 
 ## FIXES
 
@@ -39,7 +41,8 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### Correct use of a distant ambulance
 
 - A distant ambulance now follows the appropriate ground-transfer path instead of attempting an unrealistic pickup. A second ambulance waits for its own patient work before leaving.
-- **Build history:** 0.997 10, 65, post-142 checkpoint.
+- An ambulance that stops far from the patient (an off-road patient, a road that ends far from the scene) no longer takes him: beyond 150 m between the parked ambulance and the patient the helicopter crew carries the patient and the ambulance crew simply leaves. Before, the tablet said the patient would go by ambulance and he stayed on the mountain.
+- **Build history:** 0.997 10, 65, 169.46, post-142 checkpoint.
 - **Test:** Start a three-patient call with two ambulances at different distances and follow both transport outcomes.
 
 ### Complete ambulance assessments
@@ -51,13 +54,15 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### Realistic ambulance loading
 
 - A patient selected for road transport is now prepared and moved as a stretcher patient. They no longer slide across the scene as if pulled by an invisible force, and the ambulance crew's walking and standing postures during loading are correct again.
-- **Build history:** 0.997 65, 91, 138, 168.130, 168.136, 168.144, post-142 checkpoint.
+- Once the patient lies on the stretcher the loading is carried through to the end even when a long ambulance leaves the stretcher a few metres from its centre or a walk raises an error: the ambulance no longer drives away with the patient left on the scene.
+- **Build history:** 0.997 65, 91, 138, 168.130, 168.136, 168.144, 169.46, post-142 checkpoint.
 - **Test:** Let an ambulance take a non-HEMS patient and watch the complete loading sequence before departure.
 
 ### Correct three-crew roles
 
 - In a three-crew operation, the copilot remains the pilot throughout hospital unloading and only returns to the cockpit role when actually going back to the cockpit. Four- and five-crew operations follow the equivalent pattern, with the extra crew member(s) taking the correct standing, walking or crouching role instead of a pilot role.
-- **Build history:** 0.997 20, 27, 40-42, 118-122, 142, 168.139, 168.147.
+- With three crew the copilot also keeps the pilot appearance during the hospital paperwork instead of turning into a crew member.
+- **Build history:** 0.997 20, 27, 40-42, 118-122, 142, 168.139, 168.147, 169.45.
 - **Test:** Complete a hospital arrival with three crew and verify the copilot's role during unloading and reboarding.
 
 ### Reliable rear-door closure
@@ -192,13 +197,156 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 168.149.
 - **Test:** Change a few settings, including Direction Finder tuning mode and Tablet 5G, use Reset to Default (or Reset Stats), and confirm every changed setting returns to its starting value.
 
+### Dispatch marker and briefing links
+
+- The dispatch marker is drawn once and on the right place when the first location is not valid, and the Technical page and description links of the briefing now open with their full content.
+- **Build history:** 0.997 169.1.
+- **Test:** Open a dispatch whose first location is not valid and check for a single marker; open the Technical page and the description link from the briefing and verify the pages are complete.
+
+### Second dispatch keeps one consistent scene
+
+- A second dispatch now refreshes the accident location, so the scene, the landing spot, the ambulance and the flight plan destination are the same place, also for residential rescue calls and for custom or reloaded missions.
+- **Build history:** 0.997 169.21.
+- **Test:** Finish a call, accept a second dispatch (also a custom one after a reload) and compare the scene, the landing spot, the ambulance and the flight plan destination.
+
+### Rescue vehicles arrive even without road routes
+
+- When the route service does not answer, ambulances, police and fire engines no longer wait: after 90 seconds a random station is used, a route with no duration falls back to a direct drive, and in the legacy routing mode vehicles drive straight to the scene, the hospital or the midway point.
+- **Build history:** 0.997 169.2.
+- **Test:** Choose the legacy routing mode, or disable the route service, and verify that every vehicle reaches the scene, the hospital and a midway point.
+
+### Tidy parking of rescue vehicles
+
+- Fire engines, ambulances and police cars park in lanes by role without overlapping, with the police car backing up before parking on the fire side. After the last patient the medic stands down and returns to the station, and the ambulance retreat at the scene is a single movement.
+- Ambulances now park on the left and fire engines on the right, never more than 4 m from the road. Fire engines never reverse, the ambulances reverse to make room for them and the police car moves last; the police car also foresees the worst case (a second fire engine, or a second ambulance with more than two casualties) when it chooses its lane. A fire engine no longer stops in the middle of the road without its firefighters when the road ends.
+- **Build history:** 0.997 169.3, 169.22, 169.27.
+- **Test:** Run a call with fire engine, ambulance and police car and check that nothing overlaps and that the medic returns to the station after the handover.
+
+### Crash injuries reach everyone aboard
+
+- Crash and hard-landing injuries now reach the pilot, the copilot, the rear crew and a patient on the stretcher, whatever the crew aboard. The severity follows the real loss of speed of the impact in several steps: touchdown speed and sudden speed loss are checked, spikes without a real change of speed and teleports are ignored, a crew member at zero is not revived, and an impact heavier than the previous one inside a chain of bounces is graded too. The damage of an impact to a patient aboard now stays on the patient's Life Score instead of being overwritten a moment later. Heavy impacts also cause aircraft failures, from the lightest to the heaviest as listed under the aircraft failures.
+- The thresholds and the survival floors are unchanged.
+- **Build history:** 0.997 169.4-169.17, 169.21, 169.26, 169.27.
+- **Test:** Land hard, then bounce and crash on purpose; check the crew lifescores on the dispatch page after each impact and verify that a heavier hit right after a lighter one is applied.
+
+### No early dispatch while a mission starts
+
+- A new dispatch can no longer be handed out while the mission is still starting up, so a dispatch left over from the previous mission cannot open too early.
+- **Build history:** 0.997 169.11.
+- **Test:** Restart a mission right after finishing one and verify that no dispatch opens before the start is complete.
+
+### Single or multiplayer selection message clears
+
+- The single player or multiplayer selection message disappears as soon as the choice is made.
+- **Build history:** 0.997 169.17.
+- **Test:** Start a mission, choose single or multiplayer and verify that the message disappears.
+
+### Police no longer takes the crew to the wrong place
+
+- When the police drive the crew from a far landing spot, the crew now walks from the police car to the patient instead of walking all the way back to the helicopter and to the patient again, which could leave the mission waiting for ever. The police car also drives to the accident instead of appearing there and then driving away from the crew, which walked back to the helicopter.
+- **Build history:** 0.997 169.27, 169.45.
+- **Test:** Choose a custom landing spot far from the accident with police available, with three and with four or five crew, and follow the car and the crew to the patient.
+
+### Crew no longer walks off after leaving the helicopter
+
+- At a scene reached by the four-crew or five-crew procedure, the rear crew members no longer walk some 300 metres away and back before the first patient visit. They go straight to the patient.
+- **Build history:** 0.997 169.43.
+- **Test:** Land with four and five crew at a scene with a search-and-rescue quad bike or a distant patient and watch the first walk of the rear crew.
+
+### Patients no longer die before anybody arrives
+
+- Until the crew reaches the patient, and during the first 30 minutes of the call, a patient's Life Score now falls at half speed and never below 8, so a patient is no longer lost during a long flight to the scene. After the arrival the normal decay applies and patients can still die.
+- A new medical setting freezes the Life Score completely until the helicopter is within 2 NM of the scene. It is on in the ROOKIE PILOT, EXPERT PILOT and EXPERT HEMS profiles and off in DEFAULT.
+- **Build history:** 0.997 169.45.
+- **Test:** Fly a long dispatch with the freeze off and on and read the Life Score on the dispatch page; run two missions in a row and check that the second patient starts with fresh values.
+
+### Rescue vehicles approach along real road routes
+
+- Ambulances, police cars and fire engines now follow three traffic routes generated for the scene, starting 420 to 520 m away and stopping at the rescue point. The parking points before the scene come from those routes, and when routes are not available the vehicles use the compass points at once instead of waiting.
+- **Build history:** 0.997 169.35, 169.36.
+- **Test:** Run road-incident calls and watch the three routes of the traffic and the parking of the vehicles near the scene; repeat in the legacy routing mode.
+
+### Ambulance and HEMS no longer wait for each other
+
+- An ambulance that stands down because the patient is assigned to HEMS now releases the HEMS operations, which no longer wait for it.
+- **Build history:** 0.997 169.32.
+- **Test:** Give a patient to HEMS while an ambulance is on scene and confirm that the HEMS work starts without waiting.
+
+### Landing spot stays where you put it
+
+- The default landing spot is created once and is no longer recreated every second and a half. After the injured are moved at the scene it is updated once, with its circle and icon, unless you chose another spot.
+- **Build history:** 0.997 169.32.
+- **Test:** Choose a custom landing spot, let the ambulance move the injured, and check that the spot does not move; repeat with the default spot.
+
+### Hoist loading and ground operations as in the original
+
+- The casualty is prepared for transport also for HEMS and is removed when it is hooked, the crew walks at the normal speed, and the destination and ground operations regain their original speeds. The hospital staff point at the correct spot and the ambulance stretcher point is back.
+- **Build history:** 0.997 169.33.
+- **Test:** Run a hoist pick-up and a ground pick-up and compare the loading and the walking speed with the earlier builds.
+
+### Interior check and engine shut-down no longer stuck
+
+- The interior check stuck at its step 12 and the engine shut-down waited for a value that never came. They now wait for the engines to be off, and the emergency locator steps read the switch correctly (armed, test, on).
+- **Build history:** 0.997 169.39.
+- **Test:** Complete the interior check and the engine shut-down and verify that neither stops before its last step.
+
+### Boarding without a map-data answer
+
+- When the map data service gives no answer, the search ends after 10 seconds. The crew then boards from a hangar created beside the helicopter, or spawns 40 m from it when there is no hangar location, instead of waiting for ever.
+- **Build history:** 0.997 169.41.
+- **Test:** Start a mission in a place without hangar data and verify that the crew boards.
+
+### Dispatch statistics only when known
+
+- The time to the scene, the on-site time, the total time and the injured on scene are shown only when they were set, they are cleared at every mission start, and a mission diverted by a crew emergency no longer writes the time of the rotor shutdown at the hospital as its time to the scene. A crew alone sets the total time at the hospital landing.
+- **Build history:** 0.997 169.30.
+- **Test:** Finish a normal mission and a mission diverted by a crew emergency and read the statistics of the old dispatch.
+
+### Add-on detection
+
+- The Organcooler and EU firefighter add-ons each set their own flag, so installing one no longer hides or enables the other.
+- **Build history:** 0.997 169.27.
+- **Test:** Run with only one of the two add-ons installed and verify the matching options.
+
+### Long or stuck missions stay light
+
+- The ground crew trace and the other troubleshooting records have a fixed size now. A mission left running or stuck for a long time no longer ends in an error from a record that has grown too large, and automatic snapshots stay small.
+- **Build history:** 0.997 169.28.
+- **Test:** Leave a stuck ground operation for an hour and check that the tablet still responds and the snapshot can be saved.
+
+### No Windows Firewall question at every start of the app
+
+- The Mission Companion app (0.9) now accepts connections only from this computer, which is all the mission needs, so Windows Firewall no longer asks to open the port at every start. The port 5997 is fixed by the simulator and cannot be changed. A new checkbox, Accept connections from other computers, restores the old behaviour for the rare setups that need it.
+- **Build history:** Mission Companion app 0.9.
+- **Test:** Start the app with the firewall active and verify that no question appears and that the mission still connects; tick the checkbox and restart to see the firewall question again.
+
+### Second dispatch starts where it was offered
+
+- The second and later dispatches are built on the location shown in their own preview. A search-and-rescue dispatch no longer starts on the spot of the previous mission, and a dispatch that has no rescue place or pickup point no longer gets the one of an earlier dispatch (a tester saw the second call 19 km from where it was announced).
+- **Build history:** 0.997 169.46.
+- **Test:** Fly a residential call, accept a mountain call and then a search-and-rescue call: each scene, map marker and search ring is where its own preview showed it.
+
+### Ambulance crew and patients in every dispatch
+
+- In the second and later dispatches the ambulance crew deploys and visits the patients as in the first one, and a patient is no longer skipped by both the ambulance and the helicopter crew because of a leftover of the previous dispatch (a tester had an ambulance parked beside a patient nobody visited).
+- **Build history:** 0.997 169.46.
+- **Test:** Accept a second dispatch with an ambulance and two patients: the ambulance medic appears after the ambulance parks, each patient is visited and both are transported.
+
+### Fewer false errors during a dispatch
+
+- A traffic car that has already reached its stop no longer raises an "object does not exist" banner, the search for a dispatch location no longer ends at the first slow answer of the map service (and the error shows the search radius instead of a placeholder), and the dispatch status no longer raises an error banner while the mission starts.
+- **Build history:** 0.997 169.46.
+- **Test:** Start several dispatches in a row, also with a slow map service: no error banner appears and the location is found.
+
 ## UI
 
 ### Persistent troubleshooting snapshots
 
 - Troubleshooting now saves a clear snapshot of the current mission, route, crew progress, rotor progress and patient information. It can be reopened later or cleared deliberately.
-- **Build history:** 0.997 92, 108, 110-112, 123-125.
-- **Test:** Save a snapshot before and during ground operations, then reopen it from the troubleshooting page.
+- Troubleshooting also keeps a record that survives a second dispatch (cleared only when a new first dispatch starts), a record of ground operations that stop advancing, and, at every mission start, a copy of the snapshot of the previous mission in its own file, so the last snapshot is not lost when a mission ends badly or is restarted.
+- Every police drive now leaves its own records (start, arrival with the seconds it took, error, timeout), and the patients leave records of what they start with, when they die and when their Life Score is held, so a patient who seems to inherit values from the previous mission can be recognised. The Debug Center no longer shows the obsolete test tracker and registry diagnostics, and the snapshot buttons and date are at the top.
+- **Build history:** 0.997 92, 108, 110-112, 123-125, 169.21-169.23, 169.26, 169.31, 169.45.
+- **Test:** Save a snapshot before and during ground operations, then reopen it from the troubleshooting page. Start a second mission and open the previous mission snapshot file: it must hold the snapshot of the mission before.
 
 ### Multi-patient diagnostic page
 
@@ -245,8 +393,9 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### Dispatch progress and end-of-shift view
 
 - Dispatch now shows visible rescue progress, a clear warning if operations stop advancing, and an unambiguous End Shift choice after return to base.
-- **Build history:** 0.997 21, 59, 71-73, 100, 110.
-- **Test:** Run a ground operation, pause it briefly and complete the return-to-base flow.
+- During ground operations the second separator of the dispatch page becomes a grey progress bar, which goes back to a plain separator when the operations end; the percentage and the step are written in grey and only appear when Additional info is shown.
+- **Build history:** 0.997 21, 59, 71-73, 100, 110, 169.26.
+- **Test:** Run a ground operation and watch the grey bar replace the separator; switch Additional info off and on and verify that only the text appears and disappears.
 
 ### Clean checklist pages
 
@@ -271,6 +420,48 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The Save button on the Save/Reload page is now disabled once ground or hoist operations have started at the scene. A mission can still be saved at any point before ground work begins.
 - **Build history:** 0.997 168.148.
 - **Test:** Start ground or hoist operations at a scene, then open Save/Reload and confirm the Save button is disabled.
+
+### Shorter and clearer dispatch messages
+
+- Dispatch and RescueTrack messages are shorter and more professional, with typos and unit ambiguity removed. Vital signs in patient messages are whole numbers, and the HEMS reports use the correct sender.
+- **Build history:** 0.997 169.20, 169.24.
+- **Test:** Follow a call and read the dispatch and RescueTrack messages: numbers must be whole and the sender must be the HEMS unit.
+
+### Message clock in UTC or local time
+
+- Messages show the time in UTC (suffix Z) or in local time (suffix L), as selected, with the estimated arrival as a clock time and the time of death kept in simulator time and shown on the medical page, which also has a short page for a person found deceased on scene.
+- **Build history:** 0.997 169.21.
+- **Test:** Switch the clock between UTC and local time and check the time of the messages, the estimated arrival and the time of death.
+
+### Crew names and lifescores on the dispatch page
+
+- The crew members are named Pilot, Medic, Copilot, HEMS 1 and HEMS 2 everywhere, and the dispatch page shows the lifescore of each of them just above the patient lifescores, hidden together with them.
+- **Build history:** 0.997 169.24.
+- **Test:** Open the dispatch page with 3, 4 and 5 crew, show the lifescores and check the names and the order.
+
+### Clear mission failed report
+
+- The MISSION FAILED button is red. The report names the deceased crew members (all of them or their number), shows the cause of death of a patient (piloting, clinical deterioration, hoist loss) and, after a crew death or a serious injury, the notice to the aviation accident investigation authority; a serious injury no longer raises an error on the tablet. A failed mission also shows its result, its cause, the seriously injured and deceased crew members and the deceased patients, and a mission that ended before the scene was reached says so.
+- **Build history:** 0.997 169.11, 169.18, 169.26, 169.30.
+- **Test:** Cause a crew death, a serious crew injury and a patient death in separate missions and read the end report each time.
+
+### Crew critical and deceased rows
+
+- Every crew member has a red CRITICAL row (1 to 10) and a red DECEASED row (0) on the dispatch page, which ignore the choice to hide the Life Scores. The crew is listed as Pilot, Copilot, Medic, HEMS 1 and HEMS 2 in the dispatch page, the end menu and the Debug Center, with the rows of the crew UNLOADED AT HOSPITAL. The CREW EMERGENCY question hides the dispatch page first.
+- **Build history:** 0.997 169.30, 169.31, 169.32.
+- **Test:** Make a crew member critical and another one dead with the Life Scores hidden and verify the rows, the order and the question.
+
+### Crew emergency messages from the right sender
+
+- Each RescueTrack message in a crew emergency comes from whoever knows the fact: the crew reports as -OUT- (critical or deceased member, mission aborted and diversion, confirmed hospital, patient handed over, patient deceased on board, deceased on scene with the request for the police, handover of the crew casualties with the accident cause), the fire service with its own call sign, and the dispatcher only answers after a crew report. The Divert or Continue question is no longer a message, and the handover report is posted once per mission.
+- **Build history:** 0.997 169.30.
+- **Test:** Cause a crew emergency with a patient aboard and read the senders of the messages.
+
+### Visit estimate and progress text
+
+- The estimate of the doctor's visit includes the deployment, the loading and the return, and is cleared when the crew diverts. The progress text of the ground operations is written under the grey bar.
+- **Build history:** 0.997 169.27.
+- **Test:** Start a doctor visit, read the estimate, then divert and check that it disappears.
 
 ## NEW FUNCTIONS
 
@@ -424,6 +615,152 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 168.148.
 - **Test:** Load a livery with its own settings, then load a save, and confirm the dialog offers the livery, saved, and cancel choices.
 
+### Crew emergency: divert or continue
+
+- When a crew member becomes critical the tablet asks whether to divert to a hospital or continue the mission; a death diverts at once. The hospital of the call is proposed and can be confirmed or changed from the usual destination menu, and with no hospital found you choose one. A patient not yet loaded stays at the scene and the dispatcher sends another unit; a patient aboard is delivered at the same hospital with the normal procedure, and with a patient aboard the question is not asked at all, because the helicopter goes to the hospital anyway (it is still asked before the pick-up and after the delivery). A critical crew member no longer announces that the mission is aborted before you have answered.
+- **Build history:** 0.997 169.25, 169.27, 169.29.
+- **Test:** Make a crew member critical on the way to the hospital and with the patient not loaded yet: answer Divert once and Continue once, and confirm or change the hospital.
+
+### Hospital handover of the critical crew
+
+- At the hospital, once the rotor has stopped, one empty stretcher per critical or dead crew member is placed beside the patient's ground team and the crew members are loaded from their seats while the patient is handed over. Each stretcher then leaves for the hospital door, or for the ambulance, one at a time after the patient, following the hospital waypoints (the custom ones too). A medic who is a casualty stays in the seat and the paperwork is skipped for a casualty. No extra medic is created when the medic of the patient is there; otherwise one medic goes to the helicopter with the first stretcher, stands slightly aside toward the nose so that he does not overlap the casualty door, comes back with the stretcher when there is one casualty and follows the last stretcher when there are several. There is no ambulance unless you ask for it with the usual button, or the ambulance setting is forced; the police waits only when a crew member has died. The handover waits for the crew to be back in the seats before the casualties are counted, and the remaining pilot then flies back to the base.
+- **Build history:** 0.997 169.25, 169.29, 169.30.
+- **Test:** Divert with two critical crew members (one of them dead) to a hospital with and without custom waypoints, with and without the ambulance, and follow the stretchers to the door.
+
+### Police and ambulance at the base after a crew emergency
+
+- After a crew emergency, or when a crew member aboard is hurt (20 or less), the police car and the policeman wait at the base; an ambulance with medic and stretcher waits too if a crew member aboard is critical (10 or less). They walk to the helicopter, the critical crew is loaded, and the remaining pilot walks around the nose to the policeman. Then the end menu opens, and no new dispatch is possible.
+- **Build history:** 0.997 169.24, 169.25.
+- **Test:** Land at the base with a critical crew member aboard and with a crew member at 15: check the vehicles, the stretcher loading and the pilot walk, then the end menu.
+
+### End of the mission under your control
+
+- At the base the end menu is offered as soon as you land and the mission ends only when you press End Shift: nothing closes it automatically. End Shift and Reload save the automatic snapshot first, a second dispatch can be accepted while the crew is still walking and the crew goes back aboard from where it is, and the failure of the previous mission is not shown in the next one.
+- **Build history:** 0.997 169.24, 169.25.
+- **Test:** Land at the base, wait without touching anything, then press End Shift or Reload and accept a second dispatch while the crew is outside.
+
+### Police and dispatcher reports after a death
+
+- The police are requested when a person is found dead or dies at the scene, unless police are already there or on the way. New reports tell that a patient died on board, was handed over to the emergency department, that the fire service finds the scene safe or on fire and then out, that the police secured the scene, and the crew status with the role. A patient who dies on board is met by the police at the hospital.
+- **Build history:** 0.997 169.19, 169.20, 169.24.
+- **Test:** Let a patient die on scene and one on board and read the dispatch reports; check that the police wait at the hospital.
+
+### Crew losses change the care and the mission
+
+- A critical or dead medic stops the effect of the manual treatments. The mission ends when both pilots are dead or critical, with the right text, and after a crew death the next mission starts with the helicopter repaired and a new crew shift. The career statistics count crew deaths and patients killed by an impact.
+- **Build history:** 0.997 169.11, 169.12, 169.18.
+- **Test:** Lose the medic during a manual treatment, then lose both pilots in another mission, then start the next one and check the helicopter and the statistics.
+
+### Aircraft failures from light to heavy
+
+- The failures follow a severity order: APCP, autopilot, MGB chip, FADEC level 1, backup, FADEC level 2, fuel, hydraulic, T/MGB mechanical, engine failure and engine fire. A severe crash causes one or two failures from APCP up to an engine failure; the two heaviest crashes cause one failure from the fuel failures up to the engine fire. The new fuel leakage loses a constant 0.2 to 0.8 kg every 5 seconds (never more than 10 kg a minute) until the fuel ends or the helicopter is repaired. Eleven further failures join the list and the checklists: eight SEMA failures, as likely as the autopilot ones, and three fuel failures.
+- **Build history:** 0.997 169.26, 169.35.
+- **Test:** With failures enabled, crash at three severities and check which failures appear; trigger a fuel leakage and watch the fuel fall, then refuel.
+
+### Hoist cable accidents
+
+- An operator or a patient on the hoist cable can be hurt or killed: a hurt operator never drops under Life Score 20, an injured operator on the way down is released when the hook rests at the same height, and a fatal event either releases the hook or keeps the person (a dead operator on the hook comes aboard with the cable). Whatever lets go appears at the aircraft at that moment, as a dead person for the operator and as an injured person in the stretcher for the patient. A patient on the hook takes the impact. The medic is always crew member 2, the copilot is never hurt by the hook, and the second operator of four and five crew is member 4. The ground impact is graded at 8, 12 and 18 ft/s, so the normal descent of 5.7 ft/s costs nothing.
+- **Build history:** 0.997 169.31, 169.32.
+- **Test:** Hoist with a fast ground contact, an overspeed and a heavy load, with a patient and with an operator on the cable, and compare the outcomes; the thresholds still need tuning.
+
+### Single patient sheltered in the ambulance
+
+- When the weather or a hazard keeps HEMS away from a single patient, the HEMS doctor can visit the patient inside the ambulance. The sheltering, its monitoring, its release and its abort were rewritten.
+- The sheltered visit works with three, four and five crew and with a ground, skid or hoist landing (it was limited to three crew by mistake).
+- **Build history:** 0.997 169.31, 169.46.
+- **Test:** Run a single-patient call in bad weather with an ambulance on scene and follow the doctor's visit and the release.
+
+### Reset failures button
+
+- A RESET FAILURES button next to the failure buttons clears the active aircraft failures, and the choice is read again at mission start.
+- **Build history:** 0.997 169.31.
+- **Test:** Cause a failure, press the button and verify that the aircraft is repaired.
+
+### Search-and-rescue visual clues
+
+- Random clues are placed around the victim inside the red search ring: a tent, a campfire, a bag, a bike, a dog, a quad bike, skis, a snowmobile, a rare second paraglider and a car parked on the closest road. When the location is entered by hand there is never a car or a road.
+- **Build history:** 0.997 169.33.
+- **Test:** Fly several search-and-rescue calls and look for the clues; enter a location by hand and check that no car appears.
+
+### Custom search-and-rescue missions 65 to 68
+
+- Four missions are available in the custom missions list: 65 overdue car, 66 parked car with a walking owner, 67 overdue quad rider and 68 person who wandered away from home. Only the walking owner carries a beacon. For mission 65 the dispatch shows the vehicle model and colour, the origin and the destination are marked by two icons joined by a straight line, the last contact point is the flight plan target, the dispatch page and its Open on map and Open on PC buttons use the last known position and its distance, and the patient lies on the driver side by nation. The car is moved to a random point of a 25 to 40 km route when the mission loads; a failed route, a manual location or a reloaded mission keep the normal search with its ring.
+- **Build history:** 0.997 169.33, 169.34, 169.35.
+- **Test:** Start each of the four missions, check the dispatch text, the icons and the last contact point, and then reload mission 65 from a save.
+
+### Performance settings
+
+- A PERFORMANCE section in the settings, kept in every aircraft profile, lets you choose the sampling of the impact monitor (fast, balanced, light), whether the monitor sleeps above 450 ft above ground and wakes below 400 ft or on the ground, and the log level (advanced or basic: basic drops the chatty trace rows, while snapshots and the crash event log stay complete). The factory values are fast, gate on, advanced for DEFAULT, EXPERT PILOT and EXPERT HEMS, and light, gate on, advanced for ROOKIE PILOT. With the crew health simulation off, the crash monitor waits for it to be switched on again.
+- **Build history:** 0.997 169.33.
+- **Test:** Change each performance setting, reload and check that it stays; crash with the gate on and off and compare the crew Life Scores.
+
+### Flight manual checklists
+
+- The tablet checklists follow section 4 of the flight manual (BK 117 D-2, Helionix Step 2) from the interior check to the engine shut-down, in full and with no step cut: interior check, quick start preflight, the additional pre-flight checks, after engine start with the heating system and avionics checks, before take-off, take-off check and procedure, pre-landing, landing and engine shut-down. Eight IFR procedures are included: preflight check and departure, OBS navigation, parallel track, holding pattern, ILS approach, LNAV or LP approach, LPV or LNAV/VNAV approach, and missed approach with vectors to final.
+- No page is longer than 26 rows. Longer lists are cut at the headings of the manual, with PREV PAGE and NEXT PAGE links, and the next page of the same list opens 5 seconds after a page is complete.
+- Steps with a readable aircraft state advance when the state is met, the others on a timer. Night flight preparation, the heating system check, the avionic test and the start-up after the interior check are choices between links and wait for you. The main checklist page lists every procedure with the title of the manual.
+- Notes and cautions are read out with the next step, the spoken prompts are shortened so that a prompt ends before its step moves on, and the slope guidance appears beyond 12 degrees of pitch or bank.
+- **Build history:** 0.997 169.37, 169.38, 169.39, 169.40.
+- **Test:** Run the checklists from the main page in order, including one IFR procedure, a long list with PREV and NEXT, and the optional blocks.
+
+### Dispatch status keys
+
+- The status report to the dispatcher can be sent from the tablet keypad and from the CARLS digits 0 to 9. On the CARLS it works only on the home page with the radio connected and only for a status different from the current one; the CARLS shows its usual popup (Sending request, Request sent), the report is logged on the message page as a line of the crew (Status sent), and the tablet needs no confirmation any more.
+- **Build history:** 0.997 169.40.
+- **Test:** Send each status from the tablet and from the CARLS and read the message page; a held key may not repeat.
+
+### Payload weights follow the people aboard
+
+- The six payload stations now hold the people on the seats (copilot, pilot, PAX 1, 2, 3 and the stretcher with the patient), recomputed continuously and after a reloaded mission. During hoist work the weight stays while the person hangs on the cable and goes when the person touches the ground. A new option on the technical page, WEIGHT OF THE INSTALLED KITS (on or off, off by default, kept in the profiles), adds an estimate of the installed kits.
+- **Build history:** 0.997 169.40.
+- **Test:** Board and deboard with several crew and a patient and watch the stations; repeat with the kits option on.
+
+### Mission Companion voice mode
+
+- With the Mission Companion app (0.9 and the voice pack EN 7) the crew and the dispatcher speak with the voices of the app. The mission uses the voice code APP and follows the app every second, so it does not miss the reset that the simulator does at a flight load.
+- Conversations: boarding, briefing and debriefing of the crew, and the dispatcher reading the dispatch. The briefing and the objective differ for each kind of mission, and a short exchange with the dispatcher at the briefing includes the presentation of the crew and, when the police drive the crew, where the crew will be left. The dispatcher names the rescue vehicles in one sentence, and a five-line approach briefing before the arrival tells whether the hoist is expected and which vehicles are on scene. The message tone of the app is gone because the tablet plays its own.
+- Updates follow the news instead of a question every minute: the pilot hears the ground team when the team has an update, and chats with the people aboard only when nobody is alone and there is silence. There are also reports of the ground operations for a dead patient, reactions to a death and to a hard landing, the hospital call, handover and marshal notice, and cruise and small talk. The dead and the badly hurt crew do not speak.
+- Every message has six options, one default, two professional and three colloquial, so repeated calls do not sound alike.
+- **Build history:** 0.997 169.41, 169.42, 169.43, 169.45.
+- **Test:** Fly a mission with the app and listen to the boarding, the briefing, the approach and the debriefing; check that a long flight has no question every minute and that a dead crew member stays silent.
+
+### Crew chatter setting
+
+- The setting CREW CHATTER (FULL, REDUCED, MINIMAL) controls how much the crew talks, and is kept in the profiles.
+- **Build history:** 0.997 169.45.
+- **Test:** Fly the same dispatch with each level and compare how many cruise chats and updates are spoken.
+
+### Male or female technician
+
+- The technician of each scene (start of a flight, fuel truck, arrival at the base) is male or female, picked at random. The app speaks the technician lines with the voice of that technician, and the crew greetings use the technician's name. With the wav voice packs the technicians stay as before. The user action to tell the technician that you arrived and the fuel text in the settings no longer name Sarah and Frank.
+- **Build history:** 0.997 169.44.
+- **Test:** Start several flights and check that the technician changes sex, voice and name in the greetings.
+
+### Clean-up of the app work folder by category
+
+- The Clean-up button of the app lists what it will delete in three groups, and you choose which ones: Safe to delete (debug), R&E configuration files (resets saved flights or profiles) and User settings (use it to go back to the defaults, or if the mission does not start). The global settings file is in the last group: it holds the variables of all the missions and sometimes becomes corrupt and blocks the mission, so this is the usual reason to use the button. Each group asks for a confirmation with its own warning.
+- **Build history:** Mission Companion app 0.9.
+- **Test:** Open Clean-up, check that the three groups and their sizes are listed, delete only the debug group, and verify that the saved flights and the settings are still there.
+
+### Setup program for the app
+
+- The app comes with its own installer, which installs it, creates the desktop and start menu shortcuts and can remove it again. It supports a silent installation, a chosen folder, no shortcuts, no launch at the end and an uninstall that can also remove the data.
+- **Build history:** Mission Companion app 0.9.
+- **Test:** Install in a new folder, start the app, then uninstall and check that nothing is left.
+
+### Quieter app voices
+
+- The app understands the CREW CHATTER setting of the mission and speaks fewer cruise chats at the reduced and minimal levels. A message option that is empty is a real silence: nothing is sent to the voice. A muted crew member (dead or badly hurt) does not speak.
+- **Build history:** Mission Companion app 0.9.
+- **Test:** Set each chatter level in the mission and compare what the app speaks; verify that a dead crew member stays silent.
+
+### Updates from the Mission Companion
+
+- The Tools tab of the Mission Companion (0.10) checks for a newer mission file and a newer program when it starts (at most every six hours, it can be switched off) and on the button Check for updates. The check only reads: it tells you with a notification, and nothing is downloaded before you answer the question.
+- The question is a window with the release notes of what is newer, with Download and install and Not now. The mission file is replaced first (the old one is kept in the backups folder) and the mission index is updated; then the program updates itself and starts again. The button What's new shows the notes of the latest releases at any time.
+- **Build history:** Mission Companion app 0.10.
+- **Test:** Publish nothing: press Check for updates and What's new; with a newer release the question shows its notes and Not now closes it without downloading.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -460,4 +797,7 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 168:** Candidate delivery restoring five-minute-plus CPR stability, crew-fatality placement, and marshal restart recognition; runtime PENDING.
 - **0.997 168.1-168.129:** Internal reliability hardening and trial builds; no separate final pilot-facing change beyond what is listed above.
 - **0.997 168.130-168.147:** Independent multi-patient ambulance/HEMS choreography, rebuilt orange smoke marker, per-action RescueTrack attribution, the vehicle-circling fix, and corrected vitals/temperature display.
-- **0.997 168.148-169.0 (this release):** Portable, self-contained save files, save disabled during active ground/hoist work, the hoist too-low altitude callout, the livery-vs-saved-settings load choice, expanded crew safety scoring (sustained fire, hoist ground-contact speed, sustained hoist overspeed/bank/excess load, aircraft crash, gradual recovery), corrected livery hints and full Reset to Default/Reset Stats coverage in Settings, the briefing screen reopening over an open menu, and the flickering dispatch location marker. Still to be confirmed in the simulator.
+- **0.997 168.148-169.0:** Portable, self-contained save files, save disabled during active ground/hoist work, the hoist too-low altitude callout, the livery-vs-saved-settings load choice, expanded crew safety scoring (sustained fire, hoist ground-contact speed, sustained hoist overspeed/bank/excess load, aircraft crash, gradual recovery), corrected livery hints and full Reset to Default/Reset Stats coverage in Settings, the briefing screen reopening over an open menu, and the flickering dispatch location marker. Still to be confirmed in the simulator.
+- **0.997 169.1-169.26:** Dispatch marker and briefing fixes, consistent second-dispatch scene, vehicle arrival without road routes and tidy parking, reliable crash detection with injuries for everyone aboard and aircraft failures from light to heavy with a fuel leakage, crew losses (medic, both pilots, repair after a death), clearer dispatch and RescueTrack messages with the selectable clock, crew names and lifescores on the dispatch page, the mission failed report, police and dispatcher reports after a death, the crew emergency (divert or continue, hospital handover, base scene), end of the mission under your control, the grey progress bar, and the previous mission troubleshooting file. Still to be confirmed in the simulator.
+- **Mission Companion app 0.9-0.10 (this release):** No firewall question at every start, the Clean-up by category, the setup program, and the chatter level, the silent options and the mute of the dead crew, then the update check with its release notes window for the mission and for the program.
+- **0.997 169.27-169.46 (this release):** Scene parking by lane and the police drop-off fixes, the crew that no longer walks off, patients protected before the arrival with the optional Life Score freeze, crash damage kept on the patient, the crew emergency refinements (no question with a patient aboard, hospital handover of the casualties, senders of the messages, critical and deceased rows), dispatch statistics only when known, light long missions, hoist cable accidents and sheltered single patient, the reset failures button, new search-and-rescue clues and missions 65 to 68, performance settings, road routes for the rescue vehicles, the flight manual checklists with the IFR procedures, the dispatch status keys, payload weights, the Mission Companion voice mode with crew chatter and the male or female technician, then the second dispatch built on its own location, the ambulance crew and patients in every dispatch, the distant ambulance that no longer takes a patient it cannot reach, the loading that is carried through, the sheltered patient for every crew, and fewer false errors. Still to be confirmed in the simulator.

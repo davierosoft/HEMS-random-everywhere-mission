@@ -17,9 +17,15 @@ for (const token of [
   if (!traceText.includes(token)) throw new Error(`handoff trace is missing ${token}`);
 }
 
-const starter = JSON.stringify(diagnostics['start location diagnostics']);
-if (starter.includes('dispatch_handoff_log')) {
-  throw new Error('start location diagnostics must not reset dispatch_handoff_log: it has to survive next_dispatch and reload_mission');
+// dispatch_handoff_log has to survive next_dispatch and reload_mission: start location diagnostics may only clear it
+// inside the first-dispatch branch (init call from objective1 with no accepted second dispatch).
+const starterCommands = diagnostics['start location diagnostics'];
+const unguarded = JSON.stringify(starterCommands.filter((command) => !(command.if && JSON.stringify(command.if).includes('"param":"init"'))));
+if (unguarded.includes('dispatch_handoff_log')) {
+  throw new Error('start location diagnostics must not reset dispatch_handoff_log outside the first-dispatch branch: it has to survive next_dispatch and reload_mission');
+}
+if (!JSON.stringify(starterCommands.find((command) => command.if && JSON.stringify(command.if).includes('"param":"init"'))?.if).includes('SECOND_DISPATCH_ACCEPTED')) {
+  throw new Error('the first-dispatch reset must be skipped while a second dispatch is accepted');
 }
 if (!JSON.stringify(diagnostics['capture crew movement snapshot']).includes('"key":"dispatch_handoff_log"')) {
   throw new Error('every snapshot must carry dispatch_handoff_log');

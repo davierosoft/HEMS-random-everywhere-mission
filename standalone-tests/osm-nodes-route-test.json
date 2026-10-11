@@ -1,0 +1,195 @@
+{
+  "title": "OSM NODES AND ROUTE TEST",
+  "id": "osm_nodes_route_test",
+  "start_info": {"icon_src": "", "query": []},
+  "objectives": [
+    {
+      "title": "OSM NODES AND ROUTE TEST",
+      "commands": [
+        {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+        {"set":{"local":"t1_status"},"value":"PENDING"},
+        {"set":{"local":"t2_status"},"value":"PENDING"},
+        {"set":{"local":"t3_status"},"value":"PENDING"},
+        {"set":{"local":"t3_probe_1"},"value":""},
+        {"set":{"local":"t3_probe_2"},"value":""},
+        {"set":{"local":"t3_probe_3"},"value":""},
+        {"set":{"local":"t3_probe_4"},"value":""},
+        {"set":{"local":"t3_probe_5"},"value":""},
+        {"set":{"local":"t3_probe_6"},"value":""},
+        {"set":{"local":"t3_probe_7"},"value":""},
+        {"set":{"local":"t4_status"},"value":"PENDING"},
+        {"set":{"local":"t4_info"},"value":""},
+        {"set_briefing_dialog":1},
+        {"wait_for":1,"lt":0}
+      ]
+    }
+  ],
+  "macros": {
+    "osm test query roads": [
+      {"#comment":"Shared step: roads within 1000 m of the helicopter. Leaves the data in the caller as my_data (param result of the call)."},
+      {"set":{"param":"my_data"},"value":null},
+      {"osm_query_data":"[out:json];way({{bbox}})[highway];(._;>;);out;","location":"heli","size":1000,"result":"my_data"},
+      {"set":{"param":"wait"},"value":0},
+      {"while": {"and":[{"require":{"param":"my_data"},"eq":null},{"require":{"param":"wait"},"lt":40}]}, "eq": 1,
+        "do": [
+          {"sleep":0.5},
+          {"set":{"param":"wait"},"value":{"add":[{"param":"wait"},0.5]}}
+      ]},
+      {"return":{"param":"my_data"}}
+    ],
+    "osm test nodes first way": [
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t1_status"},"value":"RUNNING"},
+      {"call_macro":"osm test query roads","result":"my_data"},
+      {"if": {"param":"my_data"}, "eq": null,
+        "then": [
+          {"set":{"local":"t1_status"},"value":"FAILED: no OSM data after 20 s"}
+        ],"else": [
+          {"osm_get_all_ways":{"param":"my_data"},"result":"my_ways"},
+          {"set":{"local":"t1_ways"},"value":{"struct":{"param":"my_ways"},"path":"length"}},
+          {"set":{"param":"way"},"value":{"struct":{"param":"my_ways"},"index":0}},
+          {"osm_get_nodes":{"struct":{"param":"way"},"path":"id"},"data":{"param":"my_data"},"result":"way_nodes"},
+          {"set":{"local":"t1_nodes"},"value":{"struct":{"param":"way_nodes"},"path":"length"}},
+          {"open_table":{"static":"Osm_Test_Table"}},
+          {"clear_table":{"static":"Osm_Test_Table"}},
+          {"set":{"table":{"static":"Osm_Test_Table"},"key":"way_id"},"value":{"struct":{"param":"way"},"path":"id"}},
+          {"set":{"table":{"static":"Osm_Test_Table"},"key":"ways_count"},"value":{"local":"t1_ways"}},
+          {"set":{"table":{"static":"Osm_Test_Table"},"key":"nodes_length"},"value":{"local":"t1_nodes"}},
+          {"set":{"table":{"static":"Osm_Test_Table"},"key":"nodes_array"},"value":{"param":"way_nodes"}},
+          {"set":{"local":"t1_i"},"value":0},
+          {"for_each": {"param":"way_nodes"},
+            "do": [
+              {"set":{"table":{"static":"Osm_Test_Table"},"key":{"local":"t1_i"}},"value":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}},
+              {"set":{"local":"t1_i"},"value":{"add":[{"local":"t1_i"},1]}}
+          ]},
+          {"save_table":{"static":"Osm_Test_Table"}},
+          {"set":{"param":"pick"},"value":{"struct":{"param":"way_nodes"},"index":{"floor":{"rand":[0,{"struct":{"param":"way_nodes"},"path":"length"}]}}}},
+          {"create_location":"osm_test_node","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"pick"},"path":"lat"},{"struct":{"param":"pick"},"path":"lon"}]}}}}]},
+          {"set":{"local":"t1_dist"},"value":{"object":"osm_test_node","var":"distance:m","to":"heli"}},
+          {"set_map":{"add":{"point":{"location":"osm_test_node","text":"RANDOM NODE"}}}},
+          {"set":{"local":"t1_status"},"value":{"text":"OK: {0} ways, first way has {1} nodes (path length), random node {2} m from the helicopter, rows written to table R&E_osm_nodes_test","params":[{"local":"t1_ways"},{"local":"t1_nodes"},{"local":"t1_dist"}]}}
+      ]}
+    ],
+    "osm test way through closest node": [
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t2_status"},"value":"RUNNING"},
+      {"call_macro":"osm test query roads","result":"my_data"},
+      {"if": {"param":"my_data"}, "eq": null,
+        "then": [
+          {"set":{"local":"t2_status"},"value":"FAILED: no OSM data after 20 s"}
+        ],"else": [
+          {"osm_get_closest_nodes":"heli","data":{"param":"my_data"},"result":"my_closest_nodes"},
+          {"set":{"param":"closest"},"value":{"struct":{"param":"my_closest_nodes"},"index":0}},
+          {"osm_get_parent_ways":{"struct":{"param":"closest"},"path":"id"},"data":{"param":"my_data"},"result":"parents"},
+          {"set":{"local":"t2_parents"},"value":{"struct":{"param":"parents"},"path":"length"}},
+          {"set":{"param":"way"},"value":{"struct":{"param":"parents"},"index":0}},
+          {"osm_get_nodes":{"struct":{"param":"way"},"path":"id"},"data":{"param":"my_data"},"result":"way_nodes"},
+          {"set":{"local":"t2_nodes"},"value":{"struct":{"param":"way_nodes"},"path":"length"}},
+          {"open_table":{"static":"Osm_Test_Table_Way"}},
+          {"clear_table":{"static":"Osm_Test_Table_Way"}},
+          {"set":{"table":{"static":"Osm_Test_Table_Way"},"key":"closest_node_id"},"value":{"struct":{"param":"closest"},"path":"id"}},
+          {"set":{"table":{"static":"Osm_Test_Table_Way"},"key":"parent_ways"},"value":{"local":"t2_parents"}},
+          {"set":{"table":{"static":"Osm_Test_Table_Way"},"key":"nodes_length"},"value":{"local":"t2_nodes"}},
+          {"set":{"table":{"static":"Osm_Test_Table_Way"},"key":"nodes_array"},"value":{"param":"way_nodes"}},
+          {"save_table":{"static":"Osm_Test_Table_Way"}},
+          {"set":{"param":"first"},"value":{"struct":{"param":"way_nodes"},"index":0}},
+          {"set":{"param":"last"},"value":{"struct":{"param":"way_nodes"},"index":{"subtract":[{"struct":{"param":"way_nodes"},"path":"length"},1]}}},
+          {"create_location":"osm_test_first","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"first"},"path":"lat"},{"struct":{"param":"first"},"path":"lon"}]}}}}]},
+          {"create_location":"osm_test_last","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"last"},"path":"lat"},{"struct":{"param":"last"},"path":"lon"}]}}}}]},
+          {"set":{"local":"t2_first_dist"},"value":{"object":"osm_test_first","var":"distance:m","to":"heli"}},
+          {"set":{"local":"t2_last_dist"},"value":{"object":"osm_test_last","var":"distance:m","to":"heli"}},
+          {"set_map":{"add":{"point":{"location":"osm_test_first","text":"WAY FIRST"}}}},
+          {"set_map":{"add":{"point":{"location":"osm_test_last","text":"WAY LAST"}}}},
+          {"set":{"local":"t2_status"},"value":{"text":"OK: closest node is on {0} way(s); first way has {1} nodes; first node {2} m, last node {3} m from the helicopter","params":[{"local":"t2_parents"},{"local":"t2_nodes"},{"local":"t2_first_dist"},{"local":"t2_last_dist"}]}}
+      ]}
+    ],
+    "osm test route probe": [
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t3_status"},"value":"RUNNING"},
+      {"create_location":"osm_test_route_end","zones":[{"zone":{"location":{"bearing":0,"dist":700,"object":"heli"}}}]},
+      {"create_route":{"name":"osm_test_route","query":{"to":"osm_test_route_end","from":"heli","type":"car"}}},
+      {"set":{"local":"t3_duration"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+      {"draw_route":"osm_test_route","stroke":{"width":4,"color":"#FCBA03"}},
+      {"open_table":{"static":"Osm_Test_Table_Route"}},
+      {"clear_table":{"static":"Osm_Test_Table_Route"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"duration"},"value":{"local":"t3_duration"}},
+      {"#comment":"Only reads of special params: no invented commands. A name that does not exist reads as null; try/catch records an error instead of stopping the test."},
+      {"try":[{"set":{"local":"t3_probe_1"},"value":{"text":"DISTANCE type {0} value {1}","params":[{"typeof":{"param":"$CREATE_ROUTE:DISTANCE"}},{"param":"$CREATE_ROUTE:DISTANCE"}]}}],"catch":[{"set":{"local":"t3_probe_1"},"value":"DISTANCE read error"}]},
+      {"try":[{"set":{"local":"t3_probe_2"},"value":{"text":"POINTS type {0} length {1}","params":[{"typeof":{"param":"$CREATE_ROUTE:POINTS"}},{"struct":{"param":"$CREATE_ROUTE:POINTS"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_2"},"value":"POINTS read error"}]},
+      {"try":[{"set":{"local":"t3_probe_3"},"value":{"text":"NODES type {0} length {1}","params":[{"typeof":{"param":"$CREATE_ROUTE:NODES"}},{"struct":{"param":"$CREATE_ROUTE:NODES"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_3"},"value":"NODES read error"}]},
+      {"try":[{"set":{"local":"t3_probe_4"},"value":{"text":"WAYPOINTS type {0} length {1}","params":[{"typeof":{"param":"$CREATE_ROUTE:WAYPOINTS"}},{"struct":{"param":"$CREATE_ROUTE:WAYPOINTS"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_4"},"value":"WAYPOINTS read error"}]},
+      {"try":[{"set":{"local":"t3_probe_5"},"value":{"text":"INSTRUCTIONS type {0} length {1}","params":[{"typeof":{"param":"$CREATE_ROUTE:INSTRUCTIONS"}},{"struct":{"param":"$CREATE_ROUTE:INSTRUCTIONS"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_5"},"value":"INSTRUCTIONS read error"}]},
+      {"try":[{"set":{"local":"t3_probe_6"},"value":{"text":"whole $CREATE_ROUTE type {0}","params":[{"typeof":{"param":"$CREATE_ROUTE"}}]}}],"catch":[{"set":{"local":"t3_probe_6"},"value":"$CREATE_ROUTE read error"}]},
+      {"try":[{"set":{"local":"t3_probe_7"},"value":{"text":"RAWDATA type {0} length {1}","params":[{"typeof":{"param":"$CREATE_ROUTE:RAWDATA"}},{"struct":{"param":"$CREATE_ROUTE:RAWDATA"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_7"},"value":"RAWDATA read error"}]},
+      {"try":[{"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"rawdata"},"value":{"param":"$CREATE_ROUTE:RAWDATA"}}],"catch":[{"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"rawdata"},"value":"RAWDATA save error"}]},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_rawdata"},"value":{"local":"t3_probe_7"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_distance"},"value":{"local":"t3_probe_1"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_points"},"value":{"local":"t3_probe_2"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_nodes"},"value":{"local":"t3_probe_3"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_waypoints"},"value":{"local":"t3_probe_4"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_instructions"},"value":{"local":"t3_probe_5"}},
+      {"set":{"table":{"static":"Osm_Test_Table_Route"},"key":"probe_whole"},"value":{"local":"t3_probe_6"}},
+      {"save_table":{"static":"Osm_Test_Table_Route"}},
+      {"set":{"local":"t3_status"},"value":{"text":"DONE: route drawn, duration {0} s; probes below show which special params exist","params":[{"local":"t3_duration"}]}}
+    ],
+    "osm test route entries": [
+      {"#comment":"Route read as an array: create_route stores the route under its name, {route:name} puts it into a param, each entry should be [lat, lon, alt, spd] (HPG community note). Self-contained: builds its own route."},
+      {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+      {"set":{"local":"t4_status"},"value":"RUNNING"},
+      {"set":{"local":"t4_info"},"value":""},
+      {"create_location":"osm_test_route_end","zones":[{"zone":{"location":{"bearing":0,"dist":700,"object":"heli"}}}]},
+      {"create_route":{"name":"osm_test_route","query":{"to":"osm_test_route_end","from":"heli","type":"car"}}},
+      {"set":{"local":"t4_duration"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+      {"draw_route":"osm_test_route","stroke":{"width":4,"color":"#FCBA03"}},
+      {"set":{"param":"my_route"},"value":{"route":"osm_test_route"}},
+      {"try":[
+        {"set":{"local":"t4_type"},"value":{"typeof":{"param":"my_route"}}},
+        {"set":{"local":"t4_count"},"value":{"struct":{"param":"my_route"},"path":"length"}},
+        {"set":{"param":"first"},"value":{"struct":{"param":"my_route"},"index":0}},
+        {"set":{"param":"last"},"value":{"struct":{"param":"my_route"},"index":{"subtract":[{"struct":{"param":"my_route"},"path":"length"},1]}}},
+        {"set":{"param":"pick"},"value":{"struct":{"param":"my_route"},"index":{"floor":{"rand":[0,{"struct":{"param":"my_route"},"path":"length"}]}}}},
+        {"open_table":{"static":"Osm_Test_Table_Route_Entries"}},
+        {"clear_table":{"static":"Osm_Test_Table_Route_Entries"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"type"},"value":{"local":"t4_type"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"count"},"value":{"local":"t4_count"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"duration"},"value":{"local":"t4_duration"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"first"},"value":{"param":"first"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"last"},"value":{"param":"last"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"pick"},"value":{"param":"pick"}},
+        {"set":{"table":{"static":"Osm_Test_Table_Route_Entries"},"key":"route"},"value":{"param":"my_route"}},
+        {"save_table":{"static":"Osm_Test_Table_Route_Entries"}},
+        {"create_location":"osm_test_route_first","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"first"},"index":0},{"struct":{"param":"first"},"index":1}]}}}}]},
+        {"create_location":"osm_test_route_pick","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"pick"},"index":0},{"struct":{"param":"pick"},"index":1}]}}}}]},
+        {"set":{"local":"t4_first_dist"},"value":{"object":"osm_test_route_first","var":"distance:m","to":"heli"}},
+        {"set":{"local":"t4_pick_dist"},"value":{"object":"osm_test_route_pick","var":"distance:m","to":"heli"}},
+        {"set_map":{"add":{"point":{"location":"osm_test_route_pick","text":"ROUTE RANDOM POINT"}}}},
+        {"set":{"local":"t4_info"},"value":{"text":"entry 0 = [{0}, {1}, {2}, {3}]; first point {4} m and random point {5} m from the helicopter","params":[{"struct":{"param":"first"},"index":0},{"struct":{"param":"first"},"index":1},{"struct":{"param":"first"},"index":2},{"struct":{"param":"first"},"index":3},{"local":"t4_first_dist"},{"local":"t4_pick_dist"}]}},
+        {"set":{"local":"t4_status"},"value":{"text":"DONE: route param type {0}, {1} entries, duration {2} s, table R&E_osm_route_entries_test","params":[{"local":"t4_type"},{"local":"t4_count"},{"local":"t4_duration"}]}}
+      ],"catch":[
+        {"set":{"local":"t4_status"},"value":"FAILED: route read as a param raised an error; see the other lines"}
+      ]}
+    ]
+  },
+  "briefing": [
+    {"text":"OSM NODES AND ROUTE TEST","size":"large","align":"center"},
+    {"text":"Stay still in the helicopter. Each test recreates the location heli at your position, queries the roads within 1000 m and writes its result to a table. Run 1 and 2 once, then 3 and 4."},
+    {"buttonbar":[{"title":"1 NODES OF FIRST ROAD WAY","commands":[{"call_macro":"osm test nodes first way"}]},{"text":"{0}","params":[{"local":"t1_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"2 WAY THROUGH CLOSEST NODE","commands":[{"call_macro":"osm test way through closest node"}]},{"text":"{0}","params":[{"local":"t2_status"}],"color":"green"}]},
+    {"buttonbar":[{"title":"3 ROUTE PROBE (700 M NORTH)","commands":[{"call_macro":"osm test route probe"}]},{"text":"{0}","params":[{"local":"t3_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t3_probe_1"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_2"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_3"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_4"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_5"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_6"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_7"}],"color":"yellow"},
+    {"buttonbar":[{"title":"4 ROUTE ENTRIES (700 M NORTH)","commands":[{"call_macro":"osm test route entries"}]},{"text":"{0}","params":[{"local":"t4_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t4_info"}],"color":"yellow"}
+  ],
+  "data": {
+    "Osm_Test_Table": "R&E_osm_nodes_test",
+    "Osm_Test_Table_Way": "R&E_osm_nodes_way_test",
+    "Osm_Test_Table_Route": "R&E_osm_route_probe_test",
+    "Osm_Test_Table_Route_Entries": "R&E_osm_route_entries_test"
+  }
+}

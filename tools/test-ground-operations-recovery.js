@@ -6,13 +6,13 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..');
-const checklistDefinitions = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
+const checklistDefinitions = Object.assign({}, JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8')), JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/22-checklists.json'), 'utf8')));
 const runtime = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/14-shared-runtime.json'), 'utf8'));
 const ground = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/08-ground-response.json'), 'utf8'));
 const hoist = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/09-hoist-ground-ops.json'), 'utf8'));
 const debug = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/15-debug-and-df-ui.json'), 'utf8'));
 const scene = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/06-scene-generation.json'), 'utf8'));
-const checklists = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8'));
+const checklists = Object.assign({}, JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8')), JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/22-checklists.json'), 'utf8')));
 const navigation = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/05-navigation-queries.json'), 'utf8'));
 const transfer = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/10-transfer-special-missions.json'), 'utf8'));
 const tablet = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/04-dispatch-tablet-ui.json'), 'utf8'));
@@ -38,7 +38,7 @@ function paramsInsideWorker(value, inWorker = false, found = []) {
   return found;
 }
 
-const clinical = runtime['patient1 clinical visit gate'];
+requireTrue(!Object.hasOwn(runtime, 'patient1 clinical visit gate'), 'the unused legacy Patient 1 clinical gate is removed: the visit record is read by the registry');
 const completedTreatment = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/17-multipatient-runtime.json'), 'utf8'))['multipatient registry crew clinical completion'];
 const multipatient = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/17-multipatient-runtime.json'), 'utf8'));
 const ambulanceDispatch = JSON.stringify(ground.Ambulance1) + JSON.stringify(ground.Ambulance2);
@@ -57,13 +57,11 @@ for (const name of ['drive ambulance1 safe', 'drive ambulance1 safe multiplier',
   requireTrue(paramsInsideWorker(ground[name]).length === 0, `${name} must snapshot every caller parameter before creating workers`);
   requireTrue(JSON.stringify(ground[name]).includes('"local":"drive_watchdog_ambulance'), `${name} must use explicit worker-safe locals`);
 }
-requireTrue(Array.isArray(clinical) && clinical.some(entry => entry.call_macro === 'multipatient registry crew record'), 'patient 1 legacy gate must read the physical visit record');
-requireTrue(!contains(clinical, entry => entry?.create_thread), 'legacy gate must not restart an asynchronous treatment worker');
 requireTrue(contains(completedTreatment, entry => entry?.call_macro === 'request manual patient visit'), 'manual medical mode no longer uses its clinical gate');
 requireTrue(contains(completedTreatment, entry => entry?.set?.local === 'medical_actions_started' && entry.value === 1), 'automatic clinical treatment does not start when the clinician arrives');
 requireTrue(contains(completedTreatment, entry => entry?.set?.local === 'P1_MEDICAL_ACTIONS_VISIBLE' && entry.value === 'yes'), 'automatic clinical treatment is not shown to the user');
 requireTrue(contains(completedTreatment, entry => entry?.call_macro === 'apply patient1 medical action effect'), 'automatic clinical treatment does not apply the configured actions');
-requireTrue(!JSON.stringify(clinical).includes('SIM ON GROUND'), 'patient 1 clinical treatment is incorrectly gated by ground state');
+requireTrue(!JSON.stringify(completedTreatment).includes('SIM ON GROUND'), 'patient 1 clinical treatment is incorrectly gated by ground state');
 requireTrue(contains(hoist, (entry) => entry && entry.call_macro === 'multipatient registry crew tour safe'), 'the HEMS clinician arrival path does not invoke the multipatient crew tour');
 requireTrue(!JSON.stringify(hoist).includes('patient1 clinical visit gate'), 'the HEMS clinician arrival path retains the duplicate legacy Patient 1 clinical gate');
 const runtimeTrace = multipatient['ground crew runtime trace'];
@@ -155,7 +153,7 @@ crewObjectFiles.forEach((file) => {
   const module = JSON.parse(fs.readFileSync(path.join(macroDirectory, file), 'utf8'));
   Object.entries(module).forEach(([macro, commands]) => inspectMacro(commands, file, macro));
 });
-requireTrue(crewObjectCount === 78 && crewWrapperCount === crewObjectCount, 'every packaged $TITLE Crew creation must have one synchronous watchdog wrapper');
+requireTrue(crewObjectCount === 82 && crewWrapperCount === crewObjectCount, 'every packaged $TITLE Crew creation must have one synchronous watchdog wrapper');
 requireTrue(nrGateCalls === 24, 'every standalone NR < gndopsNR gate must use the watchdog');
 
 const threeCrewDestinationMacros = [
@@ -369,20 +367,37 @@ const avionic = checklistDefinitions.aviopftckl;
 const beforeTakeoff = checklistDefinitions.beforetockl;
 const takeoff = checklistDefinitions.takeoffckl;
 const transitionBefore = checklistDefinitions['checklist transition before takeoff'];
-const transitionTakeoff = checklistDefinitions['checklist transition takeoff'];
-requireTrue(avionic.find((entry) => entry.set_dispatch)?.set_dispatch.some((row) => row.link === 'PROCEED WITH TAKE OFF CHECKLIST' && row.commands?.some((command) => command.if?.local === 'checklist_avionic_advanced')), 'avionic/preflight page lacks a working proceed button');
+requireTrue(avionic.find((entry) => entry.set_dispatch)?.set_dispatch.some((row) => row.link === 'PROCEED WITH AFTER ENGINE START (PART 2)' && row.commands?.some((command) => command.if?.local === 'checklist_avionic_advanced')), 'avionic/preflight page lacks a working proceed button');
 requireTrue(beforeTakeoff.find((entry) => entry.set_dispatch)?.set_dispatch.some((row) => row.link === 'PROCEED WITH TAKE OFF CHECKLIST' && row.commands?.some((command) => command.if?.local === 'checklist_beforetakeoff_advanced')), 'before take-off page lacks a working proceed button');
-for (const [name, checklist, next] of [['avionic', avionic, 'beforetockl'], ['before take-off', beforeTakeoff, 'takeoffckl']]) {
+const afterStart = checklistDefinitions.afterengstartckl;
+const afterStart2 = checklistDefinitions.afterengstartckl2b;
+const afterStart2Pages = [checklistDefinitions.afterengstartckl2, checklistDefinitions.afterengstartckl2b];
+requireTrue(afterStart2, 'the after engine start checklist, part 2, is missing');
+requireTrue(afterStart2.find((entry) => entry.set_dispatch)?.set_dispatch.some((row) => row.link === 'PROCEED WITH BEFORE TAKE-OFF CHECKLIST' && row.commands?.some((command) => command.if?.local === 'checklist_afterengstartckl2b_advanced')), 'after engine start part 2 lacks a working proceed button');
+for (const [name, checklist, next] of [['avionic', avionic, 'afterengstartckl2'], ['after engine start part 2', afterStart2, 'beforetockl'], ['before take-off', beforeTakeoff, 'takeoffckl']]) {
   const serialized = JSON.stringify(checklist);
   requireTrue(serialized.includes('"sleep":20') && serialized.includes(`"call_macro":"${next}"`), `${name} checklist lacks the 20-second automatic continuation`);
 }
-requireTrue(transitionBefore && transitionTakeoff, 'legacy transition helpers are missing');
+// chain: after engine start -> heating and avionics checks -> avionic test (or skip) -> part 2 -> before take-off -> take-off; no transition helper or unused duplicate is left
+const afterStart1b = checklistDefinitions.afterengstartckl1c;
+requireTrue(afterStart1b, 'the after engine start heating and avionics checks are missing');
+requireTrue(JSON.stringify(afterStart).includes('"call_macro":"afterengstartckl1b"') && !JSON.stringify(afterStart).includes('"call_macro":"aviopftckl"'), 'after engine start must continue with the heating and avionics checks');
+requireTrue(JSON.stringify(afterStart1b).includes('"call_macro":"aviopftckl"') && JSON.stringify(afterStart1b).includes('"call_macro":"afterengstartckl2"') && JSON.stringify(afterStart1b).includes('L:CHECKLIST_SKIP'), 'the heating and avionics checks must offer the avionic test or, when skipped, part 2');
+requireTrue(!JSON.stringify(avionic).includes('"call_macro":"beforetockl"'), 'the avionic test must continue with part 2, not skip it');
+requireTrue(!transitionBefore && !checklistDefinitions['checklist transition takeoff'], 'the unused transition helper or the unused duplicate of beforetockl came back');
+const mainPage = JSON.stringify(checklistDefinitions['checklist home']);
+const mainOrder = ['interiorckl', 'normstartupckl', 'quickprep1ckl', 'startupckl', 'afterengstartckl', 'afterengstartckl1b', 'aviopftckl', 'afterengstartckl2', 'beforetockl', 'takeoffckl', 'takeoffprocckl', 'prelandingckl', 'landingckl', 'shutdownckl', 'ifrdepckl'].map((name) => mainPage.indexOf(`"call_macro":"${name}"`));
+requireTrue(mainOrder.every((index) => index > 0) && mainOrder.every((index, i) => i === 0 || index > mainOrder[i - 1]), 'the checklist list must follow the flight manual order, from the interior check to the engine shut-down');
+// the restored part 2 is complete: nothing is cut because another checklist repeats it
+const part2Text = JSON.stringify(afterStart2Pages);
+for (const needed of ['AP1 + AP2 + BKUP', 'Collective', 'MFDs', 'Cockpit illumination', 'Fixed and S/L landing lights', 'Fabric glare shield', 'Optional equipment', 'Power check', "ENG 1/2 MAIN sw's"]) requireTrue(part2Text.includes(needed), `after engine start part 2 lacks the manual step ${needed}`);
 requireTrue(takeoff.some((entry) => entry.set_dispatch?.some((row) => row.text === 'SLOPE TAKE-OFF PROCEDURE' && row.show_condition?.or)), 'take-off checklist does not place conditional slope guidance first');
 const takeoffText = JSON.stringify(takeoff);
 requireTrue(takeoffText.includes('PLANE PITCH DEGREES","Radians') && takeoffText.includes('PLANE BANK DEGREES","Radians') && takeoffText.includes('0.20944'), 'slope guidance does not use the 12-degree radians threshold');
 requireTrue(takeoffText.includes('"param":"L:FLI"') || takeoffText.includes('L:FLI'), 'take-off FLI gate is missing');
 requireTrue(takeoffText.includes('SDK_ENG_1_TRQ') && takeoffText.includes('SDK_ENG_2_TRQ') && takeoffText.includes('takeoff_torque_delta'), 'take-off AEO torque comparison is missing');
-requireTrue(takeoff.at(-1)?.call_macro === 'Mission dispatch' && takeoff.at(-2)?.sleep === 10, 'take-off checklist does not return to dispatch after ten seconds');
+requireTrue(takeoff.at(-1)?.call_macro === 'takeoffprocckl' && takeoff.at(-2)?.sleep === 10, 'take-off checklist does not continue with the take-off procedure after ten seconds');
+requireTrue(!JSON.stringify(checklistDefinitions.takeoffprocckl).includes('call_macro":"Mission dispatch') && !JSON.stringify(checklistDefinitions.takeoffprocckl).includes('prelandingckl'), 'the take-off procedure must stop: the next procedure is chosen from the main page');
 
 const boardingCargoClose = checklists['verify boarding cargo doors closed'];
 requireTrue(Array.isArray(boardingCargoClose) && boardingCargoClose.length === 2, 'boarding cargo-door close verification is missing');

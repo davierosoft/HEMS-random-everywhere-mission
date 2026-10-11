@@ -18,7 +18,7 @@ class Live extends Scene {
     for (const slot of [1, 2, 3]) Object.assign(this.locals, slot === 1 ? {SPO2: 96, BPM: 80, GCS_TOTAL: 14} : {[`P${slot}_SPO2`]: 96, [`P${slot}_BPM`]: 80, [`P${slot}_GCS_TOTAL`]: 14});
     for (const name of ['ambulance1', 'ambulance2', 'ambustretcher7', 'ambustretcher2', 'ambumedic7', 'ambumedic2', 'hoist_crew', 'pax3']) {this.objects.add(name); this.locations[name] = [0, 0];}
     Object.assign(this.locals, {VAR_MISSION_NUMBER: 9, 'L:TEMPACCIDENT_LOCATION LAT': 45, 'L:TEMPACCIDENT_LOCATION LON': 8});
-    this.locations.accident_location = [0, 0];
+    this.locations.accident_location = [0, 0]; this.locations.$USER = [0, 0];
   }
   query(q, p) {
     if (q?.if) return this.query(this.compare(this.query(q.if, p), q, p) ? q.then : q.else, p);
@@ -112,11 +112,31 @@ for (const slot of [1, 2, 3]) for (const resource of ['ambulance1', 'ambulance2'
     assert.equal(h.call(prefix + 'live ground load', {ticket, vehicle: resource, medic, stretcher: resource === 'ambulance1' ? 'ambustretcher7' : 'ambustretcher2'}), 1);
     assert.equal(h.locals[slot === 1 ? 'ambulance_final_provider' : `P${slot}_AMBULANCE_FINAL_PROVIDER`], resource);
   }
-  assert.deepEqual(Array.from(h.events.filter(e => e[0] === 'pack'), e => e[1]), resource === 'hems' ? [] : [packed],
-    'HEMS boarding does not repose the casualty into the ambulance-stretcher ready-for-transport model');
+  assert.deepEqual(Array.from(h.events.filter(e => e[0] === 'pack'), e => e[1]), [packed],
+    'the casualty must be packed (compatible model, VAR 1 1) when the loading starts, as in the original HEMS flow');
   const record = h.call(prefix + 'get', {slot});
   assert.equal(record.report.lifescore, h.locals[`LIFESCORE${slot === 1 ? '' : slot}`]);
   assert.equal(h.call(prefix + 'live prepare patient', {ticket: {...ticket, generation: ticket.generation - 1}}), 0);
+}
+// The load after the patient left its place is committed (the patient lives only on the stretcher): a long vehicle that stops the stretcher far from its
+// centre, or a walk that raises an error, must still end with the stretcher and the medic loaded and the ticket loaded or already transported (tester report 2026-10-11,
+// German ambulance: the old distance gate aborted the load and the ambulance left without the patient).
+for (const resource of ['ambulance1', 'ambulance2']) for (const mode of ['far', 'error']) {
+  const h = new Live();
+  for (const other of [2, 3]) h.objects.delete(`injured_human${other}`);
+  assert.equal(h.tour(resource), 1);
+  const ticket = h.reserve(resource);
+  const stretcher = resource === 'ambulance1' ? 'ambustretcher7' : 'ambustretcher2';
+  const medic = resource === 'ambulance1' ? 'ambumedic7' : 'ambumedic2';
+  if (mode === 'far') h.moveHook = (scene, actor) => { if (actor === stretcher) scene.locations[actor] = [9, 0]; };
+  else {
+    const original = h.call.bind(h);
+    h.call = (name, p = {}) => { const result = original(name, p); if (name === prefix + 'live load patient') h.failedMovement = true; return result; };
+  }
+  assert.equal(h.call(prefix + 'live ground load', {ticket, vehicle: resource, medic, stretcher}), 1, `${resource} ${mode}: the committed load completes`);
+  assert.ok(h.events.some((e) => e[0] === 'destroy' && e[1] === stretcher), `${resource} ${mode}: the stretcher is loaded`);
+  assert.ok(h.events.some((e) => e[0] === 'destroy' && e[1] === medic), `${resource} ${mode}: the medic is loaded`);
+  assert.ok(['loaded', 'transported'].includes(h.call(prefix + 'get', {slot: ticket.slot}).transport_state), `${resource} ${mode}: the ticket is loaded (and on its way)`);
 }
 {
   const h = new Live(); h.locals.AMBU_AVAIL = 0; h.locals.SPO2 = 70;
@@ -158,7 +178,7 @@ for (const slot of [1, 2, 3]) for (const resource of ['ambulance1', 'ambulance2'
 }
 {
   const h = new Live(); h.call(prefix + 'live sync');
-  Object.assign(h.locals, {P1_DECR_RATE: 1, P2_DECR_RATE: 2, P3_DECR_RATE: 3, 'L:RESCUED': 1});
+  Object.assign(h.locals, {P1_DECR_RATE: 1, P2_DECR_RATE: 2, P3_DECR_RATE: 3, 'L:RESCUED': 1, MISSION_PHASE: 8});
   h.call(prefix + 'live physiology step', {seconds: 60});
   assert.equal(h.locals.LIFESCORE, 74); assert.equal(h.locals.LIFESCORE2, 63); assert.equal(h.locals.LIFESCORE3, 52);
   assert.deepEqual([h.locals['L:HEALTH'], h.locals['L:HEALTH2'], h.locals['L:HEALTH3']], [3, 2, 2]);
@@ -166,6 +186,39 @@ for (const slot of [1, 2, 3]) for (const resource of ['ambulance1', 'ambulance2'
   h.call(prefix + 'live physiology step', {seconds: 5}); h.call(prefix + 'live physiology step', {seconds: 5});
   assert.equal(h.messages.filter(x => x === 'Patient 2 died.').length, 1);
   assert.equal(h.locals.patient_pending_transport, 2, 'A primary rescue flag must not stop the other patients');
+}
+{
+  // Before the crew reaches the patient (phase below 8) the decay is halved and nobody falls below the floor; at the patient the full rate applies; after the grace time nothing protects
+  const h = new Live(); h.call(prefix + 'live sync');
+  Object.assign(h.locals, {P1_DECR_RATE: 2, P2_DECR_RATE: 2, P3_DECR_RATE: 2, MISSION_PHASE: 7, LIFESCORE: 30, LIFESCORE2: 8.5, LIFESCORE3: 30});
+  h.call(prefix + 'live physiology step', {seconds: 60});
+  assert.equal(h.locals.LIFESCORE, 29, 'half rate before the crew arrives');
+  assert.equal(h.locals.LIFESCORE2, 8, 'the floor holds before the crew arrives');
+  h.locals.MISSION_PHASE = 8;
+  h.call(prefix + 'live physiology step', {seconds: 60});
+  assert.equal(h.locals.LIFESCORE, 27, 'full rate once the crew is at the patient');
+  h.locals.MISSION_PHASE = 7; h.locals.patient_registry_clock = 1800; h.locals.LIFESCORE3 = 4;
+  h.call(prefix + 'live physiology step', {seconds: 5});
+  assert.ok(h.locals.LIFESCORE3 < 4, 'after the grace time nothing protects the patient');
+}
+{
+  // LIFE_FREEZE_NEAR: no decay while the helicopter is farther than 2 NM (3704 m) from the scene and the crew is not at the patient; the first time it is within 2 NM the latch opens and the protected decay runs
+  const h = new Live(); h.call(prefix + 'live sync');
+  Object.assign(h.locals, {P1_DECR_RATE: 2, P2_DECR_RATE: 2, P3_DECR_RATE: 2, MISSION_PHASE: 6, LIFESCORE: 40, LIFESCORE2: 40, LIFESCORE3: 40});
+  h.globals.LIFE_FREEZE_NEAR = 'yes'; h.locations.$USER = [0, 9000];
+  h.call(prefix + 'live physiology step', {seconds: 60});
+  assert.equal(h.locals.LIFESCORE, 40, 'frozen while far from the scene'); assert.equal(h.locals.LIFESCORE3, 40);
+  h.locations.$USER = [0, 3000];
+  h.call(prefix + 'live physiology step', {seconds: 60});
+  assert.equal(h.locals.LIFESCORE, 39, 'within 2 NM the decay runs at the protected half rate');
+  assert.equal(h.locals.LIFE_NEAR_LATCH, 1);
+  h.locations.$USER = [0, 9000];
+  h.call(prefix + 'live physiology step', {seconds: 60});
+  assert.equal(h.locals.LIFESCORE, 38, 'once close, flying away does not freeze it again');
+  const off = new Live(); off.call(prefix + 'live sync');
+  Object.assign(off.locals, {P1_DECR_RATE: 2, MISSION_PHASE: 6, LIFESCORE: 40}); off.globals.LIFE_FREEZE_NEAR = 'no'; off.locations.$USER = [0, 9000];
+  off.call(prefix + 'live physiology step', {seconds: 60});
+  assert.equal(off.locals.LIFESCORE, 39, 'the option off keeps the protected half rate');
 }
 for (const slot of [1, 2, 3]) {
   const h = new Live(); h.locals[`LIFESCORE${slot === 1 ? '' : slot}`] = 41 + slot;
@@ -257,5 +310,57 @@ for (const slot of [1, 2, 3]) {
   Object.assign(h.locals, {patient_live_mode: 0, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:CPR': 0, 'L:RESCUED': 0, crewvisiting1: 'yes', cpr_armed: 0, cpr_manual_stop: 0});
   h.call('CPR'); h.sleepHook = scene => {scene.locals['L:CPR'] = 5;}; h.runThread(h.threads[0]);
   assert.equal(h.locals['L:CPR'], 5); assert.equal(h.locals.cpr_manual_stop, 1, 'Non-registry missions retain legacy CPR controls');
+}
+// Ambulance out of reach (tester report 2026-10-11: off-road patient, ambulance stopped on a distant road, patient shown as "transported by ambulance" and left on
+// the mountain). The stretcher walks from the vehicle to the patient and back, so a parked ambulance farther than ambulance_patient_reach_m (150 m) cannot reserve him:
+// HEMS takes him. At the limit and below nothing changes; a missing vehicle or patient never blocks.
+for (const resource of ['ambulance1', 'ambulance2']) {
+  for (const [meters, reaches] of [[0, true], [100, true], [150, true], [151, false], [1500, false]]) {
+    const h = new Live();
+    for (const other of [2, 3]) h.objects.delete(`injured_human${other}`);
+    h.locations[resource] = [0, meters];
+    assert.equal(h.tour(resource), 1);
+    const ticket = h.reserve(resource);
+    if (reaches) { assert.equal(ticket?.slot, 1, `${resource} at ${meters} m reserves the patient`); continue; }
+    assert.equal(ticket, null, `${resource} at ${meters} m must not reserve the patient`);
+    assert.equal(h.reserve(resource), null); assert.equal(h.reserve(resource), null);
+    const rows = (h.locals.ground_crew_runtime_trace || []).filter(row => row.macro === 'ambulance_reach');
+    assert.equal(rows.length, 1, 'a blocked ambulance polling every second writes one trace row, not one per poll');
+    assert.match(rows[0].state, /blocked/);
+    assert.equal(h.tour('hems'), 1);
+    const hems = h.reserve('hems');
+    assert.equal(hems?.slot, 1, 'HEMS reserves the patient the ambulance cannot reach');
+    assert.equal(hems.resource, 'hems');
+  }
+}
+{
+  const h = new Live();
+  for (const other of [2, 3]) h.objects.delete(`injured_human${other}`);
+  h.locations.ambulance1 = [0, 5000]; h.objects.delete('ambulance1');
+  assert.equal(h.call(prefix + 'ambulance reach', {vehicle: 'ambulance1', patient: 1}), 1, 'no vehicle: the check cannot be made and never blocks');
+  h.objects.add('ambulance1'); h.objects.delete('injured_human');
+  assert.equal(h.call(prefix + 'ambulance reach', {vehicle: 'ambulance1', patient: 1}), 1, 'no patient object: never blocks');
+  assert.equal(h.call(prefix + 'ambulance reach', {vehicle: 'ambulance1', patient: 4}), 1, 'a slot without a patient object never blocks');
+}
+// the same patient reserved by HEMS first leaves the far ambulance without a patient: its medic does not walk to him
+{
+  const h = new Live();
+  for (const other of [2, 3]) h.objects.delete(`injured_human${other}`);
+  h.locations.ambulance1 = [0, 1500]; h.locations.ambumedic7 = [0, 1500];
+  h.locals.MISSION_TIME = 0; h.locals['L:MISSION_TIME'] = 10000;
+  // the stand down ends with a wait for the minimum time on the mission clock, which this harness does not advance: the medic part has run by then
+  try { h.call('ambulance1 stand down'); } catch (error) { assert.match(String(error.message), /Synchronous worker wait did not complete/); }
+  assert.ok(!h.events.some(e => e[0] === 'arrival' && e[1] === 'ambumedic7'), 'the medic of an ambulance 1500 m from the patient does not walk to him');
+  assert.ok(h.events.some(e => e[0] === 'destroy' && e[1] === 'ambumedic7'), 'the medic boards at once');
+}
+// A ground provider left by the previous dispatch (locals survive reload_mission) made crew eligibility answer "assigned" for patient 1 of the next one: neither the
+// ambulance nor HEMS visited him (tester report 2026-10-11, mission 62). The live initialisation of a mission clears it.
+{
+  const h = new Live();
+  Object.assign(h.locals, {P1_GROUND_PROVIDER: 'ambulance1', P2_GROUND_PROVIDER: 'ambulance1', P3_GROUND_PROVIDER: 'ambulance2'});
+  assert.equal(h.call(prefix + 'crew eligibility', {patient: 1}), 'assigned', 'a stale provider hides the patient from every crew');
+  h.call(prefix + 'live initialize');
+  for (const patient of [1, 2, 3]) assert.equal(h.locals[`P${patient}_GROUND_PROVIDER`], null, `provider of patient ${patient} cleared`);
+  assert.equal(h.call(prefix + 'crew eligibility', {patient: 1}), 'eligible', 'after the start of the next dispatch the patient is visited again');
 }
 console.log('Live patient transport PASS: visit barrier, queue ownership, nine slot/resource combinations, clinical priority, recovery, independent physiology, real CPR/manual workers and three save slots. HPG/MSFS PENDING.');

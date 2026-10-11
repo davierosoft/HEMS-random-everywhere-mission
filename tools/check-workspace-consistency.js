@@ -50,17 +50,23 @@ function collectSection(sectionName, orderProperty) {
   return { moduleCount: definitions.length, entryCount: seenKeys.size, largestModuleBytes };
 }
 
-const macros = collectSection('macros', 'macroOrder');
-const data = collectSection('data', 'dataOrder');
+const orderProperty = (name) => (name === 'macros' ? 'macroOrder' : name === 'data' ? 'dataOrder' : `${name}Order`);
+const sections = {};
+expect(isDeepStrictEqual(manifest.keyedSections, ['macros', 'data', 'threads', 'icons', 'root']), 'keyedSections must list macros, data, threads, icons and root');
+for (const name of manifest.keyedSections || []) sections[name] = collectSection(name, orderProperty(name));
+const { macros, data, threads, icons } = sections;
 
+// every root key of the deployed mission lives in mission-src: keyed sections hold their members, "root" holds the others
+expect(isDeepStrictEqual(Object.keys(mission), manifest.artifactKeyOrder), 'artifactKeyOrder is stale or reordered');
+expect(isDeepStrictEqual(manifest.modularSections, manifest.artifactKeyOrder) && manifest.artifactOnlySections.length === 0, 'every root key must be modular (no artifact-only section)');
+const keyedRootKeys = manifest.keyedSections.filter((name) => name !== 'root');
+expect(isDeepStrictEqual(manifest.rootOrder, manifest.artifactKeyOrder.filter((key) => !keyedRootKeys.includes(key))), 'root modules do not hold exactly the non-keyed root keys');
 expect(macros.entryCount === Object.keys(mission.macros || {}).length, 'modular macro count differs from the deployed artifact');
 expect(data.entryCount === Object.keys(mission.data || {}).length, 'modular data count differs from the deployed artifact');
+expect(threads.entryCount === Object.keys(mission.threads || {}).length, 'modular thread count differs from the deployed artifact');
+expect(icons.entryCount === Object.keys(mission.icons || {}).length, 'modular icon count differs from the deployed artifact');
 expect(sourceReadme.includes(`${macros.moduleCount} subsystem files`) && sourceReadme.includes(`all ${macros.entryCount} command macros`), 'mission-src README macro counts are stale');
 expect(sourceReadme.includes(`${data.moduleCount} files`) && sourceReadme.includes(`all ${data.entryCount} persistent tables`), 'mission-src README data counts are stale');
-
-const artifactOnly = Object.keys(mission).filter((key) => !manifest.modularSections.includes(key));
-expect(isDeepStrictEqual(artifactOnly, manifest.artifactOnlySections), 'artifactOnlySections is stale or reordered');
-expect(isDeepStrictEqual(manifest.modularSections, ['macros', 'data']), 'only macros and data may be modular without updating the assembler contract');
 expect(manifest.format?.macros?.headers?.length === macros.entryCount, 'macro formatting metadata count is stale');
 expect(manifest.format?.data?.headers?.length === data.entryCount, 'data formatting metadata count is stale');
 
@@ -151,7 +157,9 @@ console.log(JSON.stringify({
   macros: macros.entryCount,
   dataModules: data.moduleCount,
   dataEntries: data.entryCount,
-  largestModuleBytes: Math.max(macros.largestModuleBytes, data.largestModuleBytes),
+  threadModules: threads.moduleCount,
+  iconModules: icons.moduleCount,
+  largestModuleBytes: Math.max(...Object.values(sections).map((section) => section.largestModuleBytes)),
   guidanceFiles: requiredAgents.length,
   retiredHandoffs: retiredNames.length,
 }, null, 2));
