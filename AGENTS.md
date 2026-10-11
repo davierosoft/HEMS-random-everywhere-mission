@@ -37,4 +37,4 @@
 ## Documentation
 
 - Durable architecture belongs in `docs/architecture/`; runtime checks in `docs/testing/`.
-- Update `CHANGELOG.en.md` only for an externally visible technical release. Update `CHANGELOG_USER.en.md` only when explicitly requested; then use exactly `FIXES`, `UI`, `NEW FUNCTIONS`, audit every covered build, and run its validator.
+- Update `CHANGELOG.en.md` only for an externally visible technical release. Update `CHANGELOG_USER.en.md` when explicitly requested and in every Git publication that carries a noteworthy change (standing rule of 2026-10-11: the release body shown by the Mission Companion is generated from it with `node tools/user-release-notes.js`); then use exactly `FIXES`, `UI`, `NEW FUNCTIONS`, audit every covered build, and run its validator.
