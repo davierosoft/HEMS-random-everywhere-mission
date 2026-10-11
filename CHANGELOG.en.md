@@ -1,3 +1,10 @@
+## Release 0.997 169.50
+
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.49 plus 169.50
+- Decision of the crew on a new dispatch: copilot checks, pilot accepts, dispatcher nudge and reassignment (Mission Companion 0.18, pack EN 12)
+- A dispatch that arrives by RescueTrack (ready dispatch, first_dispatch) is no longer followed at once by the briefing: the dispatcher reads it (voice read dispatch), then voice dispatch triage starts the thread voice dispatch triage run: the copilot asks the crew (DSA.ASK); with a second dispatch the fuel against the option LOWFUELTHRSLD (DSA.FUEL.OK, DSA.FUEL.LOW), two missions done (DSA.MIS, the old PLT38 rule), the equipment (DSA.EQP) and the health (DSA.HLT); DSA.GO and the question to the pilot, the user (DSA.ASKP, or DSA.ASKP.B with fuel low or two missions done). The briefing with the dispatcher (voice briefing chat) goes on only when the pilot accepts: accept_dispatch calls voice dispatch accepted. A second dispatch reloads the mission and the reload ends the threads: L:VDA_RESP survives it and the loading macro (objective2) starts the briefing after Cabin preparation completed (it waits for TTS).
+- A minute after the question without an acceptance the dispatcher asks for an answer (DSA.NUDGE, once). A new dispatch while the previous one is not accepted: voice dispatch reassign (called by ready dispatch) says the previous one was reassigned (DSA.REASSIGN) and the old thread ends (voice_dispatch_seq changed); the new one is read by Mission description. New locals vda_pending, vda_open, vda_mode, voice_dispatch_seq. With a wav pack or a custom mission nothing changes; with the Mission Companion ready dispatch says PLT40 (a new dispatch) instead of the PLT38 question. The mission declares pack EN 12 (<pack:EN:12>). New macros: voice dispatch triage, voice dispatch triage run, voice dispatch reassign, voice dispatch accepted.
+
 ## Release 0.997 169.49
 
 - Scope of the cumulative baseline: entries delivered in 169.23 to 169.48 plus 169.49

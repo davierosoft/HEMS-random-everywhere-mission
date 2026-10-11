@@ -3776,6 +3776,15 @@
     {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
     {"set":{"var":["L:{local:VCP}1","number"]},"value":{"add":[{"var":["L:{local:VCP}1","number"]},1]}},
     {"set_message":{"text":"Cabin preparation completed!"}},
+    {"if": {"var":["L:VDA_RESP","number"]}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:VDA_RESP","number"]},"value":0},
+        {"create_thread": {
+          "commands": [
+            {"wait_for":{"local":"TTS"},"eq":1},
+            {"call_macro":"voice briefing chat"}
+        ]}}
+    ]},
     {"set_dispatch_dialog":1},
     {"call_macro":"Query closest hospital unrelated for stretcher"},
     {"set":{"var":["L:OLD_VAR_MISSION_NUMBER","number"]},"value":{"local":"VAR_MISSION_NUMBER"}},
@@ -5552,6 +5561,16 @@
     {"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},
     {"set":{"var":["L:Dispatch","number"]},"value":1},
     {"call_macro":"dispatch ringtone"},
+    {"call_macro":"voice dispatch reassign"},
+    {"set":{"local":"vda_mode"},"value":"no"},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vda_mode"},"value":"yes"}
+    ]},
     {"if": {"local":"progressiveunaccepteddispatch"}, "lt": 2,
       "then": [
         {"if": {
@@ -5561,7 +5580,15 @@
           ]}, "eq": 1,
           "then": [
             {"sleep":[2,4]},
-            {"set":{"var":["L:PLT{local:VCP}38","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}38","number"]},1]}}
+            {"if": {"local":"vda_mode"}, "eq": "yes",
+              "then": [
+                {"if": {"var":["L:DEBOARD","number"]}, "lt": 8,
+                  "then": [
+                    {"set":{"var":["L:PLT{local:VCP}40","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}40","number"]},1]}}
+                ]}
+              ],"else": [
+                {"set":{"var":["L:PLT{local:VCP}38","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}38","number"]},1]}}
+            ]}
         ]},
         {"if": {
           "and": [
@@ -5632,7 +5659,9 @@
     ]},
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"},
+    {"set":{"local":"vda_pending"},"value":"yes"},
     {"call_macro":"Mission description"},
+    {"set":{"local":"vda_pending"},"value":"no"},
     {"set_briefing_dialog":1},
     {"set":{"local":"DISPLAY_DISPATCH"},"value":1}
   ],
@@ -5796,6 +5825,7 @@
       "then": [
         {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},
         {"call_macro":"Update_raw from dispatchphase"},
+        {"call_macro":"voice dispatch accepted"},
         {"set_briefing_dialog":0},
         {"set":{"local":"SUBMITTED"},"value":0},
         {"sleep":0.5},
@@ -5912,7 +5942,9 @@
             {"call_macro":"dispatch ringtone"},
             {"set":{"var":["L:MISSION_TIME_OFFSET","number"]},"value":{"var":["L:MISSION_TIME","number"]}},
             {"sleep":2.5},
+            {"set":{"local":"vda_pending"},"value":"yes"},
             {"call_macro":"Mission description"},
+            {"set":{"local":"vda_pending"},"value":"no"},
             {"set":{"local":"lock_random_dispatch"},"value":0}
         ]}
       ],"else": [

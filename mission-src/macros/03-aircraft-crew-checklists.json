@@ -1031,7 +1031,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:11>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:12>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice new shift": [
@@ -1069,7 +1069,115 @@
         ]},
         {"call_macro":"voice objective"},
         {"sleep":1},
-        {"call_macro":"voice briefing chat"}
+        {"if": {"local":"vda_pending"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"vda_pending"},"value":"no"},
+            {"call_macro":"voice dispatch triage"}
+          ],"else": [
+            {"call_macro":"voice briefing chat"}
+        ]}
+    ]}
+  ],
+  "voice dispatch triage": [
+    {"#comment":"A dispatch arrived by RescueTrack (ready dispatch, first_dispatch: vda_pending yes) and the dispatcher read it: the crew decides before the pilot (the user) accepts on the tablet. The copilot asks the crew (DSA.ASK); with a second dispatch the fuel against the LOWFUELTHRSLD option (DSA.FUEL.OK / LOW), the two missions of the shift (DSA.MIS, the old PLT38 rule), the equipment (DSA.EQP) and the health (DSA.HLT) are checked; then DSA.GO and the question to the pilot (DSA.ASKP, or DSA.ASKP.B with fuel low or two missions done). The briefing with the dispatcher (voice briefing chat) waits for the acceptance: voice dispatch accepted, called by accept_dispatch. voice_dispatch_seq numbers the dispatches: a thread that is not the last one stops. Only with the Mission Companion (a wav pack keeps the counters PLT38 and PLT40)."},
+    {"if": {"local":"voice_dispatch_seq"}, "eq": null,
+      "then": [
+        {"set":{"local":"voice_dispatch_seq"},"value":0}
+    ]},
+    {"set":{"local":"voice_dispatch_seq"},"value":{"add":[{"local":"voice_dispatch_seq"},1]}},
+    {"set":{"local":"vda_open"},"value":"yes"},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice dispatch triage run","params":{"seq":{"local":"voice_dispatch_seq"},"second":{"local":"SECOND_DISPATCH"}}}
+    ]}}
+  ],
+  "voice dispatch triage run": [
+    {"#comment":"Thread of voice dispatch triage (params seq = the number of this dispatch, second = 1 for a second dispatch). Lines 1.5 s apart; the chatter (declut 1) follows the AUDIO_DECLUT levels, the fuel warning, the two missions and the question to the pilot are always said. Then it waits for the acceptance (vda_open no, set by voice dispatch accepted) or a newer dispatch (voice_dispatch_seq changed) and, a minute after the question and without an answer, the dispatcher asks for it (DSA.NUDGE)."},
+    {"sleep":2.5},
+    {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
+      "then": [
+        {"return":1}
+    ]},
+    {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
+    {"sleep":1.5},
+    {"set":{"param":"tr_c"},"value":0},
+    {"if": {"param":"second"}, "eq": 1,
+      "then": [
+        {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lte": {"global":"LOWFUELTHRSLD"},
+          "then": [
+            {"set":{"param":"tr_c"},"value":1},
+            {"call_macro":"voice say","params":{"key":"DSA.FUEL.LOW"}}
+          ],"else": [
+            {"call_macro":"voice say","params":{"key":"DSA.FUEL.OK","declut":1}}
+        ]},
+        {"sleep":1.5},
+        {"if": {"local":"COMPLETED_TEMP_MISSIONS"}, "gte": 2,
+          "then": [
+            {"set":{"param":"tr_c"},"value":1},
+            {"call_macro":"voice say","params":{"key":"DSA.MIS"}},
+            {"sleep":1.5}
+        ]},
+        {"call_macro":"voice say","params":{"key":"DSA.EQP","declut":1}},
+        {"sleep":1.5},
+        {"call_macro":"voice say","params":{"key":"DSA.HLT","declut":1}},
+        {"sleep":1.5}
+    ]},
+    {"if": {"param":"tr_c"}, "eq": 0,
+      "then": [
+        {"call_macro":"voice say","params":{"key":"DSA.GO","declut":1}},
+        {"sleep":1.5},
+        {"call_macro":"voice say","params":{"key":"DSA.ASKP"}}
+      ],"else": [
+        {"call_macro":"voice say","params":{"key":"DSA.ASKP.B"}}
+    ]},
+    {"set":{"param":"tr_t"},"value":0},
+    {"set":{"param":"tr_s"},"value":0},
+    {"while": {"param":"tr_s"}, "eq": 0,
+      "do": [
+        {"sleep":1},
+        {"set":{"param":"tr_t"},"value":{"add":[{"param":"tr_t"},1]}},
+        {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
+          "then": [
+            {"set":{"param":"tr_s"},"value":2}
+        ]},
+        {"if": {"local":"vda_open"}, "ne": "yes",
+          "then": [
+            {"set":{"param":"tr_s"},"value":1}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"param":"tr_s"},"eq":0},
+            {"require":{"param":"tr_t"},"eq":60}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}}
+        ]}
+    ]}
+  ],
+  "voice dispatch reassign": [
+    {"#comment":"Called by ready dispatch when the new dispatch arrives: if the previous one was never accepted (vda_open yes) the dispatcher says it was reassigned to another unit (DSA.REASSIGN) and the waiting thread of the old one stops. The new dispatch is read afterwards by Mission description."},
+    {"if": {"local":"vda_open"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"vda_open"},"value":"no"},
+        {"set":{"local":"voice_dispatch_seq"},"value":{"add":[{"local":"voice_dispatch_seq"},1]}},
+        {"call_macro":"voice say","params":{"key":"DSA.REASSIGN"}}
+    ]}
+  ],
+  "voice dispatch accepted": [
+    {"#comment":"Called by accept_dispatch when the pilot accepts on the tablet: the answer to the dispatcher and the briefing (voice briefing chat) go on. A second dispatch reloads the mission, which ends every thread: L:VDA_RESP asks for the briefing to be said after the reload (loading macro, Cabin preparation completed). Without the triage (a wav pack, a custom mission) vda_open is not yes and nothing happens."},
+    {"if": {"local":"vda_open"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"vda_open"},"value":"no"},
+        {"if": {
+          "and": [
+            {"require":{"local":"SECOND_DISPATCH"},"eq":1},
+            {"require":{"local":"MISSION_PHASE"},"gt":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:VDA_RESP","number"]},"value":1}
+          ],"else": [
+            {"call_macro":"voice briefing chat"}
+        ]}
     ]}
   ],
   "voice boarding chat": [
