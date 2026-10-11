@@ -480,7 +480,7 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The Mission Companion (0.12 and 0.13) shows only the main controls: Start and Stop service, the log and the language on the first tab, and a box Show advanced options in the footer shows the rest. The tabs are drawn in blue and stand out, and the master volume is now on the Volume tab. The Tools tab has two boxes, Work folder and Mission index.
 - A new Updates tab opens when you press Check for updates, which moved to the footer. You choose to update both, only the mission or only the program. The button, the tab and the status line turn amber when something newer is published.
 - The Test buttons of the app (voices, Piper voices, Radio effect) always play at full volume, also when the mission is not running or its volume is low, so a new installation can be set up.
-- **Build history:** Mission Companion app 0.11, 0.12, 0.13.
+- **Build history:** Mission Companion app 0.12, 0.13.
 - **Test:** Start the app: the first tab is short; tick Show advanced options to see the rest; press Check for updates and verify that the Updates tab opens; press a Test button with no simulator running and hear it.
 
 ## NEW FUNCTIONS
