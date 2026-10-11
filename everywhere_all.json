@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.48",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.49",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.48"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.49"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -329,6 +329,10 @@
   ],
   "boarding": [
     {"set":{"local":"COPILOT"},"value":0},
+    {"if": {"global":"PILOT_ANIMATION"}, "ne": 1,
+      "then": [
+        {"set":{"local":"PILOT_OUT"},"value":0}
+    ]},
     {"if": {"var":["EXTERNAL POWER ON","number"]}, "ne": 0,
       "then": [
         {"trigger":"K:TOGGLE_EXTERNAL_POWER"}
@@ -436,7 +440,8 @@
         ]},
         {"call_macro":"crew spawn wait","params":{"crew_name":"pilot1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
         {"set":{"object":"pilot1","var":"VAR 1"},"value":14},
-        {"set":{"object":"pilot1","var":"VAR 2"},"value":1}
+        {"set":{"object":"pilot1","var":"VAR 2"},"value":1},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"call_macro":"crew spawn launch","params":{"crew_name":"pax33","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
     {"try": [
@@ -891,6 +896,7 @@
             {"sleep":0.5},
             {"destroy_object":"pilot1"},
             {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_ON"},
+            {"set":{"local":"PILOT_OUT"},"value":0},
             {"sleep":0.5},
             {"if": {"local":"BOARDING_MAINTENANCE_PRESENCE"}, "eq": "yes",
               "then": [
@@ -18058,7 +18064,6 @@
                     {"create_thread": {
                       "commands": [
                         {"sleep":[10,90]},
-                        {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                         {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                         {"set":{"local":"ambumessage"},"value":"Ambulance '{local:ambuname}' on the way to the accident. No advanced paramedic on board"},
                         {"call_macro":"eta clock","params":{"seconds":{"local":"ambu_adjusted_time"}}},
@@ -18262,7 +18267,6 @@
                     {"wait_for":{"param":"haspolinamechoice"},"eq":true},
                     {"sleep":[15,25]},
                     {"sleep":[5,90]},
-                    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                     {"set":{"local":"polimessage"},"value":"Police {local:poliname} crew is on the way to accident site. As accident site may be off road, if it's needed, we will define a nearby area where rescue team can support your operations"},
                     {"call_macro":"eta clock","params":{"seconds":{"local":"poli_adjusted_time"}}},
@@ -25106,6 +25110,7 @@
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":43},
     {"set_message":{"text":"Cabin preparation, 43% completed... please wait, it can take a while"}},
+    {"set":{"local":"scene_vehicles_forced"},"value":"no"},
     {"call_macro":{"local":"scene_macro"}},
     {"if": {"local":"SAR"}, "eq": "yes",
       "then": [
@@ -25164,6 +25169,10 @@
           ],"else": [
             {"set":{"local":"FIREENGINE_AVAIL"},"value":0}
         ]},
+        {"if": {"local":"scene_vehicles_forced"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"FIREENGINE_AVAIL"},"value":1}
+        ]},
         {"sleep":0.5},
         {"set":{"var":["L:LOAD","number"]},"value":93},
         {"set_message":{"text":"Cabin preparation, 93% completed... please wait, it can take a while"}},
@@ -25177,6 +25186,10 @@
                 {"set":{"local":"AMBU_AVAIL"},"value":{"global":"ambu_force"}}
             ]}
         ]},
+        {"if": {"local":"scene_vehicles_forced"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"AMBU_AVAIL"},"value":1}
+        ]},
         {"sleep":0.5},
         {"set":{"var":["L:LOAD","number"]},"value":95},
         {"set_message":{"text":"Cabin preparation, 95% completed... please wait, it can take a while"}},
@@ -25189,6 +25202,10 @@
               ],"else": [
                 {"set":{"local":"POLICE_AVAIL"},"value":{"global":"poli_force"}}
             ]}
+        ]},
+        {"if": {"local":"scene_vehicles_forced"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"POLICE_AVAIL"},"value":1}
         ]},
         {"set":{"var":["L:LOAD","number"]},"value":96},
         {"set_message":{"text":"Cabin preparation, 96% completed... please wait, it can take a while"}},
@@ -26569,6 +26586,8 @@
     {"set":{"local":"FIREENGINE_AVAIL"},"value":1},
     {"set":{"local":"POLICE_AVAIL"},"value":1},
     {"set":{"local":"AMBU_AVAIL"},"value":1},
+    {"#comment":"The scene places its own fire engine, ambulance and police: rescue vehicles keeps the three AVAIL at 1 (no random value, nothing can be requested) and Firetruck1 ends when firetruck1 exists."},
+    {"set":{"local":"scene_vehicles_forced"},"value":"yes"},
     {"set":{"local":"VFX"},"value":{"floor":{"rand":[0,13]}}},
     {"create_location": "POLWP",
       "zones": [
@@ -26772,6 +26791,8 @@
     {"set":{"local":"FIREENGINE_AVAIL"},"value":1},
     {"set":{"local":"POLICE_AVAIL"},"value":1},
     {"set":{"local":"AMBU_AVAIL"},"value":1},
+    {"#comment":"The scene places its own fire engine, ambulance and police: rescue vehicles keeps the three AVAIL at 1 (no random value, nothing can be requested) and Firetruck1 ends when firetruck1 exists."},
+    {"set":{"local":"scene_vehicles_forced"},"value":"yes"},
     {"set":{"local":"VFX"},"value":{"floor":{"rand":[0,13]}}},
     {"create_location": "POLWP",
       "zones": [
@@ -27822,6 +27843,7 @@
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":41},
     {"set_message":{"text":"Cabin preparation, 41% completed... please wait, it can take a while"}},
+    {"set":{"local":"scene_vehicles_forced"},"value":"no"},
     {"call_macro":{"local":"scene_macro"}},
     {"if": {"local":"SAR"}, "eq": "yes",
       "then": [
@@ -28317,7 +28339,16 @@
             {"zone":{"location":{"bearing":0,"dist":3,"object":"rescue_location"}}}
         ]},
         {"call_macro":"fence road","params":{"fence_rescue":"ambulance"}},
-        {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}}
+        {"#comment":"Three victims with fire: the injured are moved to rescue_location below, the icon of the injured is there."},
+        {"set_map":{"update":{"point":{"location":"rescue_location","id":"accident_location_icon"}}}}
+    ]},
+    {"if": {"local":"HELOVICTIMS"}, "ne": 3,
+      "then": [
+        {"#comment":"The injured are at accident_location (the dispatch preview shows rescue_location, the location_name of the residential incidents): the icon of the injured goes where they are."},
+        {"if": {"has_location":"accident_location"}, "eq": 1,
+          "then": [
+            {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}}
+        ]}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":44},
     {"set_message":{"text":"Cabin preparation, 44% completed... please wait, it can take a while"}},
@@ -28839,6 +28870,7 @@
   "Special mission launcher": [
     {"set":{"var":["L:LOAD","number"]},"value":22},
     {"set_message":{"text":"Cabin preparation, 22% completed... please wait, it can take a while"}},
+    {"set":{"local":"scene_vehicles_forced"},"value":"no"},
     {"call_macro":{"local":"scene_macro"}},
     {"call_macro":"ELT {local:ELT}"},
     {"if": {"local":"closestambu"}, "eq": "yes",
@@ -34390,7 +34422,7 @@
                 "text": "Select destination helipad for patient transport",
                 "options": [
                   {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
-                  {"text":"Unload to closest ambulance","style":"","commands":[{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},
+                  {"text":"Unload to closest ambulance","style":"","commands":[{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},
                   {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
                   {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"create_thread":{"commands":[{"call_macro":"shared repeated block 050"}]}},{"call_macro":"User predestination"}]}]}
               ]}
@@ -34447,6 +34479,7 @@
   ],
   "Choose manual type modal": [
     {"set_message":{"text":""}},
+    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
     {"wait_modal": {
         "title": "CHOOSE MANUAL TYPE",
         "text": "Select which type of manual destination",
@@ -37626,10 +37659,16 @@
                       {"if": {"has_object":"hoist_crew"}, "eq": 1,
                         "then": [
                           {"set":{"object":"hoist_crew","var":"WP INDEX"},"value":0},
-                          {"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0},
+                          {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                            "then": [
+                              {"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0}
+                          ]},
                           {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
                           {"move_object":"hoist_crew","to":{"bearing":30,"dist":20,"heading":0}},
-                          {"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0}
+                          {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                            "then": [
+                              {"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0}
+                          ]}
                       ]},
                       {"if": {"has_object":"pax1"}, "eq": 1,
                         "then": [
@@ -37669,27 +37708,60 @@
                     {"sleep":3},
                     {"if": {"local":"hospital_wptot"}, "lt": 1,
                       "then": [
-                        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":9},{"bearing":25,"dist":8},{"bearing":165,"dist":9}],"to":"hospital_door"}],"VAR1":2,"speed":4}}
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":9},{"bearing":25,"dist":8},{"bearing":165,"dist":9}],"to":"hospital_door"}],"VAR1":2,"speed":4}}
+                        ]}
                     ]},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+                    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                    ]},
                     {"if": {"local":"hospital_wptot"}, "gte": 1,
                       "then": [
-                        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":9},{"bearing":25,"dist":8},{"bearing":165,"dist":9}],"to":"hospital_door"},"hospital_wp1"],"VAR1":2,"speed":6}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":9},{"bearing":25,"dist":8},{"bearing":165,"dist":9}],"to":"hospital_door"},"hospital_wp1"],"VAR1":2,"speed":6}}
+                        ]},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                        ]}
                     ]},
                     {"if": {"local":"hospital_wptot"}, "gt": 1,
                       "then": [
-                        {"drive_object":{"name":"hoist_crew","to":["hospital_wp2"],"VAR1":2,"speed":6}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"hoist_crew","to":["hospital_wp2"],"VAR1":2,"speed":6}}
+                        ]},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                        ]}
                     ]},
                     {"if": {"local":"hospital_wptot"}, "gt": 2,
                       "then": [
-                        {"drive_object":{"name":"hoist_crew","to":["hospital_wp3"],"VAR1":2,"speed":6}},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"hoist_crew","to":["hospital_wp3"],"VAR1":2,"speed":6}}
+                        ]},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                        ]}
+                    ]},
+                    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                      "then": [
+                        {"drive_object":{"name":"hoist_crew","to":["hospital_door","hospital"],"VAR1":2,"speed":5}}
+                    ]},
+                    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                      "then": [
                         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
                     ]},
-                    {"drive_object":{"name":"hoist_crew","to":["hospital_door","hospital"],"VAR1":2,"speed":5}},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+                    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                    ]},
                     {"sleep":[50,140]},
                     {"if": {"local":"PAPERWORK"}, "ne": 0,
                       "then": [
@@ -37757,25 +37829,55 @@
                             ]}}
                         ]},
                         {"sleep":3},
-                        {"drive_object":{"name":"hoist_crew","to":["hospital_door"],"VAR1":2,"speed":5}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"hoist_crew","to":["hospital_door"],"VAR1":2,"speed":5}}
+                        ]},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                        ]},
                         {"if": {"local":"hospital_wptot"}, "eq": 1,
                           "then": [
-                            {"drive_object":{"name":"hoist_crew","to":["hospital_wp1"],"VAR1":2,"speed":6}},
-                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                            {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                              "then": [
+                                {"drive_object":{"name":"hoist_crew","to":["hospital_wp1"],"VAR1":2,"speed":6}}
+                            ]},
+                            {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                              "then": [
+                                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                            ]}
                         ]},
                         {"if": {"local":"hospital_wptot"}, "eq": 2,
                           "then": [
-                            {"drive_object":{"name":"hoist_crew","to":["hospital_wp2","hospital_wp1"],"VAR1":2,"speed":6}},
-                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                            {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                              "then": [
+                                {"drive_object":{"name":"hoist_crew","to":["hospital_wp2","hospital_wp1"],"VAR1":2,"speed":6}}
+                            ]},
+                            {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                              "then": [
+                                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                            ]}
                         ]},
                         {"if": {"local":"hospital_wptot"}, "eq": 3,
                           "then": [
-                            {"drive_object":{"name":"hoist_crew","to":["hospital_wp3","hospital_wp2","hospital_wp1"],"VAR1":2,"speed":6}},
+                            {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                              "then": [
+                                {"drive_object":{"name":"hoist_crew","to":["hospital_wp3","hospital_wp2","hospital_wp1"],"VAR1":2,"speed":6}}
+                            ]},
+                            {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                              "then": [
+                                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                            ]}
+                        ]},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
+                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":160,"dist":7},{"bearing":90,"dist":5},{"bearing":35,"dist":6}],"to":"hoist_crew"}],"VAR1":2,"speed":5}}
+                        ]},
+                        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+                          "then": [
                             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
                         ]},
-                        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":160,"dist":7},{"bearing":90,"dist":5},{"bearing":35,"dist":6}],"to":"hoist_crew"}],"VAR1":2,"speed":5}},
-                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
                         {"if": {"has_user_action":"skippb"}, "eq": 1,
                           "then": [
                             {"destroy_user_action":"skippb"}
@@ -40091,7 +40193,6 @@
                 {"create_thread": {
                   "commands": [
                     {"sleep":[15,30]},
-                    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                     {"if": {"local":"AMBU_AVAIL"}, "eq": 2,
                       "then": [
@@ -41864,7 +41965,6 @@
   ],
   "police_rescuetrack_ontheway-arrived": [
     {"sleep":[5,90]},
-    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
     {"if": {"local":"POLICE_AVAIL"}, "eq": 2,
       "then": [
@@ -41899,6 +41999,11 @@
     {"call_macro":"UpdateRescueTrack"}
   ],
   "Firetruck1": [
+    {"#comment":"A scene that already placed its own firetruck1 (airplane emergency landing: scene_vehicles_forced, FIREENGINE_AVAIL 1) keeps it: this macro ends here instead of creating a second object with the same name."},
+    {"if": {"has_object":"firetruck1"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
     {"set":{"local":"fire1_parked"},"value":"no"},
     {"set":{"local":"fire1_parking"},"value":"no"},
     {"set":{"local":"fire1_stop_active"},"value":"no"},
@@ -41923,7 +42028,6 @@
                 {"create_thread": {
                   "commands": [
                     {"sleep":[10,120]},
-                    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                     {"set":{"param":"hasfirenamechoice"},"value":false},
                     {"set":{"param":"nationalfirename"},"value":{"create_array":[]}},
@@ -43101,6 +43205,7 @@
         {"set":{"object":"pilot","var":"VAR 2"},"value":1},
         {"move_object":"pilot","to":"rcocdoor"},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1},
         {"drive_object":{"name":"pilot","to":[{"bearing":60,"dist":2.5}],"VAR1":16,"speed":3}},
         {"set":{"object":"pilot","var":"VAR 1"},"value":14},
         {"point_object":"pilot","to":"$USER"},
@@ -47792,8 +47897,7 @@
                   }
                 },
                 {"set":{"local":"Dispatcher_text"},"value":""},
-                {"call_macro":"UpdateRescueTrack"},
-                {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}}
+                {"call_macro":"UpdateRescueTrack"}
             ]}
         ]}
     ]}},
@@ -48012,9 +48116,7 @@
             {"create_thread": {
               "commands": [
                 {"call_macro":"Query closest hospital midway"},
-                {"wait_for":{"has_location":"hospital_user"},"eq":1},
-                {"set":{"var":["L:PRE_HOSPITAL","number"]},"value":{"location":"hospital_user"}},
-                {"set":{"var":["L:PAX3{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}6","number"]},1]}}
+                {"call_macro":"voice hospital proposal"}
             ]}},
             {"wait_for":{"location":"userA","var":"distance"},"lt":1},
             {"set":{"var":["L:CPL{local:VCP}16","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}16","number"]},1]}}
@@ -48046,23 +48148,44 @@
                     ]}
                 ]},
                 {"sleep":12},
-                {"if": {"local":"AMBU_AVAIL"}, "ne": 0,
+                {"if": {
+                  "and": [
+                    {"require":{"local":"VCP"},"eq":"APP"},
+                    {"require":{"local":"TTS"},"eq":1}
+                  ]}, "eq": 1,
                   "then": [
-                    {"set":{"var":["L:PAX3{local:VCP}1","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}1","number"]},1]}},
-                    {"set":{"var":["L:CONFONSCENE","number"]},"value":1},
-                    {"sleep":1.5}
-                ]},
-                {"if": {"local":"POLICE_AVAIL"}, "ne": 0,
-                  "then": [
-                    {"set":{"var":["L:PAX3{local:VCP}12","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}12","number"]},1]}},
-                    {"set":{"var":["L:CONFONSCENE","number"]},"value":1},
-                    {"sleep":0.7}
-                ]},
-                {"if": {"local":"FIREENGINE_AVAIL"}, "ne": 0,
-                  "then": [
-                    {"set":{"var":["L:PAX3{local:VCP}4","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}4","number"]},1]}},
-                    {"set":{"var":["L:CONFONSCENE","number"]},"value":1},
-                    {"sleep":1}
+                    {"call_macro":"voice crew vehicles"},
+                    {"if": {"local":"AMBU_AVAIL"}, "ne": 0,
+                      "then": [
+                        {"set":{"var":["L:CONFONSCENE","number"]},"value":1}
+                    ]},
+                    {"if": {"local":"POLICE_AVAIL"}, "ne": 0,
+                      "then": [
+                        {"set":{"var":["L:CONFONSCENE","number"]},"value":1}
+                    ]},
+                    {"if": {"local":"FIREENGINE_AVAIL"}, "ne": 0,
+                      "then": [
+                        {"set":{"var":["L:CONFONSCENE","number"]},"value":1}
+                    ]}
+                  ],"else": [
+                    {"if": {"local":"AMBU_AVAIL"}, "ne": 0,
+                      "then": [
+                        {"set":{"var":["L:PAX3{local:VCP}1","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}1","number"]},1]}},
+                        {"set":{"var":["L:CONFONSCENE","number"]},"value":1},
+                        {"sleep":1.5}
+                    ]},
+                    {"if": {"local":"POLICE_AVAIL"}, "ne": 0,
+                      "then": [
+                        {"set":{"var":["L:PAX3{local:VCP}12","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}12","number"]},1]}},
+                        {"set":{"var":["L:CONFONSCENE","number"]},"value":1},
+                        {"sleep":0.7}
+                    ]},
+                    {"if": {"local":"FIREENGINE_AVAIL"}, "ne": 0,
+                      "then": [
+                        {"set":{"var":["L:PAX3{local:VCP}4","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}4","number"]},1]}},
+                        {"set":{"var":["L:CONFONSCENE","number"]},"value":1},
+                        {"sleep":1}
+                    ]}
                 ]},
                 {"if": {"var":["L:CONFONSCENE","number"]}, "eq": 1,
                   "then": [
@@ -48098,9 +48221,7 @@
               "commands": [
                 {"wait_for":{"object":"injured_human","var":"distance"},"lt":3},
                 {"call_macro":"Query closest hospital"},
-                {"wait_for":{"has_location":"hospital_user"},"eq":1},
-                {"set":{"var":["L:PRE_HOSPITAL","number"]},"value":{"location":"hospital_user"}},
-                {"set":{"var":["L:PAX3{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}6","number"]},1]}}
+                {"call_macro":"voice hospital proposal"}
             ]}}
         ]}
     ]},
@@ -49027,7 +49148,6 @@
         {"create_thread": {
           "commands": [
             {"sleep":[10,200]},
-            {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
             {"set":{"var":["L:PATOLOGY_TIME","number"]},"value":1}
         ]}},
         {"#comment":"MIDWAY"},
@@ -71813,6 +71933,7 @@
         {"set":{"local":"CREW_TERMINATED_ACK"},"value":"no"},
         {"if": {"local":"CREW_ALIVE_COUNT"}, "eq": 0,
           "then": [
+            {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
             {"wait_modal": {
                 "title": "MISSION FAILED",
                 "text": "All crew members are deceased. The operation is terminated.",
@@ -71823,6 +71944,7 @@
           ],"else": [
             {"if": {"local":"MISSION_FAILED"}, "eq": "CREW_CRITICAL",
               "then": [
+                {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                 {"wait_modal": {
                     "title": "MISSION FAILED",
                     "text": "Pilot and copilot are incapacitated. The operation is terminated.",
@@ -71831,6 +71953,7 @@
                   ]}
                 }
               ],"else": [
+                {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                 {"wait_modal": {
                     "title": "MISSION FAILED",
                     "text": "Pilot and copilot are deceased. The operation is terminated.",
@@ -73833,6 +73956,7 @@
       "then": [
         {"set":{"var":["L:REBOARD_PILOT_ON","number"]},"value":0},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1},
         {"create_location": "reboard_pilot",
           "zones": [
             {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:REBOARD_PILOT LAT","number"]},{"var":["L:REBOARD_PILOT LON","number"]}]}}}}
@@ -73853,6 +73977,7 @@
         {"sleep":0.5},
         {"destroy_object":"pilot"},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_ON"},
+        {"set":{"local":"PILOT_OUT"},"value":0},
         {"sleep":0.5},
         {"close_door":"cockpit_right"}
     ]}
@@ -74128,7 +74253,8 @@
     {"sleep":1},
     {"if": {"local":"CCS_LOAD_MEMBER"}, "eq": 1,
       "then": [
-        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"}
+        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"if": {"local":"CCS_LOAD_MEMBER"}, "eq": 2,
       "then": [
@@ -74220,6 +74346,7 @@
         {"set":{"object":"pilot","var":"VAR 2"},"value":1},
         {"move_object":"pilot","to":"rcocdoor"},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1},
         {"sleep":1},
         {"if": {"local":"ccs_pol_side"}, "eq": "R",
           "then": [
@@ -74899,7 +75026,8 @@
     {"sleep":1},
     {"if": {"local":"CHS_MEMBER_1"}, "eq": 1,
       "then": [
-        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"}
+        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"if": {"local":"CHS_MEMBER_1"}, "eq": 2,
       "then": [
@@ -75236,7 +75364,8 @@
     {"sleep":1},
     {"if": {"local":"CHS_MEMBER_2"}, "eq": 1,
       "then": [
-        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"}
+        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"if": {"local":"CHS_MEMBER_2"}, "eq": 2,
       "then": [
@@ -75570,7 +75699,8 @@
     {"sleep":1},
     {"if": {"local":"CHS_MEMBER_3"}, "eq": 1,
       "then": [
-        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"}
+        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"if": {"local":"CHS_MEMBER_3"}, "eq": 2,
       "then": [
@@ -75904,7 +76034,8 @@
     {"sleep":1},
     {"if": {"local":"CHS_MEMBER_4"}, "eq": 1,
       "then": [
-        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"}
+        {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"if": {"local":"CHS_MEMBER_4"}, "eq": 2,
       "then": [
@@ -84272,7 +84403,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:2>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:11>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice new shift": [
@@ -84491,8 +84622,13 @@
           "then": [
             {"set":{"local":"vc_off"},"value":1}
         ]},
+        {"if": {"local":"PILOT_OUT"}, "eq": null,
+          "then": [
+            {"set":{"local":"PILOT_OUT"},"value":0}
+        ]},
         {"set":{"local":"vc_mask"},"value":0},
-        {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
+        {"#comment":"Pilot = the simmer: aboard from the end of the boarding (the right cockpit door closes after the pilot object is destroyed) to the deboarding (removed after the right cockpit door opens). PILOT_OUT is 1 in between; the visible pilot model (IMPL_PILOT0) is not used because an option can hide it."},
+        {"if": {"local":"PILOT_OUT"}, "ne": 1,
           "then": [
             {"set":{"local":"vc_mask"},"value":{"add":[{"local":"vc_mask"},1]}}
         ]},
@@ -84662,52 +84798,7 @@
             {"require":{"param":"ab_cls"},"ne":"ORG"}
           ]}, "eq": 1,
           "then": [
-            {"set":{"local":"vb_w"},"value":""},
-            {"set":{"local":"vb_s"},"value":""},
-            {"set":{"local":"vb_amb"},"value":"N"},
-            {"set":{"local":"vb_sec"},"value":"N"},
-            {"if": {"local":"AMBU_AVAIL"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vb_amb"},"value":"A"},
-                {"if": {
-                  "or": [
-                    {"require":{"local":"AMBU_AVAIL"},"eq":1},
-                    {"require":{"local":"ambu1arrived"},"eq":"yes"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_s"},"value":{"text":"{0}A","params":[{"local":"vb_s"}]}}
-                  ],"else": [
-                    {"set":{"local":"vb_w"},"value":{"text":"{0}A","params":[{"local":"vb_w"}]}}
-                ]}
-            ]},
-            {"if": {"local":"FIREENGINE_AVAIL"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vb_sec"},"value":"S"},
-                {"if": {
-                  "or": [
-                    {"require":{"local":"FIREENGINE_AVAIL"},"eq":1},
-                    {"require":{"local":"fire1arrived"},"eq":"yes"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_s"},"value":{"text":"{0}F","params":[{"local":"vb_s"}]}}
-                  ],"else": [
-                    {"set":{"local":"vb_w"},"value":{"text":"{0}F","params":[{"local":"vb_w"}]}}
-                ]}
-            ]},
-            {"if": {"local":"POLICE_AVAIL"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vb_sec"},"value":"S"},
-                {"if": {
-                  "or": [
-                    {"require":{"local":"POLICE_AVAIL"},"eq":1},
-                    {"require":{"local":"poli1arrived"},"eq":"yes"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_s"},"value":{"text":"{0}P","params":[{"local":"vb_s"}]}}
-                  ],"else": [
-                    {"set":{"local":"vb_w"},"value":{"text":"{0}P","params":[{"local":"vb_w"}]}}
-                ]}
-            ]},
+            {"call_macro":"voice vehicle letters"},
             {"set":{"local":"vb_key"},"value":"BOTH"},
             {"if": {"local":"vb_s"}, "eq": "",
               "then": [
@@ -85610,6 +85701,116 @@
         {"if": {"local":"vz_best"}, "lte": 5,
           "then": [
             {"set":{"local":"vz_zone"},"value":1}
+        ]}
+    ]}
+  ],
+  "voice vehicle letters": [
+    {"#comment":"The rescue vehicles of the tablet as letters for the voice texts: vb_s = the vehicles on scene, vb_w = the ones still on the way (A ambulance, F fire engine, P police; AVAIL 1 = on scene from the start, 2 = dispatched, the arrived flags move a vehicle to the scene), vb_amb N or A (ambulance), vb_sec N or S (police or fire). Used by the approach briefing and by voice crew vehicles."},
+    {"set":{"local":"vb_w"},"value":""},
+    {"set":{"local":"vb_s"},"value":""},
+    {"set":{"local":"vb_amb"},"value":"N"},
+    {"set":{"local":"vb_sec"},"value":"N"},
+    {"if": {"local":"AMBU_AVAIL"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vb_amb"},"value":"A"},
+        {"if": {
+          "or": [
+            {"require":{"local":"AMBU_AVAIL"},"eq":1},
+            {"require":{"local":"ambu1arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vb_s"},"value":{"text":"{0}A","params":[{"local":"vb_s"}]}}
+          ],"else": [
+            {"set":{"local":"vb_w"},"value":{"text":"{0}A","params":[{"local":"vb_w"}]}}
+        ]}
+    ]},
+    {"if": {"local":"FIREENGINE_AVAIL"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vb_sec"},"value":"S"},
+        {"if": {
+          "or": [
+            {"require":{"local":"FIREENGINE_AVAIL"},"eq":1},
+            {"require":{"local":"fire1arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vb_s"},"value":{"text":"{0}F","params":[{"local":"vb_s"}]}}
+          ],"else": [
+            {"set":{"local":"vb_w"},"value":{"text":"{0}F","params":[{"local":"vb_w"}]}}
+        ]}
+    ]},
+    {"if": {"local":"POLICE_AVAIL"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vb_sec"},"value":"S"},
+        {"if": {
+          "or": [
+            {"require":{"local":"POLICE_AVAIL"},"eq":1},
+            {"require":{"local":"poli1arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vb_s"},"value":{"text":"{0}P","params":[{"local":"vb_s"}]}}
+          ],"else": [
+            {"set":{"local":"vb_w"},"value":{"text":"{0}P","params":[{"local":"vb_w"}]}}
+        ]}
+    ]}
+  ],
+  "voice crew vehicles": [
+    {"#comment":"The crew confirms the rescue vehicles of the tablet in ONE sentence (pack EN CRW.VEH.BOTH, SCENE, WAY; nothing when there are none), instead of one short line for each vehicle. Mission Companion only (VCP APP): the old counters stay for the wav packs."},
+    {"call_macro":"voice vehicle letters"},
+    {"set":{"local":"vb_key"},"value":"BOTH"},
+    {"if": {"local":"vb_s"}, "eq": "",
+      "then": [
+        {"set":{"local":"vb_key"},"value":"WAY"}
+    ]},
+    {"if": {"local":"vb_w"}, "eq": "",
+      "then": [
+        {"set":{"local":"vb_key"},"value":"SCENE"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vb_w"},"eq":""},
+        {"require":{"local":"vb_s"},"eq":""}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vb_key"},"value":"NONE"}
+    ]},
+    {"if": {"local":"vb_key"}, "ne": "NONE",
+      "then": [
+        {"speak":{"text":"<say:CRW.VEH.{0}>{1}//{2}","params":[{"local":"vb_key"},{"local":"vb_w"},{"local":"vb_s"}]}}
+    ]}
+  ],
+  "voice hospital proposal": [
+    {"#comment":"After Query closest hospital, on the way to the patient: waits for the hospital (45 s at most, same fallback as the crew emergency route). Found: PRE_HOSPITAL is saved as before and, with the Mission Companion (VCP APP), the doctor says its name (pack EN HOSP.FOUND, the name is the hospital_name of the query); the wav packs keep the old line (PAX3 counter 6). Not found: with the Mission Companion the doctor says that no hospital was found and that the destination will be chosen by hand (HOSP.NONE)."},
+    {"set":{"local":"hp_timeout"},"value":"no"},
+    {"create_thread": {
+      "commands": [
+        {"sleep":45},
+        {"set":{"local":"hp_timeout"},"value":"yes"}
+    ]}},
+    {"or": [
+      {"wait_for":{"has_location":"hospital_user"},"eq":1},
+      {"wait_for":{"local":"hp_timeout"},"eq":"yes"}
+    ]},
+    {"if": {"has_location":"hospital_user"}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:PRE_HOSPITAL","number"]},"value":{"location":"hospital_user"}},
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"speak":{"text":"<say:HOSP.FOUND>{0}","params":[{"local":"hospital_name"}]}}
+          ],"else": [
+            {"set":{"var":["L:PAX3{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}6","number"]},1]}}
+        ]}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"speak":"<say:HOSP.NONE>"}
         ]}
     ]}
   ]
@@ -131641,7 +131842,7 @@
 "userActions": {},
 
 "objectives": [
-    {"title":"Loading... please wait...","commands":[{"set":{"local":"HXX"},"value":{"fn":"get_aircraft_moniker"}},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"set":{"local":"ambulance_patient_report_finalized"},"value":"no"},{"if":{"has_location":"$MISSION_ENTER_LOCATION"},"eq":1,"then":[{"create_location":"teleport_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_ENTER_LOCATION"}}}]},{"clear_user_poi":1},{"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},{"wait_modal":{"title":"MISSION LOADED FROM MAP","text":"Do you want to teleport the helicopter on selected point?","options":[{"text":"YES","style":"primary","commands":[{"set_message":{"text":"TELEPORTING, PLEASE WAIT..."}},{"sleep":0.5},{"trigger":["K:SLEW_ON"]},{"sleep":0.5},{"teleport_to":"teleport_location"},{"trigger":["K:SLEW_RESET"]},{"sleep":5},{"set":{"var":["A:PLANE ALT ABOVE GROUND","feet"]},"value":0},{"set_message":{"text":"DONE"}},{"set_message":{"text":" "}},{"trigger":["K:SLEW_OFF"]}]},{"text":"NO","style":"","commands":[]}]}}]},{"set_objective_title":"starting DAVIEROSOFT OPERATION CENTER -DOC-","color":"blue"},{"call_macro":"objective1"}]},
+    {"title":"Loading... please wait...","commands":[{"set":{"local":"HXX"},"value":{"fn":"get_aircraft_moniker"}},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"set":{"local":"ambulance_patient_report_finalized"},"value":"no"},{"if":{"has_location":"$MISSION_ENTER_LOCATION"},"eq":1,"then":[{"create_location":"teleport_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_ENTER_LOCATION"}}}]},{"clear_user_poi":1},{"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},{"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},{"wait_modal":{"title":"MISSION LOADED FROM MAP","text":"Do you want to teleport the helicopter on selected point?","options":[{"text":"YES","style":"primary","commands":[{"set_message":{"text":"TELEPORTING, PLEASE WAIT..."}},{"sleep":0.5},{"trigger":["K:SLEW_ON"]},{"sleep":0.5},{"teleport_to":"teleport_location"},{"trigger":["K:SLEW_RESET"]},{"sleep":5},{"set":{"var":["A:PLANE ALT ABOVE GROUND","feet"]},"value":0},{"set_message":{"text":"DONE"}},{"set_message":{"text":" "}},{"trigger":["K:SLEW_OFF"]}]},{"text":"NO","style":"","commands":[]}]}}]},{"set_objective_title":"starting DAVIEROSOFT OPERATION CENTER -DOC-","color":"blue"},{"call_macro":"objective1"}]},
     {"title":"PREFLIGHT OPERATIONS, WAIT FOR REAR CREW CLEARANCE!","commands":[{"if":{"var":["SIM ON GROUND","bool"]},"eq":1,"then":[{"set_objective_title":"PREFLIGHT OPERATIONS, WAIT FOR REAR CREW CLEARANCE!","color":"yellow"}],"else":[{"set_objective_title":"REAR CREW IS PREPARING THE CABIN, FLY STABLE UNTILL REAR CREW CLEARANCE!","color":"yellow"}]},{"call_macro":"objective2"}]},
     {"title":"CABIN READY FOR TAKE OFF!","commands":[{"if":{"var":["SIM ON GROUND","bool"]},"eq":1,"then":[{"set_objective_title":"CABIN READY FOR TAKE OFF!","color":"green"}],"else":[{"set_objective_title":"CABIN READY, MISSION CAN PROCEED","color":"green"}]},{"call_macro":"objective4"}]},
     {"title":"FLY TO THE LOADING PLACE","commands":[{"set_objective_title":"FLY TO THE LOADING PLACE","color":"cyan"},{"call_macro":"objective5 transfer"}]},

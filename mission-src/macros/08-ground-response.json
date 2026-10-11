@@ -95,6 +95,10 @@
           ],"else": [
             {"set":{"local":"FIREENGINE_AVAIL"},"value":0}
         ]},
+        {"if": {"local":"scene_vehicles_forced"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"FIREENGINE_AVAIL"},"value":1}
+        ]},
         {"sleep":0.5},
         {"set":{"var":["L:LOAD","number"]},"value":93},
         {"set_message":{"text":"Cabin preparation, 93% completed... please wait, it can take a while"}},
@@ -108,6 +112,10 @@
                 {"set":{"local":"AMBU_AVAIL"},"value":{"global":"ambu_force"}}
             ]}
         ]},
+        {"if": {"local":"scene_vehicles_forced"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"AMBU_AVAIL"},"value":1}
+        ]},
         {"sleep":0.5},
         {"set":{"var":["L:LOAD","number"]},"value":95},
         {"set_message":{"text":"Cabin preparation, 95% completed... please wait, it can take a while"}},
@@ -120,6 +128,10 @@
               ],"else": [
                 {"set":{"local":"POLICE_AVAIL"},"value":{"global":"poli_force"}}
             ]}
+        ]},
+        {"if": {"local":"scene_vehicles_forced"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"POLICE_AVAIL"},"value":1}
         ]},
         {"set":{"var":["L:LOAD","number"]},"value":96},
         {"set_message":{"text":"Cabin preparation, 96% completed... please wait, it can take a while"}},
@@ -3102,7 +3114,6 @@
                 {"create_thread": {
                   "commands": [
                     {"sleep":[15,30]},
-                    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                     {"if": {"local":"AMBU_AVAIL"}, "eq": 2,
                       "then": [
@@ -4899,7 +4910,6 @@
   ],
   "police_rescuetrack_ontheway-arrived": [
     {"sleep":[5,90]},
-    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
     {"if": {"local":"POLICE_AVAIL"}, "eq": 2,
       "then": [
@@ -4934,6 +4944,11 @@
     {"call_macro":"UpdateRescueTrack"}
   ],
   "Firetruck1": [
+    {"#comment":"A scene that already placed its own firetruck1 (airplane emergency landing: scene_vehicles_forced, FIREENGINE_AVAIL 1) keeps it: this macro ends here instead of creating a second object with the same name."},
+    {"if": {"has_object":"firetruck1"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
     {"set":{"local":"fire1_parked"},"value":"no"},
     {"set":{"local":"fire1_parking"},"value":"no"},
     {"set":{"local":"fire1_stop_active"},"value":"no"},
@@ -4958,7 +4973,6 @@
                 {"create_thread": {
                   "commands": [
                     {"sleep":[10,120]},
-                    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
                     {"set":{"local":"RESCUE_DISPATCHED"},"value":1},
                     {"set":{"param":"hasfirenamechoice"},"value":false},
                     {"set":{"param":"nationalfirename"},"value":{"create_array":[]}},

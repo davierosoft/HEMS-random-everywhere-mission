@@ -3851,6 +3851,7 @@
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":43},
     {"set_message":{"text":"Cabin preparation, 43% completed... please wait, it can take a while"}},
+    {"set":{"local":"scene_vehicles_forced"},"value":"no"},
     {"call_macro":{"local":"scene_macro"}},
     {"if": {"local":"SAR"}, "eq": "yes",
       "then": [
@@ -5236,6 +5237,8 @@
     {"set":{"local":"FIREENGINE_AVAIL"},"value":1},
     {"set":{"local":"POLICE_AVAIL"},"value":1},
     {"set":{"local":"AMBU_AVAIL"},"value":1},
+    {"#comment":"The scene places its own fire engine, ambulance and police: rescue vehicles keeps the three AVAIL at 1 (no random value, nothing can be requested) and Firetruck1 ends when firetruck1 exists."},
+    {"set":{"local":"scene_vehicles_forced"},"value":"yes"},
     {"set":{"local":"VFX"},"value":{"floor":{"rand":[0,13]}}},
     {"create_location": "POLWP",
       "zones": [
@@ -5439,6 +5442,8 @@
     {"set":{"local":"FIREENGINE_AVAIL"},"value":1},
     {"set":{"local":"POLICE_AVAIL"},"value":1},
     {"set":{"local":"AMBU_AVAIL"},"value":1},
+    {"#comment":"The scene places its own fire engine, ambulance and police: rescue vehicles keeps the three AVAIL at 1 (no random value, nothing can be requested) and Firetruck1 ends when firetruck1 exists."},
+    {"set":{"local":"scene_vehicles_forced"},"value":"yes"},
     {"set":{"local":"VFX"},"value":{"floor":{"rand":[0,13]}}},
     {"create_location": "POLWP",
       "zones": [
@@ -6489,6 +6494,7 @@
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":41},
     {"set_message":{"text":"Cabin preparation, 41% completed... please wait, it can take a while"}},
+    {"set":{"local":"scene_vehicles_forced"},"value":"no"},
     {"call_macro":{"local":"scene_macro"}},
     {"if": {"local":"SAR"}, "eq": "yes",
       "then": [
@@ -6984,7 +6990,16 @@
             {"zone":{"location":{"bearing":0,"dist":3,"object":"rescue_location"}}}
         ]},
         {"call_macro":"fence road","params":{"fence_rescue":"ambulance"}},
-        {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}}
+        {"#comment":"Three victims with fire: the injured are moved to rescue_location below, the icon of the injured is there."},
+        {"set_map":{"update":{"point":{"location":"rescue_location","id":"accident_location_icon"}}}}
+    ]},
+    {"if": {"local":"HELOVICTIMS"}, "ne": 3,
+      "then": [
+        {"#comment":"The injured are at accident_location (the dispatch preview shows rescue_location, the location_name of the residential incidents): the icon of the injured goes where they are."},
+        {"if": {"has_location":"accident_location"}, "eq": 1,
+          "then": [
+            {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}}
+        ]}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":44},
     {"set_message":{"text":"Cabin preparation, 44% completed... please wait, it can take a while"}},

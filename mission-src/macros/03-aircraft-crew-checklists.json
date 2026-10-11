@@ -1,5 +1,9 @@
 {"boarding": [
     {"set":{"local":"COPILOT"},"value":0},
+    {"if": {"global":"PILOT_ANIMATION"}, "ne": 1,
+      "then": [
+        {"set":{"local":"PILOT_OUT"},"value":0}
+    ]},
     {"if": {"var":["EXTERNAL POWER ON","number"]}, "ne": 0,
       "then": [
         {"trigger":"K:TOGGLE_EXTERNAL_POWER"}
@@ -107,7 +111,8 @@
         ]},
         {"call_macro":"crew spawn wait","params":{"crew_name":"pilot1","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
         {"set":{"object":"pilot1","var":"VAR 1"},"value":14},
-        {"set":{"object":"pilot1","var":"VAR 2"},"value":1}
+        {"set":{"object":"pilot1","var":"VAR 2"},"value":1},
+        {"set":{"local":"PILOT_OUT"},"value":1}
     ]},
     {"call_macro":"crew spawn launch","params":{"crew_name":"pax33","crew_title":"$TITLE Crew","crew_fallback":"Airbus H145 ADAC Crew"}},
     {"try": [
@@ -562,6 +567,7 @@
             {"sleep":0.5},
             {"destroy_object":"pilot1"},
             {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_ON"},
+            {"set":{"local":"PILOT_OUT"},"value":0},
             {"sleep":0.5},
             {"if": {"local":"BOARDING_MAINTENANCE_PRESENCE"}, "eq": "yes",
               "then": [
@@ -962,6 +968,7 @@
       "then": [
         {"set":{"var":["L:REBOARD_PILOT_ON","number"]},"value":0},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1},
         {"create_location": "reboard_pilot",
           "zones": [
             {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:REBOARD_PILOT LAT","number"]},{"var":["L:REBOARD_PILOT LON","number"]}]}}}}
@@ -982,6 +989,7 @@
         {"sleep":0.5},
         {"destroy_object":"pilot"},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_ON"},
+        {"set":{"local":"PILOT_OUT"},"value":0},
         {"sleep":0.5},
         {"close_door":"cockpit_right"}
     ]}
@@ -1023,7 +1031,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:2>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:11>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice new shift": [
@@ -1264,52 +1272,7 @@
             {"require":{"param":"ab_cls"},"ne":"ORG"}
           ]}, "eq": 1,
           "then": [
-            {"set":{"local":"vb_w"},"value":""},
-            {"set":{"local":"vb_s"},"value":""},
-            {"set":{"local":"vb_amb"},"value":"N"},
-            {"set":{"local":"vb_sec"},"value":"N"},
-            {"if": {"local":"AMBU_AVAIL"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vb_amb"},"value":"A"},
-                {"if": {
-                  "or": [
-                    {"require":{"local":"AMBU_AVAIL"},"eq":1},
-                    {"require":{"local":"ambu1arrived"},"eq":"yes"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_s"},"value":{"text":"{0}A","params":[{"local":"vb_s"}]}}
-                  ],"else": [
-                    {"set":{"local":"vb_w"},"value":{"text":"{0}A","params":[{"local":"vb_w"}]}}
-                ]}
-            ]},
-            {"if": {"local":"FIREENGINE_AVAIL"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vb_sec"},"value":"S"},
-                {"if": {
-                  "or": [
-                    {"require":{"local":"FIREENGINE_AVAIL"},"eq":1},
-                    {"require":{"local":"fire1arrived"},"eq":"yes"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_s"},"value":{"text":"{0}F","params":[{"local":"vb_s"}]}}
-                  ],"else": [
-                    {"set":{"local":"vb_w"},"value":{"text":"{0}F","params":[{"local":"vb_w"}]}}
-                ]}
-            ]},
-            {"if": {"local":"POLICE_AVAIL"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vb_sec"},"value":"S"},
-                {"if": {
-                  "or": [
-                    {"require":{"local":"POLICE_AVAIL"},"eq":1},
-                    {"require":{"local":"poli1arrived"},"eq":"yes"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_s"},"value":{"text":"{0}P","params":[{"local":"vb_s"}]}}
-                  ],"else": [
-                    {"set":{"local":"vb_w"},"value":{"text":"{0}P","params":[{"local":"vb_w"}]}}
-                ]}
-            ]},
+            {"call_macro":"voice vehicle letters"},
             {"set":{"local":"vb_key"},"value":"BOTH"},
             {"if": {"local":"vb_s"}, "eq": "",
               "then": [
@@ -1368,6 +1331,116 @@
                 {"speak":{"text":"<say:APR.CHF.{0}>","params":[{"local":"vb_plan"}]}},
                 {"speak":"<say:APR.END>"}
             ]}
+        ]}
+    ]}
+  ],
+  "voice vehicle letters": [
+    {"#comment":"The rescue vehicles of the tablet as letters for the voice texts: vb_s = the vehicles on scene, vb_w = the ones still on the way (A ambulance, F fire engine, P police; AVAIL 1 = on scene from the start, 2 = dispatched, the arrived flags move a vehicle to the scene), vb_amb N or A (ambulance), vb_sec N or S (police or fire). Used by the approach briefing and by voice crew vehicles."},
+    {"set":{"local":"vb_w"},"value":""},
+    {"set":{"local":"vb_s"},"value":""},
+    {"set":{"local":"vb_amb"},"value":"N"},
+    {"set":{"local":"vb_sec"},"value":"N"},
+    {"if": {"local":"AMBU_AVAIL"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vb_amb"},"value":"A"},
+        {"if": {
+          "or": [
+            {"require":{"local":"AMBU_AVAIL"},"eq":1},
+            {"require":{"local":"ambu1arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vb_s"},"value":{"text":"{0}A","params":[{"local":"vb_s"}]}}
+          ],"else": [
+            {"set":{"local":"vb_w"},"value":{"text":"{0}A","params":[{"local":"vb_w"}]}}
+        ]}
+    ]},
+    {"if": {"local":"FIREENGINE_AVAIL"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vb_sec"},"value":"S"},
+        {"if": {
+          "or": [
+            {"require":{"local":"FIREENGINE_AVAIL"},"eq":1},
+            {"require":{"local":"fire1arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vb_s"},"value":{"text":"{0}F","params":[{"local":"vb_s"}]}}
+          ],"else": [
+            {"set":{"local":"vb_w"},"value":{"text":"{0}F","params":[{"local":"vb_w"}]}}
+        ]}
+    ]},
+    {"if": {"local":"POLICE_AVAIL"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vb_sec"},"value":"S"},
+        {"if": {
+          "or": [
+            {"require":{"local":"POLICE_AVAIL"},"eq":1},
+            {"require":{"local":"poli1arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vb_s"},"value":{"text":"{0}P","params":[{"local":"vb_s"}]}}
+          ],"else": [
+            {"set":{"local":"vb_w"},"value":{"text":"{0}P","params":[{"local":"vb_w"}]}}
+        ]}
+    ]}
+  ],
+  "voice crew vehicles": [
+    {"#comment":"The crew confirms the rescue vehicles of the tablet in ONE sentence (pack EN CRW.VEH.BOTH, SCENE, WAY; nothing when there are none), instead of one short line for each vehicle. Mission Companion only (VCP APP): the old counters stay for the wav packs."},
+    {"call_macro":"voice vehicle letters"},
+    {"set":{"local":"vb_key"},"value":"BOTH"},
+    {"if": {"local":"vb_s"}, "eq": "",
+      "then": [
+        {"set":{"local":"vb_key"},"value":"WAY"}
+    ]},
+    {"if": {"local":"vb_w"}, "eq": "",
+      "then": [
+        {"set":{"local":"vb_key"},"value":"SCENE"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vb_w"},"eq":""},
+        {"require":{"local":"vb_s"},"eq":""}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vb_key"},"value":"NONE"}
+    ]},
+    {"if": {"local":"vb_key"}, "ne": "NONE",
+      "then": [
+        {"speak":{"text":"<say:CRW.VEH.{0}>{1}//{2}","params":[{"local":"vb_key"},{"local":"vb_w"},{"local":"vb_s"}]}}
+    ]}
+  ],
+  "voice hospital proposal": [
+    {"#comment":"After Query closest hospital, on the way to the patient: waits for the hospital (45 s at most, same fallback as the crew emergency route). Found: PRE_HOSPITAL is saved as before and, with the Mission Companion (VCP APP), the doctor says its name (pack EN HOSP.FOUND, the name is the hospital_name of the query); the wav packs keep the old line (PAX3 counter 6). Not found: with the Mission Companion the doctor says that no hospital was found and that the destination will be chosen by hand (HOSP.NONE)."},
+    {"set":{"local":"hp_timeout"},"value":"no"},
+    {"create_thread": {
+      "commands": [
+        {"sleep":45},
+        {"set":{"local":"hp_timeout"},"value":"yes"}
+    ]}},
+    {"or": [
+      {"wait_for":{"has_location":"hospital_user"},"eq":1},
+      {"wait_for":{"local":"hp_timeout"},"eq":"yes"}
+    ]},
+    {"if": {"has_location":"hospital_user"}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:PRE_HOSPITAL","number"]},"value":{"location":"hospital_user"}},
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"speak":{"text":"<say:HOSP.FOUND>{0}","params":[{"local":"hospital_name"}]}}
+          ],"else": [
+            {"set":{"var":["L:PAX3{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}6","number"]},1]}}
+        ]}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"speak":"<say:HOSP.NONE>"}
         ]}
     ]}
   ],
@@ -1977,8 +2050,13 @@
           "then": [
             {"set":{"local":"vc_off"},"value":1}
         ]},
+        {"if": {"local":"PILOT_OUT"}, "eq": null,
+          "then": [
+            {"set":{"local":"PILOT_OUT"},"value":0}
+        ]},
         {"set":{"local":"vc_mask"},"value":0},
-        {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
+        {"#comment":"Pilot = the simmer: aboard from the end of the boarding (the right cockpit door closes after the pilot object is destroyed) to the deboarding (removed after the right cockpit door opens). PILOT_OUT is 1 in between; the visible pilot model (IMPL_PILOT0) is not used because an option can hide it."},
+        {"if": {"local":"PILOT_OUT"}, "ne": 1,
           "then": [
             {"set":{"local":"vc_mask"},"value":{"add":[{"local":"vc_mask"},1]}}
         ]},
@@ -4001,6 +4079,7 @@
         {"set":{"object":"pilot","var":"VAR 2"},"value":1},
         {"move_object":"pilot","to":"rcocdoor"},
         {"trigger":"H:{local:HXX}_SDK_PILOT_CAPT_OFF"},
+        {"set":{"local":"PILOT_OUT"},"value":1},
         {"drive_object":{"name":"pilot","to":[{"bearing":60,"dist":2.5}],"VAR1":16,"speed":3}},
         {"set":{"object":"pilot","var":"VAR 1"},"value":14},
         {"point_object":"pilot","to":"$USER"},
