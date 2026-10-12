@@ -1,3 +1,10 @@
+## Release 0.997 169.51
+
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.50 plus 169.51
+- Hospital handover diagnosis and guard (tester report 2026-10-12, build 169.45)
+- Hospital handover (User destination1 and Ambulance destination1): the second hoist_crew drive, to the closest of the four points 2 m around the hospital stretcher (not in the baseline; the baseline walk ends 1.5 m from the stretcher), is skipped when the medic is already within 3 m of the stretcher (locals hs_gap_m, hs_walk; traces stretcher_gap_m, already_at_stretcher_skip_closest_drive). A tester reported the medic walking off with the patient without handing over (drive_start without drive_done for 4 minutes, mission 67, 4 crew, 169.45). The cause is not proven: the simulator tests (standalone-tests/closest-drive-test.json) confirmed that a closest in a route is chosen when the drive starts, and that short routes, a closest under the crew and a second crew on the target all return.
+- New diagnosis macros: hospital pad trace (rows target hospital pad of the ground crew runtime trace: the distances from the helicopter of hospital_user, DAMBWP, DAMBU, DRUP, DSTR, DMED, hospital_wp1, the hospital stretcher and medic, hoist_crew, ambulance5 and pax1, and a row pad_points with their coordinates and the heading of the helicopter; each reading inside a try, -1 when missing) called at after_predefined_move (user destination scene predefined1), after_landing_locations, after_hospital_crew_walk and before_second_drive, and hospital drive watch (a row every 10 s, at most 24, during the second drive). tools/analyze-hospital-pad.js rebuilds the geometry of the routes from a snapshot.
+
 ## Release 0.997 169.50
 
 - Scope of the cumulative baseline: entries delivered in 169.23 to 169.49 plus 169.50

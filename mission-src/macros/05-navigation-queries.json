@@ -3934,9 +3934,48 @@
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
     {"sleep":0.5},
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":5},{"bearing":88,"dist":4},{"bearing":5,"dist":9},{"bearing":345,"dist":7.5}],"VAR1":11,"speed":4}},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_start"}},
-    {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher3"},{"bearing2":90,"dist":2,"object":"ambustretcher3"},{"bearing2":180,"dist":2,"object":"ambustretcher3"},{"bearing2":270,"dist":2,"object":"ambustretcher3"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_done"}},
+    {"#comment":"The medic with the trolley ends the first walk next to the hospital stretcher. The second drive goes to the closest of the four points 2 m from the stretcher, which is then 0.5 to 1.4 m away: a route that short made the crew walk off into the distance and never finish (tester report 2026-10-12, build 169.45, trace drive_start without drive_done for minutes; same defect as the quad SAR of 169.43). Already within 3 m of the stretcher the drive is skipped."},
+    {"set":{"local":"hs_gap_m"},"value":-1},
+    {"try": [
+        {"set":{"local":"hs_gap_m"},"value":{"object":"hoist_crew","var":"distance:m","to":"ambustretcher3"}}
+      ],
+      "catch": [
+        {"set":{"local":"hs_gap_m"},"value":-1}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":{"text":"stretcher_gap_m {0}","params":[{"round":{"local":"hs_gap_m"},"to":1}]}}},
+    {"set":{"local":"hs_str_heli_m"},"value":-1},
+    {"set":{"local":"hs_crew_heli_m"},"value":-1},
+    {"try": [
+        {"set":{"local":"hs_str_heli_m"},"value":{"object":"ambustretcher3","var":"distance:m","to":"$USER"}},
+        {"set":{"local":"hs_crew_heli_m"},"value":{"object":"hoist_crew","var":"distance:m","to":"$USER"}}
+      ],
+      "catch": [
+        {"set":{"local":"hs_str_heli_m"},"value":-1}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":{"text":"heli_distance_m stretcher {0} crew {1}","params":[{"round":{"local":"hs_str_heli_m"},"to":1},{"round":{"local":"hs_crew_heli_m"},"to":1}]}}},
+    {"call_macro":"hospital pad trace","params":{"stage":"before_second_drive","str":"ambustretcher3","med":"ambumedic3"}},
+    {"set":{"local":"hs_walk"},"value":1},
+    {"if": {
+      "and": [
+        {"require":{"local":"hs_gap_m"},"gte":0},
+        {"require":{"local":"hs_gap_m"},"lt":3}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hs_walk"},"value":0},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"already_at_stretcher_skip_closest_drive"}}
+    ]},
+    {"if": {"local":"hs_walk"}, "eq": 1,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_start"}},
+        {"set":{"local":"hs_watch_on"},"value":"yes"},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"hospital drive watch","params":{"str":"ambustretcher3","med":"ambumedic3"}}
+        ]}},
+        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher3"},{"bearing2":90,"dist":2,"object":"ambustretcher3"},{"bearing2":180,"dist":2,"object":"ambustretcher3"},{"bearing2":270,"dist":2,"object":"ambustretcher3"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_done"}},
+        {"set":{"local":"hs_watch_on"},"value":"no"}
+    ]},
     {"call_macro":"voice hospital handover"},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
     {"sleep":2},
@@ -5139,6 +5178,301 @@
     {"set":{"var":["L:READY","number"]},"value":0},
     {"call_macro":"Return to base or continue menu"}
   ],
+  "hospital pad trace": [
+    {"#comment":"Diagnosis of the hospital pad (tester report 2026-10-12, build 169.45: the medic never reached the hospital stretcher). One row of the ground crew runtime trace with the distance in metres from the helicopter of the hospital waypoints (hospital_user, DAMBWP, DAMBU, DRUP, DSTR, DMED, hospital_wp1) and of the hospital stretcher (param str), the hospital medic (param med), hoist_crew, ambulance5 and pax1, then stretcher to hospital_user and crew to stretcher. -1 = the location or the object does not exist. Params: stage (text), str, med. A second row (state pad_points) holds the coordinates in degrees of the helicopter (lat, lon, heading true), of the same waypoints and of the stretcher, the medic, hoist_crew and pax1, so that the geometry of the routes can be rebuilt (tools/analyze-hospital-pad.js)."},
+    {"set":{"param":"hp_v0"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v0"},"value":{"round":{"location":"hospital_user","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v0"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v1"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v1"},"value":{"round":{"location":"DAMBWP","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v1"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v2"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v2"},"value":{"round":{"location":"DAMBU","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v2"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v3"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v3"},"value":{"round":{"location":"DRUP","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v3"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v4"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v4"},"value":{"round":{"location":"DSTR","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v4"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v5"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v5"},"value":{"round":{"location":"DMED","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v5"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v6"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v6"},"value":{"round":{"location":"hospital_wp1","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v6"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v7"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v7"},"value":{"round":{"object":{"param":"str"},"var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v7"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v8"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v8"},"value":{"round":{"object":{"param":"med"},"var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v8"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v9"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v9"},"value":{"round":{"object":"hoist_crew","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v9"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v10"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v10"},"value":{"round":{"object":"ambulance5","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v10"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v11"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v11"},"value":{"round":{"object":"pax1","var":"distance:m","to":"$USER"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v11"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v12"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v12"},"value":{"round":{"object":{"param":"str"},"var":"distance:m","to":"hospital_user"},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v12"},"value":-1}
+    ]},
+    {"set":{"param":"hp_v13"},"value":-1},
+    {"try": [
+        {"set":{"param":"hp_v13"},"value":{"round":{"object":"hoist_crew","var":"distance:m","to":{"param":"str"}},"to":1}}
+      ],
+      "catch": [
+        {"set":{"param":"hp_v13"},"value":-1}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"hospital pad","state":{"text":"{0}: from the helicopter hospital_user {1} DAMBWP {2} DAMBU {3} DRUP {4} DSTR {5} DMED {6} hospital_wp1 {7} | stretcher {8} medic {9} hoist_crew {10} ambulance5 {11} pax1 {12} | stretcher to hospital_user {13} hoist_crew to stretcher {14}","params":[{"param":"stage"},{"param":"hp_v0"},{"param":"hp_v1"},{"param":"hp_v2"},{"param":"hp_v3"},{"param":"hp_v4"},{"param":"hp_v5"},{"param":"hp_v6"},{"param":"hp_v7"},{"param":"hp_v8"},{"param":"hp_v9"},{"param":"hp_v10"},{"param":"hp_v11"},{"param":"hp_v12"},{"param":"hp_v13"}]}}},
+    {"set":{"param":"pp_v0"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v0"},"value":{"var":["PLANE LATITUDE","DEGREES"]}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v0"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v1"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v1"},"value":{"var":["PLANE LONGITUDE","DEGREES"]}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v1"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v2"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v2"},"value":{"var":["PLANE HEADING DEGREES TRUE","DEGREES"]}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v2"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v3"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v3"},"value":{"location":"hospital_user","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v3"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v4"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v4"},"value":{"location":"hospital_user","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v4"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v5"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v5"},"value":{"location":"DAMBWP","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v5"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v6"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v6"},"value":{"location":"DAMBWP","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v6"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v7"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v7"},"value":{"location":"DAMBU","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v7"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v8"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v8"},"value":{"location":"DAMBU","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v8"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v9"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v9"},"value":{"location":"DRUP","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v9"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v10"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v10"},"value":{"location":"DRUP","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v10"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v11"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v11"},"value":{"location":"DSTR","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v11"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v12"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v12"},"value":{"location":"DSTR","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v12"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v13"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v13"},"value":{"location":"DMED","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v13"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v14"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v14"},"value":{"location":"DMED","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v14"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v15"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v15"},"value":{"location":"hospital_wp1","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v15"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v16"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v16"},"value":{"location":"hospital_wp1","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v16"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v17"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v17"},"value":{"location":{"param":"str"},"var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v17"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v18"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v18"},"value":{"location":{"param":"str"},"var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v18"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v19"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v19"},"value":{"location":{"param":"med"},"var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v19"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v20"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v20"},"value":{"location":{"param":"med"},"var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v20"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v21"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v21"},"value":{"location":"hoist_crew","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v21"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v22"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v22"},"value":{"location":"hoist_crew","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v22"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v23"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v23"},"value":{"location":"pax1","var":"lat"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v23"},"value":-1}
+    ]},
+    {"set":{"param":"pp_v24"},"value":-1},
+    {"try": [
+        {"set":{"param":"pp_v24"},"value":{"location":"pax1","var":"lon"}}
+      ],
+      "catch": [
+        {"set":{"param":"pp_v24"},"value":-1}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"hospital pad","state":{"text":"pad_points {0} | heli_lat={1} | heli_lon={2} | heli_hdg={3} | hospital_user_lat={4} | hospital_user_lon={5} | DAMBWP_lat={6} | DAMBWP_lon={7} | DAMBU_lat={8} | DAMBU_lon={9} | DRUP_lat={10} | DRUP_lon={11} | DSTR_lat={12} | DSTR_lon={13} | DMED_lat={14} | DMED_lon={15} | hospital_wp1_lat={16} | hospital_wp1_lon={17} | str_lat={18} | str_lon={19} | med_lat={20} | med_lon={21} | crew_lat={22} | crew_lon={23} | pax1_lat={24} | pax1_lon={25}","params":[{"param":"stage"},{"param":"pp_v0"},{"param":"pp_v1"},{"param":"pp_v2"},{"param":"pp_v3"},{"param":"pp_v4"},{"param":"pp_v5"},{"param":"pp_v6"},{"param":"pp_v7"},{"param":"pp_v8"},{"param":"pp_v9"},{"param":"pp_v10"},{"param":"pp_v11"},{"param":"pp_v12"},{"param":"pp_v13"},{"param":"pp_v14"},{"param":"pp_v15"},{"param":"pp_v16"},{"param":"pp_v17"},{"param":"pp_v18"},{"param":"pp_v19"},{"param":"pp_v20"},{"param":"pp_v21"},{"param":"pp_v22"},{"param":"pp_v23"},{"param":"pp_v24"}]}}}
+  ],
+  "hospital drive watch": [
+    {"#comment":"Sampler of the second hoist_crew drive of the hospital handover: while hs_watch_on is yes, every 10 s one row of hospital pad trace (stage second_drive_t<seconds>), at most 24 rows; hs_watch_on is set to no when the drive returns. Params: str, med."},
+    {"set":{"param":"hw_t"},"value":0},
+    {"while": {"local":"hs_watch_on"}, "eq": "yes",
+      "do": [
+        {"sleep":10},
+        {"set":{"param":"hw_t"},"value":{"add":[{"param":"hw_t"},10]}},
+        {"if": {"local":"hs_watch_on"}, "eq": "yes",
+          "then": [
+            {"call_macro":"hospital pad trace","params":{"stage":{"text":"second_drive_t{0}","params":[{"param":"hw_t"}]},"str":{"param":"str"},"med":{"param":"med"}}},
+            {"if": {"param":"hw_t"}, "gte": 240,
+              "then": [
+                {"set":{"local":"hs_watch_on"},"value":"no"}
+            ]}
+        ]}
+    ]}
+  ],
   "user destination scene predefined1": [
     {"create_location": "DAMBWP",
       "zones": [
@@ -5242,7 +5576,8 @@
         {"point_object":"ambumedic","to":"hospital_user"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"user destination scene predefined1","state":"move_object"}},
         {"move_object":"ambustretcher","to":{"bearing":0,"dist":0,"heading":240,"object":"DSTR"}},
-        {"point_object":"ambustretcher","to":"hospital_user"}
+        {"point_object":"ambustretcher","to":"hospital_user"},
+        {"call_macro":"hospital pad trace","params":{"stage":"after_predefined_move","str":"ambustretcher","med":"ambumedic"}}
     ]}}
   ],
   "User destination1": [
@@ -5425,6 +5760,7 @@
             {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
         ]}
     ]},
+    {"call_macro":"hospital pad trace","params":{"stage":"after_landing_locations","str":"ambustretcher","med":"ambumedic"}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.L:_local:HXX__SDK_ROTOR_RPM_lt_80"}},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":80},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
@@ -5457,6 +5793,7 @@
     {"drive_object":{"name":"ambustretcher","to":["DAMBWP",{"bearing":10,"dist":9},{"bearing":345,"dist":9}],"VAR1":1,"speed":5}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"User destination1","state":"drive_done"}},
     {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0},
+    {"call_macro":"hospital pad trace","params":{"stage":"after_hospital_crew_walk","str":"ambustretcher","med":"ambumedic"}},
     {"call_macro":"ground ops NR gate","params":{"source":"User destination1"}},
     {"set_message":{"text":"Patient unloading procedures started, please wait..."}},
     {"open_door":"pax_right"},
@@ -5578,9 +5915,48 @@
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
     {"sleep":0.5},
     {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":5},{"bearing":88,"dist":4},{"bearing":5,"dist":9},{"bearing":345,"dist":7.5}],"VAR1":11,"speed":4}},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_start"}},
-    {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher"},{"bearing2":90,"dist":2,"object":"ambustretcher"},{"bearing2":180,"dist":2,"object":"ambustretcher"},{"bearing2":270,"dist":2,"object":"ambustretcher"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_done"}},
+    {"#comment":"The medic with the trolley ends the first walk next to the hospital stretcher. The second drive goes to the closest of the four points 2 m from the stretcher, which is then 0.5 to 1.4 m away: a route that short made the crew walk off into the distance and never finish (tester report 2026-10-12, build 169.45, trace drive_start without drive_done for minutes; same defect as the quad SAR of 169.43). Already within 3 m of the stretcher the drive is skipped."},
+    {"set":{"local":"hs_gap_m"},"value":-1},
+    {"try": [
+        {"set":{"local":"hs_gap_m"},"value":{"object":"hoist_crew","var":"distance:m","to":"ambustretcher"}}
+      ],
+      "catch": [
+        {"set":{"local":"hs_gap_m"},"value":-1}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":{"text":"stretcher_gap_m {0}","params":[{"round":{"local":"hs_gap_m"},"to":1}]}}},
+    {"set":{"local":"hs_str_heli_m"},"value":-1},
+    {"set":{"local":"hs_crew_heli_m"},"value":-1},
+    {"try": [
+        {"set":{"local":"hs_str_heli_m"},"value":{"object":"ambustretcher","var":"distance:m","to":"$USER"}},
+        {"set":{"local":"hs_crew_heli_m"},"value":{"object":"hoist_crew","var":"distance:m","to":"$USER"}}
+      ],
+      "catch": [
+        {"set":{"local":"hs_str_heli_m"},"value":-1}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":{"text":"heli_distance_m stretcher {0} crew {1}","params":[{"round":{"local":"hs_str_heli_m"},"to":1},{"round":{"local":"hs_crew_heli_m"},"to":1}]}}},
+    {"call_macro":"hospital pad trace","params":{"stage":"before_second_drive","str":"ambustretcher","med":"ambumedic"}},
+    {"set":{"local":"hs_walk"},"value":1},
+    {"if": {
+      "and": [
+        {"require":{"local":"hs_gap_m"},"gte":0},
+        {"require":{"local":"hs_gap_m"},"lt":3}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hs_walk"},"value":0},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"already_at_stretcher_skip_closest_drive"}}
+    ]},
+    {"if": {"local":"hs_walk"}, "eq": 1,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_start"}},
+        {"set":{"local":"hs_watch_on"},"value":"yes"},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"hospital drive watch","params":{"str":"ambustretcher","med":"ambumedic"}}
+        ]}},
+        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher"},{"bearing2":90,"dist":2,"object":"ambustretcher"},{"bearing2":180,"dist":2,"object":"ambustretcher"},{"bearing2":270,"dist":2,"object":"ambustretcher"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_done"}},
+        {"set":{"local":"hs_watch_on"},"value":"no"}
+    ]},
     {"call_macro":"voice hospital handover"},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
     {"sleep":2},

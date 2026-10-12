@@ -202,4 +202,48 @@ const iRestore = liveInit.findIndex((c) => c.call_macro === 'multipatient regist
 assert.ok(iReset >= 0 && iRestore > iReset, 'the ground providers are cleared before the saved mission restore (which sets them)');
 for (const name of ['P2_GROUND_PROVIDER', 'P3_GROUND_PROVIDER']) assert.ok(liveInit.some((c) => c.set && c.set.local === name && c.value === null), `${name} is cleared at start`);
 
-console.log('Tester report guards PASS: traffic car sets wait for the car, a query without an answer retries with a larger radius, ERR101 shows the radius, RescueTrack phase macros never name a missing static, the live ambulance load does not abort on the vehicle-centre distance, a finished dispatch preview clears the PRE_* locations and writes the SAR accident (second dispatch no longer rebuilt on the first). HPG/MSFS PENDING.');
+// 7. Fifth tester report (Piperdriver, 2026-10-12, build 169.45, mission 67, 4 crew): at the hospital the medic took the casualty on the trolley and walked
+// off towards the hospital without handing it over (trace: hoist_crew drive_start, never drive_done, 4 minutes). The second hoist_crew drive of
+// `User destination1` and `Ambulance destination1` goes to the closest of the four points 2 m from the hospital stretcher; the first walk ends 1.5 m
+// from it, so that route is 0.5 to 1.4 m long (the baseline has no such drive). A route that short is the defect of the quad SAR (169.43): the drive
+// is skipped when the medic is already within 3 m of the stretcher (distance traced), and never made unguarded.
+const navHospital = read('05-navigation-queries.json');
+for (const [macro, stretcher] of [['User destination1', 'ambustretcher'], ['Ambulance destination1', 'ambustretcher3']]) {
+  let drives = 0; let guardedDrives = 0; let gapSets = 0; let skips = 0;
+  const aroundStretcher = (c) => c.drive_object && c.drive_object.name === 'hoist_crew' && JSON.stringify(c.drive_object.to).includes('"object":"' + stretcher + '"') && JSON.stringify(c.drive_object.to).includes('closest');
+  walk(navHospital[macro], (node) => {
+    if (aroundStretcher(node)) drives += 1;
+    if (node.if && node.if.local === 'hs_walk' && node.eq === 1 && Array.isArray(node.then)) guardedDrives += node.then.filter(aroundStretcher).length;
+    if (node.set && node.set.local === 'hs_gap_m' && node.value && node.value.object === 'hoist_crew' && node.value.to === stretcher) gapSets += 1;
+    if (node.set && node.set.local === 'hs_walk' && node.value === 0) skips += 1;
+  });
+  assert.equal(drives, 1, macro + ': one drive of hoist_crew to the closest point around ' + stretcher);
+  assert.equal(guardedDrives, 1, macro + ': that drive only runs when hs_walk is 1 (the medic is not already next to ' + stretcher + ')');
+  assert.equal(gapSets, 1, macro + ': the distance medic - ' + stretcher + ' is read before the drive');
+  assert.equal(skips, 1, macro + ': a gap below 3 m turns the drive off');
+  const text = JSON.stringify(navHospital[macro]);
+  assert.ok(text.includes('already_at_stretcher_skip_closest_drive') && text.includes('stretcher_gap_m {0}'), macro + ': the gap and the skip are traced');
+}
+
+// 7b. diagnosis tools for the same report (the cause is not known): the hospital waypoints and objects are traced as rows of the ground crew runtime
+// trace at the four moments of the handover, and the second drive is sampled every 10 s while it runs (at most 24 rows).
+{
+  const padCmds = JSON.stringify(nav['hospital pad trace']);
+  for (const name of ['hospital_user', 'DAMBWP', 'DAMBU', 'DRUP', 'DSTR', 'DMED', 'hospital_wp1', 'hoist_crew', 'ambulance5', 'pax1']) assert.ok(padCmds.includes('"' + name + '"'), 'hospital pad trace reads ' + name);
+  assert.ok(padCmds.includes('"param":"str"') && padCmds.includes('"param":"med"'), 'hospital pad trace reads the stretcher and the medic of the caller');
+  const tries = (padCmds.match(/"try":/g) || []).length;
+  const sets = (padCmds.match(/"value":-1/g) || []).length;
+  assert.equal(tries, 39, 'every distance (14) and every coordinate (25) is read inside a try (a missing location or object is -1, never an error)');
+  assert.ok(sets >= tries, 'every reading starts at -1');
+  assert.ok(padCmds.includes('pad_points') && padCmds.includes('heli_hdg=') && padCmds.includes('DAMBWP_lat='), 'the coordinates row (pad_points) holds the helicopter heading and the waypoint coordinates');
+  const watch = JSON.stringify(nav['hospital drive watch']);
+  assert.ok(watch.includes('"hs_watch_on"') && watch.includes('"sleep":10') && watch.includes('"gte":240'), 'the sampler runs every 10 s and stops after 240 s or when hs_watch_on is no');
+  const user = JSON.stringify(nav['User destination1']);
+  for (const stage of ['after_landing_locations', 'after_hospital_crew_walk', 'before_second_drive']) assert.ok(user.includes('"stage":"' + stage + '"'), 'User destination1 traces ' + stage);
+  assert.ok(JSON.stringify(nav['user destination scene predefined1']).includes('"stage":"after_predefined_move"'), 'the macro that places the hospital crew while flying traces after_predefined_move');
+  for (const macro of ['User destination1', 'Ambulance destination1']) {
+    const text = JSON.stringify(nav[macro]);
+    assert.ok(text.includes('"call_macro":"hospital drive watch"') && text.includes('"hs_watch_on"},"value":"yes"') && text.includes('"hs_watch_on"},"value":"no"'), macro + ': the sampler starts with the second drive and ends with it');
+  }
+}
+console.log('Tester report guards PASS: traffic car sets wait for the car, a query without an answer retries with a larger radius, ERR101 shows the radius, RescueTrack phase macros never name a missing static, the live ambulance load does not abort on the vehicle-centre distance, a finished dispatch preview clears the PRE_* locations and writes the SAR accident (second dispatch no longer rebuilt on the first), the hospital handover drive to the closest point around the stretcher is skipped when the medic is already there. HPG/MSFS PENDING.');
