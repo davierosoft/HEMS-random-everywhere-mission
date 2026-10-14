@@ -449,3 +449,14 @@ Tester report 2026-10-14 (169.51, app 0.22): residential missions stopped at 43.
 2. The map shows one icon of the incident, where the injured are; no icon is left at the rescue location of the preview.
 3. A second residential dispatch accepted after the first one ends: the same.
 4. With the Mission Companion 0.23 the log shows `Mission: RE` at the connection (`voice app connect` sends `<mission:RE>`).
+
+## Crew tips (PENDING)
+
+User request of 2026-10-14. With the Mission Companion (pack EN 13) the crew tells, in the long legs, a conversation of four lines about a function of the mission (TIP.<topic>.1 to 4, eleven topics). Setting CREW TIPS (Settings, Audio options, TIPS ON / TIPS OFF), independent from CREW CHATTER.
+
+1. Fly a dispatch with CREW CHATTER FULL and TIPS ON: in the legs to the scene, to the hospital and back to the base (more than 7 km from the target, above 300 ft) a tip is told in about 4 legs out of 10, after the short chat of the pack when there is one. The log of the Companion shows `[SAY] TIP.<topic>.n -> option k of 6`. Fly several missions: the topics follow each other and do not repeat before all eleven were told.
+2. Set TIPS OFF: no tip is told, the small talk (banter, CRZ chats) continues. Set TIPS ON and CREW CHATTER REDUCED or MINIMAL: the small talk stops, the tips continue (lower options, the same information).
+3. With a crew member hurt (Life Score under 85), a dying patient or a death in the session no tip is told.
+4. Save a custom profile with TIPS OFF, load another profile and load the first again: TIPS OFF is restored; Reset to default turns the tips on again.
+5. With a wav voice pack (no Companion) nothing is said and nothing breaks.
+6. Read the texts: the menu names (Quick links, Save or reload a mission, Crew health simulation, Weight of the installed kits, Capture snapshot, Crew chatter, Crew tips) must be the ones of the tablet.

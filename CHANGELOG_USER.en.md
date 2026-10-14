@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.52. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.53. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-It also covers the Mission Companion app up to version 0.23, which speaks the voices of the mission and updates itself and the mission.
+It also covers the Mission Companion app up to version 0.24, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.52, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.53, still need final simulator confirmation.
 
 ## FIXES
 
@@ -368,6 +368,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - A tester reported that residential missions stopped at 43.5% with a Command Failed message on the tablet (build 169.51): the change of the icon asked the tablet to move an icon that was not on the map, so the icon is now removed and drawn again at the injured.
 - **Build history:** 0.997 169.49, 169.52.
 - **Test:** Start residential dispatches with one, two and three victims and compare the icon with the position of the injured.
+
+### Tips of the crew about the functions of the mission
+
+- During the long legs of the flight the crew now sometimes tells a short tip about a function of the mission that pilots may not know, with the Mission Companion 0.24 and a voice pack in text (not the recorded wav packs). Eleven tips come one after the other, without repeating until all were told: the three save slots and the autosave, the mission list presets, the user settings profiles, the crew health simulation, the weight of the installed kits, the Quick links of the dispatch page (with the medical page), the Debug center snapshots to post on Discord, the medical options, the helicopter failures, the Crew chatter setting and how to switch the tips off.
+- The tips have their own setting, CREW TIPS (Settings, Audio options, TIPS ON or TIPS OFF), independent from CREW CHATTER and kept in the profiles. With the small talk reduced or minimal you still get the tips until you switch them off; they are not told with a crew emergency, a hurt crew member, a dying patient or after a death. Because of the new tips the small talk of the cruise is a little less frequent.
+- **Build history:** 0.997 169.53, Mission Companion app 0.24.
+- **Test:** Fly a dispatch with the Mission Companion and listen to the long legs: a tip should come in about four legs out of ten. Set TIPS OFF and check that no tip is told while the small talk continues; set CREW CHATTER to REDUCED with TIPS ON and check that the tips continue.
 
 ### A reduced crew is spoken by the crew that is there
 

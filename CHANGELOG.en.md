@@ -1,3 +1,11 @@
+## Release 0.997 169.53
+
+- Cumulative scope of the baseline: entries 169.23 to 169.53 (crew tips, CREW TIPS setting)
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.52 plus 169.53
+- Crew tips (user request of 2026-10-14, Mission Companion 0.24, pack EN 13): new macro voice tip, called by voice cruise chat in the three long legs, tells a conversation of four lines TIP.<topic>.1 to 4 (copilot, doctor, sometimes the pilot) about a function of the mission that pilots may not know. Eleven topics in a fixed order from a random start (the local vtp_next survives the reloads, so a tip is not repeated before all were told): SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, TOF how to switch the tips off. The key is built from the topic code and the line number; a wav pack says nothing (voice say needs the Companion).
+- New setting CREW TIPS (global CREW_TIPS, 0 or empty = on, 1 = off; Settings, Audio options, buttons TIPS ON and TIPS OFF), independent from CREW CHATTER: saved in and loaded from the aircraft profiles (save custom aircraft profile, load custom aircraft profile), cleared by resetdefault, a change marks the profile CUSTOM. voice calm takes the new param tip: with tip 1 the setting CREW CHATTER does not stop it, the mood rules stay (crew emergency, crew member hurt or dead, dying patient, death in the session). voice cruise chat: with the small talk allowed a roll of 0 to 9 gives a banter (0 to 3, was 0 to 6), a tip (4 to 6) or nothing, and on the way back to the base a banter (0 to 4) or a tip; with the small talk refused the leg still offers a tip, 4 times in 10 (5 in 10 back to the base).
+- tools/test-voice-tips.js (in check-workspace): macro, topics, setting in the profiles, reset, buttons, cruise chat legs and, with the Companion repository next to this one, the 44 messages of its base pack.
+
 ## Release 0.997 169.52
 
 - Cumulative scope of the baseline: entries 169.23 to 169.52 (residential icon, mission identity tag)

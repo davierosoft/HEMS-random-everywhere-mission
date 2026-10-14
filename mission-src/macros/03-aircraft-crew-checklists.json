@@ -1940,9 +1940,13 @@
     ]}}
   ],
   "voice calm": [
-    {"#comment":"1 when the mood allows small talk: no crew emergency, nobody hurt (every crew member of the flight has CREW_LIFESCORE 85 or more and is alive), and with the param patient 1 a patient that is not dying, not dead and not in CPR (LIFESCORE 50 or more), with the param casualties 1 nobody died in this session (PATIENTS_KILLED_TOTAL). Used by voice cruise chat and voice banter. Always 0 when the setting CREW CHATTER is REDUCED or MINIMAL."},
+    {"#comment":"1 when the mood allows small talk: no crew emergency, nobody hurt (every crew member of the flight has CREW_LIFESCORE 85 or more and is alive), and with the param patient 1 a patient that is not dying, not dead and not in CPR (LIFESCORE 50 or more), with the param casualties 1 nobody died in this session (PATIENTS_KILLED_TOTAL). Used by voice cruise chat, voice banter and voice tip. Always 0 when the setting CREW CHATTER is REDUCED or MINIMAL, except with the param tip 1 (voice tip: the tips have their own setting CREW TIPS, independent from the chatter)."},
     {"set":{"param":"calm"},"value":1},
-    {"if": {"global":"CREW_CHATTER"}, "gt": 0,
+    {"if": {
+      "and": [
+        {"require":{"global":"CREW_CHATTER"},"gt":0},
+        {"require":{"param":"tip"},"ne":1}
+      ]}, "eq": 1,
       "then": [
         {"set":{"param":"calm"},"value":0}
     ]},
@@ -2060,8 +2064,82 @@
         ]}}
     ]}
   ],
+  "voice tip": [
+    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
+    {"set":{"param":"vtp_calm"},"value":0},
+    {"if": {"global":"CREW_TIPS"}, "ne": 1,
+      "then": [
+        {"call_macro":"voice calm","params":{"patient":{"param":"patient"},"casualties":{"param":"casualties"},"tip":1},"result":"vtp_calm"}
+    ]},
+    {"if": {"param":"vtp_calm"}, "eq": 1,
+      "then": [
+        {"if": {"local":"vtp_next"}, "eq": null,
+          "then": [
+            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,11]}}}
+        ]},
+        {"set":{"local":"vtp_t"},"value":{"local":"vtp_next"}},
+        {"set":{"local":"vtp_next"},"value":{"add":[{"local":"vtp_next"},1]}},
+        {"if": {"local":"vtp_next"}, "gte": 11,
+          "then": [
+            {"set":{"local":"vtp_next"},"value":0}
+        ]},
+        {"set":{"local":"vtp_code"},"value":"SAV"},
+        {"if": {"local":"vtp_t"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"MSL"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 2,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"PRF"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 3,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"CRW"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 4,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"KIT"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 5,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"QLK"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 6,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"DBG"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 7,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"MED"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 8,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"FLR"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 9,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"CHT"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 10,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"TOF"}
+        ]},
+        {"create_thread": {
+          "commands": [
+            {"sleep":{"rand":[5,15]}},
+            {"set":{"local":"vtp_n"},"value":1},
+            {"while": {"local":"vtp_n"}, "lte": 4,
+              "do": [
+                {"set":{"local":"vtp_key"},"value":{"text":"TIP.{0}.{1}","params":[{"local":"vtp_code"},{"local":"vtp_n"}]}},
+                {"call_macro":"voice say","params":{"key":{"local":"vtp_key"},"declut":1}},
+                {"sleep":6},
+                {"set":{"local":"vtp_n"},"value":{"add":[{"local":"vtp_n"},1]}}
+            ]}
+        ]}}
+    ]}
+  ],
   "voice cruise chat": [
-    {"#comment":"Small talk during the long legs of the flight, once each: to the scene (phases 4 to 6, more than 7 km from accident_location, above 300 ft), to the hospital (phase 8 or 9, more than 7 km from hospital_user) and back to the base (route 6, more than 7 km from RTB_location). Only when voice calm allows it (never with a dying patient, an injured crew member, or after a death); a short chat of the pack (CRZ.*, futile) and, seven times in ten, a conversation of voice banter. Chatter (AUDIO_DECLUT)."},
+    {"#comment":"Small talk during the long legs of the flight, once each: to the scene (phases 4 to 6, more than 7 km from accident_location, above 300 ft), to the hospital (phase 8 or 9, more than 7 km from hospital_user) and back to the base (route 6, more than 7 km from RTB_location). Only when voice calm allows it (never with a dying patient, an injured crew member, or after a death); a short chat of the pack (CRZ.*, futile) and then, by a roll of 0 to 9, a conversation of voice banter (0 to 3), a tip of voice tip (4 to 6) or nothing; on the way back to the base a banter (roll 0 to 4) or a tip. When voice calm refuses the chat (CREW CHATTER REDUCED or MINIMAL, or the mood) the leg still offers a tip, 4 times in 10 (5 in 10 back to the base), because the tips have their own setting CREW TIPS and voice tip decides by itself. Chatter (AUDIO_DECLUT)."},
     {"while": 1, "gt": 0,
       "do": [
         {"sleep":10},
@@ -2093,9 +2171,25 @@
                 {"call_macro":"voice say","params":{"key":"CRZ.OUT.DOC","declut":1}},
                 {"sleep":8},
                 {"set":{"local":"vcc_roll"},"value":{"floor":{"rand":[0,10]}}},
-                {"if": {"local":"vcc_roll"}, "lt": 7,
+                {"if": {"local":"vcc_roll"}, "lt": 4,
                   "then": [
                     {"call_macro":"voice banter","params":{"patient":0,"casualties":1}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"vcc_roll"},"gte":4},
+                    {"require":{"local":"vcc_roll"},"lt":7}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice tip","params":{"patient":0,"casualties":1}}
+                ]}
+            ]},
+            {"if": {"param":"vcc_calm"}, "ne": 1,
+              "then": [
+                {"set":{"local":"vcc_roll"},"value":{"floor":{"rand":[0,10]}}},
+                {"if": {"local":"vcc_roll"}, "lt": 4,
+                  "then": [
+                    {"call_macro":"voice tip","params":{"patient":0,"casualties":1}}
                 ]}
             ]}
         ]},
@@ -2121,9 +2215,25 @@
                 {"call_macro":"voice say","params":{"key":"CRZ.BACK.CPL","declut":1}},
                 {"sleep":8},
                 {"set":{"local":"vcc_roll"},"value":{"floor":{"rand":[0,10]}}},
-                {"if": {"local":"vcc_roll"}, "lt": 7,
+                {"if": {"local":"vcc_roll"}, "lt": 4,
                   "then": [
                     {"call_macro":"voice banter","params":{"patient":1,"casualties":1}}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"vcc_roll"},"gte":4},
+                    {"require":{"local":"vcc_roll"},"lt":7}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice tip","params":{"patient":1,"casualties":1}}
+                ]}
+            ]},
+            {"if": {"param":"vcc_calm"}, "ne": 1,
+              "then": [
+                {"set":{"local":"vcc_roll"},"value":{"floor":{"rand":[0,10]}}},
+                {"if": {"local":"vcc_roll"}, "lt": 4,
+                  "then": [
+                    {"call_macro":"voice tip","params":{"patient":1,"casualties":1}}
                 ]}
             ]}
         ]},
@@ -2140,7 +2250,23 @@
             {"call_macro":"voice calm","params":{"patient":0,"casualties":1},"result":"vcc_calm2"},
             {"if": {"param":"vcc_calm2"}, "eq": 1,
               "then": [
-                {"call_macro":"voice banter","params":{"patient":0,"casualties":1}}
+                {"set":{"local":"vcc_roll"},"value":{"floor":{"rand":[0,10]}}},
+                {"if": {"local":"vcc_roll"}, "lt": 5,
+                  "then": [
+                    {"call_macro":"voice banter","params":{"patient":0,"casualties":1}}
+                ]},
+                {"if": {"local":"vcc_roll"}, "gte": 5,
+                  "then": [
+                    {"call_macro":"voice tip","params":{"patient":0,"casualties":1}}
+                ]}
+            ]},
+            {"if": {"param":"vcc_calm2"}, "ne": 1,
+              "then": [
+                {"set":{"local":"vcc_roll"},"value":{"floor":{"rand":[0,10]}}},
+                {"if": {"local":"vcc_roll"}, "lt": 5,
+                  "then": [
+                    {"call_macro":"voice tip","params":{"patient":0,"casualties":1}}
+                ]}
             ]}
         ]}
     ]}

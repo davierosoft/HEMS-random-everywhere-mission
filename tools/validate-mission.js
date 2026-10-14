@@ -897,7 +897,7 @@ function checkAircraftProfileRegression() {
     'MISSION_GUIDANCE_OVERRIDE', 'RINGONCE', 'LOWFUELTHRSLD', 'NOCONNEXT', 'CARLSPBIT', 'CARLS_DF_TUNING_MODE',
     'TABLET_5G_ENABLED', 'startpage', 'ambu_force', 'poli_force', 'fire_force', 'ENGINE_FAILURES_ENABLED',
     'ORANGE_TARGET_SMOKE', 'TARGET_GUIDANCE_RANGE', 'HOIST_SAFETY_MONITOR', 'HOIST_CONTROL_PROFILE',
-    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED', 'PERF_SAMPLING', 'PERF_ALTITUDE_GATE', 'PERF_LOG_LEVEL', 'KIT_WEIGHTS', 'LIFE_FREEZE_NEAR', 'CREW_CHATTER'
+    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED', 'PERF_SAMPLING', 'PERF_ALTITUDE_GATE', 'PERF_LOG_LEVEL', 'KIT_WEIGHTS', 'LIFE_FREEZE_NEAR', 'CREW_CHATTER', 'CREW_TIPS'
   ]);
   const savedProfileKeys = new Set(collect(mission.macros['save custom aircraft profile'] || [], (item) => item.set?.table && typeof item.set.key === 'string').map((item) => item.set.key));
   const loadedProfileKeys = new Set(collect(mission.macros['load custom aircraft profile'] || [], (item) => item.table && typeof item.key === 'string').map((item) => item.key));
