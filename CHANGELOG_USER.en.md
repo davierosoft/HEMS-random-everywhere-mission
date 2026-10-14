@@ -2,7 +2,7 @@
 
 This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.52. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
-It also covers the Mission Companion app up to version 0.19, which speaks the voices of the mission and updates itself and the mission.
+It also covers the Mission Companion app up to version 0.23, which speaks the voices of the mission and updates itself and the mission.
 
 The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.52, still need final simulator confirmation.
 
@@ -368,6 +368,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - A tester reported that residential missions stopped at 43.5% with a Command Failed message on the tablet (build 169.51): the change of the icon asked the tablet to move an icon that was not on the map, so the icon is now removed and drawn again at the injured.
 - **Build history:** 0.997 169.49, 169.52.
 - **Test:** Start residential dispatches with one, two and three victims and compare the icon with the position of the injured.
+
+### A reduced crew is spoken by the crew that is there
+
+- With the Mission Companion 0.23 and a voice pack in text (not the recorded wav packs), the lines of a seat that the flight does not have are said by a crew member who is there, with that voice. Before, with three crew the lines of the HEMS1 (the chief) were spoken by a voice of someone who is not in the helicopter. A crew member who cannot speak is skipped. The recorded wav packs are unchanged.
+- **Build history:** 0.997 169.52, Mission Companion app 0.23.
+- **Test:** Fly with three crew and let the cabin preparation run: the lines of the chief ("Cabin preparation completed") are said by the doctor, not by a fourth voice. With four and five crew every seat speaks its own lines.
+
+### The Mission Companion announces and installs its updates more reliably
+
+- The Mission Companion checks for a new mission, program or voice pack at every start (before, it waited six hours after the last check) and reads GitHub only. Restarting the program and the uninstaller no longer run command-line tricks that an antivirus may flag.
+- **Build history:** Mission Companion app 0.20, 0.21, 0.22.
+- **Test:** Start the Mission Companion after a new release is published and verify that the Updates button turns amber and says what is new.
 
 ### The crew outside the helicopter is heard on the radio
 
