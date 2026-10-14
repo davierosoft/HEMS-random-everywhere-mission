@@ -1,3 +1,9 @@
+## Release 0.997 169.54
+
+- Cumulative scope of the baseline: entries 169.23 to 169.54 (crew tips, pack EN 13 declared)
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.53 plus 169.54
+- voice app connect declares the voice pack EN 13 (<pack:EN:13>) instead of 12: the crew tips of 169.53 (TIP.*) exist from pack EN 13, and a Companion with an older pack now reports it (the message of a missing key is silent). tools/test-voice-tips.js checks the declared version against the base pack.
+
 ## Release 0.997 169.53
 
 - Cumulative scope of the baseline: entries 169.23 to 169.53 (crew tips, CREW TIPS setting)

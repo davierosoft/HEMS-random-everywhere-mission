@@ -74,6 +74,10 @@ if (fs.existsSync(packFile)) {
     }
   }
   assert.equal(Object.keys(messages).filter((k) => k && k.startsWith('TIP.')).length, codes.length * 4, 'no tip in the pack without a topic in the macro');
+  const declared = Number((text('voice app connect').match(/<pack:EN:(\d+)>/) || [])[1]);
+  const packVersion = Number((xml.match(/<voicepack\b[^>]*\bversion="(\d+)"/) || [])[1]);
+  assert.ok(declared >= 13, 'the mission declares at least pack EN 13, the first with the TIP messages: an older pack is reported by the Companion');
+  assert.ok(packVersion >= declared, 'the base pack is not older than the version the mission declares');
 } else {
   console.log('voice tips: the Companion repository is not next to this one, the pack checks are skipped');
 }
