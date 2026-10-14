@@ -440,3 +440,12 @@ Tester report 2026-10-11 (169.45, three dispatches in a row: residential, climbe
 1. Fly a residential dispatch, accept a second dispatch of another kind (climber, SAR, any outdoor scene) while the first is ending: the scene, the map icon and the SAR ring are on the location shown in the preview, and `rescue_location` does not exist unless the new dispatch is residential.
 2. Chain three dispatches (residential, then climber, then SAR): in `R&E_debug_dispatch_snapshots`, `dispatch_handoff_log`, the `objective1_rebuilt` row has `pre_accident_*` equal to the `live_accident_*` of the `preview_done` row of the same dispatch, and `gap_accident_rescue_m` is -1 when the dispatch has no rescue location.
 3. Organ transport (mission 4) after a normal dispatch: the pickup point (`userA`) is the new one and no accident of the earlier dispatch is rebuilt.
+
+## Residential injured icon (PENDING)
+
+Tester report 2026-10-14 (169.51, app 0.22): residential missions stopped at 43.5% (Preflight operations, wait for rear crew clearance) with the tablet error `TypeError: undefined is not an object (evaluating '_0x500c2f.getGeometry')` on `{"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"...`. Cause: the dispatch preview of a residential incident draws `rescue_location_icon` only (`location_name` is `rescue_location`), so the `update` added in 169.49 acted on a point that did not exist. The scene (macro `residential`) now removes `rescue_location_icon` and `accident_location_icon`, waits 1 s and adds `accident_location_icon` with the dispatch icon at `accident_location` (at `rescue_location` with three victims and fire).
+
+1. Start residential dispatches (one, two and three victims, with fire for three), accept: the loading passes 43.5% with no Command Failed on the tablet.
+2. The map shows one icon of the incident, where the injured are; no icon is left at the rescue location of the preview.
+3. A second residential dispatch accepted after the first one ends: the same.
+4. With the Mission Companion 0.23 the log shows `Mission: RE` at the connection (`voice app connect` sends `<mission:RE>`).

@@ -1,3 +1,10 @@
+## Release 0.997 169.52
+
+- Cumulative scope of the baseline: entries 169.23 to 169.52 (residential icon, mission identity tag)
+- Scope of the cumulative baseline: entries delivered in 169.23 to 169.51 plus 169.52
+- Residential injured icon (tester report 2026-10-14, build 169.51: stuck at 43.5%, Command Failed, getGeometry of undefined): the residential dispatch preview draws only rescue_location_icon (location_name is rescue_location), so the set_map update of accident_location_icon added in 169.49 acted on a point that did not exist. The scene now removes rescue_location_icon and accident_location_icon, waits 1 s and adds accident_location_icon with the dispatch icon at accident_location (at rescue_location with three victims and fire), as the original preview does.
+- voice app connect sends <mission:RE> after <pack:EN:12>, the identity of the mission for the Mission Companion (0.23 keeps and logs it; older versions read an unknown tag as a voice name with no text).
+
 ## Release 0.997 169.51
 
 - Scope of the cumulative baseline: entries delivered in 169.23 to 169.50 plus 169.51

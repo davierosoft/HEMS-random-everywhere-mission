@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.50. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.52. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.19, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.51, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.52, still need final simulator confirmation.
 
 ## FIXES
 
@@ -365,7 +365,8 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### Injured icon at the injured in residential scenes
 
 - In residential scenes the icon of the injured is now where the injured are (the accident location). Only with three victims and a fire, who are carried to the rescue location, the icon is at the rescue location.
-- **Build history:** 0.997 169.49.
+- A tester reported that residential missions stopped at 43.5% with a Command Failed message on the tablet (build 169.51): the change of the icon asked the tablet to move an icon that was not on the map, so the icon is now removed and drawn again at the injured.
+- **Build history:** 0.997 169.49, 169.52.
 - **Test:** Start residential dispatches with one, two and three victims and compare the icon with the position of the injured.
 
 ### The crew outside the helicopter is heard on the radio

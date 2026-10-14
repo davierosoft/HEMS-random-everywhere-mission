@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.51",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.52",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.51"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.52"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -28378,15 +28378,21 @@
             {"zone":{"location":{"bearing":0,"dist":3,"object":"rescue_location"}}}
         ]},
         {"call_macro":"fence road","params":{"fence_rescue":"ambulance"}},
-        {"#comment":"Three victims with fire: the injured are moved to rescue_location below, the icon of the injured is there."},
-        {"set_map":{"update":{"point":{"location":"rescue_location","id":"accident_location_icon"}}}}
+        {"#comment":"Three victims with fire: the injured are moved to rescue_location below, the icon of the injured is there. The preview of a residential dispatch drew only rescue_location_icon (location_name is rescue_location), so accident_location_icon does not exist and a set_map update of it fails on the tablet (getGeometry of undefined, stuck at 43.5%, tester report 2026-10-14): both ids are removed and the icon is added, as the original preview does."},
+        {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
+        {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
+        {"sleep":1},
+        {"set_map":{"add":{"point":{"location":"rescue_location","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "ne": 3,
       "then": [
-        {"#comment":"The injured are at accident_location (the dispatch preview shows rescue_location, the location_name of the residential incidents): the icon of the injured goes where they are."},
+        {"#comment":"The injured are at accident_location (the dispatch preview drew rescue_location_icon at rescue_location, the location_name of the residential incidents): the icon of the injured goes where they are. Never a set_map update of accident_location_icon, which does not exist here (tester report 2026-10-14)."},
         {"if": {"has_location":"accident_location"}, "eq": 1,
           "then": [
-            {"set_map":{"update":{"point":{"location":"accident_location","id":"accident_location_icon"}}}}
+            {"set_map":{"remove":{"point":{"id":"rescue_location_icon"}}}},
+            {"set_map":{"remove":{"point":{"id":"accident_location_icon"}}}},
+            {"sleep":1},
+            {"set_map":{"add":{"point":{"location":"accident_location","icon":{"resolve_icon":"{local:Icon}"},"id":"accident_location_icon"}}}}
         ]}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":44},
@@ -84516,7 +84522,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:12>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:12>"},{"speak":"<mission:RE>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice new shift": [

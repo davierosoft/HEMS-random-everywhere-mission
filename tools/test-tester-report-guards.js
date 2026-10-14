@@ -246,4 +246,19 @@ for (const [macro, stretcher] of [['User destination1', 'ambustretcher'], ['Ambu
     assert.ok(text.includes('"call_macro":"hospital drive watch"') && text.includes('"hs_watch_on"},"value":"yes"') && text.includes('"hs_watch_on"},"value":"no"'), macro + ': the sampler starts with the second drive and ends with it');
   }
 }
-console.log('Tester report guards PASS: traffic car sets wait for the car, a query without an answer retries with a larger radius, ERR101 shows the radius, RescueTrack phase macros never name a missing static, the live ambulance load does not abort on the vehicle-centre distance, a finished dispatch preview clears the PRE_* locations and writes the SAR accident (second dispatch no longer rebuilt on the first), the hospital handover drive to the closest point around the stretcher is skipped when the medic is already there. HPG/MSFS PENDING.');
+// 8. Tester report (Daikan, 2026-10-14, build 169.51): residential missions stop at 43.5% with "getGeometry of undefined". The dispatch preview of a
+// residential incident draws rescue_location_icon only (location_name is rescue_location), so a set_map update of accident_location_icon acts on a
+// point that does not exist. The scene removes both ids and adds accident_location_icon; it never updates it.
+{
+  const updatesOf = (tree) => { const found = []; walk(tree, (node) => { if (node.set_map && node.set_map.update && node.set_map.update.point && node.set_map.update.point.id === 'accident_location_icon') found.push(node); }); return found; };
+  const addsOf = (tree) => { let n = 0; walk(tree, (node) => { if (node.set_map && node.set_map.add && node.set_map.add.point && node.set_map.add.point.id === 'accident_location_icon') n += 1; }); return n; };
+  const synthetic = [{ set_map: { update: { point: { location: 'accident_location', id: 'accident_location_icon' } } } }];
+  assert.equal(updatesOf(synthetic).length, 1, 'the check finds a set_map update of accident_location_icon (focused failure mode)');
+  const residential = read('06-scene-generation.json').residential;
+  assert.equal(updatesOf(residential).length, 0, 'residential never updates accident_location_icon: the point does not exist there');
+  assert.equal(addsOf(residential), 2, 'residential draws accident_location_icon again for the injured (one victim or two) and for the carried victims (three and fire)');
+  const text = JSON.stringify(residential);
+  assert.ok(text.includes('"remove":{"point":{"id":"rescue_location_icon"}}') && text.includes('"remove":{"point":{"id":"accident_location_icon"}}'), 'both icons are removed before the new one is added');
+}
+
+console.log('Tester report guards PASS: traffic car sets wait for the car, a query without an answer retries with a larger radius, ERR101 shows the radius, RescueTrack phase macros never name a missing static, the live ambulance load does not abort on the vehicle-centre distance, a finished dispatch preview clears the PRE_* locations and writes the SAR accident (second dispatch no longer rebuilt on the first), the hospital handover drive to the closest point around the stretcher is skipped when the medic is already there, the residential injured icon is removed and added again, never updated. HPG/MSFS PENDING.');
