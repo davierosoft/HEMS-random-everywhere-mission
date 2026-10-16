@@ -451,8 +451,8 @@
             {"set":{"object":"pax22","var":"VAR 1"},"value":1},
             {"point_object":"pax22","to":"$USER"},
             {"sleep":2},
-            {"open_door":"cargo_right"},
-            {"open_door":"cargo_left"},
+            {"call_macro":"ensure door","params":{"door":"cargo_right","want":"open"}},
+            {"call_macro":"ensure door","params":{"door":"cargo_left","want":"open"}},
             {"set":{"object":"pax22","var":"VAR 1"},"value":5},
             {"sleep":1},
             {"move_object":"bag11","to":{"bearing2":0,"dist":0.6,"heading":0,"object":"pax22"}},
@@ -465,7 +465,7 @@
             {"set":{"var":["L:STEP","number"]},"value":100},
             {"drive_object":{"name":"pax22","to":["reardoorside","rpaxdoor"],"VAR1":2,"speed":5}},
             {"set":{"object":"pax22","var":"VAR 1"},"value":0},
-            {"open_door":"pax_right"},
+            {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
             {"sleep":0.5},
             {"destroy_object":"pax22"},
             {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},
@@ -619,8 +619,8 @@
         {"set":{"object":"pax33","var":"VAR 1"},"value":1},
         {"point_object":"pax33","to":"$USER"},
         {"sleep":0.5},
-        {"open_door":"cargo_right"},
-        {"open_door":"cargo_left"},
+        {"call_macro":"ensure door","params":{"door":"cargo_right","want":"open"}},
+        {"call_macro":"ensure door","params":{"door":"cargo_left","want":"open"}},
         {"sleep":1},
         {"set":{"object":"pax33","var":"VAR 1"},"value":5},
         {"sleep":0.5},
@@ -640,7 +640,7 @@
         {"sleep":2},
         {"drive_object":{"name":"pax33","to":["reardoorside","rpaxdoor"],"VAR1":2,"speed":4}},
         {"set":{"object":"pax33","var":"VAR 1"},"value":0},
-        {"open_door":"pax_right"},
+        {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
         {"sleep":0.5},
         {"destroy_object":"pax33"},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"},
@@ -722,8 +722,8 @@
                 {"set":{"object":"pax2","var":"VAR 1"},"value":1},
                 {"drive_object":{"name":"pax2","to":[{"bearing":100,"dist":5},"reardoor"],"VAR1":3,"speed":5}},
                 {"set":{"object":"pax2","var":"VAR 1"},"value":1},
-                {"open_door":"cargo_right"},
-                {"open_door":"cargo_left"},
+                {"call_macro":"ensure door","params":{"door":"cargo_right","want":"open"}},
+                {"call_macro":"ensure door","params":{"door":"cargo_left","want":"open"}},
                 {"sleep":1},
                 {"set":{"object":"pax2","var":"VAR 1"},"value":5},
                 {"sleep":1},
@@ -742,7 +742,7 @@
                 {"close_door":"cargo_left"},
                 {"drive_object":{"name":"pax2","to":["reardoorside","rpaxdoor"],"VAR1":2,"speed":5}},
                 {"set":{"object":"pax2","var":"VAR 1"},"value":0},
-                {"open_door":"pax_right"},
+                {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
                 {"sleep":0.5},
                 {"destroy_object":"pax2"},
                 {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},
@@ -782,7 +782,7 @@
     {"set":{"object":"pax3","var":"VAR 1"},"value":0},
     {"sleep":0.5},
     {"drive_object":{"name":"pax3","to":["rpaxdoor"],"VAR1":2,"speed":5}},
-    {"open_door":"pax_right"},
+    {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
     {"sleep":0.5},
     {"set":{"object":"pax3","var":"VAR 1"},"value":0},
     {"trigger":["H:{local:HXX}_SDK_PAX_3_ON"]},
@@ -896,7 +896,7 @@
         {"set":{"object":"pax2","var":"VAR 1"},"value":0},
         {"drive_object":{"name":"pax2","to":["rpaxdoor"],"VAR1":2,"speed":4}},
         {"set":{"object":"pax2","var":"VAR 1"},"value":0},
-        {"open_door":"pax_right"},
+        {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
         {"sleep":0.5},
         {"destroy_object":"pax2"},
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"},
@@ -929,7 +929,7 @@
             {"drive_object":{"name":"pax3","to":["rpaxdoor"],"VAR1":3,"speed":4}},
             {"set":{"object":"pax3","var":"VAR 1"},"value":1}
         ]},
-        {"open_door":"pax_right"},
+        {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
         {"sleep":0.5},
         {"destroy_object":"pax3"},
         {"trigger":"H:{local:HXX}_SDK_PAX_3_ON"},
@@ -1031,8 +1031,87 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:13>"},{"speak":"<mission:RE>"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:14>"},{"speak":"<mission:RE>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
+  ],
+  "voice dispatcher publish": [
+    {"#comment":"Tells the Mission Companion who the dispatcher is (user request of 2026-10-16): the tag <dsp:INDEX:CITY>, INDEX the position of the group selected on the CARLS in the static GRPID (global GRPIDX, -1 for the manual frequency), CITY the city of the base found by voice dispatcher name start (empty until found). The program keeps the last one until another arrives and says the full name of the group in its own words ({@DSP} in the pack, for example Leitstelle Zuerich); the mission keeps only the short names of GRPID. Called at the connection, when the group is chosen on the CARLS and when the city is known. Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"global":"GRPIDX"}, "eq": null,
+          "then": [
+            {"set":{"param":"vdp_i"},"value":-1},
+            {"if": {"global":"GRPNUM"}, "ne": "MAN",
+              "then": [
+                {"set":{"param":"vdp_k"},"value":0},
+                {"for_each": {"static":"GRPN"},
+                  "do": [
+                    {"if": {"param":"$item"}, "eq": {"global":"GRPNUM"},
+                      "then": [
+                        {"set":{"param":"vdp_i"},"value":{"param":"vdp_k"}}
+                    ]},
+                    {"set":{"param":"vdp_k"},"value":{"add":[{"param":"vdp_k"},1]}}
+                ]}
+            ]},
+            {"set":{"global":"GRPIDX"},"value":{"param":"vdp_i"}}
+        ]},
+        {"if": {"local":"base_city_name"}, "eq": null,
+          "then": [
+            {"set":{"local":"base_city_name"},"value":""}
+        ]},
+        {"speak":{"text":"<dsp:{0}:{1}>","params":[{"global":"GRPIDX"},{"local":"base_city_name"}]}}
+    ]}
+  ],
+  "voice dispatcher name start": [
+    {"#comment":"At the connection with the Mission Companion: publishes the dispatcher at once (city empty) and looks for the city of the base, the closest place (city, town or village) to mission_start_location within 20 km with the same kind of query as the closest hospital; the name of the result is base_city_Name. The wait for the base and for the query is at most 60 s and 45 s. The city is cleared at every call, so a city of an earlier mission never stays. When the query fails the program says the name without the city (Leitstelle, regional control center). Not run before a test in the simulator: the place query is not proven there yet (docs/testing/RUNTIME_VALIDATION.md)."},
+    {"set":{"local":"base_city_name"},"value":""},
+    {"call_macro":"voice dispatcher publish"},
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"vdn_to"},"value":"no"},
+        {"create_thread": {
+          "commands": [
+            {"sleep":60},
+            {"set":{"local":"vdn_to"},"value":"yes"}
+        ]}},
+        {"or": [
+          {"wait_for":{"has_location":"mission_start_location"},"eq":1},
+          {"wait_for":{"local":"vdn_to"},"eq":"yes"}
+        ]},
+        {"if": {"has_location":"mission_start_location"}, "eq": 1,
+          "then": [
+            {"create_location": "base_city",
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_closest_result",
+                    "query": "[out:json];node({{bbox}})[place~\"^(city|town|village)$\"];out;",
+                    "location": "mission_start_location",
+                    "radius": 20000,
+                    "commands": []
+                  }
+                }
+            ]},
+            {"set":{"local":"vdn_to2"},"value":"no"},
+            {"create_thread": {
+              "commands": [
+                {"sleep":45},
+                {"set":{"local":"vdn_to2"},"value":"yes"}
+            ]}},
+            {"or": [
+              {"wait_for":{"has_location":"base_city"},"eq":1},
+              {"wait_for":{"local":"vdn_to2"},"eq":"yes"}
+            ]},
+            {"if": {"has_location":"base_city"}, "eq": 1,
+              "then": [
+                {"set":{"local":"base_city_name"},"value":"base_city_Name"},
+                {"call_macro":"voice dispatcher publish"}
+            ]}
+        ]}
+    ]}}
   ],
   "voice new shift": [
     {"#comment":"New shift: the program draws new crew names when its option is Random names (the tag is ignored otherwise)."},
@@ -4151,7 +4230,7 @@
     {"call_macro":"zoom out"},
     {"sleep":2},
     {"set":{"var":["L:PLT{local:VCP}2","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}2","number"]},1]}},
-    {"open_door":"pax_right"},
+    {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
     {"sleep":2},
     {"create_thread": {
       "commands": [

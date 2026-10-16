@@ -1653,6 +1653,7 @@
             {"set":{"local":"HEMS_DECISION_STATE"},"value":"hems_selected"},
             {"call_macro":"multipatient registry crew set assessment","params":{"actor":{"local":"patient_crew_visit_actor"}}},
             {"call_macro":"multipatient registry scene defibrillator place","params":{"patient":{"param":"patient"}}},
+            {"call_macro":"voice hoist visit","params":{"stage":"ARR","patient":{"param":"patient"}}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_crew_physical_HEMS_assessment"}},
             {"call_macro":"crew physical HEMS assessment","params":{"patient":{"param":"patient"},"actor":{"local":"patient_crew_visit_actor"}},"result":"assessment"}
           ],"else": [
@@ -1663,7 +1664,11 @@
         {"if": {"param":"assessment"}, "eq": 1,
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_clinical_completion"}},
-            {"call_macro":"multipatient registry crew clinical completion","params":{"patient":{"param":"patient"},"resource":{"param":"resource"},"generation":{"param":"generation"}},"result":"assessment"}
+            {"call_macro":"multipatient registry crew clinical completion","params":{"patient":{"param":"patient"},"resource":{"param":"resource"},"generation":{"param":"generation"}},"result":"assessment"},
+            {"if": {"param":"resource"}, "eq": "hems",
+              "then": [
+                {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"param":"patient"}}}
+            ]}
         ]},
         {"if": {"param":"resource"}, "eq": "hems",
           "then": [
@@ -3068,6 +3073,7 @@
     {"return":1}
   ],
   "multipatient registry live ground suitability": [
+    {"#comment":"The transport settings count in the live mode too (tester report 2026-10-16, applied to the three patients: the ambulance loaded and drove off a patient of Life Score 55 whose own status was HEMS handover required): ALWAYS BY HELICOPTER (AMBULOCK 1) and a Life Score up to LIFESCORE_THR_LO keep the patient for HEMS; up to LIFESCORE_THR_HI the ambulance waits for the visit of the HEMS crew (P1_MEDICAL_ACTIONS_COMPLETED); above it the ambulance takes the patient alone. The manual choice of the user stays above all."},
     {"if": {"param":"patient"}, "eq": 1,
       "then": [
         {"if": {
@@ -3075,6 +3081,7 @@
             {"require":{"local":"P1_MEDICAL_ASSESSMENT_COMPLETE"},"eq":"yes"},
             {"require":{"local":"LIFESCORE"},"gt":0},
             {"require":{"or":[{"require":{"local":"P1_AMBULANCE_COMPLETED_ACTIONS"},"gte":2},{"require":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"eq":1}]},"eq":1},
+            {"require":{"or":[{"require":{"local":"manual_p1_transport_choice"},"eq":"ambulance"},{"require":{"and":[{"require":{"global":"AMBULOCK"},"ne":1},{"require":{"local":"LIFESCORE"},"gt":{"global":"LIFESCORE_THR_LO"}},{"require":{"or":[{"require":{"local":"LIFESCORE"},"gt":{"global":"LIFESCORE_THR_HI"}},{"require":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"eq":1}]},"eq":1}]},"eq":1}]},"eq":1},
             {"require":{"local":"SPO2"},"gte":90},
             {"require":{"local":"BPM"},"gte":50},
             {"require":{"local":"BPM"},"lte":120},
@@ -3094,6 +3101,7 @@
             {"require":{"local":"P2_MEDICAL_ASSESSMENT_COMPLETE"},"eq":"yes"},
             {"require":{"local":"LIFESCORE2"},"gt":0},
             {"require":{"or":[{"require":{"local":"P2_AMBULANCE_COMPLETED_ACTIONS"},"gte":2},{"require":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"eq":1}]},"eq":1},
+            {"require":{"or":[{"require":{"local":"manual_p2_transport_choice"},"eq":"ambulance"},{"require":{"and":[{"require":{"global":"AMBULOCK"},"ne":1},{"require":{"local":"LIFESCORE2"},"gt":{"global":"LIFESCORE_THR_LO"}},{"require":{"or":[{"require":{"local":"LIFESCORE2"},"gt":{"global":"LIFESCORE_THR_HI"}},{"require":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"eq":1}]},"eq":1}]},"eq":1}]},"eq":1},
             {"require":{"local":"P2_SPO2"},"gte":90},
             {"require":{"local":"P2_BPM"},"gte":50},
             {"require":{"local":"P2_BPM"},"lte":120},
@@ -3113,6 +3121,7 @@
             {"require":{"local":"P3_MEDICAL_ASSESSMENT_COMPLETE"},"eq":"yes"},
             {"require":{"local":"LIFESCORE3"},"gt":0},
             {"require":{"or":[{"require":{"local":"P3_AMBULANCE_COMPLETED_ACTIONS"},"gte":2},{"require":{"local":"P3_MEDICAL_ACTIONS_COMPLETED"},"eq":1}]},"eq":1},
+            {"require":{"or":[{"require":{"local":"manual_p3_transport_choice"},"eq":"ambulance"},{"require":{"and":[{"require":{"global":"AMBULOCK"},"ne":1},{"require":{"local":"LIFESCORE3"},"gt":{"global":"LIFESCORE_THR_LO"}},{"require":{"or":[{"require":{"local":"LIFESCORE3"},"gt":{"global":"LIFESCORE_THR_HI"}},{"require":{"local":"P3_MEDICAL_ACTIONS_COMPLETED"},"eq":1}]},"eq":1}]},"eq":1}]},"eq":1},
             {"require":{"local":"P3_SPO2"},"gte":90},
             {"require":{"local":"P3_BPM"},"gte":50},
             {"require":{"local":"P3_BPM"},"lte":120},
@@ -3701,6 +3710,7 @@
     {"call_macro":"Query closest hospital unrelated for stretcher"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"multipatient registry live ground load","state":"wait_has_location.unhospital_eq_1"}},
     {"wait_for":{"has_location":"unhospital"},"eq":1},
+    {"call_macro":"ambulance departs notice"},
     {"if": {"param":"vehicle"}, "eq": "ambulance1",
       "then": [
         {"create_location": "ambulance1_assigned_hospital",

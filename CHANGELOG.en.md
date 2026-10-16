@@ -1,3 +1,14 @@
+## Release 0.997 169.55
+
+- Cumulative scope of the baseline: entries 169.23 to 169.55 (ambulance, heli rescuer, doors, dispatcher name)
+- Ambulance (tester report 2026-10-16, Daikan, build 169.54): `multipatient registry live ground suitability` follows `LIFESCORE_THR_LO/HI` and `AMBULOCK` (ambulance only above THR_HI, the manual choice "ambulance", or after the HEMS visit); `ambulance departs notice` announces the departure (tablet, RescueTrack, dispatcher AMB.DEP.DSP); `dispatch cancellation evaluation` and `ground ops` cancel the dispatch with reason "ambulance" when every patient is assigned to an ambulance (AMB.CAN.DSP), before and after the landing.
+- Heli rescuer pick-up: radio call to the heli rescue base (`heli rescuer pickup request`, `arrival`, `recheck` on SECOND_HR; HRQ.*), with the actor 12 of the Mission Companion.
+- Doors: `ensure door` reads the door LVAR and commands only a closed door; it replaces 127 `open_door` of pax_right, cargo_left and cargo_right, so the heli rescuer is lowered and the crew re-enters through an open door.
+- Heli rescuers left at the destination: `cabin has crew aboard` gates the cabin ready counter (PAX1.3 / `L:{VCP}18`); `heli rescuer drop farewell` (HRD.*) tells the base where they were left; `helirescuer walk to hospital` makes them follow the route points of the paperwork to the hospital door.
+- Voices during the hoist operations: `voice hoist visit` (HST.*, doctor) and HRS.START/MID/DONE (heli rescuer securing the area).
+- Dispatcher name: `voice dispatcher publish` and `voice dispatcher name start` send `<dsp:INDEX:CITY>` (CARLS group `GRPIDX`, city of the base by an OSM place query); `voice app connect` declares pack EN 14 (<pack:EN:14>). Mission Companion 0.25 only.
+- Tests and docs: tools/test-heli-rescuer-and-ambulance.js, RUNTIME_VALIDATION section. Runtime in the simulator pending.
+
 ## Release 0.997 169.54
 
 - Cumulative scope of the baseline: entries 169.23 to 169.54 (crew tips, pack EN 13 declared)

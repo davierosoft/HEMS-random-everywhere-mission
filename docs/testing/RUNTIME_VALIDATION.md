@@ -460,3 +460,30 @@ User request of 2026-10-14. With the Mission Companion (pack EN 13) the crew tel
 4. Save a custom profile with TIPS OFF, load another profile and load the first again: TIPS OFF is restored; Reset to default turns the tips on again.
 5. With a wav voice pack (no Companion) nothing is said and nothing breaks.
 6. Read the texts: the menu names (Quick links, Save or reload a mission, Crew health simulation, Weight of the installed kits, Capture snapshot, Crew chatter, Crew tips) must be the ones of the tablet.
+## Ambulance, cancellation, heli rescuers, doors, dispatcher name (PENDING)
+
+Reports of 2026-10-16 (Daikan on 169.54 and the user, mission 169.55, app 0.25, pack EN 14). Static gates only: `node tools/test-heli-rescuer-and-ambulance.js`; none of this has run in the simulator.
+
+**Ambulance.** Cause of the Daikan case: the live ground suitability ignored `LIFESCORE_THR_LO/HI` and `AMBULOCK`, the ambulance loaded and left a patient that needed the helicopter, nothing told it and `dispatch cancellation evaluation` knew only the case "nobody to treat". Now the ambulance takes a patient only when it is declared ambulance-only (Life Score above `LIFESCORE_THR_HI`, or the manual choice "ambulance"), or after the HEMS visit; with `AMBULOCK` 1 or a Life Score up to `LIFESCORE_THR_LO` the ambulance waits for the helicopter. The departure is announced (tablet, RescueTrack line, dispatcher `AMB.DEP.DSP`). When every patient is assigned to an ambulance the dispatch is cancelled (`dispatch_cancellation_reason` "ambulance", `AMB.CAN.DSP`) both before the helicopter lands (`dispatch cancellation evaluation`) and at the scene (`ground ops`), so no block remains.
+
+1. Patient with Life Score above 65 (ambulance only), helicopter far: the ambulance arrives, loads, the departure is announced; the dispatch is cancelled with the ambulance reason; no HEMS landing on an empty scene.
+2. The same with the helicopter already landing or on scene: the cancellation arrives, the crew is not left waiting.
+3. Life Score between 40 and 65 and a visit requested: the ambulance does not leave before the doctor visits; then it takes the patient (with or without the doctor) or the helicopter loads him.
+4. Life Score up to 40, or AMBULOCK 1: the ambulance never takes the patient; the helicopter does.
+5. Three patients, mixed: the ones for the ambulance leave, the dispatch is not cancelled while one is still for the helicopter.
+
+**Heli rescuer pick-up.** With the Companion: at the start of `pick heli rescuer` the pilot calls the heli rescue base (1 or 2 rescuers, from the crew and SECOND_HR), the base answers, the pilot briefs the kind of mission and the injured, the base acknowledges; at the meeting point the pilot announces the arrival and the base answers; a change of SECOND_HR in between is corrected on the radio.
+
+6. Four crew, then three crew with SECOND_HR yes and no: the numbers in the calls match; change SECOND_HR after the request: the correction is heard once. Log lines `[SAY] HRQ.*`.
+
+**Doors.** Every opening of pax_right / cargo_left / cargo_right goes through `ensure door`, which reads the door LVAR first and commands only when the door is closed (it does not toggle an open door).
+
+7. Heli rescuer lowered by hoist and by ground operation with the door closed at the start: the door opens (about 2 s) before the cable, never a rescuer through a closed door. Crew re-entering at the hospital through a closed door: the door is open before the last drive. Check that an already open door stays open.
+
+**Heli rescuers left at the destination.** `cabin ready` (PAX1.3 / `L:{VCP}18`) is counted only if somebody is aboard (`cabin has crew aboard`); the farewell is spoken (`HRD.*`, the base is told where: hospital, base or meeting point); the rescuers then walk to the hospital along the route points of the paperwork.
+
+8. Leave the heli rescuers at the hospital (`hospital_user` mode, pad 7 m from the helicopter): farewell first, then they walk to the hospital door; no one stands in front of the helicopter. Empty cabin: no "cabin ready".
+
+**Voices.** `HST.*` (doctor, hoist visits), `HRS.*` (heli rescuer lowered and securing the area), actor 12 Heli rescuer in the Actors tab.
+
+**Dispatcher name and call sign.** The mission sends `<dsp:INDEX:CITY>` at the connection and at every change of the CARLS group; the city is the nearest city, town or village to the mission start (Overpass query, 20 km). Runtime points: the log of the Companion shows `Dispatcher: group N, city X` (if the city stays `base_city_Name` the query found nothing: the app says the name without the city); `--atc-test report.txt` with the aircraft loaded tells whether ATC ID / ATC AIRLINE / ATC FLIGHT NUMBER of the H145 can be read; the call sign setting wins over the livery.

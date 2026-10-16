@@ -6,7 +6,7 @@ The mission already had a mode for an external audio program: `L:AUDIOINHIBIT` n
 
 | Macro | Role |
 | --- | --- |
-| `voice app connect` | with `VCP` = `APP`: `connect_voice_server`, sets `TTS`, declares the pack (`<pack:EN:13>`: pack and the version the mission needs; 11 holds the messages CRW.VEH.*, HOSP.*, 12 the DSA.* of the dispatch decision, 13 the TIP.* tips of the crew), sends `<defaultactor:11>` and asks for new crew names; called where `VCP` becomes `APP` (mission start, thread `EXTERNAL XML AUDIO ENABLE`) |
+| `voice app connect` | with `VCP` = `APP`: `connect_voice_server`, sets `TTS`, declares the pack (`<pack:EN:14>`: pack and the version the mission needs; 11 holds the messages CRW.VEH.*, HOSP.*, 12 the DSA.* of the dispatch decision, 13 the TIP.* tips of the crew, 14 AMB.*, HST.*, HRS.*, HRD.*, HRQ.* and the dispatcher names DSP.NAME.*), starts `voice dispatcher name start`, sends `<defaultactor:11>` and asks for new crew names; called where `VCP` becomes `APP` (mission start, thread `EXTERNAL XML AUDIO ENABLE`) |
 | `voice new shift` | `<names:random>` at the start of a shift (called by `initialize crew lifescores for shift`) |
 | `voice read dispatch` | the dispatcher (actor 8, radio) reads `accident_description` and `accident_objective` with `<plain>`, then calls `voice briefing chat`; called at the end of `Mission description` (`04-dispatch-tablet-ui.json`) |
 | `voice boarding chat` | five lines after `COMM CHECK` (PLT 47, CPL 65, PAX3 38, no prefix 90, PLT 48) |

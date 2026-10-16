@@ -1242,7 +1242,29 @@
     {"set":{"local":"ground_units_at_scene"},"value":0},
     {"set":{"local":"dispatch_cancellation_lifescore_ok"},"value":1},
     {"set":{"local":"dispatch_cancellation_ready"},"value":0},
+    {"set":{"local":"dispatch_cancellation_reason"},"value":"stable"},
+    {"set":{"local":"ground_covers_all"},"value":0},
     {"set":{"local":"helicopter_on_scene"},"value":0},
+    {"if": {"local":"patient_live_mode"}, "eq": 1,
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"local":"ambu1arrived"},"eq":"yes"},
+            {"require":{"local":"ambu2arrived"},"eq":"yes"}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"multipatient registry live pending"},
+            {"if": {
+              "and": [
+                {"require":{"local":"patient_unassigned_transport"},"eq":0},
+                {"require":{"local":"HEMS_GROUND_READY_COUNT"},"gte":1},
+                {"require":{"local":"patient_pending_transport"},"eq":{"local":"HEMS_GROUND_READY_COUNT"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"ground_covers_all"},"value":1}
+            ]}
+        ]}
+    ]},
     {"if": {
       "and": [
         {"require":{"or":[{"require":{"has_object":"ambulance1"},"eq":1},{"require":{"has_object":"ambulance2"},"eq":1}]},"eq":1},
@@ -1306,6 +1328,11 @@
                           "then": [
                             {"set":{"local":"dispatch_cancellation_ready"},"value":1}
                         ]}
+                    ]},
+                    {"if": {"local":"ground_covers_all"}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"dispatch_cancellation_reason"},"value":"ambulance"},
+                        {"set":{"local":"dispatch_cancellation_ready"},"value":1}
                     ]}
                 ]}
             ]}
@@ -1360,11 +1387,29 @@
         {"set":{"local":"dispatch_cancellation_monitor"},"value":"done"},
         {"set":{"local":"dispatch_cancellation_pending"},"value":"done"},
         {"set":{"global":"CANCELLED_DISPATCHES"},"value":{"add":[{"global":"CANCELLED_DISPATCHES"},1]}},
+        {"#comment":"Two reasons (local dispatch_cancellation_reason, set by dispatch cancellation evaluation): stable = ground units on scene and every casualty above CANCELTHRESHOLD (the old rule); ambulance = every active patient is assigned to an ambulance (the live registry, patients above LIFESCORE_THR_HI or already visited), whatever the Life Score: nobody is left for HEMS. Also called by ground ops when the helicopter reaches the scene and finds nothing left for HEMS (tester report 2026-10-16: the crew walked to an empty accident location and stayed there)."},
         {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - ground units have taken over. Return to base."},
+        {"set":{"local":"cancel_text"},"value":{"text":"Ground units report all {0} casualties stable. HEMS intervention is no longer required; dispatch cancelled.","params":[{"local":"HELOVICTIMS"}]}},
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ground units: all {0} casualties stable. HEMS not required, dispatch cancelled. Return to base.","params":[{"local":"HELOVICTIMS"}]}},
+        {"if": {"local":"dispatch_cancellation_reason"}, "eq": "ambulance",
+          "then": [
+            {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - the ambulance is transporting the patient. Return to base."},
+            {"set":{"local":"cancel_text"},"value":"The ambulance has the patient and is taking them to the hospital. HEMS intervention is no longer required; dispatch cancelled."},
+            {"set":{"local":"Dispatcher_text"},"value":"Ambulance has loaded the patient and is on the way to the hospital. HEMS not required, dispatch cancelled. Return to base."},
+            {"set":{"local":"whobringpatient"},"value":"ambulance"}
+        ]},
         {"set_objective_title":"DISPATCH CANCELLED","color":"red"},
         {"set":{"var":["L:PLT{local:VCP}46","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}46","number"]},1]}},
-        {"set_message":{"text":"Ground units report all {0} casualties stable. HEMS intervention is no longer required; dispatch cancelled.","params":[{"local":"HELOVICTIMS"}]}},
-        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ground units: all {0} casualties stable. HEMS not required, dispatch cancelled. Return to base.","params":[{"local":"HELOVICTIMS"}]}},
+        {"if": {
+          "and": [
+            {"require":{"local":"dispatch_cancellation_reason"},"eq":"ambulance"},
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"AMB.CAN.DSP"}}
+        ]},
+        {"set_message":{"text":"{local:cancel_text}"}},
         {"modify_array": {"local":"Dispatcher_Messages"},
           "prepend": {
             "create_struct": {
@@ -1396,6 +1441,50 @@
         {"set":{"local":"MISSION_PHASE"},"value":8},
         {"set_objective_title":"DISPATCH CANCELLED","color":"red"},
         {"call_macro":"return to base menu"}
+    ]}
+  ],
+  "voice hoist visit": [
+    {"#comment":"The doctor tells the visit of a patient during the hoist and skid operations (L:MISSION_HOIST not 0), where the progress monitor of the ground operations that feeds voice ground update does not run (user request of 2026-10-16: nothing was heard from the crew during the visits of the hoist operations). Params stage (ARR the doctor reached the patient, DONE the assessment and the treatment are complete) and patient (1 to 3); the key is HST.<stage>.<S|M|C> by the Life Score of that patient (60 or more stable, 30 to 60 serious, under 30 critical). Mission Companion only; the ground operations keep GRD.*."},
+    {"if": {
+      "and": [
+        {"require":{"var":["L:MISSION_HOIST","number"]},"ne":0},
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"vhv_ls"},"value":{"local":"LIFESCORE"}},
+        {"if": {"param":"patient"}, "eq": 2,
+          "then": [
+            {"set":{"param":"vhv_ls"},"value":{"local":"LIFESCORE2"}}
+        ]},
+        {"if": {"param":"patient"}, "eq": 3,
+          "then": [
+            {"set":{"param":"vhv_ls"},"value":{"local":"LIFESCORE3"}}
+        ]},
+        {"set":{"param":"vhv_c"},"value":"S"},
+        {"if": {"param":"vhv_ls"}, "lt": 60,
+          "then": [
+            {"set":{"param":"vhv_c"},"value":"M"}
+        ]},
+        {"if": {"param":"vhv_ls"}, "lt": 30,
+          "then": [
+            {"set":{"param":"vhv_c"},"value":"C"}
+        ]},
+        {"set":{"param":"vhv_key"},"value":{"text":"HST.{0}.{1}","params":[{"param":"stage"},{"param":"vhv_c"}]}},
+        {"call_macro":"voice say","params":{"key":{"param":"vhv_key"}}}
+    ]}
+  ],
+  "ambulance departs notice": [
+    {"#comment":"The ambulance has loaded a patient and leaves for its hospital (called by multipatient registry live ground load when the hospital of the ambulance exists). Before 169.55 nothing was said or shown (tester report 2026-10-16: the ambulance drove off with the patient and neither the dispatcher nor the doctor said a word). The tablet message names the hospital of the ambulance, the RescueTrack list gets a line from the ambulance, and with the Mission Companion the dispatcher says it on the radio (pack EN AMB.DEP.DSP). Wav packs: the tablet only."},
+    {"set_message":{"text":"Patient loaded, transported by ambulance to:<br /> {0:LOCATION}","params":["unhospital"]}},
+    {"call_macro":"post dispatcher message","params":{"text":"Patient loaded, on the way to the hospital.","from":"ambulance"}},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice say","params":{"key":"AMB.DEP.DSP"}}
     ]}
   ],
   "return to base menu": [
@@ -2619,7 +2708,8 @@
         {"if": {"global":"GRPNUM"}, "eq": null,
           "then": [
             {"set":{"global":"GRPNUM"},"value":"MAN"},
-            {"set":{"global":"GRPNAME"},"value":"275.00 FM"}
+            {"set":{"global":"GRPNAME"},"value":"275.00 FM"},
+            {"set":{"global":"GRPIDX"},"value":-1}
         ]},
         {"if": {"global":"location_ref"}, "eq": null,
           "then": [
