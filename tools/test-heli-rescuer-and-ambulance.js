@@ -81,6 +81,25 @@ assert.ok(text('voice app connect').includes('voice dispatcher name start'), 'th
 const publishers = Object.keys(macros).filter((name) => name !== 'voice dispatcher publish' && JSON.stringify(macros[name]).includes('"call_macro":"voice dispatcher publish"'));
 assert.ok(publishers.some((name) => moduleOf[name] === '15-debug-and-df-ui.json'), 'the CARLS group selection publishes the dispatcher');
 
+// 6b. build 169.56 (tester and user reports of 2026-10-16, second part)
+// - the old closing lines of the vehicles (76, PAX3 3) do not repeat voice crew vehicles when the Companion speaks
+const lifecycle = JSON.stringify(JSON.parse(fs.readFileSync(path.join(root, 'mission-src', 'macros', '11-mission-lifecycle.json'), 'utf8')));
+const confIdx = lifecycle.indexOf('"var":["L:CONFONSCENE","number"]},"eq":1},{"require":{"and":[{"require":{"local":"VCP"},"eq":"APP"},{"require":{"local":"TTS"},"eq":1}]},"ne":1}');
+assert.ok(confIdx > 0, 'the closing vehicle lines (L:{VCP}76, PAX3 3) are skipped with the Companion');
+// - the city of the base: not with SKIP_QUERY 1, city or town first, village as the fallback, all in a thread that never blocks the mission
+const city = text('voice dispatcher name start');
+assert.ok(city.includes('"L:SKIP_QUERY"') && city.includes('(city|town)') && city.includes('base_village'), 'the city query respects SKIP_QUERY and falls back to a village');
+assert.ok(city.indexOf('"create_thread"') >= 0 && city.indexOf('"create_thread"') < city.indexOf('"create_location":"base_city"'), 'the query runs in its own thread');
+// - the voices drawn: shift (dispatcher), dispatch (ground unit, heli rescuer), connection
+assert.ok(text('voice new shift').includes('<voices:shift>') && text('voice read dispatch').includes('<voices:dispatch>') && text('voice app connect').includes('<voices:all>'), 'the mission asks for the voice draws');
+// - the call sign on the tablet: global CALLSIGN, helper, setting page, profiles, reset, cancellation texts
+assert.ok(text('callsign word').includes('"global":"CALLSIGN"') && text('callsign word').includes('"HEMS"'), 'callsign word returns the custom name or HEMS');
+assert.ok(text('cancel HEMS dispatch').includes('callsign word') && text('cancel HEMS dispatch').includes('{local:cs_word}'), 'the cancellation texts use the call sign');
+assert.ok(text('save custom aircraft profile').includes('"key":"CALLSIGN"') && text('load custom aircraft profile').includes('"key":"CALLSIGN"') && text('resetdefault').includes('"global":"CALLSIGN"},"value":null'), 'CALLSIGN is saved, loaded and reset with the profiles');
+assert.ok(JSON.stringify(macros.settings).includes('"textbox":"callsign_input"'), 'the settings page has the call sign text box');
+// - the doors: the state four seconds after the command
+assert.ok(text('ensure door').includes('ensure door trace') && text('ensure door trace').includes('result (state read 4 s later'), 'ensure door logs the result');
+
 // 7. the pack EN of the Companion repository (when it is next to this one)
 const packFile = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
 if (fs.existsSync(packFile)) {
@@ -99,8 +118,9 @@ if (fs.existsSync(packFile)) {
   }
   const usedKeys = new Set(collect(macros, (n) => n.call_macro === 'voice say' && n.params && typeof n.params.key === 'string' && /^(AMB|HRS|HRD|HRQ)\./.test(n.params.key)).map((n) => n.params.key));
   for (const key of usedKeys) assert.ok(messages[key], `the key ${key} used by the mission exists in the pack`);
-  assert.ok(Number((xml.match(/<voicepack\b[^>]*\bversion="(\d+)"/) || [])[1]) >= 14, 'the base pack is at least version 14');
-  assert.ok(Number((text('voice app connect').match(/<pack:EN:(\d+)>/) || [])[1]) >= 14, 'the mission declares at least pack EN 14');
+  assert.ok(Number((xml.match(/<voicepack\b[^>]*\bversion="(\d+)"/) || [])[1]) >= 15, 'the base pack is at least version 15');
+  for (const key of ['CPL.23', 'PAX1.37', 'PAX1.38', 'PAX2.2', 'PAX2.3', 'PLT.5', 'PLT.9', 'PLT.21', 'PLT.26']) assert.ok(/ to="tech"/.test(messages[key].attrs), key + ' is said to the technician (to="tech")');
+  assert.ok(Number((text('voice app connect').match(/<pack:EN:(\d+)>/) || [])[1]) >= 15, 'the mission declares at least pack EN 15');
   for (const key of ['HOS.CALL.P', 'HOS.REPLY', 'DSA.NUDGE', 'DSP.RQ', 'DSP.ANS.ACC']) assert.ok(/\{@(HEMS|DSP)\}/.test(messages[key].inner), `${key} uses the call sign or the dispatcher name`);
 } else {
   console.log('heli rescuer and ambulance: the Companion repository is not next to this one, the pack checks are skipped');

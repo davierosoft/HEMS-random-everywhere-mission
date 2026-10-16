@@ -2579,7 +2579,14 @@
     ]},
     {"if": {"param":"ed_act"}, "ne": 0,
       "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"doors","actor":"crew","target":{"param":"door"},"state":{"text":"{0} command (state read {1})","params":[{"param":"want"},{"param":"ed_state"}]}}}
+        {"call_macro":"ground crew runtime trace","params":{"macro":"doors","actor":"crew","target":{"param":"door"},"state":{"text":"{0} command (state read {1})","params":[{"param":"want"},{"param":"ed_state"}]}}},
+        {"set":{"local":"ed_snap_door"},"value":{"param":"door"}},
+        {"set":{"local":"ed_snap_want"},"value":{"param":"want"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":4},
+            {"call_macro":"ensure door trace","params":{"door":{"local":"ed_snap_door"},"want":{"local":"ed_snap_want"}}}
+        ]}}
     ]},
     {"if": {"param":"ed_act"}, "eq": 1,
       "then": [
@@ -2620,6 +2627,23 @@
         ]}
     ]},
     {"return":{"param":"ed_act"}}
+  ],
+  "ensure door trace": [
+    {"#comment":"Diagnosis of ensure door: writes in the ground crew runtime trace (macro doors) the state of the door LVAR four seconds after the command, so that a snapshot shows whether the door really moved (169.55 logged only the state read before the command). Params door (pax_right, cargo_left, cargo_right) and want."},
+    {"set":{"param":"edt_state"},"value":-1},
+    {"if": {"param":"door"}, "eq": "pax_right",
+      "then": [
+        {"set":{"param":"edt_state"},"value":{"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]}}
+    ]},
+    {"if": {"param":"door"}, "eq": "cargo_left",
+      "then": [
+        {"set":{"param":"edt_state"},"value":{"var":["L:{local:HXX}_SDK_DOOR_CARGO_L","number"]}}
+    ]},
+    {"if": {"param":"door"}, "eq": "cargo_right",
+      "then": [
+        {"set":{"param":"edt_state"},"value":{"var":["L:{local:HXX}_SDK_DOOR_CARGO_R","number"]}}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"doors","actor":"crew","target":{"param":"door"},"state":{"text":"{0} result (state read 4 s later {1})","params":[{"param":"want"},{"param":"edt_state"}]}}}
   ],
   "hoist heli rescuer down": [
     {"call_macro":"multipatient registry crew first target"},

@@ -1381,21 +1381,33 @@
         ]}}
     ]}
   ],
+  "callsign word": [
+    {"#comment":"The call sign of the helicopter for the texts of the tablet (user request of 2026-10-16): the name typed in the settings (global CALLSIGN) or HEMS. Sets the local cs_word. The Mission Companion has its own call sign setting (the airline of the aircraft.cfg, or a custom name): the mission cannot read the airline, so the two names are independent."},
+    {"set":{"local":"cs_word"},"value":"HEMS"},
+    {"if": {"global":"CALLSIGN"}, "ne": null,
+      "then": [
+        {"if": {"global":"CALLSIGN"}, "ne": "",
+          "then": [
+            {"set":{"local":"cs_word"},"value":{"global":"CALLSIGN"}}
+        ]}
+    ]}
+  ],
   "cancel HEMS dispatch": [
     {"if": {"local":"dispatch_cancellation_monitor"}, "eq": "running",
       "then": [
+        {"call_macro":"callsign word"},
         {"set":{"local":"dispatch_cancellation_monitor"},"value":"done"},
         {"set":{"local":"dispatch_cancellation_pending"},"value":"done"},
         {"set":{"global":"CANCELLED_DISPATCHES"},"value":{"add":[{"global":"CANCELLED_DISPATCHES"},1]}},
         {"#comment":"Two reasons (local dispatch_cancellation_reason, set by dispatch cancellation evaluation): stable = ground units on scene and every casualty above CANCELTHRESHOLD (the old rule); ambulance = every active patient is assigned to an ambulance (the live registry, patients above LIFESCORE_THR_HI or already visited), whatever the Life Score: nobody is left for HEMS. Also called by ground ops when the helicopter reaches the scene and finds nothing left for HEMS (tester report 2026-10-16: the crew walked to an empty accident location and stayed there)."},
         {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - ground units have taken over. Return to base."},
-        {"set":{"local":"cancel_text"},"value":{"text":"Ground units report all {0} casualties stable. HEMS intervention is no longer required; dispatch cancelled.","params":[{"local":"HELOVICTIMS"}]}},
-        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ground units: all {0} casualties stable. HEMS not required, dispatch cancelled. Return to base.","params":[{"local":"HELOVICTIMS"}]}},
+        {"set":{"local":"cancel_text"},"value":{"text":"Ground units report all {0} casualties stable. {1} intervention is no longer required; dispatch cancelled.","params":[{"local":"HELOVICTIMS"},{"local":"cs_word"}]}},
+        {"set":{"local":"Dispatcher_text"},"value":{"text":"Ground units: all {0} casualties stable. {1} not required, dispatch cancelled. Return to base.","params":[{"local":"HELOVICTIMS"},{"local":"cs_word"}]}},
         {"if": {"local":"dispatch_cancellation_reason"}, "eq": "ambulance",
           "then": [
             {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - the ambulance is transporting the patient. Return to base."},
-            {"set":{"local":"cancel_text"},"value":"The ambulance has the patient and is taking them to the hospital. HEMS intervention is no longer required; dispatch cancelled."},
-            {"set":{"local":"Dispatcher_text"},"value":"Ambulance has loaded the patient and is on the way to the hospital. HEMS not required, dispatch cancelled. Return to base."},
+            {"set":{"local":"cancel_text"},"value":"The ambulance has the patient and is taking them to the hospital. {local:cs_word} intervention is no longer required; dispatch cancelled."},
+            {"set":{"local":"Dispatcher_text"},"value":"Ambulance has loaded the patient and is on the way to the hospital. {local:cs_word} not required, dispatch cancelled. Return to base."},
             {"set":{"local":"whobringpatient"},"value":"ambulance"}
         ]},
         {"set_objective_title":"DISPATCH CANCELLED","color":"red"},
@@ -4041,7 +4053,12 @@
                         {"sleep":1}
                     ]}
                 ]},
-                {"if": {"var":["L:CONFONSCENE","number"]}, "eq": 1,
+                {"#comment":"With the Mission Companion (VCP APP, TTS 1) voice crew vehicles has just said the vehicles in one sentence: the old closing lines of the wav packs (76 on the way to the accident, PAX3 3) would repeat it (tester report 2026-10-16: 'on the way' twice), so they run only without the Companion."},
+                {"if": {
+                  "and": [
+                    {"require":{"var":["L:CONFONSCENE","number"]},"eq":1},
+                    {"require":{"and":[{"require":{"local":"VCP"},"eq":"APP"},{"require":{"local":"TTS"},"eq":1}]},"ne":1}
+                  ]}, "eq": 1,
                   "then": [
                     {"if": {
                       "or": [

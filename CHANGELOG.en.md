@@ -1,3 +1,14 @@
+## Release 0.997 169.56
+
+- Cumulative scope of the baseline: entries 169.23 to 169.56 (vehicle lines, city query, call sign, voice draws, door trace)
+- Vehicles on the way said twice (tester report 2026-10-16, the log of the Companion: CRW.VEH.WAY then PAX1.76): in the macro of the two-nautical-mile approach the closing counters of the wav packs (L:{VCP}76 and PAX3 3 after voice crew vehicles) now run only when the Companion is not speaking (VCP APP with TTS 1).
+- City of the base for the dispatcher name (voice dispatcher name start): the query runs only with L:SKIP_QUERY not 1, looks for a city or a town within 30 km first and a village within 20 km only when there is none (the first run named a hamlet), and every wait is in its own thread with a timeout, so the mission goes on whatever the query does.
+- Voice draws: the mission sends <voices:all> at the connection, <voices:shift> in voice new shift and <voices:dispatch> before the dispatcher reads a dispatch (voice read dispatch); the Mission Companion 0.26 draws the voices of the actors set to Random voice.
+- Declares the voice pack EN 15 (<pack:EN:15>, the crew lines to the technician with to="tech").
+- Call sign on the tablet: global CALLSIGN (text box and SET / CLEAR on the audio options page; saved in the aircraft profiles, cleared by Reset to default), macro callsign word (the name or HEMS) used in the texts of cancel HEMS dispatch. The mission cannot read the atc_airline of the livery, so the Companion keeps its own setting.
+- Doors: ensure door writes a second row of the macro doors four seconds after the command (macro ensure door trace), with the state read, so that a snapshot shows whether the door moved.
+- Test: tools/test-heli-rescuer-and-ambulance.js checks all of this; RUNTIME_VALIDATION section "Second part of the reports of 2026-10-16". Runtime in the simulator pending.
+
 ## Release 0.997 169.55
 
 - Cumulative scope of the baseline: entries 169.23 to 169.55 (ambulance, heli rescuer, doors, dispatcher name)

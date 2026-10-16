@@ -1031,7 +1031,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:14>"},{"speak":"<mission:RE>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:15>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice dispatcher publish": [
@@ -1082,15 +1082,23 @@
           {"wait_for":{"has_location":"mission_start_location"},"eq":1},
           {"wait_for":{"local":"vdn_to"},"eq":"yes"}
         ]},
+        {"set":{"local":"vdn_go"},"value":0},
         {"if": {"has_location":"mission_start_location"}, "eq": 1,
+          "then": [
+            {"if": {"var":["L:SKIP_QUERY","number"]}, "ne": 1,
+              "then": [
+                {"set":{"local":"vdn_go"},"value":1}
+            ]}
+        ]},
+        {"if": {"local":"vdn_go"}, "eq": 1,
           "then": [
             {"create_location": "base_city",
               "zones": [
                 {"zone": {
                     "zone_type": "query_closest_result",
-                    "query": "[out:json];node({{bbox}})[place~\"^(city|town|village)$\"];out;",
+                    "query": "[out:json];node({{bbox}})[place~\"^(city|town)$\"];out;",
                     "location": "mission_start_location",
-                    "radius": 20000,
+                    "radius": 30000,
                     "commands": []
                   }
                 }
@@ -1109,19 +1117,47 @@
               "then": [
                 {"set":{"local":"base_city_name"},"value":"base_city_Name"},
                 {"call_macro":"voice dispatcher publish"}
+              ],"else": [
+                {"create_location": "base_village",
+                  "zones": [
+                    {"zone": {
+                        "zone_type": "query_closest_result",
+                        "query": "[out:json];node({{bbox}})[place=\"village\"];out;",
+                        "location": "mission_start_location",
+                        "radius": 20000,
+                        "commands": []
+                      }
+                    }
+                ]},
+                {"set":{"local":"vdn_to3"},"value":"no"},
+                {"create_thread": {
+                  "commands": [
+                    {"sleep":45},
+                    {"set":{"local":"vdn_to3"},"value":"yes"}
+                ]}},
+                {"or": [
+                  {"wait_for":{"has_location":"base_village"},"eq":1},
+                  {"wait_for":{"local":"vdn_to3"},"eq":"yes"}
+                ]},
+                {"if": {"has_location":"base_village"}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"base_city_name"},"value":"base_village_Name"},
+                    {"call_macro":"voice dispatcher publish"}
+                ]}
             ]}
         ]}
     ]}}
   ],
   "voice new shift": [
-    {"#comment":"New shift: the program draws new crew names when its option is Random names (the tag is ignored otherwise)."},
+    {"#comment":"New shift: the program draws new crew names when its option is Random names, and a new voice for the dispatcher when that actor is set to Random voice (the tags are ignored otherwise)."},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
         {"require":{"local":"TTS"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"speak":"<names:random>"}
+        {"speak":"<names:random>"},
+        {"speak":"<voices:shift>"}
     ]}
   ],
   "voice read dispatch": [
@@ -1134,6 +1170,7 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"vrd_last"},"value":{"local":"accident_description"}},
+        {"speak":"<voices:dispatch>"},
         {"set":{"local":"vrd_text"},"value":{"local":"accident_description"}},
         {"set":{"local":"vrd_veh"},"value":0},
         {"if": {"local":"accident_description"}, "eq": {"local":"sar_desc_final"},

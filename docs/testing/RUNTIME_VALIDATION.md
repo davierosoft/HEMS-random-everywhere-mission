@@ -487,3 +487,16 @@ Reports of 2026-10-16 (Daikan on 169.54 and the user, mission 169.55, app 0.25, 
 **Voices.** `HST.*` (doctor, hoist visits), `HRS.*` (heli rescuer lowered and securing the area), actor 12 Heli rescuer in the Actors tab.
 
 **Dispatcher name and call sign.** The mission sends `<dsp:INDEX:CITY>` at the connection and at every change of the CARLS group; the city is the nearest city, town or village to the mission start (Overpass query, 20 km). Runtime points: the log of the Companion shows `Dispatcher: group N, city X` (if the city stays `base_city_Name` the query found nothing: the app says the name without the city); `--atc-test report.txt` with the aircraft loaded tells whether ATC ID / ATC AIRLINE / ATC FLIGHT NUMBER of the H145 can be read; the call sign setting wins over the livery.
+
+
+## Second part of the reports of 2026-10-16 (PENDING)
+
+Mission 169.56, Mission Companion 0.26, pack EN 15. Static gates only (`node tools/test-heli-rescuer-and-ambulance.js`).
+
+1. Vehicles on the way: at two nautical miles the dispatcher says the vehicles once and the doctor confirms once; there is no third line "On the way to the accident site" (the old closing lines run only without the Companion).
+2. Crew deboarded (the pilot walked away, the user stays in the seat) and a new dispatch: only the tablet sound, no dispatcher and no crew conversation; after the acceptance, when a crew member is aboard again, the voices are back. The log of the Companion says `not said: nobody of the crew is aboard`.
+3. Pilot lines to the technician at the boarding (PLT.5, PLT.9): no radio effect; intercom with the battery on and the technician next to the helicopter, voice otherwise.
+4. City of the dispatcher: with `SKIP_QUERY` 1 no query and the name without city; otherwise the log shows `Dispatcher: group N, city X`, the nearest city or town within 30 km, a village (20 km) only when there is none; if both fail the mission goes on and the name has no city.
+5. Doors: the ground crew runtime trace (macro doors) has a second row four seconds after each command with the state read: the door should read 1 after an opening.
+6. Call sign: the setting CALL SIGN on the audio options page of the tablet (SET, CLEAR, saved in the aircraft profiles, cleared by Reset to default) and the cancellation texts. The Companion has its own setting (airline of the aircraft.cfg or custom name).
+7. Random voices: set the dispatcher, ground unit and heli rescuer to Random voice in the Actors tab, pick the pool, start two dispatches: the ground unit and the heli rescuer change voice at each dispatch, the dispatcher at each shift, and the three voices are never equal.
