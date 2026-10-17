@@ -932,26 +932,45 @@
     {"sleep":0.5}
   ],
   "next_dispatch": [
+    {"#comment":"No dispatch is loaded while a crew emergency is active: the shift is terminated (CREW_EMERGENCY_ACTIVE is reset at every mission start). Tester report of 2026-10-17 (169.58, DATAQUERYSERVICE 1): the NEXT DISPATCH button stayed inactive forever. The original sets nddisabled and the cooldown first thing in the thread, so that the second thread (sleep of the cooldown, then nddisabled null) always starts after them. The archive, the location diagnostics and the map clean-up were added before them: they save tables and give way, the second thread read a stale cooldown (0 the first time), released the button and the first thread set nddisabled afterwards, for good. The lock and the cooldown are now set here, before both threads, and the first thread runs only when this part let it (nd_run). The trace rows next_dispatch of the snapshot say the cooldown and when the button was released."},
+    {"set":{"local":"nd_run"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"nddisabled"},"eq":null},
+        {"require":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"nd_run"},"value":1},
+        {"set":{"local":"nddisabled"},"value":"disabled"},
+        {"#comment":"Seconds the NEXT DISPATCH button stays inactive: NEXT_DISPATCH_COOLDOWN (25 s, as in the original) and NEXT_DISPATCH_COOLDOWN_FAST (10 s, with DATAQUERYSERVICE 3). They are globals set here only when missing, so a tester can change them in the global variables without editing the script."},
+        {"if": {"global":"NEXT_DISPATCH_COOLDOWN"}, "eq": null,
+          "then": [
+            {"set":{"global":"NEXT_DISPATCH_COOLDOWN"},"value":25}
+        ]},
+        {"if": {"global":"NEXT_DISPATCH_COOLDOWN_FAST"}, "eq": null,
+          "then": [
+            {"set":{"global":"NEXT_DISPATCH_COOLDOWN_FAST"},"value":10}
+        ]},
+        {"if": {"local":"cooldowntimer"}, "eq": null,
+          "then": [
+            {"set":{"local":"cooldowntimer"},"value":0}
+        ]},
+        {"if": {"global":"DATAQUERYSERVICE"}, "eq": 3,
+          "then": [
+            {"set":{"local":"cooldowntimer"},"value":{"global":"NEXT_DISPATCH_COOLDOWN_FAST"}}
+          ],"else": [
+            {"set":{"local":"cooldowntimer"},"value":{"add":[{"global":"NEXT_DISPATCH_COOLDOWN"},{"local":"cooldowntimer"}]}}
+        ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"next_dispatch","actor":"dispatch","target":"cooldown","state":{"text":"button locked, cooldown {0} s, DATAQUERYSERVICE {1}","params":[{"local":"cooldowntimer"},{"global":"DATAQUERYSERVICE"}]}}}
+    ]},
     {"create_thread": {
       "commands": [
-        {"#comment":"No dispatch is loaded while a crew emergency is active: the shift is terminated (CREW_EMERGENCY_ACTIVE is reset at every mission start)."},
-        {"if": {
-          "and": [
-            {"require":{"local":"nddisabled"},"eq":null},
-            {"require":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"}
-          ]}, "eq": 1,
+        {"if": {"local":"nd_run"}, "eq": 1,
           "then": [
             {"call_macro":"archive closing dispatch"},
             {"call_macro":"start location diagnostics"},
             {"set":{"local":"map_preview_generation"},"value":{"add":[{"local":"map_preview_generation"},1]}},
             {"call_macro":"clear_unaccepted_dispatch_map"},
-            {"set":{"local":"nddisabled"},"value":"disabled"},
-            {"if": {"global":"DATAQUERYSERVICE"}, "eq": 3,
-              "then": [
-                {"set":{"local":"cooldowntimer"},"value":10}
-              ],"else": [
-                {"set":{"local":"cooldowntimer"},"value":{"add":[25,{"local":"cooldowntimer"}]}}
-            ]},
             {"set":{"local":"queryfailed"},"value":null},
             {"set":{"local":"query_skipped"},"value":null},
             {"set_message":{"text":"DOWNLOADING, PLEASE WAIT..."}},
@@ -1036,7 +1055,8 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"local":"cooldowntimer"}},
-        {"set":{"local":"nddisabled"},"value":null}
+        {"set":{"local":"nddisabled"},"value":null},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"next_dispatch","actor":"dispatch","target":"cooldown","state":"button released"}}
     ]}}
   ],
   "CUSTOM_MISSION": [

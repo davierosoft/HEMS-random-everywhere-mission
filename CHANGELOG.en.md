@@ -1,3 +1,11 @@
+## Release 0.997 169.60
+
+- Cumulative scope of the delivery since the baseline
+- Cooldown values are the globals NEXT_DISPATCH_COOLDOWN and NEXT_DISPATCH_COOLDOWN_FAST
+- Cumulative scope of the baseline: entries 169.23 to 169.60 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions, SAR flag, drive speeds, heli rescuer gate and briefing, temporary query errors, boarding log, NEXT DISPATCH release)
+- NEXT DISPATCH button (tester report of 2026-10-17, 169.58, DATAQUERYSERVICE 1: the button stayed inactive for good, also with the cooldown edited to 0 in the script): `next_dispatch` set the lock (nddisabled) and the cooldown after the archive and the location diagnostics, which save tables and give way, so the release thread could read a stale cooldown, release first and be locked afterwards. The gate, the lock, the cooldown (with a null guard) and the run flag nd_run are now set in the body of the macro before both threads (original order); the dispatch thread runs on nd_run 1; the release thread sleeps the cooldown and writes a trace row. Cause found by reading the source, not reproduced in the simulator. Test tools/test-next-dispatch-cooldown.js.
+- The cooldown is read from the globals NEXT_DISPATCH_COOLDOWN (25 s, normal) and NEXT_DISPATCH_COOLDOWN_FAST (10 s, DATAQUERYSERVICE 3), created with those values when missing, so a tester can change them without editing the script. No menu option.
+
 ## Release 0.997 169.59
 
 - Cumulative scope of the baseline: entries 169.23 to 169.59 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions, SAR flag, drive speeds, heli rescuer gate and briefing, temporary query errors, boarding log)

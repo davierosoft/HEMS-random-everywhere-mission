@@ -62,6 +62,7 @@ const scripts = [
   'test-heli-rescuer-gate.js',
   'test-heli-rescuer-briefing.js',
   'test-query-nonblocking.js',
+  'test-next-dispatch-cooldown.js',
   'audit-drive-speeds.js',
   'test-heli-rescuer-and-ambulance.js',
   'validate-user-changelog.js',
