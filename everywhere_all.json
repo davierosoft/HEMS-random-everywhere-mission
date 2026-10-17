@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.56",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.57",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.56"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.57"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -2505,6 +2505,8 @@
   "randomize": [
     {"set":{"local":"randomize_result"},"value":null},
     {"set":{"param":"selectable_accidents"},"value":0},
+    {"set":{"param":"cond_eligible"},"value":0},
+    {"call_macro":"conditions snapshot"},
     {"for_each": {"static":"accidents"},
       "do": [
         {"set":{"param":"candidate_accident"},"value":{"param":"$item"}},
@@ -2514,9 +2516,36 @@
               "then": [
                 {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"candidate_accident"},"path":"id"}}, "eq": true,
                   "then": [
-                    {"set":{"param":"selectable_accidents"},"value":{"add":[{"param":"selectable_accidents"},1]}}
+                    {"set":{"param":"selectable_accidents"},"value":{"add":[{"param":"selectable_accidents"},1]}},
+                    {"set":{"param":"cond_pass"},"value":1},
+                    {"if": {"local":"cm_active"}, "eq": 1,
+                      "then": [
+                        {"if": {"struct":{"param":"candidate_accident"},"path":"cond"}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"cf_light"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_light"}},
+                            {"set":{"local":"cf_hours"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_hours"}},
+                            {"set":{"local":"cf_from"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_from"}},
+                            {"set":{"local":"cf_to"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_to"}},
+                            {"set":{"local":"cf_season"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_season"}},
+                            {"set":{"local":"cf_weather"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_weather"}},
+                            {"set":{"local":"cf_wind"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_wind"}},
+                            {"call_macro":"conditions fit","result":"cond_pass"}
+                        ]}
+                    ]},
+                    {"if": {"param":"cond_pass"}, "eq": 1,
+                      "then": [
+                        {"set":{"param":"cond_eligible"},"value":{"add":[{"param":"cond_eligible"},1]}}
+                    ]}
                 ]}
             ]}
+        ]}
+    ]},
+    {"set":{"local":"cm_eligible"},"value":{"param":"cond_eligible"}},
+    {"if": {"local":"cm_active"}, "eq": 1,
+      "then": [
+        {"if": {"param":"cond_eligible"}, "eq": 0,
+          "then": [
+            {"set":{"local":"cm_active"},"value":0}
         ]}
     ]},
     {"if": {"param":"selectable_accidents"}, "gt": 0,
@@ -2583,7 +2612,26 @@
               "then": [
                 {"if": {"struct":{"param":"nextaccident"},"path":"is_random"}, "eq": null,
                   "then": [
-                    {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"nextaccident"},"path":"id"}}, "eq": true,
+                    {"set":{"param":"cond_pass"},"value":1},
+                    {"if": {"local":"cm_active"}, "eq": 1,
+                      "then": [
+                        {"if": {"struct":{"param":"nextaccident"},"path":"cond"}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"cf_light"},"value":{"struct":{"param":"nextaccident"},"path":"cond_light"}},
+                            {"set":{"local":"cf_hours"},"value":{"struct":{"param":"nextaccident"},"path":"cond_hours"}},
+                            {"set":{"local":"cf_from"},"value":{"struct":{"param":"nextaccident"},"path":"cond_from"}},
+                            {"set":{"local":"cf_to"},"value":{"struct":{"param":"nextaccident"},"path":"cond_to"}},
+                            {"set":{"local":"cf_season"},"value":{"struct":{"param":"nextaccident"},"path":"cond_season"}},
+                            {"set":{"local":"cf_weather"},"value":{"struct":{"param":"nextaccident"},"path":"cond_weather"}},
+                            {"set":{"local":"cf_wind"},"value":{"struct":{"param":"nextaccident"},"path":"cond_wind"}},
+                            {"call_macro":"conditions fit","result":"cond_pass"}
+                        ]}
+                    ]},
+                    {"if": {
+                      "and": [
+                        {"require":{"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"nextaccident"},"path":"id"}},"eq":true},
+                        {"require":{"param":"cond_pass"},"eq":1}
+                      ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"accident_name"},"value":{"struct":{"param":"nextaccident"},"path":"name"}},
                         {"set":{"local":"accident_general_description"},"value":{"struct":{"param":"nextaccident"},"path":"general_description"}},
@@ -4524,6 +4572,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"no"},
+    {"set":{"global":"COND_MISSIONS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"},
@@ -4613,6 +4662,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
+    {"set":{"global":"COND_MISSIONS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":1},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"ROOKIE PILOT"},
@@ -4702,6 +4752,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
+    {"set":{"global":"COND_MISSIONS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT PILOT"},
@@ -4791,6 +4842,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
+    {"set":{"global":"COND_MISSIONS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":2},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT HEMS"},
@@ -4911,6 +4963,7 @@
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"PERF_LOG_LEVEL"},"value":{"global":"PERF_LOG_LEVEL"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"KIT_WEIGHTS"},"value":{"global":"KIT_WEIGHTS"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"LIFE_FREEZE_NEAR"},"value":{"global":"LIFE_FREEZE_NEAR"}},
+    {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"COND_MISSIONS"},"value":{"global":"COND_MISSIONS"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"PERSIST_MISSION_WAIT_TIME"},"value":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"ULTRASHORT"},"value":{"global":"ULTRASHORT"}},
     {"if": {"table":{"static":{"param":"PROFILE_TABLE"}},"key":"name"}, "eq": null,
@@ -5044,6 +5097,7 @@
         {"set":{"global":"PERF_LOG_LEVEL"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"PERF_LOG_LEVEL"}},
         {"set":{"global":"KIT_WEIGHTS"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"KIT_WEIGHTS"}},
         {"set":{"global":"LIFE_FREEZE_NEAR"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"LIFE_FREEZE_NEAR"}},
+        {"set":{"global":"COND_MISSIONS"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"COND_MISSIONS"}},
         {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"PERSIST_MISSION_WAIT_TIME"}},
         {"set":{"global":"ULTRASHORT"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"ULTRASHORT"}},
         {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"CUSTOM"},
@@ -5470,6 +5524,7 @@
         {"buttonbar":[{"text":"(P)Is mountain/special accident Max.Range randomly set or coupled to the normal Maximum Range value?"},{"title":"RANDOM (default)","select_condition":{"require":{"global":"MOUNT_AUTO_RNG"},"eq":"yes"},"commands":[{"set":{"global":"MOUNT_AUTO_RNG"},"value":"yes"},{"call_macro":"mark aircraft profile custom"},{"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":{"floor":{"rand":[35000,90000]}}},{"set_map":{"remove":{"point":{"id":"BASE_special"}}}},{"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_special","stroke":{"width":0.3,"color":"blue"},"fill":{"color":"rgba(0, 0, 0, 0)"},"range":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]}}}}}]},{"title":"COUPLED TO.MAX.RNG","select_condition":{"require":{"global":"MOUNT_AUTO_RNG"},"ne":"yes"},"commands":[{"set":{"global":"MOUNT_AUTO_RNG"},"value":"no"},{"call_macro":"mark aircraft profile custom"},{"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}},{"set_map":{"remove":{"point":{"id":"BASE_special"}}}}]}],"show_condition":{"require":{"local":"tab3"},"ne":0}},
         {"buttonbar":[{"text":"Dispatcher coverage area is centered on: (PRESENT POSITION=Default)"},{"title":"PRESENT POSITION(P)","select_condition":{"require":{"global":"location_ref"},"eq":"$USER"},"commands":[{"set":{"global":"location_ref"},"value":"$USER"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"min max rng check"},{"set_map":{"remove":{"point":{"id":"custom_center_location_icon"}}}}]},{"title":"START LOCATION(P)","select_condition":{"require":{"global":"location_ref"},"eq":"mission_start_location"},"commands":[{"set":{"global":"location_ref"},"value":"mission_start_location"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"min max rng check"},{"set_map":{"remove":{"point":{"id":"custom_center_location_icon"}}}}]},{"title":"CUSTOM LOCATION","select_condition":{"require":{"global":"location_ref"},"eq":"custom_center_location"},"commands":[{"call_macro":"Query dispatcher position custom"},{"set":{"global":"location_ref"},"value":"custom_center_location"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"min max rng check"}]}],"show_condition":{"require":{"local":"tab3"},"ne":0}},
         {"buttonbar":[{"text":"(P)Is dispatch randomly delayed or immediately shown at mission startup?"},{"title":"DELAYED (default)","select_condition":{"require":{"global":"REALISTIC_DISPATCH"},"eq":1},"commands":[{"set":{"global":"REALISTIC_DISPATCH"},"value":1},{"call_macro":"mark aircraft profile custom"}]},{"title":"NOT DELAYED","select_condition":{"require":{"global":"REALISTIC_DISPATCH"},"eq":0},"commands":[{"set":{"global":"REALISTIC_DISPATCH"},"value":0},{"call_macro":"mark aircraft profile custom"}]}],"show_condition":{"require":{"local":"tab3"},"ne":0}},
+        {"buttonbar":[{"text":"(P)On conditions missions: the random missions that do not fit the local time, the month or the weather (a skier in August, a paraglider in a gale, a school at night) are not drawn. The calls for missing people are never filtered (OFF: default, every mission can be drawn; ON in the EXPERT PILOT and EXPERT HEMS profiles):"},{"title":"OFF (DEFAULT)","select_condition":{"require":{"global":"COND_MISSIONS"},"ne":"yes"},"commands":[{"set":{"global":"COND_MISSIONS"},"value":"no"},{"call_macro":"mark aircraft profile custom"}]},{"title":"ON","select_condition":{"require":{"global":"COND_MISSIONS"},"eq":"yes"},"commands":[{"set":{"global":"COND_MISSIONS"},"value":"yes"},{"call_macro":"mark aircraft profile custom"}]}],"show_condition":{"require":{"local":"tab3"},"ne":0}},
         {"text":"(P)If dispatch is delayed, adjust the maximum waiting time for first dispatch: {0:TIME} min.","params":[{"tofixed":{"global":"DISPATCH_TIME"},"digits":2}],"show_condition":{"require":{"local":"tab3"},"ne":0}},
         {"slider":{"min":15,"max":7200,"global":"DISPATCH_TIME","commands":[{"call_macro":"mark aircraft profile custom"}]},"show_condition":{"require":{"local":"tab3"},"ne":0}},
         {"text":"(P)Adjust the maximum waiting time for next dispatches: {0:TIME} min.","params":[{"tofixed":{"global":"TIME_SECOND_DISPATCH"},"digits":2}],"show_condition":{"require":{"local":"tab3"},"ne":0}},
@@ -45922,6 +45977,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":null},
     {"set":{"global":"KIT_WEIGHTS"},"value":null},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":null},
+    {"set":{"global":"COND_MISSIONS"},"value":null},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":null},
     {"set":{"global":"AIRCRAFT_PROFILE_SLOT"},"value":null},
     {"set":{"global":"NATION_BYPASS"},"value":null},
@@ -68929,7 +68985,7 @@
     {"set":{"table":{"param":"snapshot_table"},"key":"gndops_45_crew_trace"},"value":{"local":"GNDOPS_45_CREW_TRACE"}},
     {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_schema"},"value":8},
     {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_page_order"},"value":"COMMON,SUMMARY,MISSION,MEDICAL,GROUND,GUIDANCE,INVENTORY,LOCATIONS,PATIENTS,SCENE,FLOW"},
-    {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_common"},"value":{"create_struct":{"global:TABLET_5G_ENABLED":{"global":"TABLET_5G_ENABLED"},"global:LIFE_FREEZE_NEAR":{"global":"LIFE_FREEZE_NEAR"},"local:debug_page_section":{"local":"debug_page_section"},"local:CREW_EMERGENCY_ACTIVE":{"local":"CREW_EMERGENCY_ACTIVE"},"local:MISSION_FAILED":{"local":"MISSION_FAILED"},"local:CREW_EMERGENCY_MEMBER":{"local":"CREW_EMERGENCY_MEMBER"},"local:CREW_EMERGENCY_SCORE":{"local":"CREW_EMERGENCY_SCORE"},"local:CREW_EMERGENCY_FATAL":{"local":"CREW_EMERGENCY_FATAL"},"local:CREW_EMERGENCY_CAUSE":{"local":"CREW_EMERGENCY_CAUSE"},"local:CREW_IMPACT_OBJECT":{"local":"CREW_IMPACT_OBJECT"},"local:CREW_EMERGENCY_BOARDING_DONE":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"local:CREW_EMERGENCY_ROUTE_FALLBACK":{"local":"CREW_EMERGENCY_ROUTE_FALLBACK"},"local:CREW_FATAL_OBJECT_REPLACED":{"local":"CREW_FATAL_OBJECT_REPLACED"},"local:CREW_LIFESCORE_MONITOR_STARTED":{"local":"CREW_LIFESCORE_MONITOR_STARTED"},"local:HOIST_OUT_RISK_MONITOR_STARTED":{"local":"HOIST_OUT_RISK_MONITOR_STARTED"},"local:HOIST_ATTACHED_RISK_MONITOR_STARTED":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"local:CREW_ACCELERATION_MAX_X_POS":{"local":"CREW_ACCELERATION_MAX_X_POS"},"local:CREW_ACCELERATION_MAX_X_NEG":{"local":"CREW_ACCELERATION_MAX_X_NEG"},"local:CREW_ACCELERATION_MAX_Y_POS":{"local":"CREW_ACCELERATION_MAX_Y_POS"},"local:CREW_ACCELERATION_MAX_Y_NEG":{"local":"CREW_ACCELERATION_MAX_Y_NEG"},"local:CREW_ACCELERATION_MAX_Z_POS":{"local":"CREW_ACCELERATION_MAX_Z_POS"},"local:CREW_ACCELERATION_MAX_Z_NEG":{"local":"CREW_ACCELERATION_MAX_Z_NEG"},"local:patient_crew_visits":{"local":"patient_crew_visits"},"local:patient_crew_visit_generation":{"local":"patient_crew_visit_generation"},"local:HEMS_VISIT_OBJECT":{"local":"HEMS_VISIT_OBJECT"},"local:patient_crew_tours":{"local":"patient_crew_tours"},"local:CREW_ASSISTANT_BUSY":{"local":"CREW_ASSISTANT_BUSY"},"local:CREW_ASSISTANT_ACTOR":{"local":"CREW_ASSISTANT_ACTOR"},"local:CREW_ASSISTANT_WALK":{"local":"CREW_ASSISTANT_WALK"},"local:patient_crew_tour_exception":{"local":"patient_crew_tour_exception"},"local:patient_crew_visit_actor":{"local":"patient_crew_visit_actor"},"local:TIME1SHORT":{"local":"TIME1SHORT"},"local:TIME2SHORT":{"local":"TIME2SHORT"},"local:TIME3SHORT":{"local":"TIME3SHORT"},"local:TIMEBIAS":{"local":"TIMEBIAS"},"local:TIMERGND":{"local":"TIMERGND"},"local:active_cpr_slot":{"local":"active_cpr_slot"},"local:patient_live_mode":{"local":"patient_live_mode"},"local:P1_MEDICAL_ACTION_COUNT":{"local":"P1_MEDICAL_ACTION_COUNT"},"local:P1_MEDICAL_ACTIONS_COMPLETED":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"local:P1_HEMS_STEPS_DONE":{"local":"P1_HEMS_STEPS_DONE"},"local:P2_HEMS_STEPS_DONE":{"local":"P2_HEMS_STEPS_DONE"},"local:P2_MEDICAL_ACTION_COUNT":{"local":"P2_MEDICAL_ACTION_COUNT"},"local:P2_MEDICAL_ACTIONS_COMPLETED":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"local:patient_live_generation":{"local":"patient_live_generation"},"local:patient_pending_transport":{"local":"patient_pending_transport"},"local:patient_unassigned_transport":{"local":"patient_unassigned_transport"},"local:HEMS_TRANSPORT_TICKET":{"local":"HEMS_TRANSPORT_TICKET"},"local:ambulance1_transport_ticket":{"local":"ambulance1_transport_ticket"},"local:ambulance2_transport_ticket":{"local":"ambulance2_transport_ticket"},"local:cpr_patient_slot":{"local":"cpr_patient_slot"},"local:location_diagnostic_generation":{"local":"location_diagnostic_generation"},"local:location_diagnostic_monitor_active":{"local":"location_diagnostic_monitor_active"},"local:location_diagnostic_source_macro":{"local":"location_diagnostic_source_macro"},"local:location_diagnostic_history":{"local":"location_diagnostic_history"},"global:PERF_SAMPLING":{"global":"PERF_SAMPLING"},"global:PERF_ALTITUDE_GATE":{"global":"PERF_ALTITUDE_GATE"},"global:PERF_LOG_LEVEL":{"global":"PERF_LOG_LEVEL"},"global:KIT_WEIGHTS":{"global":"KIT_WEIGHTS"}}}},
+    {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_common"},"value":{"create_struct":{"global:TABLET_5G_ENABLED":{"global":"TABLET_5G_ENABLED"},"global:LIFE_FREEZE_NEAR":{"global":"LIFE_FREEZE_NEAR"},"global:COND_MISSIONS":{"global":"COND_MISSIONS"},"local:cm_active":{"local":"cm_active"},"local:cm_eligible":{"local":"cm_eligible"},"local:cm_hour":{"local":"cm_hour"},"local:cm_month":{"local":"cm_month"},"local:cm_mn":{"local":"cm_mn"},"local:cm_day":{"local":"cm_day"},"local:cm_precip":{"local":"cm_precip"},"local:cm_temp":{"local":"cm_temp"},"local:cm_wind":{"local":"cm_wind"},"local:cm_t1300":{"local":"cm_t1300"},"local:debug_page_section":{"local":"debug_page_section"},"local:CREW_EMERGENCY_ACTIVE":{"local":"CREW_EMERGENCY_ACTIVE"},"local:MISSION_FAILED":{"local":"MISSION_FAILED"},"local:CREW_EMERGENCY_MEMBER":{"local":"CREW_EMERGENCY_MEMBER"},"local:CREW_EMERGENCY_SCORE":{"local":"CREW_EMERGENCY_SCORE"},"local:CREW_EMERGENCY_FATAL":{"local":"CREW_EMERGENCY_FATAL"},"local:CREW_EMERGENCY_CAUSE":{"local":"CREW_EMERGENCY_CAUSE"},"local:CREW_IMPACT_OBJECT":{"local":"CREW_IMPACT_OBJECT"},"local:CREW_EMERGENCY_BOARDING_DONE":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"local:CREW_EMERGENCY_ROUTE_FALLBACK":{"local":"CREW_EMERGENCY_ROUTE_FALLBACK"},"local:CREW_FATAL_OBJECT_REPLACED":{"local":"CREW_FATAL_OBJECT_REPLACED"},"local:CREW_LIFESCORE_MONITOR_STARTED":{"local":"CREW_LIFESCORE_MONITOR_STARTED"},"local:HOIST_OUT_RISK_MONITOR_STARTED":{"local":"HOIST_OUT_RISK_MONITOR_STARTED"},"local:HOIST_ATTACHED_RISK_MONITOR_STARTED":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"local:CREW_ACCELERATION_MAX_X_POS":{"local":"CREW_ACCELERATION_MAX_X_POS"},"local:CREW_ACCELERATION_MAX_X_NEG":{"local":"CREW_ACCELERATION_MAX_X_NEG"},"local:CREW_ACCELERATION_MAX_Y_POS":{"local":"CREW_ACCELERATION_MAX_Y_POS"},"local:CREW_ACCELERATION_MAX_Y_NEG":{"local":"CREW_ACCELERATION_MAX_Y_NEG"},"local:CREW_ACCELERATION_MAX_Z_POS":{"local":"CREW_ACCELERATION_MAX_Z_POS"},"local:CREW_ACCELERATION_MAX_Z_NEG":{"local":"CREW_ACCELERATION_MAX_Z_NEG"},"local:patient_crew_visits":{"local":"patient_crew_visits"},"local:patient_crew_visit_generation":{"local":"patient_crew_visit_generation"},"local:HEMS_VISIT_OBJECT":{"local":"HEMS_VISIT_OBJECT"},"local:patient_crew_tours":{"local":"patient_crew_tours"},"local:CREW_ASSISTANT_BUSY":{"local":"CREW_ASSISTANT_BUSY"},"local:CREW_ASSISTANT_ACTOR":{"local":"CREW_ASSISTANT_ACTOR"},"local:CREW_ASSISTANT_WALK":{"local":"CREW_ASSISTANT_WALK"},"local:patient_crew_tour_exception":{"local":"patient_crew_tour_exception"},"local:patient_crew_visit_actor":{"local":"patient_crew_visit_actor"},"local:TIME1SHORT":{"local":"TIME1SHORT"},"local:TIME2SHORT":{"local":"TIME2SHORT"},"local:TIME3SHORT":{"local":"TIME3SHORT"},"local:TIMEBIAS":{"local":"TIMEBIAS"},"local:TIMERGND":{"local":"TIMERGND"},"local:active_cpr_slot":{"local":"active_cpr_slot"},"local:patient_live_mode":{"local":"patient_live_mode"},"local:P1_MEDICAL_ACTION_COUNT":{"local":"P1_MEDICAL_ACTION_COUNT"},"local:P1_MEDICAL_ACTIONS_COMPLETED":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"local:P1_HEMS_STEPS_DONE":{"local":"P1_HEMS_STEPS_DONE"},"local:P2_HEMS_STEPS_DONE":{"local":"P2_HEMS_STEPS_DONE"},"local:P2_MEDICAL_ACTION_COUNT":{"local":"P2_MEDICAL_ACTION_COUNT"},"local:P2_MEDICAL_ACTIONS_COMPLETED":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"local:patient_live_generation":{"local":"patient_live_generation"},"local:patient_pending_transport":{"local":"patient_pending_transport"},"local:patient_unassigned_transport":{"local":"patient_unassigned_transport"},"local:HEMS_TRANSPORT_TICKET":{"local":"HEMS_TRANSPORT_TICKET"},"local:ambulance1_transport_ticket":{"local":"ambulance1_transport_ticket"},"local:ambulance2_transport_ticket":{"local":"ambulance2_transport_ticket"},"local:cpr_patient_slot":{"local":"cpr_patient_slot"},"local:location_diagnostic_generation":{"local":"location_diagnostic_generation"},"local:location_diagnostic_monitor_active":{"local":"location_diagnostic_monitor_active"},"local:location_diagnostic_source_macro":{"local":"location_diagnostic_source_macro"},"local:location_diagnostic_history":{"local":"location_diagnostic_history"},"global:PERF_SAMPLING":{"global":"PERF_SAMPLING"},"global:PERF_ALTITUDE_GATE":{"global":"PERF_ALTITUDE_GATE"},"global:PERF_LOG_LEVEL":{"global":"PERF_LOG_LEVEL"},"global:KIT_WEIGHTS":{"global":"KIT_WEIGHTS"}}}},
     {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_summary"},"value":{"create_struct":{"local:debug_page_section":{"local":"debug_page_section"},"local:VAR_MISSION_NUMBER":{"local":"VAR_MISSION_NUMBER"},"local:CRASH_VARIABLE":{"local":"CRASH_VARIABLE"},"local:MISSION_SCENE_VARIANT":{"local":"MISSION_SCENE_VARIANT"},"var:L:LOAD":{"var":["L:LOAD","number"]},"local:FPL_NMBR":{"local":"FPL_NMBR"},"global:DATAQUERYSERVICE":{"global":"DATAQUERYSERVICE"},"var:L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"global:CICERS_AUTO_ACTIVATION_BYPASS":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"local:AMBU_AVAIL":{"local":"AMBU_AVAIL"},"local:POLICE_AVAIL":{"local":"POLICE_AVAIL"},"local:FIREENGINE_AVAIL":{"local":"FIREENGINE_AVAIL"},"local:helicopter_on_scene":{"local":"helicopter_on_scene"},"local:location_name":{"local":"location_name"},"local:scene_macro":{"local":"scene_macro"},"local:CREW":{"local":"CREW"},"local:crew_spawn_log":{"local":"crew_spawn_log"},"local:destination_confirmed":{"local":"destination_confirmed"},"local:gndops_nr_gate_log":{"local":"gndops_nr_gate_log"},"local:GNDOPS_3_CREW_TRACE":{"local":"GNDOPS_3_CREW_TRACE"},"local:GNDOPS_45_CREW_TRACE":{"local":"GNDOPS_45_CREW_TRACE"},"local:HELOVICTIMS":{"local":"HELOVICTIMS"},"local:MISSION_PHASE":{"local":"MISSION_PHASE"},"var:L:RELEASE_BUILD":{"var":["L:RELEASE_BUILD","number"]},"local:RELEASE_IDENTITY":{"local":"RELEASE_IDENTITY"},"local:Menabledtotal":{"local":"Menabledtotal"},"local:Mdisabledtotal":{"local":"Mdisabledtotal"},"var:L:CARLS_CONNECTED":{"var":["L:CARLS_CONNECTED","number"]},"var:L:SERVICE_CONNECTED":{"var":["L:SERVICE_CONNECTED","number"]},"local:wificonnect":{"local":"wificonnect"},"local:HOCconnection":{"local":"HOCconnection"},"global:TABLET_5G_ENABLED":{"global":"TABLET_5G_ENABLED"},"global:LIFE_FREEZE_NEAR":{"global":"LIFE_FREEZE_NEAR"},"local:LIFESCORE":{"local":"LIFESCORE"},"local:LIFESCORE2":{"local":"LIFESCORE2"},"local:LIFESCORE3":{"local":"LIFESCORE3"},"local:manual_active_patient":{"local":"manual_active_patient"},"local:medical_display_patient":{"local":"medical_display_patient"},"local:whobringpatient":{"local":"whobringpatient"},"local:ambulance_patient_transfer_state":{"local":"ambulance_patient_transfer_state"},"local:crewvisitended":{"local":"crewvisitended"},"local:debug_relevant_ambulance":{"local":"debug_relevant_ambulance"},"local:marshall_guidance_target":{"local":"marshall_guidance_target"},"local:marshall_guidance_state":{"local":"marshall_guidance_state"},"local:marshall_approach_armed":{"local":"marshall_approach_armed"},"local:marshall_departure_armed":{"local":"marshall_departure_armed"},"local:marshall_wind_enabled":{"local":"marshall_wind_enabled"},"local:marshall_role":{"local":"marshall_role"},"local:debug_relevant_marshal":{"local":"debug_relevant_marshal"},"local:MSN_CONFIG_PRESET":{"local":"MSN_CONFIG_PRESET"},"local:preset_dirty":{"local":"preset_dirty"},"local:preset_group_pending":{"local":"preset_group_pending"},"local:debug_has_issue":{"local":"debug_has_issue"},"local:routeupdate_error":{"local":"routeupdate_error"},"local:routeupdate_error_detail":{"local":"routeupdate_error_detail"},"local:queryfailed":{"local":"queryfailed"},"local:dispatch_cancel_notice":{"local":"dispatch_cancel_notice"},"local:CREW_LIFESCORE_MONITOR_STARTED":{"local":"CREW_LIFESCORE_MONITOR_STARTED"},"local:HOIST_OUT_RISK_MONITOR_STARTED":{"local":"HOIST_OUT_RISK_MONITOR_STARTED"},"local:HOIST_ATTACHED_RISK_MONITOR_STARTED":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"local:CREW_ACCELERATION_MAX_X_POS":{"local":"CREW_ACCELERATION_MAX_X_POS"},"local:CREW_ACCELERATION_MAX_X_NEG":{"local":"CREW_ACCELERATION_MAX_X_NEG"},"local:CREW_ACCELERATION_MAX_Y_POS":{"local":"CREW_ACCELERATION_MAX_Y_POS"},"local:CREW_ACCELERATION_MAX_Y_NEG":{"local":"CREW_ACCELERATION_MAX_Y_NEG"},"local:CREW_ACCELERATION_MAX_Z_POS":{"local":"CREW_ACCELERATION_MAX_Z_POS"},"local:CREW_ACCELERATION_MAX_Z_NEG":{"local":"CREW_ACCELERATION_MAX_Z_NEG"},"local:MISSION_NUMBER":{"local":"MISSION_NUMBER"},"var:L:POI_TYPE":{"var":["L:POI_TYPE","number"]},"local:SAR":{"local":"SAR"},"capture:date_year":{"var":["E:LOCAL YEAR","number"]},"capture:date_month":{"var":["E:LOCAL MONTH OF YEAR","number"]},"capture:date_day":{"var":["E:LOCAL DAY OF MONTH","number"]},"capture:time":{"fn":"get_time_string"},"local:MISSION_TIME":{"var":["L:MISSION_TIME","number"]}}}},
     {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_mission"},"value":{"create_struct":{"local:debug_page_section":{"local":"debug_page_section"},"global:CICERS_AUTO_ACTIVATION_BYPASS":{"global":"CICERS_AUTO_ACTIVATION_BYPASS"},"local:APIIDALL":{"local":"APIIDALL"},"local:LATEST_RE_VERSION":{"local":"LATEST_RE_VERSION"},"local:LATEST_DEV_TYPE":{"local":"LATEST_DEV_TYPE"},"local:LATEST_DEV_VERSION":{"local":"LATEST_DEV_VERSION"},"local:MGsounds_installed":{"local":"MGsounds_installed"},"local:MISSION_VERSION":{"local":"MISSION_VERSION"},"local:DEV_VERSION":{"local":"DEV_VERSION"},"var:L:DISPATCH_PHASE":{"var":["L:DISPATCH_PHASE","number"]},"var:L:DISPATCH_PHASE_RAW":{"var":["L:DISPATCH_PHASE_RAW","number"]},"var:L:CARLS_CONNECTED":{"var":["L:CARLS_CONNECTED","number"]},"local:wificonnect":{"local":"wificonnect"},"local:HOCconnection":{"local":"HOCconnection"},"var:L:SERVICE_CONNECTED":{"var":["L:SERVICE_CONNECTED","number"]},"local:SECOND_DISPATCH":{"local":"SECOND_DISPATCH"},"local:ENDWAIT_SECOND_DISPATCH":{"local":"ENDWAIT_SECOND_DISPATCH"},"var:L:MISSION_TIME":{"var":["L:MISSION_TIME","number"]},"var:L:DISPATCH_ENDED":{"var":["L:DISPATCH_ENDED","number"]},"local:dispatch_cancellation_monitor":{"local":"dispatch_cancellation_monitor"},"local:dispatch_cancellation_pending":{"local":"dispatch_cancellation_pending"},"local:dispatch_cancellation_ready":{"local":"dispatch_cancellation_ready"},"local:ground_units_at_scene":{"local":"ground_units_at_scene"},"local:dispatch_cancellation_lifescore_ok":{"local":"dispatch_cancellation_lifescore_ok"},"local:helicopter_on_scene":{"local":"helicopter_on_scene"},"local:dispatch_cancel_notice":{"local":"dispatch_cancel_notice"},"local:debug_relevant_ambulance":{"local":"debug_relevant_ambulance"},"local:ambulance_preload":{"local":"ambulance_preload"},"local:ambulance_previsit_weather_force":{"local":"ambulance_previsit_weather_force"},"local:ambulance_previsit_forced":{"local":"ambulance_previsit_forced"},"var:AMBIENT PRECIP STATE":{"var":["AMBIENT PRECIP STATE","number"]},"var:AMBIENT TEMPERATURE":{"var":["AMBIENT TEMPERATURE","celsius"]},"local:ambulance_previsit_eligible":{"local":"ambulance_previsit_eligible"},"local:ambulance_previsit_allowed":{"local":"ambulance_previsit_allowed"},"local:ambulance_previsit_police_present":{"local":"ambulance_previsit_police_present"},"local:ambulance_previsit_police_arrived":{"local":"ambulance_previsit_police_arrived"},"local:thospital_wp_match":{"local":"thospital_wp_match"},"local:thospital_wp_ready":{"local":"thospital_wp_ready"},"local:debug_relevant_police":{"local":"debug_relevant_police"},"local:police_lz_transfer_state":{"local":"police_lz_transfer_state"},"local:police_lz_pickup_ready":{"local":"police_lz_pickup_ready"},"local:police_lz_force_pickup":{"local":"police_lz_force_pickup"},"local:police_lz_move_lock":{"local":"police_lz_move_lock"},"local:police_lz_departure_delay_done":{"local":"police_lz_departure_delay_done"},"object:police:distance:m":{"object":"police","var":"distance:m"},"local:map_preview_generation":{"local":"map_preview_generation"},"local:location_name":{"local":"location_name"},"local:has_location":{"local":"has_location"},"local:routeupdate_target":{"local":"routeupdate_target"},"local:routeupdate_valid":{"local":"routeupdate_valid"},"local:routeupdate_lock":{"local":"routeupdate_lock"},"local:routeupdate_error":{"local":"routeupdate_error"},"local:routeupdate_error_detail":{"local":"routeupdate_error_detail"},"local:scene_macro":{"local":"scene_macro"},"local:Query":{"local":"Query"},"var:L:SKIP_QUERY":{"var":["L:SKIP_QUERY","number"]},"local:skip_query":{"local":"skip_query"},"local:counter":{"local":"counter"},"local:has_accident_location":{"local":"has_accident_location"},"local:roadqueryattempt":{"local":"roadqueryattempt"},"object:accident_location:distance":{"object":"accident_location","var":"distance"},"object:userA:distance":{"object":"userA","var":"distance"},"object:rescue_location:distance":{"object":"rescue_location","var":"distance"},"object:location_temp:distance":{"object":"location_temp","var":"distance"},"object:hospital:distance":{"object":"hospital","var":"distance"},"object:hospital_door:distance":{"object":"hospital_door","var":"distance"},"object:hangar:distance":{"object":"hangar","var":"distance"},"local:roads":{"local":"roads"},"local:randomroad":{"local":"randomroad"},"local:amburoad":{"local":"amburoad"},"local:poliroad":{"local":"poliroad"},"local:fireroad":{"local":"fireroad"},"global:ambu_force":{"global":"ambu_force"},"global:poli_force":{"global":"poli_force"},"global:fire_force":{"global":"fire_force"},"object:citycentre:distance":{"object":"citycentre","var":"distance"},"local:ambu1stopdistance":{"local":"ambu1stopdistance"},"object:accident_location:distance:m":{"object":"accident_location","var":"distance:m"},"local:fire1stopdistance":{"local":"fire1stopdistance"},"local:police1stopdistance":{"local":"police1stopdistance"},"local:MSN_CONFIG_PRESET":{"local":"MSN_CONFIG_PRESET"},"local:preset_dirty":{"local":"preset_dirty"},"local:preset_group_pending":{"local":"preset_group_pending"},"local:ambulance_shelter_state":{"local":"ambulance_shelter_state"},"local:ambulance_shelter_reason":{"local":"ambulance_shelter_reason"},"local:ambulance_shelter_need":{"local":"ambulance_shelter_need"},"local:ambulance_shelter_conds":{"local":"ambulance_shelter_conds"},"local:ambulance_shelter_last":{"local":"ambulance_shelter_last"},"local:ambulance_shelter_attempts":{"local":"ambulance_shelter_attempts"},"local:ambulance_shelter_leaks":{"local":"ambulance_shelter_leaks"},"local:ambulance_shelter_at":{"local":"ambulance_shelter_at"},"local:ambulance_shelter_released_at":{"local":"ambulance_shelter_released_at"}}}},
     {"set":{"table":{"param":"snapshot_table"},"key":"snapshot_medical"},"value":{"create_struct":{"local:debug_page_section":{"local":"debug_page_section"},"local:CREW_LIFESCORE_1":{"local":"CREW_LIFESCORE_1"},"local:CREW_LIFESCORE_2":{"local":"CREW_LIFESCORE_2"},"local:CREW_LIFESCORE_3":{"local":"CREW_LIFESCORE_3"},"local:CREW_LIFESCORE_4":{"local":"CREW_LIFESCORE_4"},"local:CREW_LIFESCORE_5":{"local":"CREW_LIFESCORE_5"},"local:CREW_LIFESCORE_TOTAL_IMPACT":{"local":"CREW_LIFESCORE_TOTAL_IMPACT"},"local:HOIST_FATAL_EVENT":{"local":"HOIST_FATAL_EVENT"},"local:CREW_LIFESCORE_SHIFT_ACTIVE":{"local":"CREW_LIFESCORE_SHIFT_ACTIVE"},"local:HELOVICTIMS":{"local":"HELOVICTIMS"},"local:SEX1":{"local":"SEX1"},"local:SEX2":{"local":"SEX2"},"local:SEX3":{"local":"SEX3"},"local:CREW":{"local":"CREW"},"local:injured1":{"local":"injured1"},"local:injured2":{"local":"injured2"},"local:injured3":{"local":"injured3"},"local:LIFESCORE":{"local":"LIFESCORE"},"local:LIFESCORE2":{"local":"LIFESCORE2"},"local:LIFESCORE3":{"local":"LIFESCORE3"},"local:PATOLOGY_TYPE":{"local":"PATOLOGY_TYPE"},"local:pathology_fire_mode":{"local":"pathology_fire_mode"},"local:pathology_relax_stage":{"local":"pathology_relax_stage"},"local:BPM":{"local":"BPM"},"local:SPO2":{"local":"SPO2"},"local:ambuloadingenabled":{"local":"ambuloadingenabled"},"local:crewonambulance":{"local":"crewonambulance"},"local:pax3onambulance":{"local":"pax3onambulance"},"local:hoistcrewonambulance":{"local":"hoistcrewonambulance"},"local:stretcheronambulance":{"local":"stretcheronambulance"},"local:crasharrived":{"local":"crasharrived"},"local:crewarrived":{"local":"crewarrived"},"local:crewvisiting1":{"local":"crewvisiting1"},"local:crewvisiting2":{"local":"crewvisiting2"},"local:crewvisiting3":{"local":"crewvisiting3"},"local:crewvisitended":{"local":"crewvisitended"},"local:ambustretcherarrived":{"local":"ambustretcherarrived"},"local:crewgoforstretcherload":{"local":"crewgoforstretcherload"},"local:crewpatientonstretcher":{"local":"crewpatientonstretcher"},"local:crewpatientloaded":{"local":"crewpatientloaded"},"local:crewdoconboard":{"local":"crewdoconboard"},"local:debug_relevant_multipatient":{"local":"debug_relevant_multipatient"},"global:P1_MANUAL_MEDICAL_MODE":{"global":"P1_MANUAL_MEDICAL_MODE"},"local:PATIENT_CAPACITY":{"local":"PATIENT_CAPACITY"},"local:manual_active_patient":{"local":"manual_active_patient"},"local:medical_display_patient":{"local":"medical_display_patient"},"local:P1_MANUAL_VISIT_REQUESTED":{"local":"P1_MANUAL_VISIT_REQUESTED"},"local:manual_p1_visit_completed":{"local":"manual_p1_visit_completed"},"local:manual_p1_state":{"local":"manual_p1_state"},"local:P1_CLINICAL_OWNER":{"local":"P1_CLINICAL_OWNER"},"local:P2_MANUAL_VISIT_REQUESTED":{"local":"P2_MANUAL_VISIT_REQUESTED"},"local:manual_p2_visit_completed":{"local":"manual_p2_visit_completed"},"local:manual_p2_state":{"local":"manual_p2_state"},"local:P2_CLINICAL_OWNER":{"local":"P2_CLINICAL_OWNER"},"local:P3_MANUAL_VISIT_REQUESTED":{"local":"P3_MANUAL_VISIT_REQUESTED"},"local:manual_p3_visit_completed":{"local":"manual_p3_visit_completed"},"local:manual_p3_state":{"local":"manual_p3_state"},"local:P3_CLINICAL_OWNER":{"local":"P3_CLINICAL_OWNER"},"local:ambulance_handover_status":{"local":"ambulance_handover_status"},"local:P2_AMBULANCE_STAGE":{"local":"P2_AMBULANCE_STAGE"},"local:P3_AMBULANCE_STAGE":{"local":"P3_AMBULANCE_STAGE"},"local:ambulance_handover_completed_actions":{"local":"ambulance_handover_completed_actions"},"local:P2_AMBULANCE_COMPLETED_ACTIONS":{"local":"P2_AMBULANCE_COMPLETED_ACTIONS"},"local:P3_AMBULANCE_COMPLETED_ACTIONS":{"local":"P3_AMBULANCE_COMPLETED_ACTIONS"},"local:P2_GROUND_TRANSPORTED":{"local":"P2_GROUND_TRANSPORTED"},"local:P3_GROUND_TRANSPORTED":{"local":"P3_GROUND_TRANSPORTED"},"local:P2_AMBULANCE_REPORT_FINALIZED":{"local":"P2_AMBULANCE_REPORT_FINALIZED"},"local:P3_AMBULANCE_REPORT_FINALIZED":{"local":"P3_AMBULANCE_REPORT_FINALIZED"},"local:debug_relevant_ambulance":{"local":"debug_relevant_ambulance"},"local:whobringpatient":{"local":"whobringpatient"},"local:ambulance_patient_transfer_state":{"local":"ambulance_patient_transfer_state"},"local:ambustretcher_returning":{"local":"ambustretcher_returning"},"local:CREW_LIFESCORE_MONITOR_ACTIVE":{"local":"CREW_LIFESCORE_MONITOR_ACTIVE"},"local:CREW_LIFESCORE_CURRENT":{"local":"CREW_LIFESCORE_CURRENT"},"local:CREW_LIFESCORE_ALERT_LEVEL":{"local":"CREW_LIFESCORE_ALERT_LEVEL"},"local:CREW_ACCELERATION_DAMAGE":{"local":"CREW_ACCELERATION_DAMAGE"},"local:HOIST_CREW_ON_CABLE":{"local":"HOIST_CREW_ON_CABLE"},"local:HOIST_CABLE_PERSON_TYPE":{"local":"HOIST_CABLE_PERSON_TYPE"},"local:CREW_ACCELERATION_COOLDOWN":{"local":"CREW_ACCELERATION_COOLDOWN"},"local:HOIST_CABLE_PHASE":{"local":"HOIST_CABLE_PHASE"},"local:HOIST_CABLE_PATIENT":{"local":"HOIST_CABLE_PATIENT"},"local:HOIST_CABLE_INJURED":{"local":"HOIST_CABLE_INJURED"},"local:HOIST_OUT":{"local":"HOIST_OUT"},"local:HOIST_CABLE_EVENTS":{"local":"HOIST_CABLE_EVENTS"},"local:HOIST_CABLE_LAST":{"local":"HOIST_CABLE_LAST"},"local:HOIST_CABLE_LAST_CAUSE":{"local":"HOIST_CABLE_LAST_CAUSE"},"local:HOIST_CABLE_DETACH":{"local":"HOIST_CABLE_DETACH"},"local:CREW_FATAL_ON_HOOK":{"local":"CREW_FATAL_ON_HOOK"},"local:HOIST_ATTACHED_RISK_MONITOR_STARTED":{"local":"HOIST_ATTACHED_RISK_MONITOR_STARTED"},"local:HOIST_ATTACHED_ACTIVE":{"local":"HOIST_ATTACHED_ACTIVE"},"local:HOIST_CABLE_IMPACTS":{"local":"HOIST_CABLE_IMPACTS"},"local:HOIST_CABLE_MAX_RATE_FPS":{"local":"HOIST_CABLE_MAX_RATE_FPS"},"local:HOIST_CABLE_RELEASES":{"local":"HOIST_CABLE_RELEASES"},"local:HOIST_INJURED_WATCH":{"local":"HOIST_INJURED_WATCH"},"local:CREW_FATAL_POSITION_FIXED":{"local":"CREW_FATAL_POSITION_FIXED"}}}},
@@ -84604,7 +84660,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:15>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:16>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice new shift": [
@@ -86473,7 +86529,7 @@
     ]}
   ],
   "voice tip": [
-    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
+    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
     {"set":{"param":"vtp_calm"},"value":0},
     {"if": {"global":"CREW_TIPS"}, "ne": 1,
       "then": [
@@ -86483,11 +86539,11 @@
       "then": [
         {"if": {"local":"vtp_next"}, "eq": null,
           "then": [
-            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,11]}}}
+            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,12]}}}
         ]},
         {"set":{"local":"vtp_t"},"value":{"local":"vtp_next"}},
         {"set":{"local":"vtp_next"},"value":{"add":[{"local":"vtp_next"},1]}},
-        {"if": {"local":"vtp_next"}, "gte": 11,
+        {"if": {"local":"vtp_next"}, "gte": 12,
           "then": [
             {"set":{"local":"vtp_next"},"value":0}
         ]},
@@ -86529,6 +86585,10 @@
             {"set":{"local":"vtp_code"},"value":"CHT"}
         ]},
         {"if": {"local":"vtp_t"}, "eq": 10,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"CND"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 11,
           "then": [
             {"set":{"local":"vtp_code"},"value":"TOF"}
         ]},
@@ -87082,6 +87142,170 @@
             {"set":{"local":"cs_word"},"value":{"global":"CALLSIGN"}}
         ]}
     ]}
+  ],
+  "conditions snapshot": [
+    {"#comment":"Option On conditions missions (global COND_MISSIONS yes, kept in the aircraft profiles; ON in EXPERT PILOT and EXPERT HEMS, OFF in DEFAULT and ROOKIE PILOT): the state of the simulator that decides which random missions fit, read once at the start of randomize into the locals cm_*. cm_active 1 when the option is on; cm_hour local hour (0 to 23); cm_month the local month (1 to 12, 0 when the simulator gives none) and cm_mn the same month in northern terms (a southern latitude is shifted by six months), 0 = season unknown; cm_day 1 when E:TIME OF DAY is 1 (the value the mission already treats as day); cm_precip AMBIENT PRECIP STATE (4 or more = rain or snow); cm_temp the ambient temperature at the helicopter; cm_wind the wind speed in km/h; cm_t1300 the temperature estimated at 1300 m above sea level with the average lapse of 6.5 degrees C per 1000 m from the altitude of the helicopter (the ski areas are in the mountains while the helicopter may be in the plain). The locals are in the debug snapshots."},
+    {"set":{"local":"cm_active"},"value":0},
+    {"if": {"global":"COND_MISSIONS"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"cm_active"},"value":1},
+        {"set":{"local":"cm_hour"},"value":{"floor":{"divide":[{"var":["E:LOCAL TIME","seconds"]},3600]}}},
+        {"set":{"local":"cm_month"},"value":{"var":["E:LOCAL MONTH OF YEAR","number"]}},
+        {"set":{"local":"cm_mn"},"value":{"local":"cm_month"}},
+        {"if": {"var":["PLANE LATITUDE","DEGREES"]}, "lt": 0,
+          "then": [
+            {"if": {"local":"cm_month"}, "gt": 6,
+              "then": [
+                {"set":{"local":"cm_mn"},"value":{"subtract":[{"local":"cm_month"},6]}}
+              ],"else": [
+                {"if": {"local":"cm_month"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"cm_mn"},"value":{"add":[{"local":"cm_month"},6]}}
+                ]}
+            ]}
+        ]},
+        {"set":{"local":"cm_day"},"value":0},
+        {"if": {"var":["E:TIME OF DAY","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"cm_day"},"value":1}
+        ]},
+        {"set":{"local":"cm_precip"},"value":{"var":["AMBIENT PRECIP STATE","number"]}},
+        {"set":{"local":"cm_temp"},"value":{"var":["AMBIENT TEMPERATURE","celsius"]}},
+        {"set":{"local":"cm_wind"},"value":{"multiply":[{"var":["AMBIENT WIND VELOCITY","knots"]},1.852]}},
+        {"set":{"local":"cm_alt_m"},"value":{"multiply":[{"var":["PLANE ALTITUDE","feet"]},0.3048]}},
+        {"set":{"local":"cm_t1300"},"value":{"subtract":[{"local":"cm_temp"},{"multiply":[0.0065,{"subtract":[1300,{"local":"cm_alt_m"}]}]}]}}
+    ]}
+  ],
+  "conditions fit": [
+    {"#comment":"Does the accident whose fields were copied into cf_light, cf_hours, cf_from, cf_to, cf_season, cf_weather and cf_wind (by randomize) fit the conditions of cm_* (conditions snapshot)? Returns 1 or 0. cf_light day: E:TIME OF DAY 1; cf_hours yes: the local hour from cf_from (included) to cf_to (excluded); cf_season (months in northern terms): nowinter not Dec to Feb, skiseason Dec to Apr, coldseason Nov to May, huntingseason Sep to Jan, schoolterm not Jul and Aug, liftseason not May and Nov; cf_weather: dry no rain or snow, nosnow no snow and above 0 degrees C, wet rain or snow, snowcover at most 0 degrees C estimated at 1300 m; cf_wind the highest wind in km/h. A field that the accident does not have is null and does not restrict; an unknown month does not restrict the season. The calls for missing people (hikers, cars, quads, wandering persons, lost aircraft) and the other missions without the field cond are never restricted. Details: docs/architecture/CONDITION_MISSIONS.md."},
+    {"set":{"param":"cfit"},"value":1},
+    {"if": {"local":"cf_light"}, "eq": "day",
+      "then": [
+        {"if": {"local":"cm_day"}, "ne": 1,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_hours"}, "eq": "yes",
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"local":"cm_hour"},"lt":{"local":"cf_from"}},
+            {"require":{"local":"cm_hour"},"gte":{"local":"cf_to"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cm_mn"}, "gt": 0,
+      "then": [
+        {"if": {"local":"cf_season"}, "eq": "nowinter",
+          "then": [
+            {"if": {
+              "or": [
+                {"require":{"local":"cm_mn"},"eq":12},
+                {"require":{"local":"cm_mn"},"lte":2}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "skiseason",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":5},
+                {"require":{"local":"cm_mn"},"lte":11}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "coldseason",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":6},
+                {"require":{"local":"cm_mn"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "huntingseason",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":2},
+                {"require":{"local":"cm_mn"},"lte":8}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "schoolterm",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":7},
+                {"require":{"local":"cm_mn"},"lte":8}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "liftseason",
+          "then": [
+            {"if": {
+              "or": [
+                {"require":{"local":"cm_mn"},"eq":5},
+                {"require":{"local":"cm_mn"},"eq":11}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "dry",
+      "then": [
+        {"if": {"local":"cm_precip"}, "gte": 4,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "nosnow",
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"local":"cm_precip"},"gte":8},
+            {"require":{"local":"cm_temp"},"lte":0}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "wet",
+      "then": [
+        {"if": {"local":"cm_precip"}, "lt": 4,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "snowcover",
+      "then": [
+        {"if": {"local":"cm_t1300"}, "gt": 0,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_wind"}, "gt": 0,
+      "then": [
+        {"if": {"local":"cm_wind"}, "gt": {"local":"cf_wind"},
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"return":{"param":"cfit"}}
   ]
 },
 
@@ -87523,7 +87747,9 @@
       "mnumber": 1,
       "preload": "enable",
       "ID_CARD": 1,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_weather": "wet"
     },
 
     {
@@ -87640,7 +87866,10 @@
       "mnumber": 1,
       "preload": "enable",
       "ID_CARD": 4,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_season": "nowinter",
+      "cond_weather": "nosnow"
     },
 
     {
@@ -87718,7 +87947,9 @@
       "requirements": [{"name":"Pack Vehicules et personnages Français","checkPath":"/VFS/Simobjects/Airplanes/hpg-fr-crash-vtt-down/aircraft.cfg","downloadUrl":"https://flightsim.to/file/42450/pack-vehicules-et-personnages-franais"}],
       "preload": "enable",
       "ID_CARD": 6,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_weather": "nosnow"
     },
 
     {
@@ -87795,7 +88026,11 @@
       "requirements": [{"name":"Pack Vehicules et personnages Français","checkPath":"/VFS/Simobjects/Airplanes/hpg-fr-crash-vtt-down/aircraft.cfg","downloadUrl":"https://flightsim.to/file/42450/pack-vehicules-et-personnages-franais"}],
       "preload": "enable",
       "ID_CARD": 7,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "nowinter",
+      "cond_weather": "nosnow"
     },
 
     {
@@ -87834,7 +88069,10 @@
       "requirements": [{"name":"68PonyGT H145 Action Pack HEMS Objects","checkPath":"/VFS/Simobjects/Airplanes/68ponyGT_Bulldozer_FD14E_LP/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"}],
       "preload": "enable",
       "ID_CARD": 8,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_weather": "nosnow"
     },
 
     {
@@ -87990,7 +88228,10 @@
       "mnumber": 1,
       "preload": "enable",
       "ID_CARD": 11,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_weather": "nosnow"
     },
 
     {
@@ -88068,7 +88309,12 @@
       "requirements": [{"name":"68PonyGT H145 Action Pack HEMS Objects","checkPath":"/VFS/Simobjects/Airplanes/68ponyGT_Bulldozer_FD14E_LP/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"}],
       "preload": "enable",
       "ID_CARD": 13,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 7,
+      "cond_to": 18,
+      "cond_weather": "nosnow"
     },
 
     {
@@ -88107,7 +88353,12 @@
       "requirements": [{"name":"68PonyGT H145 Action Pack HEMS Objects","checkPath":"/VFS/Simobjects/Airplanes/68ponyGT_Bulldozer_FD14E_LP/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/47913/h145-action-pack-hems-objects"}],
       "preload": "enable",
       "ID_CARD": 14,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 7,
+      "cond_to": 18,
+      "cond_weather": "nosnow"
     },
 
     {
@@ -88146,7 +88397,12 @@
       "requirements": [{"name":"30West - HEMS-Objects package","checkPath":"/VFS/Simobjects/Airplanes/30W_Ambu_Johanniter/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/69699/hems-objects"}],
       "preload": "disable",
       "ID_CARD": 15,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 7,
+      "cond_to": 18,
+      "cond_weather": "nosnow"
     },
 
     {
@@ -88224,7 +88480,12 @@
       "requirements": [{"name":"30West - HEMS-Objects package","checkPath":"/VFS/Simobjects/Airplanes/30West_Paraglider/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/69699/hems-objects"}],
       "preload": "enable",
       "ID_CARD": 17,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "nowinter",
+      "cond_weather": "dry",
+      "cond_wind": 30
     },
 
     {
@@ -88417,7 +88678,10 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 22,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_season": "nowinter",
+      "cond_weather": "nosnow"
     },
 
     {
@@ -88455,7 +88719,10 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 23,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_season": "nowinter",
+      "cond_weather": "dry"
     },
 
     {
@@ -88836,7 +89103,11 @@
       "requirements": [{"name":"30West - HEMS-Objects package","checkPath":"/VFS/Simobjects/Airplanes/30W_Ambu_Johanniter/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/69699/hems-objects"}],
       "preload": "enable",
       "ID_CARD": 33,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "nowinter",
+      "cond_weather": "nosnow"
     },
 
     {
@@ -88874,7 +89145,12 @@
       "mnumber": 2,
       "preload": "disable",
       "ID_CARD": 34,
-      "indoor_scene": "yes"
+      "indoor_scene": "yes",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 8,
+      "cond_to": 16,
+      "cond_season": "schoolterm"
     },
 
     {
@@ -88913,7 +89189,12 @@
       "mnumber": 2,
       "preload": "disable",
       "ID_CARD": 61,
-      "indoor_scene": "yes"
+      "indoor_scene": "yes",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 8,
+      "cond_to": 16,
+      "cond_season": "schoolterm"
     },
 
     {
@@ -89029,7 +89310,11 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 37,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "nowinter",
+      "cond_weather": "dry"
     },
 
     {
@@ -89068,7 +89353,11 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 38,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "liftseason",
+      "cond_wind": 60
     },
 
     {
@@ -89108,7 +89397,11 @@
       "requirements": [{"name":"30West - HEMS-Objects package","checkPath":"/VFS/Simobjects/Airplanes/30W_Ambu_Johanniter/aircraft.cfg","downloadUrl":"https://it.flightsim.to/file/69699/hems-objects"}],
       "preload": "enable",
       "ID_CARD": 39,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "liftseason",
+      "cond_wind": 60
     },
 
     {
@@ -89184,7 +89477,11 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 41,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "nowinter",
+      "cond_weather": "dry"
     },
 
     {
@@ -89223,7 +89520,10 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 42,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_season": "coldseason",
+      "cond_weather": "snowcover"
     },
 
     {
@@ -89261,7 +89561,11 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 43,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 8,
+      "cond_to": 18
     },
 
     {
@@ -89337,7 +89641,10 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 45,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_weather": "dry"
     },
 
     {
@@ -89413,7 +89720,11 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 47,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "skiseason",
+      "cond_weather": "snowcover"
     },
 
     {
@@ -89451,7 +89762,11 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 50,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "skiseason",
+      "cond_weather": "snowcover"
     },
 
     {
@@ -89527,7 +89842,11 @@
       "mnumber": 2,
       "preload": "disable",
       "ID_CARD": 49,
-      "indoor_scene": "yes"
+      "indoor_scene": "yes",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 8,
+      "cond_to": 19
     },
 
     {
@@ -89869,7 +90188,11 @@
       "mnumber": 2,
       "preload": "disable",
       "ID_CARD": 60,
-      "indoor_scene": "yes"
+      "indoor_scene": "yes",
+      "cond": 1,
+      "cond_hours": "yes",
+      "cond_from": 7,
+      "cond_to": 22
     },
 
     {
@@ -89907,7 +90230,10 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 63,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_season": "huntingseason"
     },
 
     {
@@ -89945,7 +90271,10 @@
       "mnumber": 2,
       "preload": "enable",
       "ID_CARD": 64,
-      "indoor_scene": "no"
+      "indoor_scene": "no",
+      "cond": 1,
+      "cond_light": "day",
+      "cond_wind": 60
     },
 
     {

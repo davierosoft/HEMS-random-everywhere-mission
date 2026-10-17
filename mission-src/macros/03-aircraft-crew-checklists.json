@@ -1031,7 +1031,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:15>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:16>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice dispatcher publish": [
@@ -2181,7 +2181,7 @@
     ]}
   ],
   "voice tip": [
-    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
+    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
     {"set":{"param":"vtp_calm"},"value":0},
     {"if": {"global":"CREW_TIPS"}, "ne": 1,
       "then": [
@@ -2191,11 +2191,11 @@
       "then": [
         {"if": {"local":"vtp_next"}, "eq": null,
           "then": [
-            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,11]}}}
+            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,12]}}}
         ]},
         {"set":{"local":"vtp_t"},"value":{"local":"vtp_next"}},
         {"set":{"local":"vtp_next"},"value":{"add":[{"local":"vtp_next"},1]}},
-        {"if": {"local":"vtp_next"}, "gte": 11,
+        {"if": {"local":"vtp_next"}, "gte": 12,
           "then": [
             {"set":{"local":"vtp_next"},"value":0}
         ]},
@@ -2237,6 +2237,10 @@
             {"set":{"local":"vtp_code"},"value":"CHT"}
         ]},
         {"if": {"local":"vtp_t"}, "eq": 10,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"CND"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 11,
           "then": [
             {"set":{"local":"vtp_code"},"value":"TOF"}
         ]},
@@ -3747,6 +3751,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"no"},
+    {"set":{"global":"COND_MISSIONS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"},
@@ -3836,6 +3841,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
+    {"set":{"global":"COND_MISSIONS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":1},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"ROOKIE PILOT"},
@@ -3925,6 +3931,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
+    {"set":{"global":"COND_MISSIONS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT PILOT"},
@@ -4014,6 +4021,7 @@
     {"set":{"global":"PERF_LOG_LEVEL"},"value":"advanced"},
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
+    {"set":{"global":"COND_MISSIONS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":2},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT HEMS"},

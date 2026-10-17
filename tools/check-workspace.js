@@ -57,6 +57,7 @@ const scripts = [
   'test-radio-context.js',
   'test-voice-texts.js',
   'test-voice-tips.js',
+  'test-condition-missions.js',
   'test-heli-rescuer-and-ambulance.js',
   'validate-user-changelog.js',
   'test-workspace-tools.js',

@@ -1,3 +1,13 @@
+## Release 0.997 169.57
+
+- Cumulative scope of the baseline: entries 169.23 to 169.57 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions)
+- Cumulative scope of the baseline: entries 169.23 to 169.57 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions)
+- Cumulative scope of the baseline: entries 169.23 to 169.57 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions)
+- Option On conditions missions (global COND_MISSIONS yes / no; Settings, DISPATCH OPTIONS; saved in the aircraft profiles, cleared by Reset to default; ON in the factory profiles EXPERT PILOT and EXPERT HEMS, OFF in DEFAULT and ROOKIE PILOT): randomize takes a snapshot of the simulator (conditions snapshot: local hour, month with the hemisphere, E:TIME OF DAY, precipitation, wind in km/h, temperature estimated at 1300 m from the altitude and the temperature of the helicopter) and draws only the enabled missions that fit (conditions fit); the 28 accidents with cond 1 carry cond_light, cond_hours, cond_season, cond_weather and cond_wind (data accidents). The calls for missing people and all the other missions are never filtered; when no enabled mission fits the filter is dropped for that draw. Design: docs/architecture/CONDITION_MISSIONS.md.
+- Crew tip about the option (topic CND of voice tip, twelve topics) and the declaration of the voice pack EN 16 (<pack:EN:16>).
+- The debug snapshot (capture diagnostic snapshot, page COMMON) shows COND_MISSIONS and the locals cm_* of the decision.
+- Test: tools/test-condition-missions.js (data, macros, profiles, a model of the decision); tools/test-voice-tips.js and tools/validate-mission.js follow. The readings of E:LOCAL MONTH OF YEAR, AMBIENT WIND VELOCITY and PLANE LATITUDE are new: runtime in the simulator pending (RUNTIME_VALIDATION, section "On conditions missions").
+
 ## Release 0.997 169.56
 
 - Cumulative scope of the baseline: entries 169.23 to 169.56 (vehicle lines, city query, call sign, voice draws, door trace)

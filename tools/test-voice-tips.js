@@ -26,8 +26,8 @@ const tipText = JSON.stringify(tip);
 assert.ok(tipText.includes('"global":"CREW_TIPS"') && tipText.includes('"ne":') && tipText.includes('"tip":1'), 'voice tip reads CREW_TIPS and asks voice calm with the param tip 1');
 assert.ok(tipText.includes('"text":"TIP.{0}.{1}"'), 'the key is built from the topic code and the line number');
 const codes = collect(tip, (node) => node.set && node.set.local === 'vtp_code' && typeof node.value === 'string').map((node) => node.value);
-assert.deepEqual(codes, ['SAV', 'MSL', 'PRF', 'CRW', 'KIT', 'QLK', 'DBG', 'MED', 'FLR', 'CHT', 'TOF'], 'eleven topics in the documented order');
-assert.ok(tipText.includes('"rand":[0,11]') && tipText.includes('"gte":11'), 'the random start and the wrap follow the number of topics');
+assert.deepEqual(codes, ['SAV', 'MSL', 'PRF', 'CRW', 'KIT', 'QLK', 'DBG', 'MED', 'FLR', 'CHT', 'CND', 'TOF'], 'twelve topics in the documented order');
+assert.ok(tipText.includes('"rand":[0,12]') && tipText.includes('"gte":12'), 'the random start and the wrap follow the number of topics');
 assert.ok(tipText.includes('"lte":4') && tipText.includes('"vtp_n"'), 'four lines for each topic');
 assert.ok(!tipText.includes('"speak"'), 'no literal speak: the lines are pack messages through voice say');
 
@@ -81,4 +81,4 @@ if (fs.existsSync(packFile)) {
 } else {
   console.log('voice tips: the Companion repository is not next to this one, the pack checks are skipped');
 }
-console.log('Voice tips PASS: eleven topics of four lines, the setting CREW TIPS (profiles, reset, buttons) independent from CREW CHATTER, a tip offered in every long leg. Simulator and Companion runtime PENDING.');
+console.log('Voice tips PASS: twelve topics of four lines, the setting CREW TIPS (profiles, reset, buttons) independent from CREW CHATTER, a tip offered in every long leg. Simulator and Companion runtime PENDING.');

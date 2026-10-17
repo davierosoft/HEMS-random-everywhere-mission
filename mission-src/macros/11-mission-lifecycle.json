@@ -1,6 +1,8 @@
 {"randomize": [
     {"set":{"local":"randomize_result"},"value":null},
     {"set":{"param":"selectable_accidents"},"value":0},
+    {"set":{"param":"cond_eligible"},"value":0},
+    {"call_macro":"conditions snapshot"},
     {"for_each": {"static":"accidents"},
       "do": [
         {"set":{"param":"candidate_accident"},"value":{"param":"$item"}},
@@ -10,9 +12,36 @@
               "then": [
                 {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"candidate_accident"},"path":"id"}}, "eq": true,
                   "then": [
-                    {"set":{"param":"selectable_accidents"},"value":{"add":[{"param":"selectable_accidents"},1]}}
+                    {"set":{"param":"selectable_accidents"},"value":{"add":[{"param":"selectable_accidents"},1]}},
+                    {"set":{"param":"cond_pass"},"value":1},
+                    {"if": {"local":"cm_active"}, "eq": 1,
+                      "then": [
+                        {"if": {"struct":{"param":"candidate_accident"},"path":"cond"}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"cf_light"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_light"}},
+                            {"set":{"local":"cf_hours"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_hours"}},
+                            {"set":{"local":"cf_from"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_from"}},
+                            {"set":{"local":"cf_to"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_to"}},
+                            {"set":{"local":"cf_season"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_season"}},
+                            {"set":{"local":"cf_weather"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_weather"}},
+                            {"set":{"local":"cf_wind"},"value":{"struct":{"param":"candidate_accident"},"path":"cond_wind"}},
+                            {"call_macro":"conditions fit","result":"cond_pass"}
+                        ]}
+                    ]},
+                    {"if": {"param":"cond_pass"}, "eq": 1,
+                      "then": [
+                        {"set":{"param":"cond_eligible"},"value":{"add":[{"param":"cond_eligible"},1]}}
+                    ]}
                 ]}
             ]}
+        ]}
+    ]},
+    {"set":{"local":"cm_eligible"},"value":{"param":"cond_eligible"}},
+    {"if": {"local":"cm_active"}, "eq": 1,
+      "then": [
+        {"if": {"param":"cond_eligible"}, "eq": 0,
+          "then": [
+            {"set":{"local":"cm_active"},"value":0}
         ]}
     ]},
     {"if": {"param":"selectable_accidents"}, "gt": 0,
@@ -79,7 +108,26 @@
               "then": [
                 {"if": {"struct":{"param":"nextaccident"},"path":"is_random"}, "eq": null,
                   "then": [
-                    {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"nextaccident"},"path":"id"}}, "eq": true,
+                    {"set":{"param":"cond_pass"},"value":1},
+                    {"if": {"local":"cm_active"}, "eq": 1,
+                      "then": [
+                        {"if": {"struct":{"param":"nextaccident"},"path":"cond"}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"cf_light"},"value":{"struct":{"param":"nextaccident"},"path":"cond_light"}},
+                            {"set":{"local":"cf_hours"},"value":{"struct":{"param":"nextaccident"},"path":"cond_hours"}},
+                            {"set":{"local":"cf_from"},"value":{"struct":{"param":"nextaccident"},"path":"cond_from"}},
+                            {"set":{"local":"cf_to"},"value":{"struct":{"param":"nextaccident"},"path":"cond_to"}},
+                            {"set":{"local":"cf_season"},"value":{"struct":{"param":"nextaccident"},"path":"cond_season"}},
+                            {"set":{"local":"cf_weather"},"value":{"struct":{"param":"nextaccident"},"path":"cond_weather"}},
+                            {"set":{"local":"cf_wind"},"value":{"struct":{"param":"nextaccident"},"path":"cond_wind"}},
+                            {"call_macro":"conditions fit","result":"cond_pass"}
+                        ]}
+                    ]},
+                    {"if": {
+                      "and": [
+                        {"require":{"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"nextaccident"},"path":"id"}},"eq":true},
+                        {"require":{"param":"cond_pass"},"eq":1}
+                      ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"accident_name"},"value":{"struct":{"param":"nextaccident"},"path":"name"}},
                         {"set":{"local":"accident_general_description"},"value":{"struct":{"param":"nextaccident"},"path":"general_description"}},
@@ -152,6 +200,170 @@
         {"set":{"local":"randomize_result"},"value":"no_active_missions"},
         {"set":{"local":"randomize_error"},"value":"NO ACTIVE MISSIONS - enable at least one in CUSTOM MISSION"}
     ]}
+  ],
+  "conditions snapshot": [
+    {"#comment":"Option On conditions missions (global COND_MISSIONS yes, kept in the aircraft profiles; ON in EXPERT PILOT and EXPERT HEMS, OFF in DEFAULT and ROOKIE PILOT): the state of the simulator that decides which random missions fit, read once at the start of randomize into the locals cm_*. cm_active 1 when the option is on; cm_hour local hour (0 to 23); cm_month the local month (1 to 12, 0 when the simulator gives none) and cm_mn the same month in northern terms (a southern latitude is shifted by six months), 0 = season unknown; cm_day 1 when E:TIME OF DAY is 1 (the value the mission already treats as day); cm_precip AMBIENT PRECIP STATE (4 or more = rain or snow); cm_temp the ambient temperature at the helicopter; cm_wind the wind speed in km/h; cm_t1300 the temperature estimated at 1300 m above sea level with the average lapse of 6.5 degrees C per 1000 m from the altitude of the helicopter (the ski areas are in the mountains while the helicopter may be in the plain). The locals are in the debug snapshots."},
+    {"set":{"local":"cm_active"},"value":0},
+    {"if": {"global":"COND_MISSIONS"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"cm_active"},"value":1},
+        {"set":{"local":"cm_hour"},"value":{"floor":{"divide":[{"var":["E:LOCAL TIME","seconds"]},3600]}}},
+        {"set":{"local":"cm_month"},"value":{"var":["E:LOCAL MONTH OF YEAR","number"]}},
+        {"set":{"local":"cm_mn"},"value":{"local":"cm_month"}},
+        {"if": {"var":["PLANE LATITUDE","DEGREES"]}, "lt": 0,
+          "then": [
+            {"if": {"local":"cm_month"}, "gt": 6,
+              "then": [
+                {"set":{"local":"cm_mn"},"value":{"subtract":[{"local":"cm_month"},6]}}
+              ],"else": [
+                {"if": {"local":"cm_month"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"cm_mn"},"value":{"add":[{"local":"cm_month"},6]}}
+                ]}
+            ]}
+        ]},
+        {"set":{"local":"cm_day"},"value":0},
+        {"if": {"var":["E:TIME OF DAY","number"]}, "eq": 1,
+          "then": [
+            {"set":{"local":"cm_day"},"value":1}
+        ]},
+        {"set":{"local":"cm_precip"},"value":{"var":["AMBIENT PRECIP STATE","number"]}},
+        {"set":{"local":"cm_temp"},"value":{"var":["AMBIENT TEMPERATURE","celsius"]}},
+        {"set":{"local":"cm_wind"},"value":{"multiply":[{"var":["AMBIENT WIND VELOCITY","knots"]},1.852]}},
+        {"set":{"local":"cm_alt_m"},"value":{"multiply":[{"var":["PLANE ALTITUDE","feet"]},0.3048]}},
+        {"set":{"local":"cm_t1300"},"value":{"subtract":[{"local":"cm_temp"},{"multiply":[0.0065,{"subtract":[1300,{"local":"cm_alt_m"}]}]}]}}
+    ]}
+  ],
+  "conditions fit": [
+    {"#comment":"Does the accident whose fields were copied into cf_light, cf_hours, cf_from, cf_to, cf_season, cf_weather and cf_wind (by randomize) fit the conditions of cm_* (conditions snapshot)? Returns 1 or 0. cf_light day: E:TIME OF DAY 1; cf_hours yes: the local hour from cf_from (included) to cf_to (excluded); cf_season (months in northern terms): nowinter not Dec to Feb, skiseason Dec to Apr, coldseason Nov to May, huntingseason Sep to Jan, schoolterm not Jul and Aug, liftseason not May and Nov; cf_weather: dry no rain or snow, nosnow no snow and above 0 degrees C, wet rain or snow, snowcover at most 0 degrees C estimated at 1300 m; cf_wind the highest wind in km/h. A field that the accident does not have is null and does not restrict; an unknown month does not restrict the season. The calls for missing people (hikers, cars, quads, wandering persons, lost aircraft) and the other missions without the field cond are never restricted. Details: docs/architecture/CONDITION_MISSIONS.md."},
+    {"set":{"param":"cfit"},"value":1},
+    {"if": {"local":"cf_light"}, "eq": "day",
+      "then": [
+        {"if": {"local":"cm_day"}, "ne": 1,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_hours"}, "eq": "yes",
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"local":"cm_hour"},"lt":{"local":"cf_from"}},
+            {"require":{"local":"cm_hour"},"gte":{"local":"cf_to"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cm_mn"}, "gt": 0,
+      "then": [
+        {"if": {"local":"cf_season"}, "eq": "nowinter",
+          "then": [
+            {"if": {
+              "or": [
+                {"require":{"local":"cm_mn"},"eq":12},
+                {"require":{"local":"cm_mn"},"lte":2}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "skiseason",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":5},
+                {"require":{"local":"cm_mn"},"lte":11}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "coldseason",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":6},
+                {"require":{"local":"cm_mn"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "huntingseason",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":2},
+                {"require":{"local":"cm_mn"},"lte":8}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "schoolterm",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"cm_mn"},"gte":7},
+                {"require":{"local":"cm_mn"},"lte":8}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"cf_season"}, "eq": "liftseason",
+          "then": [
+            {"if": {
+              "or": [
+                {"require":{"local":"cm_mn"},"eq":5},
+                {"require":{"local":"cm_mn"},"eq":11}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"cfit"},"value":0}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "dry",
+      "then": [
+        {"if": {"local":"cm_precip"}, "gte": 4,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "nosnow",
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"local":"cm_precip"},"gte":8},
+            {"require":{"local":"cm_temp"},"lte":0}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "wet",
+      "then": [
+        {"if": {"local":"cm_precip"}, "lt": 4,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_weather"}, "eq": "snowcover",
+      "then": [
+        {"if": {"local":"cm_t1300"}, "gt": 0,
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"cf_wind"}, "gt": 0,
+      "then": [
+        {"if": {"local":"cm_wind"}, "gt": {"local":"cf_wind"},
+          "then": [
+            {"set":{"param":"cfit"},"value":0}
+        ]}
+    ]},
+    {"return":{"param":"cfit"}}
   ],
   "missionupdate": [
     {"set":{"local":"CASUALTY_PERCENTAGE"},"value":{"floor":{"rand":[1,101]}}},

@@ -452,7 +452,7 @@ Tester report 2026-10-14 (169.51, app 0.22): residential missions stopped at 43.
 
 ## Crew tips (PENDING)
 
-User request of 2026-10-14. With the Mission Companion (pack EN 13) the crew tells, in the long legs, a conversation of four lines about a function of the mission (TIP.<topic>.1 to 4, eleven topics). Setting CREW TIPS (Settings, Audio options, TIPS ON / TIPS OFF), independent from CREW CHATTER.
+User request of 2026-10-14. With the Mission Companion (pack EN 13) the crew tells, in the long legs, a conversation of four lines about a function of the mission (TIP.<topic>.1 to 4, twelve topics from pack EN 16). Setting CREW TIPS (Settings, Audio options, TIPS ON / TIPS OFF), independent from CREW CHATTER.
 
 1. Fly a dispatch with CREW CHATTER FULL and TIPS ON: in the legs to the scene, to the hospital and back to the base (more than 7 km from the target, above 300 ft) a tip is told in about 4 legs out of 10, after the short chat of the pack when there is one. The log of the Companion shows `[SAY] TIP.<topic>.n -> option k of 6`. Fly several missions: the topics follow each other and do not repeat before all eleven were told.
 2. Set TIPS OFF: no tip is told, the small talk (banter, CRZ chats) continues. Set TIPS ON and CREW CHATTER REDUCED or MINIMAL: the small talk stops, the tips continue (lower options, the same information).
@@ -500,3 +500,14 @@ Mission 169.56, Mission Companion 0.26, pack EN 15. Static gates only (`node too
 5. Doors: the ground crew runtime trace (macro doors) has a second row four seconds after each command with the state read: the door should read 1 after an opening.
 6. Call sign: the setting CALL SIGN on the audio options page of the tablet (SET, CLEAR, saved in the aircraft profiles, cleared by Reset to default) and the cancellation texts. The Companion has its own setting (airline of the aircraft.cfg or custom name).
 7. Random voices: set the dispatcher, ground unit and heli rescuer to Random voice in the Actors tab, pick the pool, start two dispatches: the ground unit and the heli rescuer change voice at each dispatch, the dispatcher at each shift, and the three voices are never equal.
+
+## On conditions missions (PENDING)
+
+User request of 2026-10-17. Mission 169.57, Mission Companion 0.27, pack EN 16. Static gate only (`node tools/test-condition-missions.js`). Design: docs/architecture/CONDITION_MISSIONS.md.
+
+1. Settings, DISPATCH OPTIONS: the row "On conditions missions" with OFF (DEFAULT) and ON; a change marks the profile CUSTOM. Select the factory profiles: EXPERT PILOT and EXPERT HEMS turn it ON, DEFAULT and ROOKIE PILOT OFF. Save a custom profile with ON, load another, load the first again: ON is restored; Reset to default turns it off.
+2. With the option ON start a mission and open the debug snapshot (page COMMON): `cm_active` 1, `cm_hour` the local hour of the simulator, `cm_month` the month set in the simulator (if it is 0 the reading of E:LOCAL MONTH OF YEAR does not work in this runtime: report it), `cm_mn` equal to `cm_month` in the northern hemisphere and shifted by six months in the southern one, `cm_day` 1 by day and 0 at dawn, dusk and night, `cm_precip` 2 (none) or 4 or more with rain or snow, `cm_wind` in km/h (compare with the wind set in the simulator: 10 kt = 18.5 km/h; if it stays 0 with wind, the variable name is wrong), `cm_t1300` lower than `cm_temp` at a helicopter below 1300 m, and `cm_eligible` the number of enabled missions that fit.
+3. Midwinter at night with rain (January, 02:00, rain): draw ten random missions with only the 28 restricted ones enabled in a custom list plus one unrestricted: no skier, paraglider, school, supermarket, cableway, tractor or quarry; only the wet-road collision and the unrestricted one. In July at noon with a clear sky the skiers and the wet-road collision do not appear.
+4. Enable only a restricted mission (for example the skier) in a summer noon: the draw still works (the filter is dropped when no enabled mission fits) and the mission starts.
+5. Option OFF: the same lists draw every mission as before.
+6. The crew tip about the option (TIP.CND.*) is told with the Mission Companion 0.27 (pack EN 16) and TIPS ON; the topics follow in the documented order.

@@ -803,7 +803,7 @@ function checkAircraftProfileRegression() {
     ENGINE_FAILURES_ENABLED: 'yes', ORANGE_TARGET_SMOKE: 'auto', TARGET_GUIDANCE_RANGE: 'wide',
     HOIST_SAFETY_MONITOR: 'yes', HOIST_CONTROL_PROFILE: 'auto', AUTO_FPL_NAV_SOURCE: 'yes',
     TELEPORT_ASSIST_ENABLED: 'yes', ambu_force: 100, poli_force: 100, fire_force: 100,
-    PERF_SAMPLING: 'fast', PERF_ALTITUDE_GATE: 'yes', PERF_LOG_LEVEL: 'advanced', KIT_WEIGHTS: 'no', LIFE_FREEZE_NEAR: 'no'
+    PERF_SAMPLING: 'fast', PERF_ALTITUDE_GATE: 'yes', PERF_LOG_LEVEL: 'advanced', KIT_WEIGHTS: 'no', LIFE_FREEZE_NEAR: 'no', COND_MISSIONS: 'no'
   };
   Object.entries(firstRun).forEach(([key, value]) => {
     const owner = key === 'AIRCRAFT_PROFILE_ACTIVE' || key === 'AIRCRAFT_PROFILE_SLOT' ? 'ensure aircraft profile defaults' : 'aircraft factory DEFAULT';
@@ -852,6 +852,10 @@ function checkAircraftProfileRegression() {
   for (const [profileName, value] of Object.entries({ DEFAULT: 'no', 'ROOKIE PILOT': 'yes', 'EXPERT PILOT': 'yes', 'EXPERT HEMS': 'yes' })) {
     expectRegression(compact(mission.macros[`aircraft factory ${profileName}`] || []).includes(`"set":{"global":"LIFE_FREEZE_NEAR"},"value":"${value}"`), `factory profile ${profileName} must set LIFE_FREEZE_NEAR=${value}`);
   }
+  // Factory values of COND_MISSIONS (On conditions missions, user 2026-10-17): on in EXPERT PILOT and EXPERT HEMS, off in DEFAULT and ROOKIE PILOT (complete random missions)
+  for (const [profileName, value] of Object.entries({ DEFAULT: 'no', 'ROOKIE PILOT': 'no', 'EXPERT PILOT': 'yes', 'EXPERT HEMS': 'yes' })) {
+    expectRegression(compact(mission.macros[`aircraft factory ${profileName}`] || []).includes(`"set":{"global":"COND_MISSIONS"},"value":"${value}"`), `factory profile ${profileName} must set COND_MISSIONS=${value}`);
+  }
   // PERFORMANCE section: three persistent options, each description names the lightest choice, defaults reach every profile layer
   const settingsDispatchItems = (mission.macros.settings || []).find((command) => Array.isArray(command.set_dispatch))?.set_dispatch || [];
   const performanceLink = settingsDispatchItems.findIndex((item) => item.link === '+ PERFORMANCE');
@@ -897,7 +901,7 @@ function checkAircraftProfileRegression() {
     'MISSION_GUIDANCE_OVERRIDE', 'RINGONCE', 'LOWFUELTHRSLD', 'NOCONNEXT', 'CARLSPBIT', 'CARLS_DF_TUNING_MODE',
     'TABLET_5G_ENABLED', 'startpage', 'ambu_force', 'poli_force', 'fire_force', 'ENGINE_FAILURES_ENABLED',
     'ORANGE_TARGET_SMOKE', 'TARGET_GUIDANCE_RANGE', 'HOIST_SAFETY_MONITOR', 'HOIST_CONTROL_PROFILE',
-    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED', 'PERF_SAMPLING', 'PERF_ALTITUDE_GATE', 'PERF_LOG_LEVEL', 'KIT_WEIGHTS', 'LIFE_FREEZE_NEAR', 'CREW_CHATTER', 'CREW_TIPS'
+    'AUTO_FPL_NAV_SOURCE', 'TELEPORT_ASSIST_ENABLED', 'PERF_SAMPLING', 'PERF_ALTITUDE_GATE', 'PERF_LOG_LEVEL', 'KIT_WEIGHTS', 'LIFE_FREEZE_NEAR', 'CREW_CHATTER', 'CREW_TIPS', 'COND_MISSIONS'
   ]);
   const savedProfileKeys = new Set(collect(mission.macros['save custom aircraft profile'] || [], (item) => item.set?.table && typeof item.set.key === 'string').map((item) => item.set.key));
   const loadedProfileKeys = new Set(collect(mission.macros['load custom aircraft profile'] || [], (item) => item.table && typeof item.key === 'string').map((item) => item.key));
