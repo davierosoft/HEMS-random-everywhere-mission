@@ -513,7 +513,7 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 
 - The Radio effect tab has three hiss sliders instead of one: one for the intercom, one for radio calls and one for calls on an external radio (dispatcher, hospital). The recommended settings use 25 and 30 for the two radio ones. The Headset and External test buttons of the Volume tab now speak the sample text of the language chosen on the Voices tab.
 - The Advanced box has a Purge audio cache button (it shows how many files and how much space, and asks before deleting). The same is available as `--purge-cache` on the command line, and the cache of messages that no longer exist is cleaned at every start.
-- The About tab has a Contributors section (kekkeruuu and Daikan), a note on the online voices and the licences; the click at the end of an intercom call is a short recording of a real radio transmission.
+- The About tab has a Contributors section (Daikan and kekkeruuu), a note on the online voices and the licences; the click at the end of an intercom call is a short recording of a real radio transmission.
 - **Build history:** Mission Companion app 0.30.
 - **Test:** Move each hiss slider and press the matching test button (Radio call, Intercom, External radio): only that sound changes; press Purge audio cache; open the About tab and read the Contributors section.
 
