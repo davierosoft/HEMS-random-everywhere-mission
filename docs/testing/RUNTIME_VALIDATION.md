@@ -519,3 +519,45 @@ Tester report of 2026-10-17 (build 169.54). Mission 169.58, static gate `node to
 1. Start a mission, wait for a search and rescue dispatch (or pick Lost contact with helicopter in CUSTOM MISSION), then open the mission list page, switch the preset, toggle a category and apply a linked aircraft profile before accepting the dispatch. In the debug snapshot (page COMMON, locals) `SAR` must read `yes` (not true), `FPL_NMBR` 4 after the acceptance and the route to the last known position is loaded in the FMS.
 2. Fly to the scene: `has_landing_spot` 1 after the sighting, `patient_found` yes, the hoist option and the ground operations start.
 3. With a non-SAR dispatch the same steps leave `SAR` at `no` and the road accident route is loaded.
+
+## Walking speeds of the crews and the vehicle manoeuvres (PENDING)
+
+Tester report of 2026-10-17 (organ transport: the crew walks very slowly). Static gate `node tools/audit-drive-speeds.js` (every drive_object and every call of the drive wrapper macros, speeds in km/h, compared with starting point/baseline-0.997-original-fully-functional.json). Before the fix the audit found 217 slow person walks (110 slower than the baseline, down to 0.5 km/h on the organ pick-up where the baseline walks at 6.1; the macros of the destinations, the midway and transfer patient loads, the organ transport, the ground operations, the crew emergency and the hospital deliveries) and 123 vehicle parking manoeuvres at 2 or 3 km/h over 4 to 14 m.
+
+1. Organ transport: after the landing the crew walks to the patient and back with the stretcher at a normal walking pace (about 5 to 6 km/h on the pick-up route, never a crawl); the same in the destination macros (Ambulance, User, Organ, Midway, Transfer): compare with the video of the tester (the walk of 5 m took about 9 s).
+2. Ground operations with 3, 4 and 5 crew: the crew walks to the patient and back without waiting at a crawl; the crew emergency (a crew member hurt) carries the stretcher at 4 km/h, the pilot walks to the policeman at 4.
+3. Vehicles: ambulance, police and fire engines park (park_* macros) at 5 km/h; the ones with a speed multiplier (the road limit times 1.5) were not changed.
+4. Still slow on purpose: the walks of under 2 m (the short offsets, never above 3 km/h) and the drives that are identical to the baseline (the fire guard of the engine start at 1 to 2 km/h over 3 m).
+5. Not verified: the calls of the multiplier wrappers (drive ... safe multiplier) pass a speed of 4 together with speedMultiplier, which the baseline did not; if an ambulance or a police car crawls on the road after the dispatch, report it (the speed would be the cause).
+
+## Heli rescuer aboard at the end (PENDING)
+
+Tester report of 2026-10-17 (4 crew, heli rescuer picked up, patient rescued, flown to the hospital: the unloading of the patient was followed by END MISSION / NEW DISPATCH and the heli rescuer could not be returned). Mission 169.59, static gate `node tools/test-heli-rescuer-gate.js`; pack EN 17 (PAX3.25 is said by the heli rescuer, actor 12, on the intercom, in the first person).
+
+1. Pick up a heli rescuer, rescue the patient and fly to a hospital with him aboard. After the unloading and the paperwork the modal "Heli rescuer aboard" appears instead of "Mission accomplished".
+2. DROP HELI RESCUER HERE: land if needed; the heli rescuer deboards and walks to the hospital; then "Mission accomplished" follows with END MISSION, RECEIVE NEW DISPATCH and RETURN TO HOME BASE.
+3. GO BACK TO THE LOADING POINT: the route goes to the loading point; there the usual deboarding (hoist or ground); afterwards the route goes on to the base and "Mission accomplished" appears.
+4. RETURN TO HOME BASE: the heli rescuer stays aboard, the flight goes to the base; after the landing the modal asks again (DROP HELI RESCUER HERE (BASE) or the loading point); only after the drop the end menu (END SHIFT) appears.
+5. Use the action DROP HELIRESCUER HERE of the helicopter while the modal is open: the modal closes by itself.
+6. The briefing at the pick-up is the conversation of the next section, not the old sentence of the doctor.
+
+## Briefing of the crew to the heli rescuer (PENDING)
+
+Mission 169.59 with the Mission Companion 0.29 and pack EN 17 (user request of 2026-10-17). Static gate: `node tools/test-heli-rescuer-briefing.js`. With the voice server connected (`TTS` 1) and CREW CHATTER on FULL:
+
+1. Dispatch an accident, ask for the heli rescuer, board him (hoist and ground, once each). After the welcome the pilot opens with the kind of mission and the number of injured, the copilot gives the time to the scene and the ground units (as the tablet shows them), the doctor says what is known medically, the chief (with four crew or more; the copilot with three) explains the ground sequence and the hoist sequence. The rescuer is heard on the intercom with his own voice; the crew lines on the intercom too.
+2. Listen to the question round: the pilot asks, the rescuer asks one of the three questions or none, the answer follows; at times the doctor or the copilot voices a doubt, the rescuer or the pilot answers; then the readbacks (rescuer, doctor, chief) and the close of the pilot. Repeat three or four missions: the questions, the doubts and the readbacks vary.
+3. During the briefing no small talk, tip or banter starts; the chat of the leg to the scene starts after it.
+4. Fly the ground operation, then a hoist operation: the order really is the one briefed (the rescuer first and the area-secure call before the crew moves; the rescuer is the last one aboard at the end).
+5. Set CREW CHATTER to REDUCED: only the opening, the information, the two sequences and the close are said, with the professional wording. Set AUDIO_DECLUT to 1: the old one-sentence briefing is heard instead.
+6. Pick up the heli rescuer less than five minutes from the scene: the short briefing. Less than two minutes: the old sentence.
+7. Patient transfer and organ transport with a heli rescuer: the pilot, the doctor and the chief say that there is no scene and what the rescuer does in the cabin; the rescuer reads it back.
+8. The Companion log shows no `[UNTRANSLATED]` or missing key for HRB.* and the lines come in the order of the macro.
+
+## Non-blocking query errors and the boarding log (PENDING)
+
+Tester report of 2026-10-17 (mission 169.58): ERR101 on the tablet during the loading of the patient, the mission went on; crew already seated at the start with no walk-out. Static gate: `node tools/test-query-nonblocking.js`.
+
+1. A hospital without a marked emergency entrance (or a patient transported by the helicopter in the open country): the first search of the hospital door fails: the tablet shows "Temporary error: ERR101 ... If this message stays more than 40 seconds, please check the location" and, when the next search finds a location, "Location found" (or "Location set on a backup point" when it ends on the fixed point); the debug snapshot (ground_crew_runtime_trace) has a row `osm_query | mission | hospitaltemp | nothing found after 9 attempts, last radius ... m (not blocking: a fallback follows)`; the mission goes on to the hospital or building search and to the default point.
+2. A search mission with a pitch (`Query closest pitch`) that finds nothing keeps its ERR101.
+3. Start the mission with the battery master OFF and the helicopter cold and dark: the trace has `boarding | crew | start | start battery_master=0 rotor_rpm=0 back_to_hospital=1 ...`, `hangar query done, hangar location present yes` (or no) and `walk-out boarding: battery off and BACK_TO_HOSPITAL 1`; the technician, the ground power unit and the crew walk out. With the battery master ON the row says `crew seated at once: battery master is on, no walk-out (as in the original)` and the crew is seated at the start.

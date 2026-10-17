@@ -1080,6 +1080,11 @@
         {"call_macro":"crew hospital finish"},
         {"return":0}
     ]},
+    {"call_macro":"heli rescuer aboard gate","params":{"where":"hospital"},"result":"hrg_res"},
+    {"if": {"param":"hrg_res"}, "eq": "base",
+      "then": [
+        {"return":0}
+    ]},
     {"if": {"local":"LIFESCORE"}, "gt": 0,
       "then": [
         {"if": {"local":"player"}, "eq": "multiplayer",
@@ -1274,7 +1279,7 @@
                                     {"drive_object":{"name":"pax1","to":["hospital_door"],"VAR1":16,"speed":5}},
                                     {"set":{"object":"pax1","var":"VAR 1"},"value":14}
                                   ],"else": [
-                                    {"drive_object":{"name":"pax1","to":["hospital_door"],"VAR1":2,"speed":5}},
+                                    {"drive_object":{"name":"pax1","to":["hospital_door"],"VAR1":2,"speed":6}},
                                     {"set":{"object":"pax1","var":"VAR 1"},"value":0}
                                 ]},
                                 {"if": {"local":"hospital_wptot"}, "eq": 1,
@@ -1316,7 +1321,7 @@
                                 {"if": {"local":"CREW"}, "eq": 3,
                                   "then": [
                                     {"set":{"object":"pax1","var":"VAR 1"},"value":14},
-                                    {"drive_object":{"name":"pax1","to":[{"closest":[{"bearing":160,"dist":7},{"bearing":90,"dist":5},{"bearing":35,"dist":6}],"to":"pax1"}],"VAR1":16,"speed":5}},
+                                    {"drive_object":{"name":"pax1","to":[{"closest":[{"bearing":160,"dist":7},{"bearing":90,"dist":5},{"bearing":35,"dist":6}],"to":"pax1"}],"VAR1":16,"speed":6}},
                                     {"set":{"object":"pax1","var":"VAR 1"},"value":14}
                                   ],"else": [
                                     {"drive_object":{"name":"pax1","to":[{"closest":[{"bearing":160,"dist":7},{"bearing":90,"dist":5},{"bearing":35,"dist":6}],"to":"pax1"}],"VAR1":2,"speed":5}},
@@ -2022,6 +2027,7 @@
         ]}
     ]}},
     {"sleep":1},
+    {"call_macro":"heli rescuer aboard gate","params":{"where":"base"}},
     {"#comment":"Landed at the base: the end menu (MISSION_END_WAITING 1) is offered at once and the deboarding runs in parallel. The user may shut down and deboard, or end the shift right there (the mission is already counted as completed by Return to base or continue menu). With a crew emergency, or a hurt crew member aboard, the base scene runs first and raises the menu when it is done. Nothing here ends the mission; only END SHIFT in the end menu does."},
     {"call_macro":"crew base scene need"},
     {"if": {"local":"CCS_BASE_NEED"}, "eq": "yes",
@@ -3584,22 +3590,43 @@
             {"set":{"global":"MISSION_ACCIDENT_MAX_RADIUS"},"value":{"var":["L:DEFAULT_MISSION_MAX_RANGE","number"]}},
             {"set":{"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},"value":{"var":["L:DEFAULT_MISSION_MAX_RANGE","number"]}}
         ]},
+        {"#comment":"Which boarding runs, and why, goes to the runtime trace of the snapshot (tester report 2026-10-17: crew already seated at the start, no walk-out). The walk-out boarding (technician, ground power unit, crew walking from the hangar) runs only with the battery master OFF at this moment and BACK_TO_HOSPITAL 1, as in the original; with the battery on the crew is seated at once."},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"boarding","actor":"crew","target":"start","state":{"text":"start battery_master={0} rotor_rpm={1} back_to_hospital={2} crew={3} boarding_hold={4}","params":[{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},{"var":["L:BACK_TO_HOSPITAL","number"]},{"local":"CREW"},{"local":"BOARDING_HOLD"}]}}},
         {"if": {"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]}, "eq": 0,
           "then": [
             {"if": {"var":["L:BACK_TO_HOSPITAL","number"]}, "eq": 1,
               "then": [
-                {"call_macro":"Query closest building for boarding"}
+                {"call_macro":"Query closest building for boarding"},
+                {"call_macro": "ground crew runtime trace",
+                  "params": {
+                    "macro": "boarding",
+                    "actor": "crew",
+                    "target": "start",
+                    "state": {
+                      "text": "hangar query done, hangar location present {0}",
+                      "params": [
+                        {"if": {"has_location":"hangar"},
+                          "eq": 1,
+                          "then": "yes",
+                          "else": "no"
+                        }
+                    ]}
+                  }
+                }
             ]},
             {"if": {"var":["L:BACK_TO_HOSPITAL","number"]}, "eq": 1,
               "then": [
                 {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_OFF","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_OFF","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_OFF","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"boarding","actor":"crew","target":"start","state":"walk-out boarding: battery off and BACK_TO_HOSPITAL 1"}},
                 {"call_macro":"boarding"}
               ],"else": [
                 {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_OFF","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]},
                 {"set":{"local":"COPILOT"},"value":1},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"boarding","actor":"crew","target":"start","state":"crew seated at once: battery off but BACK_TO_HOSPITAL is not 1"}},
                 {"call_macro":"crew boarding"}
             ]}
           ],"else": [
+            {"call_macro":"ground crew runtime trace","params":{"macro":"boarding","actor":"crew","target":"start","state":"crew seated at once: battery master is on, no walk-out (as in the original)"}},
             {"if": {"local":"CREW"}, "eq": 3,
               "then": [
                 {"call_macro":"shared repeated block 028"}

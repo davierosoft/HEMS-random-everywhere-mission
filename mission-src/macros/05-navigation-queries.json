@@ -1663,8 +1663,22 @@
     {"sleep":1},
     {"if": {"param":"LOCATION_FOUND"}, "eq": 0,
       "then": [
-        {"set_message":{"text":"ERR101 FAILED to find a suitable location after {0} attempts.Please report the error to the dev.","params":[{"param":"ATTEMPTS_COUNT"}]}},
-        {"set":{"local":"queryfailed"},"value":{"text":"ERR101 FAILED to find a suitable location within {0} meters. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"SAMPLE_RADIUS"}]}}
+        {"if": {"param":"NONBLOCKING"}, "eq": 1,
+          "then": [
+            {"#comment":"The caller has a fallback (the next query, a default point). The error is shown as temporary (tester report 2026-10-17: ERR101 on the tablet while the ground operations went on, user proposal): the next search that finds a location replaces it with Location found, and the hospital queries replace it when they end on the backup point. It is also kept in the runtime trace of the snapshot."},
+            {"set_message":{"text":"Temporary error: ERR101 no suitable location found after {0} attempts, trying another search. If this message stays more than 40 seconds, please check the location.","params":[{"param":"ATTEMPTS_COUNT"}]}},
+            {"set":{"local":"query_soft_msg"},"value":"yes"},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"osm_query","actor":"mission","target":{"param":"LOCATION_NAME"},"state":{"text":"nothing found after {0} attempts, last radius {1} m (not blocking: a fallback follows)","params":[{"param":"ATTEMPTS_COUNT"},{"param":"SAMPLE_RADIUS"}]}}}
+          ],"else": [
+            {"set_message":{"text":"ERR101 FAILED to find a suitable location after {0} attempts.Please report the error to the dev.","params":[{"param":"ATTEMPTS_COUNT"}]}},
+            {"set":{"local":"queryfailed"},"value":{"text":"ERR101 FAILED to find a suitable location within {0} meters. Push 'NEXT DISPATCH' for another dispatch. If error persists, try another OSM Service provider","params":[{"param":"SAMPLE_RADIUS"}]}}
+        ]}
+      ],"else": [
+        {"if": {"local":"query_soft_msg"}, "eq": "yes",
+          "then": [
+            {"set_message":{"text":"Location found"}},
+            {"set":{"local":"query_soft_msg"},"value":null}
+        ]}
     ]}
   ],
   "Query dispatcher position custom": [
@@ -2197,16 +2211,16 @@
         ]},
         {"sleep":1}
     ]},
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=emergency_ward_entrance];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"hospital_user","LOCATION_NAME":"hospitaltemp"}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=emergency_ward_entrance];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"hospital_user","LOCATION_NAME":"hospitaltemp","NONBLOCKING":1}},
     {"sleep":4},
     {"if": {"location":"hospitaltemp","var":"distance:m","to":"hospital_user"}, "gt": 800,
       "then": [
-        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=hospital];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"hospital_user","LOCATION_NAME":"hospitaltemp"}},
+        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=hospital];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"hospital_user","LOCATION_NAME":"hospitaltemp","NONBLOCKING":1}},
         {"sleep":5}
     ]},
     {"if": {"location":"hospitaltemp","var":"distance:m","to":"hospital_user"}, "gt": 800,
       "then": [
-        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=yes];(._;>;);out center;","MAX_ATTEMPTS":7,"SAMPLE_RADIUS":10,"MULTIPLIER":2,"CENTER_AREA":"hospital_user","LOCATION_NAME":"hospitaltemp"}},
+        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=yes];(._;>;);out center;","MAX_ATTEMPTS":7,"SAMPLE_RADIUS":10,"MULTIPLIER":2,"CENTER_AREA":"hospital_user","LOCATION_NAME":"hospitaltemp","NONBLOCKING":1}},
         {"sleep":1}
     ]},
     {"if": {"location":"hospitaltemp","var":"distance:m","to":"hospital_user"}, "gt": 1000,
@@ -2222,6 +2236,11 @@
       {"wait_for":{"local":"queryfailed"},"ne":"in progress"}
     ]},
     {"set":{"local":"queryfailed"},"value":null},
+    {"if": {"local":"query_soft_msg"}, "eq": "yes",
+      "then": [
+        {"set_message":{"text":"Location set on a backup point"}},
+        {"set":{"local":"query_soft_msg"},"value":null}
+    ]},
     {"create_location": "hospital",
       "zones": [
         {"zone":{"location":{"bearing":0,"dist":0,"object":"hospitaltemp"}}}
@@ -2238,16 +2257,16 @@
         ]},
         {"sleep":0.5}
     ]},
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=emergency_ward_entrance];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"userA","LOCATION_NAME":"hospitaltemp"}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=emergency_ward_entrance];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"userA","LOCATION_NAME":"hospitaltemp","NONBLOCKING":1}},
     {"sleep":1},
     {"if": {"object":"hospitaltemp","var":"distance:m","to":"userA"}, "gt": 800,
       "then": [
-        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=hospital];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"userA","LOCATION_NAME":"hospitaltemp"}},
+        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=hospital];(._;>;);out center;","MAX_ATTEMPTS":9,"SAMPLE_RADIUS":100,"MULTIPLIER":2,"CENTER_AREA":"userA","LOCATION_NAME":"hospitaltemp","NONBLOCKING":1}},
         {"sleep":1}
     ]},
     {"if": {"location":"hospitaltemp","var":"distance:m","to":"userA"}, "gt": 800,
       "then": [
-        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=yes];(._;>;);out center;","MAX_ATTEMPTS":7,"SAMPLE_RADIUS":10,"MULTIPLIER":2,"CENTER_AREA":"userA","LOCATION_NAME":"hospitaltemp"}},
+        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=yes];(._;>;);out center;","MAX_ATTEMPTS":7,"SAMPLE_RADIUS":10,"MULTIPLIER":2,"CENTER_AREA":"userA","LOCATION_NAME":"hospitaltemp","NONBLOCKING":1}},
         {"sleep":1}
     ]},
     {"if": {"location":"hospitaltemp","var":"distance:m","to":"userA"}, "gt": 1000,
@@ -2263,6 +2282,11 @@
       {"wait_for":{"local":"queryfailed"},"ne":"in progress"}
     ]},
     {"set":{"local":"queryfailed"},"value":null},
+    {"if": {"local":"query_soft_msg"}, "eq": "yes",
+      "then": [
+        {"set_message":{"text":"Location set on a backup point"}},
+        {"set":{"local":"query_soft_msg"},"value":null}
+    ]},
     {"create_location": "thospital",
       "zones": [
         {"zone":{"location":{"bearing":0,"dist":0,"object":"hospitaltemp"}}}
@@ -2414,7 +2438,7 @@
             {"zone":{"location":{"bearing":180,"dist":5000,"object":"accident_location"}}}
         ]}
     ]},
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=police];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"police_station"}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=police];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"police_station","NONBLOCKING":1}},
     {"if": {
       "or": [
         {"require":{"object":"accident_location","var":"distance:m","to":"police_station"},"gt":20000},
@@ -2442,8 +2466,8 @@
     ]},
     {"wait_for":{"has_location":"ambu1test"},"eq":1},
     {"wait_for":{"has_location":"ambu2test"},"eq":1},
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=hospital];(._;>;);out center;","MAX_ATTEMPTS":8,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"ambu1test"}},
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=ambulance_station];(._;>;);out center;","MAX_ATTEMPTS":8,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"ambu2test"}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=hospital];(._;>;);out center;","MAX_ATTEMPTS":8,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"ambu1test","NONBLOCKING":1}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[emergency=ambulance_station];(._;>;);out center;","MAX_ATTEMPTS":8,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"ambu2test","NONBLOCKING":1}},
     {"if": {
       "and": [
         {"require":{"object":"ambu1test","var":"distance:m","to":"INJURED"},"lt":{"object":"ambu2test","var":"distance:m","to":"INJURED"}},
@@ -2544,7 +2568,7 @@
     {"set":{"local":"location_name"},"value":"rescue_location"}
   ],
   "Query closest fire station": [
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=fire_station];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"fire_station"}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=fire_station];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"fire_station","NONBLOCKING":1}},
     {"if": {
       "or": [
         {"require":{"object":"INJURED","var":"distance:m","to":"fire_station"},"gt":20000},
@@ -2559,7 +2583,7 @@
     {"wait_for":{"has_location":"fire_station"},"eq":1}
   ],
   "Query closest police": [
-    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=police];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"police_station"}},
+    {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[amenity=police];(._;>;);out center;","MAX_ATTEMPTS":6,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"CENTER_AREA":{"local":"location_name"},"LOCATION_NAME":"police_station","NONBLOCKING":1}},
     {"if": {
       "or": [
         {"require":{"object":"INJURED","var":"distance:m","to":"police_station"},"gt":20000},
@@ -3919,7 +3943,7 @@
     {"sleep":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Ambulance destination1","state":"wait_local.closestretcherarrived_eq_step1"}},
     {"wait_for":{"local":"closestretcherarrived"},"eq":"step1"},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":7}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"sleep":0.5},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
@@ -3933,7 +3957,7 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
     {"sleep":0.5},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":5},{"bearing":88,"dist":4},{"bearing":5,"dist":9},{"bearing":345,"dist":7.5}],"VAR1":11,"speed":4}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":5},{"bearing":88,"dist":4},{"bearing":5,"dist":9},{"bearing":345,"dist":7.5}],"VAR1":11,"speed":6}},
     {"#comment":"The medic with the trolley ends the first walk next to the hospital stretcher. The second drive goes to the closest of the four points 2 m from the stretcher, which is then 0.5 to 1.4 m away: a route that short made the crew walk off into the distance and never finish (tester report 2026-10-12, build 169.45, trace drive_start without drive_done for minutes; same defect as the quad SAR of 169.43). Already within 3 m of the stretcher the drive is skipped."},
     {"set":{"local":"hs_gap_m"},"value":-1},
     {"try": [
@@ -3972,7 +3996,7 @@
           "commands": [
             {"call_macro":"hospital drive watch","params":{"str":"ambustretcher3","med":"ambumedic3"}}
         ]}},
-        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher3"},{"bearing2":90,"dist":2,"object":"ambustretcher3"},{"bearing2":180,"dist":2,"object":"ambustretcher3"},{"bearing2":270,"dist":2,"object":"ambustretcher3"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
+        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher3"},{"bearing2":90,"dist":2,"object":"ambustretcher3"},{"bearing2":180,"dist":2,"object":"ambustretcher3"},{"bearing2":270,"dist":2,"object":"ambustretcher3"}],"to":"hoist_crew"}],"VAR1":11,"speed":4}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Ambulance destination1","state":"drive_done"}},
         {"set":{"local":"hs_watch_on"},"value":"no"}
     ]},
@@ -3992,7 +4016,7 @@
     {"destroy_object":"bagg"},
     {"set":{"var":["L:PAX1_MOVE","number"]},"value":1},
     {"sleep":2},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":5.5},{"bearing":185,"dist":4},{"bearing":200,"dist":2}],"VAR1":10,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":5.5},{"bearing":185,"dist":4},{"bearing":200,"dist":2}],"VAR1":10,"speed":4}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set":{"var":["L:PAX3{local:VCP}13","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}13","number"]},1]}},
     {"set_message":{"text":"Patient unloading completed"}},
@@ -4037,7 +4061,7 @@
             {"call_macro":"shared repeated block 064"}
         ]}}
     ]}},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":4}},
     {"if": {"local":"CREW"}, "eq": 5,
       "then": [
         {"trigger":"H:{local:HXX}_SDK_PAX_2_ON"}
@@ -4180,12 +4204,12 @@
     {"sleep":1},
     {"create_thread": {
       "commands": [
-        {"drive_object":{"name":"hoist_crew","to":[{"bearing":40,"dist":3.7},{"bearing":150,"dist":4.5},{"bearing":180,"dist":2}],"VAR1":2,"speed":2}},
+        {"drive_object":{"name":"hoist_crew","to":[{"bearing":40,"dist":3.7},{"bearing":150,"dist":4.5},{"bearing":180,"dist":2}],"VAR1":2,"speed":7}},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
         {"sleep":0.5},
         {"call_macro":"ensure door","params":{"door":"cargo_right","want":"open"}},
         {"call_macro":"ensure door","params":{"door":"cargo_left","want":"open"}},
-        {"drive_object":{"name":"hoist_crew","to":[{"bearing":230,"dist":3}],"VAR1":2,"speed":3}},
+        {"drive_object":{"name":"hoist_crew","to":[{"bearing":230,"dist":3}],"VAR1":2,"speed":7}},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
         {"sleep":3}
     ]}},
@@ -4292,11 +4316,11 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"Ambulance destination2","state":"destroy"}},
         {"destroy_object":"ambulance1"}
     ]}},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":190,"dist":4},{"bearing":180,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":190,"dist":4},{"bearing":180,"dist":2}],"VAR1":2,"speed":5}},
     {"close_door":"cargo_right"},
     {"sleep":0.25},
     {"close_door":"cargo_left"},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":145,"dist":4},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":145,"dist":4},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":5}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"sleep":0.2},
     {"if": {"local":"CREW"}, "eq": 5,
@@ -4517,7 +4541,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Ambulance destination hoist","state":"wait_cond_ne_0"}},
     {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{}},"ne":0},
     {"sleep":3},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.5},{"bearing":10,"dist":2}],"VAR1":2,"speed":3.9}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"sleep":0.2},
     {"if": {"local":"CREW"}, "eq": 5,
@@ -5900,7 +5924,7 @@
         ]}
     ]},
     {"sleep":1},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.2},{"bearing":40,"dist":3.7},{"bearing":130,"dist":3},{"bearing":200,"dist":2}],"VAR1":2,"speed":7}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"sleep":0.5},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
@@ -5914,7 +5938,7 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":13},
     {"trigger":"H:{local:HXX}_SDK_HEMS_STRETCHER_REMOVED"},
     {"sleep":0.5},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":5},{"bearing":88,"dist":4},{"bearing":5,"dist":9},{"bearing":345,"dist":7.5}],"VAR1":11,"speed":4}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":120,"dist":5},{"bearing":88,"dist":4},{"bearing":5,"dist":9},{"bearing":345,"dist":7.5}],"VAR1":11,"speed":6}},
     {"#comment":"The medic with the trolley ends the first walk next to the hospital stretcher. The second drive goes to the closest of the four points 2 m from the stretcher, which is then 0.5 to 1.4 m away: a route that short made the crew walk off into the distance and never finish (tester report 2026-10-12, build 169.45, trace drive_start without drive_done for minutes; same defect as the quad SAR of 169.43). Already within 3 m of the stretcher the drive is skipped."},
     {"set":{"local":"hs_gap_m"},"value":-1},
     {"try": [
@@ -5953,7 +5977,7 @@
           "commands": [
             {"call_macro":"hospital drive watch","params":{"str":"ambustretcher","med":"ambumedic"}}
         ]}},
-        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher"},{"bearing2":90,"dist":2,"object":"ambustretcher"},{"bearing2":180,"dist":2,"object":"ambustretcher"},{"bearing2":270,"dist":2,"object":"ambustretcher"}],"to":"hoist_crew"}],"VAR1":11,"speed":2}},
+        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":0,"dist":2,"object":"ambustretcher"},{"bearing2":90,"dist":2,"object":"ambustretcher"},{"bearing2":180,"dist":2,"object":"ambustretcher"},{"bearing2":270,"dist":2,"object":"ambustretcher"}],"to":"hoist_crew"}],"VAR1":11,"speed":4}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"User destination1","state":"drive_done"}},
         {"set":{"local":"hs_watch_on"},"value":"no"}
     ]},
@@ -5973,7 +5997,7 @@
     {"destroy_object":"bag"},
     {"set":{"var":["L:PAX1_MOVE","number"]},"value":1},
     {"sleep":2},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":5.5},{"bearing":185,"dist":4},{"bearing":200,"dist":2}],"VAR1":10,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":50,"dist":5},{"bearing":150,"dist":5.5},{"bearing":185,"dist":4},{"bearing":200,"dist":2}],"VAR1":10,"speed":4}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12},
     {"set_message":{"text":"Patient unloading completed"}},
     {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient handed over to ED."}},
@@ -6119,7 +6143,7 @@
     ]}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_local.PAPERWORK_eq_0"}},
     {"wait_for":{"local":"PAPERWORK"},"eq":0},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5}],"VAR1":2,"speed":3}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":135,"dist":3},{"bearing":90,"dist":3},{"bearing":20,"dist":3.5}],"VAR1":2,"speed":4}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_local.PAPERWORK_eq_0"}},
     {"wait_for":{"local":"PAPERWORK"},"eq":0},
@@ -6636,15 +6660,15 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_start"}},
-        {"drive_object":{"name":"ambumedic","to":[{"closest":["DSTR","DMED","DRUP"],"to":"ambumedic"}],"VAR1":1,"speed":5}},
+        {"drive_object":{"name":"ambumedic","to":[{"closest":["DSTR","DMED","DRUP"],"to":"ambumedic"}],"VAR1":1,"speed":6}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_start"}},
-        {"drive_object":{"name":"ambumedic","to":["DAMBWP"],"VAR1":1,"speed":5}},
+        {"drive_object":{"name":"ambumedic","to":["DAMBWP"],"VAR1":1,"speed":6}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_start"}},
-        {"drive_object":{"name":"ambumedic","to":["DAMBU"],"VAR1":1,"speed":5}},
+        {"drive_object":{"name":"ambumedic","to":["DAMBU"],"VAR1":1,"speed":6}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic","target":"User destination hoist","state":"drive_done"}},
         {"set":{"object":"ambumedic","var":"VAR 1"},"value":0}
     ]}},
@@ -6783,11 +6807,11 @@
         ]}
     ]}},
     {"sleep":3},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.5}],"VAR1":2,"speed":3.5}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":20,"dist":3.5}],"VAR1":2,"speed":4}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination hoist","state":"wait_local.PAPERWORK_eq_0"}},
     {"wait_for":{"local":"PAPERWORK"},"eq":0},
-    {"drive_object":{"name":"hoist_crew","to":[{"bearing":10,"dist":2}],"VAR1":2,"speed":2}},
+    {"drive_object":{"name":"hoist_crew","to":[{"bearing":10,"dist":2}],"VAR1":2,"speed":4}},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"sleep":0.2},
     {"if": {"local":"CREW"}, "eq": 5,
@@ -7131,7 +7155,7 @@
     {"create_thread": {
       "commands": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Organ destination1","state":"drive_start"}},
-        {"drive_object":{"name":"hoist_crew","to":[{"bearing2":0,"dist":0.7,"object":"ambustretcher"}],"VAR1":2,"speed":0.7}},
+        {"drive_object":{"name":"hoist_crew","to":[{"bearing2":0,"dist":0.7,"object":"ambustretcher"}],"VAR1":2,"speed":3}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"hoist_crew","target":"Organ destination1","state":"drive_done"}},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
     ]}},
@@ -7461,18 +7485,18 @@
                       "then": [
                         {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"pax3"}],"VAR1":16,"speed":6}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"injured_human"},{"bearing2":140,"dist":3,"object":"injured_human"}],"to":"pax3"}],"VAR1":16,"speed":3}},
+                        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"injured_human"},{"bearing2":140,"dist":3,"object":"injured_human"}],"to":"pax3"}],"VAR1":16,"speed":4}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                       ],"else": [
                         {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"pax3"}],"VAR1":3,"speed":6}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"injured_human"},{"bearing2":140,"dist":3,"object":"injured_human"}],"to":"pax3"}],"VAR1":3,"speed":3}},
+                        {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":40,"dist":3,"object":"injured_human"},{"bearing2":140,"dist":3,"object":"injured_human"}],"to":"pax3"}],"VAR1":3,"speed":4}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1}
                     ]}
                 ]},
                 {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
                 {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":40,"dist":3,"object":"injured_human"},{"bearing2":140,"dist":3,"object":"injured_human"}],"to":"hoist_crew"}],"VAR1":3,"speed":3}},
+                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":40,"dist":3,"object":"injured_human"},{"bearing2":140,"dist":3,"object":"injured_human"}],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
                 {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
                 {"set":{"local":"closest_police_crew_transfer"},"value":"done"}
               ],"else": [

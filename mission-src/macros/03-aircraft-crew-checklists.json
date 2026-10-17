@@ -1031,7 +1031,7 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:16>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:17>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
     ]}
   ],
   "voice dispatcher publish": [
@@ -1558,6 +1558,243 @@
         ]}
     ]}
   ],
+  "voice heli rescuer briefing": [
+    {"#comment":"Briefing of the crew to the heli rescuer(s) who just boarded (user request of 2026-10-17: it is the crew, not the rescuer who knows nothing, who explains the roles and the situation). Called from pick heli rescuer hoist and pick heli rescuer ground, inside the thread that used to count the old one-sentence briefing (PAX3 25). Returns 1 when the briefing was spoken, 0 when the caller must keep the old counter (wav packs, no voice server, AUDIO_DECLUT 1 to 3, a scene closer than 2 minutes). Mission Companion only (VCP APP). Pack EN HRB.*, group hrbrief: the pilot opens with the kind of mission and the injured (HRB.OPEN.<ACC|SAR|SARV|SARC|SARH|TRF|ORG>, INJ counts as ACC), the copilot gives the time to the scene and the ground units (HRB.ETA, HRB.VEH.*), the doctor says what is known medically (HRB.MED.*), the rear crew chief (the copilot when the flight has fewer than 4 crew members, CREW_MEMBER_CAP) explains the two sequences: ground (HRB.PLAN.G.*: the rescuer leaves first by the left door, secures the area and calls it, the crew follows on that call, the rescuer boards last) and hoist (HRB.PLAN.H.*: the rescuer is lowered first, the winch operator runs the cable, the crew is lowered on the rescuer's call, the rescuer is the last on the cable); both are briefed because the pilot chooses on scene (L:MISSION_HOIST), the mission does not know it yet. With CREW CHATTER on FULL the briefing is interactive: the pilot asks for questions, the rescuer asks one of three (who gives the go, a hazard or more patients, what is needed on the ground) or none and the answer follows, the doctor and the copilot may voice a doubt that the pilot or the rescuer answers, the rescuer reads back the sequence and the doctor and the chief confirm. With 5 minutes or more to the scene (accident_location, 120 kt) the briefing is complete, from 2 to 5 minutes it is short (open, the two sequences, the readback, the close). TRF and ORG have no scene: open, doctor, the rescuer stays aboard and helps, readback, close. The local hrb_busy keeps voice calm at 0 and the cruise chat waiting while the briefing is spoken."},
+    {"set":{"param":"hrb_ret"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"global":"AUDIO_DECLUT"},"eq":0},
+            {"require":{"global":"AUDIO_DECLUT"},"gt":3}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice mission class","result":"hrb_cls"},
+            {"set":{"local":"hrb_k"},"value":{"param":"hrb_cls"}},
+            {"if": {"local":"hrb_k"}, "eq": "INJ",
+              "then": [
+                {"set":{"local":"hrb_k"},"value":"ACC"}
+            ]},
+            {"set":{"local":"hrb_scene"},"value":"yes"},
+            {"if": {"local":"hrb_k"}, "eq": "TRF",
+              "then": [
+                {"set":{"local":"hrb_scene"},"value":"no"}
+            ]},
+            {"if": {"local":"hrb_k"}, "eq": "ORG",
+              "then": [
+                {"set":{"local":"hrb_scene"},"value":"no"}
+            ]},
+            {"set":{"local":"hrb_med"},"value":"ACC"},
+            {"if": {
+              "or": [
+                {"require":{"local":"hrb_k"},"eq":"SAR"},
+                {"require":{"local":"hrb_k"},"eq":"SARV"},
+                {"require":{"local":"hrb_k"},"eq":"SARC"},
+                {"require":{"local":"hrb_k"},"eq":"SARH"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"hrb_med"},"value":"SAR"}
+            ]},
+            {"if": {"local":"hrb_k"}, "eq": "TRF",
+              "then": [
+                {"set":{"local":"hrb_med"},"value":"TRF"}
+            ]},
+            {"if": {"local":"hrb_k"}, "eq": "ORG",
+              "then": [
+                {"set":{"local":"hrb_med"},"value":"ORG"}
+            ]},
+            {"set":{"local":"hrb_inj"},"value":{"local":"HELOVICTIMS"}},
+            {"if": {"local":"hrb_inj"}, "eq": null,
+              "then": [
+                {"set":{"local":"hrb_inj"},"value":1}
+            ]},
+            {"if": {"local":"hrb_inj"}, "lt": 1,
+              "then": [
+                {"set":{"local":"hrb_inj"},"value":1}
+            ]},
+            {"set":{"local":"hrb_eta"},"value":-1},
+            {"if": {
+              "and": [
+                {"require":{"local":"hrb_scene"},"eq":"yes"},
+                {"require":{"has_location":"accident_location"},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"hrb_eta"},"value":{"floor":{"add":[{"divide":[{"location":"accident_location","var":"distance:m"},3704]},0.5]}}}
+            ]},
+            {"set":{"local":"hrb_mode"},"value":"full"},
+            {"if": {"local":"hrb_scene"}, "eq": "no",
+              "then": [
+                {"set":{"local":"hrb_mode"},"value":"nosc"}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"hrb_eta"},"gte":0},
+                {"require":{"local":"hrb_eta"},"lt":5}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"hrb_mode"},"value":"short"}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"hrb_eta"},"gte":0},
+                {"require":{"local":"hrb_eta"},"lt":2}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"hrb_mode"},"value":"none"}
+            ]},
+            {"if": {"local":"hrb_mode"}, "ne": "none",
+              "then": [
+                {"set":{"param":"hrb_ret"},"value":1},
+                {"set":{"local":"hrb_busy"},"value":"yes"},
+                {"set":{"local":"hrb_chat"},"value":0},
+                {"if": {"global":"CREW_CHATTER"}, "lt": 1,
+                  "then": [
+                    {"set":{"local":"hrb_chat"},"value":1}
+                ]},
+                {"set":{"local":"hrb_cap"},"value":{"local":"CREW_MEMBER_CAP"}},
+                {"if": {"local":"hrb_cap"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"hrb_cap"},"value":{"local":"CREW"}}
+                ]},
+                {"set":{"local":"hrb_who"},"value":"CPL"},
+                {"if": {"local":"hrb_cap"}, "gte": 4,
+                  "then": [
+                    {"set":{"local":"hrb_who"},"value":"CHF"}
+                ]},
+                {"call_macro":"voice say","params":{"key":{"text":"HRB.OPEN.{0}","params":[{"local":"hrb_k"}]},"a":{"local":"hrb_inj"},"declut":1}},
+                {"sleep":3},
+                {"if": {"local":"hrb_mode"}, "eq": "full",
+                  "then": [
+                    {"if": {"local":"hrb_eta"}, "gte": 2,
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":"HRB.ETA","a":{"local":"hrb_eta"},"declut":1}},
+                        {"sleep":2}
+                    ]},
+                    {"if": {"local":"hrb_k"}, "eq": "ACC",
+                      "then": [
+                        {"call_macro":"voice vehicle letters"},
+                        {"set":{"local":"hrb_vk"},"value":"BOTH"},
+                        {"if": {"local":"vb_s"}, "eq": "",
+                          "then": [
+                            {"set":{"local":"hrb_vk"},"value":"WAY"}
+                        ]},
+                        {"if": {"local":"vb_w"}, "eq": "",
+                          "then": [
+                            {"set":{"local":"hrb_vk"},"value":"SCENE"}
+                        ]},
+                        {"if": {
+                          "and": [
+                            {"require":{"local":"vb_w"},"eq":""},
+                            {"require":{"local":"vb_s"},"eq":""}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"hrb_vk"},"value":"NONE"}
+                        ]},
+                        {"call_macro":"voice say","params":{"key":{"text":"HRB.VEH.{0}","params":[{"local":"hrb_vk"}]},"a":{"text":"{0}//{1}","params":[{"local":"vb_w"},{"local":"vb_s"}]},"declut":1}},
+                        {"sleep":3}
+                    ]}
+                ]},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"hrb_mode"},"eq":"full"},
+                    {"require":{"local":"hrb_mode"},"eq":"nosc"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":{"text":"HRB.MED.{0}","params":[{"local":"hrb_med"}]},"declut":1}},
+                    {"sleep":3}
+                ]},
+                {"if": {"local":"hrb_scene"}, "eq": "yes",
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":{"text":"HRB.PLAN.G.{0}","params":[{"local":"hrb_who"}]},"declut":1}},
+                    {"sleep":4},
+                    {"call_macro":"voice say","params":{"key":{"text":"HRB.PLAN.H.{0}","params":[{"local":"hrb_who"}]},"declut":1}},
+                    {"sleep":4}
+                  ],"else": [
+                    {"call_macro":"voice say","params":{"key":{"text":"HRB.PLAN.{0}","params":[{"local":"hrb_k"}]},"declut":1}},
+                    {"sleep":4}
+                ]},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"hrb_mode"},"eq":"full"},
+                    {"require":{"local":"hrb_chat"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":"HRB.ASK","declut":1}},
+                    {"sleep":2},
+                    {"set":{"local":"hrb_roll"},"value":{"floor":{"rand":[0,10]}}},
+                    {"if": {"local":"hrb_roll"}, "lt": 6,
+                      "then": [
+                        {"set":{"local":"hrb_q"},"value":{"add":[{"floor":{"rand":[0,3]}},1]}},
+                        {"call_macro":"voice say","params":{"key":{"text":"HRB.Q.{0}","params":[{"local":"hrb_q"}]},"declut":1}},
+                        {"sleep":2.5},
+                        {"call_macro":"voice say","params":{"key":{"text":"HRB.A.{0}","params":[{"local":"hrb_q"}]},"declut":1}},
+                        {"sleep":3}
+                      ],"else": [
+                        {"call_macro":"voice say","params":{"key":"HRB.NOQ","declut":1}},
+                        {"sleep":2}
+                    ]},
+                    {"set":{"local":"hrb_roll"},"value":{"floor":{"rand":[0,10]}}},
+                    {"if": {"local":"hrb_roll"}, "lt": 4,
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":"HRB.DB.1","declut":1}},
+                        {"sleep":2.5},
+                        {"call_macro":"voice say","params":{"key":"HRB.DBA.1","declut":1}},
+                        {"sleep":3}
+                    ]},
+                    {"set":{"local":"hrb_roll"},"value":{"floor":{"rand":[0,10]}}},
+                    {"if": {"local":"hrb_roll"}, "lt": 4,
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":"HRB.DB.2","declut":1}},
+                        {"sleep":2.5},
+                        {"call_macro":"voice say","params":{"key":"HRB.DBA.2","declut":1}},
+                        {"sleep":3}
+                    ]}
+                ]},
+                {"if": {"local":"hrb_chat"}, "eq": 1,
+                  "then": [
+                    {"if": {"local":"hrb_scene"}, "eq": "yes",
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":"HRB.RB.HR","declut":1}}
+                      ],"else": [
+                        {"call_macro":"voice say","params":{"key":"HRB.RB.X","declut":1}}
+                    ]},
+                    {"sleep":3},
+                    {"if": {"local":"hrb_mode"}, "ne": "short",
+                      "then": [
+                        {"set":{"local":"hrb_roll"},"value":{"floor":{"rand":[0,10]}}},
+                        {"if": {"local":"hrb_roll"}, "lt": 6,
+                          "then": [
+                            {"call_macro":"voice say","params":{"key":"HRB.RB.DOC","declut":1}},
+                            {"sleep":2.5}
+                        ]},
+                        {"set":{"local":"hrb_roll"},"value":{"floor":{"rand":[0,10]}}},
+                        {"if": {
+                          "and": [
+                            {"require":{"local":"hrb_roll"},"lt":6},
+                            {"require":{"local":"hrb_who"},"eq":"CHF"}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"call_macro":"voice say","params":{"key":"HRB.RB.CRW","declut":1}},
+                            {"sleep":2.5}
+                        ]}
+                    ]}
+                ]},
+                {"call_macro":"voice say","params":{"key":"HRB.END","declut":1}},
+                {"sleep":40},
+                {"if": {"local":"hrb_mode"}, "eq": "full",
+                  "then": [
+                    {"sleep":50}
+                ]},
+                {"set":{"local":"hrb_busy"},"value":"no"}
+            ]}
+        ]}
+    ]},
+    {"return":{"param":"hrb_ret"}}
+  ],
   "voice vehicle letters": [
     {"#comment":"The rescue vehicles of the tablet as letters for the voice texts: vb_s = the vehicles on scene, vb_w = the ones still on the way (A ambulance, F fire engine, P police; AVAIL 1 = on scene from the start, 2 = dispatched, the arrived flags move a vehicle to the scene), vb_amb N or A (ambulance), vb_sec N or S (police or fire). Used by the approach briefing and by voice crew vehicles."},
     {"set":{"local":"vb_w"},"value":""},
@@ -2056,13 +2293,17 @@
     ]}}
   ],
   "voice calm": [
-    {"#comment":"1 when the mood allows small talk: no crew emergency, nobody hurt (every crew member of the flight has CREW_LIFESCORE 85 or more and is alive), and with the param patient 1 a patient that is not dying, not dead and not in CPR (LIFESCORE 50 or more), with the param casualties 1 nobody died in this session (PATIENTS_KILLED_TOTAL). Used by voice cruise chat, voice banter and voice tip. Always 0 when the setting CREW CHATTER is REDUCED or MINIMAL, except with the param tip 1 (voice tip: the tips have their own setting CREW TIPS, independent from the chatter)."},
+    {"#comment":"1 when the mood allows small talk: no crew emergency, nobody hurt (every crew member of the flight has CREW_LIFESCORE 85 or more and is alive), and with the param patient 1 a patient that is not dying, not dead and not in CPR (LIFESCORE 50 or more), with the param casualties 1 nobody died in this session (PATIENTS_KILLED_TOTAL). Used by voice cruise chat, voice banter and voice tip. Always 0 when the setting CREW CHATTER is REDUCED or MINIMAL, except with the param tip 1 (voice tip: the tips have their own setting CREW TIPS, independent from the chatter). Also 0 while the crew briefs the heli rescuer (hrb_busy yes, voice heli rescuer briefing)."},
     {"set":{"param":"calm"},"value":1},
     {"if": {
       "and": [
         {"require":{"global":"CREW_CHATTER"},"gt":0},
         {"require":{"param":"tip"},"ne":1}
       ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"calm"},"value":0}
+    ]},
+    {"if": {"local":"hrb_busy"}, "eq": "yes",
       "then": [
         {"set":{"param":"calm"},"value":0}
     ]},
@@ -2284,6 +2525,7 @@
             {"if": {"param":"vcc_calm"}, "eq": 1,
               "then": [
                 {"sleep":{"rand":[20,50]}},
+                {"wait_for":{"local":"hrb_busy"},"ne":"yes"},
                 {"call_macro":"voice say","params":{"key":"CRZ.OUT.PLT","declut":1}},
                 {"sleep":4},
                 {"call_macro":"voice say","params":{"key":"CRZ.OUT.CPL","declut":1}},
@@ -4225,7 +4467,7 @@
     {"sleep":1},
     {"if": {"has_location":"hangar"}, "eq": 0,
       "then": [
-        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=yes];(._;>;);out center;","MAX_ATTEMPTS":10,"SAMPLE_RADIUS":20,"MULTIPLIER":2,"CENTER_AREA":"$USER","LOCATION_NAME":"hangar"}},
+        {"call_macro":"Query closest nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[building=yes];(._;>;);out center;","MAX_ATTEMPTS":10,"SAMPLE_RADIUS":20,"MULTIPLIER":2,"CENTER_AREA":"$USER","LOCATION_NAME":"hangar","NONBLOCKING":1}},
         {"set":{"local":"roadtype"},"value":"road"},
         {"set":{"local":"location_name"},"value":"accident_location"}
     ]}
@@ -4382,7 +4624,7 @@
           "then": [
             {"sleep":[2,5]}
         ]},
-        {"drive_object":{"name":"pax3","to":[{"bearing":40,"dist":5},{"bearing":25,"dist":22},{"bearing":17,"dist":21}],"VAR1":2,"speed":5}},
+        {"drive_object":{"name":"pax3","to":[{"bearing":40,"dist":5},{"bearing":25,"dist":22},{"bearing":17,"dist":21}],"VAR1":2,"speed":7}},
         {"set":{"object":"pax3","var":"VAR 1"},"value":0}
     ]}},
     {"sleep":1},
