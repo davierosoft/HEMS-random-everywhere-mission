@@ -1,3 +1,10 @@
+## Release 0.997 169.58
+
+- Cumulative scope of the baseline: entries 169.23 to 169.58 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions, SAR flag)
+- Cumulative scope of the baseline: entries 169.23 to 169.58 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions, SAR flag)
+- The local SAR (the flag of the running mission, "yes" or "no") was overwritten with a boolean by recompute mission preset categories, which mirrored the category toggles of the mission list in the locals RTC, MEB, MEO, JOB, SAR, SPORT and SECONDARY. Opening the mission list, switching the preset, toggling a category or applying a linked profile after the dispatch was drawn made every SAR test fail: neither accident map and route nor SAR map and route ran (FPL_NMBR 0, the destination of the previous mission stayed in the FMS), CRASH_SITE created no landing spot and no sighting (has_landing_spot 0, patient_found no), the hoist command and the ground operations never started and the mission was locked (tester report of 2026-10-17 on 169.54, snapshots with local:SAR = true and the category locals set). recompute no longer writes the local SAR; the toggle of SAR stays in preset_category_SAR and in the globals SAR and SAR1 to SAR5. Test: tools/test-sar-flag.js (fails on the previous macro). Runtime in the simulator pending (RUNTIME_VALIDATION, section "SAR flag").
+- Not changed: the engine popup "null is not an object (evaluating this.mission.macros)" for archive closing dispatch after End Mission (the mission object no longer exists when a queued command runs; harmless).
+
 ## Release 0.997 169.57
 
 - Cumulative scope of the baseline: entries 169.23 to 169.57 (vehicle lines, city query, call sign, voice draws, door trace, on conditions missions)

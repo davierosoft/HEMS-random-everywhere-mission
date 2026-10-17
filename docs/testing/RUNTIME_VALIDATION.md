@@ -511,3 +511,11 @@ User request of 2026-10-17. Mission 169.57, Mission Companion 0.27, pack EN 16. 
 4. Enable only a restricted mission (for example the skier) in a summer noon: the draw still works (the filter is dropped when no enabled mission fits) and the mission starts.
 5. Option OFF: the same lists draw every mission as before.
 6. The crew tip about the option (TIP.CND.*) is told with the Mission Companion 0.27 (pack EN 16) and TIPS ON; the topics follow in the documented order.
+
+## SAR flag (PENDING)
+
+Tester report of 2026-10-17 (build 169.54). Mission 169.58, static gate `node tools/test-sar-flag.js`.
+
+1. Start a mission, wait for a search and rescue dispatch (or pick Lost contact with helicopter in CUSTOM MISSION), then open the mission list page, switch the preset, toggle a category and apply a linked aircraft profile before accepting the dispatch. In the debug snapshot (page COMMON, locals) `SAR` must read `yes` (not true), `FPL_NMBR` 4 after the acceptance and the route to the last known position is loaded in the FMS.
+2. Fly to the scene: `has_landing_spot` 1 after the sighting, `patient_found` yes, the hoist option and the ground operations start.
+3. With a non-SAR dispatch the same steps leave `SAR` at `no` and the road accident route is loaded.
