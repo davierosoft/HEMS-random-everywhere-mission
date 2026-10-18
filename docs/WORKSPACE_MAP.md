@@ -22,6 +22,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `docs/architecture/KIT_WEIGHTS.md` | Payload stations: crew by sum and difference, kit masses per station, option `KIT_WEIGHTS` on the technical page, the thread that keeps them in line. |
 | `docs/architecture/ROAD_APPROACH_ROUTES.md` | Approach points `wpc`, `wprescue`, `wph`, `wpt` taken from route arrays by `road nodes generator`. |
 | `docs/architecture/SAR_VISUAL_HINTS_AND_MISSIONS.md` | SAR visual hints around the victim, `sar_objects` static, custom SAR missions 65-68. |
+| `docs/architecture/PATIENT_DEMOGRAPHICS.md` | Clinical record of an unvisited patient and the sex and age rules by the wording of the dispatch (`accident demographics`). |
 | `docs/architecture/SHARED_DATA.md` | Shared hangar and hospital waypoints and offline database changes: the git folder `shared-data/`, the table the Companion app writes, the loader macro and what the simulator proved about `fetch` and tables. |
 | `shared-data/` | Shared hangar/hospital waypoints (`waypoints.json`), changes to the offline databases of the H145 (`db/<type>.json`) and `manifest.json` (revision and hashes); maintained with `tools/shared-data.js`, downloaded by the Companion app. |
 | `docs/architecture/DEBUG_HANDOFF_2026-09-12.md` | User-requested handoff: preserved behavior, ownership and next debug work. Read before changing the P1-P3 integration. |

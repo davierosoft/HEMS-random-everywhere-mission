@@ -65,6 +65,7 @@ const scripts = [
   'test-next-dispatch-cooldown.js',
   'test-hr-skid-choreography.js',
   'test-shared-data.js',
+  'test-accident-demographics.js',
   'audit-drive-speeds.js',
   'test-heli-rescuer-and-ambulance.js',
   'validate-user-changelog.js',

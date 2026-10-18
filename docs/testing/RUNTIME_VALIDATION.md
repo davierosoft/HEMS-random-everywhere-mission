@@ -599,3 +599,7 @@ User request of 2026-10-18, design in docs/architecture/SHARED_DATA.md. Proven i
 3. Add a hangar of your own in the app (My points...), **Update now** while the simulator runs: at the next dispatch from that place the technician walks your points (the table was read again because `L:HMC_DATA_REV` changed).
 4. A damaged table file (cut text): the mission starts and the built-in points are used.
 5. Hospital in a place without a record: nothing changes (no staff walk, as before).
+
+## Clinical record and demographics (sources 2026-10-18, PENDING)
+
+Design in docs/architecture/PATIENT_DEMOGRAPHICS.md. 1. A call where the rescue team reports (ambulance on scene) before the crew visits: the record shows `Patient: UNKNOWN, <age>yrs, <sex>`, `Status reported by the rescue team: ...`, the team message without `Symptoms: NO INFO`, and the diagnosis only after the ambulance assessment is complete. 2. A search and rescue call: age and sex, no state. 3. Three patients: the medical update gives the same kind of text for each. 4. Quad calls: both a man ("his quad") and a woman ("her quad") come up and the rider's name and model match; the tractor, the husband and wife (56), the saleswoman (60), the father and mother (3). 5. Workers, quad, paraglider, climbers, hunters: no minors and nobody over the range; students 12-19. 6. A saved game reloads with the same sex and age.

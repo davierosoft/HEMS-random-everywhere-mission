@@ -489,6 +489,152 @@
         ]}
     ]}
   ],
+  "accident demographics sex": [
+    {"#comment":"Sex of patient 1 by the wording of the dispatch (user request 2026-10-18): the static accident demographics (by ID_CARD, field sexN for the variant CRASH_VARIABLE) is put in SEX1 before the pathology engine, like injured_workers; the engine then takes only the profiles of that sex. A saved game keeps what it saved."},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"set":{"param":"dm_sex"},"value":null},
+        {"for_each": {"static":"accident demographics"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"local":"VAR_MISSION_NUMBER"},
+              "then": [
+                {"set":{"param":"dm_sex"},"value":{"struct":{"param":"$item"},"path":"sex{local:CRASH_VARIABLE}"}},
+                {"break":1}
+            ]}
+        ]},
+        {"if": {"param":"dm_sex"}, "ne": null,
+          "then": [
+            {"set":{"local":"SEX1"},"value":{"param":"dm_sex"}}
+        ]}
+    ]}
+  ],
+  "accident demographics ages": [
+    {"#comment":"Ages of the patients by the activity of the dispatch (user request 2026-10-18): age_min and age_max of the accident (age_minN and age_maxN for the variant CRASH_VARIABLE win) bring AGE1, AGE2 and AGE3 into range after the pathology engine (the profile of patient 1 can set an age of its own). Only the patients that exist; a saved game keeps its ages."},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"set":{"param":"dm_min"},"value":null},
+        {"set":{"param":"dm_max"},"value":null},
+        {"for_each": {"static":"accident demographics"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"local":"VAR_MISSION_NUMBER"},
+              "then": [
+                {"set":{"param":"dm_min"},"value":{"struct":{"param":"$item"},"path":"age_min"}},
+                {"set":{"param":"dm_max"},"value":{"struct":{"param":"$item"},"path":"age_max"}},
+                {"set":{"param":"dm_vmin"},"value":{"struct":{"param":"$item"},"path":"age_min{local:CRASH_VARIABLE}"}},
+                {"set":{"param":"dm_vmax"},"value":{"struct":{"param":"$item"},"path":"age_max{local:CRASH_VARIABLE}"}},
+                {"if": {"param":"dm_vmin"}, "ne": null,
+                  "then": [
+                    {"set":{"param":"dm_min"},"value":{"param":"dm_vmin"}}
+                ]},
+                {"if": {"param":"dm_vmax"}, "ne": null,
+                  "then": [
+                    {"set":{"param":"dm_max"},"value":{"param":"dm_vmax"}}
+                ]},
+                {"break":1}
+            ]}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"param":"dm_min"},"ne":null},
+            {"require":{"param":"dm_max"},"ne":null}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"HELOVICTIMS"}, "gte": 1,
+              "then": [
+                {"if": {"isNaN":{"local":"AGE1"}}, "eq": 0,
+                  "then": [
+                    {"if": {"local":"AGE1"}, "lt": {"param":"dm_min"},
+                      "then": [
+                        {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]},
+                    {"if": {"local":"AGE1"}, "gt": {"param":"dm_max"},
+                      "then": [
+                        {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]}
+                ]}
+            ]},
+            {"if": {"local":"HELOVICTIMS"}, "gte": 2,
+              "then": [
+                {"if": {"isNaN":{"local":"AGE2"}}, "eq": 0,
+                  "then": [
+                    {"if": {"local":"AGE2"}, "lt": {"param":"dm_min"},
+                      "then": [
+                        {"set":{"local":"AGE2"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]},
+                    {"if": {"local":"AGE2"}, "gt": {"param":"dm_max"},
+                      "then": [
+                        {"set":{"local":"AGE2"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]}
+                ]}
+            ]},
+            {"if": {"local":"HELOVICTIMS"}, "gte": 3,
+              "then": [
+                {"if": {"isNaN":{"local":"AGE3"}}, "eq": 0,
+                  "then": [
+                    {"if": {"local":"AGE3"}, "lt": {"param":"dm_min"},
+                      "then": [
+                        {"set":{"local":"AGE3"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]},
+                    {"if": {"local":"AGE3"}, "gt": {"param":"dm_max"},
+                      "then": [
+                        {"set":{"local":"AGE3"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "symptoms parts": [
+    {"#comment":"Medical update of the ambulance (user request 2026-10-18): the symptoms are told only when they are known. The profiles with NO INFO say nothing, and the same text is used for every patient (patients 2 and 3 used the name of the pathology as symptoms)."},
+    {"set":{"local":"symptoms_part1"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_symptoms1"},"ne":null},
+        {"require":{"local":"medical_symptoms1"},"ne":""},
+        {"require":{"local":"medical_symptoms1"},"ne":"NO INFO"},
+        {"require":{"local":"medical_symptoms1"},"ne":"No info received"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"symptoms_part1"},"value":{"text":" Symptoms: {0}.","params":[{"local":"medical_symptoms1"}]}}
+          ],"else": [
+            {"set":{"local":"symptoms_part1"},"value":{"text":", symptoms: {0}","params":[{"local":"medical_symptoms1"}]}}
+        ]}
+    ]},
+    {"set":{"local":"symptoms_part2"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_symptoms2"},"ne":null},
+        {"require":{"local":"medical_symptoms2"},"ne":""},
+        {"require":{"local":"medical_symptoms2"},"ne":"NO INFO"},
+        {"require":{"local":"medical_symptoms2"},"ne":"No info received"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"symptoms_part2"},"value":{"text":" Symptoms: {0}.","params":[{"local":"medical_symptoms2"}]}}
+          ],"else": [
+            {"set":{"local":"symptoms_part2"},"value":{"text":", symptoms: {0}","params":[{"local":"medical_symptoms2"}]}}
+        ]}
+    ]},
+    {"set":{"local":"symptoms_part3"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_symptoms3"},"ne":null},
+        {"require":{"local":"medical_symptoms3"},"ne":""},
+        {"require":{"local":"medical_symptoms3"},"ne":"NO INFO"},
+        {"require":{"local":"medical_symptoms3"},"ne":"No info received"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"symptoms_part3"},"value":{"text":" Symptoms: {0}.","params":[{"local":"medical_symptoms3"}]}}
+          ],"else": [
+            {"set":{"local":"symptoms_part3"},"value":{"text":", symptoms: {0}","params":[{"local":"medical_symptoms3"}]}}
+        ]}
+    ]}
+  ],
   "append poordead to victim message": [
     {"if": {"local":"randomdeadmsg"}, "ne": null,
       "then": [
@@ -1123,12 +1269,17 @@
         {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":1}},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":2},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":3},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}},{"title":"Deceased","commands":[{"call_macro":"deceased scene page"}],"select_condition":{"require":{"local":"poordead_page_open"},"eq":1},"show_condition":{"require":{"local":"randomdeadmsg"},"ne":null}}]},
         {"text":"VIEW ONLY - PATIENT {0} IS CURRENTLY UNDER ACTIVE TREATMENT.","color":"gray","params":[{"local":"manual_active_patient"}],"show_condition":{"and":[{"require":{"local":"manual_active_patient"},"gt":0},{"require":{"local":"medical_display_patient"},"ne":{"local":"manual_active_patient"}}],"eq":1}},
         {"text":"Patient: {0}, {1}yrs, {2}","params":[{"local":"medical_display_name"},{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
-        {"text":"Patient: UNKNOWN , UNK, UNK","show_condition":{"require":{"local":"medical_display_visited"},"eq":"no"}},
+        {"text":"Patient: UNKNOWN , UNK, UNK","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"eq":null}],"eq":1}},
+        {"text":"Patient: UNKNOWN, {0}yrs, {1}","params":[{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"ne":null}],"eq":1}},
         {"text":"Dispatch: {0}","params":[{"local":"accident_name"}]},
         {"text":"Diagnosis: {0}","params":[{"local":"medical_display_diagnosis"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
-        {"text":"Status upon medical arrival: UNKNOWN","show_condition":{"require":{"local":"medical_display_visited"},"eq":"no"}},
+        {"text":"Status upon medical arrival: UNKNOWN","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"eq":null}],"eq":1}},
+        {"text":"Status upon medical arrival: UNKNOWN","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"SAR"},"eq":"yes"}],"eq":1}},
+        {"text":"Status reported by the rescue team: {0}","params":[{"local":"medical_display_status"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"SAR"},"ne":"yes"}],"eq":1}},
         {"text":"Status upon medical arrival: {0}","params":[{"local":"medical_display_status"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
-        {"text":"Info from rescue team on scene: {0}, Preliminary diagnosys: {1}","params":[{"local":"rescuediagnosis"},{"local":"medical_display_pathology"}],"color":"orange","show_condition":{"require":{"local":"rescuediagnosis"},"ne":null}},
+        {"text":"Info from rescue team on scene: {0}","params":[{"local":"rescuediagnosis"}],"color":"orange","show_condition":{"require":{"local":"rescuediagnosis"},"ne":null}},
+        {"text":"Preliminary diagnosys: {0}","params":[{"local":"medical_display_pathology"}],"color":"orange","show_condition":{"and":[{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"}],"eq":1}},
+        {"text":"Preliminary diagnosys: {0}","params":[{"local":"medical_display_pathology"}],"color":"orange","show_condition":{"and":[{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"medical_display_visited"},"eq":"yes"},{"require":{"local":"medical_display_assessment_complete"},"ne":"yes"}],"eq":1}},
         {"image":"bar"},
         {"text":"AMBULANCE HANDOVER","align":"center","color":"yellow","show_condition":{"and":[{"require":{"local":"medical_display_ambulance_visible"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"AMBULANCE REPORT: {0}","params":[{"local":"medical_display_ambulance_report"}],"color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_ambulance_visible"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
@@ -2520,21 +2671,22 @@
         {"if": {"param":"rescuesendstatus"}, "eq": "ambulance",
           "then": [
             {"set":{"local":"SEX_TIME"},"value":1},
+            {"call_macro":"symptoms parts"},
             {"if": {"local":"HELOVICTIMS"}, "eq": 1,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}. Symptoms: {local:medical_symptoms1}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}.{local:symptoms_part1}"},
                 {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 2,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}{local:symptoms_part1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}{local:symptoms_part2}."},
                 {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 3,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}, symptoms: {local:generic_pathology3}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}{local:symptoms_part1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}{local:symptoms_part2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}{local:symptoms_part3}."},
                 {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},

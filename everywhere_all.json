@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.61",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.62",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.61"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.62"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -16696,12 +16696,17 @@
         {"buttonbar":[{"title":"Patient 1","commands":[{"call_macro":"select medical patient page","params":{"patient":1}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":1}},{"title":"Patient 2","commands":[{"call_macro":"select medical patient page","params":{"patient":2}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":2},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":2}},{"title":"Patient 3","commands":[{"call_macro":"select medical patient page","params":{"patient":3}}],"select_condition":{"require":{"local":"medical_display_patient"},"eq":3},"show_condition":{"require":{"local":"HELOVICTIMS"},"gte":3}},{"title":"Deceased","commands":[{"call_macro":"deceased scene page"}],"select_condition":{"require":{"local":"poordead_page_open"},"eq":1},"show_condition":{"require":{"local":"randomdeadmsg"},"ne":null}}]},
         {"text":"VIEW ONLY - PATIENT {0} IS CURRENTLY UNDER ACTIVE TREATMENT.","color":"gray","params":[{"local":"manual_active_patient"}],"show_condition":{"and":[{"require":{"local":"manual_active_patient"},"gt":0},{"require":{"local":"medical_display_patient"},"ne":{"local":"manual_active_patient"}}],"eq":1}},
         {"text":"Patient: {0}, {1}yrs, {2}","params":[{"local":"medical_display_name"},{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
-        {"text":"Patient: UNKNOWN , UNK, UNK","show_condition":{"require":{"local":"medical_display_visited"},"eq":"no"}},
+        {"text":"Patient: UNKNOWN , UNK, UNK","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"eq":null}],"eq":1}},
+        {"text":"Patient: UNKNOWN, {0}yrs, {1}","params":[{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"ne":null}],"eq":1}},
         {"text":"Dispatch: {0}","params":[{"local":"accident_name"}]},
         {"text":"Diagnosis: {0}","params":[{"local":"medical_display_diagnosis"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
-        {"text":"Status upon medical arrival: UNKNOWN","show_condition":{"require":{"local":"medical_display_visited"},"eq":"no"}},
+        {"text":"Status upon medical arrival: UNKNOWN","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"eq":null}],"eq":1}},
+        {"text":"Status upon medical arrival: UNKNOWN","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"SAR"},"eq":"yes"}],"eq":1}},
+        {"text":"Status reported by the rescue team: {0}","params":[{"local":"medical_display_status"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"no"},{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"SAR"},"ne":"yes"}],"eq":1}},
         {"text":"Status upon medical arrival: {0}","params":[{"local":"medical_display_status"}],"show_condition":{"require":{"local":"medical_display_visited"},"eq":"yes"}},
-        {"text":"Info from rescue team on scene: {0}, Preliminary diagnosys: {1}","params":[{"local":"rescuediagnosis"},{"local":"medical_display_pathology"}],"color":"orange","show_condition":{"require":{"local":"rescuediagnosis"},"ne":null}},
+        {"text":"Info from rescue team on scene: {0}","params":[{"local":"rescuediagnosis"}],"color":"orange","show_condition":{"require":{"local":"rescuediagnosis"},"ne":null}},
+        {"text":"Preliminary diagnosys: {0}","params":[{"local":"medical_display_pathology"}],"color":"orange","show_condition":{"and":[{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"}],"eq":1}},
+        {"text":"Preliminary diagnosys: {0}","params":[{"local":"medical_display_pathology"}],"color":"orange","show_condition":{"and":[{"require":{"local":"rescuediagnosis"},"ne":null},{"require":{"local":"medical_display_visited"},"eq":"yes"},{"require":{"local":"medical_display_assessment_complete"},"ne":"yes"}],"eq":1}},
         {"image":"bar"},
         {"text":"AMBULANCE HANDOVER","align":"center","color":"yellow","show_condition":{"and":[{"require":{"local":"medical_display_ambulance_visible"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"AMBULANCE REPORT: {0}","params":[{"local":"medical_display_ambulance_report"}],"color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_ambulance_visible"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
@@ -18112,21 +18117,22 @@
         {"if": {"param":"rescuesendstatus"}, "eq": "ambulance",
           "then": [
             {"set":{"local":"SEX_TIME"},"value":1},
+            {"call_macro":"symptoms parts"},
             {"if": {"local":"HELOVICTIMS"}, "eq": 1,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}. Symptoms: {local:medical_symptoms1}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}.{local:symptoms_part1}"},
                 {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 2,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}{local:symptoms_part1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}{local:symptoms_part2}."},
                 {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 3,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}, symptoms: {local:generic_pathology3}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}{local:symptoms_part1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}{local:symptoms_part2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}{local:symptoms_part3}."},
                 {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
@@ -48600,6 +48606,7 @@
       "then": [
         {"set":{"local":"SEX1"},"value":"male"}
     ]},
+    {"call_macro":"accident demographics sex"},
     {"if": {"local":"halloween"}, "eq": 1,
       "then": [
         {"call_macro":"halloween pathology random engine"}
@@ -48619,6 +48626,7 @@
         {"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":0}
     ]},
     {"wait_for":{"local":"pathology_random_ready"},"eq":1},
+    {"call_macro":"accident demographics ages"},
     {"sleep":0.5},
     {"call_macro":"Mission dispatch"},
     {"set":{"var":["L:LOAD","number"]},"value":10},
@@ -88306,6 +88314,152 @@
         {"set":{"local":"SHARED_WPS_LOADED"},"value":"yes"},
         {"set":{"local":"SHARED_WPS_REV"},"value":{"param":"swl_rev"}}
     ]}
+  ],
+  "accident demographics sex": [
+    {"#comment":"Sex of patient 1 by the wording of the dispatch (user request 2026-10-18): the static accident demographics (by ID_CARD, field sexN for the variant CRASH_VARIABLE) is put in SEX1 before the pathology engine, like injured_workers; the engine then takes only the profiles of that sex. A saved game keeps what it saved."},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"set":{"param":"dm_sex"},"value":null},
+        {"for_each": {"static":"accident demographics"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"local":"VAR_MISSION_NUMBER"},
+              "then": [
+                {"set":{"param":"dm_sex"},"value":{"struct":{"param":"$item"},"path":"sex{local:CRASH_VARIABLE}"}},
+                {"break":1}
+            ]}
+        ]},
+        {"if": {"param":"dm_sex"}, "ne": null,
+          "then": [
+            {"set":{"local":"SEX1"},"value":{"param":"dm_sex"}}
+        ]}
+    ]}
+  ],
+  "accident demographics ages": [
+    {"#comment":"Ages of the patients by the activity of the dispatch (user request 2026-10-18): age_min and age_max of the accident (age_minN and age_maxN for the variant CRASH_VARIABLE win) bring AGE1, AGE2 and AGE3 into range after the pathology engine (the profile of patient 1 can set an age of its own). Only the patients that exist; a saved game keeps its ages."},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"set":{"param":"dm_min"},"value":null},
+        {"set":{"param":"dm_max"},"value":null},
+        {"for_each": {"static":"accident demographics"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"local":"VAR_MISSION_NUMBER"},
+              "then": [
+                {"set":{"param":"dm_min"},"value":{"struct":{"param":"$item"},"path":"age_min"}},
+                {"set":{"param":"dm_max"},"value":{"struct":{"param":"$item"},"path":"age_max"}},
+                {"set":{"param":"dm_vmin"},"value":{"struct":{"param":"$item"},"path":"age_min{local:CRASH_VARIABLE}"}},
+                {"set":{"param":"dm_vmax"},"value":{"struct":{"param":"$item"},"path":"age_max{local:CRASH_VARIABLE}"}},
+                {"if": {"param":"dm_vmin"}, "ne": null,
+                  "then": [
+                    {"set":{"param":"dm_min"},"value":{"param":"dm_vmin"}}
+                ]},
+                {"if": {"param":"dm_vmax"}, "ne": null,
+                  "then": [
+                    {"set":{"param":"dm_max"},"value":{"param":"dm_vmax"}}
+                ]},
+                {"break":1}
+            ]}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"param":"dm_min"},"ne":null},
+            {"require":{"param":"dm_max"},"ne":null}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"HELOVICTIMS"}, "gte": 1,
+              "then": [
+                {"if": {"isNaN":{"local":"AGE1"}}, "eq": 0,
+                  "then": [
+                    {"if": {"local":"AGE1"}, "lt": {"param":"dm_min"},
+                      "then": [
+                        {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]},
+                    {"if": {"local":"AGE1"}, "gt": {"param":"dm_max"},
+                      "then": [
+                        {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]}
+                ]}
+            ]},
+            {"if": {"local":"HELOVICTIMS"}, "gte": 2,
+              "then": [
+                {"if": {"isNaN":{"local":"AGE2"}}, "eq": 0,
+                  "then": [
+                    {"if": {"local":"AGE2"}, "lt": {"param":"dm_min"},
+                      "then": [
+                        {"set":{"local":"AGE2"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]},
+                    {"if": {"local":"AGE2"}, "gt": {"param":"dm_max"},
+                      "then": [
+                        {"set":{"local":"AGE2"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]}
+                ]}
+            ]},
+            {"if": {"local":"HELOVICTIMS"}, "gte": 3,
+              "then": [
+                {"if": {"isNaN":{"local":"AGE3"}}, "eq": 0,
+                  "then": [
+                    {"if": {"local":"AGE3"}, "lt": {"param":"dm_min"},
+                      "then": [
+                        {"set":{"local":"AGE3"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]},
+                    {"if": {"local":"AGE3"}, "gt": {"param":"dm_max"},
+                      "then": [
+                        {"set":{"local":"AGE3"},"value":{"floor":{"rand":[{"param":"dm_min"},{"add":[{"param":"dm_max"},1]}]}}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "symptoms parts": [
+    {"#comment":"Medical update of the ambulance (user request 2026-10-18): the symptoms are told only when they are known. The profiles with NO INFO say nothing, and the same text is used for every patient (patients 2 and 3 used the name of the pathology as symptoms)."},
+    {"set":{"local":"symptoms_part1"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_symptoms1"},"ne":null},
+        {"require":{"local":"medical_symptoms1"},"ne":""},
+        {"require":{"local":"medical_symptoms1"},"ne":"NO INFO"},
+        {"require":{"local":"medical_symptoms1"},"ne":"No info received"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"symptoms_part1"},"value":{"text":" Symptoms: {0}.","params":[{"local":"medical_symptoms1"}]}}
+          ],"else": [
+            {"set":{"local":"symptoms_part1"},"value":{"text":", symptoms: {0}","params":[{"local":"medical_symptoms1"}]}}
+        ]}
+    ]},
+    {"set":{"local":"symptoms_part2"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_symptoms2"},"ne":null},
+        {"require":{"local":"medical_symptoms2"},"ne":""},
+        {"require":{"local":"medical_symptoms2"},"ne":"NO INFO"},
+        {"require":{"local":"medical_symptoms2"},"ne":"No info received"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"symptoms_part2"},"value":{"text":" Symptoms: {0}.","params":[{"local":"medical_symptoms2"}]}}
+          ],"else": [
+            {"set":{"local":"symptoms_part2"},"value":{"text":", symptoms: {0}","params":[{"local":"medical_symptoms2"}]}}
+        ]}
+    ]},
+    {"set":{"local":"symptoms_part3"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_symptoms3"},"ne":null},
+        {"require":{"local":"medical_symptoms3"},"ne":""},
+        {"require":{"local":"medical_symptoms3"},"ne":"NO INFO"},
+        {"require":{"local":"medical_symptoms3"},"ne":"No info received"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"symptoms_part3"},"value":{"text":" Symptoms: {0}.","params":[{"local":"medical_symptoms3"}]}}
+          ],"else": [
+            {"set":{"local":"symptoms_part3"},"value":{"text":", symptoms: {0}","params":[{"local":"medical_symptoms3"}]}}
+        ]}
+    ]}
   ]
 },
 
@@ -89036,11 +89190,11 @@
     {
       "id": "ID:8 / All Terrain Vehicle ATV (Quad) accident",
       "name": "All Terrain Vehicle ATV (Quad) accident",
-      "general_description": "Info: A rider lost control of his quad and has been injured",
+      "general_description": "Info: A rider lost control of the quad and has been injured",
       "description1": "A rider lost control of his quad and has been injured.",
-      "description2": "A rider lost control of his quad and has been injured.",
+      "description2": "A rider lost control of her quad and has been injured.",
       "description3": "A rider lost control of his quad and has been injured.",
-      "description4": "A rider lost control of his quad and has been injured.",
+      "description4": "A rider lost control of her quad and has been injured.",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
       "max_injured": 1,
       "injured_type": "injured_motorcyclists",
@@ -89198,7 +89352,7 @@
       "name": "Tractor accident with injured farmer",
       "general_description": "Info: An agricultural vehicle accident caused a farmer to be injured",
       "description1": "Farmer has been injuried when his tractor tipped over.",
-      "description2": "Farmer has been injuried when his tractor tipped over.",
+      "description2": "Farmer has been injuried when her tractor tipped over.",
       "description3": "Farmer has been injuried falling from a tractor, with the tractor still moving.",
       "description4": "Farmer has been badly injured by a harvester.",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
@@ -89277,7 +89431,7 @@
       "id": "ID:13/ Quarry accident with injured worker",
       "name": "Quarry accident with injured worker",
       "general_description": "Info: A worker has been seriously injured while working in a quarry",
-      "description1": "Worker has been injuried by a payloader in a quarry.Bucket hit him during manoeuvres.",
+      "description1": "Worker has been injuried by a payloader in a quarry. Bucket hit the worker during manoeuvres.",
       "description2": "Worker has been injuried by a payloader in a quarry.",
       "description3": "Worker has been injuried falling from an excavator in a quarry.",
       "description4": "Pallet fell from a crane in a quarry trapping and wounding a worker",
@@ -90069,10 +90223,10 @@
 
     {
       "id": "ID:33/ Injured person in his garden",
-      "name": "Injured person in his garden",
+      "name": "Injured person in the garden",
       "general_description": "A person in the garden requires medical assistance",
       "description1": "A person fallen from ladder in the garden. Medical assistance is required.",
-      "description2": "A person fallen from ladder while gardening. He requires urgent medical assistance.",
+      "description2": "A person fallen from ladder while gardening. Urgent medical assistance is required.",
       "description3": "A person has been injured while cooking with grill",
       "description4": "A person has been injured while cooking with grill",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
@@ -90320,8 +90474,8 @@
     {
       "id": "ID:38/ Injured reported in chair lift accident",
       "name": "Injured reported in chair lift accident",
-      "general_description": "Info: A man has fallen from a chair lift, he is injured.",
-      "description1": "A person has fallen from a chair lift, he is injured.",
+      "general_description": "Info: A person has fallen from a chair lift and is injured.",
+      "description1": "A person has fallen from a chair lift and is injured.",
       "description2": "Reported injured after fall from chair lift.",
       "description3": "Chairlift dolly fallen on ground. Injured have been reported.",
       "description4": "Injured have been reported after a chairlift dolly fallen on ground.",
@@ -90691,8 +90845,8 @@
       "general_description": "Info: A skier fell while skiing and was injured.",
       "description1": "Ski accident, skier collided with a tree after a fall, responsive, pain in arm and leg, unable to continue.",
       "description2": "Ski accident. Two skiers skiing towards each other, each expecting the other to move aside. Now both are down and complaining.",
-      "description3": "Snowboarder misjudged a turn, then fell and landed on his back, initially unconscious",
-      "description4": "Skier swerved to avoid another skier, tangled his own feet, and severely twisted his right knee.",
+      "description3": "Snowboarder misjudged a turn, then fell and landed on the back, initially unconscious",
+      "description4": "Skier swerved to avoid another skier, got tangled up, and severely twisted the right knee.",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
       "max_injured": 2,
       "injured_type": "injured",
@@ -90775,7 +90929,7 @@
       "general_description": "Emergency call from ",
       "description1": "Worker collapsed after lifting a heavy load.",
       "description2": "A worker has been injured during factory equipment operation",
-      "description3": "A factory worker fallen on ground during his job",
+      "description3": "A factory worker fallen on ground during work",
       "description4": "A worker collapsed after chemical products inhalation",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
       "max_injured": 1,
@@ -91046,7 +91200,7 @@
       "description1": "Person fallen from a ladder, further details unknown.",
       "description2": "Elderly patient presenting with severe dehydration.",
       "description3": "Husband is breathing very deeply and quickly, looks strenuous",
-      "description4": "Husband seems to be sleeping, but breathing is strange",
+      "description4": "Wife seems to be sleeping, but breathing is strange",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
       "max_injured": 1,
       "injured_type": "injured",
@@ -91238,12 +91392,12 @@
 
     {
       "id": "ID:64/ Fisherman requires medical assistance",
-      "name": "Fisherman requires medical assistance",
-      "general_description": "Info: Injured fisherman call received. Medical assistance is required.",
+      "name": "Angler requires medical assistance",
+      "general_description": "Info: Injured angler call received. Medical assistance is required.",
       "description1": "Injured person during fishing. Urgent medical assistance has been requested.",
       "description2": "Person has fallen while fishing. Situation is unclear",
-      "description3": "Fisherman getting Injured. Urgent medical assistance has been requested.",
-      "description4": "Received a call about sick fisherman. Medical assistance is required.",
+      "description3": "Angler getting Injured. Urgent medical assistance has been requested.",
+      "description4": "Received a call about sick angler. Medical assistance is required.",
       "objective": "Objective: Fly to the site and provide assistance. Then deliver them to a nearby hospital if needed",
       "max_injured": 1,
       "injured_type": "injured",
@@ -130692,7 +130846,7 @@
       "fire": "no",
       "medical_symptoms": "Reported chest pain",
       "diagnosis": "Severe heart failure, Cheyne-stokes-Breathing, impending cardiac failure",
-      "sex": "male",
+      "sex": "female",
       "agemin": 30,
       "agemax": 86,
       "scoremin": 20,
@@ -133351,7 +133505,173 @@
     }
   ],
 
-  "Shared_Waypoints_Table": "R&E_shared_waypoints"
+  "Shared_Waypoints_Table": "R&E_shared_waypoints",
+
+  "accident demographics": [
+    {
+      "id": 3,
+      "sex1": "female",
+      "sex2": "male",
+      "sex4": "male"
+    },
+
+    {
+      "id": 4,
+      "age_min": 18,
+      "age_max": 67
+    },
+
+    {
+      "id": 8,
+      "age_min": 18,
+      "age_max": 75,
+      "sex1": "male",
+      "sex2": "female",
+      "sex3": "male",
+      "sex4": "female"
+    },
+
+    {
+      "id": 11,
+      "age_min": 18,
+      "age_max": 75,
+      "sex1": "male",
+      "sex2": "female"
+    },
+
+    {
+      "id": 13,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 14,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 15,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 16,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 17,
+      "age_min": 18,
+      "age_max": 70
+    },
+
+    {
+      "id": 29,
+      "sex2": "female"
+    },
+
+    {
+      "id": 34,
+      "age_min": 12,
+      "age_max": 19,
+      "age_min3": 18,
+      "age_max3": 25
+    },
+
+    {
+      "id": 35,
+      "age_min": 16,
+      "age_max": 65,
+      "sex4": "male"
+    },
+
+    {
+      "id": 36,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 37,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 42,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 47,
+      "age_min": 15,
+      "age_max": 70
+    },
+
+    {
+      "id": 48,
+      "age_min": 18,
+      "age_max": 65
+    },
+
+    {
+      "id": 49,
+      "age_min3": 18,
+      "age_max3": 35
+    },
+
+    {
+      "id": 50,
+      "age_min": 15,
+      "age_max": 70
+    },
+
+    {
+      "id": 54,
+      "sex1": "male"
+    },
+
+    {
+      "id": 55,
+      "sex4": "female"
+    },
+
+    {
+      "id": 56,
+      "sex3": "male",
+      "sex4": "female"
+    },
+
+    {
+      "id": 57,
+      "sex1": "male",
+      "sex3": "female"
+    },
+
+    {
+      "id": 60,
+      "sex2": "female"
+    },
+
+    {
+      "id": 61,
+      "age_min": 12,
+      "age_max": 19,
+      "sex2": "male",
+      "sex3": "male"
+    },
+
+    {
+      "id": 63,
+      "age_min": 18,
+      "age_max": 75
+    }
+  ]
 },
 
 "threads": {

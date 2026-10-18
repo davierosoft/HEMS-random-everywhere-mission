@@ -2,8 +2,8 @@
 
 `everywhere_all.json` must remain a single HPG deployment artifact, but it is too large for safe routine editing. This directory holds every root section of the mission as focused, valid JSON modules; nothing is artifact-owned:
 
-- `macros/`: 22 subsystem files containing all 956 command macros, including the checklists, Astra P1-P3 integration and location diagnostics.
-- `data/`: 6 files containing all 195 persistent tables, content pools, assets, and message catalogs.
+- `macros/`: 22 subsystem files containing all 959 command macros, including the checklists, Astra P1-P3 integration and location diagnostics.
+- `data/`: 6 files containing all 196 persistent tables, content pools, assets, and message catalogs.
 - `threads/`: 3 files with the 38 mission threads (startup and dispatch triggers, CARLS, flight monitors).
 - `icons/`: 6 files with the 36 embedded icons; the large vital-sign images each have their own file. Opaque base64: do not read them, locate and replace by key.
 - `root/`: 3 files with the remaining root keys (title, id, author, start_info, aircraft, applicable, api_version, locations, objects, userActions in the header; objectives; briefing).
