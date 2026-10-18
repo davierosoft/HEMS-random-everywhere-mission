@@ -12,6 +12,11 @@
     {"#comment":"Crew emergency decisions. CREW_DIVERT: the mission is cancelled and the helicopter goes to the hospital (a death forces it, a critical member lets the user choose Divert or Continue). The limits are the LifeScore up to which a crew member aboard at the base finds the police car (CREW_POLICE_LIMIT) and the ambulance (CREW_AMBULANCE_LIMIT)."},
     {"set":{"local":"CREW_DIVERT"},"value":"no"},
     {"set":{"local":"CREW_CONTINUE_CHOSEN"},"value":"no"},
+    {"#comment":"Crew emergency with the crew outside (user rules of 2026-10-18): CREW_OPS_ABORT yes stops the visits of the ground operations (the doctor goes back, the patient stays for another unit), CREW_NO_PATIENT yes = the helicopter will not carry a patient, CREW_TOUR_ACTIVE 1 while a crew tour runs, CRIT_FAIL_ACTIVE yes after a critical failure (mayday)."},
+    {"set":{"local":"CREW_OPS_ABORT"},"value":"no"},
+    {"set":{"local":"CREW_NO_PATIENT"},"value":"no"},
+    {"set":{"local":"CREW_TOUR_ACTIVE"},"value":0},
+    {"set":{"local":"CRIT_FAIL_ACTIVE"},"value":"no"},
     {"set":{"local":"CREW_DEST_CONFIRMED"},"value":"no"},
     {"set":{"local":"CREW_POLICE_LIMIT"},"value":20},
     {"set":{"local":"CREW_AMBULANCE_LIMIT"},"value":10},
@@ -683,10 +688,58 @@
       ]}
     }
   ],
+  "crew ops outside": [
+    {"#comment":"1 when a crew member is outside the helicopter (ground operations: hoist_crew, pax1, pax2 or pax3 exist) and no patient is aboard (L:HOISTED not 1)."},
+    {"set":{"param":"co_out"},"value":0},
+    {"if": {"var":["L:HOISTED","number"]}, "ne": 1,
+      "then": [
+        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]},
+        {"if": {"has_object":"pax1"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]},
+        {"if": {"has_object":"pax2"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]},
+        {"if": {"has_object":"pax3"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]}
+    ]},
+    {"return":{"param":"co_out"}}
+  ],
+  "sleep unless crew abort": [
+    {"#comment":"Sleeps param seconds, one second at a time, and stops at once when the ground operations are aborted by a crew emergency (CREW_OPS_ABORT yes): the visit of the doctor does not go on for its whole time."},
+    {"set":{"param":"sua_t"},"value":0},
+    {"while": {"param":"sua_t"}, "lt": {"param":"seconds"},
+      "do": [
+        {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+          "then": [
+            {"return":0}
+        ]},
+        {"sleep":1},
+        {"set":{"param":"sua_t"},"value":{"add":[{"param":"sua_t"},1]}}
+    ]}
+  ],
   "crew emergency route to care": [
     {"create_thread": {
       "commands": [
-        {"call_macro":"board crew after emergency"}
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_NO_PATIENT"},"eq":"yes"},
+            {"require":{"var":["L:MISSION_HOIST","number"]},"ne":0}
+          ]}, "eq": 1,
+          "then": [
+            {"#comment":"Skid or hoist operation aborted: the crew comes back with the pickup of the operation (the doctor, the patient stays), the program waits for it."},
+            {"wait_for":{"var":["L:HOISTED","number"]},"eq":1},
+            {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"yes"}
+          ],"else": [
+            {"call_macro":"board crew after emergency"}
+        ]}
     ]}},
     {"create_thread": {
       "commands": [
@@ -724,7 +777,8 @@
     {"if": {
       "and": [
         {"require":{"var":["L:HOISTED","number"]},"eq":1},
-        {"require":{"var":["L:SAVED","number"]},"ne":1}
+        {"require":{"var":["L:SAVED","number"]},"ne":1},
+        {"require":{"local":"CREW_NO_PATIENT"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CHS_PATIENT_PATH"},"value":"yes"},
@@ -785,7 +839,14 @@
                   "then": [
                     {"call_macro":"crew emergency continue"}
                   ],"else": [
-                    {"call_macro":"crew emergency choice"}
+                    {"#comment":"Crew outside, no patient aboard (ground operations): the abort is mandatory, no Divert or Continue question (user, 2026-10-18)."},
+                    {"call_macro":"crew ops outside","result":"cer_out"},
+                    {"if": {"param":"cer_out"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"crew emergency divert"}
+                      ],"else": [
+                        {"call_macro":"crew emergency choice"}
+                    ]}
                 ]}
             ]}
           ],"else": [
@@ -2451,6 +2512,7 @@
       "then": [
         {"set":{"local":"crew_role_name"},"value":"HEMS 2"}
     ]},
+    {"call_macro":"voice crew event","params":{"member":{"param":"member"},"kind":{"param":"kind"}}},
     {"if": {"param":"kind"}, "eq": "death",
       "then": [
         {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
@@ -2467,6 +2529,81 @@
         {"call_macro":"post crew safety message","params":{"member":{"param":"member"},"score":{"param":"score"},"status":"critical.","cause":{"param":"cause"}}},
         {"set_message":{"text":"CREW CRITICAL: {0}.","params":[{"local":"crew_role_name"}]}}
     ]}
+  ],
+  "critical failure check": [
+    {"#comment":"Called at the end of apply aircraft failure with the code: the critical failures (5 and 6 engine fire, 18 and 19 transmission damage) call the mayday."},
+    {"if": {
+      "or": [
+        {"require":{"param":"code"},"eq":5},
+        {"require":{"param":"code"},"eq":6},
+        {"require":{"param":"code"},"eq":18},
+        {"require":{"param":"code"},"eq":19}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"critical failure mayday","params":{"code":{"param":"code"}}}
+    ]}
+  ],
+  "critical failure mayday": [
+    {"#comment":"A critical failure (param code: 5 and 6 engine fire, 18 and 19 transmission damage; called by apply aircraft failure) obliges to stop the helicopter and to call a mayday (user rule of 2026-10-18), whatever the crew emergency was doing: the ground operations are aborted (CREW_OPS_ABORT), the crew emergency route to care is stopped (CREW_MISSION_TERMINATED), the dispatcher is told, the crew calls the mayday on the radio (voice mayday) and after the landing the operation is terminated with the report. Once per mission (CRIT_FAIL_ACTIVE)."},
+    {"if": {"local":"CRIT_FAIL_ACTIVE"}, "eq": "yes",
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"CRIT_FAIL_ACTIVE"},"value":"yes"},
+    {"set":{"local":"crit_kind"},"value":"F"},
+    {"set":{"local":"crit_text"},"value":"ENGINE FIRE"},
+    {"if": {
+      "or": [
+        {"require":{"param":"code"},"eq":18},
+        {"require":{"param":"code"},"eq":19}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crit_kind"},"value":"G"},
+        {"set":{"local":"crit_text"},"value":"GEARBOX DAMAGE"}
+    ]},
+    {"set":{"local":"CREW_OPS_ABORT"},"value":"yes"},
+    {"set":{"local":"CREW_DIVERT"},"value":"yes"},
+    {"set":{"local":"CREW_MISSION_TERMINATED"},"value":"yes"},
+    {"set":{"local":"MISSION_FAILED"},"value":"CRITICAL_FAILURE"},
+    {"set":{"local":"CREW_EMERGENCY_CAUSE"},"value":{"local":"crit_text"}},
+    {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":0},
+    {"set":{"local":"MISSION_PHASE"},"value":8},
+    {"set":{"local":"HOIST_OUT"},"value":0},
+    {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
+      "then": [
+        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+          "then": [
+            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
+            {"call_macro":"Update_raw from dispatchphase"}
+        ]}
+    ]},
+    {"set_hover_display":{"range":0}},
+    {"set_dispatch_dialog":0},
+    {"set_briefing_dialog":0},
+    {"set_objective_title":"MAYDAY - LAND AND SHUT DOWN","color":"red"},
+    {"set_message":{"text":"MAYDAY: {0}. Land as soon as possible and shut down.","params":[{"local":"crit_text"}],"color":"red"}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"text":"MAYDAY MAYDAY MAYDAY. {0}. Landing and shutting down, request assistance.","params":[{"local":"crit_text"}]}}},
+    {"call_macro":"post dispatcher message","params":{"text":"Copy MAYDAY. Emergency services are alerted to your position. Land and shut down."}},
+    {"call_macro":"voice mayday","params":{"kind":{"local":"crit_kind"}}},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
+        {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":2},
+        {"sleep":8},
+        {"set":{"local":"CREW_TERMINATED_ACK"},"value":"no"},
+        {"set_message":{"text":"MAYDAY: helicopter stopped. Shut down and evacuate."}},
+        {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
+        {"wait_modal": {
+            "title": "MAYDAY - OPERATION TERMINATED",
+            "text": "A critical failure obliged the crew to stop the helicopter. The operation is terminated.",
+            "options": [
+              {"text":"VIEW REPORT","style":"danger","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+          ]}
+        },
+        {"set":{"local":"MISSION_END_WAITING"},"value":1},
+        {"call_macro":"end menu"},
+        {"set_dispatch_dialog":1}
+    ]}}
   ],
   "crew mission terminated": [
     {"if": {"local":"CREW_MISSION_TERMINATED"}, "ne": "yes",
@@ -2783,6 +2920,7 @@
   ],
   "crew impact events": [
     {"#comment":"Evaluates every member marked after an impact once, with the final scores of the batch: alerts, critical and death events, survivors, the abort and the mission termination."},
+    {"call_macro":"voice crew impact"},
     {"call_macro":"crew members cap"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"events_enter eval={local:CREW_EVAL_1}/{local:CREW_EVAL_2}/{local:CREW_EVAL_3}/{local:CREW_EVAL_4}/{local:CREW_EVAL_5} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3} dead={local:CREW_DEAD_1}/{local:CREW_DEAD_2}/{local:CREW_DEAD_3} lock={local:CREW_LOCK_1}/{local:CREW_LOCK_2}/{local:CREW_LOCK_3}"}},
     {"if": {"local":"CREW_EVAL_1"}, "eq": 1,
@@ -3517,6 +3655,7 @@
   ],
   "crew emergency continue": [
     {"set":{"local":"CREW_CONTINUE_CHOSEN"},"value":"yes"},
+    {"call_macro":"voice crew continue"},
     {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"critical, mission continues. Handover at the next hospital stop.","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
     {"set_message":{"text":"The mission continues. The critical crew member is handed over at the next hospital stop or at the base."}}
   ],
@@ -3548,6 +3687,13 @@
         {"return":0}
     ]},
     {"set":{"local":"CREW_DIVERT"},"value":"yes"},
+    {"call_macro":"crew ops outside","result":"ced_out"},
+    {"if": {"param":"ced_out"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_OPS_ABORT"},"value":"yes"},
+        {"set":{"local":"CREW_NO_PATIENT"},"value":"yes"}
+    ]},
+    {"call_macro":"voice crew divert"},
     {"set":{"local":"CREW_DEST_CONFIRMED"},"value":"no"},
     {"set":{"local":"MINGND"},"value":0},
     {"if": {

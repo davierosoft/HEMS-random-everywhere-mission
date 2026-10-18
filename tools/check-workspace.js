@@ -69,6 +69,7 @@ const scripts = [
   'test-voice-app-fallback.js',
   'test-wav-extension.js',
   'test-comms-uniformity.js',
+  'test-crew-ops-abort.js',
   'audit-drive-speeds.js',
   'test-heli-rescuer-and-ambulance.js',
   'validate-user-changelog.js',

@@ -537,10 +537,18 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"sleep":0.5},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"if": {"has_object":"defibri"}, "eq": 1,
       "then": [
@@ -3113,7 +3121,7 @@
               {"wait_for":{"location":"MEET","var":"distance"},"lt":0.03}
             ]},
             {"and": [
-              {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+              {"wait_for":{"var":["L:Collective","number"]},"gte":27},
               {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
               {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
               {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7337,7 +7345,7 @@
     {"set":{"local":"HR_SKID_RETURNED"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"skid_start","detail":{"text":"crew={0} hr={1} nr={2}","params":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7399,7 +7407,7 @@
         {"set_message":{"text":"Site is safe for operation. You can return to the skid landing area"}}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7492,10 +7500,18 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":330,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"},{"bearing2":230,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"}],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"set":{"var":["L:RESCUED","number"]},"value":1},
     {"call_macro":"Life rescued"},
@@ -7623,7 +7639,7 @@
           {"wait_for":{"location":"hoist_crew","var":"distance"},"lt":0.02}
         ]},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gte":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7730,7 +7746,7 @@
           {"wait_for":{"location":"hoist_crew","var":"distance"},"lt":0.02}
         ]},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gte":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7749,7 +7765,7 @@
           {"wait_for":{"location":"hoist_crew","var":"distance"},"lt":0.02}
         ]},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gte":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7846,7 +7862,7 @@
         ]}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":27},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -7977,7 +7993,7 @@
     {"set":{"local":"HR_SKID_RETURNED"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"skid_start","detail":{"text":"crew={0} hr={1} nr={2}","params":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":35},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":30},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -8039,7 +8055,7 @@
         {"set_message":{"text":"Site is safe for operation. You can return to the skid landing area"}}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -8129,10 +8145,18 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":330,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"},{"bearing2":230,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"}],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"set":{"var":["L:RESCUED","number"]},"value":1},
     {"call_macro":"Life rescued"},
@@ -8594,7 +8618,7 @@
     {"set":{"local":"HR_SKID_RETURNED"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"skid_start","detail":{"text":"crew={0} hr={1} nr={2}","params":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":35},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":30},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -8651,7 +8675,7 @@
         {"set_message":{"text":"Site is safe for operation. You can return to the skid landing area"}}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -8731,10 +8755,18 @@
     {"sleep":[2,4]},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":6},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"set":{"var":["L:RESCUED","number"]},"value":1},
     {"call_macro":"Life rescued"},
@@ -8988,7 +9020,7 @@
         {"set_message":{"text":"Crew is ready at the landing area. Land on skids to complete the pickup"}},
         {"call_macro":"ground ops checkpoint","params":{"id":"skid_pickup_wait"}},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gt":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -9791,6 +9823,8 @@
       "then": [
         {"set":{"var":["L:{local:HXX}_FAIL_FUEL_SUPPLY2","number"]},"value":1}
     ]},
+    {"#comment":"Critical failures (user rule of 2026-10-18): an engine fire (5, 6) or a damaged transmission (18, 19) obliges to stop the helicopter and to call a mayday: critical failure mayday aborts the ground operations, the dispatcher is told, the crew calls on the radio and the operation is terminated after the landing."},
+    {"call_macro":"critical failure check","params":{"code":{"param":"code"}}},
     {"call_macro":"refresh aircraft failures flag"}
   ],
   "reset aircraft failures": [

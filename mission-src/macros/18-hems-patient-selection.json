@@ -1,5 +1,12 @@
 {"select HEMS patient": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":"entered"}},
+    {"#comment":"Ground operations aborted by a crew emergency (CREW_OPS_ABORT yes, user rules of 2026-10-18): the helicopter takes no patient, who stays for another unit; the skid and hoist macros then take the branch of a patient transported by the ambulance and pick up the crew."},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"whobringpatient"},"value":"ambulance"},
+        {"set":{"local":"HEMS_DECISION_STATE"},"value":"no_transport_required"},
+        {"return":0}
+    ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_multipatient_registry_crew_barrier"}},
     {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
     {"if": {"param":"ready"}, "ne": 1,

@@ -35,11 +35,11 @@ if (fs.existsSync(packPath)) {
     const block = pack.slice(pack.indexOf(`<message key="${key}"`), pack.indexOf('</message>', pack.indexOf(`<message key="${key}"`)));
     assert.equal(count(block, '<o>'), 6, `${key} has six options`);
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="19"/.test(pack), 'the base pack EN is version 19');
+  assert.ok(/<voicepack name="EN"[^>]* version="20"/.test(pack), 'the base pack EN is version 20');
   const dePath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml');
   if (fs.existsSync(dePath)) {
     const de = fs.readFileSync(dePath, 'utf8');
-    assert.ok(/<voicepack name="DE"[^>]* version="7" basever="19"/.test(de), 'the pack DE is version 7 on the base 19');
+    assert.ok(/<voicepack name="DE"[^>]* version="8" basever="20"/.test(de), 'the pack DE is version 8 on the base 20');
     for (const key of ['CRT.POL.OUT', 'CRT.POL.BCK', 'CRT.AMB.BCK', 'CRT.POL.OPR', 'CRT.WALK', 'MID.SET', 'MID.HND', 'TRF.HND', 'ORG.PCK', 'APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END', 'APR.MUL', 'APR.FIR']) assert.ok(de.includes(`<message key="${key}"`), `${key} is translated in the pack DE`);
   }
 }

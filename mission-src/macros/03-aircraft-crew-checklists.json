@@ -1033,7 +1033,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:19>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:20>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice app lost": [
@@ -1213,6 +1213,128 @@
         {"speak":"<voices:shift>"}
     ]}
   ],
+  "voice radio ready": [
+    {"#comment":"1 when the radio of the helicopter works for the Mission Companion rules of 2026-10-18: powered (the battery master or the GPCP power switch on) and the CARLS connected (L:CARLS_CONNECTED 1). The same rule the program applies to every radio line; a dispatch that arrives with it false is only a notification on the tablet."},
+    {"if": {
+      "and": [
+        {"require":{"or":[{"require":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},{"require":{"var":["L:{local:HXX}_SDK_GPCP_PWR_SWITCH","number"]},"gt":0.5}]},"eq":1},
+        {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"return":0}
+  ],
+  "voice crew member ok": [
+    {"#comment":"1 when the crew member (param member 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2) can speak: it exists (CREW_MEMBER_CAP), is not dead, not below 15 (the mute threshold of the context for the Mission Companion), and with aboard 1 is aboard (CREW_OUT_n 0); param skip is a member that does not count (the casualty)."},
+    {"set":{"param":"vm_ok"},"value":0},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2},
+            {"require":{"local":"CREW_DEAD_2"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_2"},"eq":null},{"require":{"local":"CREW_LIFESCORE_2"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_2"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3},
+            {"require":{"local":"CREW_DEAD_3"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_3"},"eq":null},{"require":{"local":"CREW_LIFESCORE_3"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_3"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4},
+            {"require":{"local":"CREW_DEAD_4"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_4"},"eq":null},{"require":{"local":"CREW_LIFESCORE_4"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_4"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5},
+            {"require":{"local":"CREW_DEAD_5"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_5"},"eq":null},{"require":{"local":"CREW_LIFESCORE_5"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_5"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": {"param":"skip"},
+      "then": [
+        {"set":{"param":"vm_ok"},"value":0}
+    ]},
+    {"return":{"param":"vm_ok"}}
+  ],
+  "voice crew speaker": [
+    {"#comment":"The actor number (2 copilot, 3 doctor, 4 HEMS 1, 5 HEMS 2) of the crew member who speaks, 0 when nobody can (the pilot is the user and never counts). Param first: copilot (the designated one for the radio: if the copilot is missing, dead or unfit the next survivor speaks) or doc; param aboard 1 = only a member aboard; param skip = a member who does not count. The order after the first one: doctor, HEMS 1, HEMS 2, copilot."},
+    {"set":{"local":"vcs_actor"},"value":0},
+    {"if": {"param":"first"}, "eq": "copilot",
+      "then": [
+        {"call_macro":"voice crew member ok","params":{"member":5,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":5}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":4,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":4}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":2,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":3}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":3,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":2}
+        ]}
+      ],"else": [
+        {"call_macro":"voice crew member ok","params":{"member":5,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":5}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":3,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":2}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":4,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":4}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":2,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":3}
+        ]}
+    ]},
+    {"return":{"local":"vcs_actor"}}
+  ],
   "voice read dispatch": [
     {"#comment":"The dispatcher (actor 8, external radio) reads the dispatch description and objective shown on the tablet. The description is a text with a key, DSC.<incident ID_CARD>.<variant 1-4>, so a translated pack of the Mission Companion speaks its own text; the shown English follows the key and is spoken when the pack has no such text or it does not match. The vehicle of the missions 65-67 is read apart (DSC.VEH). Then the crew briefing. Only with the Mission Companion (voice code APP). Mission description runs for every dispatch received (first, next, custom menu); vrd_last stops a second reading of the same text."},
     {"if": {
@@ -1231,12 +1353,32 @@
             {"set":{"local":"vrd_text"},"value":{"local":"sar_desc_base"}},
             {"set":{"local":"vrd_veh"},"value":1}
         ]},
-        {"speak":{"text":"<actor8><radio><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
-        {"if": {"local":"vrd_veh"}, "eq": 1,
+        {"#comment":"User rules of 2026-10-18 (cold dispatch): with the radio working (voice radio ready: power and the CARLS) the dispatcher reads the dispatch and the objective; without it the dispatch is only a notification on the tablet (the program says nothing of the dispatcher) and a crew member aboard, or partly aboard, reads the message back to the crew by voice: hey crew, a dispatch came in, what do we do? The call to the dispatcher for more information and the confirmation come when the radio is on (voice briefing chat), the dispatcher asks again for the confirmation (DSA.NUDGE) and says the reassignment as before."},
+        {"set":{"local":"vrd_rb"},"value":0},
+        {"call_macro":"voice radio ready","result":"vrd_radio"},
+        {"if": {"param":"vrd_radio"}, "eq": 1,
           "then": [
-            {"speak":{"text":"<actor8><radio><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+            {"speak":{"text":"<actor8><radio><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+            {"if": {"local":"vrd_veh"}, "eq": 1,
+              "then": [
+                {"speak":{"text":"<actor8><radio><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+            ]},
+            {"call_macro":"voice objective"}
+          ],"else": [
+            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"vrd_who"},
+            {"if": {"param":"vrd_who"}, "gt": 0,
+              "then": [
+                {"set":{"local":"vrd_rb"},"value":1},
+                {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}><radio:off>","params":[{"param":"vrd_who"}]}},
+                {"speak":{"text":"{0}<say:DSA.RB.A>","params":[{"local":"vrd_tag"}]}},
+                {"speak":{"text":"{0}<text:DSC.{1}.{2}>{3}","params":[{"local":"vrd_tag"},{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+                {"if": {"local":"vrd_veh"}, "eq": 1,
+                  "then": [
+                    {"speak":{"text":"{0}<text:DSC.VEH>{1}//{2}//{3}","params":[{"local":"vrd_tag"},{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+                ]},
+                {"speak":{"text":"{0}<say:DSA.RB.Q>","params":[{"local":"vrd_tag"}]}}
+            ]}
         ]},
-        {"call_macro":"voice objective"},
         {"sleep":1},
         {"if": {"local":"vda_pending"}, "eq": "yes",
           "then": [
@@ -1267,9 +1409,13 @@
       "then": [
         {"return":1}
     ]},
-    {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
-    {"sleep":1.5},
+    {"if": {"local":"vrd_rb"}, "ne": 1,
+      "then": [
+        {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
+        {"sleep":1.5}
+    ]},
     {"set":{"param":"tr_c"},"value":0},
+    {"set":{"param":"tr_n"},"value":0},
     {"if": {"param":"second"}, "eq": 1,
       "then": [
         {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lte": {"global":"LOWFUELTHRSLD"},
@@ -1313,13 +1459,20 @@
           "then": [
             {"set":{"param":"tr_s"},"value":1}
         ]},
+        {"#comment":"The dispatcher asks for the confirmation once, a minute after the question and as soon as the radio works (a dispatch read while the helicopter was cold stays only on the tablet until the radio is on)."},
         {"if": {
           "and": [
             {"require":{"param":"tr_s"},"eq":0},
-            {"require":{"param":"tr_t"},"eq":60}
+            {"require":{"param":"tr_n"},"eq":0},
+            {"require":{"param":"tr_t"},"gte":60}
           ]}, "eq": 1,
           "then": [
-            {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}}
+            {"call_macro":"voice radio ready","result":"tr_rr"},
+            {"if": {"param":"tr_rr"}, "eq": 1,
+              "then": [
+                {"set":{"param":"tr_n"},"value":1},
+                {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}}
+            ]}
         ]}
     ]}
   ],
@@ -1396,7 +1549,35 @@
               "commands": [
                 {"sleep":2.5},
                 {"call_macro":"voice mission class","result":"vb_cls"},
-                {"call_macro":"voice dispatch exchange","params":{"cls":{"param":"vb_cls"}}},
+                {"call_macro":"voice radio ready","result":"vb_rr"},
+                {"if": {"param":"vb_rr"}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice dispatch exchange","params":{"cls":{"param":"vb_cls"}}}
+                  ],"else": [
+                    {"#comment":"Radio not on yet: the crew calls the dispatcher as soon as it is (within 15 minutes, not for an older dispatch), asking for more information and confirming the tasking."},
+                    {"set":{"local":"vb_cls_snapshot"},"value":{"param":"vb_cls"}},
+                    {"set":{"local":"vb_seq_snapshot"},"value":{"local":"voice_dispatch_seq"}},
+                    {"create_thread": {
+                      "commands": [
+                        {"set":{"param":"vbw_cls"},"value":{"local":"vb_cls_snapshot"}},
+                        {"set":{"param":"vbw_seq"},"value":{"local":"vb_seq_snapshot"}},
+                        {"set":{"param":"vbw_t"},"value":0},
+                        {"while": {"param":"vbw_t"}, "lt": 450,
+                          "do": [
+                            {"sleep":2},
+                            {"set":{"param":"vbw_t"},"value":{"add":[{"param":"vbw_t"},1]}},
+                            {"call_macro":"voice radio ready","result":"vbw_rr"},
+                            {"if": {"param":"vbw_rr"}, "eq": 1,
+                              "then": [
+                                {"set":{"param":"vbw_t"},"value":9999},
+                                {"if": {"param":"vbw_seq"}, "eq": {"local":"voice_dispatch_seq"},
+                                  "then": [
+                                    {"call_macro":"voice dispatch exchange","params":{"cls":{"param":"vbw_cls"}}}
+                                ]}
+                            ]}
+                        ]}
+                    ]}}
+                ]},
                 {"set":{"local":"vb_k"},"value":""},
                 {"if": {"param":"vb_cls"}, "eq": "TRF",
                   "then": [
@@ -1639,6 +1820,360 @@
         {"call_macro":"voice say","params":{"key":"APR.MID.CHF","declut":1}},
         {"sleep":0.4},
         {"call_macro":"voice say","params":{"key":"APR.MID.END","declut":1}}
+    ]}
+  ],
+  "voice role code": [
+    {"#comment":"The role code of the pack names for a crew member number (1 pilot, 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2): PLT, PAX3, CPL, PAX1, PAX2. The texts of the pack take it with {role:0} and say the job word of their language."},
+    {"set":{"param":"vr_code"},"value":"PLT"},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"PAX3"}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"CPL"}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"PAX1"}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"PAX2"}
+    ]},
+    {"return":{"param":"vr_code"}}
+  ],
+  "voice crew hurt": [
+    {"#comment":"A crew member hurt by an impact complains with his own voice (user request of 2026-10-18: nobody said anything after the crash): CEM.HURT while the score is under 90, CEM.WEAK when he is critical (10 or less); nothing for a death. param member 1 pilot, 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2. The speaking actor is the one of the member (1 pilot, 3 doctor, 2 copilot, 4, 5)."},
+    {"set":{"param":"vh_score"},"value":100},
+    {"if": {"param":"member"}, "eq": 1,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_1"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_2"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_3"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_4"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_5"}}
+    ]},
+    {"if": {"param":"vh_score"}, "eq": null,
+      "then": [
+        {"set":{"param":"vh_score"},"value":100}
+    ]},
+    {"set":{"param":"vh_actor"},"value":{"param":"member"}},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"param":"vh_actor"},"value":3}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"param":"vh_actor"},"value":2}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"vh_score"},"gt":10},
+        {"require":{"param":"vh_score"},"lt":90}
+      ]}, "eq": 1,
+      "then": [
+        {"speak":{"text":"<actor{0}><say:CEM.HURT>","params":[{"param":"vh_actor"}]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"vh_score"},"gt":0},
+        {"require":{"param":"vh_score"},"lte":10}
+      ]}, "eq": 1,
+      "then": [
+        {"speak":{"text":"<actor{0}><say:CEM.WEAK>","params":[{"param":"vh_actor"}]}}
+    ]}
+  ],
+  "voice crew impact": [
+    {"#comment":"After an impact (called first by crew impact events): the members hurt complain, then a crew member who is fine says what he sees: a death (CEM.DEAD) or a critical member (CEM.CRIT). The evaluation flags are copied into locals because crew impact events clears them. Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"cvi_e1"},"value":{"local":"CREW_EVAL_1"}},
+        {"set":{"local":"cvi_e2"},"value":{"local":"CREW_EVAL_2"}},
+        {"set":{"local":"cvi_e3"},"value":{"local":"CREW_EVAL_3"}},
+        {"set":{"local":"cvi_e4"},"value":{"local":"CREW_EVAL_4"}},
+        {"set":{"local":"cvi_e5"},"value":{"local":"CREW_EVAL_5"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":1.5},
+            {"if": {"local":"cvi_e1"}, "eq": 1,
+              "then": [
+                {"call_macro":"voice crew hurt","params":{"member":1}}
+            ]},
+            {"if": {"local":"cvi_e2"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":2}}
+            ]},
+            {"if": {"local":"cvi_e3"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":3}}
+            ]},
+            {"if": {"local":"cvi_e4"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":4}}
+            ]},
+            {"if": {"local":"cvi_e5"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":5}}
+            ]},
+            {"sleep":3},
+            {"set":{"local":"cvi_dead"},"value":0},
+            {"set":{"local":"cvi_crit"},"value":0},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e5"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_5"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":5},
+                {"if": {"local":"CREW_LIFESCORE_5"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":5}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e4"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_4"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":4},
+                {"if": {"local":"CREW_LIFESCORE_4"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":4}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e2"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_2"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":2},
+                {"if": {"local":"CREW_LIFESCORE_2"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":2}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e3"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_3"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":3},
+                {"if": {"local":"CREW_LIFESCORE_3"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":3}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e1"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_1"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":1},
+                {"if": {"local":"CREW_LIFESCORE_1"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":1}
+                ]}
+            ]},
+            {"if": {"local":"cvi_dead"}, "gt": 0,
+              "then": [
+                {"call_macro":"voice role code","params":{"member":{"local":"cvi_dead"}},"result":"cvi_role"},
+                {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":{"local":"cvi_dead"}},"result":"cvi_who"},
+                {"if": {"param":"cvi_who"}, "gt": 0,
+                  "then": [
+                    {"speak":{"text":"<actor{0}><say:CEM.DEAD>{1}","params":[{"param":"cvi_who"},{"param":"cvi_role"}]}}
+                ]}
+              ],"else": [
+                {"if": {"local":"cvi_crit"}, "gt": 0,
+                  "then": [
+                    {"call_macro":"voice role code","params":{"member":{"local":"cvi_crit"}},"result":"cvi_role"},
+                    {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":{"local":"cvi_crit"}},"result":"cvi_who"},
+                    {"if": {"param":"cvi_who"}, "gt": 0,
+                      "then": [
+                        {"speak":{"text":"<actor{0}><say:CEM.CRIT>{1}","params":[{"param":"cvi_who"},{"param":"cvi_role"}]}}
+                    ]}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice crew event": [
+    {"#comment":"A crew member died or is critical (called by crew member event announce, params member and kind death or critical): the radio call to the dispatcher is made by the designated member, the copilot; when the copilot is missing, dead or unfit the surviving member makes it (user, 2026-10-18); then the dispatcher answers. Mission Companion only; with the radio off (power or CARLS) the program does not play the call and the tablet messages remain."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"cve_member"},"value":{"param":"member"}},
+        {"set":{"local":"cve_kind"},"value":{"param":"kind"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":6},
+            {"call_macro":"voice role code","params":{"member":{"local":"cve_member"}},"result":"cve_role"},
+            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":0,"skip":{"local":"cve_member"}},"result":"cve_who"},
+            {"if": {"param":"cve_who"}, "gt": 0,
+              "then": [
+                {"if": {"local":"cve_kind"}, "eq": "death",
+                  "then": [
+                    {"speak":{"text":"<actor{0}><say:CEM.RAD.D>{1}","params":[{"param":"cve_who"},{"param":"cve_role"}]}}
+                  ],"else": [
+                    {"speak":{"text":"<actor{0}><say:CEM.RAD.C>{1}","params":[{"param":"cve_who"},{"param":"cve_role"}]}}
+                ]},
+                {"sleep":7},
+                {"speak":"<say:CEM.DSP>"}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice crew divert": [
+    {"#comment":"The mission is aborted by a crew emergency (crew emergency divert): with the crew outside the doctor says that he comes back and the patient stays for the next unit (CEM.OPS), otherwise a crew member says that the mission is aborted (CEM.ABORT). Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"create_thread": {
+          "commands": [
+            {"sleep":9},
+            {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":0},"result":"cvd_who"},
+            {"if": {"param":"cvd_who"}, "gt": 0,
+              "then": [
+                {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+                  "then": [
+                    {"speak":{"text":"<actor{0}><say:CEM.OPS>","params":[{"param":"cvd_who"}]}}
+                  ],"else": [
+                    {"speak":{"text":"<actor{0}><say:CEM.ABORT>","params":[{"param":"cvd_who"}]}}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice crew continue": [
+    {"#comment":"The user chose Continue after a critical crew member (crew emergency continue): a crew member acknowledges it (CEM.CONT). Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice role code","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"}},"result":"cvc_role"},
+        {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":{"local":"CREW_EMERGENCY_MEMBER"}},"result":"cvc_who"},
+        {"if": {"param":"cvc_who"}, "gt": 0,
+          "then": [
+            {"speak":{"text":"<actor{0}><say:CEM.CONT>{1}","params":[{"param":"cvc_who"},{"param":"cvc_role"}]}}
+        ]}
+    ]}
+  ],
+  "voice mayday": [
+    {"#comment":"Critical failure (engine fire, engine failure, gearbox damage: critical failure mayday, param kind F fire, E engine, G gearbox): a crew member aboard tells to land (MAY.REACT), the designated member, the copilot or the surviving one, calls the mayday on the radio (MAY.CALL.F, E or G) and the dispatcher answers (MAY.DSP). Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vmy_kind"},"value":{"param":"kind"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":1},
+            {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":1,"skip":0},"result":"vmy_r"},
+            {"if": {"param":"vmy_r"}, "gt": 0,
+              "then": [
+                {"speak":{"text":"<actor{0}><say:MAY.REACT>","params":[{"param":"vmy_r"}]}}
+            ]},
+            {"sleep":4},
+            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":0,"skip":0},"result":"vmy_w"},
+            {"if": {"param":"vmy_w"}, "gt": 0,
+              "then": [
+                {"speak":{"text":"<actor{0}><say:MAY.CALL.{1}>","params":[{"param":"vmy_w"},{"local":"vmy_kind"}]}}
+            ]},
+            {"sleep":7},
+            {"speak":"<say:MAY.DSP>"}
+        ]}}
+    ]}
+  ],
+  "voice sar briefing": [
+    {"#comment":"Briefing of the crew for a search and rescue mission (user request of 2026-10-18), Mission Companion only: the kind of search (SAR, SARV overdue vehicle, SARC parked car, SARH person away from home: voice mission class), what is known (the search area with its radius, or the route and the last contact when there is no ring; the vehicle with its colour and model when the dispatch gives them), how the area is divided (sectors of 45 degrees and legs spaced twice the spotting range for the ring, the legs along the road for the route), the clock positions of the crew, and the best altitude and speed (the logic of SAR sighting: the spotting range is the full SPOTTED_DISTANCE at 1000 ft above the ground and up to 80 knots, below or above and faster it shrinks). Called one nautical mile before the search ring, or just after the take-off when the mission has no ring."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice mission class","result":"sb_cls"},
+        {"set":{"local":"sb_spot"},"value":{"global":"SPOTTED_DISTANCE"}},
+        {"if": {"local":"sb_spot"}, "eq": null,
+          "then": [
+            {"set":{"local":"sb_spot"},"value":926}
+        ]},
+        {"set":{"local":"sb_legs"},"value":{"multiply":[{"round":{"divide":[{"multiply":[2,{"local":"sb_spot"}]},10]},"to":0},10]}},
+        {"set":{"local":"sb_rad"},"value":{"tofixed":{"divide":[{"global":"SAR_MAX_RADIUS"},1852]},"digits":1}},
+        {"set":{"local":"sb_route"},"value":0},
+        {"if": {"local":"sar_route_known"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"sb_route"},"value":1}
+        ]},
+        {"call_macro":"voice say","params":{"key":{"text":"SAR.TYP.{0}","params":[{"param":"sb_cls"}]},"declut":1}},
+        {"sleep":0.5},
+        {"if": {"local":"sb_route"}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"SAR.INF.N","declut":1}}
+          ],"else": [
+            {"call_macro":"voice say","params":{"key":"SAR.INF.R","a":{"local":"sb_rad"},"declut":1}}
+        ]},
+        {"sleep":0.5},
+        {"if": {
+          "and": [
+            {"require":{"local":"sar_veh_kind"},"ne":null},
+            {"require":{"local":"sar_veh_model"},"ne":null}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"sar_veh_color"}, "eq": "",
+              "then": [
+                {"call_macro":"voice say","params":{"key":"SAR.VEHN","a":{"local":"sar_veh_model"},"declut":1}}
+              ],"else": [
+                {"call_macro":"voice say","params":{"key":"SAR.VEH","a":{"text":"{0}//{1}","params":[{"local":"sar_veh_color"},{"local":"sar_veh_model"}]},"declut":1}}
+            ]},
+            {"sleep":0.5}
+        ]},
+        {"if": {"local":"sb_route"}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"SAR.MET.V","a":{"local":"sb_legs"},"declut":1}}
+          ],"else": [
+            {"call_macro":"voice say","params":{"key":"SAR.MET.R","a":{"local":"sb_legs"},"declut":1}}
+        ]},
+        {"sleep":0.5},
+        {"call_macro":"voice say","params":{"key":"SAR.CLK","declut":1}},
+        {"sleep":0.5},
+        {"call_macro":"voice say","params":{"key":"SAR.OPT","a":{"text":"1000//80//{0}","params":[{"local":"sb_spot"}]},"declut":1}},
+        {"sleep":0.5},
+        {"call_macro":"voice say","params":{"key":"SAR.END","declut":1}}
     ]}
   ],
   "voice heli rescuer briefing": [

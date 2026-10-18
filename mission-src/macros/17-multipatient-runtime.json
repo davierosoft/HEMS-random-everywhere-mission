@@ -1538,6 +1538,10 @@
         {"return":"unavailable"}
     ]},
     {"set":{"param":"generation"},"value":{"local":"patient_crew_visit_generation"}},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"return":"cancelled"}
+    ]},
     {"if": {
       "and": [
         {"require":{"param":"resource"},"eq":"ambulance1"},
@@ -1682,6 +1686,10 @@
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_ambulance_assess_patient"}},
             {"call_macro":"ambulance assess patient","params":{"patient":{"param":"patient"},"provider":{"param":"provider"},"physical_visit":1},"result":"assessment"}
         ]},
+        {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+          "then": [
+            {"set":{"param":"assessment"},"value":2}
+        ]},
         {"if": {"param":"assessment"}, "eq": 1,
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_clinical_completion"}},
@@ -1712,6 +1720,10 @@
       "then": [
         {"return":"cancelled"}
     ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"return":"cancelled"}
+    ]},
     {"if": {"param":"assessment"}, "ne": 1,
       "then": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_eligibility"}},
@@ -1732,6 +1744,7 @@
   ],
   "multipatient registry crew tour safe": [
     {"set":{"param":"tour_complete"},"value":0},
+    {"set":{"local":"CREW_TOUR_ACTIVE"},"value":1},
     {"try": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour safe","state":"call_multipatient_registry_crew_tour"}},
         {"call_macro":"multipatient registry crew tour","params":{"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"tour_result"},
@@ -1744,6 +1757,7 @@
         {"set":{"param":"tour_complete"},"value":0},
         {"set":{"local":"patient_crew_tour_exception"},"value":"yes"}
     ]},
+    {"set":{"local":"CREW_TOUR_ACTIVE"},"value":0},
     {"return":{"param":"tour_complete"}}
   ],
   "multipatient registry crew tour": [

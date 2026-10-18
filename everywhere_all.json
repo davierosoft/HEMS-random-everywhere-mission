@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.63",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.64",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.63"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.64"},
     {"set":{"local":"DEV_VERSION"},"value":"1.2"},
     {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
@@ -4133,6 +4133,7 @@
         {"text":"Scene not reached: the mission ended before the arrival.","color":"hotpink","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"var":["L:STAT_TTG","number"]},"eq":0}],"eq":1}},
         {"text":"MISSION FAILED: crew member seriously injured.","color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}],"eq":1}},
         {"text":"MISSION FAILED: crew member deceased.","color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"}],"eq":1}},
+        {"text":"MISSION FAILED: critical aircraft failure, mayday.","color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":"CRITICAL_FAILURE"}],"eq":1}},
         {"text":"Cause: {0}","params":[{"local":"CREW_EMERGENCY_CAUSE"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
         {"text":"Crew seriously injured: {0}. Crew deceased: {1}.","params":[{"local":"STAT_CREW_CRITICAL"},{"local":"STAT_CREW_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
         {"text":"Patients deceased: {0}.","params":[{"local":"STAT_PATIENTS_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null},{"require":{"local":"STAT_PATIENTS_DEAD"},"gt":0}],"eq":1}},
@@ -6252,6 +6253,7 @@
         {"text":"Congratulation! You completed mission: {0} {1} {2}","color":"green","params":[{"var":["L:OLD_VAR_MISSION_NUMBER","number"]},{"var":["L:OLD_CRASH_VARIABLE","number"]},{"var":["L:OLD_MISSION_SCENE_VARIANT","number"]}],"show_condition":{"require":{"local":"MISSION_FAILED"},"eq":null}},
         {"text":"MISSION FAILED - {0} DECEASED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"},"params":[{"local":"CREW_DEAD_LABEL"}]},
         {"text":"MISSION FAILED - CREW MEMBER CRITICALLY INJURED. OPERATION AND SHIFT TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}},
+        {"text":"MISSION FAILED - CRITICAL AIRCRAFT FAILURE (MAYDAY). OPERATION TERMINATED.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CRITICAL_FAILURE"}},
         {"text":"Death or serious injury of crew: notify the aviation accident investigation authority (ANSV) and the operator.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_FATAL"}},
         {"text":"Death or serious injury of crew: notify the aviation accident investigation authority (ANSV) and the operator.","color":"red","show_condition":{"require":{"local":"MISSION_FAILED"},"eq":"CREW_CRITICAL"}},
         {"text":"Patient death cause: {0}","color":"red","params":[{"local":"PATIENT_DEATH_CAUSE"}],"show_condition":{"require":{"local":"PATIENT_DEATH_CAUSE"},"ne":null}},
@@ -9508,10 +9510,18 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"sleep":0.5},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"if": {"has_object":"defibri"}, "eq": 1,
       "then": [
@@ -9754,6 +9764,13 @@
   ],
   "select HEMS patient": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":"entered"}},
+    {"#comment":"Ground operations aborted by a crew emergency (CREW_OPS_ABORT yes, user rules of 2026-10-18): the helicopter takes no patient, who stays for another unit; the skid and hoist macros then take the branch of a patient transported by the ambulance and pick up the crew."},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"whobringpatient"},"value":"ambulance"},
+        {"set":{"local":"HEMS_DECISION_STATE"},"value":"no_transport_required"},
+        {"return":0}
+    ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_multipatient_registry_crew_barrier"}},
     {"call_macro":"multipatient registry crew barrier","params":{"resource":"hems"},"result":"ready"},
     {"if": {"param":"ready"}, "ne": 1,
@@ -24296,7 +24313,7 @@
               {"wait_for":{"location":"MEET","var":"distance"},"lt":0.03}
             ]},
             {"and": [
-              {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+              {"wait_for":{"var":["L:Collective","number"]},"gte":27},
               {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
               {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
               {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -29516,7 +29533,7 @@
                   {"call_macro":"3 crew SKID LDG"}
               ]}
             ],
-            "show_condition": {"require":{"and":[{"require":{"var":["L:Collective","number"]},"gt":30},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":25},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},"eq":1}
+            "show_condition": {"require":{"and":[{"require":{"var":["L:Collective","number"]},"gt":25},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":25},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},"eq":1}
           }
         }
     ]},
@@ -29590,7 +29607,7 @@
                       {"call_macro":"3 crew SKID LDG"}
                   ]}
                 ],
-                "show_condition": {"require":{"and":[{"require":{"var":["L:Collective","number"]},"gt":30},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":25},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},"eq":1}
+                "show_condition": {"require":{"and":[{"require":{"var":["L:Collective","number"]},"gt":25},{"require":{"var":["GPS GROUND SPEED","knots"]},"lt":1},{"require":{"var":["RADIO HEIGHT","feet"]},"lt":25},{"require":{"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},"eq":1},{"require":{"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},"eq":1},{"require":{"location":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}]},"eq":1}
               }
             }
         ]},
@@ -33180,7 +33197,7 @@
     {"set":{"local":"HR_SKID_RETURNED"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"skid_start","detail":{"text":"crew={0} hr={1} nr={2}","params":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33242,7 +33259,7 @@
         {"set_message":{"text":"Site is safe for operation. You can return to the skid landing area"}}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33335,10 +33352,18 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":330,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"},{"bearing2":230,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"}],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"set":{"var":["L:RESCUED","number"]},"value":1},
     {"call_macro":"Life rescued"},
@@ -33466,7 +33491,7 @@
           {"wait_for":{"location":"hoist_crew","var":"distance"},"lt":0.02}
         ]},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gte":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33573,7 +33598,7 @@
           {"wait_for":{"location":"hoist_crew","var":"distance"},"lt":0.02}
         ]},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gte":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33592,7 +33617,7 @@
           {"wait_for":{"location":"hoist_crew","var":"distance"},"lt":0.02}
         ]},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gte":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gte":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":0.5},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33689,7 +33714,7 @@
         ]}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":27},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33820,7 +33845,7 @@
     {"set":{"local":"HR_SKID_RETURNED"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"skid_start","detail":{"text":"crew={0} hr={1} nr={2}","params":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":35},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":30},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33882,7 +33907,7 @@
         {"set_message":{"text":"Site is safe for operation. You can return to the skid landing area"}}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -33972,10 +33997,18 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":330,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"},{"bearing2":230,"dist":0.3,"object":"{local:HEMS_VISIT_OBJECT}"}],"to":"hoist_crew"}],"VAR1":3,"speed":4}},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"set":{"var":["L:RESCUED","number"]},"value":1},
     {"call_macro":"Life rescued"},
@@ -34437,7 +34470,7 @@
     {"set":{"local":"HR_SKID_RETURNED"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"skid_start","detail":{"text":"crew={0} hr={1} nr={2}","params":[{"local":"CREW"},{"local":"HELIRESCUER_BOARDED"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":35},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":30},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -34494,7 +34527,7 @@
         {"set_message":{"text":"Site is safe for operation. You can return to the skid landing area"}}
     ]},
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -34574,10 +34607,18 @@
     {"sleep":[2,4]},
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":6},
     {"call_macro":"multipatient registry crew tour safe","params":{"resource":"hems","actor":"hoist_crew","provider":"HEMS","walk":3,"assistant":"pax3","assistant_walk":3},"result":"tour_complete"},
-    {"if": {"param":"tour_complete"}, "ne": 1,
+    {"if": {
+      "and": [
+        {"require":{"param":"tour_complete"},"ne":1},
+        {"require":{"local":"CREW_OPS_ABORT"},"ne":"yes"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"crewvisitended"},"value":"no"},
         {"return":0}
+    ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"crewvisitended"},"value":"yes"}
     ]},
     {"set":{"var":["L:RESCUED","number"]},"value":1},
     {"call_macro":"Life rescued"},
@@ -34831,7 +34872,7 @@
         {"set_message":{"text":"Crew is ready at the landing area. Land on skids to complete the pickup"}},
         {"call_macro":"ground ops checkpoint","params":{"id":"skid_pickup_wait"}},
         {"and": [
-          {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+          {"wait_for":{"var":["L:Collective","number"]},"gt":27},
           {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
           {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -48896,6 +48937,25 @@
                     {"set":{"var":["L:PLT{local:VCP}30","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}30","number"]},1]}}
                 ]}}
             ]},
+            {"#comment":"Briefing of a search and rescue mission just after the take-off (the flow is here after SIM ON GROUND 0): one nautical mile before the search ring when the mission has one, at once without a ring (the route mission 65, SAR_RING 0)."},
+            {"if": {"local":"SAR"}, "eq": "yes",
+              "then": [
+                {"create_thread": {
+                  "commands": [
+                    {"if": {
+                      "and": [
+                        {"require":{"global":"SAR_RING"},"ne":0},
+                        {"require":{"local":"sar_route_known"},"ne":"yes"}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"sarbrf_radius"},"value":{"add":[{"global":"SAR_MAX_RADIUS"},1852]}},
+                        {"sleep":0.2},
+                        {"wait_for":{"object":"SAR_start_location","var":"distance:m"},"lte":{"local":"sarbrf_radius"}}
+                    ]},
+                    {"sleep":6},
+                    {"call_macro":"voice sar briefing"}
+                ]}}
+            ]},
             {"create_thread": {
               "commands": [
                 {"set":{"var":["L:CONFONSCENE","number"]},"value":0},
@@ -53421,7 +53481,7 @@
   ],
   "shared repeated block 052": [
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -60271,6 +60331,11 @@
     {"#comment":"Crew emergency decisions. CREW_DIVERT: the mission is cancelled and the helicopter goes to the hospital (a death forces it, a critical member lets the user choose Divert or Continue). The limits are the LifeScore up to which a crew member aboard at the base finds the police car (CREW_POLICE_LIMIT) and the ambulance (CREW_AMBULANCE_LIMIT)."},
     {"set":{"local":"CREW_DIVERT"},"value":"no"},
     {"set":{"local":"CREW_CONTINUE_CHOSEN"},"value":"no"},
+    {"#comment":"Crew emergency with the crew outside (user rules of 2026-10-18): CREW_OPS_ABORT yes stops the visits of the ground operations (the doctor goes back, the patient stays for another unit), CREW_NO_PATIENT yes = the helicopter will not carry a patient, CREW_TOUR_ACTIVE 1 while a crew tour runs, CRIT_FAIL_ACTIVE yes after a critical failure (mayday)."},
+    {"set":{"local":"CREW_OPS_ABORT"},"value":"no"},
+    {"set":{"local":"CREW_NO_PATIENT"},"value":"no"},
+    {"set":{"local":"CREW_TOUR_ACTIVE"},"value":0},
+    {"set":{"local":"CRIT_FAIL_ACTIVE"},"value":"no"},
     {"set":{"local":"CREW_DEST_CONFIRMED"},"value":"no"},
     {"set":{"local":"CREW_POLICE_LIMIT"},"value":20},
     {"set":{"local":"CREW_AMBULANCE_LIMIT"},"value":10},
@@ -60973,6 +61038,18 @@
   ],
   "board crew after emergency": [
     {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"no"},
+    {"#comment":"A crew tour of the ground operations that is still running ends first (it stops at its next check when CREW_OPS_ABORT is yes): two flows never drive the same crew object. At most 90 s."},
+    {"set":{"param":"cbw"},"value":0},
+    {"while": {"param":"cbw"}, "lt": 90,
+      "do": [
+        {"if": {"local":"CREW_TOUR_ACTIVE"}, "ne": 1,
+          "then": [
+            {"set":{"param":"cbw"},"value":999}
+          ],"else": [
+            {"sleep":1},
+            {"set":{"param":"cbw"},"value":{"add":[{"param":"cbw"},1]}}
+        ]}
+    ]},
     {"if": {
       "and": [
         {"require":{"has_object":"pax3"},"eq":1},
@@ -61062,7 +61139,18 @@
   "crew emergency route to care": [
     {"create_thread": {
       "commands": [
-        {"call_macro":"board crew after emergency"}
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_NO_PATIENT"},"eq":"yes"},
+            {"require":{"var":["L:MISSION_HOIST","number"]},"ne":0}
+          ]}, "eq": 1,
+          "then": [
+            {"#comment":"Skid or hoist operation aborted: the crew comes back with the pickup of the operation (the doctor, the patient stays), the program waits for it."},
+            {"wait_for":{"var":["L:HOISTED","number"]},"eq":1},
+            {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"yes"}
+          ],"else": [
+            {"call_macro":"board crew after emergency"}
+        ]}
     ]}},
     {"create_thread": {
       "commands": [
@@ -61100,7 +61188,8 @@
     {"if": {
       "and": [
         {"require":{"var":["L:HOISTED","number"]},"eq":1},
-        {"require":{"var":["L:SAVED","number"]},"ne":1}
+        {"require":{"var":["L:SAVED","number"]},"ne":1},
+        {"require":{"local":"CREW_NO_PATIENT"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CHS_PATIENT_PATH"},"value":"yes"},
@@ -61161,7 +61250,14 @@
                   "then": [
                     {"call_macro":"crew emergency continue"}
                   ],"else": [
-                    {"call_macro":"crew emergency choice"}
+                    {"#comment":"Crew outside, no patient aboard (ground operations): the abort is mandatory, no Divert or Continue question (user, 2026-10-18)."},
+                    {"call_macro":"crew ops outside","result":"cer_out"},
+                    {"if": {"param":"cer_out"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"crew emergency divert"}
+                      ],"else": [
+                        {"call_macro":"crew emergency choice"}
+                    ]}
                 ]}
             ]}
           ],"else": [
@@ -64459,11 +64555,11 @@
                 {"call_macro":"request manual patient visit","params":{"patient":1}}
               ],"else": [
                 {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"sleep_local.TIME1SHORT"}},
-                {"sleep":{"local":"TIME1SHORT"}}
+                {"call_macro":"sleep unless crew abort","params":{"seconds":{"local":"TIME1SHORT"}}}
             ]}
           ],"else": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"sleep_local.TIME1SHORT"}},
-            {"sleep":{"local":"TIME1SHORT"}}
+            {"call_macro":"sleep unless crew abort","params":{"seconds":{"local":"TIME1SHORT"}}}
         ]},
         {"set":{"local":"P1_MEDICAL_ASSESSMENT_COMPLETE"},"value":"yes"},
         {"set":{"local":"medical_assessment_complete"},"value":"yes"},
@@ -64492,11 +64588,11 @@
                 {"call_macro":"request manual patient visit","params":{"patient":2}}
               ],"else": [
                 {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"sleep_local.TIME2SHORT"}},
-                {"sleep":{"local":"TIME2SHORT"}}
+                {"call_macro":"sleep unless crew abort","params":{"seconds":{"local":"TIME2SHORT"}}}
             ]}
           ],"else": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"sleep_local.TIME2SHORT"}},
-            {"sleep":{"local":"TIME2SHORT"}}
+            {"call_macro":"sleep unless crew abort","params":{"seconds":{"local":"TIME2SHORT"}}}
         ]},
         {"set":{"local":"P2_MEDICAL_ASSESSMENT_COMPLETE"},"value":"yes"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"call_multipatient_registry_tablet_mark_visit"}},
@@ -64527,11 +64623,11 @@
                 {"call_macro":"request manual patient visit","params":{"patient":3}}
               ],"else": [
                 {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"sleep_local.TIME3SHORT"}},
-                {"sleep":{"local":"TIME3SHORT"}}
+                {"call_macro":"sleep unless crew abort","params":{"seconds":{"local":"TIME3SHORT"}}}
             ]}
           ],"else": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"sleep_local.TIME3SHORT"}},
-            {"sleep":{"local":"TIME3SHORT"}}
+            {"call_macro":"sleep unless crew abort","params":{"seconds":{"local":"TIME3SHORT"}}}
         ]},
         {"set":{"local":"P3_MEDICAL_ASSESSMENT_COMPLETE"},"value":"yes"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"crew physical HEMS assessment","state":"call_multipatient_registry_tablet_mark_visit"}},
@@ -64911,6 +65007,10 @@
         {"return":"unavailable"}
     ]},
     {"set":{"param":"generation"},"value":{"local":"patient_crew_visit_generation"}},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"return":"cancelled"}
+    ]},
     {"if": {
       "and": [
         {"require":{"param":"resource"},"eq":"ambulance1"},
@@ -65055,6 +65155,10 @@
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_ambulance_assess_patient"}},
             {"call_macro":"ambulance assess patient","params":{"patient":{"param":"patient"},"provider":{"param":"provider"},"physical_visit":1},"result":"assessment"}
         ]},
+        {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+          "then": [
+            {"set":{"param":"assessment"},"value":2}
+        ]},
         {"if": {"param":"assessment"}, "eq": 1,
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_clinical_completion"}},
@@ -65085,6 +65189,10 @@
       "then": [
         {"return":"cancelled"}
     ]},
+    {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+      "then": [
+        {"return":"cancelled"}
+    ]},
     {"if": {"param":"assessment"}, "ne": 1,
       "then": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_eligibility"}},
@@ -65105,6 +65213,7 @@
   ],
   "multipatient registry crew tour safe": [
     {"set":{"param":"tour_complete"},"value":0},
+    {"set":{"local":"CREW_TOUR_ACTIVE"},"value":1},
     {"try": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour safe","state":"call_multipatient_registry_crew_tour"}},
         {"call_macro":"multipatient registry crew tour","params":{"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"tour_result"},
@@ -65117,6 +65226,7 @@
         {"set":{"param":"tour_complete"},"value":0},
         {"set":{"local":"patient_crew_tour_exception"},"value":"yes"}
     ]},
+    {"set":{"local":"CREW_TOUR_ACTIVE"},"value":0},
     {"return":{"param":"tour_complete"}}
   ],
   "multipatient registry crew tour": [
@@ -72666,6 +72776,7 @@
       "then": [
         {"set":{"local":"crew_role_name"},"value":"HEMS 2"}
     ]},
+    {"call_macro":"voice crew event","params":{"member":{"param":"member"},"kind":{"param":"kind"}}},
     {"if": {"param":"kind"}, "eq": "death",
       "then": [
         {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "ne": "yes",
@@ -72998,6 +73109,7 @@
   ],
   "crew impact events": [
     {"#comment":"Evaluates every member marked after an impact once, with the final scores of the batch: alerts, critical and death events, survivors, the abort and the mission termination."},
+    {"call_macro":"voice crew impact"},
     {"call_macro":"crew members cap"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"crew_events","actor":"crew","target":"crew_health","state":"events_enter eval={local:CREW_EVAL_1}/{local:CREW_EVAL_2}/{local:CREW_EVAL_3}/{local:CREW_EVAL_4}/{local:CREW_EVAL_5} scores={local:CREW_LIFESCORE_1}/{local:CREW_LIFESCORE_2}/{local:CREW_LIFESCORE_3} dead={local:CREW_DEAD_1}/{local:CREW_DEAD_2}/{local:CREW_DEAD_3} lock={local:CREW_LOCK_1}/{local:CREW_LOCK_2}/{local:CREW_LOCK_3}"}},
     {"if": {"local":"CREW_EVAL_1"}, "eq": 1,
@@ -73332,6 +73444,8 @@
       "then": [
         {"set":{"var":["L:{local:HXX}_FAIL_FUEL_SUPPLY2","number"]},"value":1}
     ]},
+    {"#comment":"Critical failures (user rule of 2026-10-18): an engine fire (5, 6) or a damaged transmission (18, 19) obliges to stop the helicopter and to call a mayday: critical failure mayday aborts the ground operations, the dispatcher is told, the crew calls on the radio and the operation is terminated after the landing."},
+    {"call_macro":"critical failure check","params":{"code":{"param":"code"}}},
     {"call_macro":"refresh aircraft failures flag"}
   ],
   "crash random failures": [
@@ -75436,6 +75550,7 @@
   ],
   "crew emergency continue": [
     {"set":{"local":"CREW_CONTINUE_CHOSEN"},"value":"yes"},
+    {"call_macro":"voice crew continue"},
     {"call_macro":"post crew safety message","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"},"score":{"local":"CREW_EMERGENCY_SCORE"},"status":"critical, mission continues. Handover at the next hospital stop.","cause":{"local":"CREW_EMERGENCY_CAUSE"}}},
     {"set_message":{"text":"The mission continues. The critical crew member is handed over at the next hospital stop or at the base."}}
   ],
@@ -75467,6 +75582,13 @@
         {"return":0}
     ]},
     {"set":{"local":"CREW_DIVERT"},"value":"yes"},
+    {"call_macro":"crew ops outside","result":"ced_out"},
+    {"if": {"param":"ced_out"}, "eq": 1,
+      "then": [
+        {"set":{"local":"CREW_OPS_ABORT"},"value":"yes"},
+        {"set":{"local":"CREW_NO_PATIENT"},"value":"yes"}
+    ]},
+    {"call_macro":"voice crew divert"},
     {"set":{"local":"CREW_DEST_CONFIRMED"},"value":"no"},
     {"set":{"local":"MINGND"},"value":0},
     {"if": {
@@ -85283,7 +85405,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:19>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:20>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice new shift": [
@@ -85316,12 +85438,32 @@
             {"set":{"local":"vrd_text"},"value":{"local":"sar_desc_base"}},
             {"set":{"local":"vrd_veh"},"value":1}
         ]},
-        {"speak":{"text":"<actor8><radio><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
-        {"if": {"local":"vrd_veh"}, "eq": 1,
+        {"#comment":"User rules of 2026-10-18 (cold dispatch): with the radio working (voice radio ready: power and the CARLS) the dispatcher reads the dispatch and the objective; without it the dispatch is only a notification on the tablet (the program says nothing of the dispatcher) and a crew member aboard, or partly aboard, reads the message back to the crew by voice: hey crew, a dispatch came in, what do we do? The call to the dispatcher for more information and the confirmation come when the radio is on (voice briefing chat), the dispatcher asks again for the confirmation (DSA.NUDGE) and says the reassignment as before."},
+        {"set":{"local":"vrd_rb"},"value":0},
+        {"call_macro":"voice radio ready","result":"vrd_radio"},
+        {"if": {"param":"vrd_radio"}, "eq": 1,
           "then": [
-            {"speak":{"text":"<actor8><radio><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+            {"speak":{"text":"<actor8><radio><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+            {"if": {"local":"vrd_veh"}, "eq": 1,
+              "then": [
+                {"speak":{"text":"<actor8><radio><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+            ]},
+            {"call_macro":"voice objective"}
+          ],"else": [
+            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"vrd_who"},
+            {"if": {"param":"vrd_who"}, "gt": 0,
+              "then": [
+                {"set":{"local":"vrd_rb"},"value":1},
+                {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}><radio:off>","params":[{"param":"vrd_who"}]}},
+                {"speak":{"text":"{0}<say:DSA.RB.A>","params":[{"local":"vrd_tag"}]}},
+                {"speak":{"text":"{0}<text:DSC.{1}.{2}>{3}","params":[{"local":"vrd_tag"},{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+                {"if": {"local":"vrd_veh"}, "eq": 1,
+                  "then": [
+                    {"speak":{"text":"{0}<text:DSC.VEH>{1}//{2}//{3}","params":[{"local":"vrd_tag"},{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+                ]},
+                {"speak":{"text":"{0}<say:DSA.RB.Q>","params":[{"local":"vrd_tag"}]}}
+            ]}
         ]},
-        {"call_macro":"voice objective"},
         {"sleep":1},
         {"if": {"local":"vda_pending"}, "eq": "yes",
           "then": [
@@ -85379,7 +85521,35 @@
               "commands": [
                 {"sleep":2.5},
                 {"call_macro":"voice mission class","result":"vb_cls"},
-                {"call_macro":"voice dispatch exchange","params":{"cls":{"param":"vb_cls"}}},
+                {"call_macro":"voice radio ready","result":"vb_rr"},
+                {"if": {"param":"vb_rr"}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice dispatch exchange","params":{"cls":{"param":"vb_cls"}}}
+                  ],"else": [
+                    {"#comment":"Radio not on yet: the crew calls the dispatcher as soon as it is (within 15 minutes, not for an older dispatch), asking for more information and confirming the tasking."},
+                    {"set":{"local":"vb_cls_snapshot"},"value":{"param":"vb_cls"}},
+                    {"set":{"local":"vb_seq_snapshot"},"value":{"local":"voice_dispatch_seq"}},
+                    {"create_thread": {
+                      "commands": [
+                        {"set":{"param":"vbw_cls"},"value":{"local":"vb_cls_snapshot"}},
+                        {"set":{"param":"vbw_seq"},"value":{"local":"vb_seq_snapshot"}},
+                        {"set":{"param":"vbw_t"},"value":0},
+                        {"while": {"param":"vbw_t"}, "lt": 450,
+                          "do": [
+                            {"sleep":2},
+                            {"set":{"param":"vbw_t"},"value":{"add":[{"param":"vbw_t"},1]}},
+                            {"call_macro":"voice radio ready","result":"vbw_rr"},
+                            {"if": {"param":"vbw_rr"}, "eq": 1,
+                              "then": [
+                                {"set":{"param":"vbw_t"},"value":9999},
+                                {"if": {"param":"vbw_seq"}, "eq": {"local":"voice_dispatch_seq"},
+                                  "then": [
+                                    {"call_macro":"voice dispatch exchange","params":{"cls":{"param":"vbw_cls"}}}
+                                ]}
+                            ]}
+                        ]}
+                    ]}}
+                ]},
                 {"set":{"local":"vb_k"},"value":""},
                 {"if": {"param":"vb_cls"}, "eq": "TRF",
                   "then": [
@@ -86809,9 +86979,13 @@
       "then": [
         {"return":1}
     ]},
-    {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
-    {"sleep":1.5},
+    {"if": {"local":"vrd_rb"}, "ne": 1,
+      "then": [
+        {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
+        {"sleep":1.5}
+    ]},
     {"set":{"param":"tr_c"},"value":0},
+    {"set":{"param":"tr_n"},"value":0},
     {"if": {"param":"second"}, "eq": 1,
       "then": [
         {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lte": {"global":"LOWFUELTHRSLD"},
@@ -86855,13 +87029,20 @@
           "then": [
             {"set":{"param":"tr_s"},"value":1}
         ]},
+        {"#comment":"The dispatcher asks for the confirmation once, a minute after the question and as soon as the radio works (a dispatch read while the helicopter was cold stays only on the tablet until the radio is on)."},
         {"if": {
           "and": [
             {"require":{"param":"tr_s"},"eq":0},
-            {"require":{"param":"tr_t"},"eq":60}
+            {"require":{"param":"tr_n"},"eq":0},
+            {"require":{"param":"tr_t"},"gte":60}
           ]}, "eq": 1,
           "then": [
-            {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}}
+            {"call_macro":"voice radio ready","result":"tr_rr"},
+            {"if": {"param":"tr_rr"}, "eq": 1,
+              "then": [
+                {"set":{"param":"tr_n"},"value":1},
+                {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}}
+            ]}
         ]}
     ]}
   ],
@@ -88773,6 +88954,594 @@
         {"call_macro":"voice say","params":{"key":"APR.MID.CHF","declut":1}},
         {"sleep":0.4},
         {"call_macro":"voice say","params":{"key":"APR.MID.END","declut":1}}
+    ]}
+  ],
+  "voice radio ready": [
+    {"#comment":"1 when the radio of the helicopter works for the Mission Companion rules of 2026-10-18: powered (the battery master or the GPCP power switch on) and the CARLS connected (L:CARLS_CONNECTED 1). The same rule the program applies to every radio line; a dispatch that arrives with it false is only a notification on the tablet."},
+    {"if": {
+      "and": [
+        {"require":{"or":[{"require":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},{"require":{"var":["L:{local:HXX}_SDK_GPCP_PWR_SWITCH","number"]},"gt":0.5}]},"eq":1},
+        {"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"return":0}
+  ],
+  "voice crew member ok": [
+    {"#comment":"1 when the crew member (param member 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2) can speak: it exists (CREW_MEMBER_CAP), is not dead, not below 15 (the mute threshold of the context for the Mission Companion), and with aboard 1 is aboard (CREW_OUT_n 0); param skip is a member that does not count (the casualty)."},
+    {"set":{"param":"vm_ok"},"value":0},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":2},
+            {"require":{"local":"CREW_DEAD_2"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_2"},"eq":null},{"require":{"local":"CREW_LIFESCORE_2"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_2"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":3},
+            {"require":{"local":"CREW_DEAD_3"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_3"},"eq":null},{"require":{"local":"CREW_LIFESCORE_3"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_3"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":4},
+            {"require":{"local":"CREW_DEAD_4"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_4"},"eq":null},{"require":{"local":"CREW_LIFESCORE_4"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_4"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"if": {
+          "and": [
+            {"require":{"local":"CREW_MEMBER_CAP"},"gte":5},
+            {"require":{"local":"CREW_DEAD_5"},"ne":1},
+            {"require":{"or":[{"require":{"local":"CREW_LIFESCORE_5"},"eq":null},{"require":{"local":"CREW_LIFESCORE_5"},"gte":15}]},"eq":1},
+            {"require":{"or":[{"require":{"param":"aboard"},"ne":1},{"require":{"local":"CREW_OUT_5"},"eq":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"vm_ok"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"member"}, "eq": {"param":"skip"},
+      "then": [
+        {"set":{"param":"vm_ok"},"value":0}
+    ]},
+    {"return":{"param":"vm_ok"}}
+  ],
+  "voice crew speaker": [
+    {"#comment":"The actor number (2 copilot, 3 doctor, 4 HEMS 1, 5 HEMS 2) of the crew member who speaks, 0 when nobody can (the pilot is the user and never counts). Param first: copilot (the designated one for the radio: if the copilot is missing, dead or unfit the next survivor speaks) or doc; param aboard 1 = only a member aboard; param skip = a member who does not count. The order after the first one: doctor, HEMS 1, HEMS 2, copilot."},
+    {"set":{"local":"vcs_actor"},"value":0},
+    {"if": {"param":"first"}, "eq": "copilot",
+      "then": [
+        {"call_macro":"voice crew member ok","params":{"member":5,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":5}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":4,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":4}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":2,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":3}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":3,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":2}
+        ]}
+      ],"else": [
+        {"call_macro":"voice crew member ok","params":{"member":5,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":5}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":3,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":2}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":4,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":4}
+        ]},
+        {"call_macro":"voice crew member ok","params":{"member":2,"aboard":{"param":"aboard"},"skip":{"param":"skip"}},"result":"vcs_ok"},
+        {"if": {"param":"vcs_ok"}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcs_actor"},"value":3}
+        ]}
+    ]},
+    {"return":{"local":"vcs_actor"}}
+  ],
+  "voice role code": [
+    {"#comment":"The role code of the pack names for a crew member number (1 pilot, 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2): PLT, PAX3, CPL, PAX1, PAX2. The texts of the pack take it with {role:0} and say the job word of their language."},
+    {"set":{"param":"vr_code"},"value":"PLT"},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"PAX3"}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"CPL"}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"PAX1"}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"set":{"param":"vr_code"},"value":"PAX2"}
+    ]},
+    {"return":{"param":"vr_code"}}
+  ],
+  "voice crew hurt": [
+    {"#comment":"A crew member hurt by an impact complains with his own voice (user request of 2026-10-18: nobody said anything after the crash): CEM.HURT while the score is under 90, CEM.WEAK when he is critical (10 or less); nothing for a death. param member 1 pilot, 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2. The speaking actor is the one of the member (1 pilot, 3 doctor, 2 copilot, 4, 5)."},
+    {"set":{"param":"vh_score"},"value":100},
+    {"if": {"param":"member"}, "eq": 1,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_1"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_2"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_3"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 4,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_4"}}
+    ]},
+    {"if": {"param":"member"}, "eq": 5,
+      "then": [
+        {"set":{"param":"vh_score"},"value":{"local":"CREW_LIFESCORE_5"}}
+    ]},
+    {"if": {"param":"vh_score"}, "eq": null,
+      "then": [
+        {"set":{"param":"vh_score"},"value":100}
+    ]},
+    {"set":{"param":"vh_actor"},"value":{"param":"member"}},
+    {"if": {"param":"member"}, "eq": 2,
+      "then": [
+        {"set":{"param":"vh_actor"},"value":3}
+    ]},
+    {"if": {"param":"member"}, "eq": 3,
+      "then": [
+        {"set":{"param":"vh_actor"},"value":2}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"vh_score"},"gt":10},
+        {"require":{"param":"vh_score"},"lt":90}
+      ]}, "eq": 1,
+      "then": [
+        {"speak":{"text":"<actor{0}><say:CEM.HURT>","params":[{"param":"vh_actor"}]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"vh_score"},"gt":0},
+        {"require":{"param":"vh_score"},"lte":10}
+      ]}, "eq": 1,
+      "then": [
+        {"speak":{"text":"<actor{0}><say:CEM.WEAK>","params":[{"param":"vh_actor"}]}}
+    ]}
+  ],
+  "voice crew impact": [
+    {"#comment":"After an impact (called first by crew impact events): the members hurt complain, then a crew member who is fine says what he sees: a death (CEM.DEAD) or a critical member (CEM.CRIT). The evaluation flags are copied into locals because crew impact events clears them. Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"cvi_e1"},"value":{"local":"CREW_EVAL_1"}},
+        {"set":{"local":"cvi_e2"},"value":{"local":"CREW_EVAL_2"}},
+        {"set":{"local":"cvi_e3"},"value":{"local":"CREW_EVAL_3"}},
+        {"set":{"local":"cvi_e4"},"value":{"local":"CREW_EVAL_4"}},
+        {"set":{"local":"cvi_e5"},"value":{"local":"CREW_EVAL_5"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":1.5},
+            {"if": {"local":"cvi_e1"}, "eq": 1,
+              "then": [
+                {"call_macro":"voice crew hurt","params":{"member":1}}
+            ]},
+            {"if": {"local":"cvi_e2"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":2}}
+            ]},
+            {"if": {"local":"cvi_e3"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":3}}
+            ]},
+            {"if": {"local":"cvi_e4"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":4}}
+            ]},
+            {"if": {"local":"cvi_e5"}, "eq": 1,
+              "then": [
+                {"sleep":0.8},
+                {"call_macro":"voice crew hurt","params":{"member":5}}
+            ]},
+            {"sleep":3},
+            {"set":{"local":"cvi_dead"},"value":0},
+            {"set":{"local":"cvi_crit"},"value":0},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e5"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_5"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":5},
+                {"if": {"local":"CREW_LIFESCORE_5"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":5}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e4"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_4"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":4},
+                {"if": {"local":"CREW_LIFESCORE_4"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":4}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e2"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_2"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":2},
+                {"if": {"local":"CREW_LIFESCORE_2"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":2}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e3"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_3"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":3},
+                {"if": {"local":"CREW_LIFESCORE_3"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":3}
+                ]}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"cvi_e1"},"eq":1},
+                {"require":{"local":"CREW_LIFESCORE_1"},"lte":10}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"cvi_crit"},"value":1},
+                {"if": {"local":"CREW_LIFESCORE_1"}, "lte": 0,
+                  "then": [
+                    {"set":{"local":"cvi_dead"},"value":1}
+                ]}
+            ]},
+            {"if": {"local":"cvi_dead"}, "gt": 0,
+              "then": [
+                {"call_macro":"voice role code","params":{"member":{"local":"cvi_dead"}},"result":"cvi_role"},
+                {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":{"local":"cvi_dead"}},"result":"cvi_who"},
+                {"if": {"param":"cvi_who"}, "gt": 0,
+                  "then": [
+                    {"speak":{"text":"<actor{0}><say:CEM.DEAD>{1}","params":[{"param":"cvi_who"},{"param":"cvi_role"}]}}
+                ]}
+              ],"else": [
+                {"if": {"local":"cvi_crit"}, "gt": 0,
+                  "then": [
+                    {"call_macro":"voice role code","params":{"member":{"local":"cvi_crit"}},"result":"cvi_role"},
+                    {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":{"local":"cvi_crit"}},"result":"cvi_who"},
+                    {"if": {"param":"cvi_who"}, "gt": 0,
+                      "then": [
+                        {"speak":{"text":"<actor{0}><say:CEM.CRIT>{1}","params":[{"param":"cvi_who"},{"param":"cvi_role"}]}}
+                    ]}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice crew event": [
+    {"#comment":"A crew member died or is critical (called by crew member event announce, params member and kind death or critical): the radio call to the dispatcher is made by the designated member, the copilot; when the copilot is missing, dead or unfit the surviving member makes it (user, 2026-10-18); then the dispatcher answers. Mission Companion only; with the radio off (power or CARLS) the program does not play the call and the tablet messages remain."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"cve_member"},"value":{"param":"member"}},
+        {"set":{"local":"cve_kind"},"value":{"param":"kind"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":6},
+            {"call_macro":"voice role code","params":{"member":{"local":"cve_member"}},"result":"cve_role"},
+            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":0,"skip":{"local":"cve_member"}},"result":"cve_who"},
+            {"if": {"param":"cve_who"}, "gt": 0,
+              "then": [
+                {"if": {"local":"cve_kind"}, "eq": "death",
+                  "then": [
+                    {"speak":{"text":"<actor{0}><say:CEM.RAD.D>{1}","params":[{"param":"cve_who"},{"param":"cve_role"}]}}
+                  ],"else": [
+                    {"speak":{"text":"<actor{0}><say:CEM.RAD.C>{1}","params":[{"param":"cve_who"},{"param":"cve_role"}]}}
+                ]},
+                {"sleep":7},
+                {"speak":"<say:CEM.DSP>"}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice crew divert": [
+    {"#comment":"The mission is aborted by a crew emergency (crew emergency divert): with the crew outside the doctor says that he comes back and the patient stays for the next unit (CEM.OPS), otherwise a crew member says that the mission is aborted (CEM.ABORT). Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"create_thread": {
+          "commands": [
+            {"sleep":9},
+            {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":0},"result":"cvd_who"},
+            {"if": {"param":"cvd_who"}, "gt": 0,
+              "then": [
+                {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+                  "then": [
+                    {"speak":{"text":"<actor{0}><say:CEM.OPS>","params":[{"param":"cvd_who"}]}}
+                  ],"else": [
+                    {"speak":{"text":"<actor{0}><say:CEM.ABORT>","params":[{"param":"cvd_who"}]}}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice crew continue": [
+    {"#comment":"The user chose Continue after a critical crew member (crew emergency continue): a crew member acknowledges it (CEM.CONT). Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice role code","params":{"member":{"local":"CREW_EMERGENCY_MEMBER"}},"result":"cvc_role"},
+        {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":0,"skip":{"local":"CREW_EMERGENCY_MEMBER"}},"result":"cvc_who"},
+        {"if": {"param":"cvc_who"}, "gt": 0,
+          "then": [
+            {"speak":{"text":"<actor{0}><say:CEM.CONT>{1}","params":[{"param":"cvc_who"},{"param":"cvc_role"}]}}
+        ]}
+    ]}
+  ],
+  "voice mayday": [
+    {"#comment":"Critical failure (engine fire, engine failure, gearbox damage: critical failure mayday, param kind F fire, E engine, G gearbox): a crew member aboard tells to land (MAY.REACT), the designated member, the copilot or the surviving one, calls the mayday on the radio (MAY.CALL.F, E or G) and the dispatcher answers (MAY.DSP). Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vmy_kind"},"value":{"param":"kind"}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":1},
+            {"call_macro":"voice crew speaker","params":{"first":"doc","aboard":1,"skip":0},"result":"vmy_r"},
+            {"if": {"param":"vmy_r"}, "gt": 0,
+              "then": [
+                {"speak":{"text":"<actor{0}><say:MAY.REACT>","params":[{"param":"vmy_r"}]}}
+            ]},
+            {"sleep":4},
+            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":0,"skip":0},"result":"vmy_w"},
+            {"if": {"param":"vmy_w"}, "gt": 0,
+              "then": [
+                {"speak":{"text":"<actor{0}><say:MAY.CALL.{1}>","params":[{"param":"vmy_w"},{"local":"vmy_kind"}]}}
+            ]},
+            {"sleep":7},
+            {"speak":"<say:MAY.DSP>"}
+        ]}}
+    ]}
+  ],
+  "voice sar briefing": [
+    {"#comment":"Briefing of the crew for a search and rescue mission (user request of 2026-10-18), Mission Companion only: the kind of search (SAR, SARV overdue vehicle, SARC parked car, SARH person away from home: voice mission class), what is known (the search area with its radius, or the route and the last contact when there is no ring; the vehicle with its colour and model when the dispatch gives them), how the area is divided (sectors of 45 degrees and legs spaced twice the spotting range for the ring, the legs along the road for the route), the clock positions of the crew, and the best altitude and speed (the logic of SAR sighting: the spotting range is the full SPOTTED_DISTANCE at 1000 ft above the ground and up to 80 knots, below or above and faster it shrinks). Called one nautical mile before the search ring, or just after the take-off when the mission has no ring."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice mission class","result":"sb_cls"},
+        {"set":{"local":"sb_spot"},"value":{"global":"SPOTTED_DISTANCE"}},
+        {"if": {"local":"sb_spot"}, "eq": null,
+          "then": [
+            {"set":{"local":"sb_spot"},"value":926}
+        ]},
+        {"set":{"local":"sb_legs"},"value":{"multiply":[{"round":{"divide":[{"multiply":[2,{"local":"sb_spot"}]},10]},"to":0},10]}},
+        {"set":{"local":"sb_rad"},"value":{"tofixed":{"divide":[{"global":"SAR_MAX_RADIUS"},1852]},"digits":1}},
+        {"set":{"local":"sb_route"},"value":0},
+        {"if": {"local":"sar_route_known"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"sb_route"},"value":1}
+        ]},
+        {"call_macro":"voice say","params":{"key":{"text":"SAR.TYP.{0}","params":[{"param":"sb_cls"}]},"declut":1}},
+        {"sleep":0.5},
+        {"if": {"local":"sb_route"}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"SAR.INF.N","declut":1}}
+          ],"else": [
+            {"call_macro":"voice say","params":{"key":"SAR.INF.R","a":{"local":"sb_rad"},"declut":1}}
+        ]},
+        {"sleep":0.5},
+        {"if": {
+          "and": [
+            {"require":{"local":"sar_veh_kind"},"ne":null},
+            {"require":{"local":"sar_veh_model"},"ne":null}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"sar_veh_color"}, "eq": "",
+              "then": [
+                {"call_macro":"voice say","params":{"key":"SAR.VEHN","a":{"local":"sar_veh_model"},"declut":1}}
+              ],"else": [
+                {"call_macro":"voice say","params":{"key":"SAR.VEH","a":{"text":"{0}//{1}","params":[{"local":"sar_veh_color"},{"local":"sar_veh_model"}]},"declut":1}}
+            ]},
+            {"sleep":0.5}
+        ]},
+        {"if": {"local":"sb_route"}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"SAR.MET.V","a":{"local":"sb_legs"},"declut":1}}
+          ],"else": [
+            {"call_macro":"voice say","params":{"key":"SAR.MET.R","a":{"local":"sb_legs"},"declut":1}}
+        ]},
+        {"sleep":0.5},
+        {"call_macro":"voice say","params":{"key":"SAR.CLK","declut":1}},
+        {"sleep":0.5},
+        {"call_macro":"voice say","params":{"key":"SAR.OPT","a":{"text":"1000//80//{0}","params":[{"local":"sb_spot"}]},"declut":1}},
+        {"sleep":0.5},
+        {"call_macro":"voice say","params":{"key":"SAR.END","declut":1}}
+    ]}
+  ],
+  "crew ops outside": [
+    {"#comment":"1 when a crew member is outside the helicopter (ground operations: hoist_crew, pax1, pax2 or pax3 exist) and no patient is aboard (L:HOISTED not 1)."},
+    {"set":{"param":"co_out"},"value":0},
+    {"if": {"var":["L:HOISTED","number"]}, "ne": 1,
+      "then": [
+        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]},
+        {"if": {"has_object":"pax1"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]},
+        {"if": {"has_object":"pax2"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]},
+        {"if": {"has_object":"pax3"}, "eq": 1,
+          "then": [
+            {"set":{"param":"co_out"},"value":1}
+        ]}
+    ]},
+    {"return":{"param":"co_out"}}
+  ],
+  "sleep unless crew abort": [
+    {"#comment":"Sleeps param seconds, one second at a time, and stops at once when the ground operations are aborted by a crew emergency (CREW_OPS_ABORT yes): the visit of the doctor does not go on for its whole time."},
+    {"set":{"param":"sua_t"},"value":0},
+    {"while": {"param":"sua_t"}, "lt": {"param":"seconds"},
+      "do": [
+        {"if": {"local":"CREW_OPS_ABORT"}, "eq": "yes",
+          "then": [
+            {"return":0}
+        ]},
+        {"sleep":1},
+        {"set":{"param":"sua_t"},"value":{"add":[{"param":"sua_t"},1]}}
+    ]}
+  ],
+  "critical failure mayday": [
+    {"#comment":"A critical failure (param code: 5 and 6 engine fire, 18 and 19 transmission damage; called by apply aircraft failure) obliges to stop the helicopter and to call a mayday (user rule of 2026-10-18), whatever the crew emergency was doing: the ground operations are aborted (CREW_OPS_ABORT), the crew emergency route to care is stopped (CREW_MISSION_TERMINATED), the dispatcher is told, the crew calls the mayday on the radio (voice mayday) and after the landing the operation is terminated with the report. Once per mission (CRIT_FAIL_ACTIVE)."},
+    {"if": {"local":"CRIT_FAIL_ACTIVE"}, "eq": "yes",
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"CRIT_FAIL_ACTIVE"},"value":"yes"},
+    {"set":{"local":"crit_kind"},"value":"F"},
+    {"set":{"local":"crit_text"},"value":"ENGINE FIRE"},
+    {"if": {
+      "or": [
+        {"require":{"param":"code"},"eq":18},
+        {"require":{"param":"code"},"eq":19}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"crit_kind"},"value":"G"},
+        {"set":{"local":"crit_text"},"value":"GEARBOX DAMAGE"}
+    ]},
+    {"set":{"local":"CREW_OPS_ABORT"},"value":"yes"},
+    {"set":{"local":"CREW_DIVERT"},"value":"yes"},
+    {"set":{"local":"CREW_MISSION_TERMINATED"},"value":"yes"},
+    {"set":{"local":"MISSION_FAILED"},"value":"CRITICAL_FAILURE"},
+    {"set":{"local":"CREW_EMERGENCY_CAUSE"},"value":{"local":"crit_text"}},
+    {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":0},
+    {"set":{"local":"MISSION_PHASE"},"value":8},
+    {"set":{"local":"HOIST_OUT"},"value":0},
+    {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
+      "then": [
+        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+          "then": [
+            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
+            {"call_macro":"Update_raw from dispatchphase"}
+        ]}
+    ]},
+    {"set_hover_display":{"range":0}},
+    {"set_dispatch_dialog":0},
+    {"set_briefing_dialog":0},
+    {"set_objective_title":"MAYDAY - LAND AND SHUT DOWN","color":"red"},
+    {"set_message":{"text":"MAYDAY: {0}. Land as soon as possible and shut down.","params":[{"local":"crit_text"}],"color":"red"}},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"text":"MAYDAY MAYDAY MAYDAY. {0}. Landing and shutting down, request assistance.","params":[{"local":"crit_text"}]}}},
+    {"call_macro":"post dispatcher message","params":{"text":"Copy MAYDAY. Emergency services are alerted to your position. Land and shut down."}},
+    {"call_macro":"voice mayday","params":{"kind":{"local":"crit_kind"}}},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
+        {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":2},
+        {"sleep":8},
+        {"set":{"local":"CREW_TERMINATED_ACK"},"value":"no"},
+        {"set_message":{"text":"MAYDAY: helicopter stopped. Shut down and evacuate."}},
+        {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
+        {"wait_modal": {
+            "title": "MAYDAY - OPERATION TERMINATED",
+            "text": "A critical failure obliged the crew to stop the helicopter. The operation is terminated.",
+            "options": [
+              {"text":"VIEW REPORT","style":"danger","commands":[{"set":{"local":"CREW_TERMINATED_ACK"},"value":"yes"}]}
+          ]}
+        },
+        {"set":{"local":"MISSION_END_WAITING"},"value":1},
+        {"call_macro":"end menu"},
+        {"set_dispatch_dialog":1}
+    ]}}
+  ],
+  "critical failure check": [
+    {"#comment":"Called at the end of apply aircraft failure with the code: the critical failures (5 and 6 engine fire, 18 and 19 transmission damage) call the mayday."},
+    {"if": {
+      "or": [
+        {"require":{"param":"code"},"eq":5},
+        {"require":{"param":"code"},"eq":6},
+        {"require":{"param":"code"},"eq":18},
+        {"require":{"param":"code"},"eq":19}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"critical failure mayday","params":{"code":{"param":"code"}}}
     ]}
   ]
 },

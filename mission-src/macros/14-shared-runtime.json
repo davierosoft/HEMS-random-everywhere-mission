@@ -1365,7 +1365,7 @@
   ],
   "shared repeated block 052": [
     {"and": [
-      {"wait_for":{"var":["L:Collective","number"]},"gt":37},
+      {"wait_for":{"var":["L:Collective","number"]},"gt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lt":1},
       {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":20},
@@ -1644,6 +1644,18 @@
   ],
   "board crew after emergency": [
     {"set":{"local":"CREW_EMERGENCY_BOARDING_DONE"},"value":"no"},
+    {"#comment":"A crew tour of the ground operations that is still running ends first (it stops at its next check when CREW_OPS_ABORT is yes): two flows never drive the same crew object. At most 90 s."},
+    {"set":{"param":"cbw"},"value":0},
+    {"while": {"param":"cbw"}, "lt": 90,
+      "do": [
+        {"if": {"local":"CREW_TOUR_ACTIVE"}, "ne": 1,
+          "then": [
+            {"set":{"param":"cbw"},"value":999}
+          ],"else": [
+            {"sleep":1},
+            {"set":{"param":"cbw"},"value":{"add":[{"param":"cbw"},1]}}
+        ]}
+    ]},
     {"if": {
       "and": [
         {"require":{"has_object":"pax3"},"eq":1},

@@ -621,3 +621,16 @@ Static: `tools/test-comms-uniformity.js` (keys in the pack EN, every moment of t
 7. Approach briefing of an accident with more than one patient (APR.MUL) and with a fire on the scene (APR.FIR); with one patient and no fire nothing changes.
 8. Radio rules: battery off and GPCP switch off: the dispatcher and the crew radios are silent, the intercom is not played; GPCP switch on: intercom; battery on and CARLS connected: intercom, radio and polycon; CARLS disconnected: intercom only. The Companion log shows the reason of every line not heard (`[SAY] ... not heard: ...`) and the new `[CTX]` lines for the switch and the CARLS.
 9. The Companion log shows no missing key for CRT.*, MID.*, TRF.HND, ORG.PCK, APR.MID.*, APR.MUL, APR.FIR.
+
+## Crew emergency with the crew outside, mayday, cold dispatch, SAR briefing (sources 2026-10-18, PENDING)
+
+Static: `tools/test-crew-ops-abort.js`. Runtime, with the Mission Companion 0.35 (pack EN 20):
+
+1. Landing operation with 3 crew, the doctor visiting: kill the copilot (a crash tier with a catastrophic impact). The doctor stops at once and walks back, the crew boards, the dispatcher gets "Mission aborted ... Patient on scene needs another unit", the route to the hospital is proposed. The copilot is not heard again; the doctor (or the chief) reports on the radio (CEM.RAD.D) and the dispatcher answers (CEM.DSP).
+2. The same during a skid operation and during a hoist operation: the visit is cut, the patient is left, the pickup of the crew (land on skids, hoist) completes, then the hospital; nothing is hoisted for a patient who stayed. A critical (not dead) member: no question, the same abort. A critical member with the patient already aboard: Continue as before, CEM.CONT.
+3. After an impact: the hurt complain with their own voice, a survivor says that the casualty is critical or dead.
+4. Engine fire (and a transmission damage): MAYDAY on the tablet, the crew says land now, the copilot (or a survivor if the copilot is dead) calls the mayday on the radio, the dispatcher answers, after the landing the modal ends the operation, the dispatch page says MAYDAY. With the copilot dead the engine fire line CPL 7 is said by another member (Companion log: "Copilot cannot speak, Doctor says it").
+5. Cold dispatch: with the battery and the GPCP switch off, or the CARLS not connected, the dispatcher says nothing; a crew member aboard reads the dispatch back by voice and asks what to do; nobody aboard besides the pilot: the tablet tone only. Switch on and connect the CARLS before accepting: the dispatcher reads it. Accept with the radio off and switch on later: the copilot calls the dispatcher when the radio is on. Leave it unaccepted with the radio on: one request for the confirmation after a minute.
+6. SAR with a ring: the briefing one mile before the ring; without a ring (route mission 65): just after the take-off. Check the kind, the radius, the vehicle colour and model (65 to 67), the method, the clock positions, 1000 ft and 80 knots with the spotting range.
+7. "SAR" is spelled, in the briefing and in "The SAR area starts here".
+8. Skid landing with a light helicopter (low fuel, no kit) on the new MSFS update: the landing on the skids is recognised with the collective held at about 27.

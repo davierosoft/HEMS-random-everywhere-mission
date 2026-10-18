@@ -4305,6 +4305,25 @@
                     {"set":{"var":["L:PLT{local:VCP}30","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}30","number"]},1]}}
                 ]}}
             ]},
+            {"#comment":"Briefing of a search and rescue mission just after the take-off (the flow is here after SIM ON GROUND 0): one nautical mile before the search ring when the mission has one, at once without a ring (the route mission 65, SAR_RING 0)."},
+            {"if": {"local":"SAR"}, "eq": "yes",
+              "then": [
+                {"create_thread": {
+                  "commands": [
+                    {"if": {
+                      "and": [
+                        {"require":{"global":"SAR_RING"},"ne":0},
+                        {"require":{"local":"sar_route_known"},"ne":"yes"}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"sarbrf_radius"},"value":{"add":[{"global":"SAR_MAX_RADIUS"},1852]}},
+                        {"sleep":0.2},
+                        {"wait_for":{"object":"SAR_start_location","var":"distance:m"},"lte":{"local":"sarbrf_radius"}}
+                    ]},
+                    {"sleep":6},
+                    {"call_macro":"voice sar briefing"}
+                ]}}
+            ]},
             {"create_thread": {
               "commands": [
                 {"set":{"var":["L:CONFONSCENE","number"]},"value":0},
