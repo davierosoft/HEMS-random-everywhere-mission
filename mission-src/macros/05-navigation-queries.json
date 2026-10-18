@@ -4605,6 +4605,67 @@
     ]}},
     {"call_macro":"User predestination"}
   ],
+  "shared wps load": [
+    {"#comment":"Hangar and hospital waypoints shared by all users (user request 2026-10-18): the Mission Companion app writes table_R&E_shared_waypoints.json (git: shared-data/waypoints.json plus the points of the user) and raises L:HMC_DATA_REV when it changes it. The table records come first, the built-in records of the mission (data hangar wps, hospitals wps) after them as a fallback: without the app or without the table nothing changes. Result: the locals shared_hangars_all and shared_hospitals_all (arrays of records), built in params and assigned at the end so a reader never sees a half-built list (no lock: a thread killed holding it would block every later call). Reloaded only when L:HMC_DATA_REV changes."},
+    {"if": {"local":"SHARED_WPS_REV"}, "eq": null,
+      "then": [
+        {"set":{"local":"SHARED_WPS_REV"},"value":-1}
+    ]},
+    {"set":{"param":"swl_rev"},"value":{"var":["L:HMC_DATA_REV","number"]}},
+    {"if": {"param":"swl_rev"}, "eq": null,
+      "then": [
+        {"set":{"param":"swl_rev"},"value":0}
+    ]},
+    {"set":{"param":"swl_need"},"value":"no"},
+    {"if": {"local":"SHARED_WPS_LOADED"}, "ne": "yes",
+      "then": [
+        {"set":{"param":"swl_need"},"value":"yes"}
+    ]},
+    {"if": {"local":"SHARED_WPS_REV"}, "ne": {"param":"swl_rev"},
+      "then": [
+        {"set":{"param":"swl_need"},"value":"yes"}
+    ]},
+    {"if": {"param":"swl_need"}, "eq": "yes",
+      "then": [
+        {"open_table":{"static":"Shared_Waypoints_Table"}},
+        {"set":{"param":"swl_hangars_all"},"value":[]},
+        {"set":{"param":"swl_hospitals_all"},"value":[]},
+        {"set":{"param":"swl_hangars"},"value":{"table":{"static":"Shared_Waypoints_Table"},"key":"hangar_wps"}},
+        {"set":{"param":"swl_hospitals"},"value":{"table":{"static":"Shared_Waypoints_Table"},"key":"hospitals_wps"}},
+        {"try": [
+            {"if": {"param":"swl_hangars"}, "ne": null,
+              "then": [
+                {"for_each": {"param":"swl_hangars"},
+                  "do": [
+                    {"modify_array":{"param":"swl_hangars_all"},"append":{"param":"$item"}}
+                ]}
+            ]},
+            {"if": {"param":"swl_hospitals"}, "ne": null,
+              "then": [
+                {"for_each": {"param":"swl_hospitals"},
+                  "do": [
+                    {"modify_array":{"param":"swl_hospitals_all"},"append":{"param":"$item"}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"param":"swl_hangars_all"},"value":[]},
+            {"set":{"param":"swl_hospitals_all"},"value":[]}
+        ]},
+        {"for_each": {"static":"hangar wps"},
+          "do": [
+            {"modify_array":{"param":"swl_hangars_all"},"append":{"param":"$item"}}
+        ]},
+        {"for_each": {"static":"hospitals wps"},
+          "do": [
+            {"modify_array":{"param":"swl_hospitals_all"},"append":{"param":"$item"}}
+        ]},
+        {"set":{"local":"shared_hangars_all"},"value":{"param":"swl_hangars_all"}},
+        {"set":{"local":"shared_hospitals_all"},"value":{"param":"swl_hospitals_all"}},
+        {"set":{"local":"SHARED_WPS_LOADED"},"value":"yes"},
+        {"set":{"local":"SHARED_WPS_REV"},"value":{"param":"swl_rev"}}
+    ]}
+  ],
   "user hospital WP": [
     {"set":{"local":"hospital_wptot"},"value":0},
     {"set":{"local":"hospital_wp_match"},"value":"no"},
@@ -4619,7 +4680,8 @@
             {"zone":{"location":{"bearing":0,"dist":7,"object":"hospital"}}}
         ]},
         {"sleep":1},
-        {"for_each": {"static":"hospitals wps"},
+        {"call_macro":"shared wps load"},
+        {"for_each": {"local":"shared_hospitals_all"},
           "do": [
             {"create_location": "CUSTOM_HOSPITAL_DOOR",
               "zones": [
@@ -4682,7 +4744,8 @@
           "zones": [
             {"zone":{"location":{"bearing":0,"dist":7,"object":"userA"}}}
         ]},
-        {"for_each": {"static":"hospitals wps"},
+        {"call_macro":"shared wps load"},
+        {"for_each": {"local":"shared_hospitals_all"},
           "do": [
             {"create_location": "tCUSTOM_HOSPITAL_DOOR",
               "zones": [
@@ -4727,7 +4790,8 @@
     {"set":{"local":"hangar_wptot"},"value":0},
     {"set":{"local":"hangar_wp_match"},"value":"no"},
     {"set":{"local":"hangar_marshal_present"},"value":"no"},
-    {"for_each": {"static":"hangar wps"},
+    {"call_macro":"shared wps load"},
+    {"for_each": {"local":"shared_hangars_all"},
       "do": [
         {"create_location": "CUSTOM_HANGAR",
           "zones": [

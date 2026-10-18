@@ -3315,6 +3315,7 @@
     {"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0},
     {"set":{"local":"PREVIOUS_FPL"},"value":0},
     {"set":{"local":"SEX_TIME"},"value":0},
+    {"set":{"local":"casualty_word"},"value":"injured"},
     {"set":{"var":["L:HOLD","number"]},"value":0},
     {"set":{"var":["L:PAX_HOIST","number"]},"value":0},
     {"set":{"local":"HOIST_OUT"},"value":0},
@@ -3980,17 +3981,20 @@
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 1,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. {local:AGE1} {local:SEX1}, {local:consciousness1}."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}."},
+                    {"call_macro":"SAR dispatcher text"},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 2,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}."},
+                    {"call_macro":"SAR dispatcher text"},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"if": {"local":"HELOVICTIMS"}, "eq": 3,
                   "then": [
-                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}."},
+                    {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}."},
+                    {"call_macro":"SAR dispatcher text"},
                     {"call_macro":"append poordead to victim message"}
                 ]},
                 {"set":{"local":"SEX_TIME"},"value":1},
@@ -4248,8 +4252,13 @@
         ]},
         {"if": {"var":["L:MIDWAY","number"]}, "eq": 0,
           "then": [
-            {"if": {"local":"SAR"}, "eq": "yes",
+            {"if": {
+              "and": [
+                {"require":{"local":"SAR"},"eq":"yes"},
+                {"require":{"local":"sar_route_known"},"ne":"yes"}
+              ]}, "eq": 1,
               "then": [
+                {"#comment":"PLT.30 (We are entering the designated SAR area) only when a search area exists: the route mission 65 has no ring and no area, the message gave away the distance to the vehicle (tester report 2026-10-18)."},
                 {"create_thread": {
                   "commands": [
                     {"set":{"local":"sarradius"},"value":{"add":[{"global":"SAR_MAX_RADIUS"},500]}},

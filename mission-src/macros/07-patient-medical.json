@@ -471,6 +471,24 @@
     {"set":{"local":"Dispatcher_text"},"value":""},
     {"call_macro":"UpdateRescueTrack"}
   ],
+  "SAR dispatcher text": [
+    {"#comment":"Search and rescue: the dispatcher update carries only what the people who report can know: number, age and sex. No consciousness, symptoms or pathology (user request of 2026-10-18). Called after each update text, before the deceased note."},
+    {"if": {"local":"SAR"}, "eq": "yes",
+      "then": [
+        {"if": {"local":"HELOVICTIMS"}, "eq": 1,
+          "then": [
+            {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}."}
+        ]},
+        {"if": {"local":"HELOVICTIMS"}, "eq": 2,
+          "then": [
+            {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}. 2: {local:AGE2} {local:SEX2}."}
+        ]},
+        {"if": {"local":"HELOVICTIMS"}, "eq": 3,
+          "then": [
+            {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}. 2: {local:AGE2} {local:SEX2}. 3: {local:AGE3} {local:SEX3}."}
+        ]}
+    ]}
+  ],
   "append poordead to victim message": [
     {"if": {"local":"randomdeadmsg"}, "ne": null,
       "then": [
@@ -1866,7 +1884,16 @@
                 {"require":{"isNaN":{"local":"AGEMAX"}},"eq":0}
               ]}, "eq": 1,
               "then": [
-                {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"local":"AGEMIN"},{"local":"AGEMAX"}]}}}
+                {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"local":"AGEMIN"},{"local":"AGEMAX"}]}}},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"VAR_MISSION_NUMBER"},"gte":65},
+                    {"require":{"local":"VAR_MISSION_NUMBER"},"lte":67},
+                    {"require":{"local":"AGE1"},"lt":18}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"AGE1"},"value":{"floor":{"rand":[18,81]}}}
+                ]}
             ]},
             {"if": {"isNaN":{"local":"LIFESCORE"}}, "eq": 1,
               "then": [
@@ -2218,7 +2245,16 @@
             {"require":{"isNaN":{"local":"AGEMAX"}},"eq":0}
           ]}, "eq": 1,
           "then": [
-            {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"local":"AGEMIN"},{"local":"AGEMAX"}]}}}
+            {"set":{"local":"AGE1"},"value":{"floor":{"rand":[{"local":"AGEMIN"},{"local":"AGEMAX"}]}}},
+            {"if": {
+              "and": [
+                {"require":{"local":"VAR_MISSION_NUMBER"},"gte":65},
+                {"require":{"local":"VAR_MISSION_NUMBER"},"lte":67},
+                {"require":{"local":"AGE1"},"lt":18}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"AGE1"},"value":{"floor":{"rand":[18,81]}}}
+            ]}
         ]},
         {"if": {"isNaN":{"local":"LIFESCORE"}}, "eq": 1,
           "then": [
@@ -2410,17 +2446,20 @@
           "then": [
             {"if": {"local":"HELOVICTIMS"}, "eq": 1,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. {local:AGE1} {local:SEX1}, {local:consciousness1}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}."},
+                {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 2,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}."},
+                {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 3,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}."},
+                {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {
@@ -2483,17 +2522,20 @@
             {"set":{"local":"SEX_TIME"},"value":1},
             {"if": {"local":"HELOVICTIMS"}, "eq": 1,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} injured. {local:AGE1} {local:SEX1}, {local:consciousness1}. Symptoms: {local:medical_symptoms1}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. {local:AGE1} {local:SEX1}, {local:consciousness1}. Symptoms: {local:medical_symptoms1}."},
+                {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 2,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}."},
+                {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {"local":"HELOVICTIMS"}, "eq": 3,
               "then": [
-                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} injured. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}, symptoms: {local:generic_pathology3}."},
+                {"set":{"local":"Dispatcher_text"},"value":"Medical update: {local:HELOVICTIMS} {local:casualty_word}. 1: {local:AGE1} {local:SEX1}, {local:consciousness1}, symptoms: {local:medical_symptoms1}. 2: {local:AGE2} {local:SEX2}, {local:consciousness2}, symptoms: {local:generic_pathology2}. 3: {local:AGE3} {local:SEX3}, {local:consciousness3}, symptoms: {local:generic_pathology3}."},
+                {"call_macro":"SAR dispatcher text"},
                 {"call_macro":"append poordead to victim message"}
             ]},
             {"if": {

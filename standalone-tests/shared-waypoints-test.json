@@ -1,0 +1,165 @@
+{
+  "title": "SHARED WAYPOINTS TABLE AND FETCH TEST",
+  "id": "shared_waypoints_test",
+  "start_info": {"icon_src": "", "query": []},
+  "objectives": [
+    {
+      "title": "SHARED WAYPOINTS TABLE AND FETCH TEST",
+      "commands": [
+        {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
+        {"set":{"local":"t1_status"},"value":"PENDING"},
+        {"set":{"local":"t1_info"},"value":""},
+        {"set":{"local":"t2_status"},"value":"PENDING"},
+        {"set":{"local":"t2_info"},"value":""},
+        {"set":{"local":"t3_status"},"value":"PENDING"},
+        {"set":{"local":"t3_info"},"value":""},
+        {"set":{"local":"t3_probe_1"},"value":""},
+        {"set":{"local":"t3_probe_2"},"value":""},
+        {"set":{"local":"t3_probe_3"},"value":""},
+        {"set":{"local":"t3_probe_4"},"value":""},
+        {"set":{"local":"t3_probe_5"},"value":""},
+        {"set":{"local":"t4_status"},"value":"PENDING"},
+        {"set":{"local":"t4_info"},"value":""},
+        {"set":{"local":"t5_status"},"value":"PENDING"},
+        {"set":{"local":"t5_info"},"value":""},
+        {"set_briefing_dialog":1},
+        {"wait_for":1,"lt":0}
+      ]
+    }
+  ],
+  "macros": {
+    "swt read table": [
+      {"#comment":"Test 1: the table that an outside program (the Companion app, or you by hand) wrote in the work folder as table_R&E_shared_waypoints_test.json is opened by the mission. Press it, change the file (for example version 1 to 2) while the simulator runs, press again: a changed version means that open_table reads the disk every time."},
+      {"set":{"local":"t1_status"},"value":"RUNNING"},
+      {"set":{"local":"t1_info"},"value":""},
+      {"open_table":{"static":"Swt_Table"}},
+      {"set":{"param":"ver"},"value":{"table":{"static":"Swt_Table"},"key":"version"}},
+      {"set":{"param":"hang"},"value":{"table":{"static":"Swt_Table"},"key":"hangar_wps"}},
+      {"set":{"param":"hosp"},"value":{"table":{"static":"Swt_Table"},"key":"hospitals_wps"}},
+      {"try":[
+          {"set":{"local":"t1_hang_type"},"value":{"typeof":{"param":"hang"}}},
+          {"set":{"local":"t1_hosp_type"},"value":{"typeof":{"param":"hosp"}}},
+          {"set":{"local":"t1_hang_n"},"value":0},
+          {"set":{"local":"t1_hosp_n"},"value":0},
+          {"set":{"local":"t1_first"},"value":"(none)"},
+          {"set":{"local":"t1_lat_type"},"value":"(none)"},
+          {"set":{"local":"t1_null_type"},"value":"(none)"},
+          {"if": {"param":"hang"}, "ne": null,
+            "then": [
+              {"set":{"local":"t1_hang_n"},"value":{"struct":{"param":"hang"},"path":"length"}},
+              {"if": {"local":"t1_hang_n"}, "gt": 0,
+                "then": [
+                  {"set":{"param":"first"},"value":{"struct":{"param":"hang"},"index":0}},
+                  {"set":{"local":"t1_first"},"value":{"struct":{"param":"first"},"path":"id"}},
+                  {"set":{"local":"t1_lat_type"},"value":{"typeof":{"struct":{"param":"first"},"path":"WPspawnlat"}}},
+                  {"set":{"local":"t1_null_type"},"value":{"typeof":{"struct":{"param":"first"},"path":"WP3lat"}}},
+                  {"create_location":"swt_first","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"first"},"path":"WPspawnlat"},{"struct":{"param":"first"},"path":"WPspawnlon"}]}}}}]},
+                  {"set":{"local":"t1_dist"},"value":{"object":"swt_first","var":"distance:km","to":"heli"}}
+              ]}
+          ]},
+          {"if": {"param":"hosp"}, "ne": null,
+            "then": [
+              {"set":{"local":"t1_hosp_n"},"value":{"struct":{"param":"hosp"},"path":"length"}}
+          ]},
+          {"set":{"local":"t1_status"},"value":{"text":"version {0}; hangar_wps {1} ({2} entries); hospitals_wps {3} ({4} entries)","params":[{"param":"ver"},{"local":"t1_hang_type"},{"local":"t1_hang_n"},{"local":"t1_hosp_type"},{"local":"t1_hosp_n"}]}},
+          {"set":{"local":"t1_info"},"value":{"text":"first hangar '{0}', WPspawnlat is {1}, WP3lat (null in the file) reads as {2}, {3} km from the helicopter","params":[{"local":"t1_first"},{"local":"t1_lat_type"},{"local":"t1_null_type"},{"local":"t1_dist"}]}}
+        ],"catch":[
+          {"set":{"local":"t1_status"},"value":"FAILED: reading the table raised an error (is the file in the work folder? see the other tests)"}
+      ]},
+      {"call_macro":"swt log","params":{"key":"t1","value":{"local":"t1_status"}}}
+    ],
+    "swt write table": [
+      {"#comment":"Test 2: the mission writes a table with an array of records like the hangar wps of the mission (numbers, text, nulls) and reads it back. Open the file table_R&E_shared_waypoints_selftest.json in the work folder: this is the exact shape the Companion app has to write."},
+      {"set":{"local":"t2_status"},"value":"RUNNING"},
+      {"open_table":{"static":"Swt_Table_Self"}},
+      {"clear_table":{"static":"Swt_Table_Self"}},
+      {"try":[
+          {"set":{"param":"rec1"},"value":{"create_struct":{"id":"SELF TEST HANGAR 1","WPspawnlat":46.909643483787015,"WPspawnlon":7.504900516920537,"max_rng_m":520,"WPtot":2,"WP1lat":46.90961370803623,"WP1lon":7.504828097279621,"WP2lat":46.90958988742367,"WP2lon":7.504761712613604,"WP3lat":null,"WP3lon":null,"technician_boarding":"no","technician_deboarding":"no","marshal_present":"no","WPMarshalLAT":null,"WPMarshalLON":null}}},
+          {"set":{"param":"rec2"},"value":{"create_struct":{"id":"SELF TEST HANGAR 2","WPspawnlat":55.872387,"WPspawnlon":-4.424749,"max_rng_m":520,"WPtot":0,"WP1lat":null,"WP1lon":null,"WP2lat":null,"WP2lon":null,"WP3lat":null,"WP3lon":null,"technician_boarding":"yes","technician_deboarding":"yes","marshal_present":"no","WPMarshalLAT":null,"WPMarshalLON":null}}},
+          {"set":{"param":"arr"},"value":{"create_array":[{"param":"rec1"},{"param":"rec2"}]}},
+          {"set":{"table":{"static":"Swt_Table_Self"},"key":"version"},"value":1},
+          {"set":{"table":{"static":"Swt_Table_Self"},"key":"hangar_wps"},"value":{"param":"arr"}},
+          {"save_table":{"static":"Swt_Table_Self"}},
+          {"set":{"param":"back"},"value":{"table":{"static":"Swt_Table_Self"},"key":"hangar_wps"}},
+          {"set":{"local":"t2_n"},"value":{"struct":{"param":"back"},"path":"length"}},
+          {"set":{"param":"b2"},"value":{"struct":{"param":"back"},"index":1}},
+          {"set":{"local":"t2_id"},"value":{"struct":{"param":"b2"},"path":"id"}},
+          {"set":{"local":"t2_lon_type"},"value":{"typeof":{"struct":{"param":"b2"},"path":"WPspawnlon"}}},
+          {"set":{"local":"t2_null_type"},"value":{"typeof":{"struct":{"param":"b2"},"path":"WP1lat"}}},
+          {"set":{"local":"t2_status"},"value":{"text":"OK: written and read back {0} records, the second is '{1}'","params":[{"local":"t2_n"},{"local":"t2_id"}]}},
+          {"set":{"local":"t2_info"},"value":{"text":"WPspawnlon reads as {0}, a null field reads as {1}; file table_R&E_shared_waypoints_selftest.json (look at it: arrays of records, nulls, numbers)","params":[{"local":"t2_lon_type"},{"local":"t2_null_type"}]}}
+        ],"catch":[
+          {"set":{"local":"t2_status"},"value":"FAILED: an error while writing or reading the table (create_struct with null, create_array of structs, or the table itself)"}
+      ]},
+      {"call_macro":"swt log","params":{"key":"t2","value":{"local":"t2_status"}}}
+    ],
+    "swt fetch github": [
+      {"#comment":"Test 3: can the mission read a file of the repository through the internet? The file is small and public. Shows the status and which special parameter holds the answer (the names are not documented: every likely name is probed)."},
+      {"set":{"local":"t3_status"},"value":"RUNNING"},
+      {"set":{"local":"t3_info"},"value":""},
+      {"fetch":{"url":"https://raw.githubusercontent.com/davierosoft/HEMS-random-everywhere-mission/main/tools/release-ledger.json","method":"GET"}},
+      {"set":{"local":"t3_code"},"value":{"param":"$FETCH_STATUS"}},
+      {"try":[{"set":{"local":"t3_probe_1"},"value":{"text":"$FETCH_RESPONSE type {0} length {1}","params":[{"typeof":{"param":"$FETCH_RESPONSE"}},{"struct":{"param":"$FETCH_RESPONSE"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_1"},"value":"$FETCH_RESPONSE read error"}]},
+      {"try":[{"set":{"local":"t3_probe_2"},"value":{"text":"$FETCH_RESULT type {0} length {1}","params":[{"typeof":{"param":"$FETCH_RESULT"}},{"struct":{"param":"$FETCH_RESULT"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_2"},"value":"$FETCH_RESULT read error"}]},
+      {"try":[{"set":{"local":"t3_probe_3"},"value":{"text":"$FETCH_BODY type {0} length {1}","params":[{"typeof":{"param":"$FETCH_BODY"}},{"struct":{"param":"$FETCH_BODY"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_3"},"value":"$FETCH_BODY read error"}]},
+      {"try":[{"set":{"local":"t3_probe_4"},"value":{"text":"$FETCH_DATA type {0} length {1}","params":[{"typeof":{"param":"$FETCH_DATA"}},{"struct":{"param":"$FETCH_DATA"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_4"},"value":"$FETCH_DATA read error"}]},
+      {"try":[{"set":{"local":"t3_probe_5"},"value":{"text":"$FETCH_TEXT type {0} length {1}","params":[{"typeof":{"param":"$FETCH_TEXT"}},{"struct":{"param":"$FETCH_TEXT"},"path":"length"}]}}],"catch":[{"set":{"local":"t3_probe_5"},"value":"$FETCH_TEXT read error"}]},
+      {"set":{"local":"t3_status"},"value":{"text":"DONE: status {0} (200 means the internet answered)","params":[{"local":"t3_code"}]}},
+      {"call_macro":"swt log","params":{"key":"t3","value":{"local":"t3_status"}}},
+      {"call_macro":"swt log","params":{"key":"t3_probes","value":{"text":"{0} | {1} | {2} | {3} | {4}","params":[{"local":"t3_probe_1"},{"local":"t3_probe_2"},{"local":"t3_probe_3"},{"local":"t3_probe_4"},{"local":"t3_probe_5"}]}}}
+    ],
+    "swt fetch missing": [
+      {"#comment":"Test 4: what a missing file or a blocked address does: the status the mission would have to handle (it must never stop because the internet or the file is not there)."},
+      {"set":{"local":"t4_status"},"value":"RUNNING"},
+      {"fetch":{"url":"https://raw.githubusercontent.com/davierosoft/HEMS-random-everywhere-mission/main/this-file-does-not-exist.json","method":"GET"}},
+      {"set":{"local":"t4_code"},"value":{"param":"$FETCH_STATUS"}},
+      {"set":{"local":"t4_status"},"value":{"text":"missing file: status {0}","params":[{"local":"t4_code"}]}},
+      {"try":[
+          {"fetch":{"url":"https://invalid.invalid/none.json","method":"GET"}},
+          {"set":{"local":"t4_info"},"value":{"text":"unknown host: status {0}","params":[{"param":"$FETCH_STATUS"}]}}
+        ],"catch":[
+          {"set":{"local":"t4_info"},"value":"unknown host: an error was raised and caught (no status)"}
+      ]},
+      {"call_macro":"swt log","params":{"key":"t4","value":{"text":"{0} / {1}","params":[{"local":"t4_status"},{"local":"t4_info"}]}}}
+    ],
+    "swt fetch offline db": [
+      {"#comment":"Test 5: can the mission read the offline databases of the H145 package (html_ui/HPGH145-System/db)? The mission already fetches /VFS/ paths for the sound files. Informative: the tablet maps use these files, the mission does not."},
+      {"set":{"local":"t5_status"},"value":"RUNNING"},
+      {"fetch":{"url":"/VFS/html_ui/HPGH145-System/db/H_hospital.json","method":"GET"}},
+      {"set":{"local":"t5_code"},"value":{"param":"$FETCH_STATUS"}},
+      {"try":[{"set":{"local":"t5_info"},"value":{"text":"H_hospital.json: status {0}; $FETCH_RESPONSE type {1} length {2}","params":[{"local":"t5_code"},{"typeof":{"param":"$FETCH_RESPONSE"}},{"struct":{"param":"$FETCH_RESPONSE"},"path":"length"}]}}],"catch":[{"set":{"local":"t5_info"},"value":{"text":"H_hospital.json: status {0}; the answer could not be read","params":[{"local":"t5_code"}]}}]},
+      {"set":{"local":"t5_status"},"value":"DONE"},
+      {"call_macro":"swt log","params":{"key":"t5","value":{"local":"t5_info"}}}
+    ],
+    "swt log": [
+      {"#comment":"Every result is also written to table_R&E_shared_waypoints_testlog.json: attach that file to the report."},
+      {"open_table":{"static":"Swt_Table_Log"}},
+      {"set":{"table":{"static":"Swt_Table_Log"},"key":{"param":"key"}},"value":{"param":"value"}},
+      {"save_table":{"static":"Swt_Table_Log"}}
+    ]
+  },
+  "briefing": [
+    {"text":"SHARED WAYPOINTS TABLE AND FETCH TEST","size":"large","align":"center"},
+    {"text":"Questions: (1) does the mission read a table that an outside program wrote in the work folder, and again after the file changed; (2) what exact shape does the mission itself write for an array of records; (3) does fetch reach a public file of GitHub, and with which answer; (4) what happens when the file or the internet is missing; (5) can the offline database of the H145 be read. Results are also written to table_R&E_shared_waypoints_testlog.json."},
+    {"text":"Before test 1 put a file named table_R&E_shared_waypoints_test.json in the work folder (hpg-airbus-h145-ap\\work) with the content of test 2 (run test 2 first, then copy table_R&E_shared_waypoints_selftest.json to that name and change the version to 2 between two presses of test 1).","color":"yellow"},
+    {"buttonbar":[{"title":"1 READ TABLE FROM DISK","commands":[{"call_macro":"swt read table"}]},{"text":"{0}","params":[{"local":"t1_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t1_info"}],"color":"yellow"},
+    {"buttonbar":[{"title":"2 WRITE AND READ BACK","commands":[{"call_macro":"swt write table"}]},{"text":"{0}","params":[{"local":"t2_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t2_info"}],"color":"yellow"},
+    {"buttonbar":[{"title":"3 FETCH A FILE FROM GITHUB","commands":[{"call_macro":"swt fetch github"}]},{"text":"{0}","params":[{"local":"t3_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t3_probe_1"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_2"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_3"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_4"}],"color":"yellow"},
+    {"text":"{0}","params":[{"local":"t3_probe_5"}],"color":"yellow"},
+    {"buttonbar":[{"title":"4 MISSING FILE AND BAD HOST","commands":[{"call_macro":"swt fetch missing"}]},{"text":"{0}","params":[{"local":"t4_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t4_info"}],"color":"yellow"},
+    {"buttonbar":[{"title":"5 OFFLINE DB OF THE H145","commands":[{"call_macro":"swt fetch offline db"}]},{"text":"{0}","params":[{"local":"t5_status"}],"color":"green"}]},
+    {"text":"{0}","params":[{"local":"t5_info"}],"color":"yellow"}
+  ],
+  "data": {
+    "Swt_Table": "R&E_shared_waypoints_test",
+    "Swt_Table_Self": "R&E_shared_waypoints_selftest",
+    "Swt_Table_Log": "R&E_shared_waypoints_testlog"
+  }
+}

@@ -3622,6 +3622,12 @@
   ],
   "SAR car dispatch text": [
     {"#comment":"Vehicle model and colour for the vehicle missions (65 car, 66 parked car, 67 quad), appended once to the dispatch description. The pick is deterministic from CASUALTY_PERCENTAGE so a reloaded mission keeps the same vehicle; the final text is remembered to stay idempotent across the dispatch refresh flows."},
+    {"#comment":"Search and rescue: nobody knows that the missing person is injured, the tablet and the dispatcher say person(s) (casualty_word) and give no medical information, only number, age and sex (SAR dispatcher text)."},
+    {"set":{"local":"casualty_word"},"value":"injured"},
+    {"if": {"local":"SAR"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"casualty_word"},"value":"person(s)"}
+    ]},
     {"set":{"local":"sar_veh_kind"},"value":null},
     {"if": {
       "or": [
@@ -6755,6 +6761,24 @@
     {"if": {"local":"CAMPING_VARIABLE"}, "eq": 8,
       "then": [
         {"move_object":"injured_human","to":{"bearing":{"rand":[0,359]},"dist":{"rand":[0,59]},"object":"accident_location"}},
+        {"#comment":"Avalanche (CAMPING_VARIABLE 8): the injured is thrown up to 59 m from accident_location, while LUP, RUP, LDWN and RDWN (created above, 4 m around accident_location, shared with the other scenes) are the points the heli rescuer walks to secure the area and to restore it. They are placed again around the final position of the injured, with the same bearings and distance as above (locations have no heading: no bearing2), so the heli rescuer works at the patient and not up to 59 m away."},
+        {"create_location": "RUP",
+          "zones": [
+            {"zone":{"location":{"bearing":35,"dist":4,"object":"injured_human"}}}
+        ]},
+        {"create_location": "RDWN",
+          "zones": [
+            {"zone":{"location":{"bearing":130,"dist":4,"object":"injured_human"}}}
+        ]},
+        {"sleep":0.2},
+        {"create_location": "LDWN",
+          "zones": [
+            {"zone":{"location":{"bearing":225,"dist":4,"object":"injured_human"}}}
+        ]},
+        {"create_location": "LUP",
+          "zones": [
+            {"zone":{"location":{"bearing":325,"dist":4,"object":"injured_human"}}}
+        ]},
         {"create_object":{"name":"stickski","title":"Airbus H145 FR Batons de Ski","fallback_title":"Airbus H145 Cargo Bag","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[5,59]},"heading":{"rand":[0,359]},"object":"injured_human"}}},
         {"create_object":{"name":"ski","title":"Airbus H145 FR Skis Fischer","fallback_title":" Airbus H145 Cargo Bag ","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[0,59]},"heading":{"rand":[0,359]},"object":"injured_human"}}},
         {"create_object":{"name":"bagger","title":"Airbus H145 Cargo Bag","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[0,89]},"heading":{"rand":[0,359]},"object":"injured_human"}}}

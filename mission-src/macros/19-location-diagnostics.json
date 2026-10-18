@@ -403,6 +403,77 @@
       "then": [
         {"set":{"local":"gops_pax3_created"},"value":{"object":"pax3","var":"CREATED"}}
     ]},
+    {"set": {"local":"gops_hr_flags"},
+      "value": {
+        "text": "skid S{0} M{1} A{2} C{3} R{4} | hoist A{5} D{6} C{7} R{8} | lock {9}",
+        "params": [
+          {"if": {"local":"HR_SKID_SECURED"},
+            "ne": null,
+            "then": {"local":"HR_SKID_SECURED"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_SKID_MEET_READY"},
+            "ne": null,
+            "then": {"local":"HR_SKID_MEET_READY"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_SKID_AT_MEET"},
+            "ne": null,
+            "then": {"local":"HR_SKID_AT_MEET"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_SKID_CLEANUP"},
+            "ne": null,
+            "then": {"local":"HR_SKID_CLEANUP"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_SKID_RETURNED"},
+            "ne": null,
+            "then": {"local":"HR_SKID_RETURNED"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_HOIST_AT_MEET"},
+            "ne": null,
+            "then": {"local":"HR_HOIST_AT_MEET"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_HOIST_CREW_DOWN"},
+            "ne": null,
+            "then": {"local":"HR_HOIST_CREW_DOWN"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_HOIST_CLEANUP"},
+            "ne": null,
+            "then": {"local":"HR_HOIST_CLEANUP"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_HOIST_RETURNED"},
+            "ne": null,
+            "then": {"local":"HR_HOIST_RETURNED"},
+            "else": "-"
+          },
+          {"if": {"local":"HR_HOISTING_LOCK"},
+            "ne": null,
+            "then": {"local":"HR_HOISTING_LOCK"},
+            "else": "-"
+          }
+      ]}
+    },
+    {"set":{"local":"gops_dist_meet"},"value":-1},
+    {"if": {"has_location":"MEET"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gops_dist_meet"},"value":{"round":{"location":"MEET","var":"distance:m"},"to":1}}
+    ]},
+    {"set":{"local":"gops_dist_jolly"},"value":-1},
+    {"if": {"has_object":"jolly"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gops_dist_jolly"},"value":{"round":{"object":"jolly","var":"distance:m"},"to":1}}
+    ]},
+    {"set":{"local":"gops_dist_hoist_crew"},"value":-1},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gops_dist_hoist_crew"},"value":{"round":{"object":"hoist_crew","var":"distance:m"},"to":1}}
+    ]},
     {"set": {"local":"ground_ops_state_now"},
       "value": {
         "create_struct": {
@@ -685,7 +756,13 @@
             "ne": null,
             "then": {"local":"DISPATCHER_AUTO"},
             "else": "<unset>"
-          }
+          },
+          "hr_flags": {"local":"gops_hr_flags"},
+          "meet_exists": {"has_location":"MEET"},
+          "dist_aircraft_to_meet_m": {"local":"gops_dist_meet"},
+          "jolly_exists": {"has_object":"jolly"},
+          "dist_aircraft_to_jolly_m": {"local":"gops_dist_jolly"},
+          "dist_aircraft_to_hoist_crew_m": {"local":"gops_dist_hoist_crew"}
         }
       }
     }
@@ -716,7 +793,7 @@
           ]}, "eq": 1,
           "do": [
             {"call_macro":"sample ground ops state"},
-            {"set":{"param":"sig"},"value":{"text":"nr={0} ecp={1}/{2} gnd={3} hoisted={4} step={5} hold={6} hh={7} brd={8} gate={9} t45={10} t3={11} spawn={12} cp={13} plo={14} lz={15}/{16} pav={17} ph={18} post={19} hc={20}/{21} px={22}/{23}","params":[{"round":{"struct":{"local":"ground_ops_state_now"},"path":"nr"},"to":0},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_1"},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_2"},{"struct":{"local":"ground_ops_state_now"},"path":"on_ground"},{"struct":{"local":"ground_ops_state_now"},"path":"hoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"step"},{"struct":{"local":"ground_ops_state_now"},"path":"hold"},{"struct":{"local":"ground_ops_state_now"},"path":"holdhoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"helirescuer_boarded"},{"struct":{"local":"ground_ops_state_now"},"path":"gate_state"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_45"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_3"},{"struct":{"local":"ground_ops_state_now"},"path":"spawn_state"},{"struct":{"local":"ground_ops_state_now"},"path":"last_checkpoint"},{"struct":{"local":"ground_ops_state_now"},"path":"policeloadingenabled"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_transfer_state"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_force_pickup"},{"struct":{"local":"ground_ops_state_now"},"path":"police_avail"},{"struct":{"local":"ground_ops_state_now"},"path":"mission_phase"},{"struct":{"local":"ground_ops_state_now"},"path":"post_rotor_gate"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_created_var"}]}},
+            {"set":{"param":"sig"},"value":{"text":"nr={0} ecp={1}/{2} gnd={3} hoisted={4} step={5} hold={6} hh={7} brd={8} gate={9} t45={10} t3={11} spawn={12} cp={13} plo={14} lz={15}/{16} pav={17} ph={18} post={19} hc={20}/{21} px={22}/{23} hr={24}","params":[{"round":{"struct":{"local":"ground_ops_state_now"},"path":"nr"},"to":0},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_1"},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_2"},{"struct":{"local":"ground_ops_state_now"},"path":"on_ground"},{"struct":{"local":"ground_ops_state_now"},"path":"hoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"step"},{"struct":{"local":"ground_ops_state_now"},"path":"hold"},{"struct":{"local":"ground_ops_state_now"},"path":"holdhoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"helirescuer_boarded"},{"struct":{"local":"ground_ops_state_now"},"path":"gate_state"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_45"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_3"},{"struct":{"local":"ground_ops_state_now"},"path":"spawn_state"},{"struct":{"local":"ground_ops_state_now"},"path":"last_checkpoint"},{"struct":{"local":"ground_ops_state_now"},"path":"policeloadingenabled"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_transfer_state"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_force_pickup"},{"struct":{"local":"ground_ops_state_now"},"path":"police_avail"},{"struct":{"local":"ground_ops_state_now"},"path":"mission_phase"},{"struct":{"local":"ground_ops_state_now"},"path":"post_rotor_gate"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"hr_flags"}]}},
             {"set":{"param":"heartbeat"},"value":{"add":[{"param":"heartbeat"},1]}},
             {"if": {
               "or": [
