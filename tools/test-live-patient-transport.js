@@ -69,6 +69,7 @@ class Live extends Scene {
   }
   call(name, p = {}) {
     if (name === 'test tracker begin' || name === 'test tracker complete') return;
+    if (name === 'patient death notice') { this.voiceCalls = (this.voiceCalls || []).concat(name); return; }   // tablet pages, red message, sound and voice (module 03): not part of the transport transactions
     if (/^prepare patient[123] manual treatment phase$/.test(name)) {this.locals[`manual_p${name.match(/patient([123])/)[1]}_state`] = 'choose'; return;}
     if (/^set manual patient[123] procedure duration$/.test(name)) {this.locals[`manual_p${name.match(/patient([123])/)[1]}_action_duration`] = 1; return;}
     if (/^record manual patient[123] action result$/.test(name)) return;
@@ -184,7 +185,7 @@ for (const resource of ['ambulance1', 'ambulance2']) for (const mode of ['far', 
   assert.deepEqual([h.locals['L:HEALTH'], h.locals['L:HEALTH2'], h.locals['L:HEALTH3']], [3, 2, 2]);
   h.locals.LIFESCORE2 = 0;
   h.call(prefix + 'live physiology step', {seconds: 5}); h.call(prefix + 'live physiology step', {seconds: 5});
-  assert.equal(h.messages.filter(x => x === 'Patient 2 died.').length, 1);
+  assert.equal((h.voiceCalls || []).filter(x => x === 'patient death notice').length, 1, 'the death warning (pages, red message, sound) is called once per death');
   assert.equal(h.locals.patient_pending_transport, 2, 'A primary rescue flag must not stop the other patients');
 }
 {
@@ -275,7 +276,7 @@ for (const slot of [1, 2, 3]) {
 }
 for (const slot of [1, 2, 3]) {
   const h = new Live();
-  Object.assign(h.locals, {patient_live_generation: 1, cpr_patient_slot: slot, 'L:CPR': 0, cpr_active: 0, cpr_armed: 0, cpr_manual_stop: 0,
+  Object.assign(h.locals, {patient_live_generation: 1, cpr_patient_slot: slot, 'L:MISSION_HOIST': 0, 'L:CPR': 0, cpr_active: 0, cpr_armed: 0, cpr_manual_stop: 0,
     [`LIFESCORE${slot === 1 ? '' : slot}`]: 10});
   for (const [key, value] of Object.entries({BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8})) h.locals[slot === 1 ? key : `P${slot}_${key}`] = value;
   h.locals.patient_crew_visits[slot - 1].owner = 'hems';
@@ -295,7 +296,7 @@ for (const slot of [1, 2, 3]) {
   assert.equal(h.threads.length, threadsBeforeStep, 'A stopped procedure must not automatically restart on the same patient');
 }
 {
-  const h = new Live(); Object.assign(h.locals, {patient_live_generation: 1, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:CPR': 0, cpr_armed: 0, cpr_manual_stop: 0});
+  const h = new Live(); Object.assign(h.locals, {patient_live_generation: 1, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:MISSION_HOIST': 0, 'L:CPR': 0, cpr_armed: 0, cpr_manual_stop: 0});
   h.locals.patient_crew_visits[0].owner = 'hems';
   h.call(prefix + 'live physiology step', {seconds: 0}); const expired = h.threads[0];
   h.call(prefix + 'live physiology step', {seconds: 181});
@@ -307,7 +308,7 @@ for (const slot of [1, 2, 3]) {
 }
 {
   const h = new Live(); delete h.locals.patients;
-  Object.assign(h.locals, {patient_live_mode: 0, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:CPR': 0, 'L:RESCUED': 0, crewvisiting1: 'yes', cpr_armed: 0, cpr_manual_stop: 0});
+  Object.assign(h.locals, {patient_live_mode: 0, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:MISSION_HOIST': 0, 'L:CPR': 0, 'L:RESCUED': 0, crewvisiting1: 'yes', cpr_armed: 0, cpr_manual_stop: 0});
   h.call('CPR'); h.sleepHook = scene => {scene.locals['L:CPR'] = 5;}; h.runThread(h.threads[0]);
   assert.equal(h.locals['L:CPR'], 5); assert.equal(h.locals.cpr_manual_stop, 1, 'Non-registry missions retain legacy CPR controls');
 }

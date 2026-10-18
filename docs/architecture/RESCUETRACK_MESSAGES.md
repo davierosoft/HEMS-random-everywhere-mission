@@ -6,7 +6,7 @@ A message belongs to whoever knows the fact. The dispatcher (`GRPNAME`, for inst
 
 | Sender | How | What |
 | --- | --- | --- |
-| Helicopter crew | `-OUT-` (`post dispatcher message` with `from` crew, or `post crew safety message`) | State of the crew (critical, deceased), abort of the mission and diversion, confirmed hospital, patient handed over to the ED, patient deceased on board, deceased on scene and the request for the police, handover of the crew casualties, the status report sent from the CARLS or tablet keypad (`send dispatch phase`: `Status sent: <phase name>`) |
+| Helicopter crew | `-OUT-` (`post dispatcher message` with `from` crew, or `post crew safety message`) | State of the crew (critical, deceased), abort of the mission and diversion, confirmed hospital, patient handed over to the ED, patient deceased on board (macro `patient death dispatcher notice`, live physiology step, any phase until the handover to the ED: "on board" only for a loaded patient; otherwise "Patient deceased on scene." and, with no police on scene or on the way and not in multiplayer, "Patient deceased on scene. Requesting police." answered by the dispatcher with "Copy. Police tasked. Scene under investigation: do not move the body."), deceased on scene and the request for the police, handover of the crew casualties, the status report sent from the CARLS or tablet keypad (`send dispatch phase`: `Status sent: <phase name>`) |
 | Fire service | call sign `firename` (`from` fire) | Scene safe, not safe (fire or smoke), fire out |
 | Police | call sign `poliname` (`from` police) | Arrival, scene secured |
 | Ambulance | call sign `ambuname` (`from` ambulance) | Arrival, updates on the patients, patient released |

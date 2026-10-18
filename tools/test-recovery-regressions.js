@@ -49,7 +49,7 @@ function prepareCpr(slot, onboard = false, mcpr = false) {
   const h = new Live(); h.maxLoopTicks = 90;
   Object.assign(h.locals, {patient_live_generation: 1, cpr_patient_slot: slot, 'L:CPR': 0, cpr_active: 0, cpr_armed: 0, cpr_manual_stop: 0, 'SIM ON GROUND': 0});
   h.globals.MCPR_ONBOARD = mcpr ? 'yes' : 'no';
-  for (const cue of [17, 19, 20]) h.locals[`L:PAX3{local:VCP}${cue}`] = 0;
+  for (const cue of [17, 19, 20, 30, 31]) h.locals[`L:PAX3{local:VCP}${cue}`] = 0;
   h.locals[`LIFESCORE${slot === 1 ? '' : slot}`] = 10;
   for (const [key, value] of Object.entries({BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8})) h.locals[slot === 1 ? key : `P${slot}_${key}`] = value;
   h.locals.patient_crew_visits[slot - 1].owner = 'hems';

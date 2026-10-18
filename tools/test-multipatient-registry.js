@@ -122,6 +122,7 @@ class HpgRegistry {
         for (const row of c.set_dispatch) if (row.params) row.params.forEach(q => this.query(q, {}));
       } else if (Object.hasOwn(c, 'return')) throw new Returned(this.query(c.return, p));
       else if (c.set_message) this.messages.push(this.query(c.set_message, p));
+      else if (c.set_briefing_dialog !== undefined || c.set_dispatch_dialog !== undefined) { /* tablet pages closed by patient death notice: no registry effect */ }
       else throw new Error(`Forbidden/unsupported registry command ${JSON.stringify(c)}`);
     }
   }
@@ -134,7 +135,7 @@ class HpgRegistry {
     }
     if (name === 'Police1' && !this.macros[name]) { this.policeRequests = (this.policeRequests || 0) + 1; return; }
     if (name === 'ground ops checkpoint' && !this.macros[name]) { this.checkpoints = (this.checkpoints || []).concat(params.id); return; }   // the diagnostic ring of module 19
-    if (name.startsWith('voice ') && !this.macros[name]) { this.voiceCalls = (this.voiceCalls || []).concat(name); return; }   // the voice lines of the Mission Companion (module 03) are not part of the registry
+    if ((name.startsWith('voice ') || name === 'patient death notice') && !this.macros[name]) { this.voiceCalls = (this.voiceCalls || []).concat(name); return; }   // the voice lines of the Mission Companion (module 03) are not part of the registry
     assert.ok(this.macros[name], `Unknown macro ${name}`);
     try { this.commands(this.macros[name], params); } catch (e) { if (e instanceof Returned) return e.value; throw e; }
   }

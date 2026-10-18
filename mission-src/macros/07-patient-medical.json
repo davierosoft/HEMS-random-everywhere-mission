@@ -1371,8 +1371,8 @@
         {"text":"ROSC achieved. Continue critical-care monitoring before transport.","color":"green","show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"local":"medical_display_lifescore"},"gt":24},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"var":["L:CPR","number"]},"eq":3},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"CPR DIDN'T ACHIEVE ROSC. Critical deterioration continues.","color":"red","show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"var":["L:CPR","number"]},"eq":4},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"CPR has been active for more than 5 minutes. Stopping it does not stabilize the patient.","color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2},{"require":{"local":"cpr_elapsed"},"gte":300},{"require":{"local":"cpr_manual_stop"},"ne":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
-        {"buttonbar":[{"title":"STOP CPR","commands":[{"set":{"var":["L:CPR","number"]},"value":5},{"set":{"local":"cpr_stop_requested"},"value":1},{"set_message":{"text":"CPR stop requested. Critical monitoring continues."}}]}],"show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2},{"require":{"local":"cpr_elapsed"},"gte":300},{"require":{"local":"cpr_manual_stop"},"ne":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"ne":"manual"}],"eq":1}},
-        {"buttonbar":[{"title":"STOP CPR","commands":[{"set":{"var":["L:CPR","number"]},"value":5},{"set":{"local":"cpr_stop_requested"},"value":1},{"set_message":{"text":"CPR stop requested. Critical monitoring continues."}}]}],"show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2},{"require":{"local":"cpr_elapsed"},"gte":300},{"require":{"local":"cpr_manual_stop"},"ne":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
+        {"buttonbar":[{"title":"STOP CPR","commands":[{"set":{"var":["L:CPR","number"]},"value":5},{"set":{"var":["L:PAX3{local:VCP}31","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}31","number"]},1]}},{"set":{"local":"cpr_stop_requested"},"value":1},{"set_message":{"text":"CPR stop requested. Critical monitoring continues."}}]}],"show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2},{"require":{"local":"cpr_elapsed"},"gte":300},{"require":{"local":"cpr_manual_stop"},"ne":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"ne":"manual"}],"eq":1}},
+        {"buttonbar":[{"title":"STOP CPR","commands":[{"set":{"var":["L:CPR","number"]},"value":5},{"set":{"var":["L:PAX3{local:VCP}31","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}31","number"]},1]}},{"set":{"local":"cpr_stop_requested"},"value":1},{"set_message":{"text":"CPR stop requested. Critical monitoring continues."}}]}],"show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":2},{"require":{"local":"cpr_elapsed"},"gte":300},{"require":{"local":"cpr_manual_stop"},"ne":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
         {"text":"CPR STOPPED BY CREW. Patient remains critical and may deteriorate or die.","color":"red","show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:CPR","number"]},"eq":5},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"Patient cannot be transported untill his conditions are stable. It will take time to stabilize","color":"yellow","show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:RESCUED","number"]},"ne":0},{"require":{"local":"medical_display_lifescore"},"lt":19},{"require":{"local":"medical_display_lifescore"},"gt":11},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"var":["L:CPR","number"]},"eq":0},{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"buttonbar":[{"title":"Stabilize patient for transport","select_condition":{"require":{"local":"medical_display_lifescore"},"lt":18},"commands":[{"call_macro":"stabilize medical patient for transport","params":{"slot":{"local":"medical_display_patient"}}}]}],"show_condition":{"and":[{"require":{"local":"medical_display_cpr_active"},"eq":1},{"require":{"var":["L:RESCUED","number"]},"ne":0},{"require":{"local":"medical_display_lifescore"},"lt":19},{"require":{"local":"medical_display_lifescore"},"gt":11},{"require":{"var":["L:SAVED","number"]},"ne":1},{"require":{"var":["L:CPR","number"]},"eq":0},{"require":{"var":["SIM ON GROUND","bool"]},"eq":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"ne":"manual"}],"eq":1}},
@@ -1469,7 +1469,11 @@
                   "then": [
                     {"set":{"local":"cpr_mode"},"value":"in_flight_mCPR"}
                   ],"else": [
-                    {"set":{"local":"cpr_mode"},"value":"awaiting_landing"}
+                    {"set":{"local":"cpr_mode"},"value":"awaiting_landing"},
+                    {"if": {"var":["SIM ON GROUND","bool"]}, "eq": 0,
+                      "then": [
+                        {"set":{"var":["L:PAX3{local:VCP}30","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}30","number"]},1]}}
+                    ]}
                 ]}
               ],"else": [
                 {"set":{"local":"cpr_mode"},"value":"scene"}
@@ -1528,7 +1532,7 @@
                             {"if": {
                               "and": [
                                 {"require":{"local":"cpr_provider"},"eq":"HEMS"},
-                                {"require":{"local":"cpr_patient_onboard"},"ne":0}
+                                {"require":{"or":[{"require":{"local":"cpr_patient_onboard"},"ne":0},{"require":{"var":["L:MISSION_HOIST","number"]},"ne":0}]},"eq":1}
                               ]}, "eq": 1,
                               "then": [
                                 {"set":{"var":["L:PAX3{local:VCP}17","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}17","number"]},1]}}
@@ -1627,11 +1631,7 @@
                 {"if": {"var":["L:CPR","number"]}, "eq": 3,
                   "then": [
                     {"set":{"local":"cpr_armed"},"value":0},
-                    {"if": {
-                      "and": [
-                        {"require":{"local":"cpr_provider"},"eq":"HEMS"},
-                        {"require":{"local":"cpr_patient_onboard"},"ne":0}
-                      ]}, "eq": 1,
+                    {"if": {"local":"cpr_provider"}, "eq": "HEMS",
                       "then": [
                         {"set":{"var":["L:PAX3{local:VCP}20","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}20","number"]},1]}}
                     ]},
@@ -1653,6 +1653,14 @@
                 {"if": {"var":["L:CPR","number"]}, "eq": 4,
                   "then": [
                     {"set":{"local":"cpr_armed"},"value":0},
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"cpr_provider"},"eq":"HEMS"},
+                        {"require":{"local":"cpr_patient_onboard"},"eq":0}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"var":["L:PAX3{local:VCP}21","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}21","number"]},1]}}
+                    ]},
                     {"set_message":{"text":"CPR ended without ROSC. Critical deterioration continues."}}
                 ]}
               ],"else": [

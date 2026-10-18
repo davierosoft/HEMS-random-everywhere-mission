@@ -76,6 +76,14 @@ const restoreSecondOfficer = ground.police_ensure_second_officer_at_scene;
 requireTrue(contains(returnAfterPickup, (entry) => entry && entry.call_macro === 'police_ensure_second_officer_at_scene'), 'police return after crew pickup does not restore the second officer');
 requireTrue(contains(restoreSecondOfficer, (entry) => entry && entry.drive_object && entry.drive_object.name === 'policeman2' && Array.isArray(entry.drive_object.to) && entry.drive_object.to.includes('POLMAN2')), 'second officer is not returned to POLMAN2');
 requireTrue(contains(restoreSecondOfficer, (entry) => entry && entry.point_object === 'policeman2' && entry.to === 'accident_location'), 'second officer is not pointed toward the incident after return');
+// tester snapshot 2026-10-18: 155 s between the arrival of the police car and the crew walking out, inside this macro. The second drive is a zero-length drive when the officer already stands at POLMAN2, and the crew must never wait for a cosmetic walk
+const secondOfficerText = JSON.stringify(restoreSecondOfficer);
+requireTrue(secondOfficerText.includes('"location":"POLMAN2","var":"distance:m","to":"policeman2"},"gt":2'), 'the second officer is driven to POLMAN2 only when he is more than 2 m away (a zero-length drive can wander for minutes)');
+requireTrue(secondOfficerText.includes('"id":"pol2_ensure_start"') && secondOfficerText.includes('"id":"pol2_ensure_done"'), 'the second officer step must leave start and done checkpoints with the time spent');
+for (const macroName of ['3 crew ground ops', '4 or 5 crew ground ops']) {
+  const crewText = JSON.stringify(hoist[macroName]);
+  requireTrue(crewText.includes('"create_thread":{"commands":[{"call_macro":"police_ensure_second_officer_at_scene"}]}') && !crewText.includes('{"call_macro":"police_ensure_second_officer_at_scene"},{"sleep"'), `${macroName}: the crew flow must not wait for the second police officer`);
+}
 
 const crewSpawnLaunch = runtime['crew spawn launch'];
 const crewSpawnWait = runtime['crew spawn wait'];

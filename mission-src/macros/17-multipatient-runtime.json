@@ -91,7 +91,7 @@
   "multipatient registry event": [
     {"if": {"param":"event"}, "eq": "DIED",
       "then": [
-        {"call_macro":"voice patient died"}
+        {"call_macro":"patient death notice","params":{"slot":{"param":"patient","path":"slot"}}}
     ]},
     {"if": {"param":"event"}, "eq": "DIED",
       "then": [
@@ -118,6 +118,27 @@
     {"if": {"struct":{"param":"patient","path":"history"},"path":"length"}, "gt": 64,
       "then": [
         {"modify_array":{"param":"patient","path":"history"},"removeIndex":0}
+    ]}
+  ],
+  "patient death dispatcher notice": [
+    {"#comment":"Dispatcher message of the crew when a patient dies in live mode (called by multipatient registry live physiology step, which has stored pat_death_prev_state, the transport state before the death; not after the handover to the ED, L:SAVED 1). 'On board' is true only for a patient already loaded; during the loading or before it the patient is still on the scene (tester snapshot 2026-10-18: death at 18:13:40 while the crew carried the patient, reported as on board). A patient who dies on scene before loading: the police are requested once, as with the Request police button, only when the scene has no police (POLICE_AVAIL 0; 1 is police already on scene, 2 is police on the way from the station) and not in multiplayer, where the dispatcher decides. The rule was only in multipatient registry tick, which nothing calls (the live physiology step is the one that runs, in singleplayer too); user request 2026-10-18 to put it back."},
+    {"if": {"local":"pat_death_prev_state"}, "eq": "loaded",
+      "then": [
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"local":"POLICE_AVAIL"},"eq":0},
+            {"require":{"local":"player"},"ne":"multiplayer"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"POLICE_AVAIL"},"value":2},
+            {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene. Requesting police."}},
+            {"call_macro":"Police1"},
+            {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
+          ],"else": [
+            {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene."}}
+        ]}
     ]}
   ],
   "multipatient registry add": [
@@ -5095,6 +5116,7 @@
                         {"set":{"local":"registry_physio_refetch_count"},"value":{"add":[{"if":{"local":"registry_physio_refetch_count"},"ne":null,"then":{"local":"registry_physio_refetch_count"},"else":0},1]}},
                         {"call_macro":"multipatient registry get","params":{"slot":1},"result":"record"}
                     ]},
+                    {"set":{"local":"pat_death_prev_state"},"value":{"param":"record","path":"transport_state"}},
                     {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"death_recorded":1,"active":0,"transport_state":"died","resource":"none","reservation_generation":{"add":[{"param":"record","path":"reservation_generation"},1]}}}]}},
                     {"set":{"local":"patientlife"},"value":"died"},
                     {"call_macro":"multipatient registry event","params":{"patient":{"param":"record"},"event":"DIED"}},
@@ -5103,15 +5125,10 @@
                         {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
                     ]},
                     {"call_macro":"record patient death time","params":{"patient":1}},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["L:RESCUED","number"]},"ne":0},
-                        {"require":{"var":["L:SAVED","number"]},"ne":1}
-                      ]}, "eq": 1,
+                    {"if": {"var":["L:SAVED","number"]}, "ne": 1,
                       "then": [
-                        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
-                    ]},
-                    {"set_message":{"text":"Patient 1 died."}}
+                        {"call_macro":"patient death dispatcher notice"}
+                    ]}
                 ]}
             ]},
             {"if": {
@@ -5216,6 +5233,7 @@
                         {"set":{"local":"registry_physio_refetch_count"},"value":{"add":[{"if":{"local":"registry_physio_refetch_count"},"ne":null,"then":{"local":"registry_physio_refetch_count"},"else":0},1]}},
                         {"call_macro":"multipatient registry get","params":{"slot":2},"result":"record"}
                     ]},
+                    {"set":{"local":"pat_death_prev_state"},"value":{"param":"record","path":"transport_state"}},
                     {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"death_recorded":1,"active":0,"transport_state":"died","resource":"none","reservation_generation":{"add":[{"param":"record","path":"reservation_generation"},1]}}}]}},
                     {"set":{"local":"patientlife2"},"value":"died"},
                     {"call_macro":"multipatient registry event","params":{"patient":{"param":"record"},"event":"DIED"}},
@@ -5224,15 +5242,10 @@
                         {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
                     ]},
                     {"call_macro":"record patient death time","params":{"patient":2}},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["L:RESCUED","number"]},"ne":0},
-                        {"require":{"var":["L:SAVED","number"]},"ne":1}
-                      ]}, "eq": 1,
+                    {"if": {"var":["L:SAVED","number"]}, "ne": 1,
                       "then": [
-                        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
-                    ]},
-                    {"set_message":{"text":"Patient 2 died."}}
+                        {"call_macro":"patient death dispatcher notice"}
+                    ]}
                 ]}
             ]},
             {"if": {
@@ -5337,6 +5350,7 @@
                         {"set":{"local":"registry_physio_refetch_count"},"value":{"add":[{"if":{"local":"registry_physio_refetch_count"},"ne":null,"then":{"local":"registry_physio_refetch_count"},"else":0},1]}},
                         {"call_macro":"multipatient registry get","params":{"slot":3},"result":"record"}
                     ]},
+                    {"set":{"local":"pat_death_prev_state"},"value":{"param":"record","path":"transport_state"}},
                     {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"death_recorded":1,"active":0,"transport_state":"died","resource":"none","reservation_generation":{"add":[{"param":"record","path":"reservation_generation"},1]}}}]}},
                     {"set":{"local":"patientlife3"},"value":"died"},
                     {"call_macro":"multipatient registry event","params":{"patient":{"param":"record"},"event":"DIED"}},
@@ -5345,15 +5359,10 @@
                         {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":"CLINICAL DETERIORATION"}
                     ]},
                     {"call_macro":"record patient death time","params":{"patient":3}},
-                    {"if": {
-                      "and": [
-                        {"require":{"var":["L:RESCUED","number"]},"ne":0},
-                        {"require":{"var":["L:SAVED","number"]},"ne":1}
-                      ]}, "eq": 1,
+                    {"if": {"var":["L:SAVED","number"]}, "ne": 1,
                       "then": [
-                        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
-                    ]},
-                    {"set_message":{"text":"Patient 3 died."}}
+                        {"call_macro":"patient death dispatcher notice"}
+                    ]}
                 ]}
             ]},
             {"if": {

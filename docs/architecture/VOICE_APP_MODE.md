@@ -92,8 +92,85 @@ User request of 2026-10-17: when the heli rescuer boards, the one who knows noth
 
 The user's spreadsheet lists 23 messages written for events that do not call them yet; two are wired now (PLT 46, PAX3 36). Still to wire, with the trigger described in the spreadsheet (check each hook for repeats before adding the increment): `MAR 1-5` marshal controller corrections, hold and landing clear; `PAX3 27-35, 37` visit start, critical vitals, treatment result, CPR required while airborne, CPR stopped, ambulance on scene, second ambulance, police, fire service, additional patients; `PAX2 5-6` hoist pause and abort; `CPL 62-64` route unavailable, destination changed, engine start held by the ground operations; `FRA 9` inspection required; `PAX1 82` ground crew returning. The wav-pack LVARs that exist in `sound.xml` but not in the spreadsheet (`PAX1 T1-T15`, `PAX1 4, 17, 27-31, 35, 36, 39-41, 50, 53, 58, 87`, `CPL 34, 35, 49, 50`, `PLT 4, 12, 18, 22, 23`, `PAX2 2`, `PAX3 14, 18, 21`, `SARA 3`) are in the pack with draft texts written from the wav names.
 
+## Companion not connected: back to the wav pack (sources only, user request of 2026-10-18)
+
+Tester report (169.61): `L:AUDIOINHIBIT` stayed 1 after the Companion was closed, so `VCP` stayed `APP`, the voice server refused the connection (`TTS` 0) and every voice and sound was silent, the death of a patient included. Now, with the app selected (`L:AUDIOINHIBIT` not 0 and not 100) and no voice server, the mission goes back to the last selection of the user:
+
+| Macro | Role |
+| --- | --- |
+| `voice app connect` | times the attempt (`VOICE_APP_T0`); `on_connected` sets `TTS` 1 and `voice_app_lost` "no"; `on_disconnected` calls `voice app lost` |
+| `voice app lost` | `TTS` 0, `voice_app_lost` "yes"; only for the app selection: `L:AUDIOINHIBIT` 0 (what the original thread `EXTERNAL XML AUDIO ENABLE` expects when the external program is off), `VCP` = `VOICEPACK` (ANDREW when none), then `voice app popup`. The sound LVARs `L:<role>{VCP}<n>` play the wavs again |
+| `voice app popup` | one modal "Mission Companion not connected" per simulator session (`L:HMC_APP_POPUP_SHOWN`, an LVAR: it survives a mission reload, a new flight clears it). Its only call site is `voice app lost`: with a wav pack selected no popup |
+| `voice app check` | 25 s after the attempt without `TTS` 1 and without the callback, the connection counts as lost. Called by `voice say` (first message requested without the app) and by the thread every second while `VCP` is `APP` and `TTS` is not 1 |
+
+The Companion that starts later writes `L:AUDIOINHIBIT` 1 (every 5 s) and the thread, which keeps its original rules, sets `VCP` to `APP` and connects it again; the checklist assistant connection (`22-checklists.json`, old audio service with a wav pack) keeps its own handlers and never shows the popup. Test: `node tools/test-voice-app-fallback.js`. Runtime PENDING: whether the aircraft wavs play with `L:AUDIOINHIBIT` rewritten to 0 by the mission, and whether `on_disconnected` is called when the server is not running (the 25 s check covers the case it is not).
+
+### Patient death: warning and sound
+
+`multipatient registry event` DIED calls `patient death notice` (03): the Companion fallback first, then `set_dispatch_dialog` 0 and `set_briefing_dialog` 0 (a message does not appear over those pages), the red message "Patient N has died.", and `voice patient died`: the dead sound `L:DEAD{VCP}` always (the Companion plays SYS.DEAD, a wav pack its AND.dead.wav, as for the hoist casualties), then with the Companion the lines DTH.* and with a wav pack the existing wav `L:PAX3{VCP}7` ("The patient has died.", 3 s later). Before this the TTS-only `voice patient died` left a wav pack silent.
+
+### Wav LVARs and the spreadsheet (verified 2026-10-18)
+
+`docs/AND_voice_messages.xlsx` lists the wavs of the pack AND (253 rows: LVAR, wav file, transcription, role, trigger in column E for the 25 messages written for events that had no call site, proposed correction, alternatives). Checked against the base pack `EN.xml` of the Companion and against the mission sources (`mission-src`, call sites `"L:<role>{local:VCP}<n>"`):
+
+- All 253 LVARs are messages of the pack with the same wav name; nine LVARs with several wav variants (PLT 30, 38, 40) keep the first one in the pack. 100 pack texts equal the transcription, 96 the proposed correction; the other 57 are the 7 non-verbal sounds (no text) and wording differences (the technician name as `{@TECH}`, articles, punctuation).
+- 232 rows have call sites in the mission. 21 had none, all of them with a trigger in column E. 65 other LVARs of the pack are not in the spreadsheet (no transcription: draft texts written from the wav names): CPL 34, 35, 49, 50, 65-68; PAX1 4, 17, 27-31, 35, 36, 39-41, 50, 53, 58, 86, 87, 90-92 and T1-T15; PAX2 2; PAX3 14, 18, 21, 38-41; PLT 4, 12, 18, 22, 23, 47-54; SARA 3. They stay as they are until somebody writes the trigger.
+
+The 21 rows without a call site, against the conditions of the mission (`tools/test-wav-extension.js` checks the nine wired ones):
+
+| LVAR | Trigger of the spreadsheet | Condition in the mission | State |
+| --- | --- | --- | --- |
+| MAR 5 landing area clear | a valid landing is committed inside the landing area | `marshall_landing_commit` set to 1 (`marshaller animation monitor`) | wired |
+| PAX3 30 CPR awaits the landing | `L:CPR` 1 in the air with `MCPR_ONBOARD` off | `CPR`: patient aboard, `MCPR_ONBOARD` not yes (`cpr_mode` awaiting_landing), `SIM ON GROUND` 0, once per CPR start | wired |
+| PAX3 31 CPR stopped | the tablet STOP CPR sets `L:CPR` 5 | both STOP CPR buttons of the medical page | wired |
+| PAX3 32 ambulance on scene | ambulance arrival | `ambu1arrived` set to yes (3 parking branches) through `wav unit arrival`, phases 5 to 7, once in 120 s | wired |
+| PAX3 34 police securing the scene | police arrival | `poli1arrived` yes in `park_police` through `wav unit arrival` | wired |
+| PAX3 35 fire hazard | fire engine or fire hazard branch | `fire1arrived` yes in `park_firetruck1`, only with `random_fire` not no | wired |
+| PAX3 33 second ambulance | secondary rescue assigns ambulance 2 to patient 2 or 3 | `ambulance2_secondary_started` yes (`wav secondary rescue`, phases 5 to 9) | wired |
+| PAX3 37 additional patients | patient 2 or 3 remains, or the secondary rescue begins | six seconds after PAX3 33 when `HELOVICTIMS` is 2 or more | wired |
+| CPL 64 hold engine start | marshal or pisteur guidance blocks a first pump start | the guard of the threads `ENG 1_2` and `ENG 2_1` (`marshall_engine_guard_active` or `pisteur3_guidance_active`) | wired |
+| MAR 1-4 left, right, forward, hold | marshal controller corrections | the animation states of `marshaller animation monitor` (`marshall_guidance_state` 5, 6, 1, 3, set from `marshall_relative_bearing`): which state is left and which right depends on the mirroring of the animation, not documented | open: runtime check of the animations |
+| PAX3 28 critical vital signs | critical-vitals indicators turn red | tablet line at LIFESCORE 2 to 30 after the visit, `voice ground update` already says the critical stage with the Companion | open: wav only (VCP not APP) or both |
+| PAX3 29 ready for transport | treatment result allows loading | no single event: the loading branch starts from the transport ownership transitions of the registry | open |
+| PAX2 5, 6 hoist paused, aborted | a speed, acceleration or bank limit pauses or aborts the hoist | the hoist safety monitor only has casualty events (`hoist cable casualty`), no pause or abort state | not modelled |
+| CPL 62 route unavailable | `routeupdate` records a missing or failed destination after its retry | `routeupdate_error` set_route_failed_twice or missing_location | open: thresholds of phase and repeats |
+| CPL 63 destination changed | the target changes and the route is recalculated | `routeupdate_target` changes, but it changes at every leg of a normal mission (scene, hospital, base) | open: would be said at every leg |
+| FRA 9 inspection required | a failure or a hard landing requires inspection | the mission has no inspection state | not modelled |
+| PAX1 82 crew returning | the post-visit, post-load or post-hoist crew return begins | several return flows (ground, hoist, police) | open |
+
+The increment is the wav LVAR of the packs and, with the Companion, the pack message of the same LVAR (same text as the wav). Where the Companion already says the same event with its own lines (`voice ground update`, `voice patient died`) the wav is not duplicated. Runtime PENDING.
+
 ## Existing defects found while reading the call sites (not changed)
 
 - `09-hoist-ground-ops.json` (about lines 2333 and 2339): `L:PAX3{VCP}26` and `25` are set to `L:PAX3{VCP}59` and `55` plus 1; those two variables are never written, so the value is always 1 and the "welcome" and "briefing" lines sound only once per flight load (wav packs only: in app mode the briefing is `voice heli rescuer briefing`, see above).
 - `09-hoist-ground-ops.json`: `L:{VCP}89` ("Personnel 2 to ground") has no sound in the wav packs, and `L:{VCP}86` has three wav variants (`pls.set.hoist.sw.on1..3`).
 - Crew tips (pack EN 13, user request of 2026-10-14): the macro `voice tip` (called by `voice cruise chat` in the three long legs) tells a four-line conversation `TIP.<topic>.1` to `4` of the copilot, the doctor and sometimes the pilot about a function of the mission pilots may not know: SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, TOF how to switch the tips off. The topics follow each other in this order from a random start (the local `vtp_next` survives the reloads). The tips have their own setting CREW TIPS (global `CREW_TIPS`, 0 or empty on, 1 off; Settings, Audio options, buttons TIPS ON and TIPS OFF; kept in the aircraft profiles; Reset to default clears it), independent from CREW CHATTER: `voice calm` is called with the param `tip` 1 and does not stop on the chatter setting, but still refuses with a crew emergency, a hurt crew member, a dying patient or a death. The messages are not futile (six options, none silent): with CREW CHATTER REDUCED or MINIMAL the Companion limits the option number, and every option tells the whole information. Wav packs say nothing (`voice say` needs the Companion). Test: `node tools/test-voice-tips.js`.
+
+## Uniform communications across the operations (sources 2026-10-18, runtime PENDING)
+
+User request of 2026-10-18: the hoist had fewer voices than the ground operations, so the moments of every operation were audited against the pack EN. The audit tool is the matrix of the voice keys (`voice say` keys and wav LVAR increments resolved to pack keys) per mode macro; `tools/test-comms-uniformity.js` keeps the result.
+
+| Moment | Landing 3/4/5 crew | Skid 3/4/5 crew | Hoist |
+| --- | --- | --- | --- |
+| Time left (GRD.ETA.0/1/N) | `voice ground update` (stage monitor) | `voice hoist visit`, stage ARR, from MINGND, at most once every 300 s | same |
+| Doctor at the patient / visit done | GRD.DEP, GRD.TRT.* | HST.ARR.*, HST.DONE.* | same |
+| The patient travels by ambulance (PAX1 20 / 65) | yes | 4 and 5 crew yes; **3 crew added**; not said for a patient who died | yes |
+| Patient on board (PAX3 10) | yes | 4 and 5 crew yes; **3 crew added** | yes |
+| CPR in progress (PAX3 17) | GRD.CPR.DOC | **added on the ground** (L:MISSION_HOIST not 0) and aboard | same |
+| CPR successful (PAX3 20) | aboard only before; **now whenever the crew did the CPR** | same | same |
+| Patient does not respond to CPR (PAX3 21, the key that was never called) | **added on the ground** (after an unsuccessful CPR) | same | same |
+| Crew leaves or comes back with the police or the ambulance | message only before; **CRT.POL.OUT, CRT.POL.BCK, CRT.AMB.BCK, CRT.POL.OPR, CRT.WALK** | n/a (the crew walks to the skid point) | n/a |
+| Death of the patient in any phase | `patient death notice` (message, sound, police rule) | same | same |
+
+Other kinds of mission:
+
+- **Meeting half way** (`L:MIDWAY` 1): MID.SET when the point is accepted (objective4), APR.MID.PLT/DOC/CHF/END at two nautical miles from the meeting point (the 2 NM L thread, macro `voice midway briefing`), MID.HND at the loading of the patient from the ambulance (`midway patient load1/2`).
+- **Patient transfer**: APR.TRF.* (as before), TRF.HND when the doctor goes in for the handover at the hospital (`transfer patient paperwork`).
+- **Organ transport**: APR.ORG.* and BRF.ORG.* (as before), ORG.PCK when the rear crew collects the container (`organ pick up scene1`); HOS.ORG at the delivery.
+- **Approach briefing with the information of the mission**: APR.MUL (more than one patient expected, `HELOVICTIMS` 2 or more) and APR.FIR (fire on the scene, `random_fire` yes or forced) before APR.END.
+- **Heli rescuer**: already complete (HRQ.*, HRB.*, HRS.*, HRD.*); not covered: the boarding of the heli rescuer in a landing operation (`gnd ops heli rescuer up`) has no line.
+- The new lines are texts of the Mission Companion (VCP APP): no wav exists for them, so a wav pack stays silent at these moments. Pack EN 19 and DE 7 (on the base 19); the mission declares `<pack:EN:19>`.
+
+### Radio, intercom and polycon (the Companion rules of 2026-10-18)
+
+The Companion decides who is heard; the mission only publishes the context. Powered = the battery master (`L:H145_SDK_OH_BATTERY_MASTER`) on OR the GPCP power switch (`L:H145_SDK_GPCP_PWR_SWITCH`) on. Powered: the intercom works. Powered and the CARLS connected (`L:CARLS_CONNECTED` 1): radio (dispatcher, hospital, heli rescue base) and polycon (the crew inside and outside) work too. Battery off and switch off: no intercom, no radio, no polycon, no exception (the base wifi range of `L:HMC_AT_BASE` no longer lets the dispatcher through). Voices in the air (technician, ground unit, patient, crew when everybody is outside or everybody aboard without power) are unchanged.

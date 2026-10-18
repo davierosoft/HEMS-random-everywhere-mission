@@ -1143,6 +1143,7 @@
         {"set":{"local":"ambu1_parked"},"value":"yes"},
         {"set":{"local":"ambu1_parking"},"value":"no"},
         {"set":{"local":"ambu1arrived"},"value":"yes"},
+        {"call_macro":"wav unit arrival","params":{"unit":"ambulance"}},
         {"if": {"has_object":"ambulance2"}, "eq": 1,
           "then": [
             {"if": {"local":"ambu2arrived"}, "eq": "yes",
@@ -1226,6 +1227,7 @@
         {"set":{"local":"ambu1_parked"},"value":"yes"},
         {"set":{"local":"ambu1_parking"},"value":"no"},
         {"set":{"local":"ambu1arrived"},"value":"yes"},
+        {"call_macro":"wav unit arrival","params":{"unit":"ambulance"}},
         {"call_macro":"scene gap trace"},
         {"create_thread": {
           "commands": [
@@ -1509,7 +1511,8 @@
         {"set":{"local":"rescue_parking_lock"},"value":0},
         {"set":{"local":"closest_ambu_parked"},"value":"yes"},
         {"set":{"local":"closest_ambu_parking"},"value":"no"},
-        {"set":{"local":"ambu1arrived"},"value":"yes"}
+        {"set":{"local":"ambu1arrived"},"value":"yes"},
+        {"call_macro":"wav unit arrival","params":{"unit":"ambulance"}}
     ]}
   ],
   "park_ambulance2": [
@@ -2181,6 +2184,7 @@
         {"set":{"local":"poli1_parked"},"value":"yes"},
         {"set":{"local":"poli1_parking"},"value":"no"},
         {"set":{"local":"poli1arrived"},"value":"yes"},
+        {"call_macro":"wav unit arrival","params":{"unit":"police"}},
         {"call_macro":"scene gap trace"},
         {"create_thread": {
           "commands": [
@@ -2253,6 +2257,7 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"fire_ops","actor":"firetruck1","target":"park_firetruck1","state":"parked_done"}},
         {"call_macro":"scene gap trace"},
         {"set":{"local":"fire1arrived"},"value":"yes"},
+        {"call_macro":"wav unit arrival","params":{"unit":"fire"}},
         {"create_thread": {
           "commands": [
             {"call_macro":"scene spacing watch"}
@@ -2475,7 +2480,8 @@
         {"set":{"local":"rescue_parking_lock"},"value":0},
         {"set":{"local":"fire1_parked"},"value":"yes"},
         {"set":{"local":"fire1_parking"},"value":"no"},
-        {"set":{"local":"fire1arrived"},"value":"yes"}
+        {"set":{"local":"fire1arrived"},"value":"yes"},
+        {"call_macro":"wav unit arrival","params":{"unit":"fire"}}
     ]}
   ],
   "park_firetruck2": [
@@ -4664,6 +4670,18 @@
     {"set":{"var":["L:STEP","number"]},"value":2}
   ],
   "police_ensure_second_officer_at_scene": [
+    {"#comment":"Cosmetic: puts the second officer back at POLMAN2 after the car returned from a crew pickup. It must never hold the crew (callers run it in a thread). A drive to the point where the officer already stands is a zero-length drive, which in the simulator can wander for minutes (tester snapshot 2026-10-18: 155 s between the car arrival and the crew walking out), so the second drive only runs when the officer is more than 2 m from POLMAN2. Checkpoints pol2_ensure_start/done show the time spent."},
+    {"set":{"local":"pol2_ensure_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"pol2_ensure_dist"},"value":-1},
+    {"if": {
+      "and": [
+        {"require":{"has_object":"policeman2"},"eq":1},
+        {"require":{"has_location":"POLMAN2"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"pol2_ensure_dist"},"value":{"round":{"location":"POLMAN2","var":"distance:m","to":"policeman2"},"to":1}}
+    ]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"pol2_ensure_start","detail":{"text":"policeman2={0} POLMAN2={1} dist_m={2}","params":[{"has_object":"policeman2"},{"has_location":"POLMAN2"},{"local":"pol2_ensure_dist"}]}}},
     {"if": {
       "and": [
         {"require":{"has_object":"police"},"eq":1},
@@ -4689,12 +4707,16 @@
         {"require":{"has_location":"POLMAN2"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"drive_object":{"name":"policeman2","to":["POLMAN2"],"VAR1":1,"speed":5}},
-        {"wait_for":{"object":"policeman2","var":"VELOCITY Z"},"eq":0},
+        {"if": {"location":"POLMAN2","var":"distance:m","to":"policeman2"}, "gt": 2,
+          "then": [
+            {"drive_object":{"name":"policeman2","to":["POLMAN2"],"VAR1":1,"speed":5}},
+            {"wait_for":{"object":"policeman2","var":"VELOCITY Z"},"eq":0}
+        ]},
         {"set":{"object":"policeman2","var":"VAR 1"},"value":0},
         {"point_object":"policeman2","to":"accident_location"}
     ]},
-    {"call_macro":"policeman2_keep_clear_of_vehicles"}
+    {"call_macro":"policeman2_keep_clear_of_vehicles"},
+    {"call_macro":"ground ops checkpoint","params":{"id":"pol2_ensure_done","detail":{"text":"after {0}s","params":[{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"pol2_ensure_t0"}]}]}}}
   ],
   "policeman2_keep_clear_of_vehicles": [
     {"if": {
@@ -6560,6 +6582,7 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"ambulance2_secondary_started"},"value":"yes"},
+        {"call_macro":"wav secondary rescue"},
         {"set":{"local":"ambulance2_secondary_gate"},"value":"waiting_for_arrival"},
         {"set":{"local":"ambulance2_secondary_log"},"value":"gate passed; waiting for ambulance arrival"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambulance2 secondary rescue","state":"wait_has_object.ambulance2_eq_1"}},

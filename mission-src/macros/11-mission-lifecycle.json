@@ -1720,7 +1720,42 @@
             {"set":{"param":"vhv_c"},"value":"C"}
         ]},
         {"set":{"param":"vhv_key"},"value":{"text":"HST.{0}.{1}","params":[{"param":"stage"},{"param":"vhv_c"}]}},
-        {"call_macro":"voice say","params":{"key":{"param":"vhv_key"}}}
+        {"call_macro":"voice say","params":{"key":{"param":"vhv_key"}}},
+        {"#comment":"Uniform with the landing operations (voice ground update): when the doctor reaches the first patient the chief says the time left, from the estimate of the ground time (MINGND, minutes). Once every 5 minutes at most, so a second patient does not repeat it."},
+        {"set":{"local":"vhv_now"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"if": {"local":"vhv_eta_t"}, "eq": null,
+          "then": [
+            {"set":{"local":"vhv_eta_t"},"value":-1000}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"param":"stage"},"eq":"ARR"},
+            {"require":{"or":[{"require":{"local":"vhv_now"},"gt":{"add":[{"local":"vhv_eta_t"},300]}},{"require":{"local":"vhv_now"},"lt":{"local":"vhv_eta_t"}}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vhv_eta_t"},"value":{"local":"vhv_now"}},
+            {"set":{"local":"vhv_eta_min"},"value":{"local":"MINGND"}},
+            {"if": {"local":"vhv_eta_min"}, "eq": null,
+              "then": [
+                {"set":{"local":"vhv_eta_min"},"value":0}
+            ]},
+            {"set":{"local":"vhv_eta_key"},"value":"GRD.ETA.0"},
+            {"if": {"local":"vhv_eta_min"}, "gte": 1,
+              "then": [
+                {"set":{"local":"vhv_eta_key"},"value":"GRD.ETA.1"}
+            ]},
+            {"if": {"local":"vhv_eta_min"}, "gte": 2,
+              "then": [
+                {"set":{"local":"vhv_eta_key"},"value":"GRD.ETA.N"}
+            ]},
+            {"create_thread": {
+              "commands": [
+                {"set":{"param":"vhe_key"},"value":{"local":"vhv_eta_key"}},
+                {"set":{"param":"vhe_min"},"value":{"local":"vhv_eta_min"}},
+                {"sleep":9},
+                {"call_macro":"voice say","params":{"key":{"param":"vhe_key"},"declut":1,"a":{"param":"vhe_min"}}}
+            ]}}
+        ]}
     ]}
   ],
   "ambulance departs notice": [
@@ -4239,6 +4274,7 @@
         {"if": {"var":["L:MIDWAY","number"]}, "eq": 1,
           "then": [
             {"set_objective_title":"REACH THE CONCORDED MEETING POINT","color":"orange"},
+            {"call_macro":"voice say","params":{"key":"MID.SET"}},
             {"if": {"var":["L:DEBOARD","number"]}, "gt": 2,
               "then": [
                 {"set":{"var":["L:PLT{local:VCP}45","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}45","number"]},1]}}
@@ -5138,7 +5174,12 @@
             {"wait_for":{"has_location":"userA"},"eq":1},
             {"wait_for":{"location":"userA","var":"distance"},"gt":2.1},
             {"wait_for":{"location":"userA","var":"distance"},"lt":2.1},
-            {"set":{"var":["L:PLT{local:VCP}16","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}16","number"]},1]}}
+            {"set":{"var":["L:PLT{local:VCP}16","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}16","number"]},1]}},
+            {"if": {"var":["L:MIDWAY","number"]}, "eq": 1,
+              "then": [
+                {"sleep":4},
+                {"call_macro":"voice midway briefing"}
+            ]}
         ]}},
         {"#comment":"2 NM L MAP ZOOM"},
         {"create_thread": {

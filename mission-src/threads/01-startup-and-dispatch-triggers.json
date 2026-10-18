@@ -23,6 +23,17 @@
                 {"set":{"local":"VCP"},"value":"APP"},
                 {"call_macro":"voice app connect"}
             ]},
+            {"#comment":"Companion selected (L:AUDIOINHIBIT 1) but no voice server answer: voice app check counts the connection as lost after 25 s (voice app lost: back to the wav pack, L:AUDIOINHIBIT 0, one popup per session). The wav pack selected by the user is the fallback, never silence."},
+            {"if": {
+              "and": [
+                {"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":0},
+                {"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":100},
+                {"require":{"local":"VCP"},"eq":"APP"},
+                {"require":{"local":"TTS"},"ne":1}
+              ]}, "eq": 1,
+              "then": [
+                {"call_macro":"voice app check"}
+            ]},
             {"set":{"var":["L:TEMPAUDIOINHIBIT","number"]},"value":{"var":["L:AUDIOINHIBIT","number"]}}
         ]}
     ]},

@@ -1031,7 +1031,60 @@
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
     {"if": {"local":"VCP"}, "eq": "APP",
       "then": [
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"speak":"<pack:EN:17>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"set":{"local":"TTS"},"value":0}]}}
+        {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"set":{"local":"voice_app_lost"},"value":"no"},
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:19>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+    ]}
+  ],
+  "voice app lost": [
+    {"#comment":"The Mission Companion is not there (the voice server refused or dropped the connection, or never answered, see voice app check). Only for the app selection (L:AUDIOINHIBIT not 0 and not 100): the mission goes back to the last selection of the user, the wav voice pack (VCP = VOICEPACK, L:AUDIOINHIBIT 0 as the original thread does when the external program is off), so that the sound LVARs play the wavs, and tells the user once per simulator session (L:HMC_APP_POPUP_SHOWN). With a wav pack selected nothing is shown. The Companion that starts later writes L:AUDIOINHIBIT 1 again and the thread EXTERNAL XML AUDIO ENABLE connects it. Tester report 2026-10-18: Companion not connected, TTS 0 and AUDIOINHIBIT 1 left silence for every voice and sound."},
+    {"set":{"local":"TTS"},"value":0},
+    {"set":{"local":"voice_app_lost"},"value":"yes"},
+    {"if": {
+      "and": [
+        {"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":0},
+        {"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":100}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:AUDIOINHIBIT","number"]},"value":0},
+        {"set":{"var":["L:TEMPAUDIOINHIBIT","number"]},"value":0},
+        {"if": {"global":"VOICEPACK"}, "eq": null,
+          "then": [
+            {"set":{"local":"VCP"},"value":"ANDREW"}
+          ],"else": [
+            {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
+        ]},
+        {"call_macro":"voice app popup"}
+    ]}
+  ],
+  "voice app popup": [
+    {"#comment":"One popup for the whole simulator session (L:HMC_APP_POPUP_SHOWN, an LVAR: it survives a mission reload and is cleared when the flight is loaded again): the Companion is not connected. Called only by voice app lost, which runs for the app selection and never with a wav pack."},
+    {"if": {"var":["L:HMC_APP_POPUP_SHOWN","number"]}, "eq": 0,
+      "then": [
+        {"set":{"var":["L:HMC_APP_POPUP_SHOWN","number"]},"value":1},
+        {"set_modal": {
+            "title": "Mission Companion not connected",
+            "text": "The voice and sound app is selected but it is not running or not connected. The mission uses the wav voice pack you selected until the Companion is started: it then connects by itself. This message is shown once.",
+            "options": [
+              {"text":"OK","style":"primary","commands":[{"set":{"local":"voice_app_popup_ok"},"value":1}]}
+          ]}
+        }
+    ]}
+  ],
+  "voice app check": [
+    {"#comment":"Called when a message is requested (voice say) or by the thread every second while the voice code is APP and the voice server is not connected (TTS not 1): after 25 s from the connection attempt without an answer the connection counts as lost (voice app lost), in case the on_disconnected callback never comes."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"ne":1},
+        {"require":{"local":"voice_app_lost"},"ne":"yes"},
+        {"require":{"local":"VOICE_APP_T0"},"ne":null}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:MISSION_TIME","number"]}, "gt": {"add":[{"local":"VOICE_APP_T0"},25]},
+          "then": [
+            {"call_macro":"voice app lost"}
+        ]}
     ]}
   ],
   "voice dispatcher publish": [
@@ -1553,9 +1606,39 @@
                 {"speak":{"text":"<say:APR.CPL.{0}>","params":[{"local":"vb_sec"}]}},
                 {"speak":{"text":"<say:APR.DOC.{0}>","params":[{"local":"vb_amb"}]}},
                 {"speak":{"text":"<say:APR.CHF.{0}>","params":[{"local":"vb_plan"}]}},
+                {"#comment":"Information of the mission for the approach (uniform with the other briefings): more than one patient expected (HELOVICTIMS), fire at the scene (random_fire yes or forced)."},
+                {"if": {"local":"HELOVICTIMS"}, "gte": 2,
+                  "then": [
+                    {"speak":"<say:APR.MUL>"}
+                ]},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"random_fire"},"eq":"yes"},
+                    {"require":{"local":"random_fire"},"eq":"forced"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"speak":"<say:APR.FIR>"}
+                ]},
                 {"speak":"<say:APR.END>"}
             ]}
         ]}
+    ]}
+  ],
+  "voice midway briefing": [
+    {"#comment":"Two nautical miles from the meeting point of a midway meeting (L:MIDWAY 1: the ambulance brings the patient half way, the user accepted the point): the crew briefing for this kind of mission, like the ones of the organ transport and the patient transfer (pack EN APR.MID.*). Mission Companion only; chatter, skipped by the AUDIO_DECLUT levels 1 to 3."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice say","params":{"key":"APR.MID.PLT","declut":1}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":"APR.MID.DOC","declut":1}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":"APR.MID.CHF","declut":1}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":"APR.MID.END","declut":1}}
     ]}
   ],
   "voice heli rescuer briefing": [
@@ -1934,6 +2017,8 @@
             ]},
             {"speak":{"text":"<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"}]}}
         ]}
+      ],"else": [
+        {"call_macro":"voice app check"}
     ]}
   ],
   "voice mission class": [
@@ -2154,20 +2239,22 @@
   ],
   "voice patient died": [
     {"#comment":"A patient died (called by multipatient registry event DIED): the doctor says it and the pilot answers; after the impact of a hard landing the copilot asks first and the lines are about the impact (the death cause is not the clinical deterioration). Not more than one reading every 20 s. Pack EN DTH.*."},
-    {"if": {
-      "and": [
-        {"require":{"local":"VCP"},"eq":"APP"},
-        {"require":{"local":"TTS"},"eq":1}
-      ]}, "eq": 1,
+    {"#comment":"Sound for every death (user request 2026-10-18): the dead sound L:DEAD{VCP} always (the Companion plays SYS.DEAD, a wav pack its AND.dead.wav, as the hoist casualties do), then the lines: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
+    {"set":{"local":"vpd_now"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"if": {"local":"vpd_last"}, "eq": null,
       "then": [
-        {"set":{"local":"vpd_now"},"value":{"var":["L:MISSION_TIME","number"]}},
-        {"if": {"local":"vpd_last"}, "eq": null,
+        {"set":{"local":"vpd_last"},"value":-100}
+    ]},
+    {"if": {"local":"vpd_now"}, "gt": {"add":[{"local":"vpd_last"},20]},
+      "then": [
+        {"set":{"local":"vpd_last"},"value":{"local":"vpd_now"}},
+        {"set":{"var":["L:DEAD{local:VCP}","number"]},"value":{"add":[{"var":["L:DEAD{local:VCP}","number"]},1]}},
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
           "then": [
-            {"set":{"local":"vpd_last"},"value":-100}
-        ]},
-        {"if": {"local":"vpd_now"}, "gt": {"add":[{"local":"vpd_last"},20]},
-          "then": [
-            {"set":{"local":"vpd_last"},"value":{"local":"vpd_now"}},
             {"set":{"local":"vpd_cln"},"value":"yes"},
             {"if": {
               "and": [
@@ -2193,8 +2280,121 @@
                     {"call_macro":"voice say","params":{"key":"DTH.IMP.PLT"}}
                 ]}
             ]}}
+          ],"else": [
+            {"if": {
+              "and": [
+                {"require":{"local":"VCP"},"ne":"APP"},
+                {"require":{"var":["L:CPR","number"]},"ne":4}
+              ]}, "eq": 1,
+              "then": [
+                {"create_thread": {
+                  "commands": [
+                    {"sleep":3},
+                    {"set":{"var":["L:PAX3{local:VCP}7","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}7","number"]},1]}}
+                ]}}
+            ]}
         ]}
     ]}
+  ],
+  "wav unit arrival": [
+    {"#comment":"The crew tells that a ground unit arrived: the wavs of the spreadsheet docs/AND_voice_messages.xlsx that had no call site (user request 2026-10-18, triggers of its column E): PAX3 32 ambulance on scene (param unit ambulance), PAX3 34 police securing the scene (police), PAX3 35 fire service controlling a hazard (fire, only with a fire or smoke hazard: random_fire not no). The LVAR is the wav of the packs and, with the Companion, its pack message (same number). Only while the crew is on the way or on scene (MISSION_PHASE 5 to 7), once per unit in 120 s (an arrival is set by more than one parking branch)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"MISSION_PHASE"},"gte":5},
+        {"require":{"local":"MISSION_PHASE"},"lte":7}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"wua_now"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"if": {"param":"unit"}, "eq": "ambulance",
+          "then": [
+            {"if": {"local":"wua_t_ambulance"}, "eq": null,
+              "then": [
+                {"set":{"local":"wua_t_ambulance"},"value":-1000}
+            ]},
+            {"if": {
+              "or": [
+                {"require":{"local":"wua_now"},"gt":{"add":[{"local":"wua_t_ambulance"},120]}},
+                {"require":{"local":"wua_now"},"lt":{"local":"wua_t_ambulance"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"wua_t_ambulance"},"value":{"local":"wua_now"}},
+                {"set":{"var":["L:PAX3{local:VCP}32","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}32","number"]},1]}}
+            ]}
+        ]},
+        {"if": {"param":"unit"}, "eq": "police",
+          "then": [
+            {"if": {"local":"wua_t_police"}, "eq": null,
+              "then": [
+                {"set":{"local":"wua_t_police"},"value":-1000}
+            ]},
+            {"if": {
+              "or": [
+                {"require":{"local":"wua_now"},"gt":{"add":[{"local":"wua_t_police"},120]}},
+                {"require":{"local":"wua_now"},"lt":{"local":"wua_t_police"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"wua_t_police"},"value":{"local":"wua_now"}},
+                {"set":{"var":["L:PAX3{local:VCP}34","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}34","number"]},1]}}
+            ]}
+        ]},
+        {"if": {"param":"unit"}, "eq": "fire",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"local":"random_fire"},"ne":null},
+                {"require":{"local":"random_fire"},"ne":"no"}
+              ]}, "eq": 1,
+              "then": [
+                {"if": {"local":"wua_t_fire"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"wua_t_fire"},"value":-1000}
+                ]},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"wua_now"},"gt":{"add":[{"local":"wua_t_fire"},120]}},
+                    {"require":{"local":"wua_now"},"lt":{"local":"wua_t_fire"}}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"wua_t_fire"},"value":{"local":"wua_now"}},
+                    {"set":{"var":["L:PAX3{local:VCP}35","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}35","number"]},1]}}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "wav secondary rescue": [
+    {"#comment":"The secondary rescue of ambulance 2 starts (ambulance2 secondary rescue, spreadsheet column E): PAX3 33 a second ambulance is managing another patient, keep the landing area clear; six seconds later, with more than one casualty (HELOVICTIMS 2 or more), PAX3 37 additional patients remain on scene, await tasking before departure. Crew on the way, on scene or flying (MISSION_PHASE 5 to 9); the secondary rescue starts once per dispatch."},
+    {"if": {
+      "and": [
+        {"require":{"local":"MISSION_PHASE"},"gte":5},
+        {"require":{"local":"MISSION_PHASE"},"lte":9}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:PAX3{local:VCP}33","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}33","number"]},1]}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":6},
+            {"if": {"local":"HELOVICTIMS"}, "gte": 2,
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}37","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}37","number"]},1]}}
+            ]}
+        ]}}
+    ]}
+  ],
+  "patient death notice": [
+    {"#comment":"Warning for a patient death in any phase (user request 2026-10-18), purely informational: called by multipatient registry event DIED, so it covers the live physiology step whatever the path (clinical deterioration, impact). The dispatch page and the briefing page are closed first (set_dispatch_dialog 0, set_briefing_dialog 0): a message does not appear over them. Then the red message, the sound and the voice (voice patient died). With the Companion selected but not connected the mission falls back to the wav pack before the sound (voice app lost)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice app lost"}
+    ]},
+    {"set_dispatch_dialog":0},
+    {"set_briefing_dialog":0},
+    {"set_message":{"text":"Patient {0} has died.","params":[{"param":"slot"}],"color":"red"}},
+    {"call_macro":"voice patient died"}
   ],
   "voice hard landing": [
     {"#comment":"After a hard landing (threads landing hard, copilot line CPL 39): the pilot asks the crew to report, the copilot and the doctor (when aboard) answer. Pack EN HLD.*."},

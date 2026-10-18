@@ -4467,6 +4467,7 @@
                         {"set":{"local":"policeloadingenabled"},"value":"yes"},
                         {"set_message":{"text":"Crew will be transported to the accident site by police car"}},
                         {"call_macro":"ground ops checkpoint","params":{"id":"c45_message","detail":"Crew will be transported to the accident site by police car"}},
+                        {"call_macro":"voice say","params":{"key":"CRT.POL.OUT"}},
                         {"if": {"local":"police_lz_force_pickup"}, "eq": "yes",
                           "then": [
                             {"create_thread": {
@@ -4603,7 +4604,10 @@
                         {"set":{"local":"police_lz_transfer_state"},"value":"idle"},
                         {"set":{"local":"police_lz_pickup_ready"},"value":"no"},
                         {"set":{"local":"police_lz_force_pickup"},"value":"no"},
-                        {"call_macro":"police_ensure_second_officer_at_scene"},
+                        {"create_thread": {
+                          "commands": [
+                            {"call_macro":"police_ensure_second_officer_at_scene"}
+                        ]}},
                         {"sleep":[2,5]},
                         {"move_object":"pax3","to":{"bearing2":260,"dist":1.5,"heading":100,"object":"police"}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":1},
@@ -5190,6 +5194,7 @@
                                 {"set":{"local":"ambuloadingenabled"},"value":"yes"},
                                 {"set_message":{"text":"Crew and patient are returning to helicopter transported by ambulance"}},
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_message","detail":"Crew and patient are returning to helicopter transported by ambulance"}},
+                                {"call_macro":"voice say","params":{"key":"CRT.AMB.BCK"}},
                                 {"create_thread": {
                                   "commands": [
                                     {"call_macro":"ground ops checkpoint","params":{"id":"c45_wait","detail":"('local':'pax3onambulance')"}},
@@ -5505,6 +5510,7 @@
                             {"set":{"local":"policeloadingenabled"},"value":"return"},
                             {"set_message":{"text":"Crew will be transported back to the helicopter by police car"}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c45_message","detail":"Crew will be transported back to the helicopter by police car"}},
+                            {"call_macro":"voice say","params":{"key":"CRT.POL.BCK"}},
                             {"create_thread": {
                               "commands": [
                                 {"call_macro":"shared repeated block 031"}
@@ -5608,6 +5614,7 @@
                             {"set":{"local":"policeloadingenabled"},"value":"return"},
                             {"set_message":{"text":"Patient will be transported by ambulance. Doc will go with ambulance. We will meet him at destination hospital. Operator will be transported back to the helicopter by police car"}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c45_message","detail":"Patient will be transported by ambulance. Doc will go with ambulance. We will me"}},
+                            {"call_macro":"voice say","params":{"key":"CRT.POL.OPR"}},
                             {"create_thread": {
                               "commands": [
                                 {"call_macro":"shared repeated block 031"}
@@ -5922,6 +5929,7 @@
                         {"set":{"local":"policeloadingenabled"},"value":"yes"},
                         {"set_message":{"text":"Crew will be transported to the accident site by police car"}},
                         {"call_macro":"ground ops checkpoint","params":{"id":"c3_message","detail":"Crew will be transported to the accident site by police car"}},
+                        {"call_macro":"voice say","params":{"key":"CRT.POL.OUT"}},
                         {"if": {"local":"police_lz_force_pickup"}, "eq": "yes",
                           "then": [
                             {"create_thread": {
@@ -6056,7 +6064,10 @@
                         {"set":{"local":"police_lz_transfer_state"},"value":"idle"},
                         {"set":{"local":"police_lz_pickup_ready"},"value":"no"},
                         {"set":{"local":"police_lz_force_pickup"},"value":"no"},
-                        {"call_macro":"police_ensure_second_officer_at_scene"},
+                        {"create_thread": {
+                          "commands": [
+                            {"call_macro":"police_ensure_second_officer_at_scene"}
+                        ]}},
                         {"sleep":[2,5]},
                         {"move_object":"pax3","to":{"bearing2":260,"dist":1.5,"heading":100,"object":"police"}},
                         {"set":{"object":"pax3","var":"VAR 1"},"value":14},
@@ -6643,6 +6654,7 @@
                                 {"set":{"local":"ambuloadingenabled"},"value":"yes"},
                                 {"set_message":{"text":"Crew and patient are returning to helicopter transported by ambulance"}},
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_message","detail":"Crew and patient are returning to helicopter transported by ambulance"}},
+                                {"call_macro":"voice say","params":{"key":"CRT.AMB.BCK"}},
                                 {"create_thread": {
                                   "commands": [
                                     {"call_macro":"ground ops checkpoint","params":{"id":"c3_wait","detail":"('local':'pax3onambulance')"}},
@@ -6976,6 +6988,7 @@
                             {"set":{"local":"policeloadingenabled"},"value":"return"},
                             {"set_message":{"text":"Crew will be transported back to the helicopter by police car"}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c3_message","detail":"Crew will be transported back to the helicopter by police car"}},
+                            {"call_macro":"voice say","params":{"key":"CRT.POL.BCK"}},
                             {"create_thread": {
                               "commands": [
                                 {"call_macro":"shared repeated block 031"}
@@ -7059,6 +7072,7 @@
                             {"set":{"local":"policeloadingenabled"},"value":"return"},
                             {"set_message":{"text":"Patient will be transported by ambulance. Doc will go with ambulance. We will meet him at destination hospital. Operator will be transported back to the helicopter by police car"}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c3_message","detail":"Patient will be transported by ambulance. Doc will go with ambulance. We will me"}},
+                            {"call_macro":"voice say","params":{"key":"CRT.POL.OPR"}},
                             {"create_thread": {
                               "commands": [
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"pax3"}},
@@ -7695,7 +7709,10 @@
     {"if": {"local":"whobringpatient"}, "eq": "ambulance",
       "then": [
         {"sleep":[1,3]},
-        {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
+        {"if": {"local":"patientlife"}, "ne": "died",
+          "then": [
+            {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}}
+        ]},
         {"create_thread": {
           "commands": [
             {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":3,"speed":4}},
@@ -8328,7 +8345,10 @@
     ]},
     {"if": {"local":"whobringpatient"}, "eq": "ambulance",
       "then": [
-        {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}},
+        {"if": {"local":"patientlife"}, "ne": "died",
+          "then": [
+            {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}}
+        ]},
         {"create_thread": {
           "commands": [
             {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":270,"dist":1,"object":"MEET"}],"VAR1":3,"speed":4}},
@@ -8926,7 +8946,9 @@
         {"sleep":[2,5]},
         {"if": {"local":"patientlife"}, "ne": "died",
           "then": [
-            {"set":{"var":["L:{local:VCP}10","number"]},"value":{"add":[{"var":["L:{local:VCP}10","number"]},1]}}
+            {"set":{"var":["L:{local:VCP}10","number"]},"value":{"add":[{"var":["L:{local:VCP}10","number"]},1]}},
+            {"sleep":2},
+            {"set":{"var":["L:PAX3{local:VCP}10","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}10","number"]},1]}}
         ]},
         {"sleep":[1,5]},
         {"close_door":"pax_right"},
@@ -8952,7 +8974,8 @@
           "then": [
             {"set_message":{"text":"Patient is deceased, no transport is needed. Return to the skid landing area to pick up the cabin crew"}}
           ],"else": [
-            {"set_message":{"text":"Ground medical services will manage patient transport. Return to the skid landing area to pick up the cabin crew"}}
+            {"set_message":{"text":"Ground medical services will manage patient transport. Return to the skid landing area to pick up the cabin crew"}},
+            {"set":{"var":["L:{local:VCP}20","number"]},"value":{"add":[{"var":["L:{local:VCP}20","number"]},1]}}
         ]},
         {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":30,"dist":1.5,"object":"MEET"}],"VAR1":3,"speed":4}},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
@@ -8998,6 +9021,7 @@
     {"if": {"local":"whobringpatient"}, "eq": "ambudoc",
       "then": [
         {"set_message":{"text":"Ground medical services will transport the patient and doctor by ambulance"}},
+        {"set":{"var":["L:{local:VCP}65","number"]},"value":{"add":[{"var":["L:{local:VCP}65","number"]},1]}},
         {"call_macro":"shared repeated block 033"},
         {"set_hover_display":{"range":0}},
         {"sleep":2},
