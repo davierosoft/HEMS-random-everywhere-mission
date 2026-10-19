@@ -1,9 +1,61 @@
 {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.64"},
-    {"set":{"local":"DEV_VERSION"},"value":"1.2"},
-    {"set":{"local":"DEV_TYPE"},"value":"(BETA)"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.65"},
+    {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
+    {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
+    {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
+    {"set":{"local":"BUILD_MAJOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":0}}},
+    {"set":{"local":"BUILD_MINOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":1}}},
+    {"set":{"local":"BUILD_N"},"value":{"add":[{"multiply":[{"local":"BUILD_MAJOR"},1000]},{"local":"BUILD_MINOR"}]}},
     {"set":{"local":"MINIMUM_VERSION"},"value":479}
+  ],
+  "latest version token": [
+    {"#comment":"One word of the version that the CICERS server answers (param tok, may be empty): a word with exactly one dot is the build (169.70, or 1.2 of the old format) and becomes LATEST_DEV_VERSION and LATEST_BUILD_N (major * 1000 + minor); any other word is the type ((BETA), (ALPHA), (DEV)). The order of the words does not matter."},
+    {"if": {"param":"tok"}, "ne": null,
+      "then": [
+        {"set":{"param":"lvt_parts"},"value":{"string:split":{"param":"tok"},"delimiter":"."}},
+        {"if": {
+          "and": [
+            {"require":{"struct":{"param":"lvt_parts"},"path":"length"},"eq":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"LATEST_DEV_VERSION"},"value":{"param":"tok"}},
+            {"set":{"local":"LATEST_BUILD_N"},"value":{"add":[{"multiply":[{"parseInt":{"string:split":{"param":"tok"},"delimiter":".","index":0}},1000]},{"parseInt":{"string:split":{"param":"tok"},"delimiter":".","index":1}}]}}
+          ],"else": [
+            {"set":{"local":"LATEST_DEV_TYPE"},"value":{"param":"tok"}}
+        ]}
+    ]}
+  ],
+  "latest version parse": [
+    {"#comment":"Reads CICERS_RE_VERSION, the version that the CICERS server answers after the id (0.997 (BETA), 0.997 169.70 (ALPHA), the old 0.997 1.2 (BETA)): LATEST_RE_VERSION, LATEST_DEV_TYPE, LATEST_DEV_VERSION, LATEST_BUILD_N and UPD_SERVER = 1 only when the server offers something NEWER than this build (a higher mission version, or the same mission version and a higher build; a type (DEV) never counts, a server without a build number never counts). The briefing shows the notice from UPD_SERVER; the notice of the Mission Companion (L:HMC_MISSION_LATEST_MAJOR / MINOR) is independent."},
+    {"set":{"local":"LATEST_RE_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":0}},
+    {"set":{"local":"LATEST_DEV_VERSION"},"value":""},
+    {"set":{"local":"LATEST_DEV_TYPE"},"value":""},
+    {"set":{"local":"LATEST_BUILD_N"},"value":0},
+    {"set":{"local":"lvp_t1"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":1}},
+    {"set":{"local":"lvp_t2"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":2}},
+    {"set":{"local":"lvp_t3"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":3}},
+    {"call_macro":"latest version token","params":{"tok":{"local":"lvp_t1"}}},
+    {"call_macro":"latest version token","params":{"tok":{"local":"lvp_t2"}}},
+    {"call_macro":"latest version token","params":{"tok":{"local":"lvp_t3"}}},
+    {"set":{"local":"UPD_SERVER"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"LATEST_RE_VERSION"},"gt":{"local":"MISSION_VERSION"}},
+        {"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"UPD_SERVER"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"LATEST_RE_VERSION"},"eq":{"local":"MISSION_VERSION"}},
+        {"require":{"local":"LATEST_BUILD_N"},"gt":{"local":"BUILD_N"}},
+        {"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"UPD_SERVER"},"value":1}
+    ]}
   ],
   "custom settings enable": [
     {"#comment":"WARNING WARNING WARNING - THE ONLY MODIFIABLE FIELDS ARE THE NUMBERS LISTED BELOW WITHIN THE GIVEN RANGE. ANY CHANGE OUTSIDE WILL RESULT IN POTENTIAL MISSION CORRUPTION. BEFORE PROCEEDING, MAKE A BACKUP OF THIS FILE."},
@@ -120,9 +172,7 @@
                               ]},
                               {"set":{"local":"CICERS_SERVICESTUS"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":4}},
                               {"set":{"local":"CICERS_RE_VERSION"},"value":{"string:split":{"local":"APIIDALL"},"delimiter":",","index":5}},
-                              {"set":{"local":"LATEST_RE_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":0}},
-                              {"set":{"local":"LATEST_DEV_VERSION"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":1}},
-                              {"set":{"local":"LATEST_DEV_TYPE"},"value":{"string:split":{"local":"CICERS_RE_VERSION"},"delimiter":" ","index":2}},
+                              {"call_macro":"latest version parse"},
                               {"if": {"local":"CICERS_REMAINING_HM"}, "ne": "Unknown",
                                 "then": [
                                   {"set":{"local":"CICERS_REMAINING_H"},"value":{"string:split":{"local":"CICERS_REMAINING_HM"},"delimiter":"h","index":0}},

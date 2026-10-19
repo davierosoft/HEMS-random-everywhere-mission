@@ -70,6 +70,7 @@ const scripts = [
   'test-wav-extension.js',
   'test-comms-uniformity.js',
   'test-crew-ops-abort.js',
+  'test-update-notice.js',
   'audit-drive-speeds.js',
   'test-heli-rescuer-and-ambulance.js',
   'validate-user-changelog.js',

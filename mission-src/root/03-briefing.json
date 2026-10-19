@@ -35,16 +35,7 @@
       "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
       "commands": [{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],
       "align": "center",
-      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"LATEST_RE_VERSION"},"gt":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
-    },
-
-    {
-      "describe_icon": "newico",
-      "color": "green",
-      "description": "New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!",
-      "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
-      "commands": [{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],
-      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"LATEST_RE_VERSION"},"eq":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_VERSION"},"ne":{"local":"DEV_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}
     },
 
     {
@@ -54,16 +45,41 @@
       "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
       "commands": [{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],
       "align": "center",
-      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"LATEST_RE_VERSION"},"gt":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}
     },
 
     {
       "describe_icon": "newico",
       "color": "green",
-      "description": "New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!",
-      "params": [{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],
-      "commands": [{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],
-      "show_condition": {"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"LATEST_RE_VERSION"},"eq":{"local":"MISSION_VERSION"}},{"require":{"local":"LATEST_DEV_VERSION"},"ne":{"local":"DEV_VERSION"}},{"require":{"local":"LATEST_DEV_TYPE"},"ne":"(DEV)"}],"eq":1}
+      "description": "New R&E mission build {0}.{1} is available. Open the Mission Companion, Updates tab, and press Update now.",
+      "params": [{"var":["L:HMC_MISSION_LATEST_MAJOR","number"]},{"var":["L:HMC_MISSION_LATEST_MINOR","number"]}],
+      "align": "center",
+      "show_condition": {"and":[{"require":{"var":["L:HMC_MISSION_LATEST_MAJOR","number"]},"gt":{"local":"BUILD_MAJOR"}},{"require":{"local":"UPD_SERVER"},"ne":1}],"eq":1}
+    },
+
+    {
+      "describe_icon": "newico",
+      "color": "green",
+      "description": "New R&E mission build {0}.{1} is available. Open the Mission Companion, Updates tab, and press Update now.",
+      "params": [{"var":["L:HMC_MISSION_LATEST_MAJOR","number"]},{"var":["L:HMC_MISSION_LATEST_MINOR","number"]}],
+      "align": "center",
+      "show_condition": {"and":[{"require":{"var":["L:HMC_MISSION_LATEST_MAJOR","number"]},"eq":{"local":"BUILD_MAJOR"}},{"require":{"var":["L:HMC_MISSION_LATEST_MINOR","number"]},"gt":{"local":"BUILD_MINOR"}},{"require":{"local":"UPD_SERVER"},"ne":1}],"eq":1}
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "red",
+      "description": "Mission Companion: no voice for {0} main actor(s) (crew, dispatcher, ground ops, heli rescuer), the voices are stopped. Open the Companion, Actors and voices tab.",
+      "params": [{"var":["L:HMC_ACTORS_MISSING","number"]}],
+      "show_condition": {"require":{"var":["L:HMC_ACTORS_MISSING","number"]},"gt":0}
+    },
+
+    {
+      "describe_icon": "error",
+      "color": "orange",
+      "description": "Mission Companion: {0} main actor(s) had no voice and got a default one. Check the Companion, Actors and voices tab.",
+      "params": [{"var":["L:HMC_ACTORS_DEFAULTED","number"]}],
+      "show_condition": {"and":[{"require":{"var":["L:HMC_ACTORS_DEFAULTED","number"]},"gt":0},{"require":{"var":["L:HMC_ACTORS_MISSING","number"]},"eq":0}],"eq":1}
     },
 
     {

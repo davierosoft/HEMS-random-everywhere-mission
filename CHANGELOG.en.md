@@ -1,3 +1,11 @@
+## Release 0.997 169.65
+
+- Build numbering follows the release (DEV VERSION 169.xx, ALPHA), the new version notice only for a newer build (server or Mission Companion), messages for the actors without a voice
+- Numbering (user request 2026-10-19): `version check` derives DEV_VERSION from the second word of RELEASE_IDENTITY (169.65; release-workflow keeps writing only RELEASE_IDENTITY, one place to change), DEV_TYPE is (ALPHA) until the mission is stable, BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor) are the numbers the notice compares. Docs docs/architecture/UPDATE_NOTICE.md.
+- New version notice: the old rows showed the notice for ANY difference of the words of the CICERS answer (with the answer 0.997 (BETA) to everybody). New macros `latest version token` / `latest version parse` (called by `CICERS PING`) read the answer in any order (a word with one dot is the build, any other word the type) and set UPD_SERVER = 1 only for a higher mission version, or the same version and a higher build; (DEV) and an answer without a build never count. Four rows (AND only: two for the server, two for the Mission Companion) on the briefing, `homepage` and `techpage`; the Companion rows read L:HMC_MISSION_LATEST_MAJOR / MINOR (the newest published release, written by the program 0.36) and are not shown with the server rows.
+- Actors without a voice (user request 2026-10-19): the program 0.36 writes L:HMC_ACTORS_MISSING (main actors without a voice, voices stopped) and L:HMC_ACTORS_DEFAULTED (main actors that got a default voice); a red and an amber row in the message area of the briefing, `homepage`, `techpage`, the open AUDIO OPTIONS section of `settings` and `checklist home`; "No errors detected!" needs L:HMC_ACTORS_MISSING 0 on the two dispatch pages. The other pages show nothing.
+- Tests: tools/test-update-notice.js (check-workspace): numbering, the four rows on the three pages, no OR, the parser on 13 formats of the server answer, the variables of the program, the pages of the actor messages. Runtime PENDING (HPG parseInt / string:split with array length, LVARs read in show_condition).
+
 ## Release 0.997 169.64
 
 - Version check carries the release number

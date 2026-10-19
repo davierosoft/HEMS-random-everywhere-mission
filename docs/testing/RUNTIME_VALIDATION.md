@@ -634,3 +634,9 @@ Static: `tools/test-crew-ops-abort.js`. Runtime, with the Mission Companion 0.35
 6. SAR with a ring: the briefing one mile before the ring; without a ring (route mission 65): just after the take-off. Check the kind, the radius, the vehicle colour and model (65 to 67), the method, the clock positions, 1000 ft and 80 knots with the spotting range.
 7. "SAR" is spelled, in the briefing and in "The SAR area starts here".
 8. Skid landing with a light helicopter (low fuel, no kit) on the new MSFS update: the landing on the skids is recognised with the collective held at about 27.
+
+## Update notice and build numbering (2026-10-19, pending)
+
+- Open the briefing with the server answering `0.997 (BETA)`: no "New R&E" row. With `0.997 169.70 (ALPHA)` (or `0.997 (ALPHA) 169.70`) and a mission 169.64: the row appears with the links; with `169.9`, `169.64` or an older build it does not.
+- Publish a mission release newer than the one that runs and start the Mission Companion (or press Check for updates): the row "New R&E mission build 169.xx is available. Open the Mission Companion..." appears in the briefing; it disappears after Update now and a refresh of the tablet. Without the Companion running it never appears.
+- The briefing title shows `0.997(ALPHA)169.xx` and the tablet pages `(0.997 (ALPHA) 169.xx)`.
