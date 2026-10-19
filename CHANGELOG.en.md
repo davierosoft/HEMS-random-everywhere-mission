@@ -1,3 +1,8 @@
+## Release 0.997 169.66
+
+- Version check carries the release identity
+- Dispatch read back by the crew when boarding with a dispatch pending, hangar and deboarding greetings and small talk, weather in the briefing, the hoist crew returns before the ambulance notice, hoist progress bar, pack EN 21
+
 ## Release 0.997 169.65
 
 - Build numbering follows the release (DEV VERSION 169.xx, ALPHA), the new version notice only for a newer build (server or Mission Companion), messages for the actors without a voice

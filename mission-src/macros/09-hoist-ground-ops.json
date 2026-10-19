@@ -481,6 +481,15 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"set":{"local":"HR_HOIST_CREW_DOWN"},"value":1},
     {"call_macro":"ground ops checkpoint","params":{"id":"hoist_crew_down"}},
+    {"#comment":"User question of 2026-10-19 (where is the progress bar with the hoist?): the progress monitor (L:SATISFACTION and the stages of the dispatch page) was started only by the landing operations. Started here when the crew is down; it ends when the crew is hoisted back (L:HOISTED 1) or the dispatch ends."},
+    {"set":{"var":["L:SATISFACTION","number"]},"value":0},
+    {"set":{"local":"ops_progress_active"},"value":1},
+    {"set":{"local":"ops_progress_stage"},"value":"CREW DEPLOYMENT"},
+    {"set":{"local":"ops_progress_warning"},"value":0},
+    {"set":{"local":"ops_progress_stalled_seconds"},"value":0},
+    {"set":{"local":"ops_progress_last"},"value":0},
+    {"set":{"local":"ops_progress_visit_plan"},"value":0},
+    {"call_macro":"on-site operations progress monitor"},
     {"sleep":[2,3]},
     {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
     {"set_message":{"text":"hoist is running up"}},
@@ -627,9 +636,16 @@
       "then": [
         {"#comment":"The ambulance crew operations end with L:STEP above 6. An ambulance without a patient to transport (assigned to HEMS) never reaches that step: it clears L:AMBUSTRETCHERFULL when it stands down, so the wait ends then too."},
         {"set_message":{"text":"Waiting for ambulance crew operations to be completed, please wait..."}},
+        {"set":{"local":"hoist_amb_wait"},"value":"no"},
+        {"create_thread": {
+          "commands": [
+            {"sleep":480},
+            {"set":{"local":"hoist_amb_wait"},"value":"yes"}
+        ]}},
         {"or": [
           {"wait_for":{"var":["L:STEP","number"]},"gt":6},
-          {"wait_for":{"var":["L:AMBUSTRETCHERFULL","number"]},"eq":0}
+          {"wait_for":{"var":["L:AMBUSTRETCHERFULL","number"]},"eq":0},
+          {"wait_for":{"local":"hoist_amb_wait"},"eq":"yes"}
         ]}
     ]},
     {"if": {"local":"HEMS_PATIENT_LIFESCORE"}, "lt": 18,

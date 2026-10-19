@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.65",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.66",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.65"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.66"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -686,25 +686,33 @@
         {"drive_object":{"name":"copilot1","to":[{"closest":[{"bearing":330,"dist":9},{"bearing":300,"dist":7},{"bearing":270,"dist":5},{"bearing":240,"dist":7},{"bearing":210,"dist":9}],"to":"copilot1"}],"VAR1":16,"speed":5}},
         {"if": {"local":"BOARDING_MAINTENANCE_PRESENCE"}, "eq": "yes",
           "then": [
-            {"if": {
-              "or": [
-                {"require":{"global":"AUDIO_DECLUT"},"eq":0},
-                {"require":{"global":"AUDIO_DECLUT"},"gt":3}
-              ]}, "eq": 1,
+            {"if": {"local":"VCP"}, "eq": "APP",
               "then": [
-                {"set":{"var":["L:FRA{local:VCP}7","number"]},"value":{"add":[{"var":["L:FRA{local:VCP}7","number"]},1]}}
+                {"call_macro":"voice hangar greeting"}
+              ],"else": [
+                {"if": {
+                  "or": [
+                    {"require":{"global":"AUDIO_DECLUT"},"eq":0},
+                    {"require":{"global":"AUDIO_DECLUT"},"gt":3}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"var":["L:FRA{local:VCP}7","number"]},"value":{"add":[{"var":["L:FRA{local:VCP}7","number"]},1]}}
+                ]}
             ]}
         ]},
         {"drive_object":{"name":"copilot1","to":["lcocdoor"],"VAR1":16,"speed":4}},
         {"if": {"local":"BOARDING_MAINTENANCE_PRESENCE"}, "eq": "yes",
           "then": [
-            {"if": {
-              "or": [
-                {"require":{"global":"AUDIO_DECLUT"},"eq":0},
-                {"require":{"global":"AUDIO_DECLUT"},"gt":3}
-              ]}, "eq": 1,
+            {"if": {"local":"VCP"}, "ne": "APP",
               "then": [
-                {"set":{"var":["L:CPL{local:VCP}23","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}23","number"]},1]}}
+                {"if": {
+                  "or": [
+                    {"require":{"global":"AUDIO_DECLUT"},"eq":0},
+                    {"require":{"global":"AUDIO_DECLUT"},"gt":3}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"var":["L:CPL{local:VCP}23","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}23","number"]},1]}}
+                ]}
             ]}
         ]},
         {"set":{"object":"copilot1","var":"VAR 1"},"value":14},
@@ -9464,6 +9472,15 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
     {"set":{"local":"HR_HOIST_CREW_DOWN"},"value":1},
     {"call_macro":"ground ops checkpoint","params":{"id":"hoist_crew_down"}},
+    {"#comment":"User question of 2026-10-19 (where is the progress bar with the hoist?): the progress monitor (L:SATISFACTION and the stages of the dispatch page) was started only by the landing operations. Started here when the crew is down; it ends when the crew is hoisted back (L:HOISTED 1) or the dispatch ends."},
+    {"set":{"var":["L:SATISFACTION","number"]},"value":0},
+    {"set":{"local":"ops_progress_active"},"value":1},
+    {"set":{"local":"ops_progress_stage"},"value":"CREW DEPLOYMENT"},
+    {"set":{"local":"ops_progress_warning"},"value":0},
+    {"set":{"local":"ops_progress_stalled_seconds"},"value":0},
+    {"set":{"local":"ops_progress_last"},"value":0},
+    {"set":{"local":"ops_progress_visit_plan"},"value":0},
+    {"call_macro":"on-site operations progress monitor"},
     {"sleep":[2,3]},
     {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
     {"set_message":{"text":"hoist is running up"}},
@@ -9610,9 +9627,16 @@
       "then": [
         {"#comment":"The ambulance crew operations end with L:STEP above 6. An ambulance without a patient to transport (assigned to HEMS) never reaches that step: it clears L:AMBUSTRETCHERFULL when it stands down, so the wait ends then too."},
         {"set_message":{"text":"Waiting for ambulance crew operations to be completed, please wait..."}},
+        {"set":{"local":"hoist_amb_wait"},"value":"no"},
+        {"create_thread": {
+          "commands": [
+            {"sleep":480},
+            {"set":{"local":"hoist_amb_wait"},"value":"yes"}
+        ]}},
         {"or": [
           {"wait_for":{"var":["L:STEP","number"]},"gt":6},
-          {"wait_for":{"var":["L:AMBUSTRETCHERFULL","number"]},"eq":0}
+          {"wait_for":{"var":["L:AMBUSTRETCHERFULL","number"]},"eq":0},
+          {"wait_for":{"local":"hoist_amb_wait"},"eq":"yes"}
         ]}
     ]},
     {"if": {"local":"HEMS_PATIENT_LIFESCORE"}, "lt": 18,
@@ -29860,7 +29884,10 @@
                         ]}
                     ]}
                 ]},
-                {"call_macro":"voice ground update"},
+                {"if": {"var":["L:MISSION_HOIST","number"]}, "eq": 0,
+                  "then": [
+                    {"call_macro":"voice ground update"}
+                ]},
                 {"sleep":2}
             ]}
         ]}}
@@ -35084,6 +35111,7 @@
           "commands": [
             {"set_message":{"text":"Waiting for crew to board, then set route for homebase"}},
             {"wait_for":{"var":["L:HOISTED","number"]},"eq":1},
+            {"call_macro":"dispatch ambulance notice"},
             {"set_hover_display":{"range":0}},
             {"set":{"var":["L:SAVED","number"]},"value":1},
             {"set":{"local":"MISSION_PHASE"},"value":10},
@@ -43422,6 +43450,11 @@
         {"if": {"var":["SIM ON GROUND","bool"]}, "eq": 1,
           "then": [
             {"set":{"local":"helicopter_on_scene"},"value":1}
+        ]},
+        {"#comment":"A hoist or skid operation (L:MISSION_HOIST not 0) has the crew out on the scene even when the helicopter hovers: the dispatch is not cancelled until the crew is back (flight log of 2026-10-19: the dispatch was cancelled while the doctor was still down)."},
+        {"if": {"var":["L:MISSION_HOIST","number"]}, "ne": 0,
+          "then": [
+            {"set":{"local":"helicopter_on_scene"},"value":1}
         ]}
     ]},
     {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
@@ -44134,7 +44167,10 @@
                     {"set":{"var":["L:SARA{local:VCP}4","number"]},"value":{"add":[{"var":["L:SARA{local:VCP}4","number"]},1]}},
                     {"sleep":5.5}
                 ]},
-                {"set":{"var":["L:PLT{local:VCP}8","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}8","number"]},1]}}
+                {"call_macro":"voice deboarding chat","params":{"stage":1}},
+                {"set":{"var":["L:PLT{local:VCP}8","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}8","number"]},1]}},
+                {"sleep":2.5},
+                {"call_macro":"voice deboarding chat","params":{"stage":2}}
             ]}
         ]},
         {"drive_object":{"name":"pilot","to":[{"bearing":25,"dist":4},{"bearing":15,"dist":15}],"VAR1":16,"speed":5}},
@@ -67152,6 +67188,8 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambumedic2","target":"ambulance2","state":"loaded_stretcher_and_medic_destroyed"}},
         {"set":{"object":"ambulance2","var":"VAR 2"},"value":0}
     ]},
+    {"#comment":"Flight log of 2026-10-19: the doctor of a hoist operation never went up. HOISTING waits (Waiting for ambulance crew operations to be completed) until L:STEP is above 6 or L:AMBUSTRETCHERFULL is 0; with the live registry nothing set either, so the wait never ended. The patient is loaded: the stretcher is not full any more."},
+    {"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0},
     {"call_macro":"Query closest hospital unrelated for stretcher"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"multipatient registry live ground load","state":"wait_has_location.unhospital_eq_1"}},
     {"wait_for":{"has_location":"unhospital"},"eq":1},
@@ -85415,7 +85453,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:20>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:21>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice new shift": [
@@ -85460,19 +85498,7 @@
             ]},
             {"call_macro":"voice objective"}
           ],"else": [
-            {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"vrd_who"},
-            {"if": {"param":"vrd_who"}, "gt": 0,
-              "then": [
-                {"set":{"local":"vrd_rb"},"value":1},
-                {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}><radio:off>","params":[{"param":"vrd_who"}]}},
-                {"speak":{"text":"{0}<say:DSA.RB.A>","params":[{"local":"vrd_tag"}]}},
-                {"speak":{"text":"{0}<text:DSC.{1}.{2}>{3}","params":[{"local":"vrd_tag"},{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
-                {"if": {"local":"vrd_veh"}, "eq": 1,
-                  "then": [
-                    {"speak":{"text":"{0}<text:DSC.VEH>{1}//{2}//{3}","params":[{"local":"vrd_tag"},{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
-                ]},
-                {"speak":{"text":"{0}<say:DSA.RB.Q>","params":[{"local":"vrd_tag"}]}}
-            ]}
+            {"call_macro":"voice dispatch readback"}
         ]},
         {"sleep":1},
         {"if": {"local":"vda_pending"}, "eq": "yes",
@@ -85608,7 +85634,9 @@
                     {"sleep":0.4},
                     {"set":{"var":["L:PLT{local:VCP}50","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}50","number"]},1]}},
                     {"sleep":0.4}
-                ]}
+                ]},
+                {"sleep":2.5},
+                {"call_macro":"voice weather brief"}
             ]}}
         ]}
     ]}
@@ -86989,6 +87017,40 @@
       "then": [
         {"return":1}
     ]},
+    {"#comment":"Flight log of 2026-10-19: the dispatch arrived with nobody aboard (the program drops the lines of the crew then), the crew boarded a minute later and nobody said a word. The triage now waits until a crew member is aboard (it gives up after 30 minutes, with a newer dispatch or when the dispatch is accepted), then reads a dispatch heard with the radio off back to the crew (voice dispatch readback), then the questions follow."},
+    {"set":{"param":"tr_who"},"value":0},
+    {"set":{"param":"tr_w"},"value":0},
+    {"while": {"param":"tr_who"}, "eq": 0,
+      "do": [
+        {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"tr_who"},
+        {"if": {"param":"tr_who"}, "eq": 0,
+          "then": [
+            {"sleep":2},
+            {"set":{"param":"tr_w"},"value":{"add":[{"param":"tr_w"},2]}},
+            {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
+              "then": [
+                {"return":1}
+            ]},
+            {"if": {"local":"vda_open"}, "ne": "yes",
+              "then": [
+                {"return":1}
+            ]},
+            {"if": {"param":"tr_w"}, "gte": 1800,
+              "then": [
+                {"return":1}
+            ]}
+        ]}
+    ]},
+    {"sleep":1.5},
+    {"if": {"local":"vrd_rb"}, "ne": 1,
+      "then": [
+        {"call_macro":"voice radio ready","result":"tr_cold"},
+        {"if": {"param":"tr_cold"}, "eq": 0,
+          "then": [
+            {"call_macro":"voice dispatch readback"},
+            {"sleep":1.5}
+        ]}
+    ]},
     {"if": {"local":"vrd_rb"}, "ne": 1,
       "then": [
         {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
@@ -86996,6 +87058,7 @@
     ]},
     {"set":{"param":"tr_c"},"value":0},
     {"set":{"param":"tr_n"},"value":0},
+    {"set":{"param":"tr_q"},"value":0},
     {"if": {"param":"second"}, "eq": 1,
       "then": [
         {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lte": {"global":"LOWFUELTHRSLD"},
@@ -87038,6 +87101,26 @@
         {"if": {"local":"vda_open"}, "ne": "yes",
           "then": [
             {"set":{"param":"tr_s"},"value":1}
+        ]},
+        {"#comment":"With the radio off (a dispatch that stays only on the tablet) the crew asks the pilot again once, a minute after the question (user, flight log of 2026-10-19: the crew sat aboard for four minutes with the dispatch waiting and said nothing)."},
+        {"if": {
+          "and": [
+            {"require":{"param":"tr_s"},"eq":0},
+            {"require":{"param":"tr_q"},"eq":0},
+            {"require":{"param":"tr_t"},"gte":60}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice radio ready","result":"tr_qr"},
+            {"if": {"param":"tr_qr"}, "eq": 0,
+              "then": [
+                {"set":{"param":"tr_q"},"value":1},
+                {"if": {"param":"tr_c"}, "eq": 0,
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":"DSA.ASKP"}}
+                  ],"else": [
+                    {"call_macro":"voice say","params":{"key":"DSA.ASKP.B"}}
+                ]}
+            ]}
         ]},
         {"#comment":"The dispatcher asks for the confirmation once, a minute after the question and as soon as the radio works (a dispatch read while the helicopter was cold stays only on the tablet until the radio is on)."},
         {"if": {
@@ -89600,6 +89683,308 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"UPD_SERVER"},"value":1}
+    ]}
+  ],
+  "voice dispatch readback": [
+    {"#comment":"The readback of a dispatch heard with the radio off (user rules of 2026-10-18): a crew member aboard, or partly aboard, reads the message back to the crew by voice and asks what to do. Called by voice read dispatch when the dispatch arrives with somebody aboard, and by voice dispatch triage run when the crew boards later (flight log of 2026-10-19: the dispatch arrived with nobody aboard, the crew boarded and nobody said anything). Uses vrd_text and vrd_veh of voice read dispatch; sets vrd_rb 1 once it has been said."},
+    {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"vdr_who"},
+    {"if": {"param":"vdr_who"}, "gt": 0,
+      "then": [
+        {"set":{"local":"vrd_rb"},"value":1},
+        {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}><radio:off>","params":[{"param":"vdr_who"}]}},
+        {"speak":{"text":"{0}<say:DSA.RB.A>","params":[{"local":"vrd_tag"}]}},
+        {"speak":{"text":"{0}<text:DSC.{1}.{2}>{3}","params":[{"local":"vrd_tag"},{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+        {"if": {"local":"vrd_veh"}, "eq": 1,
+          "then": [
+            {"speak":{"text":"{0}<text:DSC.VEH>{1}//{2}//{3}","params":[{"local":"vrd_tag"},{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+        ]},
+        {"speak":{"text":"{0}<say:DSA.RB.Q>","params":[{"local":"vrd_tag"}]}}
+    ]}
+  ],
+  "voice day period": [
+    {"#comment":"The part of the day of the simulator (its local time): 1 morning (05:00 to 11:59), 2 afternoon (12:00 to 17:59), 3 evening (18:00 to 04:59). Used to say good morning, good afternoon or good evening."},
+    {"set":{"param":"vdp_s"},"value":{"var":["E:LOCAL TIME","seconds"]}},
+    {"if": {
+      "and": [
+        {"require":{"param":"vdp_s"},"gte":18000},
+        {"require":{"param":"vdp_s"},"lt":43200}
+      ]}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"vdp_s"},"gte":43200},
+        {"require":{"param":"vdp_s"},"lt":64800}
+      ]}, "eq": 1,
+      "then": [
+        {"return":2}
+    ]},
+    {"return":3}
+  ],
+  "voice hangar greeting": [
+    {"#comment":"User request of 2026-10-19 (flight log: the technician said one 'Hi all', the copilot 'Good morning!' at night, and that was all): at the hangar the technician, the copilot and the pilot greet each other by the hour of the simulator and by name (GRT.TEC / GRT.CPL / GRT.PLT with the suffix M morning, A afternoon, E evening), then a few words of the circumstances (CHT.TEC, CHT.CPL) and the farewell of the technician (CHT.TEC2). Only with the Mission Companion (voice code APP and the voice server connected), and with the chatter levels of the original lines (AUDIO_DECLUT 0 or above 3). The wav packs keep FRA 7 and CPL 23. Called by the boarding of the copilot while the technician is present."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {
+          "or": [
+            {"require":{"global":"AUDIO_DECLUT"},"eq":0},
+            {"require":{"global":"AUDIO_DECLUT"},"gt":3}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice weather class","result":"vhg_wc"},
+            {"set":{"local":"vhg_ws"},"value":{"local":"vw_sfx"}},
+            {"call_macro":"voice day period","result":"vhg_p"},
+            {"set":{"local":"vhg_k"},"value":"E"},
+            {"if": {"param":"vhg_p"}, "eq": 1,
+              "then": [
+                {"set":{"local":"vhg_k"},"value":"M"}
+            ]},
+            {"if": {"param":"vhg_p"}, "eq": 2,
+              "then": [
+                {"set":{"local":"vhg_k"},"value":"A"}
+            ]},
+            {"create_thread": {
+              "commands": [
+                {"sleep":0.5},
+                {"speak":{"text":"<say:GRT.TEC.{0}>","params":[{"local":"vhg_k"}]}},
+                {"sleep":2.5},
+                {"speak":{"text":"<say:GRT.CPL.{0}>","params":[{"local":"vhg_k"}]}},
+                {"sleep":2.5},
+                {"speak":{"text":"<say:GRT.PLT.{0}>","params":[{"local":"vhg_k"}]}},
+                {"sleep":3},
+                {"if": {"local":"vhg_ws"}, "ne": "",
+                  "then": [
+                    {"speak":{"text":"<say:WXH.{0}>","params":[{"local":"vhg_ws"}]}},
+                    {"sleep":3},
+                    {"speak":{"text":"<say:WXC.{0}>","params":[{"local":"vhg_ws"}]}},
+                    {"sleep":3}
+                ]},
+                {"speak":"<say:CHT.TEC>"},
+                {"sleep":2.5},
+                {"speak":"<say:CHT.CPL>"},
+                {"sleep":2.5},
+                {"speak":"<say:CHT.TEC2>"}
+            ]}}
+        ]}
+    ]}
+  ],
+  "voice weather class": [
+    {"#comment":"User request of 2026-10-19: the weather where the helicopter is, for the remarks of the crew and the weather of the briefing. Sets vw_dir (wind direction in tens of degrees), vw_spd (wind knots), vw_tmp (temperature in Celsius), vw_vis (visibility in km, 10 means 10 or more), vw_sfx (the suffix of the pack keys) and returns the class: 1 light rain (RL), 2 heavy rain (RH, rate 3 or more), 3 snow (SN), 4 hot from 30 C (HT), 5 cold up to 4 C (CD), 6 freezing up to -5 C (FZ), 7 fog under 3 km (FG), 8 wind from 20 knots (WD), 9 fine weather (FR: 12 to 26 C, wind under 12 knots, visibility 9 km or more), 0 nothing to say. The first class that applies wins, in this order. AMBIENT PRECIP STATE: 2 none, 4 rain, 8 snow. The thresholds of the precipitation rate and of the classes are to tune in the simulator."},
+    {"set":{"local":"vw_precip"},"value":{"var":["AMBIENT PRECIP STATE","number"]}},
+    {"set":{"local":"vw_rate"},"value":{"var":["AMBIENT PRECIP RATE","number"]}},
+    {"set":{"local":"vw_tmp"},"value":{"floor":{"add":[{"var":["AMBIENT TEMPERATURE","celsius"]},0.5]}}},
+    {"set":{"local":"vw_spd"},"value":{"floor":{"add":[{"var":["AMBIENT WIND VELOCITY","knots"]},0.5]}}},
+    {"set":{"local":"vw_dir"},"value":{"multiply":[{"floor":{"divide":[{"add":[{"var":["AMBIENT WIND DIRECTION","degrees"]},5]},10]}},10]}},
+    {"if": {"local":"vw_dir"}, "eq": 0,
+      "then": [
+        {"set":{"local":"vw_dir"},"value":360}
+    ]},
+    {"set":{"local":"vw_vis"},"value":{"floor":{"divide":[{"var":["AMBIENT VISIBILITY","meters"]},1000]}}},
+    {"if": {"local":"vw_vis"}, "gt": 10,
+      "then": [
+        {"set":{"local":"vw_vis"},"value":10}
+    ]},
+    {"set":{"local":"vw_code"},"value":0},
+    {"if": {"local":"vw_precip"}, "eq": 4,
+      "then": [
+        {"set":{"local":"vw_code"},"value":1},
+        {"if": {"local":"vw_rate"}, "gte": 3,
+          "then": [
+            {"set":{"local":"vw_code"},"value":2}
+        ]}
+    ]},
+    {"if": {"local":"vw_precip"}, "eq": 8,
+      "then": [
+        {"set":{"local":"vw_code"},"value":3}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vw_code"},"eq":0},
+        {"require":{"local":"vw_tmp"},"gte":30}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_code"},"value":4}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vw_code"},"eq":0},
+        {"require":{"local":"vw_tmp"},"lte":-5}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_code"},"value":6}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vw_code"},"eq":0},
+        {"require":{"local":"vw_tmp"},"lte":4}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_code"},"value":5}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vw_code"},"eq":0},
+        {"require":{"local":"vw_vis"},"lt":3}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_code"},"value":7}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vw_code"},"eq":0},
+        {"require":{"local":"vw_spd"},"gte":20}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_code"},"value":8}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"vw_code"},"eq":0},
+        {"require":{"local":"vw_tmp"},"gte":12},
+        {"require":{"local":"vw_tmp"},"lte":26},
+        {"require":{"local":"vw_spd"},"lt":12},
+        {"require":{"local":"vw_vis"},"gte":9}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_code"},"value":9}
+    ]},
+    {"set":{"local":"vw_sfx"},"value":""},
+    {"if": {"local":"vw_code"}, "eq": 1,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"RL"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 2,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"RH"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 3,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"SN"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 4,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"HT"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 5,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"CD"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 6,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"FZ"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 7,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"FG"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 8,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"WD"}
+    ]},
+    {"if": {"local":"vw_code"}, "eq": 9,
+      "then": [
+        {"set":{"local":"vw_sfx"},"value":"FR"}
+    ]},
+    {"return":{"local":"vw_code"}}
+  ],
+  "voice weather brief": [
+    {"#comment":"The copilot reads the weather in the mission briefing (WXB.<class>, with the wind direction and speed, the temperature and the visibility; WXB.OK when nothing is remarkable). Called at the end of the briefing thread, which already follows the chatter levels. Only with the Mission Companion."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice weather class","result":"vwb_c"},
+        {"set":{"local":"vwb_k"},"value":"OK"},
+        {"if": {"param":"vwb_c"}, "gt": 0,
+          "then": [
+            {"set":{"local":"vwb_k"},"value":{"local":"vw_sfx"}}
+        ]},
+        {"speak":{"text":"<say:WXB.{0}>{1}//{2}//{3}//{4}","params":[{"local":"vwb_k"},{"local":"vw_dir"},{"local":"vw_spd"},{"local":"vw_tmp"},{"local":"vw_vis"}]}}
+    ]}
+  ],
+  "voice deboarding chat": [
+    {"#comment":"At the hangar after the flight, when the technician is there (param stage): 1 = a remark about the weather (WXD.<class>) and the answer of the copilot (WXC.<class>), before the thanks of the pilot (PLT 8); 2 = after it, the farewell of the technician by the hour of the simulator (DEB.BYE.TEC.M, A, E) and the answer of the pilot (DEB.BYE.PLT). Called by deboarding inside the chatter levels of its original lines. Only with the Mission Companion."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"param":"stage"}, "eq": 1,
+          "then": [
+            {"call_macro":"voice weather class","result":"vdc_w"},
+            {"if": {"param":"vdc_w"}, "gt": 0,
+              "then": [
+                {"speak":{"text":"<say:WXD.{0}>","params":[{"local":"vw_sfx"}]}},
+                {"sleep":3.5},
+                {"speak":{"text":"<say:WXC.{0}>","params":[{"local":"vw_sfx"}]}},
+                {"sleep":3.5}
+            ]}
+        ]},
+        {"if": {"param":"stage"}, "eq": 2,
+          "then": [
+            {"call_macro":"voice day period","result":"vdc_p"},
+            {"set":{"local":"vdc_k"},"value":"E"},
+            {"if": {"param":"vdc_p"}, "eq": 1,
+              "then": [
+                {"set":{"local":"vdc_k"},"value":"M"}
+            ]},
+            {"if": {"param":"vdc_p"}, "eq": 2,
+              "then": [
+                {"set":{"local":"vdc_k"},"value":"A"}
+            ]},
+            {"speak":{"text":"<say:DEB.BYE.TEC.{0}>","params":[{"local":"vdc_k"}]}},
+            {"sleep":3.5},
+            {"speak":"<say:DEB.BYE.PLT>"},
+            {"sleep":2}
+        ]}
+    ]}
+  ],
+  "dispatch ambulance notice": [
+    {"#comment":"User request of 2026-10-19: when the patient goes by ambulance after a hoist operation the crew comes back first, then the dispatcher informs that the dispatch is closed (the ambulance has the patient, return to base). Called when the crew is aboard again (user destination menu, ambulance case). Same texts as cancel HEMS dispatch for the ambulance reason, without ending the dispatch: the end of the mission goes on as before. Nothing when the dispatch was already cancelled."},
+    {"if": {"local":"dispatch_cancellation_pending"}, "ne": "done",
+      "then": [
+        {"call_macro":"callsign word"},
+        {"set":{"local":"dispatch_cancellation_pending"},"value":"done"},
+        {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - the ambulance is transporting the patient. Return to base."},
+        {"set":{"local":"Dispatcher_text"},"value":"Ambulance has loaded the patient and is on the way to the hospital. {local:cs_word} not required, dispatch cancelled. Return to base."},
+        {"set_message":{"text":"The ambulance has the patient and is taking them to the hospital. {local:cs_word} intervention is no longer required; dispatch cancelled."}},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"}
+            }
+          }
+        },
+        {"set":{"local":"Dispatcher_text"},"value":""},
+        {"call_macro":"UpdateRescueTrack"},
+        {"set":{"var":["L:PLT{local:VCP}46","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}46","number"]},1]}},
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"AMB.CAN.DSP"}}
+        ]}
     ]}
   ]
 },

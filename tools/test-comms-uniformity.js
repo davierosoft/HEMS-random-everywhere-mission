@@ -35,11 +35,11 @@ if (fs.existsSync(packPath)) {
     const block = pack.slice(pack.indexOf(`<message key="${key}"`), pack.indexOf('</message>', pack.indexOf(`<message key="${key}"`)));
     assert.equal(count(block, '<o>'), 6, `${key} has six options`);
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="20"/.test(pack), 'the base pack EN is version 20');
+  assert.ok(/<voicepack name="EN"[^>]* version="21"/.test(pack), 'the base pack EN is version 21');
   const dePath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml');
   if (fs.existsSync(dePath)) {
     const de = fs.readFileSync(dePath, 'utf8');
-    assert.ok(/<voicepack name="DE"[^>]* version="8" basever="20"/.test(de), 'the pack DE is version 8 on the base 20');
+    assert.ok(/<voicepack name="DE"[^>]* version="9" basever="21"/.test(de), 'the pack DE is version 9 on the base 21');
     for (const key of ['CRT.POL.OUT', 'CRT.POL.BCK', 'CRT.AMB.BCK', 'CRT.POL.OPR', 'CRT.WALK', 'MID.SET', 'MID.HND', 'TRF.HND', 'ORG.PCK', 'APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END', 'APR.MUL', 'APR.FIR']) assert.ok(de.includes(`<message key="${key}"`), `${key} is translated in the pack DE`);
   }
 }
@@ -95,5 +95,64 @@ const cpr = text(macros['CPR']);
 assert.ok(cpr.includes('"L:MISSION_HOIST","number"]},"ne":0') && cpr.includes('"L:PAX3{local:VCP}17"'), 'CPR in progress is said also on the ground in the hoist and skid operations');
 assert.ok(/"local":"cpr_provider"\},"eq":"HEMS","then":\[\{"set":\{"var":\["L:PAX3\{local:VCP\}20"/.test(cpr), 'CPR successful is said whenever the crew did the CPR');
 assert.ok(cpr.includes('"L:PAX3{local:VCP}21"'), 'the patient does not respond to CPR (the key that was never called)');
+
+// 8. flight log of 2026-10-19: (a) a dispatch that arrives with nobody aboard is read back by the crew when it boards; (b) at the hangar the technician, the copilot and the
+// pilot greet each other by the hour of the simulator, by name, with a few words of circumstance
+const triageRun = text(macros['voice dispatch triage run']);
+assert.ok(triageRun.includes('"while":{"param":"tr_who"},"eq":0') && triageRun.includes('"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"tr_who"'), 'the triage waits until a crew member is aboard');
+assert.ok(triageRun.includes('"param":"tr_w"},"gte":1800') && triageRun.includes('"local":"vda_open"},"ne":"yes"') && triageRun.includes('"param":"seq"},"ne":{"local":"voice_dispatch_seq"}'), 'the wait ends with a newer dispatch, the acceptance, or after 30 minutes');
+assert.ok(triageRun.indexOf('"call_macro":"voice dispatch readback"') > triageRun.indexOf('"param":"tr_who"') && triageRun.indexOf('"call_macro":"voice dispatch readback"') < triageRun.indexOf('"key":"DSA.ASK"'), 'a dispatch read with the radio off is read back after the crew is aboard and before the questions');
+assert.ok(triageRun.includes('"param":"tr_q"},"eq":0') && triageRun.includes('"key":"DSA.ASKP"') && triageRun.includes('"param":"tr_qr"},"eq":0'), 'with the radio off the crew asks the pilot again once, a minute after the question');
+const day = text(macros['voice day period']);
+assert.ok(day.includes('E:LOCAL TIME') && day.includes('"gte":18000') && day.includes('"lt":43200') && day.includes('"gte":43200') && day.includes('"lt":64800') && day.includes('"return":3'), 'good morning from 05:00, good afternoon from 12:00, good evening from 18:00 of the local time of the simulator');
+const greet = text(macros['voice hangar greeting']);
+for (const key of ['GRT.TEC', 'GRT.CPL', 'GRT.PLT']) assert.ok(greet.includes(`<say:${key}.{0}>`), `voice hangar greeting says ${key} with the part of the day`);
+for (const key of ['CHT.TEC', 'CHT.CPL', 'CHT.TEC2']) assert.ok(greet.includes(`<say:${key}>`), `voice hangar greeting says ${key}`);
+assert.ok(greet.includes('"local":"VCP"},"eq":"APP"') && greet.includes('"local":"TTS"},"eq":1') && greet.includes('"global":"AUDIO_DECLUT"},"eq":0') && greet.includes('"global":"AUDIO_DECLUT"},"gt":3'), 'only with the Mission Companion and the chatter levels of the original lines');
+const hangarMacro = Object.values(macros).map(text).find((body) => body.includes('"call_macro":"voice hangar greeting"'));
+assert.ok(hangarMacro && hangarMacro.includes('"local":"VCP"},"eq":"APP","then":[{"call_macro":"voice hangar greeting"}]') && hangarMacro.includes('L:FRA{local:VCP}7') && hangarMacro.includes('"local":"VCP"},"ne":"APP"') && hangarMacro.includes('L:CPL{local:VCP}23'), 'the boarding at the hangar: the greeting with the Companion, the original lines FRA 7 and CPL 23 with a wav pack');
+assert.ok(all.includes('<pack:EN:21>') && !all.includes('<pack:EN:20>'), 'the mission declares the pack EN 21 (the greetings)');
+if (pack) {
+  const dePack = fs.existsSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8') : null;
+  const block = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); return xml.slice(at, xml.indexOf('</message>', at)); };
+  const technician = ['GRT.TEC.M', 'GRT.TEC.A', 'GRT.TEC.E', 'CHT.TEC', 'CHT.TEC2'];
+  const others = ['GRT.CPL.M', 'GRT.CPL.A', 'GRT.CPL.E', 'GRT.PLT.M', 'GRT.PLT.A', 'GRT.PLT.E', 'CHT.CPL'];
+  for (const xml of [pack, dePack].filter(Boolean)) {
+    for (const key of technician) { const b = block(xml, key); assert.ok(b.includes('actor="6"') && count(b, '<o sex="m">') === 6 && count(b, '<o sex="f">') === 6, `${key}: the technician, six options of each sex`); }
+    for (const key of others) { const b = block(xml, key); assert.equal(count(b, '<o>'), 6, `${key} has six options`); assert.ok(b.includes('to="tech"'), `${key} is said to the technician`); }
+    for (const key of ['GRT.TEC.M', 'GRT.CPL.M', 'GRT.PLT.M']) assert.ok(/\{@(PLT|CPL|TECH)\}/.test(block(xml, key)), `${key} says names`);
+  }
+  assert.ok(block(pack, 'GRT.TEC.M').includes('Good morning') && block(pack, 'GRT.TEC.A').includes('Good afternoon') && block(pack, 'GRT.TEC.E').includes('Good evening') && !block(pack, 'GRT.TEC.E').includes('morning') && !block(pack, 'GRT.TEC.A').includes('morning'), 'the greeting words follow the part of the day');
+}
+
+// 9. weather remarks of the crew at the hangar before and after the flight, farewell by the hour, and the weather of the briefing (user request of 2026-10-19)
+const wclass = text(macros['voice weather class']);
+for (const sv of ['AMBIENT PRECIP STATE', 'AMBIENT PRECIP RATE', 'AMBIENT TEMPERATURE', 'AMBIENT WIND VELOCITY', 'AMBIENT WIND DIRECTION', 'AMBIENT VISIBILITY']) assert.ok(wclass.includes(sv), `voice weather class reads ${sv}`);
+for (const sfx of ['RL', 'RH', 'SN', 'HT', 'CD', 'FZ', 'FG', 'WD', 'FR']) assert.ok(wclass.includes(`"local":"vw_sfx"},"value":"${sfx}"`), `voice weather class sets the suffix ${sfx}`);
+assert.ok(wclass.includes('"local":"vw_precip"},"eq":4') && wclass.includes('"local":"vw_precip"},"eq":8') && wclass.includes('"return":{"local":"vw_code"}'), 'rain 4, snow 8, the class is returned');
+assert.ok(greet.includes('"call_macro":"voice weather class"') && greet.includes('<say:WXH.{0}>') && greet.includes('<say:WXC.{0}>') && greet.indexOf('<say:WXH.{0}>') > greet.indexOf('<say:GRT.PLT.{0}>') && greet.indexOf('<say:WXH.{0}>') < greet.indexOf('<say:CHT.TEC>'), 'the weather remark is between the greetings and the circumstances');
+const debo = text(macros['deboarding']);
+assert.ok(debo.indexOf('"call_macro":"voice deboarding chat","params":{"stage":1}') > 0 && debo.indexOf('"call_macro":"voice deboarding chat","params":{"stage":1}') < debo.indexOf('"L:PLT{local:VCP}8"') && debo.indexOf('"call_macro":"voice deboarding chat","params":{"stage":2}') > debo.indexOf('"L:PLT{local:VCP}8"'), 'deboarding: the weather remark before the thanks of the pilot (PLT 8), the farewell after it');
+const debChat = text(macros['voice deboarding chat']);
+for (const key of ['WXD.{0}', 'WXC.{0}', 'DEB.BYE.TEC.{0}']) assert.ok(debChat.includes(`<say:${key}>`), `voice deboarding chat says ${key}`);
+assert.ok(debChat.includes('<say:DEB.BYE.PLT>') && debChat.includes('"local":"VCP"},"eq":"APP"') && debChat.includes('"local":"TTS"},"eq":1'), 'the pilot answers; only with the Mission Companion');
+const brief = text(macros['voice briefing chat']);
+assert.ok(brief.indexOf('"call_macro":"voice weather brief"') > brief.indexOf('L:PLT{local:VCP}50'), 'the weather comes at the end of the briefing thread');
+assert.ok(text(macros['voice weather brief']).includes('<say:WXB.{0}>{1}//{2}//{3}//{4}') && text(macros['voice weather brief']).includes('"value":"OK"'), 'the briefing says the wind, the temperature and the visibility; WXB.OK when nothing is remarkable');
+if (pack) {
+  const dePack2 = fs.existsSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8') : null;
+  const blk = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); assert.ok(at >= 0, `${key} is in the pack`); return xml.slice(at, xml.indexOf('</message>', at)); };
+  for (const xml of [pack, dePack2].filter(Boolean)) {
+    for (const sfx of ['RL', 'RH', 'SN', 'HT', 'CD', 'FZ', 'FG', 'WD', 'FR']) {
+      for (const pre of ['WXH', 'WXD', 'WXC', 'WXB']) assert.equal(count(blk(xml, `${pre}.${sfx}`), '<o>'), 6, `${pre}.${sfx} has six options`);
+      assert.ok(blk(xml, `WXB.${sfx}`).includes('{0}') && blk(xml, `WXB.${sfx}`).includes('{3}'), `WXB.${sfx} uses the wind and the visibility`);
+      assert.ok(blk(xml, `WXC.${sfx}`).includes('to="tech"'), `WXC.${sfx} is said to the technician`);
+    }
+    assert.equal(count(blk(xml, 'WXB.OK'), '<o>'), 6, 'WXB.OK has six options');
+    for (const key of ['DEB.BYE.TEC.M', 'DEB.BYE.TEC.A', 'DEB.BYE.TEC.E', 'DEB.BYE.PLT']) assert.equal(count(blk(xml, key), '<o>'), 6, `${key} has six options`);
+  }
+  assert.ok(/pouring|downpour|buckets/.test(blk(pack, 'WXH.RH')) && /freezing|numb|ice/.test(blk(pack, 'WXH.FZ')) && /hot|heat|sun/i.test(blk(pack, 'WXH.HT')), 'the remarks are about the rain, the freezing cold and the heat');
+  assert.ok(/evening|night/.test(blk(pack, 'DEB.BYE.TEC.E')) && /day/.test(blk(pack, 'DEB.BYE.TEC.M')) && /afternoon/.test(blk(pack, 'DEB.BYE.TEC.A')), 'the farewell follows the hour');
+}
 
 console.log('Communications uniformity PASS: landing, skid, hoist, police and ambulance crew transfer, midway meeting, transfer, organ, briefings, CPR and the keys of the base pack. HPG/MSFS PENDING.');

@@ -88,8 +88,10 @@ assert.ok(myd.includes('MAY.REACT') && myd.includes('MAY.CALL.{1}') && myd.inclu
 const ready = text(macros['voice radio ready']);
 assert.ok(ready.includes('_SDK_OH_BATTERY_MASTER') && ready.includes('_SDK_GPCP_PWR_SWITCH') && ready.includes('"L:CARLS_CONNECTED","number"]},"eq":1'), 'voice radio ready = power (battery or GPCP switch) and CARLS connected');
 const rd = text(macros['voice read dispatch']);
-assert.ok(rd.includes('"call_macro":"voice radio ready"') && rd.includes('DSA.RB.A') && rd.includes('DSA.RB.Q') && rd.includes('<radio:off>') && rd.includes('"first":"copilot"') && rd.includes('"aboard":1'), 'the readback by a crew member aboard when the radio is off');
-assert.ok(idx(rd, '<actor8><radio><text:DSC.{0}.{1}>') < idx(rd, 'DSA.RB.A'), 'the dispatcher reads only with the radio on');
+const rb = text(macros['voice dispatch readback']);
+assert.ok(rd.includes('"call_macro":"voice radio ready"') && rd.includes('"call_macro":"voice dispatch readback"'), 'voice read dispatch calls the readback when the radio is off');
+assert.ok(rb.includes('DSA.RB.A') && rb.includes('DSA.RB.Q') && rb.includes('<radio:off>') && rb.includes('"first":"copilot"') && rb.includes('"aboard":1'), 'the readback by a crew member aboard when the radio is off');
+assert.ok(idx(rd, '<actor8><radio><text:DSC.{0}.{1}>') < idx(rd, 'voice dispatch readback'), 'the dispatcher reads only with the radio on');
 const triage = text(macros['voice dispatch triage run']);
 assert.ok(triage.includes('"local":"vrd_rb"},"ne":1') && triage.includes('"param":"tr_t"},"gte":60') && triage.includes('"call_macro":"voice radio ready"'), 'no second question after the readback, the nudge only with the radio on');
 const chat = text(macros['voice briefing chat']);

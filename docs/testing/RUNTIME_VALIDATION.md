@@ -640,3 +640,16 @@ Static: `tools/test-crew-ops-abort.js`. Runtime, with the Mission Companion 0.35
 - Open the briefing with the server answering `0.997 (BETA)`: no "New R&E" row. With `0.997 169.70 (ALPHA)` (or `0.997 (ALPHA) 169.70`) and a mission 169.64: the row appears with the links; with `169.9`, `169.64` or an older build it does not.
 - Publish a mission release newer than the one that runs and start the Mission Companion (or press Check for updates): the row "New R&E mission build 169.xx is available. Open the Mission Companion..." appears in the briefing; it disappears after Update now and a refresh of the tablet. Without the Companion running it never appears.
 - The briefing title shows `0.997(ALPHA)169.xx` and the tablet pages `(0.997 (ALPHA) 169.xx)`.
+
+## Dispatch while the crew boards, hangar greetings (pending)
+
+- Start at the hangar with the helicopter off and a dispatch arriving before the crew boards: when the copilot sits, the crew reads the dispatch back ('Hey crew, we got a dispatch... what do we do?'); after a minute the crew asks the pilot again; nothing is said after the pilot accepts.
+- At the hangar with the technician present: greeting by name and by the hour (set the simulator to morning, afternoon, evening), the answer of the copilot and of the pilot, a line about the helicopter, a thanks and a farewell.
+
+- Weather remarks (pending): at the hangar with rain, snow, heat (30 C), freezing (-5 C), fog, wind (20 knots) and fine weather, the technician makes a remark after the greetings and the copilot answers; after the flight the technician makes another one before the farewell of the pilot and says goodbye by the hour (morning, afternoon, evening); in the briefing the copilot reads the wind, the temperature and the visibility with a remark. Check that a negative temperature is read as minus.
+
+## Hoist operation with the patient taken by the ambulance (flight log of 2026-10-19, pending)
+
+- Hoist operation, one patient, the ambulance arrives and loads him: the doctor must go up by the hoist (before, `L:STEP` stayed 3 and `L:AMBUSTRETCHERFULL` 1 for good and the doctor stayed down; checkpoint hoist_back_up never reached). Check the checkpoints hoist_crew_down then hoist_back_up.
+- The dispatch is not cancelled while the doctor is down; when he is aboard the dispatcher tells that the ambulance has the patient and the dispatch is closed (once), then the return to base as before.
+- The dispatch page shows the progress bar and "ON-SITE OPERATIONS: n% - stage" from the moment the crew is on the ground until it is hoisted back; the hoist voices (HST.*) are not doubled by the ground update lines.

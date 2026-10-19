@@ -1549,6 +1549,11 @@
         {"if": {"var":["SIM ON GROUND","bool"]}, "eq": 1,
           "then": [
             {"set":{"local":"helicopter_on_scene"},"value":1}
+        ]},
+        {"#comment":"A hoist or skid operation (L:MISSION_HOIST not 0) has the crew out on the scene even when the helicopter hovers: the dispatch is not cancelled until the crew is back (flight log of 2026-10-19: the dispatch was cancelled while the doctor was still down)."},
+        {"if": {"var":["L:MISSION_HOIST","number"]}, "ne": 0,
+          "then": [
+            {"set":{"local":"helicopter_on_scene"},"value":1}
         ]}
     ]},
     {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
@@ -1690,6 +1695,46 @@
         {"set":{"local":"MISSION_PHASE"},"value":8},
         {"set_objective_title":"DISPATCH CANCELLED","color":"red"},
         {"call_macro":"return to base menu"}
+    ]}
+  ],
+  "dispatch ambulance notice": [
+    {"#comment":"User request of 2026-10-19: when the patient goes by ambulance after a hoist operation the crew comes back first, then the dispatcher informs that the dispatch is closed (the ambulance has the patient, return to base). Called when the crew is aboard again (user destination menu, ambulance case). Same texts as cancel HEMS dispatch for the ambulance reason, without ending the dispatch: the end of the mission goes on as before. Nothing when the dispatch was already cancelled."},
+    {"if": {"local":"dispatch_cancellation_pending"}, "ne": "done",
+      "then": [
+        {"call_macro":"callsign word"},
+        {"set":{"local":"dispatch_cancellation_pending"},"value":"done"},
+        {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - the ambulance is transporting the patient. Return to base."},
+        {"set":{"local":"Dispatcher_text"},"value":"Ambulance has loaded the patient and is on the way to the hospital. {local:cs_word} not required, dispatch cancelled. Return to base."},
+        {"set_message":{"text":"The ambulance has the patient and is taking them to the hospital. {local:cs_word} intervention is no longer required; dispatch cancelled."}},
+        {"modify_array": {"local":"Dispatcher_Messages"},
+          "prepend": {
+            "create_struct": {
+              "from": {"global":"GRPNAME"},
+              "time": {
+                "text": "{0:TIME}{1}",
+                "params": [
+                  {"floor":{"if":{"global":"CLOCK_MODE"},"eq":"local","then":{"var":["E:LOCAL TIME","seconds"]},"else":{"var":["E:ZULU TIME","seconds"]}}},
+                  {"if": {"global":"CLOCK_MODE"},
+                    "eq": "local",
+                    "then": "L",
+                    "else": "Z"
+                  }
+              ]},
+              "text": {"local":"Dispatcher_text"}
+            }
+          }
+        },
+        {"set":{"local":"Dispatcher_text"},"value":""},
+        {"call_macro":"UpdateRescueTrack"},
+        {"set":{"var":["L:PLT{local:VCP}46","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}46","number"]},1]}},
+        {"if": {
+          "and": [
+            {"require":{"local":"VCP"},"eq":"APP"},
+            {"require":{"local":"TTS"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"AMB.CAN.DSP"}}
+        ]}
     ]}
   ],
   "voice hoist visit": [

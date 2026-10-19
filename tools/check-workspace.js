@@ -71,6 +71,7 @@ const scripts = [
   'test-comms-uniformity.js',
   'test-crew-ops-abort.js',
   'test-update-notice.js',
+  'test-hoist-return.js',
   'audit-drive-speeds.js',
   'test-heli-rescuer-and-ambulance.js',
   'validate-user-changelog.js',
