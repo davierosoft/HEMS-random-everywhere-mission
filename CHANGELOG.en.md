@@ -1,3 +1,43 @@
+## Release 0.997 169.72
+
+- Report MPR 2026-10-23 (hoist stuck after three were hoisted to the helicopter, cause not known): diagnostics only plus one retry. New read-only macro hoist blockers sample (ground speed, radio height, hoist operator and second operator, PAX_HOIST, patient preparation trace) feeds the ground operations state, the 120 s stall warning now refreshes it and takes an automatic snapshot, the Dispatch page lists what is still open while the operations are delayed, and Hoisting back up writes checkpoints on the hoist wait path. The patient preparation of the hoist is retried three times before it gives up, and the failure is traced and told before the macro returns (it returned silently). Runtime pending.
+- Carries 169.71 (voice code trace rows) and 169.70 (speech action bridge, doors closed once, HOS.PAP handover words, mission 65 route request caught).
+
+## Release 0.997 169.72
+
+- Reports 2026-10-21 to 2026-10-23: speech bridge, door fix, handover words, mission 65 route, voice code trace, hoist stall diagnostics and patient preparation retry (MPR 2026-10-23)
+
+## Release 0.997 169.71
+
+- Reports 2026-10-21 to 2026-10-23, speech bridge, voice code trace (thread)
+- Reports 2026-10-21 to 2026-10-23: ETA repeat, HR door and waiting feedback, ambulance handover line, CPR after drop-off, speech bridge, voice code trace
+
+## Release 0.997 169.70
+
+- Speech action bridge for the Mission Companion (new setting SPEECH COMMANDS in the tablet Settings, OFF by default, saved in the aircraft profiles): the mission publishes the contract, a fresh session and the availability of 14 commands (begin hoisting, hoist up and down of the heli rescuer, ground loading, skid landing, takeoff for hoist, ground operations here, load the patient, keep the patient out, patient in, drop the heli rescuer here, back to the meeting point, load from and unload to the ambulance) and clicks the requested button with `trigger_user_action`. A command is available exactly while its button is visible: the conditions are copied from the real buttons by tools/speech-bridge.js and a test fails when they diverge. The Companion side (push to talk, transport) is not in this release
+- The heli rescuer boarding in a skid operation closes each door once (the right door was closed and reopened by a second close command)
+- The crew says it goes inside for the report and the paperwork after the hospital handover (pack EN 24)
+- Mission 65 (missing car): the route request is caught and traced (ground crew runtime trace, macro sar_route), a failed route falls back to the straight line instead of ending the loading at 15%
+- Carries 169.69: flight report fixes of 2026-10-21 and 2026-10-23, BEGIN HOISTING and BEGIN SKID LNDG OPS hidden while a heli rescuer hoist command is pending inside the landing spot
+## Release 0.997 169.70
+
+- Speech action bridge for the Mission Companion (setting SPEECH COMMANDS, default off; 14 commands that click the mission buttons by voice), the heli rescuer boarding door is closed once, the crew says it goes inside for the paperwork after the handover (pack EN 24), mission 65 route request caught and traced, flight report fixes of 2026-10-21 and 2026-10-23 of 169.69 carried
+
+## Release 0.997 169.69
+
+- Walk to the right passenger door at 4 km/h (walking speed rule of the drive audit) and the skid wait test follows the wait loop
+- Flight report fixes of 2026-10-21 and 2026-10-23 (no resuscitation of a patient already handed over, the heli rescuer boards by the door that opens, the skid point wait names the missing condition, the patient condition is said once per stage, no handover line when the crew loads the patient), BEGIN HOISTING and BEGIN SKID LNDG OPS stay hidden while a heli rescuer hoist command is pending inside the landing spot, pack EN 23
+
+## Release 0.997 169.68
+
+- Scope of 169.67 carried into 169.68
+- Crashed vehicle created once (no duplicate wreckedcar1), ambulances stop where the injured are
+
+## Release 0.997 169.67
+
+- Version string
+- Time bar for organ team and blood missions, checklist page buttons, terrain test of the heli rescuer, work light after fire fighters, new incidents 69-74 and secondary missions 101-102, fire and flight report fixes of 2026-10-20 and 2026-10-21
+
 ## Release 0.997 169.66
 
 - Version check carries the release identity

@@ -646,6 +646,7 @@
       "commands": [
         {"wait_for":{"has_location":"hospital_user"},"eq":1},
         {"wait_for":{"local":"organexpiration"},"gt":100},
+        {"call_macro":"timed mission bar","params":{"label":{"local":"organ_bar_label"},"expiration":{"local":"organexpiration"}}},
         {"create_thread": {
           "commands": [
             {"while": {"var":["L:SAVED","number"]}, "eq": 0,
@@ -1431,9 +1432,11 @@
         {"require":{"var":["L:CPR","number"]},"eq":0},
         {"require":{"local":"cpr_armed"},"ne":1},
         {"require":{"local":"cpr_manual_stop"},"ne":1},
-        {"require":{"local":"cpr_provider_present"},"eq":1}
+        {"require":{"local":"cpr_provider_present"},"eq":1},
+        {"require":{"var":["L:SAVED","number"]},"ne":1}
       ]}, "eq": 1,
       "then": [
+        {"#comment":"A patient already handed over (L:SAVED 1) is never resuscitated again: the crewvisiting1 flag stays yes after the drop-off and started the CPR on the way back (report 2026-10-21)."},
         {"set":{"var":["L:CPR","number"]},"value":1},
         {"set":{"local":"cpr_armed"},"value":1},
         {"set":{"local":"cpr_active"},"value":0},

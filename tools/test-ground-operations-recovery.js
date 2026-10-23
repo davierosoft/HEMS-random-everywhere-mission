@@ -260,7 +260,7 @@ for (const file of crewObjectFiles) {
 }
 for (const [name, target, distance] of [
   ['watchdog_ambulance1_scene_approach', 'accident_location', 55],
-  ['watchdog_ambulance2_scene_approach', 'accident_location', 55],
+  ['watchdog_ambulance2_scene_approach', 'injured_scene', 55],
   ['watchdog_police_scene_approach', 'accident_location', 55],
   ['watchdog_firetruck1_scene_approach', 'fire_truck_scene_access', 55],
   ['watchdog_firetruck2_scene_approach', 'fire_truck_scene_access', 55],

@@ -276,8 +276,33 @@
         ]}
     ]}}
   ],
+  "organ kind setup": [
+    {"#comment":"User request of 2026-10-21: the medical team transport (ID 101) and the urgent blood supply (ID 102) are organ transfers with another payload: voice_sfx is the suffix of the pack keys that have a variant for them (.T team, .B blood; empty for an organ), organ_item_text the words of the tablet message, organ_bar_label the text of the time bar, organ_margin_min and organ_margin_max the random margin in seconds added to the flight time for the latest arrival (organ 300 to 1200; team 240 to 720; blood 150 to 480). Called by timefororgantransport and by organ transfer."},
+    {"set":{"local":"voice_sfx"},"value":""},
+    {"set":{"local":"organ_item_text"},"value":"organ transportation box"},
+    {"set":{"local":"organ_bar_label"},"value":"ORGAN DELIVERY"},
+    {"set":{"local":"organ_margin_min"},"value":300},
+    {"set":{"local":"organ_margin_max"},"value":1200},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 101,
+      "then": [
+        {"set":{"local":"voice_sfx"},"value":".T"},
+        {"set":{"local":"organ_item_text"},"value":"medical team and its equipment"},
+        {"set":{"local":"organ_bar_label"},"value":"TEAM ARRIVAL"},
+        {"set":{"local":"organ_margin_min"},"value":240},
+        {"set":{"local":"organ_margin_max"},"value":720}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 102,
+      "then": [
+        {"set":{"local":"voice_sfx"},"value":".B"},
+        {"set":{"local":"organ_item_text"},"value":"urgent blood supply box"},
+        {"set":{"local":"organ_bar_label"},"value":"BLOOD DELIVERY"},
+        {"set":{"local":"organ_margin_min"},"value":150},
+        {"set":{"local":"organ_margin_max"},"value":480}
+    ]}
+  ],
   "timefororgantransport": [
-    {"set":{"local":"organexpiration"},"value":{"tofixed":{"add":[{"var":["E:LOCAL TIME","seconds"]},{"multiply":[{"object":"userA","var":"distance:m"},{"local":"timemultiplier"}]},{"multiply":[{"location":"hospital_user","var":"distance:m","to":"userA"},{"local":"timemultiplier"}]},{"rand":[300,1200]}]},"digits":0}}
+    {"call_macro":"organ kind setup"},
+    {"set":{"local":"organexpiration"},"value":{"tofixed":{"add":[{"var":["E:LOCAL TIME","seconds"]},{"multiply":[{"object":"userA","var":"distance:m"},{"local":"timemultiplier"}]},{"multiply":[{"location":"hospital_user","var":"distance:m","to":"userA"},{"local":"timemultiplier"}]},{"rand":[{"local":"organ_margin_min"},{"local":"organ_margin_max"}]}]},"digits":0}}
   ],
   "CUSTOM HOSPITAL DB map update": [
     {"set_map":{"remove":{"point":{"id":"h1"}}}},

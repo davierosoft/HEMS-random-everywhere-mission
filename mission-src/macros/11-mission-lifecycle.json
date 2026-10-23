@@ -654,7 +654,11 @@
       "then": [
         {"for_each": {"static":"accidents"},
           "do": [
-            {"if": {"struct":{"param":"$item"},"path":"mnumber"}, "eq": 4,
+            {"if": {
+              "and": [
+                {"require":{"struct":{"param":"$item"},"path":"mnumber"},"eq":4},
+                {"require":{"struct":{"param":"$item"},"path":"type"},"eq":{"local":"MISSION_SCENE_TYPE"}}
+              ]}, "eq": 1,
               "then": [
                 {"set":{"local":"accident_name"},"value":{"struct":{"param":"$item"},"path":"name"}},
                 {"set":{"local":"accident_general_description"},"value":{"struct":{"param":"$item"},"path":"general_description"}},
@@ -1166,11 +1170,14 @@
             {"if": {"local":"PAPERWORK"}, "ne": 0,
               "then": [
                 {"sleep":1},
+                {"#comment":"Report 2026-10-23: the handover was announced as done and the crew then walked inside without a word. The crew now says it goes inside for the report and the paperwork (pack HOS.PAP, HOS.PAP.O for an organ)."},
                 {"if": {"local":"whobringpatient"}, "ne": "organ",
                   "then": [
-                    {"set_message":{"text":"Crew will follow the patient to ER for report and paperwork. Wait for their return"}}
+                    {"set_message":{"text":"Crew will follow the patient to ER for report and paperwork. Wait for their return"}},
+                    {"call_macro":"voice say","params":{"key":"HOS.PAP"}}
                   ],"else": [
-                    {"set_message":{"text":"Our operator will follow the hospital crew for report and paperwork. Wait for his return"}}
+                    {"set_message":{"text":"Our operator will follow the hospital crew for report and paperwork. Wait for his return"}},
+                    {"call_macro":"voice say","params":{"key":"HOS.PAP.O"}}
                 ]},
                 {"create_user_action": {
                     "id": "skippb",
@@ -2145,6 +2152,7 @@
   ],
   "objective1": [
     {"set":{"var":["L:RELEASE_BUILD","number"]},"value":169},
+    {"call_macro":"settings first run defaults"},
     {"call_macro":"start location diagnostics","params":{"init":1}},
     {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
     {"set":{"local":"START_PHASE_SEEN"},"value":{"var":["L:DISPATCH_PHASE","number"]}},
@@ -3140,6 +3148,7 @@
     {"set":{"local":"helirescuers_drop_here_ready"},"value":"no"},
     {"set":{"local":"helirescuers_drop_here_selected"},"value":"no"},
     {"set":{"local":"helirescuers_drop_here_mode"},"value":null},
+    {"set":{"local":"hr_scene_block"},"value":0},
     {"set":{"local":"closestretcherarrived"},"value":"no"},
     {"set":{"local":"policeloadingenabled"},"value":"notset"},
     {"set":{"local":"police_lz_transfer_state"},"value":"idle"},
@@ -3225,9 +3234,11 @@
     {"set":{"local":"startingsequence"},"value":0},
     {"if": {"var":["L:AUDIOINHIBIT","number"]}, "eq": 0,
       "then": [
-        {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
+        {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"voice_vcp","actor":"n/a","target":{"local":"VCP"},"state":{"text":"VCP now {0} (set in objective1): AUDIOINHIBIT={1} TTS={2}","params":[{"local":"VCP"},{"var":["L:AUDIOINHIBIT","number"]},{"local":"TTS"}]}}}
       ],"else": [
         {"set":{"local":"VCP"},"value":"APP"},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"voice_vcp","actor":"n/a","target":{"local":"VCP"},"state":{"text":"VCP now {0} (set in objective1): AUDIOINHIBIT={1} TTS={2}","params":[{"local":"VCP"},{"var":["L:AUDIOINHIBIT","number"]},{"local":"TTS"}]}}},
         {"call_macro":"voice app connect"}
     ]},
     {"set":{"local":"hospital_wptot"},"value":0},
@@ -3439,6 +3450,9 @@
     {"set":{"local":"ops_progress_visit_start"},"value":0},
     {"set":{"local":"ops_progress_visit_end"},"value":0},
     {"set":{"local":"ops_progress_visit_duration"},"value":0},
+    {"set":{"local":"timed_bar_active"},"value":0},
+    {"set":{"local":"voice_sfx"},"value":""},
+    {"set":{"var":["L:TIMED_LEFT_PCT","number"]},"value":100},
     {"set":{"var":["L:DISPATCH_ENDED","number"]},"value":0},
     {"set":{"local":"RESCUE_DISPATCHED"},"value":0},
     {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
@@ -4007,6 +4021,8 @@
         {"set_briefing_dialog":1}
     ]},
     {"call_macro":"events creator"},
+    {"set":{"local":"speech_bridge_running"},"value":0},
+    {"call_macro":"speech bridge start"},
     {"set":{"var":["L:LOADSTART","number"]},"value":100},
     {"wait_for":{"local":"MISSION_PHASE"},"eq":2}
   ],
@@ -5414,6 +5430,14 @@
     {"create_thread": {
       "commands": [
         {"call_macro":"voice hospital approach"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice hospital final"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice pickup approach"}
     ]}},
     {"create_thread": {
       "commands": [

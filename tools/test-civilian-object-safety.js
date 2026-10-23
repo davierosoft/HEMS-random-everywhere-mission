@@ -32,7 +32,7 @@ function walk(value, protectedByGuard = false) {
 }
 
 walk(scene);
-if (total !== 97 || unsafe !== 0) {
+if (total !== 117 || unsafe !== 0) {
   throw new Error(`Civilian object safety FAIL: total=${total}, unsafe=${unsafe}`);
 }
 console.log(`Civilian object safety PASS: ${total} operations guarded.`);

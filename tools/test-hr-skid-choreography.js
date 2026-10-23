@@ -59,7 +59,15 @@ assert.ok(downText.lastIndexOf('{"wait_for":{"local":"HOLDHOISTED"},"eq":1}') > 
 // 3. boarding in skid: already at the skid point, the wait looks at MEET and tells the pilot what is needed
 const up = text(macros['gnd ops heli rescuer up']);
 assert.ok(up.includes('{"if":{"local":"HR_SKID_RETURNED"},"eq":1,"then":[{"drive_object":{"name":"jolly","to":[{"bearing":0,"dist":9,"object":"MEET"}]'), 'boarding: no walk to a scene point when he is already at the skid point');
-assert.ok(up.includes('{"set_message":{"text":"Heli-rescuer is waiting at the skid point') && up.includes('{"wait_for":{"location":"MEET","var":"distance"},"lt":0.03}'), 'boarding: message and wait on MEET');
+// Report 2026-10-23: the waits are one loop that names the missing condition (collective, ground speed, on the ground, position on MEET and in the landing spot)
+// and says it after 10 s, then every 45 s (pack HRS.W.POS / GND / STILL / COLL); the first message still tells the pilot what is needed.
+assert.ok(up.includes('{"set_message":{"text":"Heli-rescuer is waiting at the skid point'), 'boarding: message at the skid point');
+for (const needle of ['{"require":{"location":"MEET","var":"distance"},"gte":0.03}', '{"require":{"location":"landing_spot","var":"distance:m"},"gte":{"local":"ldg_spot_area_size"}}',
+  '{"if":{"var":["L:Collective","number"]},"lt":27', '{"if":{"var":["GPS GROUND SPEED","knots"]},"gte":0.5', '{"require":{"var":["SIM ON GROUND","bool"]},"ne":1}', '{"require":{"var":["RADIO HEIGHT","feet"]},"gte":20}']) {
+  assert.ok(up.includes(needle), `boarding: the wait loop checks ${needle.slice(0, 60)}`);
+}
+for (const miss of ['POS', 'GND', 'STILL', 'COLL']) assert.ok(up.includes(`{"set":{"local":"hrw_miss"},"value":"${miss}"}`), `boarding: the loop names the missing condition ${miss}`);
+assert.ok(up.includes('{"call_macro":"voice say","params":{"key":{"text":"HRS.W.{0}","params":[{"local":"hrw_miss"}]}}}'), 'boarding: the heli rescuer says what is missing through the pack keys HRS.W.*');
 assert.ok(!up.includes('{"wait_for":{"location":"jolly","var":"distance"},"lt":0.025}'), 'the wait no longer reads the distance of the live helicopter from the heli rescuer');
 
 // 4. avalanche: the scene points around the final position of the injured

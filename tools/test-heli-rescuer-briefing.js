@@ -95,11 +95,11 @@ if (fs.existsSync(packFile)) {
     const wantsList = key.startsWith('HRB.VEH.') && key !== 'HRB.VEH.NONE';
     options.forEach((o) => {
       const holes = [...o.matchAll(/\{([^}]*)\}/g)].map((h) => h[1]);
-      if (wantsNumber) assert.ok(holes.every((h) => h === '0'), `${key}: only {0}: ${o}`);
+      if (wantsNumber) assert.ok(holes.every((h) => h === '0' || h === 'mins:0'), `${key}: only {0} or {mins:0}: ${o}`);
       else if (wantsList) assert.ok(holes.length > 0 && holes.every((h) => /^(list|be):[01]$/.test(h)), `${key}: only list and be values: ${o}`);
       else assert.equal(holes.length, 0, `${key}: no placeholder: ${o}`);
     });
-    if (wantsNumber) assert.ok(options.every((o) => o.includes('{0}')), `${key}: every option says the number`);
+    if (wantsNumber) assert.ok(options.every((o) => o.includes('{0}') || o.includes('{mins:0}')), `${key}: every option says the number`);
   }
   // the ground and the hoist sequences keep the order of the mission: the rescuer first, the crew on his call, the rescuer last
   for (const key of ['HRB.PLAN.G.CHF', 'HRB.PLAN.G.CPL']) {

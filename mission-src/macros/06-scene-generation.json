@@ -1718,16 +1718,20 @@
                 {"set":{"local":"amburoad"},"value":{"floor":{"rand":[1,{"local":"roads"}]}}},
                 {"set":{"local":"poliroad"},"value":{"floor":{"rand":[1,{"local":"roads"}]}}},
                 {"set":{"local":"fireroad"},"value":{"floor":{"rand":[1,{"local":"roads"}]}}},
-                {"set":{"local":"wpcrashed"},"value":"wpc{local:randomroad}"},
+                {"set":{"local":"wpcrashed"},"value":"wpc{local:randomroad}"}
+            ]},
+            {"wait_for":{"local":"has_accident_location"},"ne":"no"},
+            {"#comment":"User report of 2026-10-21 (\"creating duplicate object: wreckedcar1\"): the crashed vehicle is created once, after the road loop has finished with a usable location; the park fallback creates its own."},
+            {"if": {"local":"has_accident_location"}, "eq": "failed",
+              "then": [
+                {"call_macro":"random crashed launcher park"}
+            ]},
+            {"if": {"local":"has_accident_location"}, "ne": "failed",
+              "then": [
                 {"if": {"local":"extra_crashed"}, "ne": "no",
                   "then": [
                     {"call_macro":"random crashed1"}
                 ]}
-            ]},
-            {"wait_for":{"local":"has_accident_location"},"ne":"no"},
-            {"if": {"local":"has_accident_location"}, "eq": "failed",
-              "then": [
-                {"call_macro":"random crashed launcher park"}
             ]}
           ],"else": [
             {"call_macro":"random crashed launcher park"}
@@ -3225,6 +3229,7 @@
         ]},
         {"set":{"local":"location_diagnostic_source_macro"},"value":"SAR sighting"},
         {"set":{"local":"location_diagnostic_writer_landing_spot"},"value":"SAR sighting"},
+        {"call_macro":"voice sar found"},
         {"create_thread": {
           "commands": [
             {"while": {"object":"injured_human","var":"distance:m"}, "gte": {"local":"ldg_spot_area_size"},
@@ -3787,6 +3792,14 @@
     {"if": {"local":"MISSION_SCENE_TYPE"}, "eq": 19,
       "then": [
         {"create_object":{"name":"car_crash","title":{"struct":{"static":"deadanimals"},"index":{"local":"CRASH_VARIABLE"}},"fallback_title":"Airbus H145 Injured Human","location":"accident_location"}}
+    ]},
+    {"if": {"local":"MISSION_SCENE_TYPE"}, "eq": 28,
+      "then": [
+        {"#comment":"User request of 2026-10-21 (ID 69, multi-vehicle collision on the motorway): the main wreck, two more wrecks in line along the road and a third one further away; the other vehicles come from random crashed1 as in the other road accidents. Runtime PENDING."},
+        {"create_object":{"name":"car_crash","title":{"struct":{"static":"wreckedcars1"},"index":{"floor":{"rand":[0,{"struct":{"static":"wreckedcars1"},"path":"length"}]}}},"fallback_title":"Airbus H145 Car Crash 1","location":{"bearing":0,"dist":0,"heading":315,"object":"accident_location"}}},
+        {"create_object":{"name":"pile2","title":{"struct":{"static":"wreckedcarslight"},"index":{"floor":{"rand":[0,{"struct":{"static":"wreckedcarslight"},"path":"length"}]}}},"fallback_title":"Airbus H145 Car Crash 3","location":{"bearing":25,"dist":9,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+        {"create_object":{"name":"pile3","title":{"struct":{"static":"wreckedcarslight"},"index":{"floor":{"rand":[0,{"struct":{"static":"wreckedcarslight"},"path":"length"}]}}},"fallback_title":"Airbus H145 Car Crash 2","location":{"bearing":205,"dist":11,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+        {"create_object":{"name":"pile4","title":{"struct":{"static":"wreckedcars1"},"index":{"floor":{"rand":[0,{"struct":{"static":"wreckedcars1"},"path":"length"}]}}},"fallback_title":"Airbus H145 Car Crash 1","location":{"bearing":160,"dist":19,"heading":{"rand":[0,359]},"object":"accident_location"}}}
     ]},
     {"sleep":0.2},
     {"if": {"local":"MISSION_SCENE_TYPE"}, "eq": 11,
@@ -7081,6 +7094,22 @@
             {"set":{"object":"VFX2","var":"COUPLED"},"value":0}
         ]}
     ]},
+    {"#comment":"User request of 2026-10-21: ID 72 (fall from a ladder, camping 49) always has the fallen ladder 2 m from the rescue point; ID 73 (worker burned in a workshop, camping 50) has a colleague, an extinguisher and smoke, as the power transformer scene. Runtime PENDING."},
+    {"if": {"local":"CAMPING_VARIABLE"}, "eq": 49,
+      "then": [
+        {"create_object":{"name":"car_crash","title":"30West Ladder fallen","fallback_title":"Airbus H145 Cargo Bag","location":{"bearing":10,"dist":2,"heading":{"rand":[0,359]},"object":"rescue_location"}}}
+    ]},
+    {"if": {"local":"CAMPING_VARIABLE"}, "eq": 50,
+      "then": [
+        {"create_object":{"name":"collegues","title":"Airbus H145 Engineer 2","location":{"bearing":80,"dist":3,"heading":270,"object":"rescue_location"}}},
+        {"set":{"object":"collegues","var":"VAR 1"},"value":0},
+        {"create_object":{"name":"extin","title":"Airbus H145 Fire extinguisher","location":{"bearing":70,"dist":2.2,"heading":0,"object":"rescue_location"}}},
+        {"set":{"object":"extin","var":"VAR 1"},"value":0},
+        {"create_object":{"name":"VFX2","title":"Smoke Effects","fallback_title":"Airbus H145 VFX Object","location":{"bearing":330,"dist":2.5,"heading":0,"object":"rescue_location"}}},
+        {"set":{"object":"VFX2","var":"VAR 1"},"value":1},
+        {"set":{"object":"VFX2","var":"VAR 2"},"value":0},
+        {"set":{"object":"VFX2","var":"COUPLED"},"value":0}
+    ]},
     {"set":{"var":["L:LOAD","number"]},"value":60},
     {"set_message":{"text":"Cabin preparation, 60% completed... please wait, it can take a while"}},
     {"create_thread": {
@@ -7426,6 +7455,395 @@
       "then": [
         {"create_object":{"name":"deadanimal","title":"30West Deer dead","location":{"bearing":40,"dist":7,"heading":{"rand":[0,359]},"object":"accident_location"}}}
     ]}
+  ],
+  "MTB TRAIL": [
+    {"#comment":"User request of 2026-10-21 (ID 70, mountain biker injured on a trail): the waypoints of hunting, the crashed mountain bike (the French pack object, or the 30West crashed bike), a bag and a companion standing near the rider; with the variants 3 and 4 the second bike stands upright. Runtime PENDING."},
+    {"set":{"local":"police1stopdistance"},"value":"28"},
+    {"set":{"local":"ambu1stopdistance"},"value":"22"},
+    {"set":{"local":"ambu2stopdistance"},"value":"29"},
+    {"set":{"local":"fire1stopdistance"},"value":"15"},
+    {"set":{"local":"fire2stopdistance"},"value":"26"},
+    {"sleep":0.5},
+    {"create_location": "POLWP",
+      "zones": [
+        {"zone":{"location":{"bearing":150,"dist":9,"object":"accident_location"}}}
+    ]},
+    {"create_location": "POL",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "AMBWP",
+      "zones": [
+        {"zone":{"location":{"bearing":20,"dist":10.5,"object":"accident_location"}}}
+    ]},
+    {"create_location": "RUP",
+      "zones": [
+        {"zone":{"location":{"bearing":30,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "RDWN",
+      "zones": [
+        {"zone":{"location":{"bearing":65,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "LDWN",
+      "zones": [
+        {"zone":{"location":{"bearing":300,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "LUP",
+      "zones": [
+        {"zone":{"location":{"bearing":325,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "INJU12",
+      "zones": [
+        {"zone":{"location":{"bearing":25,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"create_location": "INJU13",
+      "zones": [
+        {"zone":{"location":{"bearing":325,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "INJU23",
+      "zones": [
+        {"zone":{"location":{"bearing":250,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"create_location": "POLMAN1",
+      "zones": [
+        {"zone":{"location":{"bearing":25,"dist":3.5,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "POLMAN2",
+      "zones": [
+        {"zone":{"location":{"bearing":145,"dist":7,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "FIRE",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+    ]},
+    {"create_location": "FIRMAN1",
+      "zones": [
+        {"zone":{"location":{"bearing":150,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "FIRMAN2",
+      "zones": [
+        {"zone":{"location":{"bearing":180,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":75},
+    {"set_message":{"text":"Cabin preparation, 75% completed... please wait, it can take a while"}},
+    {"create_object":{"name":"wreckedcar1","title":"Airbus H145 FR Crash VTT DOWN","fallback_title":"30West Bike Crashed 1","location":{"bearing":40,"dist":3.2,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"set":{"object":"wreckedcar1","var":"VAR 1"},"value":0},
+    {"set":{"var":["L:LOAD","number"]},"value":80},
+    {"set_message":{"text":"Cabin preparation, 80% completed... please wait, it can take a while"}},
+    {"create_object":{"name":"bagh","title":"Airbus H145 Cargo Bag","location":{"bearing2":90,"dist":1.5,"heading":{"rand":[0,359]},"object":"injured_human"}}},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian1","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":230,"dist":3.2,"heading":230,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian1","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian1"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian1","var":"VAR 1"},"value":0}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":85},
+    {"set_message":{"text":"Cabin preparation, 85% completed... please wait, it can take a while"}},
+    {"if": {"local":"CRASH_VARIABLE"}, "gt": 2,
+      "then": [
+        {"create_object":{"name":"bike2","title":"Airbus H145 FR Crash VTT UP","fallback_title":"30West Bike","location":{"bearing":255,"dist":6.5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+        {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+        {"create_object":{"name":"civilian2","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":270,"dist":5.5,"heading":90,"object":"accident_location"}}},
+        {"try": [
+            {"point_object":"civilian2","to":"injured_human"}
+          ],
+          "catch": [
+            {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+        ]},
+        {"if": {"has_object":"civilian2"}, "eq": 1,
+          "then": [
+            {"set":{"object":"civilian2","var":"VAR 1"},"value":0}
+        ]}
+    ]}
+  ],
+  "SPORTS FIELD": [
+    {"#comment":"User request of 2026-10-21 (ID 71, collapse on a sports field): the waypoints of hunting, several people and their bags on the west side of the injured (bearings 200 to 320), the east side stays free for the landing. With the variants 2 to 4 bystanders do chest compressions (30West cpr on the injured). Runtime PENDING."},
+    {"set":{"local":"police1stopdistance"},"value":"28"},
+    {"set":{"local":"ambu1stopdistance"},"value":"22"},
+    {"set":{"local":"ambu2stopdistance"},"value":"29"},
+    {"set":{"local":"fire1stopdistance"},"value":"15"},
+    {"set":{"local":"fire2stopdistance"},"value":"26"},
+    {"sleep":0.5},
+    {"create_location": "POLWP",
+      "zones": [
+        {"zone":{"location":{"bearing":150,"dist":9,"object":"accident_location"}}}
+    ]},
+    {"create_location": "POL",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "AMBWP",
+      "zones": [
+        {"zone":{"location":{"bearing":20,"dist":10.5,"object":"accident_location"}}}
+    ]},
+    {"create_location": "RUP",
+      "zones": [
+        {"zone":{"location":{"bearing":30,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "RDWN",
+      "zones": [
+        {"zone":{"location":{"bearing":65,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "LDWN",
+      "zones": [
+        {"zone":{"location":{"bearing":300,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "LUP",
+      "zones": [
+        {"zone":{"location":{"bearing":325,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "INJU12",
+      "zones": [
+        {"zone":{"location":{"bearing":25,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"create_location": "INJU13",
+      "zones": [
+        {"zone":{"location":{"bearing":325,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "INJU23",
+      "zones": [
+        {"zone":{"location":{"bearing":250,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"create_location": "POLMAN1",
+      "zones": [
+        {"zone":{"location":{"bearing":25,"dist":3.5,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "POLMAN2",
+      "zones": [
+        {"zone":{"location":{"bearing":145,"dist":7,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "FIRE",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+    ]},
+    {"create_location": "FIRMAN1",
+      "zones": [
+        {"zone":{"location":{"bearing":150,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "FIRMAN2",
+      "zones": [
+        {"zone":{"location":{"bearing":180,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":75},
+    {"set_message":{"text":"Cabin preparation, 75% completed... please wait, it can take a while"}},
+    {"if": {"local":"CRASH_VARIABLE"}, "gt": 1,
+      "then": [
+        {"if": {"local":"30West_installed"}, "eq": "OK",
+          "then": [
+            {"create_object":{"name":"cpr","title":"30West cpr","location":{"bearing":0,"dist":0,"heading":0,"object":"injured_human"}}}
+        ]}
+    ]},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian1","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":205,"dist":3.6,"heading":25,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian1","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian1"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian1","var":"VAR 1"},"value":0}
+    ]},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian2","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":235,"dist":4.8,"heading":55,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian2","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian2"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian2","var":"VAR 1"},"value":0}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":80},
+    {"set_message":{"text":"Cabin preparation, 80% completed... please wait, it can take a while"}},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian3","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":270,"dist":3.9,"heading":90,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian3","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian3"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian3","var":"VAR 1"},"value":0}
+    ]},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian4","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":300,"dist":5.2,"heading":120,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian4","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian4"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian4","var":"VAR 1"},"value":0}
+    ]},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian5","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":222,"dist":8.4,"heading":40,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian5","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian5"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian5","var":"VAR 1"},"value":0}
+    ]},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian6","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":285,"dist":8.8,"heading":100,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian6","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian6"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian6","var":"VAR 1"},"value":0}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":85},
+    {"set_message":{"text":"Cabin preparation, 85% completed... please wait, it can take a while"}},
+    {"create_object":{"name":"bag1","title":"Airbus H145 Cargo Bag","location":{"bearing":250,"dist":5.5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"create_object":{"name":"bag2","title":"Airbus H145 Cargo Bag","location":{"bearing":290,"dist":6.5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"create_object":{"name":"bag3","title":"Airbus H145 Cargo Bag","location":{"bearing":215,"dist":6.2,"heading":{"rand":[0,359]},"object":"accident_location"}}}
+  ],
+  "HORSE RIDING": [
+    {"#comment":"User request of 2026-10-21 (ID 74, rider fallen from a horse): the waypoints of hunting, the horse (30West Horse, the dog when the title is missing) a few meters from the rider, a person of the stable standing near the rider and a bag. Runtime PENDING (the horse animation states are not known: VAR 1 stays 0)."},
+    {"set":{"local":"police1stopdistance"},"value":"28"},
+    {"set":{"local":"ambu1stopdistance"},"value":"22"},
+    {"set":{"local":"ambu2stopdistance"},"value":"29"},
+    {"set":{"local":"fire1stopdistance"},"value":"15"},
+    {"set":{"local":"fire2stopdistance"},"value":"26"},
+    {"sleep":0.5},
+    {"create_location": "POLWP",
+      "zones": [
+        {"zone":{"location":{"bearing":150,"dist":9,"object":"accident_location"}}}
+    ]},
+    {"create_location": "POL",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "AMBWP",
+      "zones": [
+        {"zone":{"location":{"bearing":20,"dist":10.5,"object":"accident_location"}}}
+    ]},
+    {"create_location": "RUP",
+      "zones": [
+        {"zone":{"location":{"bearing":30,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "RDWN",
+      "zones": [
+        {"zone":{"location":{"bearing":65,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "LDWN",
+      "zones": [
+        {"zone":{"location":{"bearing":300,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "LUP",
+      "zones": [
+        {"zone":{"location":{"bearing":325,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "INJU12",
+      "zones": [
+        {"zone":{"location":{"bearing":25,"dist":6,"object":"accident_location"}}}
+    ]},
+    {"create_location": "INJU13",
+      "zones": [
+        {"zone":{"location":{"bearing":325,"dist":8,"object":"accident_location"}}}
+    ]},
+    {"create_location": "INJU23",
+      "zones": [
+        {"zone":{"location":{"bearing":250,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"create_location": "POLMAN1",
+      "zones": [
+        {"zone":{"location":{"bearing":25,"dist":3.5,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "POLMAN2",
+      "zones": [
+        {"zone":{"location":{"bearing":145,"dist":7,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "FIRE",
+      "zones": [
+        {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+    ]},
+    {"create_location": "FIRMAN1",
+      "zones": [
+        {"zone":{"location":{"bearing":150,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"sleep":0.2},
+    {"create_location": "FIRMAN2",
+      "zones": [
+        {"zone":{"location":{"bearing":180,"dist":5,"object":"accident_location"}}}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":75},
+    {"set_message":{"text":"Cabin preparation, 75% completed... please wait, it can take a while"}},
+    {"create_object":{"name":"horse","title":"30West Horse","fallback_title":"30West Dog","location":{"bearing":330,"dist":6,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"if": {"has_object":"horse"}, "eq": 1,
+      "then": [
+        {"set":{"object":"horse","var":"VAR 1"},"value":0}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":80},
+    {"set_message":{"text":"Cabin preparation, 80% completed... please wait, it can take a while"}},
+    {"create_object":{"name":"bagh","title":"Airbus H145 Cargo Bag","location":{"bearing2":90,"dist":1.5,"heading":{"rand":[0,359]},"object":"injured_human"}}},
+    {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+    {"create_object":{"name":"civilian1","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":215,"dist":3.5,"heading":35,"object":"accident_location"}}},
+    {"try": [
+        {"point_object":"civilian1","to":"injured_human"}
+      ],
+      "catch": [
+        {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+    ]},
+    {"if": {"has_object":"civilian1"}, "eq": 1,
+      "then": [
+        {"set":{"object":"civilian1","var":"VAR 1"},"value":0}
+    ]},
+    {"if": {"local":"CRASH_VARIABLE"}, "gt": 2,
+      "then": [
+        {"call_macro":"select unique public title","params":{"source":"civils1"},"result":"unique_public_title"},
+        {"create_object":{"name":"civilian2","title":{"param":"unique_public_title"},"fallback_title":{"struct":{"static":"stdcivils"},"index":{"floor":{"rand":[0,{"struct":{"static":"stdcivils"},"path":"length"}]}}},"location":{"bearing":240,"dist":6.5,"heading":60,"object":"accident_location"}}},
+        {"try": [
+            {"point_object":"civilian2","to":"injured_human"}
+          ],
+          "catch": [
+            {"set":{"local":"civilian_spawn_error"},"value":{"param":"$ERROR"}}
+        ]},
+        {"if": {"has_object":"civilian2"}, "eq": 1,
+          "then": [
+            {"set":{"object":"civilian2","var":"VAR 1"},"value":0}
+        ]}
+    ]},
+    {"set":{"var":["L:LOAD","number"]},"value":90},
+    {"set_message":{"text":"Cabin preparation, 90% completed... please wait, it can take a while"}}
   ],
   "fishing": [
     {"set":{"local":"police1stopdistance"},"value":"28"},

@@ -24,7 +24,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 ## 2. State and persistence
 
 - Any value displayed after a mission reload must have an explicit fallback. Local variables are not persistence.
-- A persistent user choice must use a named `global` and have a first-run default in the mission through `set: global` guarded by a null check.
+- A persistent user choice must use a named `global` and have a first-run default in the mission through `set: global` guarded by a null check. User rule of 2026-10-20: the default is not left to the consumers (null read as the default): the macro `settings first run defaults` (called by `objective1`, after `load custom aircraft profile` and at the end of `resetdefault`) sets every settings global that is null, so the tablet shows a selected button and the Mission Companion reads a value; `tools/test-flight-report-2026-10-20.js` rejects a key of `save custom aircraft profile` without a guarded default.
 - Every new option added to Settings or the technical page is persistent by default: it must use a named `global`, have a guarded first-run default in the mission, and prefix its user-facing description with `(P)`. Never add or modify a repository-side global-state file.
 - Normalise values before formatting them. A renderer must not print an optional local directly when `undefined` is possible.
 - When an automatic action changes the user-visible state, update the same persistent state used by its manual counterpart.

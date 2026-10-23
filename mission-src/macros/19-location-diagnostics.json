@@ -345,6 +345,49 @@
     ]},
     {"call_macro":"snapshot dispatch diagnostics","params":{"stage":{"param":"stage"}}}
   ],
+  "hoist blockers sample": [
+    {"#comment":"Report MPR 2026-10-23 (the hoist never came out and nobody could tell which wait was open): reads, without changing anything, the conditions the hoist waits of Hoisting back up look at and writes the ones that fail, plus the flags that gate the sequence, into the local ground_ops_blockers (text). It is a field of ground_ops_state_now (every watcher row and snapshot), it is shown on the Dispatch page while the progress is stalled and it is called by the ground ops watcher and by the on-site operations progress monitor. Read-only: no wait, no logic depends on it."},
+    {"set":{"local":"gb"},"value":""},
+    {"set":{"local":"gb_speed"},"value":{"var":["GPS GROUND SPEED","knots"]}},
+    {"set":{"local":"gb_rh"},"value":{"var":["RADIO HEIGHT","feet"]}},
+    {"if": {"local":"gb_speed"}, "gt": 1,
+      "then": [
+        {"set":{"local":"gb"},"value":{"text":"{0}ground speed {1} kt, hold it under 1; ","params":[{"local":"gb"},{"round":{"local":"gb_speed"},"to":1}]}}
+    ]},
+    {"if": {"local":"gb_rh"}, "lt": 40,
+      "then": [
+        {"set":{"local":"gb"},"value":{"text":"{0}radio height {1} ft, climb above 40; ","params":[{"local":"gb"},{"round":{"local":"gb_rh"},"to":0}]}}
+    ]},
+    {"if": {"local":"gb_rh"}, "gt": 163,
+      "then": [
+        {"set":{"local":"gb"},"value":{"text":"{0}radio height {1} ft, descend below 163; ","params":[{"local":"gb"},{"round":{"local":"gb_rh"},"to":0}]}}
+    ]},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gb_d"},"value":{"object":"hoist_crew","var":"distance:m"}},
+        {"if": {"local":"gb_d"}, "gt": {"local":"ldg_spot_area_size"},
+          "then": [
+            {"set":{"local":"gb"},"value":{"text":"{0}hoist operator {1} m away, move over the landing spot; ","params":[{"local":"gb"},{"round":{"local":"gb_d"},"to":0}]}}
+        ]}
+    ]},
+    {"if": {"has_object":"hpax1"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gb_d"},"value":{"object":"hpax1","var":"distance:m"}},
+        {"if": {"local":"gb_d"}, "gt": {"local":"ldg_spot_area_size"},
+          "then": [
+            {"set":{"local":"gb"},"value":{"text":"{0}second hoist operator {1} m away, move over the landing spot; ","params":[{"local":"gb"},{"round":{"local":"gb_d"},"to":0}]}}
+        ]}
+    ]},
+    {"set":{"local":"gb_f1"},"value":{"if":{"local":"HOIST_OUT"},"ne":null,"then":{"local":"HOIST_OUT"},"else":"-"}},
+    {"set":{"local":"gb_f2"},"value":{"if":{"local":"SECOND_HOIST"},"ne":null,"then":{"local":"SECOND_HOIST"},"else":"-"}},
+    {"set":{"local":"gb_f3"},"value":{"if":{"local":"HR_HOISTING_LOCK"},"ne":null,"then":{"local":"HR_HOISTING_LOCK"},"else":"-"}},
+    {"set":{"local":"gb_f4"},"value":{"if":{"local":"HOLDHOISTED"},"ne":null,"then":{"local":"HOLDHOISTED"},"else":"-"}},
+    {"set":{"local":"gb_f5"},"value":{"if":{"local":"second_hoist_hoisting"},"ne":null,"then":{"local":"second_hoist_hoisting"},"else":"-"}},
+    {"set":{"local":"gb_f6"},"value":{"if":{"local":"HEMS_LOADING_TRACE"},"ne":null,"then":{"local":"HEMS_LOADING_TRACE"},"else":"-"}},
+    {"set":{"local":"gb_f7"},"value":{"if":{"local":"ground_ops_last_checkpoint"},"ne":null,"then":{"local":"ground_ops_last_checkpoint"},"else":"-"}},
+    {"set":{"local":"gb_f8"},"value":{"if":{"local":"HEMS_PREPARE_TRACE"},"ne":null,"then":{"local":"HEMS_PREPARE_TRACE"},"else":"-"}},
+    {"set":{"local":"ground_ops_blockers"},"value":{"text":"{0}| STEP {1} PAX_HOIST {2} HOIST_OUT {3} SECOND_HOIST {4} HR_LOCK {5} HOLD {6} second_hoisting {7} loading {8} checkpoint {9} patient {10}","params":[{"local":"gb"},{"var":["L:STEP","number"]},{"var":["L:PAX_HOIST","number"]},{"local":"gb_f1"},{"local":"gb_f2"},{"local":"gb_f3"},{"local":"gb_f4"},{"local":"gb_f5"},{"local":"gb_f6"},{"local":"gb_f7"},{"local":"gb_f8"}]}}
+  ],
   "ground ops checkpoint": [
     {"#comment":"Appends one row to ground_ops_checkpoint_log (ring of 600, survives reload_mission, copied into every snapshot). Every row carries NR, ground flag, HOISTED, STEP, HOLD, phase and CREW so a stall can be located to the exact checkpoint and its rotor state. Keep this macro flat: it is called from deep thread bodies."},
     {"if": {"param":"detail"}, "eq": null,
@@ -367,6 +410,7 @@
   ],
   "sample ground ops state": [
     {"#comment":"Builds the local struct ground_ops_state_now used by the snapshot and by the ground ops watch. Every value has an explicit default so an unset local is visible as <unset> instead of a missing key. Distances are read only when both ends exist."},
+    {"call_macro":"hoist blockers sample"},
     {"set":{"local":"gops_nr"},"value":{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}},
     {"set":{"local":"gops_ecp1"},"value":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]}},
     {"set":{"local":"gops_ecp2"},"value":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]}},
@@ -487,6 +531,12 @@
           "mission_hoist": {"var":["L:MISSION_HOIST","number"]},
           "show_hoist_command": {"var":["L:MISSION_SHOW_HOIST_COMMAND","number"]},
           "show_skid_command": {"var":["L:MISSION_SHOW_SKID_COMMAND","number"]},
+          "blockers": {
+            "if": {"local":"ground_ops_blockers"},
+            "ne": null,
+            "then": {"local":"ground_ops_blockers"},
+            "else": "<unset>"
+          },
           "holdhoisted": {
             "if": {"local":"HOLDHOISTED"},
             "ne": null,

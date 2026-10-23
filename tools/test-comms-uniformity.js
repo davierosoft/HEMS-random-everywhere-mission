@@ -30,16 +30,27 @@ if (fs.existsSync(packPath)) {
   const used = new Set([...all.matchAll(/"call_macro":"voice say","params":\{"key":"([A-Z0-9.]+)"/g)].map((m) => m[1]));
   for (const m of all.matchAll(/<say:([A-Z0-9.]+)>/g)) if (m[1] !== 'KEY') used.add(m[1]);      // KEY is the placeholder of a comment
   for (const key of used) assert.ok(keys.has(key), `the voice key ${key} is used by the mission but is not in the base pack EN`);
+  // the keys with a variant for the medical team (.T) and the blood supply (.B): the mission adds the suffix voice_sfx (user, 2026-10-21)
+  const withSuffix = [...all.matchAll(/"key":\{"text":"([A-Z0-9.{}]+)\{(\d)\}","params":\[(?:[^\]]*,)?\{"local":"voice_sfx"\}\]\}/g)].map((m) => m[1]);
+  const suffixed = new Set(['ORG.INF', 'ORG.PCK', 'ORG.PCK.G', 'ORG.PCK.R', 'HOS.ORG', 'HOS.ORG.LT', 'ORG.DEL.LT', 'APR.ORG.PLT']);
+  for (const key of suffixed) { assert.ok(withSuffix.includes(key), `${key} is said with the suffix of the payload`); used.add(key); }
+  for (const key of ['OBJ.ORG', 'BRF.ORG.PLT', 'APR.ORG.PLT', 'DSP.ANS.ORG', 'PCK.CALL.ORG', 'PCK.REPLY.ORG', ...suffixed]) {
+    for (const sfx of ['T', 'B']) {
+      assert.ok(keys.has(`${key}.${sfx}`), `${key}.${sfx} is a message of the base pack EN`);
+      const at = pack.indexOf(`<message key="${key}.${sfx}"`);
+      assert.equal(count(pack.slice(at, pack.indexOf('</message>', at)), '<o>'), 6, `${key}.${sfx} has six options`);
+    }
+  }
   for (const key of ['CRT.POL.OUT', 'CRT.POL.BCK', 'CRT.AMB.BCK', 'CRT.POL.OPR', 'CRT.WALK', 'MID.SET', 'MID.HND', 'TRF.HND', 'ORG.PCK', 'APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END', 'APR.MUL', 'APR.FIR']) {
     assert.ok(used.has(key), `${key} must be used by the mission`);
     const block = pack.slice(pack.indexOf(`<message key="${key}"`), pack.indexOf('</message>', pack.indexOf(`<message key="${key}"`)));
     assert.equal(count(block, '<o>'), 6, `${key} has six options`);
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="21"/.test(pack), 'the base pack EN is version 21');
+  assert.ok(/<voicepack name="EN"[^>]* version="24"/.test(pack), 'the base pack EN is version 24');
   const dePath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml');
   if (fs.existsSync(dePath)) {
     const de = fs.readFileSync(dePath, 'utf8');
-    assert.ok(/<voicepack name="DE"[^>]* version="9" basever="21"/.test(de), 'the pack DE is version 9 on the base 21');
+    assert.ok(/<voicepack name="DE"[^>]* version="12" basever="24"/.test(de), 'the pack DE is version 12 on the base 24');
     for (const key of ['CRT.POL.OUT', 'CRT.POL.BCK', 'CRT.AMB.BCK', 'CRT.POL.OPR', 'CRT.WALK', 'MID.SET', 'MID.HND', 'TRF.HND', 'ORG.PCK', 'APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END', 'APR.MUL', 'APR.FIR']) assert.ok(de.includes(`<message key="${key}"`), `${key} is translated in the pack DE`);
   }
 }
@@ -77,7 +88,7 @@ assert.equal(count(all, '"key":"MID.SET"'), 1, 'MID.SET when the meeting point i
 assert.ok(all.slice(all.indexOf('REACH THE CONCORDED MEETING POINT'), all.indexOf('REACH THE CONCORDED MEETING POINT') + 400).includes('"key":"MID.SET"'), 'MID.SET comes right after the objective of the meeting point');
 assert.equal(count(text(macros['midway patient load1']) + text(macros['midway patient load2']), '"key":"MID.HND"'), 2, 'MID.HND in both midway loadings');
 assert.ok(text(macros['transfer patient paperwork']).includes('"key":"TRF.HND"'), 'the handover at the hospital of a patient transfer');
-assert.ok(text(macros['organ pick up scene1']).includes('"key":"ORG.PCK"'), 'the organ pickup');
+assert.ok(text(macros['organ pick up scene1']).includes('"key":{"text":"ORG.PCK{0}","params":[{"local":"voice_sfx"}]}'), 'the organ pickup (with the suffix of the payload)');
 const mid = text(macros['voice midway briefing']);
 for (const key of ['APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END']) assert.ok(mid.includes(`"${key}"`), `voice midway briefing: ${key}`);
 assert.ok(mid.includes('"local":"VCP"},"eq":"APP"') && mid.includes('"declut":1'), 'the midway briefing is for the app and is chatter');
@@ -111,7 +122,7 @@ for (const key of ['CHT.TEC', 'CHT.CPL', 'CHT.TEC2']) assert.ok(greet.includes(`
 assert.ok(greet.includes('"local":"VCP"},"eq":"APP"') && greet.includes('"local":"TTS"},"eq":1') && greet.includes('"global":"AUDIO_DECLUT"},"eq":0') && greet.includes('"global":"AUDIO_DECLUT"},"gt":3'), 'only with the Mission Companion and the chatter levels of the original lines');
 const hangarMacro = Object.values(macros).map(text).find((body) => body.includes('"call_macro":"voice hangar greeting"'));
 assert.ok(hangarMacro && hangarMacro.includes('"local":"VCP"},"eq":"APP","then":[{"call_macro":"voice hangar greeting"}]') && hangarMacro.includes('L:FRA{local:VCP}7') && hangarMacro.includes('"local":"VCP"},"ne":"APP"') && hangarMacro.includes('L:CPL{local:VCP}23'), 'the boarding at the hangar: the greeting with the Companion, the original lines FRA 7 and CPL 23 with a wav pack');
-assert.ok(all.includes('<pack:EN:21>') && !all.includes('<pack:EN:20>'), 'the mission declares the pack EN 21 (the greetings)');
+assert.ok(all.includes('<pack:EN:24>') && !all.includes('<pack:EN:23>'), 'the mission declares the pack EN 24 (HOS.PAP on top of the radio calls of the flight of 2026-10-20)');
 if (pack) {
   const dePack = fs.existsSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8') : null;
   const block = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); return xml.slice(at, xml.indexOf('</message>', at)); };

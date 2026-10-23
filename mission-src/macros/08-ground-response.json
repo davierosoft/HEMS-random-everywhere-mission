@@ -875,6 +875,21 @@
     ]},
     {"destroy_object":"ambulance5"}
   ],
+  "injured scene reference": [
+    {"#comment":"Daikan report of 2026-10-21: the emergency vehicles go where the injured are. The police go to the scene (an officer on each side), the fire engines to the fire, the ambulances to the injured: injured_scene is the position of injured_human now (accident_location when there is none), created when an ambulance comes near. Residential fires move the injured away from the fire, other scenes may move them too."},
+    {"if": {"has_object":"injured_human"}, "eq": 1,
+      "then": [
+        {"create_location": "injured_scene",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"injured_human"}}}
+        ]}
+      ],"else": [
+        {"create_location": "injured_scene",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+        ]}
+    ]}
+  ],
   "park_ambulance1": [
     {"if": {
       "and": [
@@ -883,9 +898,10 @@
         {"require":{"local":"ambu1_parking"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
+        {"call_macro":"injured scene reference"},
         {"set":{"local":"ambu1_parking"},"value":"yes"},
         {"or": [
-          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"accident_location"},"lt":55},
+          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"injured_scene"},"lt":55},
           {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance1","var":"VELOCITY Z"}, "gt": 10,
@@ -893,7 +909,7 @@
             {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":10}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"accident_location"},"lt":40},
+          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"injured_scene"},"lt":40},
           {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance1","var":"VELOCITY Z"}, "gt": 7,
@@ -901,7 +917,7 @@
             {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":7}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"accident_location"},"lt":{"local":"ambu1stopdistance"}},
+          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"injured_scene"},"lt":{"local":"ambu1stopdistance"}},
           {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0}
         ]},
         {"set":{"object":"ambulance1","var":"WP INDEX"},"value":0},
@@ -1165,6 +1181,7 @@
         {"require":{"local":"ambu1_parking"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
+        {"call_macro":"injured scene reference"},
         {"if": {"param":"stop_only"}, "eq": 1,
           "then": [
             {"set":{"local":"ambu1_stop_active"},"value":"yes"}
@@ -1173,7 +1190,7 @@
             {"wait_for":{"local":"ambu1_stop_active"},"ne":"yes"}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"accident_location"},"lt":55},
+          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"injured_scene"},"lt":55},
           {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance1","var":"VELOCITY Z"}, "gt": 10,
@@ -1181,7 +1198,7 @@
             {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":10}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"accident_location"},"lt":40},
+          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"injured_scene"},"lt":40},
           {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance1","var":"VELOCITY Z"}, "gt": 7,
@@ -1189,7 +1206,7 @@
             {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":7}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"accident_location"},"lt":{"local":"ambu1stopdistance"}},
+          {"wait_for":{"location":"ambulance1","var":"distance:m","to":"injured_scene"},"lt":{"local":"ambu1stopdistance"}},
           {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0}
         ]},
         {"set":{"object":"ambulance1","var":"WP INDEX"},"value":0},
@@ -1208,7 +1225,7 @@
         {"set":{"object":"ambulance1","var":"WP INDEX"},"value":0},
         {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":0},
         {"wait_for":{"object":"ambulance1","var":"VELOCITY Z"},"eq":0},
-        {"if": {"object":"accident_location","var":"distance:m","to":"ambulance1"}, "gte": {"local":"ambu1stopdistance"},
+        {"if": {"object":"injured_scene","var":"distance:m","to":"ambulance1"}, "gte": {"local":"ambu1stopdistance"},
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"park_ambulance1_scene","state":"turn_back_start"}},
             {"drive_object":{"name":"ambulance1","to":[{"bearing2":90,"dist":2,"object":"ambulance1"}],"VAR1":1,"speed":4}},
@@ -1523,9 +1540,10 @@
         {"require":{"local":"ambu2_parking"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
+        {"call_macro":"injured scene reference"},
         {"set":{"local":"ambu2_parking"},"value":"yes"},
         {"or": [
-          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"accident_location"},"lt":55},
+          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"injured_scene"},"lt":55},
           {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance2","var":"VELOCITY Z"}, "gt": 10,
@@ -1533,7 +1551,7 @@
             {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":10}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"accident_location"},"lt":40},
+          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"injured_scene"},"lt":40},
           {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance2","var":"VELOCITY Z"}, "gt": 7,
@@ -1541,7 +1559,7 @@
             {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":7}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"accident_location"},"lt":{"local":"ambu2stopdistance"}},
+          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"injured_scene"},"lt":{"local":"ambu2stopdistance"}},
           {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0}
         ]},
         {"set":{"object":"ambulance2","var":"WP INDEX"},"value":0},
@@ -1824,6 +1842,7 @@
         {"require":{"local":"ambu2_parking"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
+        {"call_macro":"injured scene reference"},
         {"if": {"param":"stop_only"}, "eq": 1,
           "then": [
             {"set":{"local":"ambu2_stop_active"},"value":"yes"}
@@ -1832,7 +1851,7 @@
             {"wait_for":{"local":"ambu2_stop_active"},"ne":"yes"}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"accident_location"},"lt":55},
+          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"injured_scene"},"lt":55},
           {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance2","var":"VELOCITY Z"}, "gt": 10,
@@ -1840,7 +1859,7 @@
             {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":10}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"accident_location"},"lt":40},
+          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"injured_scene"},"lt":40},
           {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0}
         ]},
         {"if": {"object":"ambulance2","var":"VELOCITY Z"}, "gt": 7,
@@ -1848,7 +1867,7 @@
             {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":7}
         ]},
         {"or": [
-          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"accident_location"},"lt":{"local":"ambu2stopdistance"}},
+          {"wait_for":{"location":"ambulance2","var":"distance:m","to":"injured_scene"},"lt":{"local":"ambu2stopdistance"}},
           {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0}
         ]},
         {"set":{"object":"ambulance2","var":"WP INDEX"},"value":0},
@@ -1868,7 +1887,7 @@
         {"set":{"object":"ambulance2","var":"WP INDEX"},"value":0},
         {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":0},
         {"wait_for":{"object":"ambulance2","var":"VELOCITY Z"},"eq":0},
-        {"if": {"object":"accident_location","var":"distance:m","to":"ambulance2"}, "gte": {"local":"ambu2stopdistance"},
+        {"if": {"object":"injured_scene","var":"distance:m","to":"ambulance2"}, "gte": {"local":"ambu2stopdistance"},
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance2","target":"park_ambulance2_scene","state":"turn_back_start"}},
             {"drive_object":{"name":"ambulance2","to":[{"bearing2":90,"dist":2,"object":"ambulance2"}],"VAR1":1,"speed":4}},
@@ -2484,6 +2503,24 @@
         {"call_macro":"wav unit arrival","params":{"unit":"fire"}}
     ]}
   ],
+  "fire scene worklight": [
+    {"#comment":"User request of 2026-10-20: at a road accident (the scene macros default rtc, Bycicle vs car, pedestrian vs car, BUS CRASH, truck vs car, train) with the fire engine on the scene and the light not full day (E:TIME OF DAY not 1: dawn, dusk or night) a worklight (Airbus H145 Worklight, VAR 1 = 1 is on, as in the quarry, construction and power scenes and for the police lights) is put 7 m ahead of the fire engine (bearing2 0 from firetruck1, so it is on the road in front of the engine, not on the patients) and turned to injured_human. Once for each dispatch (the object worklight_fire). It is not checked against the other objects (no command tells the free place): the position ahead of the engine is the free one by the parking of the engine. Called at the end of deploy_firetruck1_crew and of the second fire crew branch of Firetruck1, i.e. after the fire fighters have been placed (user, 2026-10-21: the light comes after the fire fighters, 7 m ahead of the engine). Runtime PENDING."},
+    {"if": {
+      "and": [
+        {"require":{"var":["E:TIME OF DAY","number"]},"ne":1},
+        {"require":{"or":[{"require":{"local":"scene_macro"},"eq":"default rtc"},{"require":{"local":"scene_macro"},"eq":"Bycicle vs car"},{"require":{"local":"scene_macro"},"eq":"pedestrian vs car"},{"require":{"local":"scene_macro"},"eq":"BUS CRASH"},{"require":{"local":"scene_macro"},"eq":"truck vs car"},{"require":{"local":"scene_macro"},"eq":"train"}]},"eq":1},
+        {"require":{"has_object":"injured_human"},"eq":1},
+        {"require":{"has_object":"firetruck1"},"eq":1},
+        {"require":{"has_object":"worklight_fire"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"create_object":{"name":"worklight_fire","title":"Airbus H145 Worklight","location":{"bearing":0,"dist":0,"heading":0,"object":"firetruck1"}}},
+        {"move_object":"worklight_fire","to":{"bearing2":0,"dist":7,"heading":0,"object":"firetruck1"}},
+        {"point_object":"worklight_fire","to":"injured_human"},
+        {"set":{"object":"worklight_fire","var":"VAR 1"},"value":1},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"fire_ops","actor":"worklight_fire","target":"fire scene worklight","state":"created ahead of the fire engine, on"}}
+    ]}
+  ],
   "park_firetruck2": [
     {"if": {
       "and": [
@@ -3053,7 +3090,8 @@
             {"create_object":{"name":"fireman2","title":{"struct":{"static":"FiremanEU"},"index":{"floor":{"rand":[0,{"struct":{"static":"FiremanEU"},"path":"length"}]}}},"fallback_title":"Airbus H145 Fireman","location":{"bearing2":90,"dist":2.5,"heading":0,"object":"fireman"}}}
         ]},
         {"set":{"object":"fireman2","var":"VAR 1"},"value":0},
-        {"point_object":"fireman2","to":"accident_location"}
+        {"point_object":"fireman2","to":"accident_location"},
+        {"call_macro":"fire scene worklight"}
     ]}
   ],
   "deploy_police_crew": [
@@ -3658,9 +3696,10 @@
                     {"sleep":0.8},
                     {"set":{"object":"ambulance2","var":"VELOCITY Z"},"value":10}
                 ]}},
+                {"call_macro":"injured scene reference"},
                 {"create_location": "watchdog_ambulance2_scene_approach",
                   "zones": [
-                    {"zone":{"location":{"bearing":315,"dist":55,"object":"accident_location"}}}
+                    {"zone":{"location":{"bearing":315,"dist":55,"object":"injured_scene"}}}
                 ]},
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance2","target":"Ambulance2","state":"drive_start"}},
                 {"if": {"local":"ambu_direct_drive"}, "eq": "yes",
@@ -5293,7 +5332,8 @@
                     {"point_object":"fireman","to":"accident_location"},
                     {"set":{"object":"fireman","var":"VAR 1"},"value":0},
                     {"point_object":"fireman2","to":"accident_location"},
-                    {"set":{"object":"fireman2","var":"VAR 1"},"value":0}
+                    {"set":{"object":"fireman2","var":"VAR 1"},"value":0},
+                    {"call_macro":"fire scene worklight"}
                 ]},
                 {"wait_for":{"local":"fire1arrived"},"eq":"yes"},
                 {"call_macro":"ground crew runtime trace","params":{"macro":"fire_ops","actor":"firetruck1","target":"Firetruck1","state":"fire1arrived_seen"}},

@@ -116,6 +116,15 @@
     {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk|primary|secondary|tertiary|(motorway|trunk|primary|secondary)_link)$\"]->.major;way({{bbox}})[highway~\"^(unclassified)$\"]->.minor;node(w.major)(w.minor);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}},
     {"set":{"local":"location_name"},"value":"accident_location"}
   ],
+  "Query random motorway": [
+    {"#comment":"User request of 2026-10-21 (multi-vehicle collision on the motorway, ID 69): a node of a motorway or trunk road. Same road flow as Query random road (roadtype road, the road nodes generator finds the approach routes)."},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];way({{bbox}})[highway~\"^(motorway|trunk)$\"];node(w);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":500,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"roadtype"},"value":"road"},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
   "Query random parking": [
     {"if": {"local":"skip_query"}, "ne": "yes",
       "then": [
@@ -128,6 +137,22 @@
     {"if": {"local":"skip_query"}, "ne": "yes",
       "then": [
         {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];nwr({{bbox}})[highway=cycleway];(._;>;);out;","MAX_ATTEMPTS":15,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random pitch": [
+    {"#comment":"User request of 2026-10-21 (collapse on a sports field, ID 71): a pitch, a sports centre or a stadium."},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];(nwr({{bbox}})[leisure=pitch];nwr({{bbox}})[leisure=sports_centre];nwr({{bbox}})[leisure=stadium];);(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":800,"MULTIPLIER":3,"LOCATION_NAME":"accident_location"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"accident_location"}
+  ],
+  "Query random riding": [
+    {"#comment":"User request of 2026-10-21 (rider fallen from a horse, ID 74): a riding school, a horse riding centre or an equestrian place."},
+    {"if": {"local":"skip_query"}, "ne": "yes",
+      "then": [
+        {"call_macro":"Query random nodes with sampling","params":{"QUERY":"[out:json];(nwr({{bbox}})[leisure=horse_riding];nwr({{bbox}})[sport=equestrian];nwr({{bbox}})[amenity=riding_school];);(._;>;);out center;","MAX_ATTEMPTS":17,"SAMPLE_RADIUS":2000,"MULTIPLIER":2,"LOCATION_NAME":"accident_location"}}
     ]},
     {"set":{"local":"location_name"},"value":"accident_location"}
   ],

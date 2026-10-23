@@ -1041,7 +1041,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:21>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:24>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice app lost": [
@@ -1058,9 +1058,11 @@
         {"set":{"var":["L:TEMPAUDIOINHIBIT","number"]},"value":0},
         {"if": {"global":"VOICEPACK"}, "eq": null,
           "then": [
-            {"set":{"local":"VCP"},"value":"ANDREW"}
+            {"set":{"local":"VCP"},"value":"ANDREW"},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"voice_vcp","actor":"n/a","target":{"local":"VCP"},"state":{"text":"VCP now {0} (set in voice app lost): AUDIOINHIBIT={1} TTS={2}","params":[{"local":"VCP"},{"var":["L:AUDIOINHIBIT","number"]},{"local":"TTS"}]}}}
           ],"else": [
-            {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}}
+            {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"voice_vcp","actor":"n/a","target":{"local":"VCP"},"state":{"text":"VCP now {0} (set in voice app lost): AUDIOINHIBIT={1} TTS={2}","params":[{"local":"VCP"},{"var":["L:AUDIOINHIBIT","number"]},{"local":"TTS"}]}}}
         ]},
         {"call_macro":"voice app popup"}
     ]}
@@ -1233,6 +1235,64 @@
     ]},
     {"return":0}
   ],
+  "voice radio reminder": [
+    {"#comment":"User request of 2026-10-20: after a dispatch is accepted, if the helicopter is on (the battery master or the GPCP power switch) and the CARLS is still not connected after a few minutes, a crew member aboard, chosen at random, reminds the pilot to switch the radio on to talk to the dispatcher (pack RAD.REM). First reminder 3 to 5 minutes after the briefing started, then every 4 to 6 minutes, at most three. It stops when the radio works (voice radio ready), with a newer dispatch (voice_dispatch_seq) or when the mission is over (MISSION_PHASE 10 or more). With the helicopter off it only waits. Mission Companion only (a wav pack has no such line). param seq = the number of the dispatch."},
+    {"set":{"param":"rr_n"},"value":0},
+    {"sleep":{"rand":[180,300]}},
+    {"while": {"param":"rr_n"}, "lt": 3,
+      "do": [
+        {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
+          "then": [
+            {"return":1}
+        ]},
+        {"if": {"local":"MISSION_PHASE"}, "gte": 10,
+          "then": [
+            {"return":1}
+        ]},
+        {"call_macro":"voice radio ready","result":"rr_ready"},
+        {"if": {"param":"rr_ready"}, "eq": 1,
+          "then": [
+            {"return":1}
+        ]},
+        {"if": {
+          "or": [
+            {"require":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+            {"require":{"var":["L:{local:HXX}_SDK_GPCP_PWR_SWITCH","number"]},"gt":0.5}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"param":"rr_who"},"value":0},
+            {"set":{"param":"rr_try"},"value":0},
+            {"while": {"param":"rr_who"}, "eq": 0,
+              "do": [
+                {"set":{"param":"rr_m"},"value":{"add":[2,{"floor":{"rand":[0,4]}}]}},
+                {"call_macro":"voice crew member ok","params":{"member":{"param":"rr_m"},"aboard":1,"skip":0},"result":"rr_ok"},
+                {"if": {"param":"rr_ok"}, "eq": 1,
+                  "then": [
+                    {"set":{"param":"rr_who"},"value":{"param":"rr_m"}},
+                    {"if": {"param":"rr_m"}, "eq": 2,
+                      "then": [
+                        {"set":{"param":"rr_who"},"value":3}
+                    ]},
+                    {"if": {"param":"rr_m"}, "eq": 3,
+                      "then": [
+                        {"set":{"param":"rr_who"},"value":2}
+                    ]}
+                ]},
+                {"set":{"param":"rr_try"},"value":{"add":[{"param":"rr_try"},1]}},
+                {"if": {"param":"rr_try"}, "gte": 8,
+                  "then": [
+                    {"set":{"param":"rr_who"},"value":-1}
+                ]}
+            ]},
+            {"if": {"param":"rr_who"}, "gt": 0,
+              "then": [
+                {"speak":{"text":"<actor{0}><say:RAD.REM>","params":[{"param":"rr_who"}]}},
+                {"set":{"param":"rr_n"},"value":{"add":[{"param":"rr_n"},1]}}
+            ]}
+        ]},
+        {"sleep":{"rand":[240,360]}}
+    ]}
+  ],
   "voice crew member ok": [
     {"#comment":"1 when the crew member (param member 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2) can speak: it exists (CREW_MEMBER_CAP), is not dead, not below 15 (the mute threshold of the context for the Mission Companion), and with aboard 1 is aboard (CREW_OUT_n 0); param skip is a member that does not count (the casualty)."},
     {"set":{"param":"vm_ok"},"value":0},
@@ -1391,7 +1451,8 @@
     {"if": {"param":"vdr_who"}, "gt": 0,
       "then": [
         {"set":{"local":"vrd_rb"},"value":1},
-        {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}><radio:off>","params":[{"param":"vdr_who"}]}},
+        {"#comment":"User report 2026-10-20: the readback was in a plain voice with the helicopter powered. The text carries no radio tag now: the Mission Companion decides (the intercom with the battery or the GPCP switch on, the voice without power; the pack messages DSA.RB.A and DSA.RB.Q say radio ics)."},
+        {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}>","params":[{"param":"vdr_who"}]}},
         {"speak":{"text":"{0}<say:DSA.RB.A>","params":[{"local":"vrd_tag"}]}},
         {"speak":{"text":"{0}<text:DSC.{1}.{2}>{3}","params":[{"local":"vrd_tag"},{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
         {"if": {"local":"vrd_veh"}, "eq": 1,
@@ -1849,7 +1910,20 @@
     ]}
   ],
   "voice briefing chat": [
-    {"#comment":"Crew briefing after the dispatcher read the dispatch (pack EN group brief). New LVAR numbers PLT 49-50, CPL 66, PAX3 39, 91. Starts with voice dispatch exchange (the pilot asks the dispatcher for an update, the dispatcher answers by mission class)."},
+    {"#comment":"Crew briefing after the dispatcher read the dispatch (pack EN group brief). New LVAR numbers PLT 49-50, CPL 66, PAX3 39, 91. Starts with voice dispatch exchange (the pilot asks the dispatcher for an update, the dispatcher answers by mission class). Also starts the reminder to switch the radio on (voice radio reminder, user request of 2026-10-20)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vrr_seq_snapshot"},"value":{"local":"voice_dispatch_seq"}},
+        {"create_thread": {
+          "commands": [
+            {"set":{"param":"vrr_seq"},"value":{"local":"vrr_seq_snapshot"}},
+            {"call_macro":"voice radio reminder","params":{"seq":{"param":"vrr_seq"}}}
+        ]}}
+    ]},
     {"if": {
       "or": [
         {"require":{"global":"AUDIO_DECLUT"},"eq":0},
@@ -1912,7 +1986,7 @@
                 ]},
                 {"if": {"local":"vb_k"}, "ne": "",
                   "then": [
-                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.PLT","params":[{"local":"vb_k"}]}}},
+                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.PLT{1}","params":[{"local":"vb_k"},{"local":"voice_sfx"}]}}},
                     {"sleep":0.4},
                     {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.CPL","params":[{"local":"vb_k"}]}}},
                     {"sleep":0.4},
@@ -1921,7 +1995,17 @@
                     {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.CHF","params":[{"local":"vb_k"}]}}},
                     {"sleep":0.4},
                     {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.END","params":[{"local":"vb_k"}]}}},
-                    {"sleep":0.4}
+                    {"sleep":0.4},
+                    {"if": {"local":"vb_k"}, "eq": "ORG",
+                      "then": [
+                        {"sleep":4},
+                        {"call_macro":"voice organ briefing"}
+                    ]},
+                    {"if": {"local":"vb_k"}, "eq": "TRF",
+                      "then": [
+                        {"sleep":4},
+                        {"call_macro":"voice say","params":{"key":"TRF.INF","a":{"local":"hospital_name"}}}
+                    ]}
                   ],"else": [
                     {"set":{"var":["L:PLT{local:VCP}49","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}49","number"]},1]}},
                     {"sleep":0.4},
@@ -2031,7 +2115,7 @@
         ]},
         {"if": {"param":"ab_cls"}, "eq": "ORG",
           "then": [
-            {"call_macro":"voice say","params":{"key":"APR.ORG.PLT","declut":1}},
+            {"call_macro":"voice say","params":{"key":{"text":"APR.ORG.PLT{0}","params":[{"local":"voice_sfx"}]},"declut":1}},
             {"sleep":0.4},
             {"call_macro":"voice say","params":{"key":"APR.ORG.DOC","declut":1}},
             {"sleep":0.4},
@@ -2907,7 +2991,7 @@
   "voice objective": [
     {"#comment":"The dispatcher says the objective of the mission in a colloquial way, a text for each kind of mission (pack EN OBJ.*), after reading the description of the dispatch."},
     {"call_macro":"voice mission class","result":"vo_cls"},
-    {"call_macro":"voice say","params":{"key":{"text":"OBJ.{0}","params":[{"param":"vo_cls"}]}}}
+    {"call_macro":"voice say","params":{"key":{"text":"OBJ.{0}{1}","params":[{"param":"vo_cls"},{"local":"voice_sfx"}]}}}
   ],
   "voice ground update": [
     {"#comment":"Updates during the ground operations (called every 2 s by on-site operations progress monitor). The team reports when it has news, not on a timer: a new stage of the operations (deployment, treatment with the condition of the patient from LIFESCORE, CPR, loading, return; a dead patient has its own report), a change of the time left (TIMERGND times the progress that is missing, in minutes, at most one report every 20 s), once who transports the patient. When nothing happens for 240 s and the pilot is alone (nobody else aboard, L:HMC_CREW_PRESENT) the pilot asks for the status; when nothing happens for 150 s and somebody is aboard, they make small talk (voice banter, only when voice calm allows it). Only with the Mission Companion (VCP APP). Pack EN GRD.*."},
@@ -2991,7 +3075,17 @@
               "then": [
                 {"set":{"local":"gu_alone"},"value":0}
             ]},
-            {"set":{"local":"gu_news"},"value":{"text":"{0}|{1}","params":[{"local":"gu_key"},{"local":"gu_eb"}]}},
+            {"#comment":"The condition of the patient swings between stable and serious with the LIFESCORE (report 2026-10-23: the same time left was said four times): both count as one stage in the signature, so a report needs a new stage (critical, CPR, loading) or a new time left."},
+            {"set":{"local":"gu_sk"},"value":{"local":"gu_key"}},
+            {"if": {
+              "or": [
+                {"require":{"local":"gu_key"},"eq":"GRD.TRT.S"},
+                {"require":{"local":"gu_key"},"eq":"GRD.TRT.M"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"gu_sk"},"value":"GRD.TRT"}
+            ]},
+            {"set":{"local":"gu_news"},"value":{"text":"{0}|{1}","params":[{"local":"gu_sk"},{"local":"gu_eb"}]}},
             {"set":{"local":"gu_go"},"value":0},
             {"if": {
               "and": [
@@ -3049,8 +3143,30 @@
                         {"set":{"local":"gu_who_done"},"value":"yes"}
                     ]}
                 ]},
+                {"set":{"local":"gu_rr"},"value":{"rand":[0,1]}},
+                {"set":{"local":"gu_reply"},"value":0},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"gu_rr"},"lt":0.55},
+                    {"require": {"local":"gu_now"},
+                      "gte": {
+                        "add": [
+                          {"if": {"local":"gu_pltok_last"},
+                            "ne": null,
+                            "then": {"local":"gu_pltok_last"},
+                            "else": -100
+                          },
+                          60
+                      ]}
+                    }
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"gu_reply"},"value":1},
+                    {"set":{"local":"gu_pltok_last"},"value":{"local":"gu_now"}}
+                ]},
                 {"create_thread": {
                   "commands": [
+                    {"set":{"param":"tk_rep"},"value":{"local":"gu_reply"}},
                     {"set":{"param":"tk_ask"},"value":{"local":"gu_ask"}},
                     {"set":{"param":"tk_key"},"value":{"local":"gu_key"}},
                     {"set":{"param":"tk_who"},"value":{"local":"gu_who"}},
@@ -3070,7 +3186,10 @@
                     ]},
                     {"call_macro":"voice say","params":{"key":{"param":"tk_eta"},"declut":1,"a":{"param":"tk_min"}}},
                     {"sleep":3.5},
-                    {"call_macro":"voice say","params":{"key":"GRD.PLT.OK","declut":1}}
+                    {"if": {"param":"tk_rep"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":"GRD.PLT.OK","declut":1}}
+                    ]}
                 ]}}
             ]},
             {"if": {
@@ -3161,10 +3280,20 @@
               "then": [
                 {"set":{"local":"wua_t_ambulance"},"value":-1000}
             ]},
+            {"#comment":"An ambulance that arrives when the crew already loads or brings back the patient (whobringpatient us) takes nothing: no handover line (report 2026-10-23)."},
+            {"set":{"local":"wua_handover_open"},"value":1},
             {"if": {
-              "or": [
-                {"require":{"local":"wua_now"},"gt":{"add":[{"local":"wua_t_ambulance"},120]}},
-                {"require":{"local":"wua_now"},"lt":{"local":"wua_t_ambulance"}}
+              "and": [
+                {"require":{"local":"whobringpatient"},"eq":"us"},
+                {"require":{"or":[{"require":{"local":"ops_progress_stage"},"eq":"PATIENT LOADING / CREW RETURN"},{"require":{"local":"ops_progress_stage"},"eq":"FINAL CREW RETURN"}]},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"wua_handover_open"},"value":0}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"local":"wua_handover_open"},"eq":1},
+                {"require":{"or":[{"require":{"local":"wua_now"},"gt":{"add":[{"local":"wua_t_ambulance"},120]}},{"require":{"local":"wua_now"},"lt":{"local":"wua_t_ambulance"}}]},"eq":1}
               ]}, "eq": 1,
               "then": [
                 {"set":{"local":"wua_t_ambulance"},"value":{"local":"wua_now"}},
@@ -3293,8 +3422,245 @@
                 {"call_macro":"voice say","params":{"key":{"text":"HOS.CALL.{0}","params":[{"local":"vha_k"}]},"a":{"local":"vha_min"}}},
                 {"sleep":4},
                 {"call_macro":"voice say","params":{"key":{"local":"vha_rk"}}},
+                {"sleep":4},
+                {"call_macro":"voice hospital marshal expected","result":"vha_mar"},
+                {"if": {"param":"vha_mar"}, "eq": 1,
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":"HOS.MAR.P"}},
+                    {"sleep":4.5},
+                    {"call_macro":"voice say","params":{"key":"HOS.MAR.A"}}
+                ]},
                 {"wait_for":{"local":"MISSION_PHASE"},"lt":8}
             ]}
+        ]}
+    ]}
+  ],
+  "voice sar found": [
+    {"#comment":"User request of 2026-10-20: when the target of a search and rescue is found (SAR sighting, the landing spot is created) the copilot tells the dispatcher by radio, with the position of the target (degrees and minutes, approximate), and the dispatcher answers (SAR.FND.PLT, SAR.FND.A; arguments latitude degrees, minutes, N or S, longitude degrees, minutes, E or W). Mission Companion only; the radio rules of the program apply (powered and the CARLS connected, else nothing is heard)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vsf_lat"},"value":{"location":"injured_human","var":"lat"}},
+        {"set":{"local":"vsf_lon"},"value":{"location":"injured_human","var":"lon"}},
+        {"set":{"local":"vsf_ns"},"value":"N"},
+        {"if": {"local":"vsf_lat"}, "lt": 0,
+          "then": [
+            {"set":{"local":"vsf_ns"},"value":"S"},
+            {"set":{"local":"vsf_lat"},"value":{"multiply":[{"local":"vsf_lat"},-1]}}
+        ]},
+        {"set":{"local":"vsf_ew"},"value":"E"},
+        {"if": {"local":"vsf_lon"}, "lt": 0,
+          "then": [
+            {"set":{"local":"vsf_ew"},"value":"W"},
+            {"set":{"local":"vsf_lon"},"value":{"multiply":[{"local":"vsf_lon"},-1]}}
+        ]},
+        {"set":{"local":"vsf_la"},"value":{"floor":{"local":"vsf_lat"}}},
+        {"set":{"local":"vsf_lam"},"value":{"floor":{"multiply":[{"subtract":[{"local":"vsf_lat"},{"local":"vsf_la"}]},60]}}},
+        {"set":{"local":"vsf_lo"},"value":{"floor":{"local":"vsf_lon"}}},
+        {"set":{"local":"vsf_lom"},"value":{"floor":{"multiply":[{"subtract":[{"local":"vsf_lon"},{"local":"vsf_lo"}]},60]}}},
+        {"set":{"local":"vsf_arg"},"value":{"text":"{0}//{1}//{2}//{3}//{4}//{5}","params":[{"local":"vsf_la"},{"local":"vsf_lam"},{"local":"vsf_ns"},{"local":"vsf_lo"},{"local":"vsf_lom"},{"local":"vsf_ew"}]}},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"voice say","params":{"key":"SAR.FND.PLT","a":{"local":"vsf_arg"}}},
+            {"sleep":6},
+            {"call_macro":"voice say","params":{"key":"SAR.FND.A","a":{"local":"vsf_arg"}}}
+        ]}}
+    ]}
+  ],
+  "voice hospital marshal expected": [
+    {"#comment":"1 when the marshal of the destination hospital will be there (the same condition as voice marshal notice and the creation of the hospital marshal: the option MARSHAL_HOSPITAL_ENABLED for a hospital that is not in the shared table, or the marshal of the table for a hospital that is) and he was not created yet; 0 otherwise."},
+    {"if": {
+      "and": [
+        {"require":{"or":[{"and":[{"require":{"global":"MARSHAL_HOSPITAL_ENABLED"},"eq":"yes"},{"require":{"local":"hospital_wp_match"},"ne":"yes"}],"eq":1},{"and":[{"require":{"local":"hospital_wp_match"},"eq":"yes"},{"require":{"local":"hospital_marshal_present"},"eq":"yes"}],"eq":1}]},"eq":1},
+        {"require":{"local":"hospital_marshall_spawned"},"ne":"yes"}
+      ]}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"return":0}
+  ],
+  "voice hospital final": [
+    {"#comment":"User report 2026-10-20 (few calls with the hospital): after the call with the minutes to go (voice hospital approach) the hospital is called again on the final approach, 900 m from the helipad (HOS.FIN.P the copilot asks to land, HOS.FIN.A the hospital clears with the wind: arguments wind direction and knots), when the helicopter is on the helipad (HOS.PAD.P, HOS.PAD.A) and when the crew is ready to leave (HOS.DEP.P, HOS.DEP.A, MISSION_PHASE 10 within 500 m). Once for each dispatch (it waits for a phase below 8 before it can speak again). Pack EN HOS.*; Mission Companion only (the lines are said only with VCP APP and TTS 1)."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":5},
+        {"if": {"local":"MISSION_PHASE"}, "gte": 8,
+          "then": [
+            {"if": {"has_location":"hospital_user"}, "eq": 1,
+              "then": [
+                {"wait_for":{"location":"hospital_user","var":"distance:m","to":"$USER"},"lte":900},
+                {"call_macro":"voice weather class"},
+                {"set":{"local":"vhf_arg"},"value":{"text":"{0}//{1}","params":[{"local":"vw_dir"},{"local":"vw_spd"}]}},
+                {"call_macro":"voice say","params":{"key":"HOS.FIN.P"}},
+                {"sleep":4.5},
+                {"call_macro":"voice say","params":{"key":"HOS.FIN.A","a":{"local":"vhf_arg"}}},
+                {"wait_for":{"var":["SIM ON GROUND","bool"]},"eq":1},
+                {"wait_for":{"location":"hospital_user","var":"distance:m","to":"$USER"},"lte":250},
+                {"sleep":8},
+                {"call_macro":"voice say","params":{"key":"HOS.PAD.P"}},
+                {"sleep":4.5},
+                {"call_macro":"voice say","params":{"key":"HOS.PAD.A"}},
+                {"wait_for":{"local":"MISSION_PHASE"},"gte":10},
+                {"if": {"location":"hospital_user","var":"distance:m","to":"$USER"}, "lte": 500,
+                  "then": [
+                    {"sleep":6},
+                    {"call_macro":"voice say","params":{"key":"HOS.DEP.P"}},
+                    {"sleep":4.5},
+                    {"call_macro":"voice say","params":{"key":"HOS.DEP.A"}}
+                ]},
+                {"wait_for":{"local":"MISSION_PHASE"},"lt":8}
+            ]}
+        ]}
+    ]}
+  ],
+  "voice pickup approach": [
+    {"#comment":"User request of 2026-10-20: a patient transfer or an organ transport tells the pick-up place that the helicopter is coming, some minutes before (random 3.5 to 6.5 km from userA, between phase 4 and 7): the copilot gives the minutes to go and asks to be ready (PCK.CALL.TRF or ORG, argument the minutes) and the place answers (PCK.REPLY.TRF or ORG, ground unit on the external radio). Once for each dispatch (it waits for a phase above 6 and then below 4). Mission Companion only."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":5},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":4},
+            {"require":{"local":"MISSION_PHASE"},"lt":7}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice mission class","result":"vpa_cls"},
+            {"if": {
+              "or": [
+                {"require":{"param":"vpa_cls"},"eq":"TRF"},
+                {"require":{"param":"vpa_cls"},"eq":"ORG"}
+              ]}, "eq": 1,
+              "then": [
+                {"if": {"has_location":"userA"}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"vpa_r"},"value":{"floor":{"rand":[3500,6501]}}},
+                    {"wait_for":{"location":"userA","var":"distance:m","to":"$USER"},"lte":{"local":"vpa_r"}},
+                    {"set":{"local":"vpa_gs"},"value":{"var":["GPS GROUND SPEED","knots"]}},
+                    {"if": {"local":"vpa_gs"}, "lt": 40,
+                      "then": [
+                        {"set":{"local":"vpa_gs"},"value":90}
+                    ]},
+                    {"set":{"local":"vpa_min"},"value":{"clamp":[{"round":{"divide":[{"location":"userA","var":"distance:m","to":"$USER"},{"multiply":[{"local":"vpa_gs"},30.9]}]},"to":0},1,9]}},
+                    {"set":{"local":"vpa_key"},"value":{"text":"PCK.CALL.{0}{1}","params":[{"param":"vpa_cls"},{"local":"voice_sfx"}]}},
+                    {"set":{"local":"vpa_rkey"},"value":{"text":"PCK.REPLY.{0}{1}","params":[{"param":"vpa_cls"},{"local":"voice_sfx"}]}},
+                    {"call_macro":"voice say","params":{"key":{"local":"vpa_key"},"a":{"local":"vpa_min"}}},
+                    {"sleep":4.5},
+                    {"call_macro":"voice say","params":{"key":{"local":"vpa_rkey"}}},
+                    {"wait_for":{"local":"MISSION_PHASE"},"gte":7},
+                    {"wait_for":{"local":"MISSION_PHASE"},"lt":4}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "voice organ briefing": [
+    {"#comment":"User request of 2026-10-20: the briefing of an organ transport tells the organ (heart, liver, kidneys, lungs or pancreas: organ_type, drawn when the mission is made), the recipient (a name from the lists and an age: organ_rcp, organ_age) and the destination hospital (ORG.INF, the doctor), then whether the time is enough: vob_left the minutes left to the deadline (organexpiration), vob_need the minutes the flight needs (the distance to the pick-up and from the pick-up to the hospital with timemultiplier, the same formula that sets the deadline); OK when there are 10 minutes more than needed, TG (tight) with less, LT (late) when the need is more than the time left (ORG.TIM.OK, TG, LT, the copilot) and the reaction of the chief (ORG.RCT.OK, TG, LT). Then the thread voice organ watch follows the time. Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"organ_type"}, "ne": null,
+          "then": [
+            {"set":{"local":"vob_left"},"value":{"floor":{"divide":[{"subtract":[{"local":"organexpiration"},{"var":["E:LOCAL TIME","seconds"]}]},60]}}},
+            {"set":{"local":"vob_need"},"value":{"floor":{"add":[{"divide":[{"multiply":[{"add":[{"object":"userA","var":"distance:m"},{"location":"hospital_user","var":"distance:m","to":"userA"}]},{"local":"timemultiplier"}]},60]},1]}}},
+            {"set":{"local":"vob_cls"},"value":"OK"},
+            {"if": {"local":"vob_left"}, "lt": {"add":[{"local":"vob_need"},10]},
+              "then": [
+                {"set":{"local":"vob_cls"},"value":"TG"}
+            ]},
+            {"if": {"local":"vob_left"}, "lt": {"local":"vob_need"},
+              "then": [
+                {"set":{"local":"vob_cls"},"value":"LT"}
+            ]},
+            {"set":{"local":"vob_arg"},"value":{"text":"{0}//{1}//{2}//{3}","params":[{"local":"organ_type"},{"local":"organ_rcp"},{"local":"organ_age"},{"local":"hospital_name"}]}},
+            {"set":{"local":"vob_argt"},"value":{"text":"{0}//{1}","params":[{"local":"vob_left"},{"local":"vob_need"}]}},
+            {"set":{"local":"vob_key"},"value":{"text":"ORG.TIM.{0}","params":[{"local":"vob_cls"}]}},
+            {"set":{"local":"vob_rkey"},"value":{"text":"ORG.RCT.{0}","params":[{"local":"vob_cls"}]}},
+            {"call_macro":"voice say","params":{"key":{"text":"ORG.INF{0}","params":[{"local":"voice_sfx"}]},"a":{"local":"vob_arg"}}},
+            {"sleep":6},
+            {"call_macro":"voice say","params":{"key":{"local":"vob_key"},"a":{"local":"vob_argt"}}},
+            {"sleep":6},
+            {"call_macro":"voice say","params":{"key":{"local":"vob_rkey"}}},
+            {"set":{"local":"vow_seq_snapshot"},"value":{"local":"voice_dispatch_seq"}},
+            {"create_thread": {
+              "commands": [
+                {"set":{"param":"vow_seq"},"value":{"local":"vow_seq_snapshot"}},
+                {"call_macro":"voice organ watch","params":{"seq":{"param":"vow_seq"}}}
+            ]}}
+        ]}
+    ]}
+  ],
+  "voice organ watch": [
+    {"#comment":"Follows the time of an organ transport (every 20 s, until the dispatch ends): when the minutes the flight still needs (before the pick-up: to userA and from there to the hospital; after it: to the hospital; with timemultiplier) become more than the minutes left to the deadline, the copilot says it once (ORG.WARN, arguments the minutes left and the minutes needed); when the deadline has passed (organcountdown below 0), once (ORG.LATE). param seq = the number of the dispatch (a newer one stops this thread). Mission Companion only."},
+    {"set":{"param":"ow_warn"},"value":0},
+    {"set":{"param":"ow_late"},"value":0},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":20},
+        {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
+          "then": [
+            {"return":1}
+        ]},
+        {"if": {"local":"MISSION_PHASE"}, "gte": 10,
+          "then": [
+            {"return":1}
+        ]},
+        {"if": {"has_location":"hospital_user"}, "eq": 1,
+          "then": [
+            {"set":{"param":"ow_left"},"value":{"floor":{"divide":[{"subtract":[{"local":"organexpiration"},{"var":["E:LOCAL TIME","seconds"]}]},60]}}},
+            {"if": {"local":"MISSION_PHASE"}, "lt": 7,
+              "then": [
+                {"set":{"param":"ow_need"},"value":{"floor":{"add":[{"divide":[{"multiply":[{"add":[{"object":"userA","var":"distance:m"},{"location":"hospital_user","var":"distance:m","to":"userA"}]},{"local":"timemultiplier"}]},60]},1]}}}
+              ],"else": [
+                {"set":{"param":"ow_need"},"value":{"floor":{"add":[{"divide":[{"multiply":[{"location":"hospital_user","var":"distance:m","to":"$USER"},{"local":"timemultiplier"}]},60]},1]}}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"param":"ow_warn"},"eq":0},
+                {"require":{"param":"ow_left"},"gt":0},
+                {"require":{"param":"ow_need"},"gt":{"param":"ow_left"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"ow_warn"},"value":1},
+                {"set":{"param":"ow_arg"},"value":{"text":"{0}//{1}","params":[{"param":"ow_left"},{"param":"ow_need"}]}},
+                {"call_macro":"voice say","params":{"key":"ORG.WARN","a":{"param":"ow_arg"}}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"param":"ow_late"},"eq":0},
+                {"require":{"param":"ow_left"},"lte":0}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"ow_late"},"value":1},
+                {"call_macro":"voice say","params":{"key":"ORG.LATE"}}
+            ]}
+        ]}
+    ]}
+  ],
+  "voice organ handoff": [
+    {"#comment":"User request of 2026-10-20: at the pick-up of the organ the ground team tells the crew what it is, for whom, how important it is and how much time is left, and the rear crew answers (ORG.PCK.G, the ground unit; ORG.PCK.R). Arguments organ, recipient, age, minutes left. Called by organ pick up scene1 after ORG.PCK. Mission Companion only."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"organ_type"}, "ne": null,
+          "then": [
+            {"set":{"local":"voh_left"},"value":{"floor":{"divide":[{"subtract":[{"local":"organexpiration"},{"var":["E:LOCAL TIME","seconds"]}]},60]}}},
+            {"set":{"local":"voh_arg"},"value":{"text":"{0}//{1}//{2}//{3}","params":[{"local":"organ_type"},{"local":"organ_rcp"},{"local":"organ_age"},{"local":"voh_left"}]}},
+            {"create_thread": {
+              "commands": [
+                {"sleep":3},
+                {"call_macro":"voice say","params":{"key":{"text":"ORG.PCK.G{0}","params":[{"local":"voice_sfx"}]},"a":{"local":"voh_arg"}}},
+                {"sleep":7},
+                {"call_macro":"voice say","params":{"key":{"text":"ORG.PCK.R{0}","params":[{"local":"voice_sfx"}]}}}
+            ]}}
         ]}
     ]}
   ],
@@ -3332,12 +3698,25 @@
           "then": [
             {"call_macro":"voice say","params":{"key":"HOS.WEL"}},
             {"sleep":4},
-            {"call_macro":"voice say","params":{"key":"HOS.ORG"}}
+            {"if": {"local":"organcountdown"}, "lt": 0,
+              "then": [
+                {"call_macro":"voice say","params":{"key":{"text":"HOS.ORG.LT{0}","params":[{"local":"voice_sfx"}]}}},
+                {"sleep":5},
+                {"call_macro":"voice say","params":{"key":{"text":"ORG.DEL.LT{0}","params":[{"local":"voice_sfx"}]}}}
+              ],"else": [
+                {"call_macro":"voice say","params":{"key":{"text":"HOS.ORG{0}","params":[{"local":"voice_sfx"}]}}},
+                {"sleep":5},
+                {"call_macro":"voice say","params":{"key":"ORG.DEL.OK"}}
+            ]}
           ],"else": [
             {"call_macro":"voice say","params":{"key":"HOS.WEL"}},
             {"sleep":4.5},
             {"call_macro":"voice say","params":{"key":"HOS.HND"}},
             {"sleep":5},
+            {"call_macro":"voice say","params":{"key":"HOS.Q"}},
+            {"sleep":4.5},
+            {"call_macro":"voice say","params":{"key":"HOS.A"}},
+            {"sleep":4.5},
             {"call_macro":"voice say","params":{"key":"HOS.THX"}}
         ]}
     ]}}
@@ -5044,6 +5423,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"no"},
     {"set":{"global":"COND_MISSIONS"},"value":"no"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"},
@@ -5134,6 +5514,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"no"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":1},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"ROOKIE PILOT"},
@@ -5224,6 +5605,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"yes"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT PILOT"},
@@ -5314,6 +5696,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"yes"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":2},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT HEMS"},
@@ -6105,7 +6488,7 @@
       "then": [
         {"set":{"local":"vde_k"},"value":"SAR"}
     ]},
-    {"call_macro":"voice say","params":{"key":{"text":"DSP.ANS.{0}","params":[{"local":"vde_k"}]},"declut":1}},
+    {"call_macro":"voice say","params":{"key":{"text":"DSP.ANS.{0}{1}","params":[{"local":"vde_k"},{"local":"voice_sfx"}]},"declut":1}},
     {"sleep":1.2},
     {"set":{"local":"vde_roll"},"value":{"floor":{"rand":[0,10]}}},
     {"if": {

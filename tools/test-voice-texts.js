@@ -26,7 +26,7 @@ assert.deepEqual(built.unkeyed, [], 'every spoken text has a key (node tools/voi
 assert.equal(fs.readFileSync(path.join(__dirname, 'voice-texts.json'), 'utf8'), render(built.texts), 'tools/voice-texts.json is the list of the sources (node tools/voice-texts.js sync)');
 const keys = Object.keys(built.texts);
 assert.equal(keys.filter((key) => key.startsWith('CHK.')).length, 377, 'the checklist rows');
-assert.equal(keys.filter((key) => /^DSC\.\d+\.[1-4]$/.test(key)).length, 288, 'the dispatch descriptions: 72 incidents with 4 variants');
+assert.equal(keys.filter((key) => /^DSC\.\d+\.[1-4]$/.test(key)).length, 320, 'the dispatch descriptions: 80 incidents with 4 variants');
 for (const key of keys) assert.match(key, /^[A-Za-z0-9_.-]{1,40}$/, `${key} is a valid pack key`);
 assert.ok(!keys.some((key) => key.startsWith('DSP.')), 'DSP.* is the prefix of the dispatcher messages of the base pack: the descriptions use DSC');
 
@@ -64,4 +64,4 @@ assert.ok(accidentTexts([{ ID_CARD: 1, description1: 'a', description2: 'b', des
 const run = spawnSync(process.execPath, [path.join(__dirname, 'voice-texts.js'), 'check'], { encoding: 'utf8' });
 assert.equal(run.status, 0, `voice-texts.js check: ${run.stdout}${run.stderr}`);
 
-console.log(`Voice texts PASS: ${keys.length} keyed texts (${keys.filter((key) => key.startsWith('CHK.')).length} checklist rows, 288 dispatch descriptions, the vehicle template).`);
+console.log(`Voice texts PASS: ${keys.length} keyed texts (${keys.filter((key) => key.startsWith('CHK.')).length} checklist rows, 320 dispatch descriptions, the vehicle template).`);

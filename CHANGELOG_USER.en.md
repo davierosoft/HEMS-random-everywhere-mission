@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.66. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.72. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.66, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.72, still need final simulator confirmation.
 
 ## FIXES
 
@@ -633,6 +633,42 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Test:** Receive a dispatch in the hangar, walk to the helicopter and board: the crew reads the dispatch back and asks what to do.
 
 
+### The heli rescuer closes each door once
+
+- When the heli rescuer boards in a skid operation, the doors are closed once. Before, the right door could be closed and opened again by a second close command, and the rescuer walked to the door at the wrong speed.
+- **Build history:** 0.997 169.69-169.70.
+- **Test:** Run a skid operation with the heli rescuer: the right door closes once and stays closed.
+
+### No resuscitation of a patient already handed over
+
+- The crew no longer starts CPR on a patient that has already been handed over, says the patient condition only once for each stage, and says no handover line when the crew itself loads the patient. The heli rescuer boards by the door that opens, and the skid point wait names the missing condition.
+- **Build history:** 0.997 169.69.
+- **Test:** Hand a patient over to the ambulance and watch the crew: no CPR starts and the condition is spoken once.
+
+### The crashed vehicle appears once and ambulances stop beside the injured
+
+- A crashed vehicle is created once (no second wreck on top of the first), and the ambulances stop where the injured are.
+- **Build history:** 0.997 169.68.
+- **Test:** Start a road accident call: a single wreck, and the ambulance parks beside the injured.
+
+### Hoisting buttons stay hidden while a hoist command is pending
+
+- BEGIN HOISTING and BEGIN SKID LNDG OPS stay hidden while a heli rescuer hoist command is pending inside the landing spot, so the two operations cannot be started on top of each other.
+- **Build history:** 0.997 169.69.
+- **Test:** Send the heli rescuer by hoist and look at the buttons: the two starts stay hidden until the command is done.
+
+### The missing car mission no longer stops at 15%
+
+- Mission 65 (missing car): when the route to the car cannot be built, the mission falls back to the straight line and goes on instead of ending the loading at 15%. The failure is written in the troubleshooting log.
+- **Build history:** 0.997 169.70.
+- **Test:** Accept mission 65 several times: the loading always completes.
+
+### Hoist that stops after the first patients
+
+- Report of a pilot: after three people were hoisted aboard nothing happened any more. The cause is not known yet, so the mission now writes down what is still open (speed, height, hoist operators, patient preparation), tells it on the Dispatch page and in the snapshot when the work stalls for two minutes, and tries the patient preparation of the hoist three times before giving up.
+- **Build history:** 0.997 169.72.
+- **Test:** Hoist several people: if it stalls, the Dispatch page names what is still open; send the snapshot with the report.
+
 ## UI
 
 ### The random voices list shows sex, quality and use, can be sorted, and copies its choices
@@ -804,6 +840,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The grey progress bar of the on-site operations now also shows during a hoist operation, from the moment the crew is on the ground until the crew is hoisted back.
 - **Build history:** 0.997 169.66.
 - **Test:** Run a hoist call: the bar appears when the crew is down and ends at ON-SITE OPERATIONS COMPLETE when the crew is back.
+
+### Time bar for organ and blood missions, and checklist buttons
+
+- The organ team and blood missions show a time bar, and the checklist pages have buttons for moving between pages.
+- **Build history:** 0.997 169.67.
+- **Test:** Start an organ transport call: the time bar shows; open the checklist and use the page buttons.
+
+### The Dispatch page lists what is still open
+
+- When the ground operations are delayed, the Dispatch page shows a line "Still open:" with the conditions that are missing.
+- **Build history:** 0.997 169.72.
+- **Test:** Let a ground operation stall for two minutes: the Dispatch page lists what is still open.
 
 ## NEW FUNCTIONS
 
@@ -1325,6 +1373,24 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** Mission Companion app 0.37.
 - **Test:** Accept a second dispatch while the crew is talking: with take turns the dispatcher and the crew do not speak together; switch to everything together and they do.
 
+### Voice commands for the mission buttons
+
+- New setting SPEECH COMMANDS in the tablet Settings (CREW voice options), off by default and saved in the aircraft profiles. With the Mission Companion app that has voice commands, you hold the push-to-talk key and say a command such as "hoist up", "load the patient" or "skid landing" and the mission presses the same button you would press, only while that button is visible. 14 commands: begin hoisting, hoist up and down of the heli rescuer, ground loading, skid landing, takeoff for hoist, ground operations here, load the patient, keep the patient out, patient in, drop the heli rescuer here, back to the meeting point, load from and unload to the ambulance.
+- **Build history:** 0.997 169.70.
+- **Test:** Turn SPEECH COMMANDS on in the tablet Settings, start the Companion with voice commands, hold push-to-talk and say "hoist up" while the hoist button is visible.
+
+### Handover words and paperwork after the hospital
+
+- After the hospital handover the crew says it goes inside for the report and the paperwork, with its own lines for organ missions (voice packs EN 24 and DE 12).
+- **Build history:** 0.997 169.70.
+- **Test:** Hand a patient over at the hospital: the crew says it goes inside for the paperwork.
+
+### New calls, work light and terrain check
+
+- New incidents 69 to 74 and secondary missions 101 and 102, the work light after the fire fighters, and a terrain check before the heli rescuer is sent down.
+- **Build history:** 0.997 169.67.
+- **Test:** Request calls until one of the new incidents appears; after a fire, check that the work light is on.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1365,3 +1431,4 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.1-169.26:** Dispatch marker and briefing fixes, consistent second-dispatch scene, vehicle arrival without road routes and tidy parking, reliable crash detection with injuries for everyone aboard and aircraft failures from light to heavy with a fuel leakage, crew losses (medic, both pilots, repair after a death), clearer dispatch and RescueTrack messages with the selectable clock, crew names and lifescores on the dispatch page, the mission failed report, police and dispatcher reports after a death, the crew emergency (divert or continue, hospital handover, base scene), end of the mission under your control, the grey progress bar, and the previous mission troubleshooting file. Still to be confirmed in the simulator.
 - **Mission Companion app 0.1-0.37 (this release):** The first versions (0.1-0.8: voice service, Piper voices, radio effect, volume, voice packs, voice app mode, installer, technicians and names), then no firewall question at every start, the Clean-up by category, the setup program, and the chatter level, the silent options and the mute of the dead crew, then the update check with its release notes window for the mission and for the program. Then the simpler window with the Updates tab and the choice of what to update (0.11, 0.12), the sound rules of the radio, the intercom and the distance (0.12), and the translated voice packs with the comparison against the base pack (0.13). Then the radio rules that count the pilot as aboard, the new message tone and the quieter tablet alarm, the vehicles and hospital spoken in one sentence (0.16), and the audio output devices and levels (0.17). Then the decision of the crew on a new dispatch and the pilot always counted from the mission (0.18). Then the settings profiles, the setup in one click and the complete setup of the installer (0.19). Then the restarts and the uninstaller without shell commands, the check at every start and the removal of the Google Drive link (0.20-0.22), the crew seats that a flight does not have spoken by the crew that is there and the mission identity tag (0.23), and the pack EN 13 with the tips of the crew (0.24). The update of the mission file with an encrypted folder (0.11), the update button, the corner message and the Italian community voices (0.14), and the log files, the ready message and the pack updates (0.15) are listed in their own entries. Then the squelch tail from ten recordings, the voice of the heli rescuer, the name of the dispatcher and the call sign of the helicopter (0.25). Then the random voices with a choice of the voices, the call sign by airline or custom name, the silent dispatch with the crew away and the crew lines to the technician off the radio (0.26). Then the voice of the technician that follows the technician, the call sign row always visible and the Test button of the random voices (0.27). Then the tablet tones that are part of the program and the port holder named in the log (0.28). Then the update that closes the old copies of the program reliably, the second start that shows the open window and the voices that start earlier (0.29). Then the list of the random voices with sex, quality, use, sorting and copy and paste (0.30). Version 0.30 also brings the German voice pack, the Swiss German online voices, the three hiss levels and the audio cache clean-up. Then the update that no longer keeps the port busy (0.31). Then the voices that play four kinds in parallel with priorities so that a burst of lines no longer queues for a minute, and the shared hangar and hospital points with the shared changes to the offline airport lists (0.32). Then the window World Database Update with the check of the characters (0.33), and the radio rules by power and CARLS and the coordinates in any format (0.34). Then the letters of SAR spelled by the voices and the lines of the crew taken over by a colleague when the copilot cannot speak (0.35). Then the voices that the crew, the dispatcher, the ground unit and the heli rescuer always have, the fixed service port, the voice pack that follows the mission and the new mission build told to the mission (0.36). Then the choice of the voices at the same time, with turns as the standard, the greetings, the weather and the farewell lines of the packs EN 21 and DE 9 (0.37).
 - **0.997 169.27-169.66 (this release):** Scene parking by lane and the police drop-off fixes, the crew that no longer walks off, patients protected before the arrival with the optional Life Score freeze, crash damage kept on the patient, the crew emergency refinements (no question with a patient aboard, hospital handover of the casualties, senders of the messages, critical and deceased rows), dispatch statistics only when known, light long missions, hoist cable accidents and sheltered single patient, the reset failures button, new search-and-rescue clues and missions 65 to 68, performance settings, road routes for the rescue vehicles, the flight manual checklists with the IFR procedures, the dispatch status keys, payload weights, the Mission Companion voice mode with crew chatter and the male or female technician, then the second dispatch built on its own location, the ambulance crew and patients in every dispatch, the distant ambulance that no longer takes a patient it cannot reach, the loading that is carried through, the sheltered patient for every crew, and fewer false errors. Still to be confirmed in the simulator. Then the hospital team that speaks when the crew meets the ground crew and the radius shown in the place-search warning (169.47), and the keyed checklist and dispatch texts for translated voice packs (169.48). Then the tablet alarm only with pop-ups, the pilot presence for the radio rules, the vehicles and hospital messages, and the fixes of Skip paperwork, the airplane fire engine and the residential injured icon (169.49). Then the decision of the crew before you accept a dispatch, the dispatcher asking for an answer and the reassigned dispatch (169.50). Then the hospital handover walk that is skipped when the medic is already at the stretcher and the diagnosis of the hospital waypoints (169.51). Then the residential missions that no longer stop at 43.5% because the injured icon is drawn again instead of updated, and the mission identity for the Mission Companion (169.52). Then the tips of the crew about the functions of the mission, with their own setting CREW TIPS, and the voice pack version the mission asks for, so that an old pack is reported (169.53, 169.54). Then the ambulance that waits for the helicopter or ends the dispatch, the doors opened for the heli rescuer, the heli rescuers who walk to the hospital, the radio calls with the heli rescue base and the voices during the hoist operations (169.55). Then the vehicles said once, the city of the dispatcher, the call sign on the tablet and the random voices (169.56). Then the missions that fit the conditions (169.57). Then the search and rescue state that is no longer overwritten (169.58). Then the crews that walk at a normal pace (169.59). Then the NEXT DISPATCH button released after the waiting time (169.60). Then the heli rescuer who meets the crew at the skid point or beside the helicopter, the skid landing that no longer stops with a deceased patient, the search and rescue calls without medical information and without an announced area on the route call, the extra troubleshooting information, and the hangar and hospital points shared by everybody (169.61). Then the patient record that agrees with itself before the visit, and the sex and age of the patients that follow the dispatch (169.62). Then the police car that no longer keeps the crew waiting, the death of a patient always announced, the fall back to the original voices without the Mission Companion, the time to the second dispatch, the same lines in every kind of operation and the recordings that were never played (169.63). Then the ground operations that stop after a casualty, the mayday for a critical failure, the voices of the injured crew, the dispatch read back by the crew when the radio is off, the search and rescue briefing and the skid landing of a light helicopter (169.64). Then the build number that follows the release, the notice of a new version only for a newer build and the messages about the actors without a voice (169.65). Then the doctor who comes back before the ambulance notice, the progress bar of the hoist, the dispatch read back when boarding, and the greetings and the weather in the hangar, at the briefing and after the landing (169.66).
+- **0.997 169.67-169.72 (this release):** Time bar for organ and blood missions, new incidents and secondary missions, no CPR after a handover, the crashed vehicle created once, doors closed once by the heli rescuer, the mission 65 route fallback, voice commands for the mission buttons (setting SPEECH COMMANDS), handover words after the hospital, and the hoist stall report on the Dispatch page.

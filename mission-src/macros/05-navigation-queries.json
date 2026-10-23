@@ -681,9 +681,13 @@
             {"call_macro":"Query closest hospital"},
             {"call_macro":"Query hospital user country"},
             {"wait_for":{"local":"hospital_nation_query_done"},"eq":1},
-            {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 100,
+            {"if": {
+              "and": [
+                {"require":{"local":"VAR_MISSION_NUMBER"},"gte":100},
+                {"require":{"local":"VAR_MISSION_NUMBER"},"lte":102}
+              ]}, "eq": 1,
               "then": [
-                {"set_message":{"text":"Pick organ transportation box at this location: <br /> {0:LOCATION} ({3}). <br /> Deliver to:  <br /> {4} ({2:LOCATION}) <br /> Delivery has to be accomplished before {1:TIME}LT","params":["userA",{"local":"organexpiration"},"hospital_user",{"local":"userA_nation"},{"local":"hospital_name"}]}}
+                {"set_message":{"text":"Pick {5} at this location: <br /> {0:LOCATION} ({3}). <br /> Deliver to:  <br /> {4} ({2:LOCATION}) <br /> Delivery has to be accomplished before {1:TIME}LT","params":["userA",{"local":"organexpiration"},"hospital_user",{"local":"userA_nation"},{"local":"hospital_name"},{"local":"organ_item_text"}]}}
             ]},
             {"if": {"has_location":"hospital_user"}, "eq": 1,
               "then": [
@@ -917,8 +921,18 @@
             {"set_map":{"add":{"point":{"location":"sar_route_a","text":"ORIGN"}}}},
             {"set_map":{"add":{"point":{"location":"sar_route_b","text":"TO-PT"}}}}
         ]},
-        {"create_route":{"name":"sar_route_1","query":{"to":"sar_route_b","from":"sar_route_a","type":"car"}}},
-        {"set":{"local":"sar_route_d1"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+        {"#comment":"Report 2026-10-23 (tester MPR, 169.66): mission 65 stayed at Cabin preparation 15% for minutes; the runtime trace stopped before the country query that follows this block, so the loading thread ended or waited here. A route that cannot be computed (the far point B off every road, the service not answering) is now caught, noted in the ground crew runtime trace (macro sar_route) and answered with the straight-line fallback below, never with a dead loading thread."},
+        {"set":{"local":"sar_route_d1"},"value":0},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"sar_route","actor":"n/a","target":"sar_route_1","state":"route_requested"}},
+        {"try": [
+            {"create_route":{"name":"sar_route_1","query":{"to":"sar_route_b","from":"sar_route_a","type":"car"}}},
+            {"set":{"local":"sar_route_d1"},"value":{"param":"$CREATE_ROUTE:DURATION"}}
+          ],
+          "catch": [
+            {"set":{"local":"sar_route_d1"},"value":0},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"sar_route","actor":"n/a","target":"sar_route_1","state":{"text":"route_failed {0}","params":[{"param":"$ERROR"}]}}}
+        ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"sar_route","actor":"n/a","target":"sar_route_1","state":{"text":"route_done duration={0}","params":[{"local":"sar_route_d1"}]}}},
         {"if": {"local":"sar_route_d1"}, "gt": 0,
           "then": [
             {"set":{"param":"sar_rt"},"value":{"route":"sar_route_1"}},
@@ -2184,7 +2198,7 @@
       "zones": [
         {"zone": {
             "zone_type": "query_closest_result",
-            "query": "[out:json];( nwr({{bbox}})[leisure=pitch][sport=soccer][surface!=artificial_turf][indoor!=yes];nwr({{bbox}})[leisure=pitch][surface=grass];nwr({{bbox}})[emergency=mountain_rescue]; );out center;",
+            "query": "[out:json];( nwr({{bbox}})[leisure=pitch][sport=soccer][surface!=artificial_turf][indoor!=yes];nwr({{bbox}})[leisure=pitch][surface=grass];nwr({{bbox}})[emergency=mountain_rescue];nwr({{bbox}})[amenity=fire_station]; );out center;",
             "location": "accident_location",
             "radius": 20000,
             "minRadius": 1000,
@@ -3819,6 +3833,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Ambulance destination1","state":"wait_var.L:_local:HXX__SDK_ROTOR_RPM_lt_90"}},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":90},
     {"set_objective_title":"PREPARING FOR PATIENT DEBOARDING OPERATION","color":"orange"},
+    {"call_macro":"ops progress timed","params":{"stage":"PATIENT HANDOVER TO THE AMBULANCE","seconds":150}},
     {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
     {"create_thread": {
       "commands": [
@@ -4158,6 +4173,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Ambulance destination2","state":"wait_var.L:_local:HXX__SDK_ROTOR_RPM_lt_90"}},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":90},
     {"set_objective_title":"PREPARING FOR PATIENT DEBOARDING OPERATION","color":"orange"},
+    {"call_macro":"ops progress timed","params":{"stage":"PATIENT HANDOVER TO THE AMBULANCE","seconds":150}},
     {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
     {"create_thread": {
       "commands": [
@@ -4423,6 +4439,7 @@
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":90},
     {"set_message":{"text":" "}},
     {"set_objective_title":"PREPARING FOR PATIENT DEBOARDING OPERATION","color":"orange"},
+    {"call_macro":"ops progress timed","params":{"stage":"PATIENT HANDOVER TO THE AMBULANCE","seconds":150}},
     {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
     {"create_thread": {
       "commands": [
@@ -5620,7 +5637,8 @@
               ]}},
               {"set":{"var":["L:AMBULANCE","number"]},"value":2}
           ]}
-        }
+        },
+        {"set":{"local":"sp_def_ambulance_prime"},"value":1}
       ],"else": [
         {"if": {"var":["L:POI_TYPE","number"]}, "eq": 2,
           "then": [
@@ -5701,6 +5719,7 @@
     {"set":{"var":["L:CPL{local:VCP}11","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}11","number"]},1]}},
     {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start unload procedure"}},
     {"set_objective_title":"DESTINATION PROCEDURES STARTED","color":"yellow"},
+    {"call_macro":"ops progress timed","params":{"stage":"PATIENT HANDOVER AT THE DESTINATION","seconds":150}},
     {"if": {"local":"DESTPRST"}, "eq": 0,
       "then": [
         {"create_thread": {
@@ -5766,7 +5785,8 @@
                   {"set":{"object":"ambulance5","var":"VAR 1"},"value":0},
                   {"set":{"var":["L:AMBULANCE","number"]},"value":2}
               ]}
-            }
+            },
+            {"set":{"local":"sp_def_ambulance_prime"},"value":3}
           ],"else": [
             {"if": {"var":["L:POI_TYPE","number"]}, "eq": 2,
               "then": [
@@ -6295,7 +6315,8 @@
               ]}},
               {"set":{"var":["L:AMBULANCE","number"]},"value":2}
           ]}
-        }
+        },
+        {"set":{"local":"sp_def_ambulance_prime"},"value":2}
       ],"else": [
         {"if": {"var":["L:POI_TYPE","number"]}, "eq": 2,
           "then": [
@@ -6407,7 +6428,8 @@
               ]}},
               {"set":{"var":["L:AMBULANCE","number"]},"value":2}
           ]}
-        }
+        },
+        {"set":{"local":"sp_def_ambulance_prime"},"value":1}
       ],"else": [
         {"if": {"var":["L:POI_TYPE","number"]}, "eq": 2,
           "then": [
@@ -6487,6 +6509,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination hoist","state":"wait_var.GPS_GROUND_SPEED_lte_1"}},
     {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":1},
     {"set_objective_title":"DESTINATION PROCEDURES STARTED","color":"yellow"},
+    {"call_macro":"ops progress timed","params":{"stage":"PATIENT HANDOVER AT THE DESTINATION","seconds":150}},
     {"set_message":{"text":"LAND AND SET ENGINES TO IDLE or STOP to start unload procedure"}},
     {"sleep":1},
     {"if": {"local":"DESTPRST"}, "eq": 0,
@@ -6552,7 +6575,8 @@
                   {"set":{"object":"ambulance5","var":"VAR 1"},"value":0},
                   {"set":{"var":["L:AMBULANCE","number"]},"value":2}
               ]}
-            }
+            },
+            {"set":{"local":"sp_def_ambulance_prime"},"value":3}
         ]}
       ],"else": [
         {"if": {"var":["L:POI_TYPE","number"]}, "eq": 2,
@@ -6952,7 +6976,8 @@
               ]},
               {"set":{"var":["L:AMBULANCE","number"]},"value":2}
           ]}
-        }
+        },
+        {"set":{"local":"sp_def_ambulance_prime"},"value":4}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":"wait_var.distance_lt_2.1"}},
     {"wait_for":{"location":"hospital_user","var":"distance"},"lt":2.1},
