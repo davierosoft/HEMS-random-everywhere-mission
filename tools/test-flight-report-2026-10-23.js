@@ -68,8 +68,8 @@ const text = (value) => JSON.stringify(value);
       assert.ok(m && (m[1].match(/<o>/g) || []).length === 6, lang + ' HRS.W.' + k + ' has 6 options');
     }
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="24"/.test(pack('EN')), 'base pack EN 24');
-  assert.ok(/<voicepack name="DE"[^>]* version="12" basever="24"/.test(pack('DE')), 'pack DE 12 on the base 24');
+  assert.ok(/<voicepack name="EN"[^>]* version="25"/.test(pack('EN')), 'base pack EN 25');
+  assert.ok(/<voicepack name="DE"[^>]* version="13" basever="25"/.test(pack('DE')), 'pack DE 13 on the base 25');
 }
 
 // 6. the heli rescuer boarding closes each door once (report: the door closed and opened again; close_door is not idempotent)

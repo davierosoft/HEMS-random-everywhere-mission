@@ -3267,7 +3267,13 @@
             {"create_object":{"name":"ccs_policeman","title":"Airbus H145 Policeman","location":{"bearing2":270,"dist":3,"heading":340,"object":"police7"}}},
             {"set":{"object":"ccs_policeman","var":"VAR 1"},"value":0}
         ]},
-        {"set":{"local":"ccs_vehicles_ready"},"value":"yes"}
+        {"set":{"local":"ccs_vehicles_ready"},"value":"yes"},
+        {"if": {"local":"CCS_CASUALTY_COUNT"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"SCN.POL.AMB"}}
+          ],"else": [
+            {"call_macro":"voice say","params":{"key":"SCN.POL"}}
+        ]}
     ]},
     {"wait_for":{"local":"ccs_vehicles_ready"},"eq":"yes"}
   ],
@@ -3287,6 +3293,7 @@
             {"create_object":{"name":"ccs_policeman","title":"Airbus H145 Policeman","location":{"bearing2":270,"dist":3,"heading":340,"object":"police7"}}},
             {"set":{"object":"ccs_policeman","var":"VAR 1"},"value":0}
         ]},
+        {"call_macro":"voice say","params":{"key":"SCN.POL"}},
         {"create_thread": {
           "commands": [
             {"call_macro":"deceased patient police guard"}
@@ -3313,7 +3320,7 @@
           {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":86}
         ]}
     ]},
-    {"drive_object":{"name":"ccs_policeman","to":[{"closest":[{"bearing":300,"dist":12},{"bearing":30,"dist":12}],"to":"ccs_policeman"}],"VAR1":1,"speed":4}},
+    {"drive_object":{"name":"ccs_policeman","to":[{"closest":[{"bearing":300,"dist":12},{"bearing":30,"dist":12}],"to":"ccs_policeman"}],"VAR1":1,"speed":5}},
     {"set":{"object":"ccs_policeman","var":"VAR 1"},"value":0},
     {"point_object":"ccs_policeman","to":"$USER"}
   ],
@@ -3456,7 +3463,7 @@
     {"set":{"local":"ccs_medic_back"},"value":0},
     {"create_thread": {
       "commands": [
-        {"drive_object":{"name":"ccs_medic","to":[{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+        {"drive_object":{"name":"ccs_medic","to":[{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":5}},
         {"set":{"object":"ccs_medic","var":"VAR 1"},"value":0},
         {"set":{"local":"ccs_medic_back"},"value":1}
     ]}},
@@ -3507,9 +3514,9 @@
         {"sleep":1},
         {"if": {"local":"ccs_pol_side"}, "eq": "R",
           "then": [
-            {"drive_object":{"name":"pilot","to":[{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":4}}
+            {"drive_object":{"name":"pilot","to":[{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"pilot","to":["ccs_nose_R","ccs_nose_C","ccs_nose_L",{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":4}}
+            {"drive_object":{"name":"pilot","to":["ccs_nose_R","ccs_nose_C","ccs_nose_L",{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":5}}
         ]},
         {"set":{"object":"pilot","var":"VAR 1"},"value":14},
         {"point_object":"ccs_policeman","to":"pilot"},
@@ -3535,9 +3542,9 @@
         {"sleep":1},
         {"if": {"local":"ccs_pol_side"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"copilott","to":[{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":4}}
+            {"drive_object":{"name":"copilott","to":[{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"copilott","to":["ccs_nose_L","ccs_nose_C","ccs_nose_R",{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":4}}
+            {"drive_object":{"name":"copilott","to":["ccs_nose_L","ccs_nose_C","ccs_nose_R",{"bearing2":0,"dist":2.5,"object":"ccs_policeman"}],"VAR1":16,"speed":5}}
         ]},
         {"set":{"object":"copilott","var":"VAR 1"},"value":14},
         {"point_object":"ccs_policeman","to":"copilott"},
@@ -3593,10 +3600,10 @@
         {"if": {"location":"ccs_pol_L","var":"distance:m","to":"ccs_policeman"}, "lte": {"location":"ccs_pol_R","var":"distance:m","to":"ccs_policeman"},
           "then": [
             {"set":{"local":"ccs_pol_side"},"value":"L"},
-            {"drive_object":{"name":"ccs_policeman","to":["ccs_pol_L"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"ccs_policeman","to":["ccs_pol_L"],"VAR1":1,"speed":5}}
           ],"else": [
             {"set":{"local":"ccs_pol_side"},"value":"R"},
-            {"drive_object":{"name":"ccs_policeman","to":["ccs_pol_R"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"ccs_policeman","to":["ccs_pol_R"],"VAR1":1,"speed":5}}
         ]},
         {"set":{"object":"ccs_policeman","var":"VAR 1"},"value":0},
         {"point_object":"ccs_policeman","to":"$USER"},
@@ -3609,10 +3616,10 @@
             {"if": {"location":"ccs_med_L","var":"distance:m","to":"ccs_medic"}, "lte": {"location":"ccs_med_R","var":"distance:m","to":"ccs_medic"},
               "then": [
                 {"set":{"local":"ccs_med_side"},"value":"L"},
-                {"drive_object":{"name":"ccs_medic","to":["ccs_med_L"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"ccs_medic","to":["ccs_med_L"],"VAR1":1,"speed":5}}
               ],"else": [
                 {"set":{"local":"ccs_med_side"},"value":"R"},
-                {"drive_object":{"name":"ccs_medic","to":["ccs_med_R"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"ccs_medic","to":["ccs_med_R"],"VAR1":1,"speed":5}}
             ]},
             {"set":{"object":"ccs_medic","var":"VAR 1"},"value":0},
             {"point_object":"ccs_medic","to":"$USER"},
@@ -4289,23 +4296,23 @@
               "then": [
                 {"create_thread": {
                   "commands": [
-                    {"drive_object":{"name":"chs_med_1","to":["chs_sL_1","chs_mdoor_1"],"VAR1":1,"speed":4}},
+                    {"drive_object":{"name":"chs_med_1","to":["chs_sL_1","chs_mdoor_1"],"VAR1":1,"speed":5}},
                     {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
                     {"point_object":"chs_med_1","to":"chs_door_1"}
                 ]}}
             ]},
-            {"drive_object":{"name":"chs_str_1","to":["chs_sL_1","chs_door_1"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_1","to":["chs_sL_1","chs_door_1"],"VAR1":1,"speed":5}}
           ],"else": [
             {"if": {"has_object":"chs_med_1"}, "eq": 1,
               "then": [
                 {"create_thread": {
                   "commands": [
-                    {"drive_object":{"name":"chs_med_1","to":["chs_sL_1","chs_nL_1","chs_nC_1","chs_nR_1","chs_sR_1","chs_mdoor_1"],"VAR1":1,"speed":4}},
+                    {"drive_object":{"name":"chs_med_1","to":["chs_sL_1","chs_nL_1","chs_nC_1","chs_nR_1","chs_sR_1","chs_mdoor_1"],"VAR1":1,"speed":5}},
                     {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
                     {"point_object":"chs_med_1","to":"chs_door_1"}
                 ]}}
             ]},
-            {"drive_object":{"name":"chs_str_1","to":["chs_sL_1","chs_nL_1","chs_nC_1","chs_nR_1","chs_sR_1","chs_door_1"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_1","to":["chs_sL_1","chs_nL_1","chs_nC_1","chs_nR_1","chs_sR_1","chs_door_1"],"VAR1":1,"speed":5}}
         ]}
       ],"else": [
         {"if": {"local":"chs_dside_1"}, "eq": "L",
@@ -4314,23 +4321,23 @@
               "then": [
                 {"create_thread": {
                   "commands": [
-                    {"drive_object":{"name":"chs_med_1","to":["chs_sR_1","chs_nR_1","chs_nC_1","chs_nL_1","chs_sL_1","chs_mdoor_1"],"VAR1":1,"speed":4}},
+                    {"drive_object":{"name":"chs_med_1","to":["chs_sR_1","chs_nR_1","chs_nC_1","chs_nL_1","chs_sL_1","chs_mdoor_1"],"VAR1":1,"speed":5}},
                     {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
                     {"point_object":"chs_med_1","to":"chs_door_1"}
                 ]}}
             ]},
-            {"drive_object":{"name":"chs_str_1","to":["chs_sR_1","chs_nR_1","chs_nC_1","chs_nL_1","chs_sL_1","chs_door_1"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_1","to":["chs_sR_1","chs_nR_1","chs_nC_1","chs_nL_1","chs_sL_1","chs_door_1"],"VAR1":1,"speed":5}}
           ],"else": [
             {"if": {"has_object":"chs_med_1"}, "eq": 1,
               "then": [
                 {"create_thread": {
                   "commands": [
-                    {"drive_object":{"name":"chs_med_1","to":["chs_sR_1","chs_mdoor_1"],"VAR1":1,"speed":4}},
+                    {"drive_object":{"name":"chs_med_1","to":["chs_sR_1","chs_mdoor_1"],"VAR1":1,"speed":5}},
                     {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
                     {"point_object":"chs_med_1","to":"chs_door_1"}
                 ]}}
             ]},
-            {"drive_object":{"name":"chs_str_1","to":["chs_sR_1","chs_door_1"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_1","to":["chs_sR_1","chs_door_1"],"VAR1":1,"speed":5}}
         ]}
     ]},
     {"set":{"object":"chs_str_1","var":"VAR 1"},"value":0},
@@ -4427,19 +4434,19 @@
           "commands": [
             {"if": {"local":"hospital_wptot"}, "eq": 0,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 1,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 2,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 3,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
             {"destroy_object":"chs_med_1"}
@@ -4447,19 +4454,19 @@
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 0,
       "then": [
-        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 1,
       "then": [
-        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 2,
       "then": [
-        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 3,
       "then": [
-        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"set":{"object":"chs_str_1","var":"VAR 1"},"value":0},
     {"if": {"local":"CHS_MEMBER_1"}, "eq": 1,
@@ -4504,11 +4511,11 @@
       "then": [
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":5}},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0}
         ]}}
     ]},
-    {"drive_object":{"name":"chs_str_1","to":["chs_leave_1",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+    {"drive_object":{"name":"chs_str_1","to":["chs_leave_1",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":5}},
     {"set":{"object":"chs_str_1","var":"VAR 1"},"value":0},
     {"sleep":1.5},
     {"destroy_object":"chs_str_1"},
@@ -4659,16 +4666,16 @@
       "then": [
         {"if": {"local":"chs_dside_2"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"chs_str_2","to":["chs_sL_2","chs_door_2"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_2","to":["chs_sL_2","chs_door_2"],"VAR1":1,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"chs_str_2","to":["chs_sL_2","chs_nL_2","chs_nC_2","chs_nR_2","chs_sR_2","chs_door_2"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_2","to":["chs_sL_2","chs_nL_2","chs_nC_2","chs_nR_2","chs_sR_2","chs_door_2"],"VAR1":1,"speed":5}}
         ]}
       ],"else": [
         {"if": {"local":"chs_dside_2"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"chs_str_2","to":["chs_sR_2","chs_nR_2","chs_nC_2","chs_nL_2","chs_sL_2","chs_door_2"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_2","to":["chs_sR_2","chs_nR_2","chs_nC_2","chs_nL_2","chs_sL_2","chs_door_2"],"VAR1":1,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"chs_str_2","to":["chs_sR_2","chs_door_2"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_2","to":["chs_sR_2","chs_door_2"],"VAR1":1,"speed":5}}
         ]}
     ]},
     {"set":{"object":"chs_str_2","var":"VAR 1"},"value":0},
@@ -4765,19 +4772,19 @@
           "commands": [
             {"if": {"local":"hospital_wptot"}, "eq": 0,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 1,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 2,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 3,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
             {"destroy_object":"chs_med_1"}
@@ -4785,19 +4792,19 @@
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 0,
       "then": [
-        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 1,
       "then": [
-        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 2,
       "then": [
-        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 3,
       "then": [
-        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_2","to":["chs_leave_2","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"set":{"object":"chs_str_2","var":"VAR 1"},"value":0},
     {"if": {"local":"CHS_MEMBER_2"}, "eq": 1,
@@ -4839,11 +4846,11 @@
       "then": [
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":5}},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0}
         ]}}
     ]},
-    {"drive_object":{"name":"chs_str_2","to":["chs_leave_2",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+    {"drive_object":{"name":"chs_str_2","to":["chs_leave_2",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":5}},
     {"set":{"object":"chs_str_2","var":"VAR 1"},"value":0},
     {"sleep":1.5},
     {"destroy_object":"chs_str_2"},
@@ -4994,16 +5001,16 @@
       "then": [
         {"if": {"local":"chs_dside_3"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"chs_str_3","to":["chs_sL_3","chs_door_3"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_3","to":["chs_sL_3","chs_door_3"],"VAR1":1,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"chs_str_3","to":["chs_sL_3","chs_nL_3","chs_nC_3","chs_nR_3","chs_sR_3","chs_door_3"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_3","to":["chs_sL_3","chs_nL_3","chs_nC_3","chs_nR_3","chs_sR_3","chs_door_3"],"VAR1":1,"speed":5}}
         ]}
       ],"else": [
         {"if": {"local":"chs_dside_3"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"chs_str_3","to":["chs_sR_3","chs_nR_3","chs_nC_3","chs_nL_3","chs_sL_3","chs_door_3"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_3","to":["chs_sR_3","chs_nR_3","chs_nC_3","chs_nL_3","chs_sL_3","chs_door_3"],"VAR1":1,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"chs_str_3","to":["chs_sR_3","chs_door_3"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_3","to":["chs_sR_3","chs_door_3"],"VAR1":1,"speed":5}}
         ]}
     ]},
     {"set":{"object":"chs_str_3","var":"VAR 1"},"value":0},
@@ -5100,19 +5107,19 @@
           "commands": [
             {"if": {"local":"hospital_wptot"}, "eq": 0,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 1,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 2,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 3,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
             {"destroy_object":"chs_med_1"}
@@ -5120,19 +5127,19 @@
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 0,
       "then": [
-        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 1,
       "then": [
-        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 2,
       "then": [
-        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 3,
       "then": [
-        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_3","to":["chs_leave_3","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"set":{"object":"chs_str_3","var":"VAR 1"},"value":0},
     {"if": {"local":"CHS_MEMBER_3"}, "eq": 1,
@@ -5174,11 +5181,11 @@
       "then": [
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":5}},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0}
         ]}}
     ]},
-    {"drive_object":{"name":"chs_str_3","to":["chs_leave_3",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+    {"drive_object":{"name":"chs_str_3","to":["chs_leave_3",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":5}},
     {"set":{"object":"chs_str_3","var":"VAR 1"},"value":0},
     {"sleep":1.5},
     {"destroy_object":"chs_str_3"},
@@ -5329,16 +5336,16 @@
       "then": [
         {"if": {"local":"chs_dside_4"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"chs_str_4","to":["chs_sL_4","chs_door_4"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_4","to":["chs_sL_4","chs_door_4"],"VAR1":1,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"chs_str_4","to":["chs_sL_4","chs_nL_4","chs_nC_4","chs_nR_4","chs_sR_4","chs_door_4"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_4","to":["chs_sL_4","chs_nL_4","chs_nC_4","chs_nR_4","chs_sR_4","chs_door_4"],"VAR1":1,"speed":5}}
         ]}
       ],"else": [
         {"if": {"local":"chs_dside_4"}, "eq": "L",
           "then": [
-            {"drive_object":{"name":"chs_str_4","to":["chs_sR_4","chs_nR_4","chs_nC_4","chs_nL_4","chs_sL_4","chs_door_4"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_4","to":["chs_sR_4","chs_nR_4","chs_nC_4","chs_nL_4","chs_sL_4","chs_door_4"],"VAR1":1,"speed":5}}
           ],"else": [
-            {"drive_object":{"name":"chs_str_4","to":["chs_sR_4","chs_door_4"],"VAR1":1,"speed":4}}
+            {"drive_object":{"name":"chs_str_4","to":["chs_sR_4","chs_door_4"],"VAR1":1,"speed":5}}
         ]}
     ]},
     {"set":{"object":"chs_str_4","var":"VAR 1"},"value":0},
@@ -5435,19 +5442,19 @@
           "commands": [
             {"if": {"local":"hospital_wptot"}, "eq": 0,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 1,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 2,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"if": {"local":"hospital_wptot"}, "eq": 3,
               "then": [
-                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+                {"drive_object":{"name":"chs_med_1","to":["chs_leave_1","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
             ]},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0},
             {"destroy_object":"chs_med_1"}
@@ -5455,19 +5462,19 @@
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 0,
       "then": [
-        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 1,
       "then": [
-        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_wp1","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_wp1","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 2,
       "then": [
-        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_wp1","hospital_wp2","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"if": {"local":"hospital_wptot"}, "eq": 3,
       "then": [
-        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":4}}
+        {"drive_object":{"name":"chs_str_4","to":["chs_leave_4","hospital_wp1","hospital_wp2","hospital_wp3","hospital_door"],"VAR1":1,"speed":5}}
     ]},
     {"set":{"object":"chs_str_4","var":"VAR 1"},"value":0},
     {"if": {"local":"CHS_MEMBER_4"}, "eq": 1,
@@ -5509,11 +5516,11 @@
       "then": [
         {"create_thread": {
           "commands": [
-            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+            {"drive_object":{"name":"chs_med_1","to":["chs_leave_1",{"bearing2":270,"dist":3,"object":"ambulance5"}],"VAR1":1,"speed":5}},
             {"set":{"object":"chs_med_1","var":"VAR 1"},"value":0}
         ]}}
     ]},
-    {"drive_object":{"name":"chs_str_4","to":["chs_leave_4",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":4}},
+    {"drive_object":{"name":"chs_str_4","to":["chs_leave_4",{"bearing2":180,"dist":2.5,"object":"ambulance5"}],"VAR1":1,"speed":5}},
     {"set":{"object":"chs_str_4","var":"VAR 1"},"value":0},
     {"sleep":1.5},
     {"destroy_object":"chs_str_4"},

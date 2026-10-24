@@ -51,6 +51,7 @@ for (const need of ['cf_light', 'cf_hours', 'cf_season', 'cf_weather', 'cf_wind'
 const rnd = text('randomize');
 assert.equal((rnd.match(/"call_macro":"conditions fit"/g) || []).length, 2, 'randomize calls conditions fit in the counting loop and in the drawing loop');
 assert.ok(rnd.includes('"call_macro":"conditions snapshot"'), 'randomize takes the snapshot once');
+assert.equal((rnd.match(/"call_macro":"conditions fit","result":"cond_pass"\},\s*\{"sleep":0\.01\}/g) || []).length, 2, 'a sleep follows each conditions fit call: the stack of the thread only unwinds at a sleep (Maximum call stack size exceeded, report 2026-10-24)');
 assert.ok(rnd.includes('"cond_eligible"') && rnd.includes('"local":"cm_active"},"value":0'), 'when no enabled mission fits, the filter is dropped for that draw (complete random missions)');
 assert.ok(rnd.includes('"param":"cond_pass"'), 'the drawing loop accepts a mission only if it fits');
 assert.ok(rnd.includes('MSN_CONFIG_PRESET'), 'the missions enabled in the list are still the base of the draw');
@@ -72,7 +73,7 @@ assert.ok(JSON.stringify(macros).includes('"global:COND_MISSIONS"') && JSON.stri
 // 4. the crew tip about it (pack EN 16)
 const tip = text('voice tip');
 assert.ok(tip.includes('"CND"'), 'voice tip has the topic CND');
-assert.ok(JSON.stringify(macros).includes('<pack:EN:24>'), 'the mission declares the pack EN 24');
+assert.ok(JSON.stringify(macros).includes('<pack:EN:25>'), 'the mission declares the pack EN 25');
 
 // 5. the model of the decision, the same rules as the macro, on typical situations
 function fit(a, s) {

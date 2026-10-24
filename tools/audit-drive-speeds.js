@@ -164,7 +164,9 @@ for (const d of drives) {
   const bs = d.base && (!vehicle || d.match === 'same') ? d.base.speedNum : null;
   const capped = d.speedNum !== null && d.node && d.speedNum >= Math.floor(guardCap(d.node) * 10) / 10 - 1e-9;
   if (d.base && d.speedNum !== null && bs !== null && d.speedNum < bs && !capped) reasons.push(`R: ${d.speedNum} km/h, baseline ${bs} km/h (${d.match} route)`);
-  if (d.base && d.speedNum === null && bs !== null) reasons.push(`R: speed ${describe(d.speed)} (an expression), baseline ${bs} km/h`);
+  // the speed that macro "crew walk speed" gives by distance (4 to 7 km/h, never below the speed the drive had) is a walking speed by design
+  const byDistance = d.speed && typeof d.speed === 'object' && d.speed.param === 'cws_sp';
+  if (d.base && d.speedNum === null && bs !== null && !byDistance) reasons.push(`R: speed ${describe(d.speed)} (an expression), baseline ${bs} km/h`);
   if (!vehicle && d.speedNum !== null && d.speedNum < WALK_MIN && !r.provenShort && d.match !== 'same' && !capped) {
     reasons.push(`N: ${d.speedNum} km/h on a route of ${r.n} point(s), ${r.legs} known leg(s) of ${r.known.toFixed(1)} m${r.first === null ? '' : ', first point ' + r.first.toFixed(1) + ' m'}${d.match === 'changed' ? ' (baseline ' + describe(d.base.speed) + ' on another route)' : ' (not in the baseline)'}`);
   }
