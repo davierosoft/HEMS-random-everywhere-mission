@@ -1,3 +1,12 @@
+## Release 0.997 169.77
+
+- Scope of the snapshot taken before 169.75 included; carried macros of 169.75 declared
+- vfxa keep smoke (user rule 2026-10-24: scene smoke stays until the fire brigade puts it out, where present; nothing extinguishes it at the landing): the keeper now skips the effects 5 to 13 (13 is a fire in random VFX OLD), so the fire engine reduction of VAR 1 is no longer written back. Smoke effects are untouched by the brigade and are only kept. Runtime pending.
+
+## Release 0.997 169.77
+
+- Smoke keeper also leaves the fire effect 13 of the old macro to the fire engine
+
 ## Release 0.997 169.76
 
 - Scope of the snapshot taken before 169.75 included; carried macros of 169.75 declared
