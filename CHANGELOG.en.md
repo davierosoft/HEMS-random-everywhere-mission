@@ -1,3 +1,19 @@
+## Release 0.997 169.76
+
+- Scope of the snapshot taken before 169.75 included; carried macros of 169.75 declared
+- Radio beeps (user, flight log 2026-10-24): every message of the actors crew radio and dispatcher/units now uses radio="ext" in the packs (51 messages per pack, double beep in both directions). Technician greeting: GRT.TEC.R3/R4/R5 and the macro voice hangar greeting greet the whole crew by CREW_MEMBER_CAP. Inconsistencies from the log: voice hospital approach/final skip whobringpatient ambulance and lethimdie; new local amb_cancel_said keeps AMB.DEP.DSP after AMB.CAN.DSP from being said; AMB.DEP.DSP option 1 addresses {@HEMS}; CPL.43/CPL.44 speed callouts pronounceable.
+- Dispatch discussion (user): new macros voice crew all aboard (L:HMC_CREW_PRESENT equals L:HMC_CREW_EXIST), voice dsp gate (vda_dsp) and voice dispatch nudge; voice dispatch triage run waits until everybody is aboard (fallback 120 s after the first one boarded) and until the hangar greetings end (vhg_busy); the dispatcher nudge DSA.NUDGE is its own thread and the crew lines wait for it. A dispatch read with the radio off no longer plays the readback immediately.
+- Command readback: speech bridge loop starts the new macro speech readback after an accepted command, pack message CMD.101-CMD.114 (six options, EN/DE/FR). tools/speech-bridge.js regenerated the module.
+- Smoke (Badger, Discord 2026-10-24): the cause is not proven; the two no-op move_object VFXA threads of the downed plane and helicopter are removed and the macro vfxa keep smoke, started by random VFX and random VFX OLD, writes the VAR 1 of the smoke back while the dispatch lasts (fires VFX 5 to 12 are untouched). Only CRASH_SITE and CAMPING_SITE use random VFX. New test test-flight-report-2026-10-24. Packs EN 27, DE 15, FR 17. Runtime pending.
+
+## Release 0.997 169.76
+
+- Radio beeps on every radio line, technician greets the whole crew, hospital and ambulance line fixes, dispatch discussion when all the crew is aboard, command readback, smoke kept alive
+
+## Voice packs 2026-10-24 (no program change)
+
+- Voice packs EN 25, DE 13 and FR 15 (published apart from the program as the releases voicepack-EN, voicepack-DE and voicepack-FR): five new messages for the mission 169.75, six options each: SVC.REQ, SVC.ACK, SVC.ARR (technical assistance requested by the copilot, confirmed by the dispatcher, the service truck is on site) and SCN.POL.AMB, SCN.POL (the dispatcher says that ambulance and police, or the police alone, wait at the landing point). The pack FR is the translation of rolandusCH2300.
+
 ## Release 0.997 169.75
 
 - Service truck (user proposal 2026-10-24): when the helicopter comes back damaged or with a failure (new macro deboarding damage state: L:CRASH, VNE, FLI, damage of engines and gearboxes of 85 percent or more, engine failed or on fire, the failure ladder) and the crew is taken by the van (hangar farther than L:VANACTION), new macro service truck: the copilot asks the dispatcher for technical assistance (SVC.REQ), the dispatcher confirms (SVC.ACK), the Airbus H145 Service Truck leaves the hangar with the lights on (VAR 1 1, assumed on) and stops 22 m behind the helicopter on the side closer to the hangar (rear sector, bearing 100 to 260: the van and the crew walk use the front sector), the dispatcher announces it (SVC.ARR); it is removed 30 s after the end of deboarding. The dispatcher also tells when the police, or ambulance and police, wait at the landing point (SCN.POL.AMB, SCN.POL: crew casualty scene vehicles, deceased patient police scene). Packs EN 25, DE 13 (base 25), FR 15 (base 25, contributed by rolandusCH2300, the five new messages translated here). New test test-service-truck. Runtime pending (the VAR 1 of the truck, the route).

@@ -70,9 +70,23 @@ if (fs.existsSync(packDir)) {
       assert.ok(/\{@DSP\}/.test(m[1]), `${lang} ${key} names the dispatcher`);
     }
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="25"/.test(fs.readFileSync(path.join(packDir, 'EN.xml'), 'utf8')), 'pack EN 25');
-  assert.ok(/<voicepack name="DE"[^>]* version="13" basever="25"/.test(fs.readFileSync(path.join(packDir, 'DE.xml'), 'utf8')), 'pack DE 13 on the base 25');
-  assert.ok(/<voicepack name="FR"[^>]* version="15"[^>]* basever="25"/.test(fs.readFileSync(path.join(packDir, 'FR.xml'), 'utf8')), 'pack FR 15 on the base 25');
+  assert.ok(/<voicepack name="EN"[^>]* version="27"/.test(fs.readFileSync(path.join(packDir, 'EN.xml'), 'utf8')), 'pack EN 27');
+  assert.ok(/<voicepack name="DE"[^>]* version="15" basever="27"/.test(fs.readFileSync(path.join(packDir, 'DE.xml'), 'utf8')), 'pack DE 15 on the base 27');
+  assert.ok(/<voicepack name="FR"[^>]* version="17"[^>]* basever="27"/.test(fs.readFileSync(path.join(packDir, 'FR.xml'), 'utf8')), 'pack FR 17 on the base 27');
 }
-assert.ok(JSON.stringify(macros['voice app connect']).includes('<pack:EN:25>'), 'the mission declares the pack EN 25');
-console.log('Service truck PASS: damage state, truck only in the van branch with damage, lights on, rear sector away from the van and the crew walk, radio SVC.* and SCN.*, packs EN 25 / DE 13 / FR 15. Simulator runtime PENDING (VAR 1 of the truck, the route, the sound of the radio).');
+// 6. every radio call with the dispatcher or the hospital (dispatcher lines and the crew lines to it) is an external radio call: double beep going out and coming in (user 2026-10-24)
+if (fs.existsSync(packDir)) {
+  for (const lang of ['EN', 'DE', 'FR']) {
+    const xml = fs.readFileSync(path.join(packDir, `${lang}.xml`), 'utf8');
+    const onCalls = [...xml.matchAll(/<message key="([^"]+)"[^>]* actor="(2|8)"[^>]* radio="on"/g)].map((m) => m[1]);
+    assert.deepEqual(onCalls, [], `${lang}: no dispatcher or crew radio call of actor 2 or 8 left on the plain radio (${onCalls.join(', ')})`);
+    for (const key of ['SVC.REQ', 'SVC.ACK', 'SVC.ARR', 'SCN.POL.AMB', 'SCN.POL', 'DSP.RQ']) assert.ok(new RegExp(`<message key="${key.replace('.', '\\.')}"[^>]* radio="ext"`).test(xml), `${lang} ${key} is an external radio call (double beep)`);
+    for (const key of ['GRT.TEC.R3', 'GRT.TEC.R4', 'GRT.TEC.R5']) assert.ok(xml.includes(`<message key="${key}"`), `${lang} has ${key}`);
+  }
+}
+// 7. the technician of the hangar greets the doctor and the rear crew too, not only the pilot and the copilot (user 2026-10-24: he greeted two persons)
+const greet = JSON.stringify(macros['voice hangar greeting']);
+assert.ok(greet.includes('<say:GRT.TEC.R{0}>') && greet.includes('"local":"CREW_MEMBER_CAP"'), 'the technician greeting of the rest of the crew by the size of the crew');
+assert.ok(greet.indexOf('GRT.TEC.R{0}') > greet.indexOf('GRT.TEC.{0}') && greet.indexOf('GRT.TEC.R{0}') < greet.indexOf('GRT.CPL.{0}'), 'right after the first technician greeting');
+assert.ok(JSON.stringify(macros['voice app connect']).includes('<pack:EN:27>'), 'the mission declares the pack EN 27');
+console.log('Service truck PASS: damage state, truck only in the van branch with damage, lights on, rear sector away from the van and the crew walk, radio SVC.* and SCN.*, packs EN 27 / DE 15 / FR 17. Simulator runtime PENDING (VAR 1 of the truck, the route, the sound of the radio).');

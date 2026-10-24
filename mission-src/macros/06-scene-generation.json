@@ -118,6 +118,15 @@
                 {"call_macro":"shared repeated block 045"}
             ]}
         ]}},
+        {"if": {"local":"vfx_gen"}, "eq": null,
+          "then": [
+            {"set":{"local":"vfx_gen"},"value":0}
+        ]},
+        {"set":{"local":"vfx_gen"},"value":{"add":[{"local":"vfx_gen"},1]}},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"vfxa keep smoke","params":{"gen":{"local":"vfx_gen"}}}
+        ]}},
         {"sleep":1},
         {"create_thread": {
           "commands": [
@@ -175,6 +184,35 @@
         ]}}
       ],"else": [
         {"call_macro":"random VFX OLD"}
+    ]}
+  ],
+  "vfxa keep smoke": [
+    {"#comment":"Flight report 2026-10-24 (Badger, downed plane and downed helicopter): the smoke of the scene vanished while the helicopter came close. The smoke object takes its state from VAR 1 (the throttle lever of the object) and nothing in the mission changes it, so the state set at the creation is kept: while the object exists (and this is still the same dispatch, param gen) a changed VAR 1 is written back. Fires (VFX 5 to 12) are not touched: the fire engine reduces them on purpose. Runtime PENDING."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VFX"},"gt":4},
+        {"require":{"local":"VFX"},"lte":12}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"wait_for":{"has_object":"VFXA"},"eq":1},
+    {"sleep":4},
+    {"if": {"has_object":"VFXA"}, "eq": 1,
+      "then": [
+        {"set":{"local":"vk_v1"},"value":{"object":"VFXA","var":"VAR 1"}},
+        {"while": {"param":"gen"}, "eq": {"local":"vfx_gen"},
+          "do": [
+            {"sleep":3},
+            {"if": {"has_object":"VFXA"}, "eq": 0,
+              "then": [
+                {"return":0}
+            ]},
+            {"if": {"object":"VFXA","var":"VAR 1"}, "ne": {"local":"vk_v1"},
+              "then": [
+                {"set":{"object":"VFXA","var":"VAR 1"},"value":{"local":"vk_v1"}}
+            ]}
+        ]}
     ]}
   ],
   "VFXA_generation3": [
@@ -302,6 +340,15 @@
           "then": [
             {"call_macro":"shared repeated block 042"}
         ]}
+    ]}},
+    {"if": {"local":"vfx_gen"}, "eq": null,
+      "then": [
+        {"set":{"local":"vfx_gen"},"value":0}
+    ]},
+    {"set":{"local":"vfx_gen"},"value":{"add":[{"local":"vfx_gen"},1]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"vfxa keep smoke","params":{"gen":{"local":"vfx_gen"}}}
     ]}},
     {"sleep":1},
     {"create_thread": {
@@ -5022,12 +5069,6 @@
     {"create_object":{"name":"helobag","title":"Airbus H145 Cargo Bag","location":{"bearing":310,"dist":11,"heading":{"rand":[0,359]},"object":"hplaneboom"}}},
     {"set":{"var":["L:LOAD","number"]},"value":90},
     {"set_message":{"text":"Cabin preparation, 90% completed... please wait, it can take a while"}},
-    {"create_thread": {
-      "commands": [
-        {"wait_for":{"has_object":"VFXA"},"eq":1},
-        {"sleep":1},
-        {"move_object":"VFXA","to":{"bearing":0,"dist":0.1,"object":"hplaneboom"}}
-    ]}},
     {"if": {"local":"HELOVICTIMS"}, "gt": 0,
       "then": [
         {"move_object":"injured_human","to":{"bearing":{"rand":[7,35]},"dist":{"rand":[7,15]},"heading":{"rand":[0,359]},"object":"hplaneboom"}}
@@ -5139,12 +5180,6 @@
     {"set":{"var":["L:LOAD","number"]},"value":80},
     {"set_message":{"text":"Cabin preparation, 80% completed... please wait, it can take a while"}},
     {"create_object":{"name":"planebag","title":"Airbus H145 Cargo Bag","location":{"bearing":310,"dist":11,"heading":{"rand":[0,359]},"object":"hplaneboom"}}},
-    {"create_thread": {
-      "commands": [
-        {"wait_for":{"has_object":"VFXA"},"eq":1},
-        {"sleep":1},
-        {"move_object":"VFXA","to":{"bearing":0,"dist":0.1,"object":"hplaneboom"}}
-    ]}},
     {"set":{"var":["L:LOAD","number"]},"value":90},
     {"set_message":{"text":"Cabin preparation, 90% completed... please wait, it can take a while"}},
     {"if": {"local":"HELOVICTIMS"}, "gt": 0,

@@ -46,11 +46,11 @@ if (fs.existsSync(packPath)) {
     const block = pack.slice(pack.indexOf(`<message key="${key}"`), pack.indexOf('</message>', pack.indexOf(`<message key="${key}"`)));
     assert.equal(count(block, '<o>'), 6, `${key} has six options`);
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="25"/.test(pack), 'the base pack EN is version 25');
+  assert.ok(/<voicepack name="EN"[^>]* version="27"/.test(pack), 'the base pack EN is version 27');
   const dePath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml');
   if (fs.existsSync(dePath)) {
     const de = fs.readFileSync(dePath, 'utf8');
-    assert.ok(/<voicepack name="DE"[^>]* version="13" basever="25"/.test(de), 'the pack DE is version 13 on the base 25');
+    assert.ok(/<voicepack name="DE"[^>]* version="15" basever="27"/.test(de), 'the pack DE is version 15 on the base 27');
     for (const key of ['CRT.POL.OUT', 'CRT.POL.BCK', 'CRT.AMB.BCK', 'CRT.POL.OPR', 'CRT.WALK', 'MID.SET', 'MID.HND', 'TRF.HND', 'ORG.PCK', 'APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END', 'APR.MUL', 'APR.FIR']) assert.ok(de.includes(`<message key="${key}"`), `${key} is translated in the pack DE`);
   }
 }
@@ -110,7 +110,7 @@ assert.ok(cpr.includes('"L:PAX3{local:VCP}21"'), 'the patient does not respond t
 // 8. flight log of 2026-10-19: (a) a dispatch that arrives with nobody aboard is read back by the crew when it boards; (b) at the hangar the technician, the copilot and the
 // pilot greet each other by the hour of the simulator, by name, with a few words of circumstance
 const triageRun = text(macros['voice dispatch triage run']);
-assert.ok(triageRun.includes('"while":{"param":"tr_who"},"eq":0') && triageRun.includes('"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"tr_who"'), 'the triage waits until a crew member is aboard');
+assert.ok(triageRun.includes('"while":{"param":"tr_ok"},"eq":0') && triageRun.includes('"call_macro":"voice crew all aboard"') &&triageRun.includes('"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"tr_who"'), 'the triage waits until a crew member is aboard');
 assert.ok(triageRun.includes('"param":"tr_w"},"gte":1800') && triageRun.includes('"local":"vda_open"},"ne":"yes"') && triageRun.includes('"param":"seq"},"ne":{"local":"voice_dispatch_seq"}'), 'the wait ends with a newer dispatch, the acceptance, or after 30 minutes');
 assert.ok(triageRun.indexOf('"call_macro":"voice dispatch readback"') > triageRun.indexOf('"param":"tr_who"') && triageRun.indexOf('"call_macro":"voice dispatch readback"') < triageRun.indexOf('"key":"DSA.ASK"'), 'a dispatch read with the radio off is read back after the crew is aboard and before the questions');
 assert.ok(triageRun.includes('"param":"tr_q"},"eq":0') && triageRun.includes('"key":"DSA.ASKP"') && triageRun.includes('"param":"tr_qr"},"eq":0'), 'with the radio off the crew asks the pilot again once, a minute after the question');
@@ -122,7 +122,7 @@ for (const key of ['CHT.TEC', 'CHT.CPL', 'CHT.TEC2']) assert.ok(greet.includes(`
 assert.ok(greet.includes('"local":"VCP"},"eq":"APP"') && greet.includes('"local":"TTS"},"eq":1') && greet.includes('"global":"AUDIO_DECLUT"},"eq":0') && greet.includes('"global":"AUDIO_DECLUT"},"gt":3'), 'only with the Mission Companion and the chatter levels of the original lines');
 const hangarMacro = Object.values(macros).map(text).find((body) => body.includes('"call_macro":"voice hangar greeting"'));
 assert.ok(hangarMacro && hangarMacro.includes('"local":"VCP"},"eq":"APP","then":[{"call_macro":"voice hangar greeting"}]') && hangarMacro.includes('L:FRA{local:VCP}7') && hangarMacro.includes('"local":"VCP"},"ne":"APP"') && hangarMacro.includes('L:CPL{local:VCP}23'), 'the boarding at the hangar: the greeting with the Companion, the original lines FRA 7 and CPL 23 with a wav pack');
-assert.ok(all.includes('<pack:EN:25>') && !all.includes('<pack:EN:24>'), 'the mission declares the pack EN 25 (SVC and SCN lines on top of HOS.PAP on top of the radio calls of the flight of 2026-10-20)');
+assert.ok(all.includes('<pack:EN:27>') && !all.includes('<pack:EN:26>'), 'the mission declares the pack EN 27 (SVC and SCN lines on top of HOS.PAP on top of the radio calls of the flight of 2026-10-20)');
 if (pack) {
   const dePack = fs.existsSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8') : null;
   const block = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); return xml.slice(at, xml.indexOf('</message>', at)); };

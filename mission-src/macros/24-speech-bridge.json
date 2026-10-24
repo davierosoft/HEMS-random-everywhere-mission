@@ -41,13 +41,25 @@
                 {"call_macro":"speech action run","params":{"code":{"local":"sp_cmd"}}}
             ]},
             {"set":{"var":["L:HMC_SPEECH_ACK_RESULT","number"]},"value":{"local":"sp_result"}},
-            {"set":{"var":["L:HMC_SPEECH_ACK_SEQ","number"]},"value":{"local":"sp_req"}}
+            {"set":{"var":["L:HMC_SPEECH_ACK_SEQ","number"]},"value":{"local":"sp_req"}},
+            {"if": {"local":"sp_result"}, "eq": 1,
+              "then": [
+                {"create_thread": {
+                  "commands": [
+                    {"call_macro":"speech readback","params":{"code":{"local":"sp_cmd"}}}
+                ]}}
+            ]}
         ]},
         {"sleep":0.25}
     ]},
     {"set":{"var":["L:HMC_SPEECH_READY","number"]},"value":0},
     {"call_macro":"speech availability clear"},
     {"set":{"local":"speech_bridge_running"},"value":0}
+  ],
+  "speech readback": [
+    {"#comment":"Feedback of an accepted spoken command (user request 2026-10-24): after the click (result 1) the copilot reads the command back by voice, pack message CMD.<code> (six options, intercom or voice by the Mission Companion rules). A refused command (result 2) is not read back. Param code."},
+    {"sleep":0.8},
+    {"call_macro":"voice say","params":{"key":{"text":"CMD.{0}","params":[{"param":"code"}]}}}
   ],
   "speech availability": [
     {"#comment":"Availability of every declared action = its button exists and its show_condition holds now (copied from the definition by tools/speech-bridge.js; tools/test-speech-bridge.js fails when they diverge). A failing read counts as not available."},

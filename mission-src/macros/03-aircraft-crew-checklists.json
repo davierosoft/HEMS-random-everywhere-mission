@@ -1041,7 +1041,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:25>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:27>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice app lost": [
@@ -1433,7 +1433,10 @@
             ]},
             {"call_macro":"voice objective"}
           ],"else": [
-            {"call_macro":"voice dispatch readback"}
+            {"if": {"local":"vda_pending"}, "ne": "yes",
+              "then": [
+                {"call_macro":"voice dispatch readback"}
+            ]}
         ]},
         {"sleep":1},
         {"if": {"local":"vda_pending"}, "eq": "yes",
@@ -1445,6 +1448,52 @@
         ]}
     ]}
   ],
+  "voice crew all aboard": [
+    {"#comment":"1 when every crew member of this flight is aboard (L:HMC_CREW_PRESENT equals L:HMC_CREW_EXIST, both published by voice context for the Mission Companion), else 0. User rule 2026-10-24: the crew discusses a dispatch only when all of them are inside; the hangar greetings come first."},
+    {"set":{"param":"vca"},"value":0},
+    {"if": {"var":["L:HMC_CREW_PRESENT","number"]}, "eq": {"var":["L:HMC_CREW_EXIST","number"]},
+      "then": [
+        {"set":{"param":"vca"},"value":1}
+    ]},
+    {"return":{"param":"vca"}}
+  ],
+  "voice dsp gate": [
+    {"#comment":"The crew talk about a dispatch stops while the dispatcher speaks on the radio (vda_dsp 1, set around the DSA.NUDGE and the DSA.REASSIGN lines) and goes on after the dispatcher part (user rule 2026-10-24)."},
+    {"while": {"local":"vda_dsp"}, "eq": 1,
+      "do": [
+        {"sleep":0.5}
+    ]}
+  ],
+  "voice dispatch nudge": [
+    {"#comment":"The dispatcher asks for the confirmation once, a minute after the dispatch and as soon as the radio works (a dispatch read while the helicopter was cold stays only on the tablet until the radio is on). It runs in its own thread, so it can come while the crew is still discussing: the discussion waits (voice dsp gate) and goes on after the dispatcher. Param seq = the number of the dispatch."},
+    {"set":{"param":"nd_t"},"value":0},
+    {"set":{"param":"nd_s"},"value":0},
+    {"while": {"param":"nd_s"}, "eq": 0,
+      "do": [
+        {"sleep":1},
+        {"set":{"param":"nd_t"},"value":{"add":[{"param":"nd_t"},1]}},
+        {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
+          "then": [
+            {"return":1}
+        ]},
+        {"if": {"local":"vda_open"}, "ne": "yes",
+          "then": [
+            {"return":1}
+        ]},
+        {"if": {"param":"nd_t"}, "gte": 60,
+          "then": [
+            {"call_macro":"voice radio ready","result":"nd_r"},
+            {"if": {"param":"nd_r"}, "eq": 1,
+              "then": [
+                {"set":{"param":"nd_s"},"value":1}
+            ]}
+        ]}
+    ]},
+    {"set":{"local":"vda_dsp"},"value":1},
+    {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}},
+    {"sleep":9},
+    {"set":{"local":"vda_dsp"},"value":0}
+  ],
   "voice dispatch readback": [
     {"#comment":"The readback of a dispatch heard with the radio off (user rules of 2026-10-18): a crew member aboard, or partly aboard, reads the message back to the crew by voice and asks what to do. Called by voice read dispatch when the dispatch arrives with somebody aboard, and by voice dispatch triage run when the crew boards later (flight log of 2026-10-19: the dispatch arrived with nobody aboard, the crew boarded and nobody said anything). Uses vrd_text and vrd_veh of voice read dispatch; sets vrd_rb 1 once it has been said."},
     {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"vdr_who"},
@@ -1452,6 +1501,7 @@
       "then": [
         {"set":{"local":"vrd_rb"},"value":1},
         {"#comment":"User report 2026-10-20: the readback was in a plain voice with the helicopter powered. The text carries no radio tag now: the Mission Companion decides (the intercom with the battery or the GPCP switch on, the voice without power; the pack messages DSA.RB.A and DSA.RB.Q say radio ics)."},
+        {"call_macro":"voice dsp gate"},
         {"set":{"local":"vrd_tag"},"value":{"text":"<actor{0}>","params":[{"param":"vdr_who"}]}},
         {"speak":{"text":"{0}<say:DSA.RB.A>","params":[{"local":"vrd_tag"}]}},
         {"speak":{"text":"{0}<text:DSC.{1}.{2}>{3}","params":[{"local":"vrd_tag"},{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
@@ -1473,22 +1523,42 @@
     {"create_thread": {
       "commands": [
         {"call_macro":"voice dispatch triage run","params":{"seq":{"local":"voice_dispatch_seq"},"second":{"local":"SECOND_DISPATCH"}}}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice dispatch nudge","params":{"seq":{"local":"voice_dispatch_seq"}}}
     ]}}
   ],
   "voice dispatch triage run": [
-    {"#comment":"Thread of voice dispatch triage (params seq = the number of this dispatch, second = 1 for a second dispatch). Lines 1.5 s apart; the chatter (declut 1) follows the AUDIO_DECLUT levels, the fuel warning, the two missions and the question to the pilot are always said. Then it waits for the acceptance (vda_open no, set by voice dispatch accepted) or a newer dispatch (voice_dispatch_seq changed) and, a minute after the question and without an answer, the dispatcher asks for it (DSA.NUDGE)."},
+    {"#comment":"Thread of voice dispatch triage (params seq = the number of this dispatch, second = 1 for a second dispatch). Lines 1.5 s apart; the chatter (declut 1) follows the AUDIO_DECLUT levels, the fuel warning, the two missions and the question to the pilot are always said. Then it waits for the acceptance (vda_open no, set by voice dispatch accepted) or a newer dispatch (voice_dispatch_seq changed) and, the dispatcher nudge is a thread of its own (voice dispatch nudge) and the crew lines wait for it (voice dsp gate)."},
     {"sleep":2.5},
     {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
       "then": [
         {"return":1}
     ]},
     {"#comment":"Flight log of 2026-10-19: the dispatch arrived with nobody aboard (the program drops the lines of the crew then), the crew boarded a minute later and nobody said a word. The triage now waits until a crew member is aboard (it gives up after 30 minutes, with a newer dispatch or when the dispatch is accepted), then reads a dispatch heard with the radio off back to the crew (voice dispatch readback), then the questions follow."},
+    {"#comment":"User rule 2026-10-24 (flight log: the dispatch arrived while the technician was still chatting with only the copilot aboard, and the readback was dropped by the voice queue): the hangar greetings stay, they come before the boarding and nobody reads the tablet yet. The discussion of the crew starts when all of them are aboard and the greetings are over; if somebody is still missing two minutes after the first one boarded it starts anyway."},
     {"set":{"param":"tr_who"},"value":0},
     {"set":{"param":"tr_w"},"value":0},
-    {"while": {"param":"tr_who"}, "eq": 0,
+    {"set":{"param":"tr_g"},"value":0},
+    {"set":{"param":"tr_ok"},"value":0},
+    {"while": {"param":"tr_ok"}, "eq": 0,
       "do": [
         {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"tr_who"},
-        {"if": {"param":"tr_who"}, "eq": 0,
+        {"call_macro":"voice crew all aboard","result":"tr_all"},
+        {"if": {"param":"tr_who"}, "gt": 0,
+          "then": [
+            {"set":{"param":"tr_g"},"value":{"add":[{"param":"tr_g"},2]}},
+            {"if": {"param":"tr_all"}, "eq": 1,
+              "then": [
+                {"set":{"param":"tr_ok"},"value":1}
+            ]},
+            {"if": {"param":"tr_g"}, "gte": 120,
+              "then": [
+                {"set":{"param":"tr_ok"},"value":1}
+            ]}
+        ]},
+        {"if": {"param":"tr_ok"}, "eq": 0,
           "then": [
             {"sleep":2},
             {"set":{"param":"tr_w"},"value":{"add":[{"param":"tr_w"},2]}},
@@ -1506,6 +1576,11 @@
             ]}
         ]}
     ]},
+    {"while": {"local":"vhg_busy"}, "eq": 1,
+      "do": [
+        {"sleep":1}
+    ]},
+    {"call_macro":"voice crew speaker","params":{"first":"copilot","aboard":1,"skip":0},"result":"tr_who"},
     {"sleep":1.5},
     {"if": {"local":"vrd_rb"}, "ne": 1,
       "then": [
@@ -1518,6 +1593,7 @@
     ]},
     {"if": {"local":"vrd_rb"}, "ne": 1,
       "then": [
+        {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.ASK","declut":1}},
         {"sleep":1.5}
     ]},
@@ -1529,28 +1605,36 @@
         {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lte": {"global":"LOWFUELTHRSLD"},
           "then": [
             {"set":{"param":"tr_c"},"value":1},
+            {"call_macro":"voice dsp gate"},
             {"call_macro":"voice say","params":{"key":"DSA.FUEL.LOW"}}
           ],"else": [
+            {"call_macro":"voice dsp gate"},
             {"call_macro":"voice say","params":{"key":"DSA.FUEL.OK","declut":1}}
         ]},
         {"sleep":1.5},
         {"if": {"local":"COMPLETED_TEMP_MISSIONS"}, "gte": 2,
           "then": [
             {"set":{"param":"tr_c"},"value":1},
+            {"call_macro":"voice dsp gate"},
             {"call_macro":"voice say","params":{"key":"DSA.MIS"}},
             {"sleep":1.5}
         ]},
+        {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.EQP","declut":1}},
         {"sleep":1.5},
+        {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.HLT","declut":1}},
         {"sleep":1.5}
     ]},
     {"if": {"param":"tr_c"}, "eq": 0,
       "then": [
+        {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.GO","declut":1}},
         {"sleep":1.5},
+        {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.ASKP"}}
       ],"else": [
+        {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.ASKP.B"}}
     ]},
     {"set":{"param":"tr_t"},"value":0},
@@ -1581,25 +1665,12 @@
                 {"set":{"param":"tr_q"},"value":1},
                 {"if": {"param":"tr_c"}, "eq": 0,
                   "then": [
+                    {"call_macro":"voice dsp gate"},
                     {"call_macro":"voice say","params":{"key":"DSA.ASKP"}}
                   ],"else": [
+                    {"call_macro":"voice dsp gate"},
                     {"call_macro":"voice say","params":{"key":"DSA.ASKP.B"}}
                 ]}
-            ]}
-        ]},
-        {"#comment":"The dispatcher asks for the confirmation once, a minute after the question and as soon as the radio works (a dispatch read while the helicopter was cold stays only on the tablet until the radio is on)."},
-        {"if": {
-          "and": [
-            {"require":{"param":"tr_s"},"eq":0},
-            {"require":{"param":"tr_n"},"eq":0},
-            {"require":{"param":"tr_t"},"gte":60}
-          ]}, "eq": 1,
-          "then": [
-            {"call_macro":"voice radio ready","result":"tr_rr"},
-            {"if": {"param":"tr_rr"}, "eq": 1,
-              "then": [
-                {"set":{"param":"tr_n"},"value":1},
-                {"call_macro":"voice say","params":{"key":"DSA.NUDGE"}}
             ]}
         ]}
     ]}
@@ -1610,7 +1681,10 @@
       "then": [
         {"set":{"local":"vda_open"},"value":"no"},
         {"set":{"local":"voice_dispatch_seq"},"value":{"add":[{"local":"voice_dispatch_seq"},1]}},
-        {"call_macro":"voice say","params":{"key":"DSA.REASSIGN"}}
+        {"set":{"local":"vda_dsp"},"value":1},
+        {"call_macro":"voice say","params":{"key":"DSA.REASSIGN"}},
+        {"sleep":8},
+        {"set":{"local":"vda_dsp"},"value":0}
     ]}
   ],
   "voice dispatch accepted": [
@@ -1851,11 +1925,17 @@
               "then": [
                 {"set":{"local":"vhg_k"},"value":"A"}
             ]},
+            {"set":{"local":"vhg_busy"},"value":1},
             {"create_thread": {
               "commands": [
                 {"sleep":0.5},
                 {"speak":{"text":"<say:GRT.TEC.{0}>","params":[{"local":"vhg_k"}]}},
                 {"sleep":2.5},
+                {"if": {"local":"CREW_MEMBER_CAP"}, "gte": 3,
+                  "then": [
+                    {"speak":{"text":"<say:GRT.TEC.R{0}>","params":[{"local":"CREW_MEMBER_CAP"}]}},
+                    {"sleep":2.5}
+                ]},
                 {"speak":{"text":"<say:GRT.CPL.{0}>","params":[{"local":"vhg_k"}]}},
                 {"sleep":2.5},
                 {"speak":{"text":"<say:GRT.PLT.{0}>","params":[{"local":"vhg_k"}]}},
@@ -1871,7 +1951,9 @@
                 {"sleep":2.5},
                 {"speak":"<say:CHT.CPL>"},
                 {"sleep":2.5},
-                {"speak":"<say:CHT.TEC2>"}
+                {"speak":"<say:CHT.TEC2>"},
+                {"sleep":6},
+                {"set":{"local":"vhg_busy"},"value":0}
             ]}}
         ]}
     ]}
@@ -3395,7 +3477,12 @@
     {"while": 1, "gt": 0,
       "do": [
         {"sleep":5},
-        {"if": {"local":"MISSION_PHASE"}, "gte": 8,
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":8},
+            {"require":{"local":"whobringpatient"},"ne":"ambulance"},
+            {"require":{"local":"whobringpatient"},"ne":"lethimdie"}
+          ]}, "eq": 1,
           "then": [
             {"if": {"has_location":"hospital_user"}, "eq": 1,
               "then": [
@@ -3487,7 +3574,12 @@
     {"while": 1, "gt": 0,
       "do": [
         {"sleep":5},
-        {"if": {"local":"MISSION_PHASE"}, "gte": 8,
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":8},
+            {"require":{"local":"whobringpatient"},"ne":"ambulance"},
+            {"require":{"local":"whobringpatient"},"ne":"lethimdie"}
+          ]}, "eq": 1,
           "then": [
             {"if": {"has_location":"hospital_user"}, "eq": 1,
               "then": [

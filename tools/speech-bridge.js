@@ -148,7 +148,10 @@ function buildMacros(all) {
           { call_macro: 'speech action run', params: { code: { local: 'sp_cmd' } } }
         ] },
         setVar(VARS.ackResult, { local: 'sp_result' }),
-        setVar(VARS.ackSeq, { local: 'sp_req' })
+        setVar(VARS.ackSeq, { local: 'sp_req' }),
+        { if: { local: 'sp_result' }, eq: 1, then: [
+          { create_thread: { commands: [{ call_macro: 'speech readback', params: { code: { local: 'sp_cmd' } } }] } }
+        ] }
       ] },
       { sleep: 0.25 }
     ] },
@@ -157,6 +160,11 @@ function buildMacros(all) {
     { set: { local: 'speech_bridge_running' }, value: 0 }
   ];
   macros['speech bridge loop'] = loop;
+  macros['speech readback'] = [
+    { '#comment': 'Feedback of an accepted spoken command (user request 2026-10-24): after the click (result 1) the copilot reads the command back by voice, pack message CMD.<code> (six options, intercom or voice by the Mission Companion rules). A refused command (result 2) is not read back. Param code.' },
+    { sleep: 0.8 },
+    { call_macro: 'voice say', params: { key: { text: 'CMD.{0}', params: [{ param: 'code' }] } } }
+  ];
 
   const avail = [{ '#comment': 'Availability of every declared action = its button exists and its show_condition holds now (copied from the definition by tools/speech-bridge.js; tools/test-speech-bridge.js fails when they diverge). A failing read counts as not available.' }];
   const run = [

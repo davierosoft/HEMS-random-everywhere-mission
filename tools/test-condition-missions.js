@@ -73,7 +73,7 @@ assert.ok(JSON.stringify(macros).includes('"global:COND_MISSIONS"') && JSON.stri
 // 4. the crew tip about it (pack EN 16)
 const tip = text('voice tip');
 assert.ok(tip.includes('"CND"'), 'voice tip has the topic CND');
-assert.ok(JSON.stringify(macros).includes('<pack:EN:25>'), 'the mission declares the pack EN 25');
+assert.ok(JSON.stringify(macros).includes('<pack:EN:27>'), 'the mission declares the pack EN 27');
 
 // 5. the model of the decision, the same rules as the macro, on typical situations
 function fit(a, s) {
