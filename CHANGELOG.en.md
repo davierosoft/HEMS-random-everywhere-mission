@@ -1,3 +1,8 @@
+## Release 0.997 169.81
+
+- Carried 169.80 scope and 169.81 ground stall causes and death outcome
+- Ground stall causes, snapshots at 120 and 300 s, death outcome of a dispatch
+
 ## Release 0.997 169.80
 
 - Version check macro carries the release number

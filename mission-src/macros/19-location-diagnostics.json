@@ -172,7 +172,8 @@
     ]},
     {"set":{"table":{"param":"snapshot_table"},"key":"ground_ops_watch_log"},"value":{"json:copy":{"local":"ground_ops_watch_log"}}},
     {"call_macro":"sample ground ops state"},
-    {"set":{"table":{"param":"snapshot_table"},"key":"ground_ops_state"},"value":{"json:copy":{"local":"ground_ops_state_now"}}}
+    {"set":{"table":{"param":"snapshot_table"},"key":"ground_ops_state"},"value":{"json:copy":{"local":"ground_ops_state_now"}}},
+    {"set":{"table":{"param":"snapshot_table"},"key":"probable_cause"},"value":{"text":"{0}: {1}","params":[{"local":"ground_ops_reason_code"},{"local":"ground_ops_reason"}]}}
   ],
   "capture automatic snapshot": [
     {"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Auto_Table"}}},
@@ -388,6 +389,142 @@
     {"set":{"local":"gb_f8"},"value":{"if":{"local":"HEMS_PREPARE_TRACE"},"ne":null,"then":{"local":"HEMS_PREPARE_TRACE"},"else":"-"}},
     {"set":{"local":"ground_ops_blockers"},"value":{"text":"{0}| STEP {1} PAX_HOIST {2} HOIST_OUT {3} SECOND_HOIST {4} HR_LOCK {5} HOLD {6} second_hoisting {7} loading {8} checkpoint {9} patient {10}","params":[{"local":"gb"},{"var":["L:STEP","number"]},{"var":["L:PAX_HOIST","number"]},{"local":"gb_f1"},{"local":"gb_f2"},{"local":"gb_f3"},{"local":"gb_f4"},{"local":"gb_f5"},{"local":"gb_f6"},{"local":"gb_f7"},{"local":"gb_f8"}]}}
   ],
+  "ground ops crew distance": [
+    {"#comment":"Read-only helper of ground ops stall reason: distance in metres from the crew member (param actor) to the object (param target), -1 when either does not exist."},
+    {"set":{"param":"gcd"},"value":-1},
+    {"if": {"has_object":{"param":"actor"}}, "eq": 1,
+      "then": [
+        {"if": {"has_object":{"param":"target"}}, "eq": 1,
+          "then": [
+            {"set":{"param":"gcd"},"value":{"object":{"param":"target"},"var":"distance:m","to":{"param":"actor"}}}
+        ]}
+    ]},
+    {"return":{"param":"gcd"}}
+  ],
+  "ground ops stall reason": [
+    {"#comment":"Report Daikan and MPR 2026-10-25 (Ground operations are delayed, snapshot of Daikan: the warning came while the pilot had landed, shut the engines down and was starting them again, nothing was wrong with the crew): names the probable cause of a stalled ground operation in plain words, from numbers only. Read-only. Call hoist blockers sample first (it sets gb, the failed hover conditions). Sets ground_ops_reason_code (HELI_ARRIVAL helicopter away from the landing spot, HELI_GROUND hoist waits and the helicopter sits on the ground, HELI_HOVER hoist waits and the hover window is not met, CREW_MOVING crew still walking, UNKNOWN), ground_ops_reason (text with the numbers), ground_ops_reason_title (Dispatch page title) and the distances gr_d_crew (nearest crew member to the patient) and gr_a_crew (nearest crew member to the aircraft), -1 when not known. The monitor uses the code to choose the message; the watcher and every snapshot carry all of them."},
+    {"set":{"local":"ground_ops_reason_code"},"value":"UNKNOWN"},
+    {"set":{"local":"ground_ops_reason"},"value":"no known wait, read the blockers and the checkpoint log"},
+    {"set":{"local":"ground_ops_reason_title"},"value":"OPERATIONS DELAYED"},
+    {"set":{"local":"gr_target"},"value":{"local":"HEMS_PATIENT_OBJECT"}},
+    {"if": {"local":"gr_target"}, "eq": null,
+      "then": [
+        {"set":{"local":"gr_target"},"value":{"local":"HEMS_VISIT_OBJECT"}}
+    ]},
+    {"set":{"local":"gr_d_crew"},"value":-1},
+    {"set":{"local":"gr_a_crew"},"value":-1},
+    {"if": {"local":"gr_target"}, "ne": null,
+      "then": [
+        {"call_macro":"ground ops crew distance","params":{"actor":"hoist_crew","target":{"local":"gr_target"}},"result":"gr_d1"},
+        {"call_macro":"ground ops crew distance","params":{"actor":"pax3","target":{"local":"gr_target"}},"result":"gr_d2"},
+        {"call_macro":"ground ops crew distance","params":{"actor":"jolly","target":{"local":"gr_target"}},"result":"gr_d3"},
+        {"if": {"local":"gr_d1"}, "gte": 0,
+          "then": [
+            {"set":{"local":"gr_d_crew"},"value":{"local":"gr_d1"}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"gr_d2"},"gte":0},
+            {"require":{"or":[{"require":{"local":"gr_d_crew"},"lt":0},{"require":{"local":"gr_d2"},"lt":{"local":"gr_d_crew"}}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_d_crew"},"value":{"local":"gr_d2"}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"gr_d3"},"gte":0},
+            {"require":{"or":[{"require":{"local":"gr_d_crew"},"lt":0},{"require":{"local":"gr_d3"},"lt":{"local":"gr_d_crew"}}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_d_crew"},"value":{"local":"gr_d3"}}
+        ]}
+    ]},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_a_crew"},"value":{"object":"hoist_crew","var":"distance:m"}}
+    ]},
+    {"if": {"has_object":"pax3"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_a2"},"value":{"object":"pax3","var":"distance:m"}},
+        {"if": {
+          "or": [
+            {"require":{"local":"gr_a_crew"},"lt":0},
+            {"require":{"local":"gr_a2"},"lt":{"local":"gr_a_crew"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_a_crew"},"value":{"local":"gr_a2"}}
+        ]}
+    ]},
+    {"if": {"has_object":"jolly"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_a3"},"value":{"object":"jolly","var":"distance:m"}},
+        {"if": {
+          "or": [
+            {"require":{"local":"gr_a_crew"},"lt":0},
+            {"require":{"local":"gr_a3"},"lt":{"local":"gr_a_crew"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_a_crew"},"value":{"local":"gr_a3"}}
+        ]}
+    ]},
+    {"set":{"local":"gr_lz"},"value":-1},
+    {"if": {"has_location":"landing_spot"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_lz"},"value":{"object":"landing_spot","var":"distance:m"}}
+    ]},
+    {"set":{"local":"gr_area"},"value":{"if":{"local":"ldg_spot_area_size"},"ne":null,"then":{"local":"ldg_spot_area_size"},"else":200}},
+    {"if": {
+      "and": [
+        {"require":{"local":"gr_lz"},"gte":0},
+        {"require":{"local":"gr_lz"},"gt":{"local":"gr_area"}}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"ground_ops_reason_code"},"value":"HELI_ARRIVAL"},
+        {"set":{"local":"ground_ops_reason_title"},"value":"WAITING FOR THE HELICOPTER"},
+        {"set":{"local":"ground_ops_reason"},"value":{"text":"the helicopter is {0} m from the landing spot, bring it into the area ({1} m)","params":[{"round":{"local":"gr_lz"},"to":0},{"round":{"local":"gr_area"},"to":0}]}}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"var":["L:MISSION_HOIST","number"]},"eq":1},
+            {"require":{"var":["SIM ON GROUND","bool"]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"ground_ops_reason_code"},"value":"HELI_GROUND"},
+            {"set":{"local":"ground_ops_reason_title"},"value":"WAITING FOR THE HELICOPTER"},
+            {"set":{"local":"ground_ops_reason"},"value":{"text":"the hoist waits for the helicopter: it is on the ground (rotor {0} percent), take off and hold a hover 40 to 163 ft over the spot","params":[{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":0}]}}
+          ],"else": [
+            {"if": {
+              "and": [
+                {"require":{"var":["L:MISSION_HOIST","number"]},"eq":1},
+                {"require":{"local":"gb"},"ne":""}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"ground_ops_reason_code"},"value":"HELI_HOVER"},
+                {"set":{"local":"ground_ops_reason_title"},"value":"WAITING FOR THE HOVER"},
+                {"set":{"local":"ground_ops_reason"},"value":{"text":"the hoist waits for the hover: {0}","params":[{"local":"gb"}]}}
+              ],"else": [
+                {"if": {"local":"gr_d_crew"}, "gt": 2,
+                  "then": [
+                    {"set":{"local":"ground_ops_reason_code"},"value":"CREW_MOVING"},
+                    {"set":{"local":"ground_ops_reason_title"},"value":"CREW MOVING"},
+                    {"set":{"local":"ground_ops_reason"},"value":{"text":"the crew is walking to the patient, {0} m to go","params":[{"round":{"local":"gr_d_crew"},"to":0}]}}
+                  ],"else": [
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"crewpatientonstretcher"},"eq":"yes"},
+                        {"require":{"local":"crewpatientloaded"},"ne":"yes"},
+                        {"require":{"local":"gr_a_crew"},"gt":6}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"ground_ops_reason_code"},"value":"CREW_MOVING"},
+                        {"set":{"local":"ground_ops_reason_title"},"value":"CREW MOVING"},
+                        {"set":{"local":"ground_ops_reason"},"value":{"text":"the crew is bringing the patient to the helicopter, {0} m to go","params":[{"round":{"local":"gr_a_crew"},"to":0}]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
   "ground ops checkpoint": [
     {"#comment":"Appends one row to ground_ops_checkpoint_log (ring of 600, survives reload_mission, copied into every snapshot). Every row carries NR, ground flag, HOISTED, STEP, HOLD, phase and CREW so a stall can be located to the exact checkpoint and its rotor state. Keep this macro flat: it is called from deep thread bodies."},
     {"if": {"param":"detail"}, "eq": null,
@@ -411,6 +548,7 @@
   "sample ground ops state": [
     {"#comment":"Builds the local struct ground_ops_state_now used by the snapshot and by the ground ops watch. Every value has an explicit default so an unset local is visible as <unset> instead of a missing key. Distances are read only when both ends exist."},
     {"call_macro":"hoist blockers sample"},
+    {"call_macro":"ground ops stall reason"},
     {"set":{"local":"gops_nr"},"value":{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}},
     {"set":{"local":"gops_ecp1"},"value":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]}},
     {"set":{"local":"gops_ecp2"},"value":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]}},
@@ -537,6 +675,47 @@
             "then": {"local":"ground_ops_blockers"},
             "else": "<unset>"
           },
+          "probable_cause_code": {"local":"ground_ops_reason_code"},
+          "probable_cause": {"local":"ground_ops_reason"},
+          "crew_to_patient_m": {"round":{"local":"gr_d_crew"},"to":1},
+          "crew_to_aircraft_m": {"round":{"local":"gr_a_crew"},"to":1},
+          "radio_height_ft": {"round":{"var":["RADIO HEIGHT","feet"]},"to":0},
+          "ground_speed_kt": {"round":{"var":["GPS GROUND SPEED","knots"]},"to":1},
+          "stalled_seconds": {
+            "if": {"local":"ops_progress_stalled_seconds"},
+            "ne": null,
+            "then": {"local":"ops_progress_stalled_seconds"},
+            "else": "<unset>"
+          },
+          "crew_patient_flags": {
+            "text": "visiting {0} stretcher_go {1} on_stretcher {2} loaded {3} visit_ended {4}",
+            "params": [
+              {"if": {"local":"crewvisiting1"},
+                "ne": null,
+                "then": {"local":"crewvisiting1"},
+                "else": "-"
+              },
+              {"if": {"local":"crewgoforstretcherload"},
+                "ne": null,
+                "then": {"local":"crewgoforstretcherload"},
+                "else": "-"
+              },
+              {"if": {"local":"crewpatientonstretcher"},
+                "ne": null,
+                "then": {"local":"crewpatientonstretcher"},
+                "else": "-"
+              },
+              {"if": {"local":"crewpatientloaded"},
+                "ne": null,
+                "then": {"local":"crewpatientloaded"},
+                "else": "-"
+              },
+              {"if": {"local":"crewvisitended"},
+                "ne": null,
+                "then": {"local":"crewvisitended"},
+                "else": "-"
+              }
+          ]},
           "holdhoisted": {
             "if": {"local":"HOLDHOISTED"},
             "ne": null,
@@ -843,7 +1022,7 @@
           ]}, "eq": 1,
           "do": [
             {"call_macro":"sample ground ops state"},
-            {"set":{"param":"sig"},"value":{"text":"nr={0} ecp={1}/{2} gnd={3} hoisted={4} step={5} hold={6} hh={7} brd={8} gate={9} t45={10} t3={11} spawn={12} cp={13} plo={14} lz={15}/{16} pav={17} ph={18} post={19} hc={20}/{21} px={22}/{23} hr={24}","params":[{"round":{"struct":{"local":"ground_ops_state_now"},"path":"nr"},"to":0},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_1"},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_2"},{"struct":{"local":"ground_ops_state_now"},"path":"on_ground"},{"struct":{"local":"ground_ops_state_now"},"path":"hoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"step"},{"struct":{"local":"ground_ops_state_now"},"path":"hold"},{"struct":{"local":"ground_ops_state_now"},"path":"holdhoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"helirescuer_boarded"},{"struct":{"local":"ground_ops_state_now"},"path":"gate_state"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_45"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_3"},{"struct":{"local":"ground_ops_state_now"},"path":"spawn_state"},{"struct":{"local":"ground_ops_state_now"},"path":"last_checkpoint"},{"struct":{"local":"ground_ops_state_now"},"path":"policeloadingenabled"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_transfer_state"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_force_pickup"},{"struct":{"local":"ground_ops_state_now"},"path":"police_avail"},{"struct":{"local":"ground_ops_state_now"},"path":"mission_phase"},{"struct":{"local":"ground_ops_state_now"},"path":"post_rotor_gate"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"hr_flags"}]}},
+            {"set":{"param":"sig"},"value":{"text":"nr={0} ecp={1}/{2} gnd={3} hoisted={4} step={5} hold={6} hh={7} brd={8} gate={9} t45={10} t3={11} spawn={12} cp={13} plo={14} lz={15}/{16} pav={17} ph={18} post={19} hc={20}/{21} px={22}/{23} hr={24} why={25}","params":[{"round":{"struct":{"local":"ground_ops_state_now"},"path":"nr"},"to":0},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_1"},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_2"},{"struct":{"local":"ground_ops_state_now"},"path":"on_ground"},{"struct":{"local":"ground_ops_state_now"},"path":"hoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"step"},{"struct":{"local":"ground_ops_state_now"},"path":"hold"},{"struct":{"local":"ground_ops_state_now"},"path":"holdhoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"helirescuer_boarded"},{"struct":{"local":"ground_ops_state_now"},"path":"gate_state"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_45"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_3"},{"struct":{"local":"ground_ops_state_now"},"path":"spawn_state"},{"struct":{"local":"ground_ops_state_now"},"path":"last_checkpoint"},{"struct":{"local":"ground_ops_state_now"},"path":"policeloadingenabled"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_transfer_state"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_force_pickup"},{"struct":{"local":"ground_ops_state_now"},"path":"police_avail"},{"struct":{"local":"ground_ops_state_now"},"path":"mission_phase"},{"struct":{"local":"ground_ops_state_now"},"path":"post_rotor_gate"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"hr_flags"},{"struct":{"local":"ground_ops_state_now"},"path":"probable_cause_code"}]}},
             {"set":{"param":"heartbeat"},"value":{"add":[{"param":"heartbeat"},1]}},
             {"if": {
               "or": [

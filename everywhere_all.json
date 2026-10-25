@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.80",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.81",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.80"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.81"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -4158,7 +4158,7 @@
         {"text":"MISSION FAILED: critical aircraft failure, mayday.","color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":"CRITICAL_FAILURE"}],"eq":1}},
         {"text":"Cause: {0}","params":[{"local":"CREW_EMERGENCY_CAUSE"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
         {"text":"Crew seriously injured: {0}. Crew deceased: {1}.","params":[{"local":"STAT_CREW_CRITICAL"},{"local":"STAT_CREW_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
-        {"text":"Patients deceased: {0}.","params":[{"local":"STAT_PATIENTS_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null},{"require":{"local":"STAT_PATIENTS_DEAD"},"gt":0}],"eq":1}},
+        {"text":"Patients deceased: {0}.","params":[{"local":"STAT_PATIENTS_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"STAT_PATIENTS_DEAD"},"gt":0}],"eq":1}},
         {"text":"At least one injured, waiting for info...","color":"yellow","show_condition":{"and":[{"require":{"local":"SEX_TIME"},"eq":0},{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"ne":"yes"},{"require":{"local":"MISSION_PHASE"},"gt":2}],"eq":1}},
         {"text":"3 injured//{0} yrs, {1}, {2}, {3}//{4} yrs, {5}, {6}, {7}//{8} yrs, {9}, {10}, {11}","params":[{"local":"AGE1"},{"local":"SEX1"},{"local":"consciousness1"},{"local":"generic_pathology1"},{"local":"AGE2"},{"local":"SEX2"},{"local":"consciousness2"},{"local":"generic_pathology2"},{"local":"AGE3"},{"local":"SEX3"},{"local":"consciousness3"},{"local":"generic_pathology3"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"ne":"yes"},{"require":{"local":"SEX_TIME"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"var":["L:DISPATCH_ENDED","number"]},"ne":1}],"eq":1}},
         {"text":"3 person(s)//{0} yrs, {1}//{2} yrs, {3}//{4} yrs, {5}","params":[{"local":"AGE1"},{"local":"SEX1"},{"local":"AGE2"},{"local":"SEX2"},{"local":"AGE3"},{"local":"SEX3"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"eq":"yes"},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"var":["L:DISPATCH_ENDED","number"]},"ne":1}],"eq":1}},
@@ -4212,8 +4212,9 @@
         {"image":"bar","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"ne":1},{"require":{"local":"timed_bar_active"},"ne":1}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"gray","var":["L:SATISFACTION","number"]},"show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"timed_bar_active"},"ne":1}],"eq":1}},
         {"text":"ON-SITE OPERATIONS: {0}% - {1}","params":[{"round":{"var":["L:SATISFACTION","number"]},"to":0},{"local":"ops_progress_stage"}],"color":"gray","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"timed_bar_active"},"ne":1},{"require":{"global":"showaddinfo"},"eq":"show"}],"eq":1}},
-        {"text":"OPERATIONS DELAYED: no progress for {0} s after step: {1}","params":[{"local":"ops_progress_stalled_seconds"},{"local":"ops_progress_stage"}],"color":"yellow","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
+        {"text":"{2}: no progress for {0} s after step: {1}","params":[{"local":"ops_progress_stalled_seconds"},{"local":"ops_progress_stage"},{"local":"ground_ops_reason_title"}],"color":"yellow","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
         {"text":"Still open: {0}","params":[{"local":"ground_ops_blockers"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_blockers"},"ne":null}],"eq":1}},
+        {"text":"Probable cause: {0}","params":[{"local":"ground_ops_reason"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason"},"ne":null}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"gray","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"gte":30}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"yellow","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"lt":30},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"gte":10}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"red","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"lt":10}],"eq":1}},
@@ -4309,7 +4310,7 @@
         {"slider":{"min":10,"max":100,"local":"LIFESCORE3"},"show_condition":{"and":[{"require":{"has_object":"injured_human3"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"whobringpatient"},"ne":"organ"},{"require":{"local":"dispatch_lifescores_visible"},"eq":1},{"require":{"local":"dispatch_lifescore_show_3"},"eq":1}],"eq":1}},
         {"text":"Organ cooler box status {0}%.Exp. time countdown: {1:TIME}","params":[{"tofixed":{"local":"LIFESCORE"},"digits":1},{"tofixed":{"local":"organcountdown"},"digits":0}],"color":"orange","show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":4},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"whobringpatient"},"eq":"organ"}],"eq":1}},
         {"slider":{"min":10,"max":100,"local":"LIFESCORE"},"show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":4},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"whobringpatient"},"eq":"organ"}],"eq":1}},
-        {"text":"CHECK ON-SITE OPERATIONS: no progress detected for more than two minutes. Verify crew, patient, vehicle, or aircraft state.","color":"orange","align":"center","show_condition":{"require":{"local":"ops_progress_warning"},"eq":1}}
+        {"text":"CHECK ON-SITE OPERATIONS: no progress detected for more than two minutes. Verify crew, patient, vehicle, or aircraft state.","color":"orange","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}}
     ]},
     {"sleep":0.5}
   ],
@@ -22679,9 +22680,9 @@
             {"set":{"var":["L:HOLD","number"]},"value":1},
             {"if": {"local":"patientlife"}, "eq": "died",
               "then": [
-                {"set_message":{"text":"Patient {0} deceased, time logged. No HEMS transport.","params":[{"local":"patientid"}]}}
+                {"call_macro":"post dispatcher message","params":{"from":"ambulance","text":{"text":"Patient {0} deceased, time logged. No HEMS transport.","params":[{"local":"patientid"}]}}}
               ],"else": [
-                {"set_message":{"text":"Doctor: Patient is stable enough for being transported by ambulance. We can return to base"}}
+                {"call_macro":"post dispatcher message","params":{"from":"ambulance","text":"Patient is stable enough for being transported by ambulance. You can return to base."}}
             ]},
             {"set":{"var":["L:STEP","number"]},"value":7},
             {"sleep":0.1},
@@ -23108,9 +23109,9 @@
         {"set":{"local":"ambulance_patient_transfer_state"},"value":"loading"},
         {"if": {"local":"patientlife"}, "eq": "died",
           "then": [
-            {"set_message":{"text":"Patient {0} deceased, time logged. No HEMS transport.","params":[{"local":"patientid"}]}}
+            {"call_macro":"post dispatcher message","params":{"from":"ambulance","text":{"text":"Patient {0} deceased, time logged. No HEMS transport.","params":[{"local":"patientid"}]}}}
           ],"else": [
-            {"set_message":{"text":"Doctor: Patient is stable enough for being transported by ambulance. We can return to base"}}
+            {"call_macro":"post dispatcher message","params":{"from":"ambulance","text":"Patient is stable enough for being transported by ambulance. You can return to base."}}
         ]},
         {"set":{"var":["L:STEP","number"]},"value":7},
         {"sleep":0.1},
@@ -30198,9 +30199,23 @@
                             ]}
                         ]}
                     ]},
-                    {"if": {"var":["L:SATISFACTION","number"]}, "gt": {"local":"ops_progress_last"},
+                    {"#comment":"Reports MPR and Daikan 2026-10-25 ('Ground operations are delayed' while the crew was walking with the patient, or right after a hoist step): the bar stops at 88 (loading) and 95 (final return), so a long walk showed no progress and the warning came after 120 s although the work went on. A new ground ops checkpoint (the crew drives, doors, hoist steps) counts as progress too; a real stall has no checkpoint and the warning stays."},
+                    {"set":{"local":"ops_progress_seq_now"},"value":{"local":"ground_ops_checkpoint_seq"}},
+                    {"if": {"local":"ops_progress_seq_now"}, "eq": null,
                       "then": [
-                        {"set":{"local":"ops_progress_last"},"value":{"var":["L:SATISFACTION","number"]}},
+                        {"set":{"local":"ops_progress_seq_now"},"value":0}
+                    ]},
+                    {"if": {
+                      "or": [
+                        {"require":{"var":["L:SATISFACTION","number"]},"gt":{"local":"ops_progress_last"}},
+                        {"require":{"local":"ops_progress_seq_now"},"ne":{"local":"ops_progress_seq"}}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"ops_progress_seq"},"value":{"local":"ops_progress_seq_now"}},
+                        {"if": {"var":["L:SATISFACTION","number"]}, "gt": {"local":"ops_progress_last"},
+                          "then": [
+                            {"set":{"local":"ops_progress_last"},"value":{"var":["L:SATISFACTION","number"]}}
+                        ]},
                         {"set":{"local":"ops_progress_stalled_seconds"},"value":0},
                         {"set":{"local":"ops_progress_warning"},"value":0}
                       ],"else": [
@@ -30208,7 +30223,8 @@
                         {"if": {"local":"ops_progress_stalled_seconds"}, "gte": 30,
                           "then": [
                             {"#comment":"Report MPR 2026-10-23: after 30 s without progress the open conditions are kept up to date for the Dispatch page and the snapshots (hoist blockers sample, read-only)."},
-                            {"call_macro":"hoist blockers sample"}
+                            {"call_macro":"hoist blockers sample"},
+                            {"call_macro":"ground ops stall reason"}
                         ]},
                         {"if": {
                           "and": [
@@ -30218,7 +30234,34 @@
                           "then": [
                             {"set":{"local":"ops_progress_warning"},"value":1},
                             {"call_macro":"capture automatic snapshot","params":{"event":"ops_progress_stall"}},
-                            {"set":{"var":["L:PAX3{local:VCP}36","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}36","number"]},1]}}
+                            {"#comment":"Reports Daikan and MPR 2026-10-25: the message says what the wait is (ground ops stall reason): the crew still walking (PAX3.42), the helicopter not at the spot (PAX3.43) or the hoist waiting for the pilot (PAX3.44). Only an unexplained stall keeps the old 'delayed' message (PAX3.36)."},
+                            {"if": {"local":"ground_ops_reason_code"}, "eq": "CREW_MOVING",
+                              "then": [
+                                {"set":{"var":["L:PAX3{local:VCP}42","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}42","number"]},1]}}
+                              ],"else": [
+                                {"if": {"local":"ground_ops_reason_code"}, "eq": "HELI_ARRIVAL",
+                                  "then": [
+                                    {"set":{"var":["L:PAX3{local:VCP}43","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}43","number"]},1]}}
+                                  ],"else": [
+                                    {"if": {
+                                      "or": [
+                                        {"require":{"local":"ground_ops_reason_code"},"eq":"HELI_GROUND"},
+                                        {"require":{"local":"ground_ops_reason_code"},"eq":"HELI_HOVER"}
+                                      ]}, "eq": 1,
+                                      "then": [
+                                        {"set":{"var":["L:PAX3{local:VCP}44","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}44","number"]},1]}}
+                                      ],"else": [
+                                        {"set":{"var":["L:PAX3{local:VCP}36","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}36","number"]},1]}}
+                                    ]}
+                                ]}
+                            ]}
+                        ]},
+                        {"if": {"local":"ops_progress_stalled_seconds"}, "eq": 300,
+                          "then": [
+                            {"#comment":"Second snapshot after 300 s: the first one (120 s) often catches a wait that ends by itself; this one is the evidence of a stall that stays."},
+                            {"call_macro":"hoist blockers sample"},
+                            {"call_macro":"ground ops stall reason"},
+                            {"call_macro":"capture automatic snapshot","params":{"event":"ops_progress_stall_300s"}}
                         ]}
                     ]}
                 ]},
@@ -43870,20 +43913,33 @@
       "then": [
         {"set":{"local":"ground_units_at_scene"},"value":{"add":[{"local":"ground_units_at_scene"},1]}}
     ]},
-    {"if": {"local":"LIFESCORE"}, "lte": {"global":"CANCELTHRESHOLD"},
+    {"#comment":"A patient who died counts as resolved (user audit 2026-10-25): his Life Score 0 no longer blocks the stable cancellation."},
+    {"if": {
+      "and": [
+        {"require":{"local":"LIFESCORE"},"lte":{"global":"CANCELTHRESHOLD"}},
+        {"require":{"local":"patientlife"},"ne":"died"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"dispatch_cancellation_lifescore_ok"},"value":0}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "gte": 2,
       "then": [
-        {"if": {"local":"LIFESCORE2"}, "lte": {"global":"CANCELTHRESHOLD"},
+        {"if": {
+          "and": [
+            {"require":{"local":"LIFESCORE2"},"lte":{"global":"CANCELTHRESHOLD"}},
+            {"require":{"local":"patientlife2"},"ne":"died"}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"dispatch_cancellation_lifescore_ok"},"value":0}
         ]}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "gte": 3,
       "then": [
-        {"if": {"local":"LIFESCORE3"}, "lte": {"global":"CANCELTHRESHOLD"},
+        {"if": {
+          "and": [
+            {"require":{"local":"LIFESCORE3"},"lte":{"global":"CANCELTHRESHOLD"}},
+            {"require":{"local":"patientlife3"},"ne":"died"}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"dispatch_cancellation_lifescore_ok"},"value":0}
         ]}
@@ -43984,6 +44040,12 @@
             {"set":{"local":"cancel_text"},"value":"The ambulance has the patient and is taking them to the hospital. {local:cs_word} intervention is no longer required; dispatch cancelled."},
             {"set":{"local":"Dispatcher_text"},"value":"Ambulance has loaded the patient and is on the way to the hospital. {local:cs_word} not required, dispatch cancelled. Return to base."},
             {"set":{"local":"whobringpatient"},"value":"ambulance"}
+        ]},
+        {"if": {"local":"dispatch_cancellation_reason"}, "eq": "dead",
+          "then": [
+            {"set":{"local":"dispatch_cancel_notice"},"value":"DISPATCH CANCELLED - no survivors. Return to base."},
+            {"set":{"local":"cancel_text"},"value":"No survivors. Dispatch cancelled, returning to base."},
+            {"set":{"local":"Dispatcher_text"},"value":"Copy, no survivors. Dispatch cancelled, ground units stand down. Return to base."}
         ]},
         {"set_objective_title":"DISPATCH CANCELLED","color":"red"},
         {"set":{"var":["L:PLT{local:VCP}46","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}46","number"]},1]}},
@@ -64034,6 +64096,8 @@
             {"require":{"param":"patient","path":"active"},"eq":1},
             {"require":{"param":"patient","path":"transport_state"},"ne":"loaded"},
             {"require":{"param":"patient","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"patient","path":"transport_state"},"ne":"loaded"},{"require":{"param":"patient","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"param":"patient","path":"death_recorded"},"eq":0}
           ]}, "eq": 1,
           "then": [
@@ -69064,6 +69128,8 @@
           "and": [
             {"require":{"param":"record","path":"active"},"eq":1},
             {"require":{"param":"record","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"record","path":"transport_state"},"ne":"loaded"},{"require":{"param":"record","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"local":"LIFEFROZEN"},"ne":1},
             {"require":{"or":[{"require":{"local":"active_cpr_slot"},"ne":1},{"require":{"local":"cpr_active"},"ne":1}]},"eq":1}
           ]}, "eq": 1,
@@ -69181,6 +69247,8 @@
           "and": [
             {"require":{"param":"record","path":"active"},"eq":1},
             {"require":{"param":"record","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"record","path":"transport_state"},"ne":"loaded"},{"require":{"param":"record","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"local":"P2_LIFEFROZEN"},"ne":1},
             {"require":{"or":[{"require":{"local":"active_cpr_slot"},"ne":2},{"require":{"local":"cpr_active"},"ne":1}]},"eq":1}
           ]}, "eq": 1,
@@ -69298,6 +69366,8 @@
           "and": [
             {"require":{"param":"record","path":"active"},"eq":1},
             {"require":{"param":"record","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"record","path":"transport_state"},"ne":"loaded"},{"require":{"param":"record","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"local":"P3_LIFEFROZEN"},"ne":1},
             {"require":{"or":[{"require":{"local":"active_cpr_slot"},"ne":3},{"require":{"local":"cpr_active"},"ne":1}]},"eq":1}
           ]}, "eq": 1,
@@ -70268,7 +70338,8 @@
     ]},
     {"set":{"table":{"param":"snapshot_table"},"key":"ground_ops_watch_log"},"value":{"json:copy":{"local":"ground_ops_watch_log"}}},
     {"call_macro":"sample ground ops state"},
-    {"set":{"table":{"param":"snapshot_table"},"key":"ground_ops_state"},"value":{"json:copy":{"local":"ground_ops_state_now"}}}
+    {"set":{"table":{"param":"snapshot_table"},"key":"ground_ops_state"},"value":{"json:copy":{"local":"ground_ops_state_now"}}},
+    {"set":{"table":{"param":"snapshot_table"},"key":"probable_cause"},"value":{"text":"{0}: {1}","params":[{"local":"ground_ops_reason_code"},{"local":"ground_ops_reason"}]}}
   ],
   "capture automatic snapshot": [
     {"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Auto_Table"}}},
@@ -74798,6 +74869,7 @@
   "sample ground ops state": [
     {"#comment":"Builds the local struct ground_ops_state_now used by the snapshot and by the ground ops watch. Every value has an explicit default so an unset local is visible as <unset> instead of a missing key. Distances are read only when both ends exist."},
     {"call_macro":"hoist blockers sample"},
+    {"call_macro":"ground ops stall reason"},
     {"set":{"local":"gops_nr"},"value":{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}},
     {"set":{"local":"gops_ecp1"},"value":{"var":["L:{local:HXX}_SDK_ECP_MAIN_1","number"]}},
     {"set":{"local":"gops_ecp2"},"value":{"var":["L:{local:HXX}_SDK_ECP_MAIN_2","number"]}},
@@ -74924,6 +74996,47 @@
             "then": {"local":"ground_ops_blockers"},
             "else": "<unset>"
           },
+          "probable_cause_code": {"local":"ground_ops_reason_code"},
+          "probable_cause": {"local":"ground_ops_reason"},
+          "crew_to_patient_m": {"round":{"local":"gr_d_crew"},"to":1},
+          "crew_to_aircraft_m": {"round":{"local":"gr_a_crew"},"to":1},
+          "radio_height_ft": {"round":{"var":["RADIO HEIGHT","feet"]},"to":0},
+          "ground_speed_kt": {"round":{"var":["GPS GROUND SPEED","knots"]},"to":1},
+          "stalled_seconds": {
+            "if": {"local":"ops_progress_stalled_seconds"},
+            "ne": null,
+            "then": {"local":"ops_progress_stalled_seconds"},
+            "else": "<unset>"
+          },
+          "crew_patient_flags": {
+            "text": "visiting {0} stretcher_go {1} on_stretcher {2} loaded {3} visit_ended {4}",
+            "params": [
+              {"if": {"local":"crewvisiting1"},
+                "ne": null,
+                "then": {"local":"crewvisiting1"},
+                "else": "-"
+              },
+              {"if": {"local":"crewgoforstretcherload"},
+                "ne": null,
+                "then": {"local":"crewgoforstretcherload"},
+                "else": "-"
+              },
+              {"if": {"local":"crewpatientonstretcher"},
+                "ne": null,
+                "then": {"local":"crewpatientonstretcher"},
+                "else": "-"
+              },
+              {"if": {"local":"crewpatientloaded"},
+                "ne": null,
+                "then": {"local":"crewpatientloaded"},
+                "else": "-"
+              },
+              {"if": {"local":"crewvisitended"},
+                "ne": null,
+                "then": {"local":"crewvisitended"},
+                "else": "-"
+              }
+          ]},
           "holdhoisted": {
             "if": {"local":"HOLDHOISTED"},
             "ne": null,
@@ -75230,7 +75343,7 @@
           ]}, "eq": 1,
           "do": [
             {"call_macro":"sample ground ops state"},
-            {"set":{"param":"sig"},"value":{"text":"nr={0} ecp={1}/{2} gnd={3} hoisted={4} step={5} hold={6} hh={7} brd={8} gate={9} t45={10} t3={11} spawn={12} cp={13} plo={14} lz={15}/{16} pav={17} ph={18} post={19} hc={20}/{21} px={22}/{23} hr={24}","params":[{"round":{"struct":{"local":"ground_ops_state_now"},"path":"nr"},"to":0},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_1"},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_2"},{"struct":{"local":"ground_ops_state_now"},"path":"on_ground"},{"struct":{"local":"ground_ops_state_now"},"path":"hoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"step"},{"struct":{"local":"ground_ops_state_now"},"path":"hold"},{"struct":{"local":"ground_ops_state_now"},"path":"holdhoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"helirescuer_boarded"},{"struct":{"local":"ground_ops_state_now"},"path":"gate_state"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_45"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_3"},{"struct":{"local":"ground_ops_state_now"},"path":"spawn_state"},{"struct":{"local":"ground_ops_state_now"},"path":"last_checkpoint"},{"struct":{"local":"ground_ops_state_now"},"path":"policeloadingenabled"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_transfer_state"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_force_pickup"},{"struct":{"local":"ground_ops_state_now"},"path":"police_avail"},{"struct":{"local":"ground_ops_state_now"},"path":"mission_phase"},{"struct":{"local":"ground_ops_state_now"},"path":"post_rotor_gate"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"hr_flags"}]}},
+            {"set":{"param":"sig"},"value":{"text":"nr={0} ecp={1}/{2} gnd={3} hoisted={4} step={5} hold={6} hh={7} brd={8} gate={9} t45={10} t3={11} spawn={12} cp={13} plo={14} lz={15}/{16} pav={17} ph={18} post={19} hc={20}/{21} px={22}/{23} hr={24} why={25}","params":[{"round":{"struct":{"local":"ground_ops_state_now"},"path":"nr"},"to":0},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_1"},{"struct":{"local":"ground_ops_state_now"},"path":"ecp_main_2"},{"struct":{"local":"ground_ops_state_now"},"path":"on_ground"},{"struct":{"local":"ground_ops_state_now"},"path":"hoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"step"},{"struct":{"local":"ground_ops_state_now"},"path":"hold"},{"struct":{"local":"ground_ops_state_now"},"path":"holdhoisted"},{"struct":{"local":"ground_ops_state_now"},"path":"helirescuer_boarded"},{"struct":{"local":"ground_ops_state_now"},"path":"gate_state"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_45"},{"struct":{"local":"ground_ops_state_now"},"path":"trace_3"},{"struct":{"local":"ground_ops_state_now"},"path":"spawn_state"},{"struct":{"local":"ground_ops_state_now"},"path":"last_checkpoint"},{"struct":{"local":"ground_ops_state_now"},"path":"policeloadingenabled"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_transfer_state"},{"struct":{"local":"ground_ops_state_now"},"path":"police_lz_force_pickup"},{"struct":{"local":"ground_ops_state_now"},"path":"police_avail"},{"struct":{"local":"ground_ops_state_now"},"path":"mission_phase"},{"struct":{"local":"ground_ops_state_now"},"path":"post_rotor_gate"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"hoist_crew_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_exists"},{"struct":{"local":"ground_ops_state_now"},"path":"pax3_created_var"},{"struct":{"local":"ground_ops_state_now"},"path":"hr_flags"},{"struct":{"local":"ground_ops_state_now"},"path":"probable_cause_code"}]}},
             {"set":{"param":"heartbeat"},"value":{"add":[{"param":"heartbeat"},1]}},
             {"if": {
               "or": [
@@ -87016,6 +87129,16 @@
                   "then": [
                     {"set":{"local":"gu_eta"},"value":"GRD.ETA.N"}
                 ]},
+                {"#comment":"Tester report 2026-10-25 (GRD.ETA.0 right after the crew gets out): no time left is given while the estimate of the ground time does not exist yet (TIMERGND is 0 until the doctor's estimate is made) nor while the progress is still low and the computed time is under a minute; 'almost ready' is said only when the work is really nearly done."},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"TIMERGND"},"eq":null},
+                    {"require":{"local":"TIMERGND"},"lte":0},
+                    {"require":{"and":[{"require":{"local":"gu_min"},"lt":1},{"require":{"var":["L:SATISFACTION","number"]},"lt":60}]},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"gu_eta"},"value":""}
+                ]},
                 {"set":{"local":"gu_who"},"value":""},
                 {"if": {
                   "and": [
@@ -87080,7 +87203,10 @@
                         {"call_macro":"voice say","params":{"key":{"param":"tk_who"},"declut":1}},
                         {"sleep":4}
                     ]},
-                    {"call_macro":"voice say","params":{"key":{"param":"tk_eta"},"declut":1,"a":{"param":"tk_min"}}},
+                    {"if": {"param":"tk_eta"}, "ne": "",
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":{"param":"tk_eta"},"declut":1,"a":{"param":"tk_min"}}}
+                    ]},
                     {"sleep":3.5},
                     {"if": {"param":"tk_rep"}, "eq": 1,
                       "then": [
@@ -87104,7 +87230,7 @@
   ],
   "voice patient died": [
     {"#comment":"A patient died (called by multipatient registry event DIED): the doctor says it and the pilot answers; after the impact of a hard landing the copilot asks first and the lines are about the impact (the death cause is not the clinical deterioration). Not more than one reading every 20 s. Pack EN DTH.*."},
-    {"#comment":"Sound for every death (user request 2026-10-18): the dead sound L:DEAD{VCP} always (the Companion plays SYS.DEAD, a wav pack its AND.dead.wav, as the hoist casualties do), then the lines: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
+    {"#comment":"No scream for a patient (user correction 2026-10-25): the L:DEAD sound AND.dead.wav is the scream of a hoist operator who falls and is played only by the hoist casualties, never by a patient death. The survivors speak: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
     {"set":{"local":"vpd_now"},"value":{"var":["L:MISSION_TIME","number"]}},
     {"if": {"local":"vpd_last"}, "eq": null,
       "then": [
@@ -87113,7 +87239,6 @@
     {"if": {"local":"vpd_now"}, "gt": {"add":[{"local":"vpd_last"},20]},
       "then": [
         {"set":{"local":"vpd_last"},"value":{"local":"vpd_now"}},
-        {"set":{"var":["L:DEAD{local:VCP}","number"]},"value":{"add":[{"var":["L:DEAD{local:VCP}","number"]},1]}},
         {"if": {
           "and": [
             {"require":{"local":"VCP"},"eq":"APP"},
@@ -88899,6 +89024,7 @@
         {"if": {
           "and": [
             {"require":{"param":"stage"},"eq":"ARR"},
+            {"require":{"local":"MINGND"},"gt":0},
             {"require":{"or":[{"require":{"local":"vhv_now"},"gt":{"add":[{"local":"vhv_eta_t"},300]}},{"require":{"local":"vhv_now"},"lt":{"local":"vhv_eta_t"}}]},"eq":1}
           ]}, "eq": 1,
           "then": [
@@ -89723,24 +89849,31 @@
   ],
   "patient death dispatcher notice": [
     {"#comment":"Dispatcher message of the crew when a patient dies in live mode (called by multipatient registry live physiology step, which has stored pat_death_prev_state, the transport state before the death; not after the handover to the ED, L:SAVED 1). 'On board' is true only for a patient already loaded; during the loading or before it the patient is still on the scene (tester snapshot 2026-10-18: death at 18:13:40 while the crew carried the patient, reported as on board). A patient who dies on scene before loading: the police are requested once, as with the Request police button, only when the scene has no police (POLICE_AVAIL 0; 1 is police already on scene, 2 is police on the way from the station) and not in multiplayer, where the dispatcher decides. The rule was only in multipatient registry tick, which nothing calls (the live physiology step is the one that runs, in singleplayer too); user request 2026-10-18 to put it back."},
+    {"#comment":"User audit of 2026-10-25: the wording follows where the crew is. Loaded: on board, and the 'continuing' line comes from patient death outcome only when somebody is still aboard. Before the crew is on scene (MISSION_PHASE below 7) the crew cannot see the patient: the dispatcher passes on the report of the ground unit, no police request as if on scene. On scene: as before. Then patient death outcome decides between the survivors and the cancellation of the dispatch."},
     {"if": {"local":"pat_death_prev_state"}, "eq": "loaded",
       "then": [
-        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board."}}
       ],"else": [
-        {"if": {
-          "and": [
-            {"require":{"local":"POLICE_AVAIL"},"eq":0},
-            {"require":{"local":"player"},"ne":"multiplayer"}
-          ]}, "eq": 1,
+        {"if": {"local":"MISSION_PHASE"}, "lt": 7,
           "then": [
-            {"set":{"local":"POLICE_AVAIL"},"value":2},
-            {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene. Requesting police."}},
-            {"call_macro":"Police1"},
-            {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
+            {"call_macro":"post dispatcher message","params":{"text":"Ground unit reports a patient deceased on scene."}}
           ],"else": [
-            {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene."}}
+            {"if": {
+              "and": [
+                {"require":{"local":"POLICE_AVAIL"},"eq":0},
+                {"require":{"local":"player"},"ne":"multiplayer"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"POLICE_AVAIL"},"value":2},
+                {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene. Requesting police."}},
+                {"call_macro":"Police1"},
+                {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
+              ],"else": [
+                {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene."}}
+            ]}
         ]}
-    ]}
+    ]},
+    {"call_macro":"patient death outcome"}
   ],
   "voice app lost": [
     {"#comment":"The Mission Companion is not there (the voice server refused or dropped the connection, or never answered, see voice app check). Only for the app selection (L:AUDIOINHIBIT not 0 and not 100): the mission goes back to the last selection of the user, the wav voice pack (VCP = VOICEPACK, L:AUDIOINHIBIT 0 as the original thread does when the external program is off), so that the sound LVARs play the wavs, and tells the user once per simulator session (L:HMC_APP_POPUP_SHOWN). With a wav pack selected nothing is shown. The Companion that starts later writes L:AUDIOINHIBIT 1 again and the thread EXTERNAL XML AUDIO ENABLE connects it. Tester report 2026-10-18: Companion not connected, TTS 0 and AUDIOINHIBIT 1 left silence for every voice and sound."},
@@ -89796,7 +89929,11 @@
     ]}
   ],
   "patient death notice": [
-    {"#comment":"Warning for a patient death in any phase (user request 2026-10-18), purely informational: called by multipatient registry event DIED, so it covers the live physiology step whatever the path (clinical deterioration, impact). The dispatch page and the briefing page are closed first (set_dispatch_dialog 0, set_briefing_dialog 0): a message does not appear over them. Then the red message, the sound and the voice (voice patient died). With the Companion selected but not connected the mission falls back to the wav pack before the sound (voice app lost)."},
+    {"#comment":"Warning for a patient death in any phase (user request 2026-10-18), purely informational: called by multipatient registry event DIED, so it covers the live physiology step whatever the path (clinical deterioration, impact). The dispatch page and the briefing page are closed first (set_dispatch_dialog 0, set_briefing_dialog 0): a message does not appear over them. Then the red message, the sound and the voice (voice patient died). With the Companion selected but not connected the mission falls back to the wav pack before the sound (voice app lost). Tester report 2026-10-25: nothing is said or played for a death after the patient was handed over to the hospital (MISSION_PHASE 9 or later); the physiology of a handed-over patient also stops in the registry."},
+    {"if": {"local":"MISSION_PHASE"}, "gte": 9,
+      "then": [
+        {"return":0}
+    ]},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -90119,7 +90256,7 @@
     ]}
   ],
   "voice crew impact": [
-    {"#comment":"After an impact (called first by crew impact events): the members hurt complain, then a crew member who is fine says what he sees: a death (CEM.DEAD) or a critical member (CEM.CRIT). The evaluation flags are copied into locals because crew impact events clears them. Mission Companion only."},
+    {"#comment":"After an impact (called first by crew impact events): the members hurt complain, then a crew member who is fine says what he sees: a death (CEM.DEAD) or a critical member (CEM.CRIT). The evaluation flags are copied into locals because crew impact events clears them. Mission Companion only. A member who died in the impact may cry out first (voice crash cry)."},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -90131,6 +90268,17 @@
         {"set":{"local":"cvi_e3"},"value":{"local":"CREW_EVAL_3"}},
         {"set":{"local":"cvi_e4"},"value":{"local":"CREW_EVAL_4"}},
         {"set":{"local":"cvi_e5"},"value":{"local":"CREW_EVAL_5"}},
+        {"if": {
+          "or": [
+            {"require":{"and":[{"require":{"local":"cvi_e1"},"eq":1},{"require":{"local":"CREW_LIFESCORE_1"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e2"},"eq":1},{"require":{"local":"CREW_LIFESCORE_2"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e3"},"eq":1},{"require":{"local":"CREW_LIFESCORE_3"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e4"},"eq":1},{"require":{"local":"CREW_LIFESCORE_4"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e5"},"eq":1},{"require":{"local":"CREW_LIFESCORE_5"},"lte":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice crash cry"}
+        ]},
         {"create_thread": {
           "commands": [
             {"sleep":1.5},
@@ -94031,6 +94179,197 @@
         {"return":0}
     ]},
     {"speak":"<actor4><say:PAX1.OUT>"}
+  ],
+  "voice crash cry": [
+    {"#comment":"A crew member who dies in a crash may cry out at the impact (user rules 2026-10-25): only a crew member (never a patient), only at the impact, at random (about 6 times in 10), one short sound at low volume and without the radio effect, never the long scream of the fall of a hoist operator (L:DEAD). Seven sounds, SYS.CRY1 to SYS.CRY7 of the pack (the files AND.crash.*.wav of the Companion). Called by voice crew impact when an evaluated member has CREW_LIFESCORE_n 0 or less. Mission Companion only."},
+    {"set":{"local":"vcc_r"},"value":{"floor":{"rand":[0,10]}}},
+    {"if": {"local":"vcc_r"}, "lt": 6,
+      "then": [
+        {"set":{"local":"vcc_n"},"value":{"floor":{"rand":[1,8]}}},
+        {"set":{"var":["L:CRY{local:VCP}{local:vcc_n}","number"]},"value":{"add":[{"var":["L:CRY{local:VCP}{local:vcc_n}","number"]},1]}}
+    ]}
+  ],
+  "ground ops crew distance": [
+    {"#comment":"Read-only helper of ground ops stall reason: distance in metres from the crew member (param actor) to the object (param target), -1 when either does not exist."},
+    {"set":{"param":"gcd"},"value":-1},
+    {"if": {"has_object":{"param":"actor"}}, "eq": 1,
+      "then": [
+        {"if": {"has_object":{"param":"target"}}, "eq": 1,
+          "then": [
+            {"set":{"param":"gcd"},"value":{"object":{"param":"target"},"var":"distance:m","to":{"param":"actor"}}}
+        ]}
+    ]},
+    {"return":{"param":"gcd"}}
+  ],
+  "ground ops stall reason": [
+    {"#comment":"Report Daikan and MPR 2026-10-25 (Ground operations are delayed, snapshot of Daikan: the warning came while the pilot had landed, shut the engines down and was starting them again, nothing was wrong with the crew): names the probable cause of a stalled ground operation in plain words, from numbers only. Read-only. Call hoist blockers sample first (it sets gb, the failed hover conditions). Sets ground_ops_reason_code (HELI_ARRIVAL helicopter away from the landing spot, HELI_GROUND hoist waits and the helicopter sits on the ground, HELI_HOVER hoist waits and the hover window is not met, CREW_MOVING crew still walking, UNKNOWN), ground_ops_reason (text with the numbers), ground_ops_reason_title (Dispatch page title) and the distances gr_d_crew (nearest crew member to the patient) and gr_a_crew (nearest crew member to the aircraft), -1 when not known. The monitor uses the code to choose the message; the watcher and every snapshot carry all of them."},
+    {"set":{"local":"ground_ops_reason_code"},"value":"UNKNOWN"},
+    {"set":{"local":"ground_ops_reason"},"value":"no known wait, read the blockers and the checkpoint log"},
+    {"set":{"local":"ground_ops_reason_title"},"value":"OPERATIONS DELAYED"},
+    {"set":{"local":"gr_target"},"value":{"local":"HEMS_PATIENT_OBJECT"}},
+    {"if": {"local":"gr_target"}, "eq": null,
+      "then": [
+        {"set":{"local":"gr_target"},"value":{"local":"HEMS_VISIT_OBJECT"}}
+    ]},
+    {"set":{"local":"gr_d_crew"},"value":-1},
+    {"set":{"local":"gr_a_crew"},"value":-1},
+    {"if": {"local":"gr_target"}, "ne": null,
+      "then": [
+        {"call_macro":"ground ops crew distance","params":{"actor":"hoist_crew","target":{"local":"gr_target"}},"result":"gr_d1"},
+        {"call_macro":"ground ops crew distance","params":{"actor":"pax3","target":{"local":"gr_target"}},"result":"gr_d2"},
+        {"call_macro":"ground ops crew distance","params":{"actor":"jolly","target":{"local":"gr_target"}},"result":"gr_d3"},
+        {"if": {"local":"gr_d1"}, "gte": 0,
+          "then": [
+            {"set":{"local":"gr_d_crew"},"value":{"local":"gr_d1"}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"gr_d2"},"gte":0},
+            {"require":{"or":[{"require":{"local":"gr_d_crew"},"lt":0},{"require":{"local":"gr_d2"},"lt":{"local":"gr_d_crew"}}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_d_crew"},"value":{"local":"gr_d2"}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"gr_d3"},"gte":0},
+            {"require":{"or":[{"require":{"local":"gr_d_crew"},"lt":0},{"require":{"local":"gr_d3"},"lt":{"local":"gr_d_crew"}}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_d_crew"},"value":{"local":"gr_d3"}}
+        ]}
+    ]},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_a_crew"},"value":{"object":"hoist_crew","var":"distance:m"}}
+    ]},
+    {"if": {"has_object":"pax3"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_a2"},"value":{"object":"pax3","var":"distance:m"}},
+        {"if": {
+          "or": [
+            {"require":{"local":"gr_a_crew"},"lt":0},
+            {"require":{"local":"gr_a2"},"lt":{"local":"gr_a_crew"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_a_crew"},"value":{"local":"gr_a2"}}
+        ]}
+    ]},
+    {"if": {"has_object":"jolly"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_a3"},"value":{"object":"jolly","var":"distance:m"}},
+        {"if": {
+          "or": [
+            {"require":{"local":"gr_a_crew"},"lt":0},
+            {"require":{"local":"gr_a3"},"lt":{"local":"gr_a_crew"}}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"gr_a_crew"},"value":{"local":"gr_a3"}}
+        ]}
+    ]},
+    {"set":{"local":"gr_lz"},"value":-1},
+    {"if": {"has_location":"landing_spot"}, "eq": 1,
+      "then": [
+        {"set":{"local":"gr_lz"},"value":{"object":"landing_spot","var":"distance:m"}}
+    ]},
+    {"set":{"local":"gr_area"},"value":{"if":{"local":"ldg_spot_area_size"},"ne":null,"then":{"local":"ldg_spot_area_size"},"else":200}},
+    {"if": {
+      "and": [
+        {"require":{"local":"gr_lz"},"gte":0},
+        {"require":{"local":"gr_lz"},"gt":{"local":"gr_area"}}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"ground_ops_reason_code"},"value":"HELI_ARRIVAL"},
+        {"set":{"local":"ground_ops_reason_title"},"value":"WAITING FOR THE HELICOPTER"},
+        {"set":{"local":"ground_ops_reason"},"value":{"text":"the helicopter is {0} m from the landing spot, bring it into the area ({1} m)","params":[{"round":{"local":"gr_lz"},"to":0},{"round":{"local":"gr_area"},"to":0}]}}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"var":["L:MISSION_HOIST","number"]},"eq":1},
+            {"require":{"var":["SIM ON GROUND","bool"]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"ground_ops_reason_code"},"value":"HELI_GROUND"},
+            {"set":{"local":"ground_ops_reason_title"},"value":"WAITING FOR THE HELICOPTER"},
+            {"set":{"local":"ground_ops_reason"},"value":{"text":"the hoist waits for the helicopter: it is on the ground (rotor {0} percent), take off and hold a hover 40 to 163 ft over the spot","params":[{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":0}]}}
+          ],"else": [
+            {"if": {
+              "and": [
+                {"require":{"var":["L:MISSION_HOIST","number"]},"eq":1},
+                {"require":{"local":"gb"},"ne":""}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"ground_ops_reason_code"},"value":"HELI_HOVER"},
+                {"set":{"local":"ground_ops_reason_title"},"value":"WAITING FOR THE HOVER"},
+                {"set":{"local":"ground_ops_reason"},"value":{"text":"the hoist waits for the hover: {0}","params":[{"local":"gb"}]}}
+              ],"else": [
+                {"if": {"local":"gr_d_crew"}, "gt": 2,
+                  "then": [
+                    {"set":{"local":"ground_ops_reason_code"},"value":"CREW_MOVING"},
+                    {"set":{"local":"ground_ops_reason_title"},"value":"CREW MOVING"},
+                    {"set":{"local":"ground_ops_reason"},"value":{"text":"the crew is walking to the patient, {0} m to go","params":[{"round":{"local":"gr_d_crew"},"to":0}]}}
+                  ],"else": [
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"crewpatientonstretcher"},"eq":"yes"},
+                        {"require":{"local":"crewpatientloaded"},"ne":"yes"},
+                        {"require":{"local":"gr_a_crew"},"gt":6}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"ground_ops_reason_code"},"value":"CREW_MOVING"},
+                        {"set":{"local":"ground_ops_reason_title"},"value":"CREW MOVING"},
+                        {"set":{"local":"ground_ops_reason"},"value":{"text":"the crew is bringing the patient to the helicopter, {0} m to go","params":[{"round":{"local":"gr_a_crew"},"to":0}]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "patient death outcome": [
+    {"#comment":"User audit of 2026-10-25, called at the end of patient death dispatcher notice. Counts the patients of the dispatch who did not die (patientlife, patientlife2, patientlife3). Nobody left, the crew still before the pickup (MISSION_PHASE below 8), no organ and the dispatch not yet cancelled: the dispatch is cancelled with the reason dead (cancel HEMS dispatch). Somebody left: the crew says how many remain. Nobody left with the crew already flying (phase 8 or later): the crew continues to the destination, no cancellation."},
+    {"set":{"local":"pd_alive"},"value":0},
+    {"if": {"local":"patientlife"}, "ne": "died",
+      "then": [
+        {"set":{"local":"pd_alive"},"value":{"add":[{"local":"pd_alive"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"HELOVICTIMS"},"gte":2},
+        {"require":{"local":"patientlife2"},"ne":"died"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"pd_alive"},"value":{"add":[{"local":"pd_alive"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"HELOVICTIMS"},"gte":3},
+        {"require":{"local":"patientlife3"},"ne":"died"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"pd_alive"},"value":{"add":[{"local":"pd_alive"},1]}}
+    ]},
+    {"if": {"local":"pd_alive"}, "gt": 0,
+      "then": [
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"text":"{0} patient(s) still alive. We continue with the operation.","params":[{"local":"pd_alive"}]}}}
+      ],"else": [
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"lt":8},
+            {"require":{"local":"whobringpatient"},"ne":"organ"},
+            {"require":{"local":"dispatch_cancellation_pending"},"ne":"done"},
+            {"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":0}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"dispatch_cancellation_reason"},"value":"dead"},
+            {"set":{"local":"dispatch_cancellation_monitor"},"value":"running"},
+            {"call_macro":"cancel HEMS dispatch"}
+          ],"else": [
+            {"if": {"local":"MISSION_PHASE"}, "gte": 8,
+              "then": [
+                {"call_macro":"post dispatcher message","params":{"from":"crew","text":"No patient left alive. Continuing to destination."}}
+            ]}
+        ]}
+    ]}
   ]
 },
 

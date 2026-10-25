@@ -994,7 +994,7 @@ const runRoute = (s) => { s.call('crew emergency route to care'); s.flush(); ret
   assert.deepEqual(senders['random deads'], ['crew', 'dispatcher']);
   assert.deepEqual(senders['multipatient registry tick'], ['crew', 'dispatcher'], 'a patient who dies on scene: the crew asks for the police, the dispatcher answers');
   assert.equal(senders['multipatient registry live physiology step'], undefined, 'a death in live mode is posted through the notice macro');
-  assert.deepEqual(senders['patient death dispatcher notice'], ['crew', 'crew', 'dispatcher', 'crew'], 'a death aboard or on scene is reported by the crew; the police request of a death on scene is answered by the dispatcher');
+  assert.deepEqual(senders['patient death dispatcher notice'], ['crew', 'dispatcher', 'crew', 'dispatcher', 'crew'], 'a death aboard or on scene is reported by the crew; before the crew is on scene the dispatcher passes on the ground report; the police request of a death on scene is answered by the dispatcher');
   assert.deepEqual(senders['crew member event announce'], ['dispatcher'], 'after a death the dispatcher asks for the accident report');
   const route = JSON.stringify(macros['crew emergency route to care']);
   assert.ok(route.includes('"params":{"from":"crew","text":{"local":"crew_dest_text"}}') && route.includes('Proceeding to {0}.') && !route.includes('crew secured'), 'the crew reports the confirmed hospital');

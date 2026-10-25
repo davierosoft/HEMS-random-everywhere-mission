@@ -122,24 +122,31 @@
   ],
   "patient death dispatcher notice": [
     {"#comment":"Dispatcher message of the crew when a patient dies in live mode (called by multipatient registry live physiology step, which has stored pat_death_prev_state, the transport state before the death; not after the handover to the ED, L:SAVED 1). 'On board' is true only for a patient already loaded; during the loading or before it the patient is still on the scene (tester snapshot 2026-10-18: death at 18:13:40 while the crew carried the patient, reported as on board). A patient who dies on scene before loading: the police are requested once, as with the Request police button, only when the scene has no police (POLICE_AVAIL 0; 1 is police already on scene, 2 is police on the way from the station) and not in multiplayer, where the dispatcher decides. The rule was only in multipatient registry tick, which nothing calls (the live physiology step is the one that runs, in singleplayer too); user request 2026-10-18 to put it back."},
+    {"#comment":"User audit of 2026-10-25: the wording follows where the crew is. Loaded: on board, and the 'continuing' line comes from patient death outcome only when somebody is still aboard. Before the crew is on scene (MISSION_PHASE below 7) the crew cannot see the patient: the dispatcher passes on the report of the ground unit, no police request as if on scene. On scene: as before. Then patient death outcome decides between the survivors and the cancellation of the dispatch."},
     {"if": {"local":"pat_death_prev_state"}, "eq": "loaded",
       "then": [
-        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board. Continuing to destination."}}
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on board."}}
       ],"else": [
-        {"if": {
-          "and": [
-            {"require":{"local":"POLICE_AVAIL"},"eq":0},
-            {"require":{"local":"player"},"ne":"multiplayer"}
-          ]}, "eq": 1,
+        {"if": {"local":"MISSION_PHASE"}, "lt": 7,
           "then": [
-            {"set":{"local":"POLICE_AVAIL"},"value":2},
-            {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene. Requesting police."}},
-            {"call_macro":"Police1"},
-            {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
+            {"call_macro":"post dispatcher message","params":{"text":"Ground unit reports a patient deceased on scene."}}
           ],"else": [
-            {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene."}}
+            {"if": {
+              "and": [
+                {"require":{"local":"POLICE_AVAIL"},"eq":0},
+                {"require":{"local":"player"},"ne":"multiplayer"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"POLICE_AVAIL"},"value":2},
+                {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene. Requesting police."}},
+                {"call_macro":"Police1"},
+                {"call_macro":"post dispatcher message","params":{"text":"Copy. Police tasked. Scene under investigation: do not move the body."}}
+              ],"else": [
+                {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Patient deceased on scene."}}
+            ]}
         ]}
-    ]}
+    ]},
+    {"call_macro":"patient death outcome"}
   ],
   "multipatient registry add": [
     {"if": {
@@ -385,6 +392,8 @@
             {"require":{"param":"patient","path":"active"},"eq":1},
             {"require":{"param":"patient","path":"transport_state"},"ne":"loaded"},
             {"require":{"param":"patient","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"patient","path":"transport_state"},"ne":"loaded"},{"require":{"param":"patient","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"param":"patient","path":"death_recorded"},"eq":0}
           ]}, "eq": 1,
           "then": [
@@ -5091,6 +5100,8 @@
           "and": [
             {"require":{"param":"record","path":"active"},"eq":1},
             {"require":{"param":"record","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"record","path":"transport_state"},"ne":"loaded"},{"require":{"param":"record","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"local":"LIFEFROZEN"},"ne":1},
             {"require":{"or":[{"require":{"local":"active_cpr_slot"},"ne":1},{"require":{"local":"cpr_active"},"ne":1}]},"eq":1}
           ]}, "eq": 1,
@@ -5208,6 +5219,8 @@
           "and": [
             {"require":{"param":"record","path":"active"},"eq":1},
             {"require":{"param":"record","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"record","path":"transport_state"},"ne":"loaded"},{"require":{"param":"record","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"local":"P2_LIFEFROZEN"},"ne":1},
             {"require":{"or":[{"require":{"local":"active_cpr_slot"},"ne":2},{"require":{"local":"cpr_active"},"ne":1}]},"eq":1}
           ]}, "eq": 1,
@@ -5325,6 +5338,8 @@
           "and": [
             {"require":{"param":"record","path":"active"},"eq":1},
             {"require":{"param":"record","path":"transport_state"},"ne":"transported"},
+            {"require":{"local":"MISSION_PHASE"},"lt":9},
+            {"require":{"or":[{"require":{"param":"record","path":"transport_state"},"ne":"loaded"},{"require":{"param":"record","path":"resource"},"eq":"hems"}]},"eq":1},
             {"require":{"local":"P3_LIFEFROZEN"},"ne":1},
             {"require":{"or":[{"require":{"local":"active_cpr_slot"},"ne":3},{"require":{"local":"cpr_active"},"ne":1}]},"eq":1}
           ]}, "eq": 1,

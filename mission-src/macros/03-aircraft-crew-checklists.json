@@ -2893,8 +2893,17 @@
         {"speak":{"text":"<actor{0}><say:CEM.WEAK>","params":[{"param":"vh_actor"}]}}
     ]}
   ],
+  "voice crash cry": [
+    {"#comment":"A crew member who dies in a crash may cry out at the impact (user rules 2026-10-25): only a crew member (never a patient), only at the impact, at random (about 6 times in 10), one short sound at low volume and without the radio effect, never the long scream of the fall of a hoist operator (L:DEAD). Seven sounds, SYS.CRY1 to SYS.CRY7 of the pack (the files AND.crash.*.wav of the Companion). Called by voice crew impact when an evaluated member has CREW_LIFESCORE_n 0 or less. Mission Companion only."},
+    {"set":{"local":"vcc_r"},"value":{"floor":{"rand":[0,10]}}},
+    {"if": {"local":"vcc_r"}, "lt": 6,
+      "then": [
+        {"set":{"local":"vcc_n"},"value":{"floor":{"rand":[1,8]}}},
+        {"set":{"var":["L:CRY{local:VCP}{local:vcc_n}","number"]},"value":{"add":[{"var":["L:CRY{local:VCP}{local:vcc_n}","number"]},1]}}
+    ]}
+  ],
   "voice crew impact": [
-    {"#comment":"After an impact (called first by crew impact events): the members hurt complain, then a crew member who is fine says what he sees: a death (CEM.DEAD) or a critical member (CEM.CRIT). The evaluation flags are copied into locals because crew impact events clears them. Mission Companion only."},
+    {"#comment":"After an impact (called first by crew impact events): the members hurt complain, then a crew member who is fine says what he sees: a death (CEM.DEAD) or a critical member (CEM.CRIT). The evaluation flags are copied into locals because crew impact events clears them. Mission Companion only. A member who died in the impact may cry out first (voice crash cry)."},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -2906,6 +2915,17 @@
         {"set":{"local":"cvi_e3"},"value":{"local":"CREW_EVAL_3"}},
         {"set":{"local":"cvi_e4"},"value":{"local":"CREW_EVAL_4"}},
         {"set":{"local":"cvi_e5"},"value":{"local":"CREW_EVAL_5"}},
+        {"if": {
+          "or": [
+            {"require":{"and":[{"require":{"local":"cvi_e1"},"eq":1},{"require":{"local":"CREW_LIFESCORE_1"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e2"},"eq":1},{"require":{"local":"CREW_LIFESCORE_2"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e3"},"eq":1},{"require":{"local":"CREW_LIFESCORE_3"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e4"},"eq":1},{"require":{"local":"CREW_LIFESCORE_4"},"lte":0}]},"eq":1},
+            {"require":{"and":[{"require":{"local":"cvi_e5"},"eq":1},{"require":{"local":"CREW_LIFESCORE_5"},"lte":0}]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice crash cry"}
+        ]},
         {"create_thread": {
           "commands": [
             {"sleep":1.5},
@@ -3734,6 +3754,16 @@
                   "then": [
                     {"set":{"local":"gu_eta"},"value":"GRD.ETA.N"}
                 ]},
+                {"#comment":"Tester report 2026-10-25 (GRD.ETA.0 right after the crew gets out): no time left is given while the estimate of the ground time does not exist yet (TIMERGND is 0 until the doctor's estimate is made) nor while the progress is still low and the computed time is under a minute; 'almost ready' is said only when the work is really nearly done."},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"TIMERGND"},"eq":null},
+                    {"require":{"local":"TIMERGND"},"lte":0},
+                    {"require":{"and":[{"require":{"local":"gu_min"},"lt":1},{"require":{"var":["L:SATISFACTION","number"]},"lt":60}]},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"gu_eta"},"value":""}
+                ]},
                 {"set":{"local":"gu_who"},"value":""},
                 {"if": {
                   "and": [
@@ -3798,7 +3828,10 @@
                         {"call_macro":"voice say","params":{"key":{"param":"tk_who"},"declut":1}},
                         {"sleep":4}
                     ]},
-                    {"call_macro":"voice say","params":{"key":{"param":"tk_eta"},"declut":1,"a":{"param":"tk_min"}}},
+                    {"if": {"param":"tk_eta"}, "ne": "",
+                      "then": [
+                        {"call_macro":"voice say","params":{"key":{"param":"tk_eta"},"declut":1,"a":{"param":"tk_min"}}}
+                    ]},
                     {"sleep":3.5},
                     {"if": {"param":"tk_rep"}, "eq": 1,
                       "then": [
@@ -3822,7 +3855,7 @@
   ],
   "voice patient died": [
     {"#comment":"A patient died (called by multipatient registry event DIED): the doctor says it and the pilot answers; after the impact of a hard landing the copilot asks first and the lines are about the impact (the death cause is not the clinical deterioration). Not more than one reading every 20 s. Pack EN DTH.*."},
-    {"#comment":"Sound for every death (user request 2026-10-18): the dead sound L:DEAD{VCP} always (the Companion plays SYS.DEAD, a wav pack its AND.dead.wav, as the hoist casualties do), then the lines: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
+    {"#comment":"No scream for a patient (user correction 2026-10-25): the L:DEAD sound AND.dead.wav is the scream of a hoist operator who falls and is played only by the hoist casualties, never by a patient death. The survivors speak: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
     {"set":{"local":"vpd_now"},"value":{"var":["L:MISSION_TIME","number"]}},
     {"if": {"local":"vpd_last"}, "eq": null,
       "then": [
@@ -3831,7 +3864,6 @@
     {"if": {"local":"vpd_now"}, "gt": {"add":[{"local":"vpd_last"},20]},
       "then": [
         {"set":{"local":"vpd_last"},"value":{"local":"vpd_now"}},
-        {"set":{"var":["L:DEAD{local:VCP}","number"]},"value":{"add":[{"var":["L:DEAD{local:VCP}","number"]},1]}},
         {"if": {
           "and": [
             {"require":{"local":"VCP"},"eq":"APP"},
@@ -3975,7 +4007,11 @@
     ]}
   ],
   "patient death notice": [
-    {"#comment":"Warning for a patient death in any phase (user request 2026-10-18), purely informational: called by multipatient registry event DIED, so it covers the live physiology step whatever the path (clinical deterioration, impact). The dispatch page and the briefing page are closed first (set_dispatch_dialog 0, set_briefing_dialog 0): a message does not appear over them. Then the red message, the sound and the voice (voice patient died). With the Companion selected but not connected the mission falls back to the wav pack before the sound (voice app lost)."},
+    {"#comment":"Warning for a patient death in any phase (user request 2026-10-18), purely informational: called by multipatient registry event DIED, so it covers the live physiology step whatever the path (clinical deterioration, impact). The dispatch page and the briefing page are closed first (set_dispatch_dialog 0, set_briefing_dialog 0): a message does not appear over them. Then the red message, the sound and the voice (voice patient died). With the Companion selected but not connected the mission falls back to the wav pack before the sound (voice app lost). Tester report 2026-10-25: nothing is said or played for a death after the patient was handed over to the hospital (MISSION_PHASE 9 or later); the physiology of a handed-over patient also stops in the registry."},
+    {"if": {"local":"MISSION_PHASE"}, "gte": 9,
+      "then": [
+        {"return":0}
+    ]},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
