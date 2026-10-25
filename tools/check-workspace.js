@@ -39,6 +39,7 @@ const scripts = [
   'test-condition-rules.js',
   'test-crash-detection.js',
   'test-failure-ladder.js',
+  'test-failure-announce.js',
   'test-scene-spacing.js',
   'test-sar-hints-and-missions.js',
   'test-road-routes.js',

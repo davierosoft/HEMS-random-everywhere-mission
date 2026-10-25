@@ -159,7 +159,7 @@ const walk = (node, fn) => {
     for (const k of ['ORG.TIM.OK', 'ORG.TIM.TG', 'ORG.TIM.LT', 'ORG.RCT.OK', 'ORG.RCT.TG', 'ORG.RCT.LT']) used.add(k);
     assert.ok(used.size >= 25, 'the new keys are used by the mission');
     for (const k of used) assert.ok(xml.includes('<message key="' + k + '"'), 'the base pack has ' + k);
-    assert.ok(/<voicepack name="EN"[^>]* version="27"/.test(xml), 'the base pack is version 27');
+    assert.ok(/<voicepack name="EN"[^>]* version="(?:2[7-9]|[3-9]\d)"/.test(xml), 'the base pack is version 27');
   }
 }
 

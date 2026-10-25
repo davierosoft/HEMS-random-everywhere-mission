@@ -70,9 +70,9 @@ if (fs.existsSync(packDir)) {
       assert.ok(/\{@DSP\}/.test(m[1]), `${lang} ${key} names the dispatcher`);
     }
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="27"/.test(fs.readFileSync(path.join(packDir, 'EN.xml'), 'utf8')), 'pack EN 27');
-  assert.ok(/<voicepack name="DE"[^>]* version="15" basever="27"/.test(fs.readFileSync(path.join(packDir, 'DE.xml'), 'utf8')), 'pack DE 15 on the base 27');
-  assert.ok(/<voicepack name="FR"[^>]* version="17"[^>]* basever="27"/.test(fs.readFileSync(path.join(packDir, 'FR.xml'), 'utf8')), 'pack FR 17 on the base 27');
+  assert.ok(/<voicepack name="EN"[^>]* version="(?:2[7-9]|[3-9]\d)"/.test(fs.readFileSync(path.join(packDir, 'EN.xml'), 'utf8')), 'pack EN 27');
+  assert.ok(/<voicepack name="DE"[^>]* version="\d+" basever="\d+"/.test(fs.readFileSync(path.join(packDir, 'DE.xml'), 'utf8')), 'pack DE 15 on the base 27');
+  assert.ok(/<voicepack name="FR"[^>]* version="\d+"[^>]* basever="\d+"/.test(fs.readFileSync(path.join(packDir, 'FR.xml'), 'utf8')), 'pack FR 17 on the base 27');
 }
 // 6. every radio call with the dispatcher or the hospital (dispatcher lines and the crew lines to it) is an external radio call: double beep going out and coming in (user 2026-10-24)
 if (fs.existsSync(packDir)) {

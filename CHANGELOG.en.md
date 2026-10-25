@@ -1,3 +1,11 @@
+## Release 0.997 169.79
+
+- Restored the DEFAULT label of two other options
+- Debug snapshot lists the crew voice profile variables in the inventory
+- Debug snapshot lists the crew voice profile variables
+- Scope of the snapshot taken before 169.75 included; carried macros declared
+- Crew failure announcements and technician report, impact status questions, crew voice profile, crew zone, speech commands on by default, organ class, single RESET FAILURES button
+
 ## Release 0.997 169.78
 
 - Scope of the snapshot taken before 169.75 included; carried macros declared

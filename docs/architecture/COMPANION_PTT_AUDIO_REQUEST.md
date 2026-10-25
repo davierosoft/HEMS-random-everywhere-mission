@@ -4,7 +4,7 @@ Date: 2026-10-24. Sender: mission side (release 0.997 169.76). To be pasted into
 
 ## What the mission already does (no work on the mission side)
 
-- Every radio message of the packs (crew to dispatcher, dispatcher, ground units) is marked `radio="ext"` (EN 27, DE 15, FR 17): the app plays the double beep before and after the line, and the hiss of the external radio. Messages marked `ics` keep the intercom click without beep.
+- Every message between the crew and a radio station (dispatcher, hospital, heli rescue base, ground units) is marked `radio="ext"` (EN 29, DE 16, FR 18) and the crew polycon `on`; the classes and the options each one needs are in `RADIO_CLASSES.md`. Messages marked `ics` keep the intercom click without beep.
 - After an accepted spoken command the copilot reads it back with the pack message `CMD.101` to `CMD.114` (six options each, actor 2, `radio="auto"`).
 - The mailbox of the speech bridge: `L:HMC_SPEECH_ACK_SEQ` follows the request sequence, `L:HMC_SPEECH_ACK_RESULT` is 1 (button clicked) or 2 (not available now).
 - Power rule for every radio sound: battery master on or the GPCP switch on, and the CARLS connected (see the radio rules already implemented in the engine).

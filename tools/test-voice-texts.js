@@ -32,7 +32,7 @@ assert.ok(!keys.some((key) => key.startsWith('DSP.')), 'DSP.* is the prefix of t
 
 // 2. the dispatch reading: key from the incident (VAR_MISSION_NUMBER = ID_CARD, CRASH_VARIABLE), the shown English after it, the vehicle apart
 const read = JSON.stringify(macros['voice read dispatch']);
-assert.ok(read.includes('<actor8><radio><text:DSC.{0}.{1}>{2}'), 'the description is spoken with its key and its English');
+assert.ok(read.includes('<actor8><radio:ext><text:DSC.{0}.{1}>{2}'), 'the description is spoken with its key and its English');
 assert.ok(read.includes('"VAR_MISSION_NUMBER"') && read.includes('"CRASH_VARIABLE"'), 'the key is built from the incident and the variant');
 assert.ok(read.includes('<text:DSC.VEH>{0}//{1}//{2}'), 'the vehicle sentence has its own key and the values after the English');
 assert.ok(!read.includes('<plain>'), 'the description is not spoken as <plain> any more');

@@ -1426,10 +1426,10 @@
         {"call_macro":"voice radio ready","result":"vrd_radio"},
         {"if": {"param":"vrd_radio"}, "eq": 1,
           "then": [
-            {"speak":{"text":"<actor8><radio><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+            {"speak":{"text":"<actor8><radio:ext><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
             {"if": {"local":"vrd_veh"}, "eq": 1,
               "then": [
-                {"speak":{"text":"<actor8><radio><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+                {"speak":{"text":"<actor8><radio:ext><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
             ]},
             {"call_macro":"voice objective"}
           ],"else": [
@@ -1991,6 +1991,496 @@
         ]}
     ]}
   ],
+  "crew voice profile apply": [
+    {"#comment":"Which of the 5 crews of synthetic voices the Mission Companion uses (user request of 2026-10-25, Companion 1.2.51: L:CREW_PROFILE 1 to 5, 0 or not set keeps the last choice of the program). The global CREW_PROFILE (option of the audio tab, saved in the profiles, 1 at the first start) is written to the LVAR; a livery that sets L:LIVERY_CREWPROFILE to 1 to 5 overrides it when L:LIVERY_ACTIVATION is 1 and the settings are not forced over the livery, with the same conditions as L:LIVERY_CREW. The program may override the LVAR for a while: that is not a choice, the global is not touched."},
+    {"if": {"global":"CREW_PROFILE"}, "eq": null,
+      "then": [
+        {"set":{"global":"CREW_PROFILE"},"value":1}
+    ]},
+    {"set":{"var":["L:CREW_PROFILE","number"]},"value":{"global":"CREW_PROFILE"}},
+    {"if": {
+      "and": [
+        {"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},
+        {"require":{"global":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"ne":1},
+        {"require":{"var":["L:LIVERY_CREWPROFILE","number"]},"gt":0},
+        {"require":{"var":["L:LIVERY_CREWPROFILE","number"]},"lt":6}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:CREW_PROFILE","number"]},"value":{"var":["L:LIVERY_CREWPROFILE","number"]}}
+    ]}
+  ],
+  "failure crew announce": [
+    {"#comment":"In flight the pilot and the copilot announce a random failure (user request of 2026-10-25): either one says what failed and the other verifies (Check / Verified), or one says that there is a failure and the other says which. Called by the failure engine (not by the crash tiers) with param code. The failure type is kept for the report to the technician (failure tech report). Mission Companion only; without it the old copilot line CPL 9 is played."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 0,
+      "then": [
+        {"set":{"var":["L:CPL{local:VCP}9","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}9","number"]},1]}},
+        {"return":0}
+    ]},
+    {"set":{"local":"fa_type"},"value":"NONE"},
+    {"set":{"local":"fa_arg"},"value":1},
+    {"if": {"param":"code"}, "eq": 1,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"ENG"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 2,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"ENG"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 3,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FAD1"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 4,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FAD1"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 5,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FIRE"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 6,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FIRE"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 7,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"HYD"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 8,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"HYD"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 9,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FPF"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 10,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FPA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 11,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"UPM"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 12,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"UPM"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 13,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"BKUP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 14,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"APCP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 15,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"CHIP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 16,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FAD2"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 17,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FAD2"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 18,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"DMGT"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 19,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"DMGM"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 20,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FPF"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 21,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FPA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 22,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"UPM"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 23,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"UPM"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 24,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"BKUP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 25,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"APCP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 26,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"CHIP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 27,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FAD2"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 28,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FAD2"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"param":"code"}, "eq": 30,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 31,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 32,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 33,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 34,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 35,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 36,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 37,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"SEMA"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 38,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FMAIN"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 39,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FSUP"},
+        {"set":{"local":"fa_arg"},"value":1}
+    ]},
+    {"if": {"param":"code"}, "eq": 40,
+      "then": [
+        {"set":{"local":"fa_type"},"value":"FSUP"},
+        {"set":{"local":"fa_arg"},"value":2}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "NONE",
+      "then": [
+        {"return":0}
+    ]},
+    {"call_macro":"failure crew speak"}
+  ],
+  "failure crew speak": [
+    {"#comment":"Speaks the failure of the locals fa_type and fa_arg (set by failure crew announce or by the fuel leakage thread). The speaker (1 pilot, 2 copilot) and the manner are drawn; the other member verifies or says which. Keys FLT.<type> of the pack (argument {0} = engine or system number), FLT.GEN, FLT.CHK, FLT.CHIPV (verification of the MGB chip with the proposal of the chip burn)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 0,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"fa_who"},"value":{"floor":{"rand":[1,3]}}},
+    {"set":{"local":"fa_mode"},"value":{"floor":{"rand":[1,3]}}},
+    {"set":{"local":"fa_oth"},"value":2},
+    {"if": {"local":"fa_who"}, "eq": 2,
+      "then": [
+        {"set":{"local":"fa_oth"},"value":1}
+    ]},
+    {"set":{"local":"fa_chk"},"value":"CHK"},
+    {"if": {"local":"fa_type"}, "eq": "CHIP",
+      "then": [
+        {"set":{"local":"fa_chk"},"value":"CHIPV"}
+    ]},
+    {"if": {"local":"fa_mode"}, "eq": 1,
+      "then": [
+        {"speak":{"text":"<actor{0}><say:FLT.{1}>{2}","params":[{"local":"fa_who"},{"local":"fa_type"},{"local":"fa_arg"}]}},
+        {"sleep":3},
+        {"speak":{"text":"<actor{0}><say:FLT.{1}>","params":[{"local":"fa_oth"},{"local":"fa_chk"}]}}
+      ],"else": [
+        {"speak":{"text":"<actor{0}><say:FLT.GEN>","params":[{"local":"fa_who"}]}},
+        {"sleep":2.2},
+        {"speak":{"text":"<actor{0}><say:FLT.{1}>{2}","params":[{"local":"fa_oth"},{"local":"fa_type"},{"local":"fa_arg"}]}},
+        {"if": {"local":"fa_type"}, "eq": "CHIP",
+          "then": [
+            {"sleep":3},
+            {"speak":{"text":"<actor{0}><say:FLT.CHIPV>","params":[{"local":"fa_who"}]}}
+        ]}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "ENG",
+      "then": [
+        {"set":{"local":"FR_ENG"},"value":{"local":"fa_arg"}}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FAD1",
+      "then": [
+        {"set":{"local":"FR_FAD1"},"value":{"local":"fa_arg"}}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FAD2",
+      "then": [
+        {"set":{"local":"FR_FAD2"},"value":{"local":"fa_arg"}}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FIRE",
+      "then": [
+        {"set":{"local":"FR_FIRE"},"value":{"local":"fa_arg"}}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "HYD",
+      "then": [
+        {"set":{"local":"FR_HYD"},"value":{"local":"fa_arg"}}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FPF",
+      "then": [
+        {"set":{"local":"FR_FPF"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FPA",
+      "then": [
+        {"set":{"local":"FR_FPA"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "LEAK",
+      "then": [
+        {"set":{"local":"FR_LEAK"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FMAIN",
+      "then": [
+        {"set":{"local":"FR_FMAIN"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "FSUP",
+      "then": [
+        {"set":{"local":"FR_FSUP"},"value":{"local":"fa_arg"}}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "UPM",
+      "then": [
+        {"set":{"local":"FR_UPM"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "BKUP",
+      "then": [
+        {"set":{"local":"FR_BKUP"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "APCP",
+      "then": [
+        {"set":{"local":"FR_APCP"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "CHIP",
+      "then": [
+        {"set":{"local":"FR_CHIP"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "DMGM",
+      "then": [
+        {"set":{"local":"FR_DMGM"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "DMGT",
+      "then": [
+        {"set":{"local":"FR_DMGT"},"value":1}
+    ]},
+    {"if": {"local":"fa_type"}, "eq": "SEMA",
+      "then": [
+        {"set":{"local":"FR_SEMA"},"value":1}
+    ]}
+  ],
+  "failure tech report": [
+    {"#comment":"At the deboarding the technician answers the failures that the crew verified in flight (FR_<type>, set by failure crew speak) with the repair time of each component, then the flags are cleared. Keys FTR.<type> of the pack; {0} = engine or system number."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 0,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"local":"FR_ENG"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.ENG>{0}","params":[{"local":"FR_ENG"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_ENG"},"value":0}
+    ]},
+    {"if": {"local":"FR_FAD1"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FAD1>{0}","params":[{"local":"FR_FAD1"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FAD1"},"value":0}
+    ]},
+    {"if": {"local":"FR_FAD2"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FAD2>{0}","params":[{"local":"FR_FAD2"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FAD2"},"value":0}
+    ]},
+    {"if": {"local":"FR_FIRE"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FIRE>{0}","params":[{"local":"FR_FIRE"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FIRE"},"value":0}
+    ]},
+    {"if": {"local":"FR_HYD"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.HYD>{0}","params":[{"local":"FR_HYD"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_HYD"},"value":0}
+    ]},
+    {"if": {"local":"FR_FPF"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FPF>{0}","params":[{"local":"FR_FPF"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FPF"},"value":0}
+    ]},
+    {"if": {"local":"FR_FPA"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FPA>{0}","params":[{"local":"FR_FPA"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FPA"},"value":0}
+    ]},
+    {"if": {"local":"FR_LEAK"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.LEAK>{0}","params":[{"local":"FR_LEAK"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_LEAK"},"value":0}
+    ]},
+    {"if": {"local":"FR_FMAIN"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FMAIN>{0}","params":[{"local":"FR_FMAIN"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FMAIN"},"value":0}
+    ]},
+    {"if": {"local":"FR_FSUP"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.FSUP>{0}","params":[{"local":"FR_FSUP"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_FSUP"},"value":0}
+    ]},
+    {"if": {"local":"FR_UPM"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.UPM>{0}","params":[{"local":"FR_UPM"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_UPM"},"value":0}
+    ]},
+    {"if": {"local":"FR_BKUP"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.BKUP>{0}","params":[{"local":"FR_BKUP"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_BKUP"},"value":0}
+    ]},
+    {"if": {"local":"FR_APCP"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.APCP>{0}","params":[{"local":"FR_APCP"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_APCP"},"value":0}
+    ]},
+    {"if": {"local":"FR_CHIP"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.CHIP>{0}","params":[{"local":"FR_CHIP"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_CHIP"},"value":0}
+    ]},
+    {"if": {"local":"FR_DMGM"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.DMGM>{0}","params":[{"local":"FR_DMGM"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_DMGM"},"value":0}
+    ]},
+    {"if": {"local":"FR_DMGT"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.DMGT>{0}","params":[{"local":"FR_DMGT"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_DMGT"},"value":0}
+    ]},
+    {"if": {"local":"FR_SEMA"}, "gt": 0,
+      "then": [
+        {"speak":{"text":"<actor6><say:FTR.SEMA>{0}","params":[{"local":"FR_SEMA"}]}},
+        {"sleep":3.5},
+        {"set":{"local":"FR_SEMA"},"value":0}
+    ]}
+  ],
+  "failure tech clear": [
+    {"#comment":"RESET FAILURES repairs the helicopter: the verified failures waiting for the report to the technician are cleared too."},
+    {"set":{"local":"FR_ENG"},"value":0},
+    {"set":{"local":"FR_FAD1"},"value":0},
+    {"set":{"local":"FR_FAD2"},"value":0},
+    {"set":{"local":"FR_FIRE"},"value":0},
+    {"set":{"local":"FR_HYD"},"value":0},
+    {"set":{"local":"FR_FPF"},"value":0},
+    {"set":{"local":"FR_FPA"},"value":0},
+    {"set":{"local":"FR_LEAK"},"value":0},
+    {"set":{"local":"FR_FMAIN"},"value":0},
+    {"set":{"local":"FR_FSUP"},"value":0},
+    {"set":{"local":"FR_UPM"},"value":0},
+    {"set":{"local":"FR_BKUP"},"value":0},
+    {"set":{"local":"FR_APCP"},"value":0},
+    {"set":{"local":"FR_CHIP"},"value":0},
+    {"set":{"local":"FR_DMGM"},"value":0},
+    {"set":{"local":"FR_DMGT"},"value":0},
+    {"set":{"local":"FR_SEMA"},"value":0}
+  ],
+  "voice impact ask": [
+    {"#comment":"After an impact that hurt somebody (voice crew impact): the pilot asks the crew for their status and, with a patient on the stretcher (L:SDK_CABIN_PAX_5 = 2), the copilot asks the doctor about the patient and the doctor answers. Pack IMP.*."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 0,
+      "then": [
+        {"return":0}
+    ]},
+    {"speak":{"text":"<actor1><say:IMP.ASK>"}},
+    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]}, "eq": 2,
+      "then": [
+        {"sleep":2.5},
+        {"speak":{"text":"<actor2><say:IMP.PAT>"}},
+        {"sleep":2.5},
+        {"speak":{"text":"<actor3><say:IMP.DOC>"}}
+    ]}
+  ],
   "voice briefing chat": [
     {"#comment":"Crew briefing after the dispatcher read the dispatch (pack EN group brief). New LVAR numbers PLT 49-50, CPL 66, PAX3 39, 91. Starts with voice dispatch exchange (the pilot asks the dispatcher for an update, the dispatcher answers by mission class). Also starts the reminder to switch the radio on (voice radio reminder, user request of 2026-10-20)."},
     {"if": {
@@ -2416,6 +2906,18 @@
               "then": [
                 {"sleep":0.8},
                 {"call_macro":"voice crew hurt","params":{"member":5}}
+            ]},
+            {"if": {
+              "or": [
+                {"require":{"local":"cvi_e1"},"eq":1},
+                {"require":{"local":"cvi_e2"},"eq":1},
+                {"require":{"local":"cvi_e3"},"eq":1},
+                {"require":{"local":"cvi_e4"},"eq":1},
+                {"require":{"local":"cvi_e5"},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"sleep":1.5},
+                {"call_macro":"voice impact ask"}
             ]},
             {"sleep":3},
             {"set":{"local":"cvi_dead"},"value":0},
@@ -3061,6 +3563,10 @@
         {"set":{"param":"cls"},"value":"TRF"}
     ]},
     {"if": {"local":"scene_macro"}, "eq": "organ transfer",
+      "then": [
+        {"set":{"param":"cls"},"value":"ORG"}
+    ]},
+    {"if": {"local":"whobringpatient"}, "eq": "organ",
       "then": [
         {"set":{"param":"cls"},"value":"ORG"}
     ]},
@@ -4283,6 +4789,14 @@
         {"call_macro":"voice zone nearest","params":{"object":"ambumedic3"}},
         {"call_macro":"voice zone class"},
         {"set":{"local":"vc_zg"},"value":{"local":"vz_zone"}},
+        {"#comment":"Crew members outside the helicopter (hoist_crew, pax1, pax2, pax3): nearest one, same classes as the technician. The program uses it to let the crew talk by voice by distance when there is no radio link (user decision 2026-10-25)."},
+        {"set":{"local":"vz_best"},"value":9999},
+        {"call_macro":"voice zone nearest","params":{"object":"hoist_crew"}},
+        {"call_macro":"voice zone nearest","params":{"object":"pax1"}},
+        {"call_macro":"voice zone nearest","params":{"object":"pax2"}},
+        {"call_macro":"voice zone nearest","params":{"object":"pax3"}},
+        {"call_macro":"voice zone class"},
+        {"set":{"local":"vc_zc"},"value":{"local":"vz_zone"}},
         {"set":{"local":"vc_chat"},"value":6},
         {"if": {"global":"CREW_CHATTER"}, "eq": 1,
           "then": [
@@ -4292,7 +4806,7 @@
           "then": [
             {"set":{"local":"vc_chat"},"value":1}
         ]},
-        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"}]}},
+        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"},{"local":"vc_zc"}]}},
         {"if": {"local":"vc_sig"}, "ne": {"local":"vc_last_sig"},
           "then": [
             {"set":{"local":"vc_last_sig"},"value":{"local":"vc_sig"}},
@@ -4304,6 +4818,7 @@
             {"set":{"var":["L:HMC_AT_BASE","number"]},"value":{"local":"vc_base"}},
             {"set":{"var":["L:HMC_ZONE_TECH","number"]},"value":{"local":"vc_zt"}},
             {"set":{"var":["L:HMC_ZONE_GROUND","number"]},"value":{"local":"vc_zg"}},
+            {"set":{"var":["L:HMC_ZONE_CREW","number"]},"value":{"local":"vc_zc"}},
             {"set":{"var":["L:HMC_CTX_VALID","number"]},"value":1}
         ]}
     ]}
@@ -5515,7 +6030,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"no"},
     {"set":{"global":"COND_MISSIONS"},"value":"no"},
-    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"DEFAULT"},
@@ -5606,7 +6121,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"no"},
-    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":1},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"ROOKIE PILOT"},
@@ -5697,7 +6212,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"yes"},
-    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT PILOT"},
@@ -5788,7 +6303,7 @@
     {"set":{"global":"KIT_WEIGHTS"},"value":"no"},
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"yes"},
-    {"set":{"global":"SPEECH_COMMANDS"},"value":"no"},
+    {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":2},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
     {"set":{"global":"AIRCRAFT_PROFILE_ACTIVE"},"value":"EXPERT HEMS"},
@@ -6440,7 +6955,8 @@
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"var":["L:PLT{local:VCP}26","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}26","number"]},1]}},
-                        {"sleep":3.5}
+                        {"sleep":3.5},
+                        {"call_macro":"failure tech report"}
                     ]},
                     {"set":{"var":["L:SARA{local:VCP}6","number"]},"value":{"add":[{"var":["L:SARA{local:VCP}6","number"]},1]}},
                     {"sleep":3.5},

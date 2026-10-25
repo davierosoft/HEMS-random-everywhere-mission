@@ -50,14 +50,14 @@ assert.equal(result.count, bridge.ACTIONS.length);
   assert.ok(!/trigger_user_action":"(skip|history|reposition)/.test(t), 'convenience skips are not in the first batch');
 }
 
-// 4. the setting SPEECH_COMMANDS: default off in every layer, in the profiles, on the tablet, started at the load
+// 4. the setting SPEECH_COMMANDS: default on in every layer, in the profiles, on the tablet, started at the load
 {
-  assert.ok(text(macros['settings first run defaults']).includes('{"if":{"global":"SPEECH_COMMANDS"},"eq":null,"then":[{"set":{"global":"SPEECH_COMMANDS"},"value":"no"}]}'), 'first-run default no');
+  assert.ok(text(macros['settings first run defaults']).includes('{"if":{"global":"SPEECH_COMMANDS"},"eq":null,"then":[{"set":{"global":"SPEECH_COMMANDS"},"value":"yes"}]}'), 'first-run default yes');
   assert.ok(text(macros['save custom aircraft profile']).includes('"key":"SPEECH_COMMANDS"},"value":{"global":"SPEECH_COMMANDS"}'), 'saved in the aircraft profile');
   assert.ok(text(macros['load custom aircraft profile']).includes('"global":"SPEECH_COMMANDS"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SPEECH_COMMANDS"}'), 'loaded from the aircraft profile');
-  for (const profile of ['DEFAULT', 'ROOKIE PILOT', 'EXPERT PILOT', 'EXPERT HEMS']) assert.ok(text(macros[`aircraft factory ${profile}`]).includes('"set":{"global":"SPEECH_COMMANDS"},"value":"no"'), 'factory profile ' + profile + ' keeps the speech commands off');
+  for (const profile of ['DEFAULT', 'ROOKIE PILOT', 'EXPERT PILOT', 'EXPERT HEMS']) assert.ok(text(macros[`aircraft factory ${profile}`]).includes('"set":{"global":"SPEECH_COMMANDS"},"value":"yes"'), 'factory profile ' + profile + ' keeps the speech commands on');
   const settings = text(macros.settings);
-  assert.ok(settings.includes('"title":"OFF (DEFAULT)","select_condition":{"require":{"global":"SPEECH_COMMANDS"},"ne":"yes"}') && settings.includes('"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"speech bridge start"}'), 'tablet switch starts the bridge and marks the profile custom');
+  assert.ok(settings.includes('"title":"OFF","select_condition":{"require":{"global":"SPEECH_COMMANDS"},"ne":"yes"}') && settings.includes('"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"speech bridge start"}'), 'tablet switch starts the bridge and marks the profile custom');
   assert.ok(/^[\x20-\x7e]*$/.test(settings.slice(settings.indexOf('SPEECH COMMANDS'), settings.indexOf('SPEECH COMMANDS') + 400)), 'tablet text is ASCII');
   const o1 = text(macros.objective1);
   assert.ok(o1.indexOf('"events creator"') < o1.indexOf('"speech bridge start"'), 'objective1 starts the bridge after the event handlers');

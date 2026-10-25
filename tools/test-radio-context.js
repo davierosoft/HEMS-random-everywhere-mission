@@ -21,14 +21,14 @@ const text = (macro) => JSON.stringify(macros[macro]);
 const publish = macros['voice context publish'];
 assert.ok(publish, 'voice context publish exists');
 const published = collect(publish, (node) => node.set && Array.isArray(node.set.var)).map((node) => node.set.var[0]);
-for (const name of ['L:HMC_HELI_OFF', 'L:HMC_CREW_PRESENT', 'L:HMC_CREW_MUTE', 'L:HMC_CHAT_MAX', 'L:HMC_CREW_EXIST', 'L:HMC_AT_BASE', 'L:HMC_ZONE_TECH', 'L:HMC_ZONE_GROUND', 'L:HMC_CTX_VALID']) {
+for (const name of ['L:HMC_HELI_OFF', 'L:HMC_CREW_PRESENT', 'L:HMC_CREW_MUTE', 'L:HMC_CHAT_MAX', 'L:HMC_CREW_EXIST', 'L:HMC_AT_BASE', 'L:HMC_ZONE_TECH', 'L:HMC_ZONE_GROUND', 'L:HMC_ZONE_CREW', 'L:HMC_CTX_VALID']) {
   assert.ok(published.includes(name), `${name} is published`);
 }
 assert.ok(!published.includes('L:HMC_RADIO_ON'), 'the battery is read by the Companion from the aircraft variable, not published');
 const signature = collect(publish, (node) => node.set && node.set.local === 'vc_sig')[0];
 assert.ok(signature, 'the change signature exists');
 const signatureLocals = collect(signature, (node) => typeof node.local === 'string').map((node) => node.local);
-for (const local of ['vc_chat', 'vc_off', 'vc_mute', 'vc_mask', 'vc_exist', 'vc_base', 'vc_zt', 'vc_zg']) assert.ok(signatureLocals.includes(local), `${local} is in the change signature`);
+for (const local of ['vc_chat', 'vc_off', 'vc_mute', 'vc_mask', 'vc_exist', 'vc_base', 'vc_zt', 'vc_zg', 'vc_zc']) assert.ok(signatureLocals.includes(local), `${local} is in the change signature`);
 // the CTX_VALID write stays last of the publish block
 const writes = collect(publish, (node) => node.set && Array.isArray(node.set.var) && node.set.var[0].startsWith('L:HMC_')).map((node) => node.set.var[0]);
 assert.equal(writes[writes.length - 1], 'L:HMC_CTX_VALID', 'L:HMC_CTX_VALID is written after the other variables');
@@ -46,7 +46,7 @@ assert.ok(nearest.includes('"try"') && nearest.includes('"catch"'), 'the distanc
 const zoneClass = text('voice zone class');
 for (const limit of ['"lte":100', '"lte":30', '"lte":5']) assert.ok(zoneClass.includes(limit), `zone limit ${limit}`);
 const calls = collect(publish, (node) => node.call_macro === 'voice zone nearest').map((node) => node.params.object);
-assert.deepEqual(calls, ['engineera', 'engineer', 'marshall', 'ambumedic', 'ambumedic3'], 'objects measured for the technician and the ground unit');
+assert.deepEqual(calls, ['engineera', 'engineer', 'marshall', 'ambumedic', 'ambumedic3', 'hoist_crew', 'pax1', 'pax2', 'pax3'], 'objects measured for the technician, the ground unit and the crew outside');
 
 // 4. the hospital handover dialog starts when the crew meets the ground crew, before the tablet message of the handover, once in each unloading variant
 const nav = JSON.parse(fs.readFileSync(path.join(root, 'mission-src', 'macros', '05-navigation-queries.json'), 'utf8'));

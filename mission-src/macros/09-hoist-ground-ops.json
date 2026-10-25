@@ -9865,8 +9865,8 @@
           "do": [
             {"wait_for":{"global":"ENGINE_FAILURES_ENABLED"},"eq":"yes"},
             {"sleep":[120,3600]},
-            {"set":{"var":["L:CPL{local:VCP}9","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}9","number"]},1]}},
             {"call_macro":"apply aircraft failure","params":{"code":{"var":["L:FAILURE","number"]}}},
+            {"call_macro":"failure crew announce","params":{"code":{"var":["L:FAILURE","number"]}}},
             {"set":{"var":["L:FAILURE","number"]},"value":{"floor":{"rand":[1,300]}}},
             {"sleep":1}
         ]}
@@ -10581,6 +10581,7 @@
     {"call_macro":"refresh aircraft failures flag"}
   ],
   "reset aircraft failures": [
+    {"call_macro":"failure tech clear"},
     {"#comment":"Repairs the helicopter: clears every failure and persistent damage that the failure table and the crash tiers can set. Called at the start of a mission when a crew member was critical or dead in the previous one (CREW_DEATH_REPAIR_PENDING, read also after a manual restart) and by the RESET FAILURES button of the Helicopter failures bar. It does not touch L:FAILURE, the random failure draw of the mission (the failure engine keeps working with it)."},
     {"set":{"var":["GENERAL ENG FAILED:1","number"]},"value":0},
     {"set":{"var":["GENERAL ENG FAILED:2","number"]},"value":0},
@@ -10993,6 +10994,18 @@
     {"call_macro":"refresh aircraft failures flag"},
     {"set":{"local":"fuel_leak_kg"},"value":{"round":{"rand":[0.2,0.8]},"to":2}},
     {"set":{"local":"fuel_leak_lost_kg"},"value":0},
+    {"set":{"local":"fuel_leak_notice"},"value":{"add":[120,{"multiply":[{"divide":[{"subtract":[0.8,{"local":"fuel_leak_kg"}]},0.6]},1680]}]}},
+    {"create_thread": {
+      "commands": [
+        {"#comment":"The crew notices the loss only when it shows: from about two minutes (fastest leak) to half an hour (slowest), then announces it."},
+        {"sleep":{"local":"fuel_leak_notice"}},
+        {"if": {"local":"fuel_leak_active"}, "eq": "yes",
+          "then": [
+            {"set":{"local":"fa_type"},"value":"LEAK"},
+            {"set":{"local":"fa_arg"},"value":1},
+            {"call_macro":"failure crew speak"}
+        ]}
+    ]}},
     {"call_macro":"ground crew runtime trace","params":{"macro":"crash_ops","actor":"crew","target":"crash","state":"fuel_leak started kg_per_5s={local:fuel_leak_kg}"}},
     {"create_thread": {
       "commands": [

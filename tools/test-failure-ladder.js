@@ -60,7 +60,7 @@ class Sim {
   run(list, p = {}) {
     for (const c of list) {
       if (c['#comment']) continue;
-      if (c.sleep !== undefined) { this.time += Array.isArray(c.sleep) ? c.sleep[0] : c.sleep; if (this.time > this.horizon) throw new Stop(); }
+      if (c.sleep !== undefined) { const wait = this.q(c.sleep, p); this.time += Array.isArray(wait) ? wait[0] : wait; if (this.time > this.horizon) throw new Stop(); }
       else if (c.set) {
         const value = this.q(c.value, p);
         if (c.set.local) this.locals[c.set.local] = value;
@@ -82,7 +82,7 @@ class Sim {
   }
   runThreads(horizon) {
     this.horizon = horizon;
-    while (this.threads.length) { const body = this.threads.shift(); try { this.run(body); } catch (error) { if (!(error instanceof Stop)) throw error; } }
+    while (this.threads.length) { const body = this.threads.shift(); this.time = 0; try { this.run(body); } catch (error) { if (!(error instanceof Stop)) throw error; } }
   }
 }
 
@@ -181,7 +181,7 @@ assert.deepEqual(draws(7, 11), [7, 8, 9, 10, 11], 'the two highest tiers: from t
   assert.ok(step * 12 <= 10, 'never more than 10 kg a minute');
   const before = sim.read('FUEL TOTAL QUANTITY WEIGHT');
   sim.call('fuel leakage'); // a second call does not start a second leak
-  assert.equal(sim.threads.length, 1, 'one leak at a time');
+  assert.equal(sim.threads.length, 2, 'one leak at a time (the loss thread and the thread that makes the crew notice it)');
   sim.runThreads(60.5);
   const lost = before - sim.read('FUEL TOTAL QUANTITY WEIGHT');
   assert.ok(Math.abs(lost - step * 12) < 1e-6, `12 steps of ${step} kg in a minute, lost ${lost}`);
@@ -241,10 +241,16 @@ assert.deepEqual(draws(7, 11), [7, 8, 9, 10, 11], 'the two highest tiers: from t
   assert.equal(macros['reset aircraft failures'].at(-1).call_macro, 'refresh aircraft failures flag');
   const settings = JSON.stringify(Object.values(macros).filter((m) => JSON.stringify(m).includes('(P)Helicopter failures:')));
   assert.ok(settings.includes('{"link":"+ FLIGHT ASSISTS","commands":[{"set":{"local":"tab11"},"value":1},{"call_macro":"refresh aircraft failures flag"}]'), 'opening the flight assists refreshes the flag');
-  assert.ok(settings.includes('{"title":"RESET FAILURES","show_condition":{"require":{"local":"FAILURES_ACTIVE"},"eq":1},"commands":[{"call_macro":"reset aircraft failures"}') && settings.includes('{"title":"RESET FAILURES","show_condition":{"require":{"local":"FAILURES_ACTIVE"},"ne":1},"commands":[{"set_message"'), 'the button in the Helicopter failures bar, inactive twin when nothing to reset');
+  assert.ok(settings.includes('{"title":"RESET FAILURES","disabled_condition":{"require":{"local":"FAILURES_ACTIVE"},"ne":1},"select_condition":{"require":{"local":"FAILURES_ACTIVE"},"eq":1},"commands":[{"call_macro":"reset aircraft failures"}'), 'one RESET FAILURES button in the Helicopter failures bar: disabled without a failure, selected with one');
+  assert.equal(settings.split('"title":"RESET FAILURES"').length - 1, 1, 'a single RESET FAILURES button');
+  // the flag follows the aircraft in real time (user rule 2026-10-25): a thread loops, waits for any failure (or), then for none (and)
+  const monitor = JSON.stringify(JSON.parse(fs.readFileSync(path.join(root, 'mission-src', 'threads', '03-flight-monitors.json'), 'utf8'))['aircraft failures monitor']);
+  assert.ok(monitor.includes('"while":1') && monitor.includes('"or":[') && monitor.includes('"and":[') && monitor.indexOf('"value":1') < monitor.indexOf('"and":['), 'the monitor thread loops and waits for any failure, then for none');
+  assert.equal(monitor.split('"wait_for":{"var":').length - 1, 60, 'thirty failure variables in each wait');
+  assert.ok(monitor.includes('"local":"fuel_leak_active"'), 'the fuel leakage counts');
   // the in-flight failure engine applies the code and then draws a new one (original 0.997): without the new draw the same failure came back every 2 to 60 minutes
   const engineLoop = JSON.stringify(macros['failure engine']);
-  assert.ok(engineLoop.includes('{"call_macro":"apply aircraft failure","params":{"code":{"var":["L:FAILURE","number"]}}},{"set":{"var":["L:FAILURE","number"]},"value":{"floor":{"rand":[1,300]}}}'), 'the failure engine draws a new L:FAILURE after every applied failure');
+  assert.ok(engineLoop.includes('{"call_macro":"apply aircraft failure","params":{"code":{"var":["L:FAILURE","number"]}}},{"call_macro":"failure crew announce","params":{"code":{"var":["L:FAILURE","number"]}}},{"set":{"var":["L:FAILURE","number"]},"value":{"floor":{"rand":[1,300]}}}'), 'the failure engine draws a new L:FAILURE after every applied failure');
   // a critical or dead crew member marks the repair at the next mission start (reload or manual restart: the flag is a global)
   const event = JSON.stringify(macros['crew member state event']);
   assert.equal(event.split('"global":"CREW_DEATH_REPAIR_PENDING"').length - 1, 10, 'five deaths and five critical members set the repair flag');
