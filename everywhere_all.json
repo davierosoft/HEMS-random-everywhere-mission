@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.79",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.80",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.79"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.80"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -9551,7 +9551,7 @@
     {"sleep":2},
     {"close_door":"pax_right"},
     {"sleep":1},
-    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+    {"call_macro":"voice crew out clear"},
     {"set_message":{"text":"Medic on ground, helicopter clear, free to leave hover"}},
     {"set":{"local":"HOLDHOISTED"},"value":1},
     {"if": {"local":"HELIRESCUER_BOARDED"}, "ne": 0,
@@ -10175,7 +10175,7 @@
                     {"wait_for":{"local":"HR_HOISTING_LOCK"},"eq":2}
                   ],"else": [
                     {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{}},"ne":0},
-                    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+                    {"call_macro":"voice hoist all inside"},
                     {"set":{"local":"HR_HOISTING_LOCK"},"value":0},
                     {"set":{"local":"second_hoist_hoisting"},"value":0},
                     {"set":{"local":"COPILOT"},"value":1}
@@ -10335,7 +10335,7 @@
                 {"set":{"local":"COPILOT"},"value":1},
                 {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 0,
                   "then": [
-                    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}}
+                    {"call_macro":"voice hoist all inside"}
                 ]},
                 {"set":{"local":"HR_HOISTING_LOCK"},"value":0}
             ]}
@@ -23949,7 +23949,7 @@
     ]},
     {"sleep":[3,5]},
     {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{}},"ne":0},
-    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+    {"call_macro":"voice hoist all inside"},
     {"set_message":{"text":"Hoist operations completed"}},
     {"sleep":[3,5]},
     {"if": {"local":"CREW"}, "eq": 4,
@@ -24763,7 +24763,7 @@
         ]},
         {"set":{"local":"HOLDHOISTED"},"value":0},
         {"set_objective_title":"HELIRESCUER(S) HOISTING UP COMPLETED","color":"green"},
-        {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+        {"call_macro":"voice hoist all inside"},
         {"set":{"local":"COPILOT"},"value":1},
         {"set":{"local":"HR_HOISTING_LOCK"},"value":2},
         {"set":{"var":["L:HOISTED","number"]},"value":1},
@@ -25384,10 +25384,7 @@
     {"set":{"local":"COPILOT"},"value":1},
     {"#comment":"PAX1.18 (hook in, boom retracted, clear to leave the hover) is a line of the rear crew: only with a crew member aboard (see drop heli rescuer ground); the heli rescuers are thanked and the base told either way (Mission Companion only)."},
     {"call_macro":"cabin has crew aboard","result":"hrh_aboard"},
-    {"if": {"param":"hrh_aboard"}, "eq": 1,
-      "then": [
-        {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}}
-    ]},
+    {"set":{"local":"hrh_say"},"value":{"param":"hrh_aboard"}},
     {"call_macro":"heli rescuer drop farewell","params":{"count":{"local":"hrd_count"}}},
     {"if": {"local":"helirescuers_drop_here_selected"}, "eq": "yes",
       "then": [
@@ -25401,6 +25398,10 @@
     ]},
     {"close_door":"pax_left"},
     {"close_door":"pax_right"},
+    {"if": {"local":"hrh_say"}, "eq": 1,
+      "then": [
+        {"call_macro":"voice crew out clear"}
+    ]},
     {"set_objective_title":"DEBOARD COMPLETED","color":"green"},
     {"call_macro":"zoom out"},
     {"set_hover_display":{"range":0}},
@@ -94004,6 +94005,32 @@
         {"sleep":2.5},
         {"speak":{"text":"<actor3><say:IMP.DOC>"}}
     ]}
+  ],
+  "voice hoist all inside": [
+    {"#comment":"The hoisted persons are all inside, the hook and the boom are stowed: the rear crew tells the pilot, who cannot see behind, that everybody is inside and that he is clear to leave the hover (pack PAX1.INS, user request of 2026-10-25 after the report of MPR on PAX1.14). Without the Mission Companion the old line PAX1.18 (hook in, boom retracted) is played. PAX1.14 only says that the hoist is up and that the last persons are being brought in."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 0,
+      "then": [
+        {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+        {"return":0}
+    ]},
+    {"speak":"<actor4><say:PAX1.INS>"}
+  ],
+  "voice crew out clear": [
+    {"#comment":"A crew member stays on the ground (the medic travels with the ambulance or goes to the patient, the heli rescuers are dropped): once the doors are closed, the hook is in and the boom retracted, the rear crew tells the pilot that he is clear to leave the hover (pack PAX1.OUT; user request of 2026-10-25). Without the Mission Companion the old line PAX1.18 is played."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 0,
+      "then": [
+        {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+        {"return":0}
+    ]},
+    {"speak":"<actor4><say:PAX1.OUT>"}
   ]
 },
 

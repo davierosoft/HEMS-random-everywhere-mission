@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.79. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.80. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.79, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.80, still need final simulator confirmation.
 
 ## FIXES
 
@@ -908,6 +908,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The setting SPEECH COMMANDS (voice commands of the mission buttons) is now on by default; the speech option of the Mission Companion has to be on too. Saved profiles keep their choice.
 - **Build history:** 0.997 169.79.
 - **Test:** On a first start check that the setting is on in the settings page.
+
+### The pilot hears when everybody is inside the helicopter
+
+- Report of a pilot: the crew said that everybody was strapped in when the hoist had only just started to come up. The line now says only that the hoist is up and the last persons are being brought inside. When everybody hoisted is really inside, the crew confirms it (everybody inside, hook and boom in, clear to leave the hover), so the pilot, who cannot see the cabin, knows when to leave the hover.
+- When a member stays on the ground (the doctor travels with the ambulance, or the heli rescuer is left at the scene) the crew now confirms that the door is closed and the hook and boom are in before the pilot is cleared to leave the hover; with the heli rescuer the line used to come before the doors were closed.
+- **Build history:** 0.997 169.80.
+- **Test:** Hoist the crew and the patient aboard and listen to the confirmation when the last one is inside; repeat with the doctor staying on the ground and with a heli rescuer left at the scene and hear that the door is closed before you are cleared to leave.
 
 ### Service truck and radio calls at the base
 

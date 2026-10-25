@@ -1,3 +1,8 @@
+## Release 0.997 169.80
+
+- Version check macro carries the release number
+- Hoist confirmations: everybody inside, door closed and boom retracted when a member stays on the ground
+
 ## Release 0.997 169.79
 
 - Restored the DEFAULT label of two other options

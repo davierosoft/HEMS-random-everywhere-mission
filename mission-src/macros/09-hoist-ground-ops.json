@@ -555,7 +555,7 @@
     {"sleep":2},
     {"close_door":"pax_right"},
     {"sleep":1},
-    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+    {"call_macro":"voice crew out clear"},
     {"set_message":{"text":"Medic on ground, helicopter clear, free to leave hover"}},
     {"set":{"local":"HOLDHOISTED"},"value":1},
     {"if": {"local":"HELIRESCUER_BOARDED"}, "ne": 0,
@@ -1125,7 +1125,7 @@
                     {"wait_for":{"local":"HR_HOISTING_LOCK"},"eq":2}
                   ],"else": [
                     {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{}},"ne":0},
-                    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+                    {"call_macro":"voice hoist all inside"},
                     {"set":{"local":"HR_HOISTING_LOCK"},"value":0},
                     {"set":{"local":"second_hoist_hoisting"},"value":0},
                     {"set":{"local":"COPILOT"},"value":1}
@@ -1285,7 +1285,7 @@
                 {"set":{"local":"COPILOT"},"value":1},
                 {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 0,
                   "then": [
-                    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}}
+                    {"call_macro":"voice hoist all inside"}
                 ]},
                 {"set":{"local":"HR_HOISTING_LOCK"},"value":0}
             ]}
@@ -2387,7 +2387,7 @@
     ]},
     {"sleep":[3,5]},
     {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{}},"ne":0},
-    {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+    {"call_macro":"voice hoist all inside"},
     {"set_message":{"text":"Hoist operations completed"}},
     {"sleep":[3,5]},
     {"if": {"local":"CREW"}, "eq": 4,
@@ -3708,7 +3708,7 @@
         ]},
         {"set":{"local":"HOLDHOISTED"},"value":0},
         {"set_objective_title":"HELIRESCUER(S) HOISTING UP COMPLETED","color":"green"},
-        {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
+        {"call_macro":"voice hoist all inside"},
         {"set":{"local":"COPILOT"},"value":1},
         {"set":{"local":"HR_HOISTING_LOCK"},"value":2},
         {"set":{"var":["L:HOISTED","number"]},"value":1},
@@ -4530,10 +4530,7 @@
     {"set":{"local":"COPILOT"},"value":1},
     {"#comment":"PAX1.18 (hook in, boom retracted, clear to leave the hover) is a line of the rear crew: only with a crew member aboard (see drop heli rescuer ground); the heli rescuers are thanked and the base told either way (Mission Companion only)."},
     {"call_macro":"cabin has crew aboard","result":"hrh_aboard"},
-    {"if": {"param":"hrh_aboard"}, "eq": 1,
-      "then": [
-        {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}}
-    ]},
+    {"set":{"local":"hrh_say"},"value":{"param":"hrh_aboard"}},
     {"call_macro":"heli rescuer drop farewell","params":{"count":{"local":"hrd_count"}}},
     {"if": {"local":"helirescuers_drop_here_selected"}, "eq": "yes",
       "then": [
@@ -4547,6 +4544,10 @@
     ]},
     {"close_door":"pax_left"},
     {"close_door":"pax_right"},
+    {"if": {"local":"hrh_say"}, "eq": 1,
+      "then": [
+        {"call_macro":"voice crew out clear"}
+    ]},
     {"set_objective_title":"DEBOARD COMPLETED","color":"green"},
     {"call_macro":"zoom out"},
     {"set_hover_display":{"range":0}},
