@@ -1,3 +1,8 @@
+## Release 0.997 169.78
+
+- Scope of the snapshot taken before 169.75 included; carried macros declared
+- RESET FAILURES button label, failure engine draws a new L:FAILURE after every applied failure
+
 ## Release 0.997 169.77
 
 - Scope of the snapshot taken before 169.75 included; carried macros of 169.75 declared

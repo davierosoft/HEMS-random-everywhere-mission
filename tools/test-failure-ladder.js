@@ -241,7 +241,10 @@ assert.deepEqual(draws(7, 11), [7, 8, 9, 10, 11], 'the two highest tiers: from t
   assert.equal(macros['reset aircraft failures'].at(-1).call_macro, 'refresh aircraft failures flag');
   const settings = JSON.stringify(Object.values(macros).filter((m) => JSON.stringify(m).includes('(P)Helicopter failures:')));
   assert.ok(settings.includes('{"link":"+ FLIGHT ASSISTS","commands":[{"set":{"local":"tab11"},"value":1},{"call_macro":"refresh aircraft failures flag"}]'), 'opening the flight assists refreshes the flag');
-  assert.ok(settings.includes('{"title":"RESET FAILURES","show_condition":{"require":{"local":"FAILURES_ACTIVE"},"eq":1},"commands":[{"call_macro":"reset aircraft failures"}') && settings.includes('{"title":"NO FAILURES","show_condition":{"require":{"local":"FAILURES_ACTIVE"},"ne":1}'), 'the button in the Helicopter failures bar, inactive twin when nothing to reset');
+  assert.ok(settings.includes('{"title":"RESET FAILURES","show_condition":{"require":{"local":"FAILURES_ACTIVE"},"eq":1},"commands":[{"call_macro":"reset aircraft failures"}') && settings.includes('{"title":"RESET FAILURES","show_condition":{"require":{"local":"FAILURES_ACTIVE"},"ne":1},"commands":[{"set_message"'), 'the button in the Helicopter failures bar, inactive twin when nothing to reset');
+  // the in-flight failure engine applies the code and then draws a new one (original 0.997): without the new draw the same failure came back every 2 to 60 minutes
+  const engineLoop = JSON.stringify(macros['failure engine']);
+  assert.ok(engineLoop.includes('{"call_macro":"apply aircraft failure","params":{"code":{"var":["L:FAILURE","number"]}}},{"set":{"var":["L:FAILURE","number"]},"value":{"floor":{"rand":[1,300]}}}'), 'the failure engine draws a new L:FAILURE after every applied failure');
   // a critical or dead crew member marks the repair at the next mission start (reload or manual restart: the flag is a global)
   const event = JSON.stringify(macros['crew member state event']);
   assert.equal(event.split('"global":"CREW_DEATH_REPAIR_PENDING"').length - 1, 10, 'five deaths and five critical members set the repair flag');
