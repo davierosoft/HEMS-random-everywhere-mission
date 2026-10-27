@@ -159,4 +159,76 @@ const text = (value) => JSON.stringify(value);
   assert.ok(arm.includes('"id":"hoist_arm_out"') && arm.includes('"id":"hoist_switch_ok"'), 'arm out and switch ok are traced');
 }
 
+// 12. report MPR 2026-10-27: he drops the medical crew, takes off and parks elsewhere until the visits end; "still a bit too far" came on that approach.
+// From the crew drop to the end of the visit the too-far callout is off; it is armed again only with the visit ended, above 10 kt and outside the landing spot area
+{
+  const ca = text(macros['crash site approach']);
+  const thread = ca.slice(ca.indexOf('"local":"distancearm"'));
+  assert.ok(thread.includes('"while":{"local":"too_far_mute"},"eq":"yes"'), 'the callout thread waits while the mute is on');
+  const rearm = thread.slice(thread.indexOf('"while":{"local":"too_far_mute"}'), thread.indexOf('"id":"too_far_rearmed"'));
+  for (const k of ['{"require":{"local":"crewvisitended"},"eq":"yes"}', '{"require":{"var":["GPS GROUND SPEED","knots"]},"gt":10}', '{"require":{"object":"landing_spot","var":"distance:m"},"gt":{"local":"ldg_spot_area_size"}}']) assert.ok(rearm.includes(k), 'the re-arm needs: ' + k);
+  assert.ok(thread.includes('"id":"too_far_rearmed"'), 'the re-arm is logged');
+  // the callout counter itself is guarded in both branches (the thread may already be waiting for the speed when the crew is dropped)
+  const guarded = thread.split('{"if":{"local":"too_far_mute"},"ne":"yes","then":[{"set":{"var":["L:{local:VCP}45","number"]}');
+  assert.equal(guarded.length - 1, 2, 'both too-far increments are guarded by the mute');
+  assert.ok(!/"then":\[\{"set":\{"var":\["L:\{local:VCP\}45","number"\]\}/.test(thread.replace(/\{"if":\{"local":"too_far_mute"\},"ne":"yes","then":\[\{"set":\{"var":\["L:\{local:VCP\}45","number"\]\}/g, '')), 'no unguarded too-far increment is left');
+  for (const name of ['5 crew SKID LDG', '4 crew SKID LDG', '3 crew SKID LDG']) {
+    const t = text(macros[name]);
+    assert.ok(t.indexOf('"id":"skid_crew_go"') < t.indexOf('{"set":{"local":"too_far_mute"},"value":"yes"}') && t.includes('"id":"too_far_mute"'), name + ': the drop sets the mute and logs it');
+  }
+  assert.ok(text(macros['HOISTING']).includes('{"set":{"local":"too_far_mute"},"value":"yes"}'), 'the hoist crew going down sets the mute');
+  assert.ok(text(macros).split('{"set":{"local":"too_far_mute"},"value":"no"}').length - 1 >= 2, 'a new dispatch / patient reset clears the mute');
+}
+
+// 13. reports MPR 2026-10-27 (SAR, pickup button): the copilot sits on the left, so the cabin crew takes the right side; the crew sights the target before the
+// copilot reports it to the dispatcher; the button title has no stray sign
+{
+  const found = text(macros['voice sar found']);
+  assert.ok(found.indexOf('"wait_for":{"local":"patient_found"},"eq":"yes"') > 0 && found.indexOf('"wait_for":{"local":"patient_found"},"eq":"yes"') < found.indexOf('"key":"SAR.FND.PLT"'), 'the dispatcher call waits for the crew sighting (patient_found, set with PAX1.78)');
+  const sight = text(macros['SAR mapldgspot']);
+  assert.ok(sight.indexOf('"local":"patient_found"') < sight.indexOf('{local:VCP}78'), 'the crew sighting sets patient_found and speaks PAX1.78');
+  assert.ok(!/LOAD PATIENT ON HELO[^"]/.test(text(macros)), 'the load patient button titles end with HELO');
+  const packs = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  if (fs.existsSync(packs)) {
+    const word = { EN: [/\bright side\b|\bright for me\b|\bright\b/i, /\bleft\b/i], DE: [/rechte|rechts/i, /linke|links/i], FR: [/droit/i, /gauche/i] };
+    for (const lang of ['EN', 'DE', 'FR']) {
+      const xml = fs.readFileSync(path.join(packs, lang + '.xml'), 'utf8');
+      const block = xml.slice(xml.indexOf('<message key="SAR.CLK"'), xml.indexOf('</message>', xml.indexOf('<message key="SAR.CLK"')));
+      const first = block.split('<o>')[1];
+      assert.ok(first.search(word[lang][0]) >= 0 && first.search(word[lang][0]) < first.search(word[lang][1]), lang + ' SAR.CLK: the speaker takes the right side, the copilot (left seat) the left');
+    }
+  }
+}
+
+// 14. user request 2026-10-27: false sightings in the SAR missions (clock position, distance in meters, denial a random 20 to 75 s later); more and repeated above 1000 ft;
+// never under 150 ft, near or after the real target; own thread
+{
+  const fs14 = text(macros['SAR false sighting']);
+  const tr14 = text(macros['SAR false sighting try']);
+  assert.ok(fs14.includes('"RADIO HEIGHT","feet"]},"gt":150') && !/"RADIO HEIGHT","feet"\]\},"lt"/.test(fs14 + tr14), 'minimum height 150 ft and no maximum');
+  assert.ok(tr14.includes('"rand":[1,100.99]') && tr14.includes('"local":"fs_chance","value":25') === false && tr14.includes('"value":25') && tr14.includes('"value":45'), 'one trial at 25 % below 1000 ft, 45 % above');
+  assert.ok(tr14.includes('"gt":1000') && tr14.includes('"value":20.99') && tr14.includes('"value":10.99'), 'distance 100 to 500 m, 100 to 1000 m above 1000 ft');
+  assert.ok(tr14.includes('"rand":[2,{"local":"fs_top"}]') && tr14.includes('},50]'), 'distance in steps of 50 m');
+  assert.ok(tr14.includes('"rand":[1,12.99]') && tr14.includes('{"local":"fs_hour"},30]') && tr14.includes('"object":"$USER"'), 'clock hour 1 to 12, relative to the helicopter');
+  assert.ok(tr14.includes('"local":"fs_low_done"') && fs14.includes('"local":"fs_count"},"gte":4'), 'low altitude: one trial only; at most 4 false sightings');
+  assert.ok(tr14.includes('"local":"fs_safe"') && tr14.includes('{"local":"fs_dist"},700]'), 'the false point is at least 700 m from the real target');
+  assert.ok(tr14.includes('"rand":[20,75.99]') && tr14.includes('"gte":{"local":"fs_deny"}') && tr14.includes('"gte":20'), 'denial a random 20 to 75 s later, not before 20 s');
+  assert.ok(tr14.includes('"key":"SAR.FLS"') && tr14.includes('"key":"SAR.FLN"') && !/SAR\.FLS\.[KN]/.test(fs14 + tr14), 'one line in meters, no units option');
+  assert.ok(tr14.includes('"local":"patient_found"},"ne":"yes"') && fs14.includes('"local":"patient_found"},"eq":"yes"'), 'never after the real sighting');
+  assert.ok(text(macros['SAR sighting']).includes('"call_macro":"SAR false sighting"'), 'started in an own thread by SAR sighting');
+  const packs14 = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  if (fs.existsSync(packs14)) {
+    for (const lang of ['EN', 'DE', 'FR']) {
+      const xml = fs.readFileSync(path.join(packs14, lang + '.xml'), 'utf8');
+      assert.ok(!xml.includes('SAR.FLS.K') && !xml.includes('SAR.FLS.N'), lang + ' has no unit keys');
+      for (const key of ['SAR.FLS', 'SAR.FLN']) {
+        const at = xml.indexOf('<message key="' + key + '"');
+        assert.ok(at > 0, lang + ' has ' + key);
+        const block = xml.slice(at, xml.indexOf('</message>', at));
+        assert.equal(block.split('<o>').length - 1, 6, lang + ' ' + key + ' has six options');
+        if (key === 'SAR.FLS') assert.ok(block.split('<o>').slice(1).every((o) => o.includes('{0}') && o.includes('{1}')), lang + ' ' + key + ' uses both arguments');
+      }
+    }
+  }
+}
 console.log('flight report 2026-10-23: ok');

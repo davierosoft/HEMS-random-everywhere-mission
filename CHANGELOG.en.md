@@ -1,3 +1,9 @@
+## Release 0.997 169.83
+
+- Too far callout off from the crew drop, SAR copilot side, SAR sighting order, SAR false sightings, button typo
+- Too far callout off from the crew drop, SAR copilot side, SAR sighting order, SAR false sightings, button typo
+- Too far callout off from the crew drop, SAR copilot side, SAR sighting order, SAR false sightings, button typo
+
 ## Release 0.997 169.82
 
 - Carried macros of 169.80 and 169.81 (stall causes, death outcome, crash cries, hoist-up lines) declared

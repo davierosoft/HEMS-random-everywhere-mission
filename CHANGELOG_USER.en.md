@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.82. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.83. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.82, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.83, still need final simulator confirmation.
 
 ## FIXES
 
@@ -723,6 +723,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The hangar greeting is answered before the crew starts the briefing about fuel and the rest.
 - **Build history:** 0.997 169.82.
 - **Test:** Do a hoist with a patient on the helicopter: after the doctor has seen the patient the hoist goes down and brings the doctor and the patient up. Say good morning in the hangar: the crew answers before the briefing.
+### The crew no longer says it is too far after it has been dropped
+
+- When you leave the medical crew at the scene, take off and park somewhere else until the visits end, the crew no longer says "we are still a bit too far" while you approach your parking place. The call is silent from the moment the crew is dropped until the visit ends. It comes back only when the visit has ended, you fly faster than 10 knots and you are away from the landing spot, so you have to return for the crew.
+- **Build history:** 0.997 169.83.
+- **Test:** Land in the landing spot area, drop the crew, take off and land a few hundred metres away: no "too far" call. When the visit has ended, fly away and come back to the crew: the call is heard again.
+
+### Search and rescue: the crew sides and the order of the find calls
+
+- In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
+- When the injured person is found, the crew first says that it sees something and only then the copilot reports the position to the dispatcher. The dispatcher call used to come first.
+- **Build history:** 0.997 169.83.
+- **Test:** Start a search and rescue mission and listen to the briefing: the copilot has the left side. Find the person: the crew speaks first, then the report to the dispatcher.
 
 ## UI
 
@@ -907,6 +919,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - When the ground operations are delayed, the Dispatch page shows a line "Still open:" with the conditions that are missing.
 - **Build history:** 0.997 169.72.
 - **Test:** Let a ground operation stall for two minutes: the Dispatch page lists what is still open.
+
+### The load patient button has no stray sign
+
+- The button LOAD PATIENT ON HELO no longer ends with an equals sign.
+- **Build history:** 0.997 169.83.
+- **Test:** Open the tablet when a patient can be loaded: the button reads LOAD PATIENT ON HELO.
 
 ## NEW FUNCTIONS
 
@@ -1488,6 +1506,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 169.67.
 - **Test:** Request calls until one of the new incidents appears; after a fire, check that the work light is on.
 
+### Search and rescue: false sightings
+
+- With the Mission Companion, during a search and rescue mission the operator may report something at a clock position and a distance in meters ("Something at 3 o'clock, around 300 meters") and, a random 20 to 75 seconds later or when you are close, say that it is not the target. Below 1000 feet it happens in about one mission out of four, once, with the point 100 to 500 metres away. Above 1000 feet the operator is wrong more often, the point can be up to 1000 metres away and it can repeat, up to four times in a mission. Never below 150 feet, never close to the real target and never after you have found it (voice packs EN 35, DE 23 and FR 24).
+- **Build history:** 0.997 169.83.
+- **Test:** Fly a search and rescue mission above 1000 feet: sooner or later the operator reports a point and then says that it is not the target. Below 150 feet nothing is reported.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1530,4 +1554,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.27-169.66 (this release):** Scene parking by lane and the police drop-off fixes, the crew that no longer walks off, patients protected before the arrival with the optional Life Score freeze, crash damage kept on the patient, the crew emergency refinements (no question with a patient aboard, hospital handover of the casualties, senders of the messages, critical and deceased rows), dispatch statistics only when known, light long missions, hoist cable accidents and sheltered single patient, the reset failures button, new search-and-rescue clues and missions 65 to 68, performance settings, road routes for the rescue vehicles, the flight manual checklists with the IFR procedures, the dispatch status keys, payload weights, the Mission Companion voice mode with crew chatter and the male or female technician, then the second dispatch built on its own location, the ambulance crew and patients in every dispatch, the distant ambulance that no longer takes a patient it cannot reach, the loading that is carried through, the sheltered patient for every crew, and fewer false errors. Still to be confirmed in the simulator. Then the hospital team that speaks when the crew meets the ground crew and the radius shown in the place-search warning (169.47), and the keyed checklist and dispatch texts for translated voice packs (169.48). Then the tablet alarm only with pop-ups, the pilot presence for the radio rules, the vehicles and hospital messages, and the fixes of Skip paperwork, the airplane fire engine and the residential injured icon (169.49). Then the decision of the crew before you accept a dispatch, the dispatcher asking for an answer and the reassigned dispatch (169.50). Then the hospital handover walk that is skipped when the medic is already at the stretcher and the diagnosis of the hospital waypoints (169.51). Then the residential missions that no longer stop at 43.5% because the injured icon is drawn again instead of updated, and the mission identity for the Mission Companion (169.52). Then the tips of the crew about the functions of the mission, with their own setting CREW TIPS, and the voice pack version the mission asks for, so that an old pack is reported (169.53, 169.54). Then the ambulance that waits for the helicopter or ends the dispatch, the doors opened for the heli rescuer, the heli rescuers who walk to the hospital, the radio calls with the heli rescue base and the voices during the hoist operations (169.55). Then the vehicles said once, the city of the dispatcher, the call sign on the tablet and the random voices (169.56). Then the missions that fit the conditions (169.57). Then the search and rescue state that is no longer overwritten (169.58). Then the crews that walk at a normal pace (169.59). Then the NEXT DISPATCH button released after the waiting time (169.60). Then the heli rescuer who meets the crew at the skid point or beside the helicopter, the skid landing that no longer stops with a deceased patient, the search and rescue calls without medical information and without an announced area on the route call, the extra troubleshooting information, and the hangar and hospital points shared by everybody (169.61). Then the patient record that agrees with itself before the visit, and the sex and age of the patients that follow the dispatch (169.62). Then the police car that no longer keeps the crew waiting, the death of a patient always announced, the fall back to the original voices without the Mission Companion, the time to the second dispatch, the same lines in every kind of operation and the recordings that were never played (169.63). Then the ground operations that stop after a casualty, the mayday for a critical failure, the voices of the injured crew, the dispatch read back by the crew when the radio is off, the search and rescue briefing and the skid landing of a light helicopter (169.64). Then the build number that follows the release, the notice of a new version only for a newer build and the messages about the actors without a voice (169.65). Then the doctor who comes back before the ambulance notice, the progress bar of the hoist, the dispatch read back when boarding, and the greetings and the weather in the hangar, at the briefing and after the landing (169.66).
 - **0.997 169.67-169.79 (this release):** Time bar for organ and blood missions, new incidents and secondary missions, no CPR after a handover, the crashed vehicle created once, doors closed once by the heli rescuer, the mission 65 route fallback, voice commands for the mission buttons (setting SPEECH COMMANDS), handover words after the hospital, and the hoist stall report on the Dispatch page, the radio beeps on every radio call, the readback of spoken commands, the technician that greets the whole crew, the crew discussion once everybody is aboard, and the smoke that stays on the scene.
 - **0.997 169.80-169.81:** The hoist-up line fix, the everybody-inside and door-closed confirmations, the causes of a stalled ground operation with the automatic snapshots at 120 and 300 seconds, and the death outcome of a dispatch (see Ground operations say what they are waiting for and A patient who dies ends the dispatch only when nobody is left).
-- **0.997 169.82 (this release):** The hoist that brings the doctor and the patient up again without waiting for a distance or the overhead switch, and the hangar greeting answered before the briefing (see The hoist brings the doctor and the patient up again).
+- **0.997 169.82:** The hoist that brings the doctor and the patient up again without waiting for a distance or the overhead switch, and the hangar greeting answered before the briefing (see The hoist brings the doctor and the patient up again).
+- **0.997 169.83 (this release):** The crew that no longer says it is too far after it has been dropped, the sides and the order of the calls in the search and rescue missions, the false sightings of the operator and the load patient button without a stray sign (see The crew no longer says it is too far after it has been dropped, Search and rescue: the crew sides and the order of the find calls, The load patient button has no stray sign and Search and rescue: false sightings).

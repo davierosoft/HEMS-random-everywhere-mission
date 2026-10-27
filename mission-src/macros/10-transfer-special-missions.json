@@ -231,7 +231,7 @@
               {"destroy_user_action":"skid_landing"},
               {"create_user_action": {
                   "id": "ambuloadlock",
-                  "title": "LOAD PATIENT ON HELO=",
+                  "title": "LOAD PATIENT ON HELO",
                   "click_commands": [
                     {"set":{"local":"whobringpatient"},"value":"us"},
                     {"destroy_user_action":"ambuloadlock"}
@@ -306,7 +306,7 @@
                   {"destroy_user_action":"skid_landing"},
                   {"create_user_action": {
                       "id": "ambuloadlock",
-                      "title": "LOAD PATIENT ON HELO=",
+                      "title": "LOAD PATIENT ON HELO",
                       "click_commands": [
                         {"set":{"local":"whobringpatient"},"value":"us"},
                         {"destroy_user_action":"ambuloadlock"}
@@ -367,6 +367,21 @@
                     {"require":{"global":"AUDIO_DECLUT"},"eq":5}
                   ]}, "eq": 1,
                   "then": [
+                    {"#comment":"Report MPR 2026-10-27: he lands in the area, leaves the medical crew, takes off and parks elsewhere until the visits end, and on that approach he heard 'still a bit too far'. From the crew drop (too_far_mute, set at skid_crew_go / hoist_crew_go) to the end of the visit the callouts are off. They are armed again only when the visit has ended, the helicopter flies above 10 kt and is outside the landing spot area, so it has to come back for the crew. Both changes are logged."},
+                    {"while": {"local":"too_far_mute"}, "eq": "yes",
+                      "do": [
+                        {"if": {
+                          "and": [
+                            {"require":{"local":"crewvisitended"},"eq":"yes"},
+                            {"require":{"var":["GPS GROUND SPEED","knots"]},"gt":10},
+                            {"require":{"object":"landing_spot","var":"distance:m"},"gt":{"local":"ldg_spot_area_size"}}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"too_far_mute"},"value":"no"},
+                            {"call_macro":"ground ops checkpoint","params":{"id":"too_far_rearmed","detail":"crew visit ended, flying away from the landing spot"}}
+                        ]},
+                        {"sleep":2}
+                    ]},
                     {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":5},
                     {"if": {"var":["L:MISSION_HOIST","number"]}, "eq": 0,
                       "then": [
@@ -384,7 +399,10 @@
                                 {"wait_for":{"object":"landing_spot","var":"distance:m"},"gt":{"local":"ldg_spot_area_size"}}
                             ]}
                           ],"else": [
-                            {"set":{"var":["L:{local:VCP}45","number"]},"value":{"add":[{"var":["L:{local:VCP}45","number"]},1]}},
+                            {"if": {"local":"too_far_mute"}, "ne": "yes",
+                              "then": [
+                                {"set":{"var":["L:{local:VCP}45","number"]},"value":{"add":[{"var":["L:{local:VCP}45","number"]},1]}}
+                            ]},
                             {"wait_for":{"var":["L:RESCUED","number"]},"eq":0},
                             {"wait_for":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}
                         ]}
@@ -401,7 +419,10 @@
                                 {"wait_for":{"object":"landing_spot","var":"distance:m"},"gt":{"local":"ldg_spot_area_size"}}
                             ]}
                           ],"else": [
-                            {"set":{"var":["L:{local:VCP}45","number"]},"value":{"add":[{"var":["L:{local:VCP}45","number"]},1]}},
+                            {"if": {"local":"too_far_mute"}, "ne": "yes",
+                              "then": [
+                                {"set":{"var":["L:{local:VCP}45","number"]},"value":{"add":[{"var":["L:{local:VCP}45","number"]},1]}}
+                            ]},
                             {"wait_for":{"var":["L:RESCUED","number"]},"eq":0},
                             {"wait_for":{"object":"landing_spot","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}
                         ]}

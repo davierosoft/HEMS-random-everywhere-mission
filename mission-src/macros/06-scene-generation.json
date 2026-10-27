@@ -3453,7 +3453,143 @@
         {"call_macro":"SAR mapldgspot"},
         {"set_map":{"add":{"point":{"location":"injured_human","icon":"injured_location","id":"location_temp_icon"}}}},
         {"set":{"var":["L:{local:VCP}80","number"]},"value":{"add":[{"var":["L:{local:VCP}80","number"]},1]}}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"SAR false sighting"}
     ]}}
+  ],
+  "SAR false sighting": [
+    {"#comment":"User request of 2026-10-27, Mission Companion only: while the helicopter searches, the operator may report something at a clock position and a distance in meters from the helicopter, and later says it is not the target (pack SAR.FLS, SAR.FLN). Below 1000 ft: one single trial per mission, 25 %, distance 100 to 500 m. Above 1000 ft the operator sees farther and is more often wrong: a trial each time (45 %), distance 100 to 1000 m, up to 4 false sightings per mission, at least 60 to 150 s apart. Never under 150 ft of radio height, never when the real target is sighted (patient_found) and the false point is always at least 700 m from the real target. The denial comes after a random 20 to 75 s (or when the helicopter is within 150 m of the point, not before 20 s). Own thread: nothing waits for it. sar_false_state: off, armed, announced, stop; fs_count counts the false sightings."},
+    {"set":{"local":"sar_false_state"},"value":"off"},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"sar_false_state"},"value":"armed"},
+        {"set":{"local":"fs_count"},"value":0},
+        {"set":{"local":"fs_low_done"},"value":0},
+        {"while": {"local":"sar_false_state"}, "ne": "stop",
+          "do": [
+            {"if": {"has_object":"injured_human"}, "eq": 0,
+              "then": [
+                {"set":{"local":"sar_false_state"},"value":"stop"}
+              ],"else": [
+                {"if": {
+                  "or": [
+                    {"require":{"local":"patient_found"},"eq":"yes"},
+                    {"require":{"local":"fs_count"},"gte":4}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sar_false_state"},"value":"stop"}
+                  ],"else": [
+                    {"if": {
+                      "and": [
+                        {"require":{"object":"injured_human","var":"distance:m"},"lt":3000},
+                        {"require":{"var":["RADIO HEIGHT","feet"]},"gt":150}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"call_macro":"SAR false sighting try"}
+                    ]}
+                ]}
+            ]},
+            {"sleep":3}
+        ]}
+    ]}
+  ],
+  "SAR false sighting try": [
+    {"#comment":"One trial of SAR false sighting (see there). Waits 15 to 45 s inside the thread of the caller, then checks again that the helicopter is still above 150 ft and the real target is not sighted."},
+    {"sleep":[15,45]},
+    {"if": {
+      "and": [
+        {"require":{"local":"patient_found"},"ne":"yes"},
+        {"require":{"var":["RADIO HEIGHT","feet"]},"gt":150}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"fs_high"},"value":0},
+        {"set":{"local":"fs_go"},"value":1},
+        {"set":{"local":"fs_chance"},"value":25},
+        {"set":{"local":"fs_top"},"value":10.99},
+        {"if": {"var":["RADIO HEIGHT","feet"]}, "gt": 1000,
+          "then": [
+            {"set":{"local":"fs_high"},"value":1},
+            {"set":{"local":"fs_chance"},"value":45},
+            {"set":{"local":"fs_top"},"value":20.99}
+          ],"else": [
+            {"if": {"local":"fs_low_done"}, "eq": 1,
+              "then": [
+                {"set":{"local":"fs_go"},"value":0}
+              ],"else": [
+                {"set":{"local":"fs_low_done"},"value":1}
+            ]}
+        ]},
+        {"if": {"local":"fs_go"}, "eq": 1,
+          "then": [
+            {"set":{"local":"fs_roll"},"value":{"floor":{"rand":[1,100.99]}}},
+            {"set":{"local":"fs_dist"},"value":{"multiply":[{"floor":{"rand":[2,{"local":"fs_top"}]}},50]}},
+            {"set":{"local":"fs_safe"},"value":{"add":[{"local":"fs_dist"},700]}},
+            {"if": {
+              "and": [
+                {"require":{"local":"fs_roll"},"lte":{"local":"fs_chance"}},
+                {"require":{"object":"injured_human","var":"distance:m"},"gt":{"local":"fs_safe"}}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"fs_hour"},"value":{"floor":{"rand":[1,12.99]}}},
+                {"set":{"local":"fs_bearing"},"value":{"multiply":[{"local":"fs_hour"},30]}},
+                {"if": {"local":"fs_bearing"}, "gte": 360,
+                  "then": [
+                    {"set":{"local":"fs_bearing"},"value":0}
+                ]},
+                {"create_location": "sar_false_sighting",
+                  "zones": [
+                    {"zone":{"location":{"bearing":{"local":"fs_bearing"},"dist":{"local":"fs_dist"},"object":"$USER"}}}
+                ]},
+                {"set":{"local":"sar_false_state"},"value":"announced"},
+                {"set":{"local":"fs_count"},"value":{"add":[{"local":"fs_count"},1]}},
+                {"call_macro":"voice say","params":{"key":"SAR.FLS","a":{"text":"{0}//{1}","params":[{"local":"fs_hour"},{"local":"fs_dist"}]}}},
+                {"set":{"local":"fs_deny"},"value":{"floor":{"rand":[20,75.99]}}},
+                {"set":{"local":"fs_elapsed"},"value":0},
+                {"set":{"local":"fs_near"},"value":0},
+                {"set":{"local":"fs_wait"},"value":1},
+                {"while": {"local":"fs_wait"}, "eq": 1,
+                  "do": [
+                    {"sleep":2},
+                    {"set":{"local":"fs_elapsed"},"value":{"add":[{"local":"fs_elapsed"},2]}},
+                    {"if": {
+                      "or": [
+                        {"require":{"local":"fs_elapsed"},"gte":{"local":"fs_deny"}},
+                        {"require":{"local":"patient_found"},"eq":"yes"},
+                        {"require":{"local":"fs_near"},"eq":1}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"fs_wait"},"value":0}
+                    ]},
+                    {"set":{"local":"fs_near"},"value":0},
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"fs_elapsed"},"gte":20},
+                        {"require":{"object":"sar_false_sighting","var":"distance:m"},"lt":150}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"fs_near"},"value":1}
+                    ]}
+                ]},
+                {"if": {"local":"patient_found"}, "ne": "yes",
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":"SAR.FLN"}}
+                ]},
+                {"set":{"local":"sar_false_state"},"value":"armed"},
+                {"sleep":[60,150]}
+              ],"else": [
+                {"if": {"local":"fs_high"}, "eq": 1,
+                  "then": [
+                    {"sleep":[120,240]}
+                ]}
+            ]}
+        ]}
+    ]}
   ],
   "SAR mapldgspot": [
     {"if": {"local":"brgrepeat"}, "eq": 0,
