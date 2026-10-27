@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.83",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.84",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.83"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.84"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -11049,6 +11049,36 @@
     {"set":{"var":["L:STAT_TOT","number"]},"value":{"var":["L:MISSION_TIME","number"]}},
     {"set":{"local":"HOIST_OUT"},"value":0},
     {"set":{"var":["L:READY","number"]},"value":0},
+    {"#comment":"The patient is at the hospital: the scene responders of this dispatch (police with car, ambulance with medic and stretcher) are released, so they leave the scene and the map whatever the user chooses next."},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"Return to base or continue menu","state":"police and ambulance removed"}},
+    {"if": {"has_object":"policeman"}, "eq": 1,
+      "then": [
+        {"destroy_object":"policeman"}
+    ]},
+    {"if": {"has_object":"policeman2"}, "eq": 1,
+      "then": [
+        {"destroy_object":"policeman2"}
+    ]},
+    {"if": {"has_object":"police"}, "eq": 1,
+      "then": [
+        {"destroy_object":"police"}
+    ]},
+    {"if": {"has_object":"police7"}, "eq": 1,
+      "then": [
+        {"destroy_object":"police7"}
+    ]},
+    {"if": {"has_object":"ambumedic7"}, "eq": 1,
+      "then": [
+        {"destroy_object":"ambumedic7"}
+    ]},
+    {"if": {"has_object":"ambustretcher7"}, "eq": 1,
+      "then": [
+        {"destroy_object":"ambustretcher7"}
+    ]},
+    {"if": {"has_object":"ambulance1"}, "eq": 1,
+      "then": [
+        {"destroy_object":"ambulance1"}
+    ]},
     {"#comment":"A crew emergency is active (the user chose Divert, or Continue and then reached a hospital): the destination flow of the patient is over, the critical crew still aboard is handed over here and the helicopter returns to base. A destination with an ambulance meeting point (cambuchoice yes) is not a hospital stop: the crew goes on to the base."},
     {"if": {
       "and": [
@@ -34946,6 +34976,7 @@
           "then": [
             {"destroy_object":"hoist_crew"}
         ]},
+        {"trigger":["H:{local:HXX}_SDK_PAX_1_ON"]},
         {"call_macro":"set station weight","params":{"station":3,"occupied":1}},
         {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{"before_stow_commands":[]}},"ne":0},
         {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 0,

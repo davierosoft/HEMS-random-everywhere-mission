@@ -231,4 +231,17 @@ const text = (value) => JSON.stringify(value);
     }
   }
 }
-console.log('flight report 2026-10-23: ok');
+// 15. MPR report 2026-10-27 (169.82, mission 44, 4 crew, skid): a medical team member vanished (the landed return of "4 crew SKID LDG" never sat the first rear seat again,
+// the hoist return did) and the police and the ambulance stayed on the scene and the map after the hospital
+{
+  const skid = macros['4 crew SKID LDG'];
+  const t15 = text(skid);
+  const at = t15.indexOf('"call_macro":"set station weight","params":{"station":3,"occupied":1}},{"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW"');
+  assert.ok(at > 0, 'landed return of the 4 crew skid operation found');
+  assert.ok(t15.slice(Math.max(0, at - 90), at).includes('{"trigger":["H:{local:HXX}_SDK_PAX_1_ON"]}'), 'the landed return seats the first rear passenger again');
+  const rb = text(macros['Return to base or continue menu']);
+  for (const name of ['policeman', 'policeman2', 'police', 'police7', 'ambumedic7', 'ambustretcher7', 'ambulance1']) {
+    assert.ok(rb.includes('{"if":{"has_object":"' + name + '"},"eq":1,"then":[{"destroy_object":"' + name + '"}]}'), name + ' is removed when the patient is at the hospital');
+  }
+  assert.ok(rb.indexOf('"destroy_object":"police"') < rb.indexOf('"call_macro":"crew hospital finish"'), 'the release comes before every choice of the menu');
+}console.log('flight report 2026-10-23: ok');

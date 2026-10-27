@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.83. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.84. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.83, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.84, still need final simulator confirmation.
 
 ## FIXES
 
@@ -728,6 +728,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - When you leave the medical crew at the scene, take off and park somewhere else until the visits end, the crew no longer says "we are still a bit too far" while you approach your parking place. The call is silent from the moment the crew is dropped until the visit ends. It comes back only when the visit has ended, you fly faster than 10 knots and you are away from the landing spot, so you have to return for the crew.
 - **Build history:** 0.997 169.83.
 - **Test:** Land in the landing spot area, drop the crew, take off and land a few hundred metres away: no "too far" call. When the visit has ended, fly away and come back to the crew: the call is heard again.
+
+### The medical crew member no longer vanishes after a landed pickup
+
+- With four crew and a skid landing, when the crew came back to the helicopter that stood on the ground, the first rear seat stayed empty and one team member seemed to disappear until the next mission. The seat is now taken again, as it already was after a hoist pickup.
+- **Build history:** 0.997 169.84.
+- **Test:** Fly a four crew skid landing mission, let the crew visit the patient and come back: all rear seats are occupied again and nobody is missing at the hospital.
+
+### Police and ambulance leave when the patient is at the hospital
+
+- When the patient has been delivered, the police with their car and the ambulance with its medic and stretcher are removed from the scene and from the map, whatever you choose next (end the mission, a new dispatch or return to base). They used to stay at the last scene, and the ambulance kept driving home.
+- **Build history:** 0.997 169.84.
+- **Test:** Deliver the patient at the hospital and choose return to base: the police, the police car and the ambulance are gone from the scene and from the map.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1555,4 +1567,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.67-169.79 (this release):** Time bar for organ and blood missions, new incidents and secondary missions, no CPR after a handover, the crashed vehicle created once, doors closed once by the heli rescuer, the mission 65 route fallback, voice commands for the mission buttons (setting SPEECH COMMANDS), handover words after the hospital, and the hoist stall report on the Dispatch page, the radio beeps on every radio call, the readback of spoken commands, the technician that greets the whole crew, the crew discussion once everybody is aboard, and the smoke that stays on the scene.
 - **0.997 169.80-169.81:** The hoist-up line fix, the everybody-inside and door-closed confirmations, the causes of a stalled ground operation with the automatic snapshots at 120 and 300 seconds, and the death outcome of a dispatch (see Ground operations say what they are waiting for and A patient who dies ends the dispatch only when nobody is left).
 - **0.997 169.82:** The hoist that brings the doctor and the patient up again without waiting for a distance or the overhead switch, and the hangar greeting answered before the briefing (see The hoist brings the doctor and the patient up again).
-- **0.997 169.83 (this release):** The crew that no longer says it is too far after it has been dropped, the sides and the order of the calls in the search and rescue missions, the false sightings of the operator and the load patient button without a stray sign (see The crew no longer says it is too far after it has been dropped, Search and rescue: the crew sides and the order of the find calls, The load patient button has no stray sign and Search and rescue: false sightings).
+- **0.997 169.83:** The crew that no longer says it is too far after it has been dropped, the sides and the order of the calls in the search and rescue missions, the false sightings of the operator and the load patient button without a stray sign (see The crew no longer says it is too far after it has been dropped, Search and rescue: the crew sides and the order of the find calls, The load patient button has no stray sign and Search and rescue: false sightings).
+- **0.997 169.84 (this release):** The crew member who no longer vanishes after a landed pickup with four crew, and the police and the ambulance that leave the scene and the map once the patient is at the hospital (see The medical crew member no longer vanishes after a landed pickup and Police and ambulance leave when the patient is at the hospital).
