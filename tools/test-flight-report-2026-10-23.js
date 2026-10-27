@@ -143,4 +143,20 @@ const text = (value) => JSON.stringify(value);
   assert.ok(hb.indexOf('hoist_patient_prepare_failed') < hb.indexOf('"return":0'), 'the failure is traced and told before the macro returns');
 }
 
+// 11. reports 2026-10-26 (sssnake74 169.81, MPR 169.66, a third): the crew stands by the patient and the cable never comes down. The synchronous drive ends the walk;
+// the distance gate (lte 1.5 m) after it could never hold, so no distance decides completion any more; the remaining waits are traced
+{
+  const hb = text(macros['Hoisting back up']);
+  assert.ok(!hb.includes('"to":"{local:HEMS_PATIENT_OBJECT}"},"lte":1.5'), 'no crew-to-patient distance gate after the stretcher drive');
+  for (const id of ['hoist_stretcher_drive', 'hoist_stretcher_done', 'hoist_arming', 'hoist_cable_down']) assert.ok(hb.includes('"id":"' + id + '"'), 'checkpoint ' + id);
+  assert.ok(hb.indexOf('hoist_stretcher_drive') < hb.indexOf('hoist_stretcher_done') && hb.indexOf('hoist_stretcher_done') < hb.indexOf('hoist_arming') && hb.indexOf('hoist_arming') < hb.indexOf('hoist_cable_down'), 'checkpoints follow the path');
+  assert.ok(!text(macros).includes('"to":"{local:HEMS_PATIENT_OBJECT}"},"lte":1.5'), 'no other crew-to-patient distance gate');
+  // the overhead switch turns on with the arm extension (original mission: no switch wait): never awaited before the arm is out
+  const sw = text(macros['set hoist switch to on']);
+  assert.ok(!/"wait_for"|"sleep"|"create_thread"|"set_message"/.test(sw), 'set hoist switch to on only traces: no wait before the arm extension');
+  const arm = text(macros['hoist_arming_and extension']);
+  assert.ok(arm.indexOf('HOIST_ARM_DEPLOY') < arm.indexOf('"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1'), 'manual mode checks the switch after the arm is out');
+  assert.ok(arm.includes('"id":"hoist_arm_out"') && arm.includes('"id":"hoist_switch_ok"'), 'arm out and switch ok are traced');
+}
+
 console.log('flight report 2026-10-23: ok');

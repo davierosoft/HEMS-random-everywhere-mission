@@ -1,3 +1,8 @@
+## Release 0.997 169.82
+
+- Carried macros of 169.80 and 169.81 (stall causes, death outcome, crash cries, hoist-up lines) declared
+- Hoist back to the helicopter no longer stalls on a crew to patient distance wait, hoist switch never awaited before the arm extension, hangar greeting answered before the briefing
+
 ## Release 0.997 169.81
 
 - Carried 169.80 scope and 169.81 ground stall causes and death outcome

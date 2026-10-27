@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.81",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.82",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.81"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.82"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -848,6 +848,8 @@
                   "then": [
                     {"point_object":"pilot1","to":"engineera"},
                     {"point_object":"engineera","to":"pilot1"},
+                    {"#comment":"User request 2026-10-26 (flight log: the pilot answer to the greeting waited 10 s behind the technician logbook and fuel lines and the copilot answer was dropped by the voice queue): the greetings of the three come first, the logbook and fuel talk starts when the exchange of greetings is over (vhg_greeting, set by voice hangar greeting)."},
+                    {"wait_for":{"local":"vhg_greeting"},"ne":1},
                     {"set":{"var":["L:FRA{local:VCP}6","number"]},"value":{"add":[{"var":["L:FRA{local:VCP}6","number"]},1]}},
                     {"sleep":4.5},
                     {"if": {
@@ -9121,7 +9123,19 @@
     {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
     {"sleep":1},
     {"set":{"var":["L:{local:VCP}9","number"]},"value":{"add":[{"var":["L:{local:VCP}9","number"]},1]}},
-    {"sleep":[3,7]}
+    {"sleep":[3,7]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_out","detail":{"text":"switch {0} arming {1}","params":[{"var":["L:H145_SDK_OH_HOIST","number"]},{"global":"HOIST_ARMING"}]}}},
+    {"if": {
+      "and": [
+        {"require":{"global":"HOIST_ARMING"},"ne":"auto"},
+        {"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set_message":{"text":"Hoist arm is out. Set HOIST switch to ON position to start hoist operations"}},
+        {"set":{"var":["L:{local:VCP}86","number"]},"value":{"add":[{"var":["L:{local:VCP}86","number"]},1]}},
+        {"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1},
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_switch_ok"}}
+    ]}
   ],
   "HOISTING": [
     {"call_macro":"multipatient registry crew first target"},
@@ -10064,10 +10078,11 @@
             ]}}
         ]},
         {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":4,"vmax":5},"result":"cws_sp"},
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_stretcher_drive","detail":{"local":"HEMS_PATIENT_OBJECT"}}},
         {"drive_object":{"name":"hoist_crew","to":["{local:HEMS_PATIENT_OBJECT}",{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":30,"dist":1.5}],"VAR1":3,"speed":{"param":"cws_sp"}}},
-        {"wait_for":{"has_object":"{local:HEMS_PATIENT_OBJECT}"},"eq":1},
-        {"wait_for":{"object":"hoist_crew","var":"distance:m","to":"{local:HEMS_PATIENT_OBJECT}"},"lte":1.5},
+        {"#comment":"Reports 2026-10-26 (sssnake74, MPR, a third tester): the doctor stood by the patient and the cable never came down. The drive above is synchronous: its end is the arrival. The original had no distance gate here; the 1.5 m wait after it compared the crew with a patient that the other thread parks 3 m from the same corner (and may pick another corner), so it could never be true. No distance decides completion (repository rule)."},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_stretcher_done"}},
         {"set":{"var":["L:{local:VCP}5","number"]},"value":{"add":[{"var":["L:{local:VCP}5","number"]},1]}},
         {"set_message":{"text":"hoist 1 plus stretcher to helicopter"}},
         {"sleep":[2.5,4]}
@@ -10216,11 +10231,13 @@
             {"call_macro":"ground ops checkpoint","params":{"id":"hoist_pax_hoist_ok"}},
             {"sleep":[3,10]}
           ],"else": [
+            {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arming","detail":{"text":"switch {0} arming {1}","params":[{"var":["L:H145_SDK_OH_HOIST","number"]},{"global":"HOIST_ARMING"}]}}},
             {"call_macro":"hoist_arming_and extension"}
         ]},
         {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
         {"sleep":2},
         {"set_message":{"text":"Hoist is running down, stay within 20m from operator"}},
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_cable_down"}},
         {"call_macro":"hoist down"},
         {"and": [
           {"wait_for":{"object":"hoist_crew","var":"distance:m"},"lt":20},
@@ -10625,8 +10642,7 @@
                 ]}}
             ]},
             {"drive_object":{"name":"hoist_crew","to":["{local:HEMS_PATIENT_OBJECT}",{"closest":[{"bearing":45,"dist":7},{"bearing":135,"dist":15},{"bearing":225,"dist":15},{"bearing":270,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
-            {"wait_for":{"has_object":"{local:HEMS_PATIENT_OBJECT}"},"eq":1},
-            {"wait_for":{"object":"hoist_crew","var":"distance:m","to":"{local:HEMS_PATIENT_OBJECT}"},"lte":1.5},
+            {"#comment":"Same defect as in Hoisting back up: the drive is synchronous, a 1.5 m wait after it never held (the crew ends at a far point, not at the patient)."},
             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
             {"sleep":2},
             {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":225,"dist":10},{"bearing":150,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
@@ -11010,16 +11026,8 @@
     {"set":{"var":["L:HOISTED","number"]},"value":1}
   ],
   "set hoist switch to on": [
-    {"set_message":{"text":"Set HOIST switch to ON position to start hoist operations"}},
-    {"create_thread": {
-      "commands": [
-        {"while": {"var":["L:H145_SDK_OH_HOIST","number"]}, "ne": 1,
-          "do": [
-            {"set":{"var":["L:{local:VCP}86","number"]},"value":{"add":[{"var":["L:{local:VCP}86","number"]},1]}},
-            {"sleep":[20,60]}
-        ]}
-    ]}},
-    {"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1}
+    {"#comment":"Reports 2026-10-26: with HOIST ARMING manual the crew waited here for a switch that the aircraft turns on by itself when the hoist arm is extended, and the arm is extended only after this macro: the operation never started (MPR screenshot: arm closed). The original mission has no switch wait. Callers extend the arm right after this macro, so it only traces; the manual check of the switch runs after the extension (hoist_arming_and extension)."},
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_switch_note","detail":{"text":"switch {0}: it turns on with the arm extension, not awaited before it","params":[{"var":["L:H145_SDK_OH_HOIST","number"]}]}}}
   ],
   "Return to base or continue menu": [
     {"set_objective_title":"DESTINATION PROCEDURES COMPLETED","color":"green"},
@@ -90784,6 +90792,7 @@
                 {"set":{"local":"vhg_k"},"value":"A"}
             ]},
             {"set":{"local":"vhg_busy"},"value":1},
+            {"set":{"local":"vhg_greeting"},"value":1},
             {"create_thread": {
               "commands": [
                 {"sleep":0.5},
@@ -90798,6 +90807,7 @@
                 {"sleep":2.5},
                 {"speak":{"text":"<say:GRT.PLT.{0}>","params":[{"local":"vhg_k"}]}},
                 {"sleep":3},
+                {"set":{"local":"vhg_greeting"},"value":0},
                 {"if": {"local":"vhg_ws"}, "ne": "",
                   "then": [
                     {"speak":{"text":"<say:WXH.{0}>","params":[{"local":"vhg_ws"}]}},
