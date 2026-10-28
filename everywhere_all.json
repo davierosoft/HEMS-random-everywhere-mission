@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.85",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.86",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.85"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.86"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -94250,13 +94250,17 @@
       "then": [
         {"return":0}
     ]},
-    {"#comment":"The line also says the door is closed: wait up to 25 s for the right passenger door LVAR (SDK_DOOR_PAX_R, 0 closed) before saying it. The hoist and boom position has no readable LVAR: the callers call this after the stow function (HOIST_REEL_UP_AND_STOW) answered."},
+    {"#comment":"The line also says the door is closed and the hoist is in: wait up to 40 s for the right passenger door LVAR (SDK_DOOR_PAX_R, 0 closed) and for the hoist LVAR H145_SDK_OH_HOIST (1 = hoist on and arm extended, 0 = switched off and arm stowed; user 2026-10-28) before saying it. If one of them is still not there after 40 s the line is not said (a false 'all in' is worse than silence) and the checkpoint voice_inside_timeout records the values. The callers call this after the stow function (HOIST_REEL_UP_AND_STOW) answered."},
     {"create_thread": {
       "commands": [
         {"set":{"local":"vhi_w"},"value":0},
-        {"while": {"local":"vhi_w"}, "lt": 25,
+        {"while": {"local":"vhi_w"}, "lt": 40,
           "do": [
-            {"if": {"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]}, "lt": 0.5,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]},"lt":0.5},
+                {"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"lt":0.5}
+              ]}, "eq": 1,
               "then": [
                 {"set":{"local":"vhi_w"},"value":99}
               ],"else": [
@@ -94264,7 +94268,13 @@
                 {"set":{"local":"vhi_w"},"value":{"add":[{"local":"vhi_w"},1]}}
             ]}
         ]},
-        {"speak":"<actor4><say:PAX1.INS>"}
+        {"if": {"local":"vhi_w"}, "eq": 99,
+          "then": [
+            {"call_macro":"ground ops checkpoint","params":{"id":"voice_inside_said","detail":{"text":"door {0} hoist switch {1}","params":[{"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]},{"var":["L:H145_SDK_OH_HOIST","number"]}]}}},
+            {"speak":"<actor4><say:PAX1.INS>"}
+          ],"else": [
+            {"call_macro":"ground ops checkpoint","params":{"id":"voice_inside_timeout","detail":{"text":"door {0} hoist switch {1} cable ft {2} status {3}","params":[{"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]},{"var":["L:H145_SDK_OH_HOIST","number"]},{"var":["L:{local:HXX}_SDK_HOIST_CABLE_FT","number"]},{"var":["L:{local:HXX}_SDK_HOIST_STATUS","number"]}]}}}
+        ]}
     ]}}
   ],
   "voice crew out clear": [

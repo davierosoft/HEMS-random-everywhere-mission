@@ -1,3 +1,8 @@
+## Release 0.997 169.86
+
+- Cabin confirmation waits for the hoist LVAR
+- Cabin confirmation waits for the hoist LVAR
+
 ## Release 0.997 169.85
 
 - Scope covers the unpublished changes since the 10-25 baseline carried by 169.79-169.84 plus 169.85

@@ -783,6 +783,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 169.85.
 - **Test:** Fly a four crew skid landing with a heli rescuer: he speaks about walking out, and the "everybody inside" line comes only after he is aboard and the door is closed.
 
+### The cabin confirmation waits for the hoist
+
+- The rear crew says that everybody is inside, the door is closed and the hoist is in only when the right door is closed and the hoist is switched off with the arm stowed. If the hoist is still out after 40 seconds the line is not said, and a checkpoint records the door and hoist values for the report.
+- **Build history:** 0.997 169.86.
+- **Test:** Finish a hoist operation: the "everybody inside" line comes only after the arm is in and the door is closed.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1611,4 +1617,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.82:** The hoist that brings the doctor and the patient up again without waiting for a distance or the overhead switch, and the hangar greeting answered before the briefing (see The hoist brings the doctor and the patient up again).
 - **0.997 169.83:** The crew that no longer says it is too far after it has been dropped, the sides and the order of the calls in the search and rescue missions, the false sightings of the operator and the load patient button without a stray sign (see The crew no longer says it is too far after it has been dropped, Search and rescue: the crew sides and the order of the find calls, The load patient button has no stray sign and Search and rescue: false sightings).
 - **0.997 169.84:** The crew member who no longer vanishes after a landed pickup with four crew, and the police and the ambulance that leave the scene and the map once the patient is at the hospital (see The medical crew member no longer vanishes after a landed pickup and Police and ambulance leave when the patient is at the hospital).
-- **0.997 169.85 (this release):** The manual medical mode transport buttons, the scene vehicles that leave only 1 NM away, the pilot weight, the silent too far call after a hoist drop without heli rescuer, the doctor heads-up and the tablet message, the hospital call after the hoist and the skid landing heli rescuer (see Manual medical mode: the transport buttons work, The police and the ambulance stay until you are far away, The pilot weight is always on the helicopter, No too far call after a hoist drop without a heli rescuer, The doctor says the treatment is nearly done, The copilot calls the hospital only when the hoist is stowed and Skid landing: the heli rescuer walks out).
+- **0.997 169.85:** The manual medical mode transport buttons, the scene vehicles that leave only 1 NM away, the pilot weight, the silent too far call after a hoist drop without heli rescuer, the doctor heads-up and the tablet message, the hospital call after the hoist and the skid landing heli rescuer (see Manual medical mode: the transport buttons work, The police and the ambulance stay until you are far away, The pilot weight is always on the helicopter, No too far call after a hoist drop without a heli rescuer, The doctor says the treatment is nearly done, The copilot calls the hospital only when the hoist is stowed and Skid landing: the heli rescuer walks out).
+- **0.997 169.86 (this release):** The cabin confirmation that waits for the hoist to be stowed (see The cabin confirmation waits for the hoist).

@@ -277,4 +277,12 @@ const text = (value) => JSON.stringify(value);
   const ha = text(macros['voice hospital approach']);
   assert.ok(ha.indexOf('"wait_for":{"var":["L:HOISTED","number"]},"eq":1') > 0 && ha.indexOf('"wait_for":{"var":["L:HOISTED","number"]},"eq":1') < ha.indexOf('"HOS.CALL.{0}"'), 'the hospital call waits for the hoist to be stowed');
 }
+// 18. User 2026-10-28: L:H145_SDK_OH_HOIST is 1 with the hoist on and the arm extended; the "all aboard, door closed, hoist in" line waits for the door
+// and for that LVAR at 0, and is not said when one of them never arrives (checkpoint voice_inside_timeout)
+{
+  const vi = text(macros['voice hoist all inside']);
+  assert.ok(vi.includes('"var":["L:H145_SDK_OH_HOIST","number"]},"lt":0.5') && vi.includes('"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]},"lt":0.5'), 'the line waits for the door and for the hoist LVAR');
+  assert.ok(vi.includes('"id":"voice_inside_timeout"') && vi.includes('"id":"voice_inside_said"'), 'both outcomes leave a checkpoint');
+  assert.ok(vi.indexOf('"eq":99') > 0 && vi.indexOf('"eq":99') < vi.indexOf('<say:PAX1.INS>'), 'the line is said only when the wait ended with both conditions met');
+}
 console.log('flight report 2026-10-23: ok');
