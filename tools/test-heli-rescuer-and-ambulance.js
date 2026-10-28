@@ -108,7 +108,8 @@ if (fs.existsSync(packFile)) {
   for (const m of xml.matchAll(/<message\b([^>]*)>([\s\S]*?)<\/message>/g)) messages[(m[1].match(/\bkey="([^"]+)"/) || [])[1]] = { attrs: m[1], inner: m[2] };
   const keys = ['AMB.DEP.DSP', 'AMB.CAN.DSP', 'HRS.START', 'HRS.MID', 'HRS.DONE', 'HRD.PLT', 'HRD.HRT', 'HRD.BASE.Q', 'HRD.BASE.A',
     'HRQ.PLT.Q', 'HRQ.BASE.A', 'HRQ.BRF.ACC', 'HRQ.BRF.SAR', 'HRQ.BRF.TRF', 'HRQ.BRF.ORG', 'HRQ.BRF.INJ', 'HRQ.BASE.OK', 'HRQ.COR.PLT', 'HRQ.COR.A', 'HRQ.ARR.PLT', 'HRQ.ARR.A', 'DSP.NAME.MAN'];
-  for (const stage of ['ARR', 'DONE']) for (const s of ['S', 'M', 'C']) keys.push(`HST.${stage}.${s}`);
+  for (const stage of ['ARR', 'SOON', 'DONE']) for (const s of ['S', 'M', 'C']) keys.push(`HST.${stage}.${s}`);
+  keys.push('HRS.START.G');
   for (let i = 0; i < 16; i += 1) keys.push(`DSP.NAME.${i}`);
   for (const key of keys) {
     const msg = messages[key];

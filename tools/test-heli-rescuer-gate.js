@@ -44,7 +44,7 @@ const menuText = JSON.stringify(menu);
 const gateAt = menuText.indexOf('"call_macro":"heli rescuer aboard gate"');
 const firstModal = menuText.indexOf('"set_modal"');
 assert.ok(gateAt > 0 && gateAt < firstModal, 'the gate comes before the first modal of Return to base or continue menu');
-assert.ok(menuText.includes('"where":"hospital"') && menuText.includes('"result":"hrg_res"') && /"param":"hrg_res"\},"eq":"base","then":\[\{"return":0\}\]/.test(menuText), 'the menu stops when the user chose to fly home with the heli rescuer(s)');
+assert.ok(menuText.includes('"where":"hospital"') && menuText.includes('"result":"hrg_res"') && /"param":"hrg_res"\},"eq":"base","then":\[\{"call_macro":"scene responders release later"\},\{"return":0\}\]/.test(menuText), 'the menu stops when the user chose to fly home with the heli rescuer(s)');
 assert.ok(menuText.indexOf('crew hospital finish') < gateAt, 'the crew emergency of the hospital keeps its own flow');
 const rtb = JSON.stringify(macros['return to base']);
 const rtbGate = rtb.indexOf('"call_macro":"heli rescuer aboard gate"');

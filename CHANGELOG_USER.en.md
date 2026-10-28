@@ -1,10 +1,10 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.84. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.85. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
-The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.84, still need final simulator confirmation.
+The checks below are simulator checks. The changes recorded after build 142, up to and including 0.997 169.85, still need final simulator confirmation.
 
 ## FIXES
 
@@ -740,6 +740,48 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - When the patient has been delivered, the police with their car and the ambulance with its medic and stretcher are removed from the scene and from the map, whatever you choose next (end the mission, a new dispatch or return to base). They used to stay at the last scene, and the ambulance kept driving home.
 - **Build history:** 0.997 169.84.
 - **Test:** Deliver the patient at the hospital and choose return to base: the police, the police car and the ambulance are gone from the scene and from the map.
+
+### Manual medical mode: the transport buttons work
+
+- In manual medical mode, after COMPLETE VISIT the buttons HEMS PRIORITY and GROUND did nothing and the patient could not be sent to transport. They now act for patients 1 to 3.
+- **Build history:** 0.997 169.85.
+- **Test:** Treat a patient in manual medical mode, press COMPLETE VISIT, then HEMS PRIORITY or GROUND: the patient is assigned to the transport and the visit completes.
+
+### The police and the ambulance stay until you are far away
+
+- After you choose return to base or end the mission, the police, their car, the ambulance, the medic and the stretcher are removed only when you are more than 1 NM from the landing spot. A new dispatch still removes them at once.
+- **Build history:** 0.997 169.85.
+- **Test:** Deliver the patient, choose end mission and take off: the scene vehicles disappear only after you are more than 1 NM away.
+
+### The pilot weight is always on the helicopter
+
+- The weight of the pilot was missing from the payload stations when the pilot model was hidden by an option, so the weight and balance page showed no crew weight for the pilot. The pilot now counts for the whole flight, from the end of the boarding to the deboarding (or a crew emergency that takes the pilot out).
+- **Build history:** 0.997 169.85.
+- **Test:** Board and open the weight page: the pilot station carries the pilot weight, with or without the pilot model visible.
+
+### No "too far" call after a hoist drop without a heli rescuer
+
+- In a search and rescue or a hoist mission without a heli rescuer, the medical crew lowered by the hoist no longer say "we are still a bit too far" while you land away from them. The silence now starts with every hoist drop, as it already did with a heli rescuer.
+- **Build history:** 0.997 169.85.
+- **Test:** In a search and rescue mission, hoist the medical crew down, fly away and land a few hundred metres off: no "too far" call.
+
+### The doctor says the treatment is nearly done, the tablet follows
+
+- During hoist and skid operations the doctor now says that the treatment is nearly done and that the crew prepares the patient for the transport (new voice lines, English, German and French packs), instead of announcing "ready for pickup" too early. The patient is announced ready only when the crew has stabilised the patient. The tablet no longer keeps "Medic on ground, helicopter clear, free to leave hover": it reads "Medical team almost done, return to pick them up".
+- **Build history:** 0.997 169.85.
+- **Test:** Drop the medical crew by hoist or skid landing and wait: the doctor gives the heads-up and the tablet message changes; the ready line comes when the patient is stabilised.
+
+### The copilot calls the hospital only when the hoist is stowed
+
+- With the hospital close, the copilot used to call it while the patient was still on the cable and the hoist was working. In hoist and skid missions the call now waits until everybody is aboard and the hoist is stowed.
+- **Build history:** 0.997 169.85.
+- **Test:** Hoist a patient with the hospital less than 6 km away: no hospital call while the cable is out.
+
+### Skid landing: the heli rescuer walks out and the cabin confirmation waits for him
+
+- The heli rescuer of a skid landing no longer says "on the cable" (new voice line, no hoist is used). The rear crew no longer says that everybody is inside, the door is closed and the hoist is in while the heli rescuer is still walking outside, and it waits for the right door to be closed.
+- **Build history:** 0.997 169.85.
+- **Test:** Fly a four crew skid landing with a heli rescuer: he speaks about walking out, and the "everybody inside" line comes only after he is aboard and the door is closed.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1568,4 +1610,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.80-169.81:** The hoist-up line fix, the everybody-inside and door-closed confirmations, the causes of a stalled ground operation with the automatic snapshots at 120 and 300 seconds, and the death outcome of a dispatch (see Ground operations say what they are waiting for and A patient who dies ends the dispatch only when nobody is left).
 - **0.997 169.82:** The hoist that brings the doctor and the patient up again without waiting for a distance or the overhead switch, and the hangar greeting answered before the briefing (see The hoist brings the doctor and the patient up again).
 - **0.997 169.83:** The crew that no longer says it is too far after it has been dropped, the sides and the order of the calls in the search and rescue missions, the false sightings of the operator and the load patient button without a stray sign (see The crew no longer says it is too far after it has been dropped, Search and rescue: the crew sides and the order of the find calls, The load patient button has no stray sign and Search and rescue: false sightings).
-- **0.997 169.84 (this release):** The crew member who no longer vanishes after a landed pickup with four crew, and the police and the ambulance that leave the scene and the map once the patient is at the hospital (see The medical crew member no longer vanishes after a landed pickup and Police and ambulance leave when the patient is at the hospital).
+- **0.997 169.84:** The crew member who no longer vanishes after a landed pickup with four crew, and the police and the ambulance that leave the scene and the map once the patient is at the hospital (see The medical crew member no longer vanishes after a landed pickup and Police and ambulance leave when the patient is at the hospital).
+- **0.997 169.85 (this release):** The manual medical mode transport buttons, the scene vehicles that leave only 1 NM away, the pilot weight, the silent too far call after a hoist drop without heli rescuer, the doctor heads-up and the tablet message, the hospital call after the hoist and the skid landing heli rescuer (see Manual medical mode: the transport buttons work, The police and the ambulance stay until you are far away, The pilot weight is always on the helicopter, No too far call after a hoist drop without a heli rescuer, The doctor says the treatment is nearly done, The copilot calls the hospital only when the hoist is stowed and Skid landing: the heli rescuer walks out).

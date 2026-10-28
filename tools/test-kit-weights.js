@@ -23,10 +23,12 @@ class Sim {
     this.vars = {};
     this.seats({ copilot: 1, pilot: 1, pax1: 0, pax2: 0, stretcher: 0, pax3: 0 });
   }
-  // seat LVARs: IMPL_PILOT0/1 read 0 when the pilot/copilot is present, SDK_CABIN_PAX_n 1 when seated, PAX_5 2 with a patient
+  // seat LVARs: IMPL_PILOT1 reads 0 when the copilot is present, SDK_CABIN_PAX_n 1 when seated, PAX_5 2 with a patient.
+  // The pilot is the simmer: the mission flag PILOT_OUT (1 = outside); the pilot model LVAR IMPL_PILOT0 stays 1 (hidden by an option).
   seats({ copilot, pilot, pax1, pax2, stretcher, pax3 }) {
     this.vars['L:H145_IMPL_PILOT1'] = copilot ? 0 : 1;
-    this.vars['L:H145_IMPL_PILOT0'] = pilot ? 0 : 1;
+    this.locals.PILOT_OUT = pilot ? 0 : 1;
+    this.vars['L:H145_IMPL_PILOT0'] = 1;
     this.vars['L:H145_SDK_CABIN_PAX_1'] = pax1;
     this.vars['L:H145_SDK_CABIN_PAX_2'] = pax2;
     this.vars['L:H145_SDK_CABIN_PAX_5'] = stretcher;
@@ -160,8 +162,12 @@ assert.ok(thread.includes('"or":[') && thread.includes('"call_macro":"station we
 const recomputeText = text(macros['station weights recompute']);
 const targetText = text(macros['kit weights target']);
 const lvars = [...new Set([...(recomputeText + targetText).matchAll(/L:\{local:HXX\}_(\w+)/g)].map((m) => m[1]))];
-assert.ok(lvars.length >= 28, `the recompute reads the seat and kit LVARs (${lvars.length})`);
+assert.ok(lvars.length >= 27, `the recompute reads the seat and kit LVARs (${lvars.length})`);
 for (const lv of lvars) assert.ok(thread.includes(`L:{local:HXX}_${lv}`), `the thread watches ${lv}`);
+// the pilot is the simmer (PILOT_OUT), never the pilot model LVAR that an option can hide
+const withoutComments = text(macros['station weights recompute'].filter((c) => !c['#comment']));
+assert.ok(!withoutComments.includes('IMPL_PILOT0') && withoutComments.includes('"local":"PILOT_OUT"'), 'station 2 follows PILOT_OUT, not the pilot model');
+assert.ok(thread.includes('"wait_for":{"local":"PILOT_OUT"},"ne":{"local":"SW_P2"}'), 'the thread watches PILOT_OUT');
 assert.ok(thread.includes('"wait_for":{"global":"KIT_WEIGHTS"}') && [1, 2, 3, 4, 5, 6].every((n) => thread.includes(`"wait_for":{"global":"STATION_${n}"}`)), 'the thread watches the option and the crew weights');
 const readText = text(macros['station weights read']);
 for (const m of thread.matchAll(/"ne":\{"local":"(SW_\w+)"\}/g)) assert.ok(readText.includes(`"local":"${m[1]}"`), `${m[1]} is stored by station weights read`);

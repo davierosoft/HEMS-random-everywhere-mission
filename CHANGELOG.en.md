@@ -1,3 +1,8 @@
+## Release 0.997 169.85
+
+- Scope covers the unpublished changes since the 10-25 baseline carried by 169.79-169.84 plus 169.85
+- Manual transport buttons, delayed scene release, pilot weight, too far mute for hoist drops, doctor heads-up, hospital call after hoist, skid heli rescuer voice
+
 ## Release 0.997 169.84
 
 - Skid return seats the first rear passenger again, police and ambulance released at the hospital

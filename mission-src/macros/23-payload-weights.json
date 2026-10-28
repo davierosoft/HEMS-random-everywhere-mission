@@ -29,7 +29,11 @@
   "station weights read": [
     {"#comment":"Remembers what the thread STATION WEIGHTS compares: seat LVARs (SW_P1..6), crew weight settings (SW_S1..6), the option (SW_OPT) and the kit LVARs (SW_K1..22)."},
     {"set":{"local":"SW_P1"},"value":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]}},
-    {"set":{"local":"SW_P2"},"value":{"var":["L:{local:HXX}_IMPL_PILOT0","number"]}},
+    {"if": {"local":"PILOT_OUT"}, "eq": null,
+      "then": [
+        {"set":{"local":"PILOT_OUT"},"value":0}
+    ]},
+    {"set":{"local":"SW_P2"},"value":{"local":"PILOT_OUT"}},
     {"set":{"local":"SW_P3"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}},
     {"set":{"local":"SW_P4"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]}},
     {"set":{"local":"SW_P5"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]}},
@@ -86,7 +90,8 @@
     ]},
     {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"local":"sw_w"}},
     {"set":{"local":"sw_on"},"value":0},
-    {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
+    {"#comment":"Station 2 is the simmer: aboard unless PILOT_OUT is 1 (as the checklists do). The visible pilot model (IMPL_PILOT0) is not used because an option can hide it, which left this station at zero (tester report 2026-10-28: pilot and copilot aboard showed 0 kg crew)."},
+    {"if": {"local":"PILOT_OUT"}, "ne": 1,
       "then": [
         {"set":{"local":"sw_on"},"value":1}
     ]},

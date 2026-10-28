@@ -1097,8 +1097,75 @@
     {"set":{"var":["L:STAT_TOT","number"]},"value":{"var":["L:MISSION_TIME","number"]}},
     {"set":{"local":"HOIST_OUT"},"value":0},
     {"set":{"var":["L:READY","number"]},"value":0},
-    {"#comment":"The patient is at the hospital: the scene responders of this dispatch (police with car, ambulance with medic and stretcher) are released, so they leave the scene and the map whatever the user chooses next."},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"Return to base or continue menu","state":"police and ambulance removed"}},
+    {"#comment":"The scene responders (police with car, ambulance with medic and stretcher) are not removed here: they leave when the user accepts END MISSION or RETURN TO HOME BASE (macro scene responders release later), once the helicopter is more than 1 NM from the landing spot; RECEIVE NEW DISPATCH releases them at once."},
+    {"#comment":"A crew emergency is active (the user chose Divert, or Continue and then reached a hospital): the destination flow of the patient is over, the critical crew still aboard is handed over here and the helicopter returns to base. A destination with an ambulance meeting point (cambuchoice yes) is not a hospital stop: the crew goes on to the base."},
+    {"if": {
+      "and": [
+        {"require":{"local":"CREW_EMERGENCY_ACTIVE"},"eq":"yes"},
+        {"require":{"local":"cambuchoice"},"ne":"yes"}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"scene responders release later"},
+        {"call_macro":"crew hospital finish"},
+        {"return":0}
+    ]},
+    {"call_macro":"heli rescuer aboard gate","params":{"where":"hospital"},"result":"hrg_res"},
+    {"if": {"param":"hrg_res"}, "eq": "base",
+      "then": [
+        {"call_macro":"scene responders release later"},
+        {"return":0}
+    ]},
+    {"if": {"local":"LIFESCORE"}, "gt": 0,
+      "then": [
+        {"if": {"local":"player"}, "eq": "multiplayer",
+          "then": [
+            {"set_modal": {
+                "title": "Mission accomplished! WELL DONE!",
+                "text": "What do you want to do?",
+                "options": [
+                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
+                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
+              ]}
+            }
+          ],"else": [
+            {"set_modal": {
+                "title": "Mission accomplished! WELL DONE!",
+                "text": "What do you want to do now?",
+                "options": [
+                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:RTB","number"]},"value":0},{"set_dispatch_dialog":1},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
+                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
+                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
+              ]}
+            }
+        ]}
+    ]},
+    {"if": {"local":"LIFESCORE"}, "eq": 0,
+      "then": [
+        {"if": {"local":"player"}, "eq": "multiplayer",
+          "then": [
+            {"set_modal": {
+                "title": "Unfortunately we arrived too late!",
+                "text": "What do you want to do now?",
+                "options": [
+                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
+                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
+              ]}
+            }
+          ],"else": [
+            {"set_modal": {
+                "title": "Unfortunately we arrived too late!",
+                "text": "What do you want to do now?",
+                "options": [
+                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":9},{"sleep":0.2},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
+                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
+                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
+              ]}
+            }
+        ]}
+    ]}
+  ],
+  "scene responders release": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"scene responders release","state":"police and ambulance removed"}},
     {"if": {"has_object":"policeman"}, "eq": 1,
       "then": [
         {"destroy_object":"policeman"}
@@ -1126,70 +1193,15 @@
     {"if": {"has_object":"ambulance1"}, "eq": 1,
       "then": [
         {"destroy_object":"ambulance1"}
-    ]},
-    {"#comment":"A crew emergency is active (the user chose Divert, or Continue and then reached a hospital): the destination flow of the patient is over, the critical crew still aboard is handed over here and the helicopter returns to base. A destination with an ambulance meeting point (cambuchoice yes) is not a hospital stop: the crew goes on to the base."},
-    {"if": {
-      "and": [
-        {"require":{"local":"CREW_EMERGENCY_ACTIVE"},"eq":"yes"},
-        {"require":{"local":"cambuchoice"},"ne":"yes"}
-      ]}, "eq": 1,
-      "then": [
-        {"call_macro":"crew hospital finish"},
-        {"return":0}
-    ]},
-    {"call_macro":"heli rescuer aboard gate","params":{"where":"hospital"},"result":"hrg_res"},
-    {"if": {"param":"hrg_res"}, "eq": "base",
-      "then": [
-        {"return":0}
-    ]},
-    {"if": {"local":"LIFESCORE"}, "gt": 0,
-      "then": [
-        {"if": {"local":"player"}, "eq": "multiplayer",
-          "then": [
-            {"set_modal": {
-                "title": "Mission accomplished! WELL DONE!",
-                "text": "What do you want to do?",
-                "options": [
-                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
-                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
-              ]}
-            }
-          ],"else": [
-            {"set_modal": {
-                "title": "Mission accomplished! WELL DONE!",
-                "text": "What do you want to do now?",
-                "options": [
-                  {"text":"END MISSION","style":"primary","commands":[{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:RTB","number"]},"value":0},{"set_dispatch_dialog":1},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
-                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
-                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
-              ]}
-            }
-        ]}
-    ]},
-    {"if": {"local":"LIFESCORE"}, "eq": 0,
-      "then": [
-        {"if": {"local":"player"}, "eq": "multiplayer",
-          "then": [
-            {"set_modal": {
-                "title": "Unfortunately we arrived too late!",
-                "text": "What do you want to do now?",
-                "options": [
-                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
-                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
-              ]}
-            }
-          ],"else": [
-            {"set_modal": {
-                "title": "Unfortunately we arrived too late!",
-                "text": "What do you want to do now?",
-                "options": [
-                  {"text":"END MISSION","style":"primary","commands":[{"set":{"local":"MISSION_PHASE"},"value":9},{"sleep":0.2},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
-                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
-                  {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
-              ]}
-            }
-        ]}
     ]}
+  ],
+  "scene responders release later": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"scene responders release later","state":"waiting for 1 NM from the landing spot"}},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"location":"landing_spot","var":"distance"},"gt":1},
+        {"call_macro":"scene responders release"}
+    ]}}
   ],
   "paperwork": [
     {"if": {
@@ -1845,6 +1857,15 @@
     ]}
   ],
   "voice hoist visit": [
+    {"if": {
+      "and": [
+        {"require":{"param":"stage"},"eq":"SOON"},
+        {"require":{"var":["L:MISSION_HOIST","number"]},"ne":0}
+      ]}, "eq": 1,
+      "then": [
+        {"#comment":"Report MPR 2026-10-28: the doctor said 'ready for pickup' as soon as the treatment was done, when the team was only nearly ready, and the tablet still read 'Medic on ground, helicopter clear, free to leave hover'. Stage SOON (pack HST.SOON.*) is the heads-up: treatment nearly done, the crew prepares the patient; the tablet follows the visit, with or without the voice."},
+        {"set_message":{"text":"Medical team almost done, return to pick them up"}}
+    ]},
     {"#comment":"The doctor tells the visit of a patient during the hoist and skid operations (L:MISSION_HOIST not 0), where the progress monitor of the ground operations that feeds voice ground update does not run (user request of 2026-10-16: nothing was heard from the crew during the visits of the hoist operations). Params stage (ARR the doctor reached the patient, DONE the assessment and the treatment are complete) and patient (1 to 3); the key is HST.<stage>.<S|M|C> by the Life Score of that patient (60 or more stable, 30 to 60 serious, under 30 critical). Mission Companion only; the ground operations keep GRD.*."},
     {"if": {
       "and": [

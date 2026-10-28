@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.84",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.85",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.84"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.85"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -9578,10 +9578,11 @@
           {"wait_for":{"has_object":"jolly"},"eq":0}
         ]},
         {"sleep":2},
-        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_crew_go"}},
-        {"set":{"local":"too_far_mute"},"value":"yes"},
-        {"call_macro":"ground ops checkpoint","params":{"id":"too_far_mute","detail":"crew down, the too far callouts are off until the visit ends"}}
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_crew_go"}}
     ]},
+    {"#comment":"Report MPR 2026-10-28 (SAR, no heli rescuer): the mute was set only inside the heli rescuer branch above, so a crew dropped by the hoist alone still heard 'still a bit too far' on the approach to the intermittent landing. Set for every hoist drop."},
+    {"set":{"local":"too_far_mute"},"value":"yes"},
+    {"call_macro":"ground ops checkpoint","params":{"id":"too_far_mute","detail":"crew down, the too far callouts are off until the visit ends"}},
     {"sleep":[1,5]},
     {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":5,"vmax":7},"result":"cws_sp"},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
@@ -9727,7 +9728,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -11049,36 +11051,7 @@
     {"set":{"var":["L:STAT_TOT","number"]},"value":{"var":["L:MISSION_TIME","number"]}},
     {"set":{"local":"HOIST_OUT"},"value":0},
     {"set":{"var":["L:READY","number"]},"value":0},
-    {"#comment":"The patient is at the hospital: the scene responders of this dispatch (police with car, ambulance with medic and stretcher) are released, so they leave the scene and the map whatever the user chooses next."},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"Return to base or continue menu","state":"police and ambulance removed"}},
-    {"if": {"has_object":"policeman"}, "eq": 1,
-      "then": [
-        {"destroy_object":"policeman"}
-    ]},
-    {"if": {"has_object":"policeman2"}, "eq": 1,
-      "then": [
-        {"destroy_object":"policeman2"}
-    ]},
-    {"if": {"has_object":"police"}, "eq": 1,
-      "then": [
-        {"destroy_object":"police"}
-    ]},
-    {"if": {"has_object":"police7"}, "eq": 1,
-      "then": [
-        {"destroy_object":"police7"}
-    ]},
-    {"if": {"has_object":"ambumedic7"}, "eq": 1,
-      "then": [
-        {"destroy_object":"ambumedic7"}
-    ]},
-    {"if": {"has_object":"ambustretcher7"}, "eq": 1,
-      "then": [
-        {"destroy_object":"ambustretcher7"}
-    ]},
-    {"if": {"has_object":"ambulance1"}, "eq": 1,
-      "then": [
-        {"destroy_object":"ambulance1"}
-    ]},
+    {"#comment":"The scene responders (police with car, ambulance with medic and stretcher) are not removed here: they leave when the user accepts END MISSION or RETURN TO HOME BASE (macro scene responders release later), once the helicopter is more than 1 NM from the landing spot; RECEIVE NEW DISPATCH releases them at once."},
     {"#comment":"A crew emergency is active (the user chose Divert, or Continue and then reached a hospital): the destination flow of the patient is over, the critical crew still aboard is handed over here and the helicopter returns to base. A destination with an ambulance meeting point (cambuchoice yes) is not a hospital stop: the crew goes on to the base."},
     {"if": {
       "and": [
@@ -11086,12 +11059,14 @@
         {"require":{"local":"cambuchoice"},"ne":"yes"}
       ]}, "eq": 1,
       "then": [
+        {"call_macro":"scene responders release later"},
         {"call_macro":"crew hospital finish"},
         {"return":0}
     ]},
     {"call_macro":"heli rescuer aboard gate","params":{"where":"hospital"},"result":"hrg_res"},
     {"if": {"param":"hrg_res"}, "eq": "base",
       "then": [
+        {"call_macro":"scene responders release later"},
         {"return":0}
     ]},
     {"if": {"local":"LIFESCORE"}, "gt": 0,
@@ -11102,7 +11077,7 @@
                 "title": "Mission accomplished! WELL DONE!",
                 "text": "What do you want to do?",
                 "options": [
-                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
+                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
                   {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
               ]}
             }
@@ -11111,8 +11086,8 @@
                 "title": "Mission accomplished! WELL DONE!",
                 "text": "What do you want to do now?",
                 "options": [
-                  {"text":"END MISSION","style":"primary","commands":[{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:RTB","number"]},"value":0},{"set_dispatch_dialog":1},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
-                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
+                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:RTB","number"]},"value":0},{"set_dispatch_dialog":1},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
+                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
                   {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
               ]}
             }
@@ -11126,7 +11101,7 @@
                 "title": "Unfortunately we arrived too late!",
                 "text": "What do you want to do now?",
                 "options": [
-                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
+                  {"text":"WAIT FOR NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
                   {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
               ]}
             }
@@ -11135,8 +11110,8 @@
                 "title": "Unfortunately we arrived too late!",
                 "text": "What do you want to do now?",
                 "options": [
-                  {"text":"END MISSION","style":"primary","commands":[{"set":{"local":"MISSION_PHASE"},"value":9},{"sleep":0.2},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
-                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"shared repeated block 048"}]},
+                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":9},{"sleep":0.2},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
+                  {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
                   {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
               ]}
             }
@@ -24416,7 +24391,8 @@
         {"#comment":"Tester flight 2026-10-20: the line that set HOLDHOISTED to 0 here released the crew at the start of the heli rescuer, so the crew left and worked while he was still walking his points. As in the original, the crew waits (HOLDHOISTED 1) until the heli rescuer has secured the area; he releases it himself below, after the last point (LDWN). Test tools/test-hr-secures-first.js."},
         {"set_objective_title":"HR GROUND OPERATIONS IN PROGRESS","color":"yellow"},
         {"set_message":{"text":"Heli-rescuer is going to secure the area"}},
-        {"call_macro":"voice say","params":{"key":"HRS.START"}},
+        {"#comment":"Report MPR 2026-10-28: the ground version said 'on the cable'. HRS.START.G is the line of the heli rescuer who walks out of the cabin."},
+        {"call_macro":"voice say","params":{"key":"HRS.START.G"}},
         {"open_door":"pax_left"},
         {"sleep":2},
         {"move_object":"jolly","to":{"bearing":320,"dist":3.2,"heading":275}},
@@ -30976,7 +30952,8 @@
                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_or_wait_ok","detail":"[('wait_for':('local':'LIFESCORE'),'lt':0.5),('wait_for':('local':'SPO2'),'lt':80),('wait_"}},
                 {"if": {"local":"patientlife"}, "ne": "died",
                   "then": [
-                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+                    {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
                   ],"else": [
                     {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}},
                     {"if": {
@@ -32571,7 +32548,8 @@
                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_or_wait_ok","detail":"[('wait_for':('local':'LIFESCORE'),'lt':0.5),('wait_for':('local':'SPO2'),'lt':80),('wait_"}},
                 {"if": {"local":"patientlife"}, "ne": "died",
                   "then": [
-                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+                    {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
                   ],"else": [
                     {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
                 ]},
@@ -33951,7 +33929,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -34607,7 +34586,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -35219,7 +35199,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -54104,6 +54085,7 @@
     {"set":{"object":"VFXA","var":"COUPLED"},"value":0}
   ],
   "shared repeated block 046": [
+    {"call_macro":"scene responders release later"},
     {"set":{"local":"MISSION_PHASE"},"value":10},
     {"set":{"var":["L:RTB","number"]},"value":1},
     {"set_message":{"text":"LOADING..."}},
@@ -60397,7 +60379,7 @@
       "and": [
         {"require":{"local":"manual_active_patient"},"eq":1},
         {"require":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"eq":1},
-        {"require":{"local":"manual_p1_state"},"eq":"review"}
+        {"require":{"local":"manual_p1_state"},"eq":"transport"}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"manual_p1_transport_choice"},"value":{"param":"transport"}},
@@ -60411,7 +60393,7 @@
       "and": [
         {"require":{"local":"manual_active_patient"},"eq":2},
         {"require":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"eq":1},
-        {"require":{"local":"manual_p2_state"},"eq":"review"}
+        {"require":{"local":"manual_p2_state"},"eq":"transport"}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"manual_p2_transport_choice"},"value":{"param":"transport"}},
@@ -60425,7 +60407,7 @@
       "and": [
         {"require":{"local":"manual_active_patient"},"eq":3},
         {"require":{"local":"P3_MEDICAL_ACTIONS_COMPLETED"},"eq":1},
-        {"require":{"local":"manual_p3_state"},"eq":"review"}
+        {"require":{"local":"manual_p3_state"},"eq":"transport"}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"manual_p3_transport_choice"},"value":{"param":"transport"}},
@@ -65876,7 +65858,7 @@
             {"call_macro":"multipatient registry crew clinical completion","params":{"patient":{"param":"patient"},"resource":{"param":"resource"},"generation":{"param":"generation"}},"result":"assessment"},
             {"if": {"param":"resource"}, "eq": "hems",
               "then": [
-                {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"param":"patient"}}}
+                {"call_macro":"voice hoist visit","params":{"stage":"SOON","patient":{"param":"patient"}}}
             ]}
         ]},
         {"if": {"param":"resource"}, "eq": "hems",
@@ -86213,7 +86195,11 @@
   "station weights read": [
     {"#comment":"Remembers what the thread STATION WEIGHTS compares: seat LVARs (SW_P1..6), crew weight settings (SW_S1..6), the option (SW_OPT) and the kit LVARs (SW_K1..22)."},
     {"set":{"local":"SW_P1"},"value":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]}},
-    {"set":{"local":"SW_P2"},"value":{"var":["L:{local:HXX}_IMPL_PILOT0","number"]}},
+    {"if": {"local":"PILOT_OUT"}, "eq": null,
+      "then": [
+        {"set":{"local":"PILOT_OUT"},"value":0}
+    ]},
+    {"set":{"local":"SW_P2"},"value":{"local":"PILOT_OUT"}},
     {"set":{"local":"SW_P3"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}},
     {"set":{"local":"SW_P4"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]}},
     {"set":{"local":"SW_P5"},"value":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]}},
@@ -86270,7 +86256,8 @@
     ]},
     {"set":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"value":{"local":"sw_w"}},
     {"set":{"local":"sw_on"},"value":0},
-    {"if": {"var":["L:{local:HXX}_IMPL_PILOT0","number"]}, "eq": 0,
+    {"#comment":"Station 2 is the simmer: aboard unless PILOT_OUT is 1 (as the checklists do). The visible pilot model (IMPL_PILOT0) is not used because an option can hide it, which left this station at zero (tester report 2026-10-28: pilot and copilot aboard showed 0 kg crew)."},
+    {"if": {"local":"PILOT_OUT"}, "ne": 1,
       "then": [
         {"set":{"local":"sw_on"},"value":1}
     ]},
@@ -87391,6 +87378,11 @@
               "then": [
                 {"set":{"local":"vha_r"},"value":{"floor":{"rand":[3500,6501]}}},
                 {"wait_for":{"location":"hospital_user","var":"distance:m","to":"$USER"},"lte":{"local":"vha_r"}},
+                {"#comment":"Report MPR 2026-10-28 (SAR, hospital close): the call came while the patient was still on the cable and the copilot was working the hoist. With hoist or skid operations (L:MISSION_HOIST not 0) the call waits until everybody is aboard and the hoist is stowed (L:HOISTED 1)."},
+                {"if": {"var":["L:MISSION_HOIST","number"]}, "ne": 0,
+                  "then": [
+                    {"wait_for":{"var":["L:HOISTED","number"]},"eq":1}
+                ]},
                 {"set":{"local":"vha_k"},"value":"P"},
                 {"set":{"local":"vha_rk"},"value":"HOS.REPLY"},
                 {"if": {"local":"LIFESCORE"}, "lte": 0,
@@ -89061,6 +89053,15 @@
     ]}
   ],
   "voice hoist visit": [
+    {"if": {
+      "and": [
+        {"require":{"param":"stage"},"eq":"SOON"},
+        {"require":{"var":["L:MISSION_HOIST","number"]},"ne":0}
+      ]}, "eq": 1,
+      "then": [
+        {"#comment":"Report MPR 2026-10-28: the doctor said 'ready for pickup' as soon as the treatment was done, when the team was only nearly ready, and the tablet still read 'Medic on ground, helicopter clear, free to leave hover'. Stage SOON (pack HST.SOON.*) is the heads-up: treatment nearly done, the crew prepares the patient; the tablet follows the visit, with or without the voice."},
+        {"set_message":{"text":"Medical team almost done, return to pick them up"}}
+    ]},
     {"#comment":"The doctor tells the visit of a patient during the hoist and skid operations (L:MISSION_HOIST not 0), where the progress monitor of the ground operations that feeds voice ground update does not run (user request of 2026-10-16: nothing was heard from the crew during the visits of the hoist operations). Params stage (ARR the doctor reached the patient, DONE the assessment and the treatment are complete) and patient (1 to 3); the key is HST.<stage>.<S|M|C> by the Life Score of that patient (60 or more stable, 30 to 60 serious, under 30 critical). Mission Companion only; the ground operations keep GRD.*."},
     {"if": {
       "and": [
@@ -94244,7 +94245,27 @@
         {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
         {"return":0}
     ]},
-    {"speak":"<actor4><say:PAX1.INS>"}
+    {"#comment":"Report MPR 2026-10-28 (skid, 4 crew, 1 heli rescuer): 'all aboard, door closed, hoist in' was said while the heli rescuer was still walking on the ground (object jolly exists) and the door was open. Said only when no heli rescuer is outside."},
+    {"if": {"has_object":"jolly"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"#comment":"The line also says the door is closed: wait up to 25 s for the right passenger door LVAR (SDK_DOOR_PAX_R, 0 closed) before saying it. The hoist and boom position has no readable LVAR: the callers call this after the stow function (HOIST_REEL_UP_AND_STOW) answered."},
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"vhi_w"},"value":0},
+        {"while": {"local":"vhi_w"}, "lt": 25,
+          "do": [
+            {"if": {"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]}, "lt": 0.5,
+              "then": [
+                {"set":{"local":"vhi_w"},"value":99}
+              ],"else": [
+                {"sleep":1},
+                {"set":{"local":"vhi_w"},"value":{"add":[{"local":"vhi_w"},1]}}
+            ]}
+        ]},
+        {"speak":"<actor4><say:PAX1.INS>"}
+    ]}}
   ],
   "voice crew out clear": [
     {"#comment":"A crew member stays on the ground (the medic travels with the ambulance or goes to the patient, the heli rescuers are dropped): once the doors are closed, the hook is in and the boom retracted, the rear crew tells the pilot that he is clear to leave the hover (pack PAX1.OUT; user request of 2026-10-25). Without the Mission Companion the old line PAX1.18 is played."},
@@ -94581,6 +94602,45 @@
             ]}
         ]}
     ]}
+  ],
+  "scene responders release": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"scene responders release","state":"police and ambulance removed"}},
+    {"if": {"has_object":"policeman"}, "eq": 1,
+      "then": [
+        {"destroy_object":"policeman"}
+    ]},
+    {"if": {"has_object":"policeman2"}, "eq": 1,
+      "then": [
+        {"destroy_object":"policeman2"}
+    ]},
+    {"if": {"has_object":"police"}, "eq": 1,
+      "then": [
+        {"destroy_object":"police"}
+    ]},
+    {"if": {"has_object":"police7"}, "eq": 1,
+      "then": [
+        {"destroy_object":"police7"}
+    ]},
+    {"if": {"has_object":"ambumedic7"}, "eq": 1,
+      "then": [
+        {"destroy_object":"ambumedic7"}
+    ]},
+    {"if": {"has_object":"ambustretcher7"}, "eq": 1,
+      "then": [
+        {"destroy_object":"ambustretcher7"}
+    ]},
+    {"if": {"has_object":"ambulance1"}, "eq": 1,
+      "then": [
+        {"destroy_object":"ambulance1"}
+    ]}
+  ],
+  "scene responders release later": [
+    {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"scene responders release later","state":"waiting for 1 NM from the landing spot"}},
+    {"create_thread": {
+      "commands": [
+        {"wait_for":{"location":"landing_spot","var":"distance"},"gt":1},
+        {"call_macro":"scene responders release"}
+    ]}}
   ]
 },
 
@@ -141228,7 +141288,7 @@
         {"call_macro":"station weights recompute"},
         {"while": 1, "gt": 0,
           "do": [
-            {"or":[{"wait_for":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]},"ne":{"local":"SW_P1"}},{"wait_for":{"var":["L:{local:HXX}_IMPL_PILOT0","number"]},"ne":{"local":"SW_P2"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]},"ne":{"local":"SW_P3"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]},"ne":{"local":"SW_P4"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]},"ne":{"local":"SW_P5"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]},"ne":{"local":"SW_P6"}},{"wait_for":{"global":"STATION_1"},"ne":{"local":"SW_S1"}},{"wait_for":{"global":"STATION_2"},"ne":{"local":"SW_S2"}},{"wait_for":{"global":"STATION_3"},"ne":{"local":"SW_S3"}},{"wait_for":{"global":"STATION_4"},"ne":{"local":"SW_S4"}},{"wait_for":{"global":"STATION_5"},"ne":{"local":"SW_S5"}},{"wait_for":{"global":"STATION_6"},"ne":{"local":"SW_S6"}},{"wait_for":{"global":"KIT_WEIGHTS"},"ne":{"local":"SW_OPT"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HISL","number"]},"ne":{"local":"SW_K1"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]},"ne":{"local":"SW_K2"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_CAPS","number"]},"ne":{"local":"SW_K3"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_RADOME","number"]},"ne":{"local":"SW_K4"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_TOP","number"]},"ne":{"local":"SW_K5"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_BOTTOM","number"]},"ne":{"local":"SW_K6"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_SKID","number"]},"ne":{"local":"SW_K7"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SKI","number"]},"ne":{"local":"SW_K8"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SETTLING_PREVENTERS","number"]},"ne":{"local":"SW_K9"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_LONG","number"]},"ne":{"local":"SW_K10"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_EMERGENCY_FLOATS","number"]},"ne":{"local":"SW_K11"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_IBF_INSTALLED","number"]},"ne":{"local":"SW_K12"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_AIRCONDITIONING","number"]},"ne":{"local":"SW_K13"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_ADELT","number"]},"ne":{"local":"SW_K14"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_ACAS","number"]},"ne":{"local":"SW_K15"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HTAWS","number"]},"ne":{"local":"SW_K16"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HMD","number"]},"ne":{"local":"SW_K17"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_FUELFLOWSENSOR","number"]},"ne":{"local":"SW_K18"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SECOND_LANDING_LIGHT","number"]},"ne":{"local":"SW_K19"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_CHIN_WINDOW_PLATES","number"]},"ne":{"local":"SW_K20"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_COCKPIT_SUN_VISORS","number"]},"ne":{"local":"SW_K21"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_COCKPIT_FABRIC_GLARESHIELDS","number"]},"ne":{"local":"SW_K22"}}],"eq":1},
+            {"or":[{"wait_for":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]},"ne":{"local":"SW_P1"}},{"wait_for":{"local":"PILOT_OUT"},"ne":{"local":"SW_P2"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]},"ne":{"local":"SW_P3"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]},"ne":{"local":"SW_P4"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]},"ne":{"local":"SW_P5"}},{"wait_for":{"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]},"ne":{"local":"SW_P6"}},{"wait_for":{"global":"STATION_1"},"ne":{"local":"SW_S1"}},{"wait_for":{"global":"STATION_2"},"ne":{"local":"SW_S2"}},{"wait_for":{"global":"STATION_3"},"ne":{"local":"SW_S3"}},{"wait_for":{"global":"STATION_4"},"ne":{"local":"SW_S4"}},{"wait_for":{"global":"STATION_5"},"ne":{"local":"SW_S5"}},{"wait_for":{"global":"STATION_6"},"ne":{"local":"SW_S6"}},{"wait_for":{"global":"KIT_WEIGHTS"},"ne":{"local":"SW_OPT"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HISL","number"]},"ne":{"local":"SW_K1"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HOIST","number"]},"ne":{"local":"SW_K2"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_CAPS","number"]},"ne":{"local":"SW_K3"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_RADOME","number"]},"ne":{"local":"SW_K4"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_TOP","number"]},"ne":{"local":"SW_K5"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_BOTTOM","number"]},"ne":{"local":"SW_K6"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_WSPS_SKID","number"]},"ne":{"local":"SW_K7"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SKI","number"]},"ne":{"local":"SW_K8"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_SETTLING_PREVENTERS","number"]},"ne":{"local":"SW_K9"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SKID_LONG","number"]},"ne":{"local":"SW_K10"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_EMERGENCY_FLOATS","number"]},"ne":{"local":"SW_K11"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_IBF_INSTALLED","number"]},"ne":{"local":"SW_K12"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_AIRCONDITIONING","number"]},"ne":{"local":"SW_K13"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_ADELT","number"]},"ne":{"local":"SW_K14"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_ACAS","number"]},"ne":{"local":"SW_K15"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HTAWS","number"]},"ne":{"local":"SW_K16"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_HMD","number"]},"ne":{"local":"SW_K17"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_FUELFLOWSENSOR","number"]},"ne":{"local":"SW_K18"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_SECOND_LANDING_LIGHT","number"]},"ne":{"local":"SW_K19"}},{"wait_for":{"var":["L:{local:HXX}_SDK_EQUIP_CHIN_WINDOW_PLATES","number"]},"ne":{"local":"SW_K20"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_COCKPIT_SUN_VISORS","number"]},"ne":{"local":"SW_K21"}},{"wait_for":{"var":["L:{local:HXX}_PERSIST_COCKPIT_FABRIC_GLARESHIELDS","number"]},"ne":{"local":"SW_K22"}}],"eq":1},
             {"call_macro":"station weights read"},
             {"call_macro":"station weights recompute"},
             {"sleep":0.5}

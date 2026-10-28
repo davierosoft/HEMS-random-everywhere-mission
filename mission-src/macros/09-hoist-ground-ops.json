@@ -579,10 +579,11 @@
           {"wait_for":{"has_object":"jolly"},"eq":0}
         ]},
         {"sleep":2},
-        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_crew_go"}},
-        {"set":{"local":"too_far_mute"},"value":"yes"},
-        {"call_macro":"ground ops checkpoint","params":{"id":"too_far_mute","detail":"crew down, the too far callouts are off until the visit ends"}}
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_crew_go"}}
     ]},
+    {"#comment":"Report MPR 2026-10-28 (SAR, no heli rescuer): the mute was set only inside the heli rescuer branch above, so a crew dropped by the hoist alone still heard 'still a bit too far' on the approach to the intermittent landing. Set for every hoist drop."},
+    {"set":{"local":"too_far_mute"},"value":"yes"},
+    {"call_macro":"ground ops checkpoint","params":{"id":"too_far_mute","detail":"crew down, the too far callouts are off until the visit ends"}},
     {"sleep":[1,5]},
     {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":5,"vmax":7},"result":"cws_sp"},
     {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
@@ -728,7 +729,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -3214,7 +3216,8 @@
         {"#comment":"Tester flight 2026-10-20: the line that set HOLDHOISTED to 0 here released the crew at the start of the heli rescuer, so the crew left and worked while he was still walking his points. As in the original, the crew waits (HOLDHOISTED 1) until the heli rescuer has secured the area; he releases it himself below, after the last point (LDWN). Test tools/test-hr-secures-first.js."},
         {"set_objective_title":"HR GROUND OPERATIONS IN PROGRESS","color":"yellow"},
         {"set_message":{"text":"Heli-rescuer is going to secure the area"}},
-        {"call_macro":"voice say","params":{"key":"HRS.START"}},
+        {"#comment":"Report MPR 2026-10-28: the ground version said 'on the cable'. HRS.START.G is the line of the heli rescuer who walks out of the cabin."},
+        {"call_macro":"voice say","params":{"key":"HRS.START.G"}},
         {"open_door":"pax_left"},
         {"sleep":2},
         {"move_object":"jolly","to":{"bearing":320,"dist":3.2,"heading":275}},
@@ -5244,7 +5247,8 @@
                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_or_wait_ok","detail":"[('wait_for':('local':'LIFESCORE'),'lt':0.5),('wait_for':('local':'SPO2'),'lt':80),('wait_"}},
                 {"if": {"local":"patientlife"}, "ne": "died",
                   "then": [
-                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+                    {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
                   ],"else": [
                     {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}},
                     {"if": {
@@ -6729,7 +6733,8 @@
                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_or_wait_ok","detail":"[('wait_for':('local':'LIFESCORE'),'lt':0.5),('wait_for':('local':'SPO2'),'lt':80),('wait_"}},
                 {"if": {"local":"patientlife"}, "ne": "died",
                   "then": [
-                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+                    {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+                    {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
                   ],"else": [
                     {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
                 ]},
@@ -8293,7 +8298,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -8949,7 +8955,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},
@@ -9561,7 +9568,8 @@
     ]},
     {"if": {"local":"patientlife"}, "ne": "died",
       "then": [
-        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"}
+        {"set":{"local":"patientmessages"},"value":"Patient has been stabilized for transport"},
+        {"call_macro":"voice hoist visit","params":{"stage":"DONE","patient":{"local":"HEMS_PATIENT_NUMBER"}}}
       ],"else": [
         {"set":{"local":"patientmessages"},"value":{"text":"Patient {0} deceased, time logged.","params":[{"local":"patientid"}]}}
     ]},

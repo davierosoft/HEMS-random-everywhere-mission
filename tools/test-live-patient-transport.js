@@ -173,7 +173,7 @@ for (const resource of ['ambulance1', 'ambulance2']) for (const mode of ['far', 
   const h = new Live(); h.locals.manual_active_patient = 2; h.locals.manual_p2_state = 'in_progress';
   h.call('complete manual patient visit', {transport: 'helicopter'});
   assert.notEqual(h.locals.manual_p2_visit_completed, 'yes', 'Async treatment must finish before manual confirmation');
-  h.locals.P2_MEDICAL_ACTIONS_COMPLETED = 1; h.locals.manual_p2_state = 'review';
+  h.locals.P2_MEDICAL_ACTIONS_COMPLETED = 1; h.locals.manual_p2_state = 'transport'; // COMPLETE VISIT (advance manual patient visit) sets "transport"; the transport buttons act in that state
   h.call('complete manual patient visit', {transport: 'helicopter'});
   assert.equal(h.locals.manual_p2_visit_completed, 'yes');
 }
@@ -270,6 +270,7 @@ for (const slot of [1, 2, 3]) {
     assert.equal(h.locals[`P${slot}_AMBULANCE_COMPLETED_ACTIONS`], step);
   }
   assert.equal(h.locals[`P${slot}_MEDICAL_ACTIONS_COMPLETED`], 1);
+  h.locals[`manual_p${slot}_state`] = 'transport'; // COMPLETE VISIT has been pressed: the transport buttons act in this state
   h.call('complete manual patient visit', {transport: 'helicopter'});
   assert.equal(h.locals[`manual_p${slot}_visit_completed`], 'yes');
   assert.deepEqual(Array.from(h.events.filter(x => x[0] === 'effect'), x => x[2]), [3, 4], 'Manual handover must not repeat completed actions');

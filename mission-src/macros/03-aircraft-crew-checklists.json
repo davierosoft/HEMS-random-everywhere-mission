@@ -2496,7 +2496,27 @@
         {"set":{"var":["L:{local:VCP}18","number"]},"value":{"add":[{"var":["L:{local:VCP}18","number"]},1]}},
         {"return":0}
     ]},
-    {"speak":"<actor4><say:PAX1.INS>"}
+    {"#comment":"Report MPR 2026-10-28 (skid, 4 crew, 1 heli rescuer): 'all aboard, door closed, hoist in' was said while the heli rescuer was still walking on the ground (object jolly exists) and the door was open. Said only when no heli rescuer is outside."},
+    {"if": {"has_object":"jolly"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"#comment":"The line also says the door is closed: wait up to 25 s for the right passenger door LVAR (SDK_DOOR_PAX_R, 0 closed) before saying it. The hoist and boom position has no readable LVAR: the callers call this after the stow function (HOIST_REEL_UP_AND_STOW) answered."},
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"vhi_w"},"value":0},
+        {"while": {"local":"vhi_w"}, "lt": 25,
+          "do": [
+            {"if": {"var":["L:{local:HXX}_SDK_DOOR_PAX_R","number"]}, "lt": 0.5,
+              "then": [
+                {"set":{"local":"vhi_w"},"value":99}
+              ],"else": [
+                {"sleep":1},
+                {"set":{"local":"vhi_w"},"value":{"add":[{"local":"vhi_w"},1]}}
+            ]}
+        ]},
+        {"speak":"<actor4><say:PAX1.INS>"}
+    ]}}
   ],
   "voice crew out clear": [
     {"#comment":"A crew member stays on the ground (the medic travels with the ambulance or goes to the patient, the heli rescuers are dropped): once the doors are closed, the hook is in and the boom retracted, the rear crew tells the pilot that he is clear to leave the hover (pack PAX1.OUT; user request of 2026-10-25). Without the Mission Companion the old line PAX1.18 is played."},
@@ -4060,6 +4080,11 @@
               "then": [
                 {"set":{"local":"vha_r"},"value":{"floor":{"rand":[3500,6501]}}},
                 {"wait_for":{"location":"hospital_user","var":"distance:m","to":"$USER"},"lte":{"local":"vha_r"}},
+                {"#comment":"Report MPR 2026-10-28 (SAR, hospital close): the call came while the patient was still on the cable and the copilot was working the hoist. With hoist or skid operations (L:MISSION_HOIST not 0) the call waits until everybody is aboard and the hoist is stowed (L:HOISTED 1)."},
+                {"if": {"var":["L:MISSION_HOIST","number"]}, "ne": 0,
+                  "then": [
+                    {"wait_for":{"var":["L:HOISTED","number"]},"eq":1}
+                ]},
                 {"set":{"local":"vha_k"},"value":"P"},
                 {"set":{"local":"vha_rk"},"value":"HOS.REPLY"},
                 {"if": {"local":"LIFESCORE"}, "lte": 0,

@@ -9,7 +9,7 @@ Station weight = the person (global `STATION_n`, 90 kg by default) if the seat s
 | Station | Seat | Presence |
 | ---: | --- | --- |
 | 1 | copilot, cockpit left | `IMPL_PILOT1` = 0 |
-| 2 | pilot, cockpit right | `IMPL_PILOT0` = 0 |
+| 2 | pilot (the simmer), cockpit right | mission flag `PILOT_OUT` is not 1 (aboard from the end of the boarding to the deboarding); the pilot model `IMPL_PILOT0` is not used because an option can hide it |
 | 3 | PAX 1, front cabin left | `SDK_CABIN_PAX_1` = 1 |
 | 4 | PAX 2, front cabin right | `SDK_CABIN_PAX_2` = 1 |
 | 5 | stretcher with patient | `SDK_CABIN_PAX_5` = 2 (1 is an empty stretcher: no weight) |

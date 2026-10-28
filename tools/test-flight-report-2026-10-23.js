@@ -239,9 +239,42 @@ const text = (value) => JSON.stringify(value);
   const at = t15.indexOf('"call_macro":"set station weight","params":{"station":3,"occupied":1}},{"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW"');
   assert.ok(at > 0, 'landed return of the 4 crew skid operation found');
   assert.ok(t15.slice(Math.max(0, at - 90), at).includes('{"trigger":["H:{local:HXX}_SDK_PAX_1_ON"]}'), 'the landed return seats the first rear passenger again');
-  const rb = text(macros['Return to base or continue menu']);
+  const rel = text(macros['scene responders release']);
   for (const name of ['policeman', 'policeman2', 'police', 'police7', 'ambumedic7', 'ambustretcher7', 'ambulance1']) {
-    assert.ok(rb.includes('{"if":{"has_object":"' + name + '"},"eq":1,"then":[{"destroy_object":"' + name + '"}]}'), name + ' is removed when the patient is at the hospital');
+    assert.ok(rel.includes('{"if":{"has_object":"' + name + '"},"eq":1,"then":[{"destroy_object":"' + name + '"}]}'), name + ' is removed by the scene release');
   }
-  assert.ok(rb.indexOf('"destroy_object":"police"') < rb.indexOf('"call_macro":"crew hospital finish"'), 'the release comes before every choice of the menu');
-}console.log('flight report 2026-10-23: ok');
+  // user rule 2026-10-28: the responders leave only after END MISSION / RETURN TO HOME BASE and more than 1 NM from the landing spot
+  const later = text(macros['scene responders release later']);
+  assert.ok(later.includes('"wait_for":{"location":"landing_spot","var":"distance"},"gt":1') && later.includes('"call_macro":"scene responders release"'), 'the delayed release waits for 1 NM from the landing spot');
+  const rb = text(macros['Return to base or continue menu']);
+  assert.ok(!rb.includes('"destroy_object"'), 'the menu itself no longer destroys the responders');
+  assert.strictEqual((rb.match(/"call_macro":"scene responders release later"/g) || []).length >= 3, true, 'END MISSION (both menus) and the crew-emergency return use the delayed release');
+  assert.ok(rb.includes('{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}'), 'a new dispatch releases at once');
+  assert.ok(text(macros['shared repeated block 046']).includes('"scene responders release later"'), 'RETURN TO HOME BASE uses the delayed release');
+}
+// 16. Dr.DougRoss report 2026-10-28: in manual mode the HEMS PRIORITY / GROUND buttons (shown in state "transport", after COMPLETE VISIT) did nothing,
+// because "complete manual patient visit" still required the state "review"
+{
+  const cm = text(macros['complete manual patient visit']);
+  for (const p of [1, 2, 3]) {
+    assert.ok(cm.includes('{"require":{"local":"manual_p' + p + '_state"},"eq":"transport"}'), 'patient ' + p + ' transport buttons act in the transport state');
+    assert.ok(!cm.includes('{"require":{"local":"manual_p' + p + '_state"},"eq":"review"}'), 'patient ' + p + ' no longer needs the review state');
+  }
+}
+// 17. MPR report 2026-10-28 (SAR, crew dropped by the hoist without a heli rescuer): the too far mute is set for every hoist drop, not only
+// inside the heli rescuer branch; the tablet follows "patient ready for pickup"
+{
+  const hg = text(macros['HOISTING']);
+  const at = hg.indexOf('"id":"hoist_crew_go"');
+  assert.ok(at > 0, 'hoist_crew_go checkpoint found');
+  const mute = hg.indexOf('{"set":{"local":"too_far_mute"},"value":"yes"}');
+  assert.ok(mute > at, 'too_far_mute is set after the heli rescuer branch');
+  assert.ok(hg.slice(at, mute).includes('{"if":{"local":"HELIRESCUER_BOARDED"}') === false, 'the mute is not inside the HELIRESCUER_BOARDED branch');
+  const hv = text(macros['voice hoist visit']);
+  assert.ok(hv.includes('"eq":"SOON"') && hv.includes('{"set_message":{"text":"Medical team almost done, return to pick them up"}}'), 'the tablet message follows the SOON stage');
+  assert.ok(text(macros['multipatient registry crew visit'] || macros[Object.keys(macros).find((k) => text(macros[k]).includes('"call_macro":"voice hoist visit"'))]).includes('"stage":"SOON"'), 'the clinical completion says the heads-up (SOON)');
+  assert.ok(text(macros['gnd ops heli rescuer down']).includes('"key":"HRS.START.G"'), 'the ground heli rescuer does not say "on the cable"');
+  const ha = text(macros['voice hospital approach']);
+  assert.ok(ha.indexOf('"wait_for":{"var":["L:HOISTED","number"]},"eq":1') > 0 && ha.indexOf('"wait_for":{"var":["L:HOISTED","number"]},"eq":1') < ha.indexOf('"HOS.CALL.{0}"'), 'the hospital call waits for the hoist to be stowed');
+}
+console.log('flight report 2026-10-23: ok');
