@@ -12,7 +12,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `DEVELOPMENT_RELEASE_CHECKLIST.md` | Blocking HPG syntax, state, subsystem, and release constraints. |
 | `CHANGELOG.en.md` | Canonical technical release history. |
 | `CHANGELOG_USER.en.md` | Public-facing changelog; update only on explicit request. |
-| `sound/` | Packaged WAV assets; names are runtime identifiers. |
+| `basepack/` | Sound content of the mission pack in the pack folder structure (`Simobjects/Airplanes/<model>/Sound` or `Soundai`): all wav files and `sound.xml` / `soundai.xml` of mission 0.997, the newest file wins; names are runtime identifiers. The Mission Companion installs missing wav files and entries from here. See `basepack/README.md`. |
 | `docs/` | Durable architecture, testing, and renderer references. |
 | `docs/architecture/DEVELOPMENT_WORKFLOW.md` | Development checkpoints, CI, PR delivery, and validated-release boundaries. |
 | `docs/testing/VALIDATION_STATUS.md` | Current artifact identity, confirmed evidence, and pending simulator sign-off. |
