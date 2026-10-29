@@ -8,7 +8,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | --- | --- |
 | `everywhere_all.json` | Generated HPG deployment artifact. Contains metadata, macros, tables, threads, locations, objectives, briefing, and embedded icons. Do not edit directly. |
 | `mission-src/` | Editable modular source for every root section of the artifact: `macros`, `data`, `threads`, `icons` and the remaining root keys (`root`). |
-| `train.json` | Companion/custom loader with its own executable and renderer contract. |
+| `train.json` | Custom mission script: sets the `CUS_*` variables and objects, then loads the mission. Incident list kept aligned by `tools/sync-train-accidents.js`; contract and audit in `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`. |
 | `DEVELOPMENT_RELEASE_CHECKLIST.md` | Blocking HPG syntax, state, subsystem, and release constraints. |
 | `CHANGELOG.en.md` | Canonical technical release history. |
 | `CHANGELOG_USER.en.md` | Public-facing changelog; update only on explicit request. |
