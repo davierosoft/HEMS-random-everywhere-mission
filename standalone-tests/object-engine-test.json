@@ -11,6 +11,7 @@
         {"set":{"local":"t_ping"},"value":0},
         {"set":{"local":"t_lon"},"value":14.1713},
         {"set":{"local":"t_i"},"value":0},
+        {"set":{"local":"t_dist"},"value":"n/a"},
         {"set":{"local":"t_err"},"value":""},
         {"set":{"local":"t_errn"},"value":0},
         {"set":{"local":"t_fbn"},"value":0},
@@ -30,6 +31,7 @@
         {"set":{"local":"t_res_12"},"value":"TEST 12 not run"},
         {"set":{"local":"t_res_13"},"value":"TEST 13 not run"},
         {"set":{"local":"t_res_14"},"value":"TEST 14 not run"},
+        {"set":{"local":"t_res_15"},"value":"TEST 15 not run"},
         {"set_briefing_dialog":1},
         {"wait_for":1,"lt":0}
       ]
@@ -187,6 +189,7 @@
     ],
     "oe reset": [
       {"set":{"local":"t_i"},"value":0},
+      {"set":{"local":"t_dist"},"value":"n/a"},
       {"set":{"local":"t_err"},"value":""},
       {"set":{"local":"t_errn"},"value":0},
       {"set":{"local":"t_fbn"},"value":0},
@@ -201,8 +204,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_1"},"value":{"text":"TEST 1 (LOCATIONS ONLY (name TL{local:i})): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_1"},"value":{"text":"TEST 1 (LOCATIONS ONLY (name TL{local:i})): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 2": [
       {"call_macro":"oe cleanup"},
@@ -211,8 +215,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"create_object":{"name":"TO{local:t_i}","title":"Airbus H145 Injured Human","location":{"bearing2":{"struct":{"param":"$item"},"path":"b"},"dist":{"struct":{"param":"$item"},"path":"d"},"object":"heli"}}}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_2"},"value":{"text":"TEST 2 (OBJECT, literal title, offset from heli (name TO{local:i})): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_2"},"value":{"text":"TEST 2 (OBJECT, literal title, offset from heli (name TO{local:i})): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 3": [
       {"call_macro":"oe cleanup"},
@@ -221,8 +226,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"create_object":{"name":"TO{local:t_i}","title":{"struct":{"param":"$item"},"path":"title"},"location":{"bearing2":{"struct":{"param":"$item"},"path":"b"},"dist":{"struct":{"param":"$item"},"path":"d"},"object":"heli"}}}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_3"},"value":{"text":"TEST 3 (OBJECT, title from the struct): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_3"},"value":{"text":"TEST 3 (OBJECT, title from the struct): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 4": [
       {"call_macro":"oe cleanup"},
@@ -231,8 +237,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":"TO{local:t_i}","title":{"struct":{"param":"$item"},"path":"title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"TL{local:t_i}"}}}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_4"},"value":{"text":"TEST 4 (OBJECT on lat/lon location, reference TL{local:i} interpolated): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_4"},"value":{"text":"TEST 4 (OBJECT on lat/lon location, reference TL{local:i} interpolated): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 5": [
       {"call_macro":"oe cleanup"},
@@ -241,8 +248,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":{"struct":{"param":"$item"},"path":"title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":{"local":"t_lname"}}}}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_5"},"value":{"text":"TEST 5 (OBJECT, name and reference held in locals): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_5"},"value":{"text":"TEST 5 (OBJECT, name and reference held in locals): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 6": [
       {"call_macro":"oe cleanup"},
@@ -251,8 +259,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":{"struct":{"param":"$item"},"path":"title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":{"local":"t_lname"}}}},{"set":{"object":{"local":"t_oname"},"var":"VAR 1"},"value":{"struct":{"param":"$item"},"path":"v1"}},{"set":{"object":{"local":"t_oname"},"var":"VAR 2"},"value":{"struct":{"param":"$item"},"path":"v2"}}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_6"},"value":{"text":"TEST 6 (test 5 + VAR 1 and VAR 2 from the struct): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_6"},"value":{"text":"TEST 6 (test 5 + VAR 1 and VAR 2 from the struct): objects {0} of 3, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 7": [
       {"call_macro":"oe cleanup"},
@@ -261,8 +270,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":{"struct":{"param":"$item"},"path":"title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":{"local":"t_lname"}}}},{"set":{"local":"t_pt"},"value":{"struct":{"param":"$item"},"path":"pt"}},{"set":{"local":"t_fb"},"value":{"struct":{"param":"$item"},"path":"fb"}},{"set":{"local":"t_title"},"value":{"struct":{"param":"$item"},"path":"title"}},{"try":[{"call_macro":"oe p local"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_7"},"value":{"text":"TEST 7 (POINT_OBJECT, name and target held in locals): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_7"},"value":{"text":"TEST 7 (POINT_OBJECT, name and target held in locals): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 8": [
       {"call_macro":"oe cleanup"},
@@ -271,8 +281,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":{"struct":{"param":"$item"},"path":"title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":{"local":"t_lname"}}}},{"set":{"local":"t_pt"},"value":{"struct":{"param":"$item"},"path":"pt"}},{"set":{"local":"t_fb"},"value":{"struct":{"param":"$item"},"path":"fb"}},{"set":{"local":"t_title"},"value":{"struct":{"param":"$item"},"path":"title"}},{"try":[{"call_macro":"oe p interp"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_8"},"value":{"text":"TEST 8 (POINT_OBJECT, name interpolated TO{local:i}, target local): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_8"},"value":{"text":"TEST 8 (POINT_OBJECT, name interpolated TO{local:i}, target local): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 9": [
       {"call_macro":"oe cleanup"},
@@ -281,8 +292,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"set":{"local":"t_pt"},"value":{"struct":{"param":"$item"},"path":"pt"}},{"set":{"local":"t_fb"},"value":{"struct":{"param":"$item"},"path":"fb"}},{"set":{"local":"t_title"},"value":{"struct":{"param":"$item"},"path":"title"}},{"try":[{"call_macro":"oe create title"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]},{"try":[{"call_macro":"oe has local"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]},{"if":{"local":"t_has"},"eq":0,"then":[{"if":{"local":"t_fb"},"ne":"","then":[{"set":{"local":"t_fbn"},"value":{"add":[{"local":"t_fbn"},1]}},{"try":[{"call_macro":"oe create fb"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}]}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_9"},"value":{"text":"TEST 9 (FALLBACK, has_object with the name in a local): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_9"},"value":{"text":"TEST 9 (FALLBACK, has_object with the name in a local): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 10": [
       {"call_macro":"oe cleanup"},
@@ -291,8 +303,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"set":{"local":"t_pt"},"value":{"struct":{"param":"$item"},"path":"pt"}},{"set":{"local":"t_fb"},"value":{"struct":{"param":"$item"},"path":"fb"}},{"set":{"local":"t_title"},"value":{"struct":{"param":"$item"},"path":"title"}},{"try":[{"call_macro":"oe create title"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]},{"try":[{"call_macro":"oe has interp"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]},{"if":{"local":"t_has"},"eq":0,"then":[{"if":{"local":"t_fb"},"ne":"","then":[{"set":{"local":"t_fbn"},"value":{"add":[{"local":"t_fbn"},1]}},{"try":[{"call_macro":"oe create fb"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}]}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_10"},"value":{"text":"TEST 10 (FALLBACK, has_object with the name interpolated): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_10"},"value":{"text":"TEST 10 (FALLBACK, has_object with the name interpolated): objects {0} of 6, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 11": [
       {"call_macro":"oe cleanup"},
@@ -301,8 +314,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TL{local:t_i}","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"set":{"local":"t_pt"},"value":{"struct":{"param":"$item"},"path":"pt"}},{"set":{"local":"t_fb"},"value":{"struct":{"param":"$item"},"path":"fb"}},{"set":{"local":"t_title"},"value":{"struct":{"param":"$item"},"path":"title"}},{"try":[{"call_macro":"oe create title"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]},{"try":[{"call_macro":"oe has interp"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]},{"if":{"local":"t_has"},"eq":0,"then":[{"if":{"local":"t_fb"},"ne":"","then":[{"set":{"local":"t_fbn"},"value":{"add":[{"local":"t_fbn"},1]}},{"try":[{"call_macro":"oe create fb"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}]},{"set":{"object":{"local":"t_oname"},"var":"VAR 1"},"value":{"struct":{"param":"$item"},"path":"v1"}},{"set":{"object":{"local":"t_oname"},"var":"VAR 2"},"value":{"struct":{"param":"$item"},"path":"v2"}},{"try":[{"call_macro":"oe p interp"}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_11"},"value":{"text":"TEST 11 (FULL ENGINE, 30 objects (create, fallback, VAR, point)): objects {0} of 30, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_11"},"value":{"text":"TEST 11 (FULL ENGINE, 30 objects (create, fallback, VAR, point)): objects {0} of 30, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 12": [
       {"call_macro":"oe cleanup"},
@@ -311,8 +325,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TLfix","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":"Airbus H145 Injured Human","fallback_title":"Airbus H145 Injured Human 2","location":{"bearing":0,"dist":5,"heading":{"rand":[0,359]},"object":"TLfix"}}},{"set":{"object":{"local":"t_oname"},"var":"VAR 1"},"value":0}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_12"},"value":{"text":"TEST 12 (ONE injured, production syntax (named location, VAR 1 0)): objects {0} of 1, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_12"},"value":{"text":"TEST 12 (ONE injured, production syntax (named location, VAR 1 0)): objects {0} of 1, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 13": [
       {"call_macro":"oe cleanup"},
@@ -321,8 +336,9 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TLfix","zones":[{"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":"Airbus H145 Medic Stretcher","fallback_title":"Airbus H145 Medic Stretcher","location":{"bearing":0,"dist":5,"heading":{"rand":[0,359]},"object":"TLfix"}}}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_13"},"value":{"text":"TEST 13 (ONE stretcher (model of the drive tests), same place): objects {0} of 1, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_13"},"value":{"text":"TEST 13 (ONE stretcher (model of the drive tests), same place): objects {0} of 1, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe variant 14": [
       {"call_macro":"oe cleanup"},
@@ -331,8 +347,20 @@
       {"call_macro":"oe build"},
       {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
       {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_object":{"name":{"local":"t_oname"},"title":{"struct":{"param":"$item"},"path":"title"},"fallback_title":"Airbus H145 Medic Stretcher","location":{"bearing":0,"dist":8,"heading":0,"object":"heli"}}},{"set":{"object":{"local":"t_oname"},"var":"VAR 1"},"value":0}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
       {"call_macro":"oe count"},
-      {"set":{"local":"t_res_14"},"value":{"text":"TEST 14 (ONE stretcher and ONE injured 8 m from the helicopter): objects {0} of 2, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"}]}}
+      {"set":{"local":"t_res_14"},"value":{"text":"TEST 14 (ONE stretcher and ONE injured 8 m from the helicopter): objects {0} of 2, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
+    ],
+    "oe variant 15": [
+      {"call_macro":"oe cleanup"},
+      {"call_macro":"oe reset"},
+      {"set":{"local":"t_n"},"value":1},
+      {"call_macro":"oe build"},
+      {"set":{"local":"t_t0"},"value":{"var":["E:ZULU TIME","seconds"]}},
+      {"try":[{"for_each":{"local":"t_objs"},"do":[{"set":{"local":"t_i"},"value":{"add":[{"local":"t_i"},1]}},{"try":[{"set":{"local":"t_oname"},"value":{"text":"TO{0}","params":[{"local":"t_i"}]}},{"set":{"local":"t_lname"},"value":{"text":"TL{0}","params":[{"local":"t_i"}]}},{"create_location":"TLfix","zones":[{"zone":{"location":{"resolve_location":{"create_array":[42.4236,14.1713]}}}}]},{"create_object":{"name":{"local":"t_oname"},"title":"Airbus H145 Injured Human","fallback_title":"Airbus H145 Injured Human 2","location":{"bearing":0,"dist":5,"heading":{"rand":[0,359]},"object":"TLfix"}}},{"set":{"object":{"local":"t_oname"},"var":"VAR 1"},"value":0}],"catch":[{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}},{"if":{"local":"t_err"},"eq":"","then":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}}]}]}]}],"catch":[{"set":{"local":"t_err"},"value":{"param":"$ERROR"}},{"set":{"local":"t_errn"},"value":{"add":[{"local":"t_errn"},1]}}]},
+      {"try":[{"set":{"local":"t_dist"},"value":{"tofixed":{"location":"heli","var":"distance","to":"TLfix"},"digits":2}}],"catch":[{"set":{"local":"t_dist"},"value":"n/a"}]},
+      {"call_macro":"oe count"},
+      {"set":{"local":"t_res_15"},"value":{"text":"TEST 15 (ONE injured at LITERAL coordinates (no struct), distance shown): objects {0} of 1, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
     "oe run all": [
       {"call_macro":"oe variant 1"},
@@ -348,7 +376,8 @@
       {"call_macro":"oe variant 11"},
       {"call_macro":"oe variant 12"},
       {"call_macro":"oe variant 13"},
-      {"call_macro":"oe variant 14"}
+      {"call_macro":"oe variant 14"},
+      {"call_macro":"oe variant 15"}
     ]
   },
   "briefing": [
@@ -356,6 +385,7 @@
     {"text":"Purpose: find out which form of create_object works inside a for_each over an array of structures (the engine planned for the custom script train.json). Stand on flat ground in the simulator, the objects spawn around the helicopter (tests 2 and 3) or at the coordinates TEST LAT / TEST LON below (tests 1 and 4 to 9, default: Busto Arsizio 45.6185 / 8.8609: fly there or edit the two values in the file). Each test removes the previous objects first, runs the loop, then counts the objects and locations that exist (TO1.. TO30 and TL1..TL30) and shows the first error text. Run the tests in order: the first failing one names the unsupported piece. Models used: Airbus H145 Injured Human, Injured Human 2 and Civilian 3; test 8 and 9 use item 5 with a missing model on purpose (fallback). Report the lines below to Andrea."},
     {"buttonbar":[{"title":"PING (does a button work?)","commands":[{"set":{"local":"t_ping"},"value":{"add":[{"local":"t_ping"},1]}}]}]},
     {"text":"Button presses seen: {0}","params":[{"local":"t_ping"}],"color":"green"},
+    {"buttonbar":[{"title":"TEST 15 ONE injured at LITERAL coordinates (no struct), ","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 15"}]}}]}]},
     {"buttonbar":[{"title":"TEST 12 ONE injured, production syntax (named location, ","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 12"}]}}]}]},
     {"buttonbar":[{"title":"TEST 13 ONE stretcher (model of the drive tests), same p","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 13"}]}}]}]},
     {"buttonbar":[{"title":"TEST 14 ONE stretcher and ONE injured 8 m from the helic","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 14"}]}}]}]},
@@ -371,6 +401,7 @@
     {"buttonbar":[{"title":"TEST 10 FALLBACK, has_object with the name interpolated","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 10"}]}}]}]},
     {"buttonbar":[{"title":"TEST 11 FULL ENGINE, 30 objects (create, fallback, VAR, ","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 11"}]}}]}]},
     {"buttonbar":[{"title":"REMOVE TEST OBJECTS","commands":[{"call_macro":"oe cleanup"}]}]},
+    {"text":"{0}","params":[{"local":"t_res_15"}],"color":"yellow"},
     {"text":"{0}","params":[{"local":"t_res_12"}],"color":"yellow"},
     {"text":"{0}","params":[{"local":"t_res_13"}],"color":"yellow"},
     {"text":"{0}","params":[{"local":"t_res_14"}],"color":"yellow"},
