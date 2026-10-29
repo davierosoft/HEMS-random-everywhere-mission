@@ -9,6 +9,8 @@
         {"create_location":"heli","zones":[{"zone":{"location":"$USER"}}]},
         {"set":{"local":"t_lat"},"value":42.4236},
         {"set":{"local":"t_ping"},"value":0},
+        {"set":{"local":"t_here"},"value":""},
+        {"call_macro":"oe here"},
         {"set":{"local":"t_lon"},"value":14.1713},
         {"set":{"local":"t_i"},"value":0},
         {"set":{"local":"t_dist"},"value":"n/a"},
@@ -362,6 +364,12 @@
       {"call_macro":"oe count"},
       {"set":{"local":"t_res_15"},"value":{"text":"TEST 15 (ONE injured at LITERAL coordinates (no struct), distance shown): objects {0} of 1, locations {1}, errors {2}, fallback/err-in-create {3}, seconds {4}. First error: {5}. Distance helicopter to TLfix (NM): {6}","params":[{"local":"t_cnt"},{"local":"t_cntl"},{"local":"t_errn"},{"local":"t_fbn"},{"subtract":[{"var":["E:ZULU TIME","seconds"]},{"local":"t_t0"}]},{"local":"t_err"},{"local":"t_dist"}]}}
     ],
+    "oe here": [
+      {"set":{"local":"t_plat"},"value":0},
+      {"set":{"local":"t_plon"},"value":0},
+      {"try":[{"set":{"local":"t_plat"},"value":{"var":["A:PLANE LATITUDE","degrees"]}},{"set":{"local":"t_plon"},"value":{"var":["A:PLANE LONGITUDE","degrees"]}}],"catch":[{"set":{"local":"t_plat"},"value":0}]},
+      {"if":{"local":"t_plat"},"gt":1,"then":[{"set":{"local":"t_lat"},"value":{"local":"t_plat"}},{"set":{"local":"t_lon"},"value":{"local":"t_plon"}},{"set":{"local":"t_here"},"value":"TEST LAT/LON taken from the aircraft position"}],"else":[{"set":{"local":"t_here"},"value":"aircraft position not readable, TEST LAT/LON stay on the default near Pescara"}]}
+    ],
     "oe run all": [
       {"call_macro":"oe variant 1"},
       {"call_macro":"oe variant 2"},
@@ -384,6 +392,8 @@
     {"text":"OBJECT ENGINE TEST","size":"large","align":"center"},
     {"text":"Purpose: find out which form of create_object works inside a for_each over an array of structures (the engine planned for the custom script train.json). Stand on flat ground in the simulator, the objects spawn around the helicopter (tests 2 and 3) or at the coordinates TEST LAT / TEST LON below (tests 1 and 4 to 9, default: Busto Arsizio 45.6185 / 8.8609: fly there or edit the two values in the file). Each test removes the previous objects first, runs the loop, then counts the objects and locations that exist (TO1.. TO30 and TL1..TL30) and shows the first error text. Run the tests in order: the first failing one names the unsupported piece. Models used: Airbus H145 Injured Human, Injured Human 2 and Civilian 3; test 8 and 9 use item 5 with a missing model on purpose (fallback). Report the lines below to Andrea."},
     {"buttonbar":[{"title":"PING (does a button work?)","commands":[{"set":{"local":"t_ping"},"value":{"add":[{"local":"t_ping"},1]}}]}]},
+    {"buttonbar":[{"title":"USE MY POSITION AS TEST LAT/LON","commands":[{"call_macro":"oe here"}]}]},
+    {"text":"{0}","params":[{"local":"t_here"}],"color":"green"},
     {"text":"Button presses seen: {0}","params":[{"local":"t_ping"}],"color":"green"},
     {"buttonbar":[{"title":"TEST 15 ONE injured at LITERAL coordinates (no struct), ","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 15"}]}}]}]},
     {"buttonbar":[{"title":"TEST 12 ONE injured, production syntax (named location, ","commands":[{"create_thread":{"commands":[{"call_macro":"oe variant 12"}]}}]}]},
