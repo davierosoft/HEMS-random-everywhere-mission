@@ -23,6 +23,19 @@
     {"set": {"var": ["L:CUS_SCRIPT_API", "number"]}, "value": 1},
     {"set": {"var": ["L:CUS_SCRIPT_BUILD", "number"]}, "value": 169089},
     {"set": {"local": "MIN_BUILD"}, "value": 169089},
+
+{"#comment": "MISSION TOO OLD FOR THIS SCRIPT? (SCRIPT_TOO_OLD = 1: THE BRIEFING SHOWS ONE WARNING, OTHERWISE NOTHING)"},
+    {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 0},
+    {"if": {"local": "MIN_VERSION"}, "gt": {"global": "first_run"}, "then": [
+      {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 1}
+    ]},
+    {"if": {"global": "CUS_LAST_BUILD"}, "eq": null, "then": [
+      {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 1}
+    ], "else": [
+      {"if": {"local": "MIN_BUILD"}, "gt": {"global": "CUS_LAST_BUILD"}, "then": [
+        {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 1}
+      ]}
+    ]},
     {"set_briefing_dialog": 0},
     {"set": {"var": ["L:SECOND_DISPATCH_ACCEPTED", "number"]}, "value": 0},
     {"set": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "value": 0},
@@ -294,9 +307,7 @@
 
   "briefing": [
     {"text": "H145 - HEMS RANDOM & EVERYWHERE build {0}", "params": [{"global": "first_run"}], "size": "large", "align": "center"},
-    {"text": "Last time the mission was started your mission version was {0}. This script needs mission version {1} and build 169.89 (build number {2}) or newer. Update the mission.", "params": [{"global": "first_run"}, {"local": "MIN_VERSION"}, {"local": "MIN_BUILD"}], "color": "yellow", "show_condition": {"require": {"local": "MIN_VERSION"}, "gt": {"global": "first_run"}}},
-    {"text": "WARNING: this script needs mission build 0.997 169.89 or newer (build number {0}). Your mission does not report a build, so it is older than 169.87 or it was never started with a recent build. If it is older, this script is NOT compatible with it: update the mission, or use the original script.", "params": [{"local": "MIN_BUILD"}], "color": "yellow", "show_condition": {"require": {"global": "CUS_LAST_BUILD"}, "eq": null}},
-    {"text": "Last time the mission was started its build was {0}. This script needs mission build 0.997 169.89 or newer (build number {1}). Update the mission: with an older one the objects, the facing choices and the own hospital do not work.", "params": [{"global": "CUS_LAST_BUILD"}, {"local": "MIN_BUILD"}], "color": "yellow", "show_condition": {"and": [{"require": {"global": "CUS_LAST_BUILD"}, "ne": null}, {"require": {"local": "MIN_BUILD"}, "gt": {"global": "CUS_LAST_BUILD"}}], "eq": 1}},
+    {"text": "This script needs mission 0.997 build 169.89 or newer. Update the mission.", "color": "yellow", "show_condition": {"require": {"local": "SCRIPT_TOO_OLD"}, "eq": 1}},
     {"text": "Mission description:"},
     {"text": "{0}", "color": "yellow", "params": [{"global": "accident_description"}]},
     {"text": "Mission objective:"},

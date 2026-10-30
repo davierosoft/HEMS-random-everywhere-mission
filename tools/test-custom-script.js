@@ -76,19 +76,17 @@ assert(scriptValue('L:CUS_SCRIPT_BUILD') <= buildN, 'script needs a newer build 
 assert(commands.some((c) => c.set && c.set.local === 'MIN_BUILD' && c.value === scriptValue('L:CUS_SCRIPT_BUILD')), 'MIN_BUILD must equal CUS_SCRIPT_BUILD');
 assert(bootstrap.includes('"CUS_LAST_BUILD"'), 'the mission must publish CUS_LAST_BUILD');
 assert(commands.some((c) => c.set && c.set.local === 'MIN_VERSION' && c.value === 0.997), 'MIN_VERSION must be the version this script needs (0.997), not the original script value');
-// The minimum is checked, never just printed: every briefing text that names it has a show_condition and names version AND build
-// (build as written in the title, 169089 = 169.89); the version check also carries the minimum build.
+// Minimal information (user rule 2026-10-30): the minimum (version AND build) is CHECKED by commands, and the briefing shows ONE short
+// warning, only when the mission is too old (no build reported = older than the first build that publishes CUS_LAST_BUILD).
 const minLabel = '169.' + (scriptValue('L:CUS_SCRIPT_BUILD') % 1000);
-const minimumTexts = script.briefing.filter((item) => item.text && /needs mission|requires/i.test(item.text));
-assert(minimumTexts.length >= 3, 'the briefing needs the version check and the two build checks');
-for (const item of minimumTexts) {
-  assert(item.show_condition, 'a minimum requirement text without a check: ' + item.text.slice(0, 60));
-  assert(item.text.includes(minLabel) && item.params.some((p) => p.local === 'MIN_BUILD'), 'a minimum requirement text without the minimum build: ' + item.text.slice(0, 60));
-}
-assert(minimumTexts.some((item) => JSON.stringify(item.show_condition).includes('"gt":{"global":"first_run"}') && item.params.some((p) => p.local === 'MIN_VERSION')), 'the version check must also name the minimum version');
-// A mission older than the first build that publishes CUS_LAST_BUILD must be told that the script is incompatible.
-assert(script.briefing.some((item) => item.show_condition && item.show_condition.require && item.show_condition.require.global === 'CUS_LAST_BUILD' && item.show_condition.eq === null && item.params.some((p) => p.local === 'MIN_BUILD')), 'the briefing must warn when the mission reports no build (older mission)');
-assert(script.briefing.some((item) => item.show_condition && JSON.stringify(item.show_condition).includes('"gt":{"global":"CUS_LAST_BUILD"}')), 'the briefing must warn when the reported build is older than MIN_BUILD');
+const minimumTexts = script.briefing.filter((item) => item.text && /needs mission/i.test(item.text));
+assert.strictEqual(minimumTexts.length, 1, 'exactly one minimum-requirement text in the briefing');
+assert(minimumTexts[0].text.includes('0.997') && minimumTexts[0].text.includes(minLabel), 'the warning names the minimum version and build');
+assert(minimumTexts[0].show_condition && minimumTexts[0].show_condition.require.local === 'SCRIPT_TOO_OLD' && minimumTexts[0].show_condition.eq === 1, 'the warning appears only when SCRIPT_TOO_OLD is 1');
+const check = JSON.stringify(commands.filter((c) => !c['#comment']));
+assert(check.includes('"if":{"local":"MIN_VERSION"},"gt":{"global":"first_run"}'), 'SCRIPT_TOO_OLD: version check missing');
+assert(check.includes('"if":{"global":"CUS_LAST_BUILD"},"eq":null'), 'SCRIPT_TOO_OLD: no reported build (older mission) check missing');
+assert(check.includes('"if":{"local":"MIN_BUILD"},"gt":{"global":"CUS_LAST_BUILD"}'), 'SCRIPT_TOO_OLD: build check missing');
 assert(missionText.includes('"custom script compatibility"') && missionText.includes('{"call_macro":"custom script compatibility"}'), 'compatibility macro missing or not called');
 
 // Legacy (original 0.997 script, kept until 0.998): every variable it sets is still read by the mission.
