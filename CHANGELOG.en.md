@@ -1,3 +1,15 @@
+## Release 0.997 169.90
+
+- Custom objects: aim location from LVARs, readable train.json layout
+
+## Release 0.997 169.89
+
+- Custom objects: six pointing choices per object, literal-name pointing macros
+
+## Release 0.997 169.88
+
+- Custom objects engine: point_object subject as object reference, local test
+
 ## Release 0.997 169.87
 
 - Include version check and title for the local build number

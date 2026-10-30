@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.87. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.90. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1574,9 +1574,9 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 
 ### Custom mission script: objects list, own hospital, version check
 
-- The custom mission script (the train accident example) now builds the scene from a list of up to 30 objects, each with its own state and an optional direction to face an object or a place, with a fallback model you choose. It can propose your own hospital first, and it declares its version: the mission tells you if the script is too old or needs a newer mission build, and the script briefing warns when your last mission build is too old. The original script keeps working. The "2 NM from the loading area" call is no longer said on top of the accident-area call when the two places are the same.
-- **Build history:** 0.997 169.87.
-- **Test:** Start the custom train script; the scene objects appear, the crew proposes your hospital if you set one, and only one 2 NM call is heard.
+- The custom mission script (the train accident example) now builds the scene from a list of up to 30 objects, each with its own state and a fallback model you choose. Each object can face nothing, the injured human, the second or third injured human (when they exist), the accident place, a point you give, or the previous object of the list. The script file is laid out for easy reading: banners, labelled areas and one block per object. It can propose your own hospital first, and it declares its version: the mission tells you if the script is too old or needs a newer mission build, and the script briefing warns when your last mission build is too old. The original script keeps working. The "2 NM from the loading area" call is no longer said on top of the accident-area call when the two places are the same.
+- **Build history:** 0.997 169.87-169.90.
+- **Test:** Start the custom train script; the scene objects appear and face the direction chosen for each, the crew proposes your hospital if you set one, and only one 2 NM call is heard.
 
 ## Build coverage ledger
 
@@ -1625,4 +1625,7 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.84:** The crew member who no longer vanishes after a landed pickup with four crew, and the police and the ambulance that leave the scene and the map once the patient is at the hospital (see The medical crew member no longer vanishes after a landed pickup and Police and ambulance leave when the patient is at the hospital).
 - **0.997 169.85:** The manual medical mode transport buttons, the scene vehicles that leave only 1 NM away, the pilot weight, the silent too far call after a hoist drop without heli rescuer, the doctor heads-up and the tablet message, the hospital call after the hoist and the skid landing heli rescuer (see Manual medical mode: the transport buttons work, The police and the ambulance stay until you are far away, The pilot weight is always on the helicopter, No too far call after a hoist drop without a heli rescuer, The doctor says the treatment is nearly done, The copilot calls the hospital only when the hoist is stowed and Skid landing: the heli rescuer walks out).
 - **0.997 169.86:** The cabin confirmation that waits for the hoist to be stowed (see The cabin confirmation waits for the hoist).
-- **0.997 169.87 (this release):** The custom mission script with the objects list, the own hospital and the version check, and the single 2 NM call (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.87:** The custom mission script with the objects list, the own hospital and the version check, and the single 2 NM call (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.88:** Local test of the objects engine (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.89:** The six facing choices per object of the custom mission script (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.90 (this release):** The facing point of an object read from the script variables, and the readable layout of the script file (see Custom mission script: objects list, own hospital, version check).

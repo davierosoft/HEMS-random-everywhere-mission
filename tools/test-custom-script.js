@@ -22,7 +22,7 @@ const script = JSON.parse(read('train.json'));
 const { formatTrainScript } = require('./train-script-format');
 assert.strictEqual(fs.readFileSync(path.join(root, 'train.json'), 'utf8'), formatTrainScript(script), 'train.json layout differs from the original script layout (node tools/sync-train-accidents.js rewrites it)');
 const commands = script.objectives[0].commands;
-const fields = ['title', 'lat', 'lon', 'var1', 'var2', 'point', 'fallback', 'heading'];
+const fields = ['title', 'lat', 'lon', 'var1', 'var2', 'aim', 'aimlat', 'aimlon', 'fallback', 'heading'];
 
 const objects = commands.filter((c) => c.modify_array && c.modify_array.local === 'CUS_OBJECTS');
 assert(objects.length <= 30, 'at most 30 custom objects');
@@ -32,6 +32,9 @@ for (const [index, command] of objects.entries()) {
   for (const key of Object.keys(item)) assert(fields.includes(key), 'unknown object field ' + key);
   assert.strictEqual(typeof item.title, 'string', 'object ' + (index + 1) + ' needs a title');
   assert(Number.isFinite(item.lat) && Number.isFinite(item.lon), 'object ' + (index + 1) + ' needs lat and lon');
+  assert(Number.isInteger(item.aim) && item.aim >= 0 && item.aim <= 6, 'object ' + (index + 1) + ' aim must be 0 to 6');
+  assert(item.aim !== 6 || index > 0, 'the first object has no previous object to face');
+  assert(item.aim !== 5 || (item.aimlat !== 0 && item.aimlon !== 0), 'object ' + (index + 1) + ' aim 5 needs aimlat and aimlon');
 }
 const initIndex = commands.findIndex((c) => c.set && c.set.local === 'CUS_OBJECTS');
 assert(initIndex >= 0, 'CUS_OBJECTS must be initialised');
@@ -42,6 +45,14 @@ const navigation = read('mission-src/macros/05-navigation-queries.json');
 assert(navigation.includes('"custom objects engine": ['), 'engine macro missing');
 assert(navigation.includes('{"call_macro":"custom objects engine"}'), 'engine macro not called by the object thread');
 assert(navigation.includes('{"if": {"local":"ce_i"}, "lt": 30,'), 'the engine must stop at 30 objects');
+
+// point_object takes literal names (a local as subject is rejected: "unknown locRef"): one macro per object slot.
+for (let n = 1; n <= 30; n++) {
+  assert(navigation.includes('"custom point CUSOBJ' + n + '": ['), 'missing pointing macro for slot ' + n);
+  assert(navigation.includes('{"point_object":"CUSOBJ' + n + '","to":"accident_location"}'), 'slot ' + n + ' must point with its literal name');
+}
+assert(navigation.includes('{"call_macro":"custom object point"}'), 'the engine must call the pointing dispatcher');
+assert(!/"point_object":\{/.test(navigation), 'point_object subject must be a literal name');
 
 const missionText = fs.readdirSync(path.join(root, 'mission-src', 'macros')).map((f) => read('mission-src/macros/' + f)).join('\n');
 for (const command of commands) {

@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.87",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.90",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.87"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.90"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -94640,6 +94640,9 @@
                 {"set":{"local":"ce_v1"},"value":{"struct":{"param":"$item"},"path":"var1"}},
                 {"set":{"local":"ce_v2"},"value":{"struct":{"param":"$item"},"path":"var2"}},
                 {"set":{"local":"ce_pt"},"value":{"struct":{"param":"$item"},"path":"point"}},
+                {"set":{"local":"ce_aim"},"value":{"struct":{"param":"$item"},"path":"aim"}},
+                {"set":{"local":"ce_plat"},"value":{"struct":{"param":"$item"},"path":"aimlat"}},
+                {"set":{"local":"ce_plon"},"value":{"struct":{"param":"$item"},"path":"aimlon"}},
                 {"set":{"local":"ce_hdg"},"value":{"struct":{"param":"$item"},"path":"heading"}},
                 {"if": {"local":"ce_fb"}, "eq": null,
                   "then": [
@@ -94649,6 +94652,25 @@
                   "then": [
                     {"set":{"local":"ce_pt"},"value":""}
                 ]},
+                {"if": {"local":"ce_aim"}, "eq": null,
+                  "then": [
+                    {"#comment":"Scripts written before the aim field: point accident_location = mode 4, anything else = no pointing."},
+                    {"set":{"local":"ce_aim"},"value":0},
+                    {"if": {"local":"ce_pt"}, "eq": "accident_location",
+                      "then": [
+                        {"set":{"local":"ce_aim"},"value":4}
+                    ]}
+                ]},
+                {"if": {"local":"ce_plat"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_plat"},"value":0}
+                ]},
+                {"if": {"local":"ce_plon"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_plon"},"value":0}
+                ]},
+                {"set":{"var":["L:CUS_AIM LAT","number"]},"value":{"local":"ce_plat"}},
+                {"set":{"var":["L:CUS_AIM LON","number"]},"value":{"local":"ce_plon"}},
                 {"if": {"local":"ce_v1"}, "eq": null,
                   "then": [
                     {"set":{"local":"ce_v1"},"value":0}
@@ -94679,25 +94701,14 @@
                     ]},
                     {"set":{"object":{"local":"ce_oname"},"var":"VAR 1"},"value":{"local":"ce_v1"}},
                     {"set":{"object":{"local":"ce_oname"},"var":"VAR 2"},"value":{"local":"ce_v2"}},
-                    {"if": {"local":"ce_pt"}, "ne": "",
+                    {"if": {"local":"ce_aim"}, "gt": 0,
                       "then": [
                         {"sleep":0.3},
                         {"try": [
-                            {"if": {"local":"ce_pt"}, "eq": "accident_location",
-                              "then": [
-                                {"point_object":{"local":"ce_oname"},"to":"accident_location"}
-                              ],"else": [
-                                {"point_object":{"local":"ce_oname"},"to":{"local":"ce_pt"}}
-                            ]}
+                            {"call_macro":"custom object point"}
                           ],
                           "catch": [
-                            {"set":{"local":"custom_objects_error"},"value":{"param":"$ERROR"}},
-                            {"try": [
-                                {"point_object":{"local":"ce_oname"},"to":{"location":{"local":"ce_pt"}}}
-                              ],
-                              "catch": [
-                                {"set":{"local":"custom_objects_error"},"value":{"param":"$ERROR"}}
-                            ]}
+                            {"set":{"local":"custom_objects_error"},"value":{"param":"$ERROR"}}
                         ]}
                     ]}
                   ],
@@ -94862,6 +94873,1294 @@
                 {"set_message":{"text":""}}
             ]}}
         ]}
+    ]}
+  ],
+  "custom object point": [
+    {"if": {"local":"ce_i"}, "eq": 1,
+      "then": [
+        {"call_macro":"custom point CUSOBJ1"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 2,
+      "then": [
+        {"call_macro":"custom point CUSOBJ2"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 3,
+      "then": [
+        {"call_macro":"custom point CUSOBJ3"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 4,
+      "then": [
+        {"call_macro":"custom point CUSOBJ4"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 5,
+      "then": [
+        {"call_macro":"custom point CUSOBJ5"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 6,
+      "then": [
+        {"call_macro":"custom point CUSOBJ6"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 7,
+      "then": [
+        {"call_macro":"custom point CUSOBJ7"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 8,
+      "then": [
+        {"call_macro":"custom point CUSOBJ8"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 9,
+      "then": [
+        {"call_macro":"custom point CUSOBJ9"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 10,
+      "then": [
+        {"call_macro":"custom point CUSOBJ10"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 11,
+      "then": [
+        {"call_macro":"custom point CUSOBJ11"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 12,
+      "then": [
+        {"call_macro":"custom point CUSOBJ12"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 13,
+      "then": [
+        {"call_macro":"custom point CUSOBJ13"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 14,
+      "then": [
+        {"call_macro":"custom point CUSOBJ14"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 15,
+      "then": [
+        {"call_macro":"custom point CUSOBJ15"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 16,
+      "then": [
+        {"call_macro":"custom point CUSOBJ16"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 17,
+      "then": [
+        {"call_macro":"custom point CUSOBJ17"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 18,
+      "then": [
+        {"call_macro":"custom point CUSOBJ18"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 19,
+      "then": [
+        {"call_macro":"custom point CUSOBJ19"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 20,
+      "then": [
+        {"call_macro":"custom point CUSOBJ20"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 21,
+      "then": [
+        {"call_macro":"custom point CUSOBJ21"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 22,
+      "then": [
+        {"call_macro":"custom point CUSOBJ22"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 23,
+      "then": [
+        {"call_macro":"custom point CUSOBJ23"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 24,
+      "then": [
+        {"call_macro":"custom point CUSOBJ24"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 25,
+      "then": [
+        {"call_macro":"custom point CUSOBJ25"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 26,
+      "then": [
+        {"call_macro":"custom point CUSOBJ26"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 27,
+      "then": [
+        {"call_macro":"custom point CUSOBJ27"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 28,
+      "then": [
+        {"call_macro":"custom point CUSOBJ28"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 29,
+      "then": [
+        {"call_macro":"custom point CUSOBJ29"}
+    ]},
+    {"if": {"local":"ce_i"}, "eq": 30,
+      "then": [
+        {"call_macro":"custom point CUSOBJ30"}
+    ]}
+  ],
+  "custom point CUSOBJ1": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ1","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ1","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ1","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ1","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT1",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ1","to":"CUSPT1"}
+    ]}
+  ],
+  "custom point CUSOBJ2": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ2","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ2","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ2","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ2","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT2",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ2","to":"CUSPT2"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ2","to":"CUSOBJ1"}
+    ]}
+  ],
+  "custom point CUSOBJ3": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ3","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ3","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ3","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ3","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT3",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ3","to":"CUSPT3"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ3","to":"CUSOBJ2"}
+    ]}
+  ],
+  "custom point CUSOBJ4": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ4","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ4","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ4","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ4","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT4",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ4","to":"CUSPT4"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ4","to":"CUSOBJ3"}
+    ]}
+  ],
+  "custom point CUSOBJ5": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ5","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ5","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ5","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ5","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT5",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ5","to":"CUSPT5"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ5","to":"CUSOBJ4"}
+    ]}
+  ],
+  "custom point CUSOBJ6": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ6","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ6","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ6","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ6","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT6",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ6","to":"CUSPT6"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ6","to":"CUSOBJ5"}
+    ]}
+  ],
+  "custom point CUSOBJ7": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ7","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ7","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ7","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ7","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT7",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ7","to":"CUSPT7"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ7","to":"CUSOBJ6"}
+    ]}
+  ],
+  "custom point CUSOBJ8": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ8","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ8","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ8","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ8","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT8",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ8","to":"CUSPT8"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ8","to":"CUSOBJ7"}
+    ]}
+  ],
+  "custom point CUSOBJ9": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ9","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ9","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ9","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ9","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT9",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ9","to":"CUSPT9"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ9","to":"CUSOBJ8"}
+    ]}
+  ],
+  "custom point CUSOBJ10": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ10","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ10","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ10","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ10","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT10",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ10","to":"CUSPT10"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ10","to":"CUSOBJ9"}
+    ]}
+  ],
+  "custom point CUSOBJ11": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ11","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ11","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ11","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ11","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT11",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ11","to":"CUSPT11"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ11","to":"CUSOBJ10"}
+    ]}
+  ],
+  "custom point CUSOBJ12": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ12","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ12","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ12","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ12","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT12",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ12","to":"CUSPT12"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ12","to":"CUSOBJ11"}
+    ]}
+  ],
+  "custom point CUSOBJ13": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ13","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ13","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ13","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ13","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT13",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ13","to":"CUSPT13"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ13","to":"CUSOBJ12"}
+    ]}
+  ],
+  "custom point CUSOBJ14": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ14","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ14","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ14","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ14","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT14",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ14","to":"CUSPT14"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ14","to":"CUSOBJ13"}
+    ]}
+  ],
+  "custom point CUSOBJ15": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ15","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ15","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ15","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ15","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT15",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ15","to":"CUSPT15"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ15","to":"CUSOBJ14"}
+    ]}
+  ],
+  "custom point CUSOBJ16": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ16","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ16","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ16","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ16","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT16",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ16","to":"CUSPT16"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ16","to":"CUSOBJ15"}
+    ]}
+  ],
+  "custom point CUSOBJ17": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ17","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ17","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ17","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ17","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT17",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ17","to":"CUSPT17"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ17","to":"CUSOBJ16"}
+    ]}
+  ],
+  "custom point CUSOBJ18": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ18","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ18","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ18","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ18","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT18",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ18","to":"CUSPT18"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ18","to":"CUSOBJ17"}
+    ]}
+  ],
+  "custom point CUSOBJ19": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ19","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ19","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ19","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ19","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT19",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ19","to":"CUSPT19"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ19","to":"CUSOBJ18"}
+    ]}
+  ],
+  "custom point CUSOBJ20": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ20","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ20","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ20","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ20","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT20",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ20","to":"CUSPT20"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ20","to":"CUSOBJ19"}
+    ]}
+  ],
+  "custom point CUSOBJ21": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ21","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ21","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ21","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ21","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT21",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ21","to":"CUSPT21"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ21","to":"CUSOBJ20"}
+    ]}
+  ],
+  "custom point CUSOBJ22": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ22","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ22","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ22","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ22","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT22",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ22","to":"CUSPT22"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ22","to":"CUSOBJ21"}
+    ]}
+  ],
+  "custom point CUSOBJ23": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ23","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ23","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ23","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ23","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT23",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ23","to":"CUSPT23"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ23","to":"CUSOBJ22"}
+    ]}
+  ],
+  "custom point CUSOBJ24": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ24","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ24","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ24","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ24","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT24",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ24","to":"CUSPT24"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ24","to":"CUSOBJ23"}
+    ]}
+  ],
+  "custom point CUSOBJ25": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ25","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ25","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ25","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ25","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT25",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ25","to":"CUSPT25"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ25","to":"CUSOBJ24"}
+    ]}
+  ],
+  "custom point CUSOBJ26": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ26","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ26","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ26","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ26","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT26",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ26","to":"CUSPT26"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ26","to":"CUSOBJ25"}
+    ]}
+  ],
+  "custom point CUSOBJ27": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ27","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ27","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ27","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ27","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT27",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ27","to":"CUSPT27"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ27","to":"CUSOBJ26"}
+    ]}
+  ],
+  "custom point CUSOBJ28": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ28","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ28","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ28","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ28","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT28",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ28","to":"CUSPT28"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ28","to":"CUSOBJ27"}
+    ]}
+  ],
+  "custom point CUSOBJ29": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ29","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ29","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ29","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ29","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT29",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ29","to":"CUSPT29"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ29","to":"CUSOBJ28"}
+    ]}
+  ],
+  "custom point CUSOBJ30": [
+    {"if": {"local":"ce_aim"}, "eq": 1,
+      "then": [
+        {"if": {"has_object":"injured_human"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ30","to":"injured_human"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 2,
+      "then": [
+        {"if": {"has_object":"injured_human2"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ30","to":"injured_human2"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 3,
+      "then": [
+        {"if": {"has_object":"injured_human3"}, "eq": 1,
+          "then": [
+            {"point_object":"CUSOBJ30","to":"injured_human3"}
+        ]}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 4,
+      "then": [
+        {"point_object":"CUSOBJ30","to":"accident_location"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 5,
+      "then": [
+        {"create_location": "CUSPT30",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_AIM LAT","number"]},{"var":["L:CUS_AIM LON","number"]}]}}}}
+        ]},
+        {"point_object":"CUSOBJ30","to":"CUSPT30"}
+    ]},
+    {"if": {"local":"ce_aim"}, "eq": 6,
+      "then": [
+        {"point_object":"CUSOBJ30","to":"CUSOBJ29"}
     ]}
   ]
 },

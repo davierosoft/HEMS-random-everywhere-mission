@@ -30,7 +30,7 @@ Legacy script (original, frozen in `tools/fixtures/train-legacy-0.997.json`): it
 
 ## Formatting rule (user, 2026-10-30)
 
-The formatting of `train.json` must strictly follow the layout of the original script (`tools/fixtures/train-legacy-0.997.json`): top-level keys in the original order with a blank line between sections, one command per line, `", "` and `": "` separators, the buttons of the briefing with one command per line, the incident list one field per line. It is not the mission formatter's layout (`mission-formatter.js`), because the file is edited by hand by users. The layout is produced by `tools/train-script-format.js` (used by the sync tool) and `tools/test-custom-script.js` fails when the file differs from it. Edit the data, then run `node tools/sync-train-accidents.js` to restore the layout.
+The formatting of `train.json` follows the layout of the original script (`tools/fixtures/train-legacy-0.997.json`), whose goal is the easiest possible reading: minimal text, delimited areas, spaces and tabs that make everything easy to find. Top-level keys in the original order with a blank line between sections, `", "` and `": "` separators, the buttons of the briefing with one command per line, the incident list one field per line. Readability pass of the same day (user: the flat layout was hard to read): in the command list the instructions are dashed banner comments in capitals (102 columns, two blank lines before the group, one after); the editable areas are opened and closed by `EDITABLE AREA STARTS/ENDS HERE` banners and their settings are indented with a tab under a short label comment; each custom object is a labelled block of aligned rows (title, lat/lon, var1/var2, aim, fallback, heading) with a blank line between objects; long commands (`for_each`, `if`) open over several lines with their `do`/`then`/`else` lists one command per line. It is not the mission formatter's layout (`mission-formatter.js`), because the file is edited by hand by users. The layout is produced by `tools/train-script-format.js` (used by the sync tool) and `tools/test-custom-script.js` fails when the file differs from it. Edit the data, then run `node tools/sync-train-accidents.js` to restore the layout.
 
 ## Keeping the incident list aligned
 
@@ -76,6 +76,10 @@ Standalone test results (simulator, Pescara threshold 04): a `for_each` over an 
 - `tools/test-custom-script.js` checks the contract statically.
 
 Not done: custom hospital as first proposal, custom audio messages, name of the place instead of the city (111 `:LOCATION` text boxes would have to follow one switch).
+
+## Object pointing: six choices (build 169.89, runtime pending)
+
+Simulator 169.88: `point_object` with a local as subject fails with `unknown locRef`. The subject must be a literal name, so the engine calls `custom object point`, which dispatches on the slot number to `custom point CUSOBJ1..30` (literal subject and targets). Per object the script gives `aim` (0 none, 1 `injured_human`, 2 `injured_human2` and 3 `injured_human3` when `has_object`, 4 `accident_location`, 5 a location `CUSPTn` created from `aimlat`/`aimlon`, 6 the previous object `CUSOBJ(n-1)`). The legacy `point` field is still read ("accident_location" = 4). `CUS_SCRIPT_BUILD` is 169089: older missions ignore `aim`.
 
 ## Custom hospital as first proposal (sources 2026-10-30, not built, runtime pending)
 
