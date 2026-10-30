@@ -6,7 +6,7 @@ The sound content of the mission pack (`hpg-airbus-h145-z-andrew-mission-pack`, 
 
 | Path | Content |
 | --- | --- |
-| `Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/` | All `AND.*.wav`, `H145.*.wav` and the other mission sounds of the H145, and its `sound.xml`. Includes the crew crash sounds `AND.crash.*.wav` (played by the Companion, no `sound.xml` entry). |
+| `Simobjects/Airplanes/hpg-airbus-h145-ems/Sound/` | All `AND.*.wav`, `H145.*.wav` and the other mission sounds of the H145, and its `sound.xml` (the installed one of 2026-10-25, which is the pack file plus the crash entries). Includes the seven crew crash sounds `AND.crash.*.wav`; `sound.xml` has their entries (block `<!--ANDcrash-->`, `LocalVar` `CRYANDREW1` to `CRYANDREW7`). |
 | `Simobjects/Airplanes/<other model>/(Soundai\|soundai)/` | `soundai.xml` and the wav of each mission object (ambulances, police, fire trucks, injured person, satellite dish, DarkOps, 30West humans). |
 | `manifest.json` | Package manifest of the pack. |
 
