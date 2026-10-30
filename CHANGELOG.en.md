@@ -1,3 +1,10 @@
+## Release 0.997 169.87
+
+- Include version check and title for the local build number
+- Custom script object engine up to 30 objects, optional pick-up and rescue points
+- Custom script version contract (CUS_SCRIPT_API, CUS_SCRIPT_BUILD, CUS_LAST_BUILD), legacy 0.997 script kept
+- Custom hospital as first proposal, point_object error message, single 2 NM loading-area call
+
 ## Release 0.997 169.86
 
 - Cabin confirmation waits for the hoist LVAR

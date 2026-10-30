@@ -1,13 +1,16 @@
 {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.86"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.87"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
     {"set":{"local":"BUILD_MAJOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":0}}},
     {"set":{"local":"BUILD_MINOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":1}}},
     {"set":{"local":"BUILD_N"},"value":{"add":[{"multiply":[{"local":"BUILD_MAJOR"},1000]},{"local":"BUILD_MINOR"}]}},
-    {"set":{"local":"MINIMUM_VERSION"},"value":479}
+    {"set":{"local":"MINIMUM_VERSION"},"value":479},
+    {"#comment":"Custom script contract (train.json, docs/architecture/CUSTOM_SCRIPT_TRAIN.md). CUS_SCRIPT_API_MIN is the oldest script API this mission accepts: raise it, and the script's CUS_SCRIPT_API with it, only when a change makes the older script impossible. A script without CUS_SCRIPT_API is the original 0.997 one (legacy, kept until 0.998). The build is published to the script as the global CUS_LAST_BUILD, which its briefing compares with the build it needs."},
+    {"set":{"local":"CUS_SCRIPT_API_MIN"},"value":1},
+    {"set":{"global":"CUS_LAST_BUILD"},"value":{"local":"BUILD_N"}}
   ],
   "settings first run defaults": [
     {"#comment":"User rule of 2026-10-20: at the first start (and whenever a settings global has no value) objective1 gives every persistent setting its default, so the tablet shows the selected button and the Mission Companion reads a value, not a null. A null was read as the default by the consumers, but the buttons showed nothing selected (CREW CHATTER, CREW TIPS) and the app got no value. Each global is set only when it is null, so the choice of the user and of the loaded profile is never touched. CALLSIGN stays null on purpose (null and empty mean HEMS). Test tools/test-settings-first-run.js."},

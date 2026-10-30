@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.86",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.87",
 
 "id": "HEMSRandE",
 
@@ -17,14 +17,17 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.86"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.87"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
     {"set":{"local":"BUILD_MAJOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":0}}},
     {"set":{"local":"BUILD_MINOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":1}}},
     {"set":{"local":"BUILD_N"},"value":{"add":[{"multiply":[{"local":"BUILD_MAJOR"},1000]},{"local":"BUILD_MINOR"}]}},
-    {"set":{"local":"MINIMUM_VERSION"},"value":479}
+    {"set":{"local":"MINIMUM_VERSION"},"value":479},
+    {"#comment":"Custom script contract (train.json, docs/architecture/CUSTOM_SCRIPT_TRAIN.md). CUS_SCRIPT_API_MIN is the oldest script API this mission accepts: raise it, and the script's CUS_SCRIPT_API with it, only when a change makes the older script impossible. A script without CUS_SCRIPT_API is the original 0.997 one (legacy, kept until 0.998). The build is published to the script as the global CUS_LAST_BUILD, which its briefing compares with the build it needs."},
+    {"set":{"local":"CUS_SCRIPT_API_MIN"},"value":1},
+    {"set":{"global":"CUS_LAST_BUILD"},"value":{"local":"BUILD_N"}}
   ],
   "custom settings enable": [
     {"#comment":"WARNING WARNING WARNING - THE ONLY MODIFIABLE FIELDS ARE THE NUMBERS LISTED BELOW WITHIN THE GIVEN RANGE. ANY CHANGE OUTSIDE WILL RESULT IN POTENTIAL MISSION CORRUPTION. BEFORE PROCEEDING, MAKE A BACKUP OF THIS FILE."},
@@ -4465,6 +4468,7 @@
   ],
   "CUSTOM_MISSION": [
     {"call_macro":"trace dispatch handoff","params":{"stage":"custom_mission_start"}},
+    {"call_macro":"custom script compatibility"},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]}},
     {"set":{"local":"CRASH_VARIABLE"},"value":{"var":["L:CUS_CRASH_VARIABLE","number"]}},
@@ -11273,18 +11277,39 @@
         ]},
         {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
         {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"accident location pregenerator CUSTOM"},
-        {"create_location": "userA",
-          "zones": [
-            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_USERA LAT","number"]},{"var":["L:CUS_USERA LON","number"]}]}}}}
+        {"if": {"var":["L:CUS_USERA LAT","number"]}, "eq": 0,
+          "then": [
+            {"#comment":"The script gave no pick-up point: the accident location is used (the transfer and organ missions need userA)."},
+            {"create_location": "userA",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
+            {"set":{"local":"location_diagnostic_writer_userA"},"value":"accident location pregenerator CUSTOM"}
+          ],"else": [
+            {"create_location": "userA",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_USERA LAT","number"]},{"var":["L:CUS_USERA LON","number"]}]}}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
+            {"set":{"local":"location_diagnostic_writer_userA"},"value":"accident location pregenerator CUSTOM"}
         ]},
-        {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
-        {"set":{"local":"location_diagnostic_writer_userA"},"value":"accident location pregenerator CUSTOM"},
-        {"create_location": "rescue_location",
-          "zones": [
-            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_RESCUE LAT","number"]},{"var":["L:CUS_RESCUE LON","number"]}]}}}}
-        ]},
-        {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
-        {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"accident location pregenerator CUSTOM"}
+        {"if": {"var":["L:CUS_RESCUE LAT","number"]}, "eq": 0,
+          "then": [
+            {"create_location": "rescue_location",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
+            {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"accident location pregenerator CUSTOM"}
+          ],"else": [
+            {"create_location": "rescue_location",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_RESCUE LAT","number"]},{"var":["L:CUS_RESCUE LON","number"]}]}}}}
+            ]},
+            {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
+            {"set":{"local":"location_diagnostic_writer_rescue_location"},"value":"accident location pregenerator CUSTOM"}
+        ]}
     ]},
     {"if": {"local":"SAR"}, "ne": "yes",
       "then": [
@@ -11301,6 +11326,7 @@
     ]},
     {"create_thread": {
       "commands": [
+        {"call_macro":"custom objects engine"},
         {"if": {"local":"OBJECT1"}, "ne": null,
           "then": [
             {"create_location": "LOBJECT1",
@@ -13386,76 +13412,17 @@
     {"sleep":1}
   ],
   "Query closest hospital": [
-    {"set":{"local":"organexpiration"},"value":0},
-    {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
-    {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
+    {"#comment":"First proposal of the hospital. Custom script (train.json): when it sets L:CUS_HOSPITAL LAT/LON (not 0) and the mission is not the organ transport, hospital_user is that place and hospital_name the local CUS_HOSPITAL_NAME (default 'Custom hospital'); no query, no comparison with the nearest. The user can still change the destination from the menu. Otherwise the usual query."},
+    {"if": {
+      "and": [
+        {"require":{"var":["L:CUS_HOSPITAL LAT","number"]},"ne":0},
+        {"require":{"local":"MISSION_NUMBER"},"ne":4}
+      ]}, "eq": 1,
       "then": [
-        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
-          "then": [
-            {"create_location": "hospital_user",
-              "zones": [
-                {"zone": {
-                    "zone_type": "query_closest_result",
-                    "query": {"query":"[out:json];(nwr({{bbox}})[amenity=hospital]; nwr({{bbox}})[aeroway=helipad];); out center;","groups":[{"amenity":"hospital"},{"aeroway":"helipad"}],"logic":{"intersection":0.2}},
-                    "location": "accident_location",
-                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
-                    "commands": []
-                  }
-                }
-            ]}
-        ]},
-        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
-          "then": [
-            {"create_location": "hospital_user",
-              "zones": [
-                {"zone": {
-                    "zone_type": "query_closest_result",
-                    "query": "DB:H_HOSPITAL",
-                    "location": "accident_location",
-                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
-                    "commands": []
-                  }
-                }
-            ]}
-        ]}
+        {"call_macro":"custom hospital first choice"}
       ],"else": [
-        {"wait_for":{"has_location":"userA"},"eq":1},
-        {"sleep":0.1},
-        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
-          "then": [
-            {"create_location": "hospital_user",
-              "zones": [
-                {"zone": {
-                    "zone_type": "query_closest_result",
-                    "query": {"query":"[out:json];(nwr({{bbox}})[amenity=hospital]; nwr({{bbox}})[aeroway=helipad];); out center;","groups":[{"amenity":"hospital"},{"aeroway":"helipad"}],"logic":{"intersection":0.2}},
-                    "location": "userA",
-                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
-                    "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
-                    "commands": []
-                  }
-                }
-            ]}
-        ]},
-        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
-          "then": [
-            {"create_location": "hospital_user",
-              "zones": [
-                {"zone": {
-                    "zone_type": "query_random_result",
-                    "query": "DB:H_HOSPITAL",
-                    "location": "userA",
-                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
-                    "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
-                    "commands": []
-                  }
-                }
-            ]}
-        ]},
-        {"call_macro":"timefororgantransport"}
-    ]},
-    {"set":{"local":"hospital_name"},"value":"hospital_user_Name"},
-    {"call_macro":"QUERY COMPARE HOSPITAL WITH DB"},
-    {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}}
+        {"call_macro":"Query closest hospital default"}
+    ]}
   ],
   "Query closest hospital midway": [
     {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
@@ -50470,11 +50437,15 @@
             {"wait_for":{"has_location":"userA"},"eq":1},
             {"wait_for":{"location":"userA","var":"distance"},"gt":2.1},
             {"wait_for":{"location":"userA","var":"distance"},"lt":2.1},
-            {"set":{"var":["L:PLT{local:VCP}16","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}16","number"]},1]}},
-            {"if": {"var":["L:MIDWAY","number"]}, "eq": 1,
+            {"#comment":"Loading area callout only when userA is a place of its own: the custom script (and the copy made by the CUSTOM pregenerator) puts userA on the accident, where the accident area callout already speaks."},
+            {"if": {"location":"userA","var":"distance","to":"accident_location"}, "gt": 0.1,
               "then": [
-                {"sleep":4},
-                {"call_macro":"voice midway briefing"}
+                {"set":{"var":["L:PLT{local:VCP}16","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}16","number"]},1]}},
+                {"if": {"var":["L:MIDWAY","number"]}, "eq": 1,
+                  "then": [
+                    {"sleep":4},
+                    {"call_macro":"voice midway briefing"}
+                ]}
             ]}
         ]}},
         {"#comment":"2 NM L MAP ZOOM"},
@@ -94651,6 +94622,247 @@
         {"wait_for":{"location":"landing_spot","var":"distance"},"gt":1},
         {"call_macro":"scene responders release"}
     ]}}
+  ],
+  "custom objects engine": [
+    {"#comment":"Objects of the custom script (train.json): local CUS_OBJECTS is an array of structures {title, lat, lon, var1, var2, point, fallback, heading}; at most 30 objects. Named CUSOBJ1.. so that point can name another one. Every object is created inside its own try: a bad row never stops the others."},
+    {"if": {"local":"CUS_OBJECTS"}, "ne": null,
+      "then": [
+        {"set":{"local":"ce_i"},"value":0},
+        {"set":{"local":"custom_objects_error"},"value":null},
+        {"for_each": {"local":"CUS_OBJECTS"},
+          "do": [
+            {"if": {"local":"ce_i"}, "lt": 30,
+              "then": [
+                {"set":{"local":"ce_i"},"value":{"add":[{"local":"ce_i"},1]}},
+                {"set":{"local":"ce_oname"},"value":{"text":"CUSOBJ{0}","params":[{"local":"ce_i"}]}},
+                {"set":{"local":"ce_title"},"value":{"struct":{"param":"$item"},"path":"title"}},
+                {"set":{"local":"ce_fb"},"value":{"struct":{"param":"$item"},"path":"fallback"}},
+                {"set":{"local":"ce_v1"},"value":{"struct":{"param":"$item"},"path":"var1"}},
+                {"set":{"local":"ce_v2"},"value":{"struct":{"param":"$item"},"path":"var2"}},
+                {"set":{"local":"ce_pt"},"value":{"struct":{"param":"$item"},"path":"point"}},
+                {"set":{"local":"ce_hdg"},"value":{"struct":{"param":"$item"},"path":"heading"}},
+                {"if": {"local":"ce_fb"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_fb"},"value":""}
+                ]},
+                {"if": {"local":"ce_pt"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_pt"},"value":""}
+                ]},
+                {"if": {"local":"ce_v1"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_v1"},"value":0}
+                ]},
+                {"if": {"local":"ce_v2"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_v2"},"value":0}
+                ]},
+                {"if": {"local":"ce_hdg"}, "eq": null,
+                  "then": [
+                    {"set":{"local":"ce_hdg"},"value":-1}
+                ]},
+                {"try": [
+                    {"create_location": "CUSOBJLOC",
+                      "zones": [
+                        {"zone":{"location":{"resolve_location":{"create_array":[{"struct":{"param":"$item"},"path":"lat"},{"struct":{"param":"$item"},"path":"lon"}]}}}}
+                    ]},
+                    {"if": {"local":"ce_hdg"}, "lt": 0,
+                      "then": [
+                        {"call_macro":"custom object create random heading"}
+                      ],"else": [
+                        {"try": [
+                            {"call_macro":"custom object create fixed heading"}
+                          ],
+                          "catch": [
+                            {"call_macro":"custom object create random heading"}
+                        ]}
+                    ]},
+                    {"set":{"object":{"local":"ce_oname"},"var":"VAR 1"},"value":{"local":"ce_v1"}},
+                    {"set":{"object":{"local":"ce_oname"},"var":"VAR 2"},"value":{"local":"ce_v2"}},
+                    {"if": {"local":"ce_pt"}, "ne": "",
+                      "then": [
+                        {"sleep":0.3},
+                        {"try": [
+                            {"if": {"local":"ce_pt"}, "eq": "accident_location",
+                              "then": [
+                                {"point_object":{"local":"ce_oname"},"to":"accident_location"}
+                              ],"else": [
+                                {"point_object":{"local":"ce_oname"},"to":{"local":"ce_pt"}}
+                            ]}
+                          ],
+                          "catch": [
+                            {"set":{"local":"custom_objects_error"},"value":{"param":"$ERROR"}},
+                            {"try": [
+                                {"point_object":{"local":"ce_oname"},"to":{"location":{"local":"ce_pt"}}}
+                              ],
+                              "catch": [
+                                {"set":{"local":"custom_objects_error"},"value":{"param":"$ERROR"}}
+                            ]}
+                        ]}
+                    ]}
+                  ],
+                  "catch": [
+                    {"set":{"local":"custom_objects_error"},"value":{"param":"$ERROR"}}
+                ]}
+            ]},
+            {"if": {"local":"custom_objects_error"}, "ne": null,
+              "then": [
+                {"set_message":{"text":"Custom objects: {0}","params":[{"local":"custom_objects_error"}]}},
+                {"sleep":20},
+                {"set_message":{"text":""}}
+            ]}
+        ]}
+    ]}
+  ],
+  "custom object create random heading": [
+    {"if": {"local":"ce_fb"}, "ne": "",
+      "then": [
+        {"try": [
+            {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"fallback_title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"CUSOBJLOC"}}}
+          ],
+          "catch": [
+            {"try": [
+                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"CUSOBJLOC"}}}
+              ],
+              "catch": [
+                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"CUSOBJLOC"}}}
+            ]}
+        ]}
+      ],"else": [
+        {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"CUSOBJLOC"}}}
+    ]}
+  ],
+  "custom object create fixed heading": [
+    {"if": {"local":"ce_fb"}, "ne": "",
+      "then": [
+        {"try": [
+            {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"fallback_title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+          ],
+          "catch": [
+            {"try": [
+                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+              ],
+              "catch": [
+                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+            ]}
+        ]}
+      ],"else": [
+        {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+    ]}
+  ],
+  "custom hospital first choice": [
+    {"set":{"local":"organexpiration"},"value":0},
+    {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
+    {"create_location": "hospital_user",
+      "zones": [
+        {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_HOSPITAL LAT","number"]},{"var":["L:CUS_HOSPITAL LON","number"]}]}}}}
+    ]},
+    {"if": {"local":"CUS_HOSPITAL_NAME"}, "eq": null,
+      "then": [
+        {"set":{"local":"CUS_HOSPITAL_NAME"},"value":"Custom hospital"}
+    ]},
+    {"set":{"local":"hospital_name"},"value":{"local":"CUS_HOSPITAL_NAME"}},
+    {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}}
+  ],
+  "Query closest hospital default": [
+    {"set":{"local":"organexpiration"},"value":0},
+    {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
+    {"if": {"local":"MISSION_NUMBER"}, "ne": 4,
+      "then": [
+        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
+          "then": [
+            {"create_location": "hospital_user",
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_closest_result",
+                    "query": {"query":"[out:json];(nwr({{bbox}})[amenity=hospital]; nwr({{bbox}})[aeroway=helipad];); out center;","groups":[{"amenity":"hospital"},{"aeroway":"helipad"}],"logic":{"intersection":0.2}},
+                    "location": "accident_location",
+                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                    "commands": []
+                  }
+                }
+            ]}
+        ]},
+        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
+          "then": [
+            {"create_location": "hospital_user",
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_closest_result",
+                    "query": "DB:H_HOSPITAL",
+                    "location": "accident_location",
+                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                    "commands": []
+                  }
+                }
+            ]}
+        ]}
+      ],"else": [
+        {"wait_for":{"has_location":"userA"},"eq":1},
+        {"sleep":0.1},
+        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
+          "then": [
+            {"create_location": "hospital_user",
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_closest_result",
+                    "query": {"query":"[out:json];(nwr({{bbox}})[amenity=hospital]; nwr({{bbox}})[aeroway=helipad];); out center;","groups":[{"amenity":"hospital"},{"aeroway":"helipad"}],"logic":{"intersection":0.2}},
+                    "location": "userA",
+                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                    "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                    "commands": []
+                  }
+                }
+            ]}
+        ]},
+        {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
+          "then": [
+            {"create_location": "hospital_user",
+              "zones": [
+                {"zone": {
+                    "zone_type": "query_random_result",
+                    "query": "DB:H_HOSPITAL",
+                    "location": "userA",
+                    "radius": {"global":"MISSION_ACCIDENT_MAX_RADIUS"},
+                    "minRadius": {"global":"MISSION_ACCIDENT_MIN_RADIUS"},
+                    "commands": []
+                  }
+                }
+            ]}
+        ]},
+        {"call_macro":"timefororgantransport"}
+    ]},
+    {"set":{"local":"hospital_name"},"value":"hospital_user_Name"},
+    {"call_macro":"QUERY COMPARE HOSPITAL WITH DB"},
+    {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}}
+  ],
+  "custom script compatibility": [
+    {"#comment":"Called first by CUSTOM_MISSION. L:CUS_SCRIPT_API 0 = the original 0.997 script (legacy: numbered OBJECTn locals, no userA/rescue/objects list, accepted as is). Above 0 but below CUS_SCRIPT_API_MIN, or needing a newer build (L:CUS_SCRIPT_BUILD, same unit as BUILD_N) than this mission: a message, the dispatch continues."},
+    {"set":{"local":"custom_script_api"},"value":{"var":["L:CUS_SCRIPT_API","number"]}},
+    {"set":{"local":"custom_script_legacy"},"value":0},
+    {"if": {"local":"custom_script_api"}, "eq": 0,
+      "then": [
+        {"set":{"local":"custom_script_legacy"},"value":1}
+      ],"else": [
+        {"if": {"local":"custom_script_api"}, "lt": {"local":"CUS_SCRIPT_API_MIN"},
+          "then": [
+            {"create_thread": {
+              "commands": [
+                {"set_message":{"text":"The custom script is too old for this mission (script API {0}, minimum {1}). Update train.json.","params":[{"local":"custom_script_api"},{"local":"CUS_SCRIPT_API_MIN"}]}},
+                {"sleep":30},
+                {"set_message":{"text":""}}
+            ]}}
+        ]},
+        {"if": {"var":["L:CUS_SCRIPT_BUILD","number"]}, "gt": {"local":"BUILD_N"},
+          "then": [
+            {"create_thread": {
+              "commands": [
+                {"set_message":{"text":"The custom script needs mission build {0} or newer, this is {1}. Update the mission.","params":[{"var":["L:CUS_SCRIPT_BUILD","number"]},{"local":"BUILD_N"}]}},
+                {"sleep":30},
+                {"set_message":{"text":""}}
+            ]}}
+        ]}
+    ]}
   ]
 },
 

@@ -16,6 +16,18 @@
 
 For every incident except 999 the mission takes the definition from its own `data.accidents`; the script copy is used only by the briefing shown before the mission loads (description of the chosen variant, objective, SAR, mountain rescuers). For ID 999 (`CUSTOM (EDITABLE)`) the script copy is the full definition and is the source of truth. The globals written by the loop match exactly the globals read by `missionupdate CUSTOM` (checked 2026-10-29).
 
+## Version contract (2026-10-30)
+
+| Where | What |
+| --- | --- |
+| Script | `L:CUS_SCRIPT_API` (contract version, now 1) and `L:CUS_SCRIPT_BUILD` (oldest mission build it needs, `major*1000+minor`, 169.87 = 169087); local `MIN_BUILD` equals the latter for the briefing. |
+| Mission, `version check` | `CUS_SCRIPT_API_MIN` (oldest script API accepted, now 1) and the global `CUS_LAST_BUILD` = `BUILD_N` of the running mission, so the script briefing can warn "this script needs build X" before the mission loads. |
+| Mission, `custom script compatibility` (first call of `CUSTOM_MISSION`) | API 0 or missing = original 0.997 script (legacy, accepted); API below the minimum, or `CUS_SCRIPT_BUILD` above the mission build = message for 30 s, the dispatch continues. |
+
+Rule: raise `CUS_SCRIPT_API_MIN` in the mission and `CUS_SCRIPT_API` / `CUS_SCRIPT_BUILD` in the script (and `MIN_BUILD`) only when a mission change makes the previous script impossible. Additions that older scripts simply do not set (new optional variables) never raise it. `tools/test-custom-script.js` checks that the script API is accepted, that the script build is not newer than the mission, and that `MISSION_VERSION` stays "0.997".
+
+Legacy script (original, frozen in `tools/fixtures/train-legacy-0.997.json`): it looks at 0.997, so `MISSION_VERSION` must stay "0.997" until 0.998, where the legacy path (numbered `OBJECT1..15` locals, `accident location pregenerator CUSTOM` fallbacks for `CUS_USERA`/`CUS_RESCUE`) and the fixture go away. The test checks that every LVAR the legacy script sets is still read by the mission. Known limit: LVARs survive between scripts in the same simulator session, so a legacy script started after a new one still reads the new `CUS_SCRIPT_API`.
+
 ## Keeping the incident list aligned
 
 ```
@@ -31,7 +43,7 @@ The tool regenerates every entry except 999 from `mission-src/data/02-waypoints-
 | --- | --- | --- |
 | A1 | Incident list stale: 13 mission incidents missing (0, 300, 65-68 SAR, 69-74, 101, 102) and about 25 entries with older texts. Choosing a missing ID produced an empty briefing. | Fixed by the sync tool (80 incidents + 999). |
 | A2 | The 999 entry has none of the optional fields the mission now supports (`extra_crashed`, `randomdead`, conditions `cond_*`, `requirements`, `preload`). The loop copies them, absent means null. | Not a defect if null means off; confirm in the simulator. |
-| A3 | `MIN_VERSION` is 0.99634 and the mission publishes `MISSION_VERSION` "0.997" (the 169.xx build is not in it). The version gate can never fire for a build number. | Open: needs a script API number set by the mission. |
+| A3 | `MIN_VERSION` is 0.99634 and the mission publishes `MISSION_VERSION` "0.997" (the 169.xx build is not in it). The version gate can never fire for a build number. | Fixed 2026-10-30: see "Version contract". |
 | A4 | The script never sets `L:CUS_USERA` and `L:CUS_RESCUE` while `SKIP_QUERY` is 1, and the mission creates `userA` and `rescue_location` from them in that branch (the original baseline does the same). Static reading: for the HEMS incidents `userA` is not needed (`Query closest hospital` measures from `accident_location`; the scene macros and `road nodes generator` create `rescue_location`). For the transfer and organ missions (99-102) `userA` is the pick-up point: `Mission dispatch` shows "Pick-up location may be invalid" when it is within 10 m of the sim origin, and the hospital queries of the transfer branch measure from it. | Static analysis only. Plan: the script gets an optional `CUS_USERA` (pick-up point of the secondary missions) and an optional `CUS_RESCUE`; when absent the mission copies `accident_location`. Simulator check of the current behaviour still pending. |
 | A5 | Instructions mention `Prototype_1`, the file has `prototype_3`; "OBJECTS LVARS ARE ACTUALLY NOT SUPPORTED" is unclear; nothing explains what happens when a model name is not installed (for example the 30West objects). | Open: rewrite with the grouping in the plan below. |
 | A6 | The 15 object slots are 15 copies of the same block, only `OBJECT1`, `OBJECT10`, `OBJECT15` face the accident. A dynamic engine cannot grow this block. | See "Object engine". |
@@ -50,9 +62,20 @@ Test: `standalone-tests/object-engine-test.json` (generated, nine buttons, each 
 
 Unproven, to be tested with a standalone mission in `standalone-tests/` before any mission change: (T1) a `for_each` over a local array of structures whose items give `name`, `lat`, `lon`; (T2) `create_object` with a name built from the loop counter (`param` values are thread-scoped and the production `VAR1` rule applies to drive, not to creation, but the name interpolation must be proven); (T3) the array local is still readable after `load_mission`; (T4) behaviour with 100+ objects and with a missing model. If T2 fails, the safe fallback is a generated, larger fixed number of slots (for example 60) produced by a tool, which is finite but keeps the current proven syntax.
 
-## Custom hospital as first proposal (design, not implemented)
+### Implemented in the sources (2026-10-29, not built, runtime pending)
 
-The script would set `L:CUS_HOSPITAL LAT/LON` and a name. The hospital proposal comes from `Query closest hospital`, `Query list hospital destination` and `voice hospital proposal`; the custom hospital would be inserted as first entry when the script value is set and skipped otherwise. The macros above have not been read in depth yet: before editing, read how the list is built and how the hangar/hospital waypoint tables (`cus_hospital`) are used.
+Standalone test results (simulator, Pescara threshold 04): a `for_each` over an array of structures with `create_object` works; the object name built from a counter and held in a local works; the title read from the structure works; `VAR 1` and `VAR 2` are accepted; a location created from `lat`/`lon` read from the structure is placed correctly. A location whose name was built from the counter was not proven (the engine uses one fixed name, `CUSOBJLOC`, rewritten at every object). Not proven: `point_object` on an object created in the loop, 30 objects together, an array local surviving `load_mission`.
+
+- `custom objects engine` (module 05) reads the local `CUS_OBJECTS`, an array of `{title, lat, lon, var1, var2, point, fallback, heading}`, creates at most 30 objects named `CUSOBJ1..`, sets `VAR 1`/`VAR 2` (0 when absent), points the object when `point` is not empty (`accident_location`, any location name, or `CUSOBJn`), and uses `fallback` when the title is missing (no fallback, no substitute). Every object is created in its own `try`; the last error text is kept in the local `custom_objects_error`. The old `OBJECT1..15` blocks stay as a compatibility path for scripts written before.
+- `accident location pregenerator CUSTOM`: `CUS_USERA` and `CUS_RESCUE` are optional; at 0 the accident location is used.
+- `train.json` is regrouped in three edit blocks (mission, advanced options, objects), the object list is one line per object, the old scene (10 objects) is converted.
+- `tools/test-custom-script.js` checks the contract statically.
+
+Not done: custom hospital as first proposal, custom audio messages, name of the place instead of the city (111 `:LOCATION` text boxes would have to follow one switch).
+
+## Custom hospital as first proposal (sources 2026-10-30, not built, runtime pending)
+
+The script sets `L:CUS_HOSPITAL LAT/LON` (0 = off) and the local `CUS_HOSPITAL_NAME`. `Query closest hospital` is now a wrapper: with the value set and `MISSION_NUMBER` not 4 (organ transport) it calls `custom hospital first choice` (hospital_user from the coordinates, `hospital_name` = the name, map icon, no query and no comparison with the nearest); otherwise it calls `Query closest hospital default` (the former body, unchanged). All callers (dispatch, `voice hospital proposal`, crew emergency) are unaffected, so the doctor says the custom name (`HOSP.FOUND`) and the user can still change the destination from the menu. Limits: the `hospital_user_Name` token (online submit only) is not set; the organ transport keeps its own query.
 
 ## Custom audio messages (design, not implemented)
 
