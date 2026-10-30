@@ -75,6 +75,7 @@ const buildN = Number(identity[1]) * 1000 + Number(identity[2]);
 assert(scriptValue('L:CUS_SCRIPT_BUILD') <= buildN, 'script needs a newer build than this mission');
 assert(commands.some((c) => c.set && c.set.local === 'MIN_BUILD' && c.value === scriptValue('L:CUS_SCRIPT_BUILD')), 'MIN_BUILD must equal CUS_SCRIPT_BUILD');
 assert(bootstrap.includes('"CUS_LAST_BUILD"'), 'the mission must publish CUS_LAST_BUILD');
+assert(commands.some((c) => c.set && c.set.local === 'MIN_VERSION' && c.value === 0.997), 'MIN_VERSION must be the version this script needs (0.997), not the original script value');
 // A mission older than the first build that publishes CUS_LAST_BUILD must be told that the script is incompatible.
 assert(script.briefing.some((item) => item.show_condition && item.show_condition.require && item.show_condition.require.global === 'CUS_LAST_BUILD' && item.show_condition.eq === null && item.params.some((p) => p.local === 'MIN_BUILD')), 'the briefing must warn when the mission reports no build (older mission)');
 assert(script.briefing.some((item) => item.show_condition && JSON.stringify(item.show_condition).includes('"gt":{"global":"CUS_LAST_BUILD"}')), 'the briefing must warn when the reported build is older than MIN_BUILD');
