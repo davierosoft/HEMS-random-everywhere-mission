@@ -76,6 +76,11 @@ assert(scriptValue('L:CUS_SCRIPT_BUILD') <= buildN, 'script needs a newer build 
 assert(commands.some((c) => c.set && c.set.local === 'MIN_BUILD' && c.value === scriptValue('L:CUS_SCRIPT_BUILD')), 'MIN_BUILD must equal CUS_SCRIPT_BUILD');
 assert(bootstrap.includes('"CUS_LAST_BUILD"'), 'the mission must publish CUS_LAST_BUILD');
 assert(commands.some((c) => c.set && c.set.local === 'MIN_VERSION' && c.value === 0.997), 'MIN_VERSION must be the version this script needs (0.997), not the original script value');
+// The minimum (version AND build) is stated in the briefing, always visible, with the build as written in the title (169089 = 169.89).
+const minLabel = '0.997 169.' + (scriptValue('L:CUS_SCRIPT_BUILD') % 1000);
+const required = script.briefing.find((item) => item.text && item.text.startsWith('REQUIRES:'));
+assert(required && !required.show_condition && required.text.includes(minLabel) && required.params.some((p) => p.local === 'MIN_VERSION') && required.params.some((p) => p.local === 'MIN_BUILD'), 'the briefing must always state the minimum version and build');
+for (const item of script.briefing) if (item.text && /needs mission|requires/i.test(item.text) && !item.text.startsWith('REQUIRES:')) assert(item.text.includes(minLabel), 'a briefing warning names a minimum other than ' + minLabel + ': ' + item.text.slice(0, 60));
 // A mission older than the first build that publishes CUS_LAST_BUILD must be told that the script is incompatible.
 assert(script.briefing.some((item) => item.show_condition && item.show_condition.require && item.show_condition.require.global === 'CUS_LAST_BUILD' && item.show_condition.eq === null && item.params.some((p) => p.local === 'MIN_BUILD')), 'the briefing must warn when the mission reports no build (older mission)');
 assert(script.briefing.some((item) => item.show_condition && JSON.stringify(item.show_condition).includes('"gt":{"global":"CUS_LAST_BUILD"}')), 'the briefing must warn when the reported build is older than MIN_BUILD');
