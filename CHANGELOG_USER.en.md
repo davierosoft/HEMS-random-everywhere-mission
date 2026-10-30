@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.92. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.93. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -788,6 +788,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The rear crew says that everybody is inside, the door is closed and the hoist is in only when the right door is closed and the hoist is switched off with the arm stowed. If the hoist is still out after 40 seconds the line is not said, and a checkpoint records the door and hoist values for the report.
 - **Build history:** 0.997 169.86.
 - **Test:** Finish a hoist operation: the "everybody inside" line comes only after the arm is in and the door is closed.
+
+### The Halloween scene without the 30West add-on
+
+- On 31 October the accident scenes of the Halloween mode no longer stay empty when the 30West add-on is not installed: the undead are replaced by ordinary civilians, so the crew calls about people coming toward the helicopter make sense. With the add-on, stones, a pumpkin and fallen undead are also scattered around the scene.
+- **Build history:** 0.997 169.93.
+- **Test:** Fly an accident or camping dispatch on 31 October (or with that date in the simulator): people approach the helicopter, the crew lines are heard, and with 30West stones and pumpkins stand around the scene.
 
 ### The destination choice keeps showing the hospital
 
@@ -1636,4 +1642,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.89:** The six facing choices per object of the custom mission script (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.90:** The facing point of an object read from the script variables, and the readable layout of the script file (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.91:** The custom script versions back to the original logic, with the build the script needs checked against the mission build (see Custom mission script: objects list, own hospital, version check).
-- **0.997 169.92 (this release):** The destination choice that keeps showing the proposed hospital and its distance (see The destination choice keeps showing the hospital).
+- **0.997 169.92:** The destination choice that keeps showing the proposed hospital and its distance (see The destination choice keeps showing the hospital).
+- **0.997 169.93 (this release):** The Halloween scene that works without the 30West add-on and has decor with it (see The Halloween scene without the 30West add-on).

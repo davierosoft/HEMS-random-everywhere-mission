@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.92",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.93",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.92"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.93"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -20765,12 +20765,26 @@
             {"set":{"object":"VFXA{local:zombie}","var":"VAR 1"},"value":{"rand":[10,30]}},
             {"set":{"object":"VFXA{local:zombie}","var":"VAR 2"},"value":0},
             {"set":{"object":"VFXA{local:zombie}","var":"COUPLED"},"value":4},
-            {"create_object":{"name":"z{local:zombie}","title":{"struct":{"static":"zombiesw"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesw"},"path":"length"}]}}},"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[90,259]},"heading":{"rand":[0,359]},"object":"accident_location"}}},
+            {"create_object":{"name":"z{local:zombie}","title":{"struct":{"static":"zombiesw"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesw"},"path":"length"}]}}},"fallback_title":"Airbus H145 Civilian 3","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[90,259]},"heading":{"rand":[0,359]},"object":"accident_location"}}},
             {"sleep":0.2},
-            {"create_object":{"name":"z{local:zombie}i","title":{"struct":{"static":"zombiesi"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesi"},"path":"length"}]}}},"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[35,209]},"heading":{"rand":[0,359]},"object":"accident_location"}}},
+            {"create_object":{"name":"z{local:zombie}i","title":{"struct":{"static":"zombiesi"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesi"},"path":"length"}]}}},"fallback_title":"Airbus H145 Civilian 5","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[35,209]},"heading":{"rand":[0,359]},"object":"accident_location"}}},
             {"sleep":0.2},
-            {"create_object":{"name":"z{local:zombie}d","title":{"struct":{"static":"zombiesd"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesd"},"path":"length"}]}}},"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[40,209]},"heading":{"rand":[0,359]},"object":"accident_location"}}},
+            {"create_object":{"name":"z{local:zombie}d","title":{"struct":{"static":"zombiesd"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesd"},"path":"length"}]}}},"fallback_title":"Airbus H145 Waving Civilian - Fallen","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[40,209]},"heading":{"rand":[0,359]},"object":"accident_location"}}},
             {"sleep":1}
+        ]},
+        {"#comment":"Halloween decor (stones, pumpkins and fallen undead of the zombiesd list) scattered around the scene; only with the 30West models, there is no fallback that would still look like decor."},
+        {"if": {"local":"30West_installed"}, "eq": "OK",
+          "then": [
+            {"set":{"local":"hallo_deco"},"value":0},
+            {"create_thread": {
+              "commands": [
+                {"while": {"local":"hallo_deco"}, "lt": 12,
+                  "do": [
+                    {"set":{"local":"hallo_deco"},"value":{"add":[{"local":"hallo_deco"},1]}},
+                    {"sleep":0.3},
+                    {"create_object":{"name":"HDECO{local:hallo_deco}","title":{"struct":{"static":"zombiesd"},"index":{"floor":{"rand":[2,{"struct":{"static":"zombiesd"},"path":"length"}]}}},"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[30,140]},"heading":{"rand":[0,359]},"object":"accident_location"}}}
+                ]}
+            ]}}
         ]},
         {"wait_for":{"local":"zombie"},"gte":10},
         {"set":{"var":["L:{local:VCP}HW3","number"]},"value":{"add":[{"var":["L:{local:VCP}HW3","number"]},1]}},
@@ -20779,7 +20793,7 @@
           "do": [
             {"set":{"local":"zombie"},"value":{"add":[{"local":"zombie"},1]}},
             {"sleep":0.2},
-            {"create_object":{"name":"z{local:zombie}","title":{"struct":{"static":"zombiesw"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesw"},"path":"length"}]}}},"location":{"bearing":{"rand":[0,359]},"dist":{"rand":[90,359]},"heading":{"rand":[0,359]}}}},
+            {"create_object":{"name":"z{local:zombie}","title":{"struct":{"static":"zombiesw"},"index":{"floor":{"rand":[0,{"struct":{"static":"zombiesw"},"path":"length"}]}}},"fallback_title":"Airbus H145 Civilian 3","location":{"bearing":{"rand":[0,359]},"dist":{"rand":[90,359]},"heading":{"rand":[0,359]}}}},
             {"sleep":1}
         ]},
         {"or": [

@@ -1,3 +1,7 @@
+## Release 0.997 169.93
+
+- Halloween scene (macro random halloween): the zombie models have a fallback title when the 30West add-on is missing, and twelve decor objects (stones, pumpkin, fallen undead) are created around the scene only with 30West. New static gate tools/test-halloween.js (date gate, HW1-HW15 counters, packs EN/DE/FR, wav and sound.xml entries, fallbacks).
+
 ## Release 0.997 169.92
 
 - Destination modals show the proposed hospital and its distance (text built into a local; set_modal params are not read by the simulator, runtime test 2026-10-30). Carries the unpublished 169.91 custom script work.
