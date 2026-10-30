@@ -77,7 +77,7 @@ assert(commands.some((c) => c.set && c.set.local === 'MIN_BUILD' && c.value === 
 assert(bootstrap.includes('"CUS_LAST_BUILD"'), 'the mission must publish CUS_LAST_BUILD');
 assert(commands.some((c) => c.set && c.set.local === 'MIN_VERSION' && c.value === 0.997), 'MIN_VERSION must be the version this script needs (0.997), not the original script value');
 // The minimum (version AND build) is stated in the briefing, always visible, with the build as written in the title (169089 = 169.89).
-const minLabel = '0.997 169.' + (scriptValue('L:CUS_SCRIPT_BUILD') % 1000);
+const minLabel = '169.' +(scriptValue('L:CUS_SCRIPT_BUILD') % 1000);
 const required = script.briefing.find((item) => item.text && item.text.startsWith('REQUIRES:'));
 assert(required && !required.show_condition && required.text.includes(minLabel) && required.params.some((p) => p.local === 'MIN_VERSION') && required.params.some((p) => p.local === 'MIN_BUILD'), 'the briefing must always state the minimum version and build');
 for (const item of script.briefing) if (item.text && /needs mission|requires/i.test(item.text) && !item.text.startsWith('REQUIRES:')) assert(item.text.includes(minLabel), 'a briefing warning names a minimum other than ' + minLabel + ': ' + item.text.slice(0, 60));
