@@ -15,7 +15,8 @@ for (const section of ['macros', 'data']) {
     assert.equal(normalize(source), formatted, `${file}: mandatory source formatting drift`);
   }
 }
-for (const file of ['everywhere_all.json', 'train.json']) {
+// train.json is not here on purpose: it keeps the layout of the original custom script (user rule 2026-10-30), checked by test-custom-script.js.
+for (const file of ['everywhere_all.json']) {
   const source = fs.readFileSync(path.join(root, file), 'utf8');
   const formatted = formatJsonText(source);
   assert.deepEqual(JSON.parse(formatted), JSON.parse(source));

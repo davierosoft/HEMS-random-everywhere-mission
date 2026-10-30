@@ -18,6 +18,9 @@ const sync = spawnSync(process.execPath, [path.join(__dirname, 'sync-train-accid
 assert.strictEqual(sync.status, 0, 'train.json incident list is not aligned: ' + sync.stderr);
 
 const script = JSON.parse(read('train.json'));
+// Formatting rule (2026-10-30): train.json keeps the layout of the original script, not the mission formatter's.
+const { formatTrainScript } = require('./train-script-format');
+assert.strictEqual(fs.readFileSync(path.join(root, 'train.json'), 'utf8'), formatTrainScript(script), 'train.json layout differs from the original script layout (node tools/sync-train-accidents.js rewrites it)');
 const commands = script.objectives[0].commands;
 const fields = ['title', 'lat', 'lon', 'var1', 'var2', 'point', 'fallback', 'heading'];
 

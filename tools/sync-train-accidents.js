@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { formatJsonText } = require('./mission-formatter');
+const { formatTrainScript } = require('./train-script-format');
 
 const root = path.resolve(__dirname, '..');
 const trainPath = path.join(root, 'train.json');
@@ -50,7 +50,7 @@ const ids = generated.map((entry) => entry.ID_CARD);
 if (new Set(ids).size !== ids.length) throw new Error('duplicate ID_CARD in the mission accidents');
 
 script.data.accidents = [accidents[0], ...generated];
-const next = formatJsonText(JSON.stringify(script));
+const next = formatTrainScript(script);
 if (/[^\x00-\x7F]/.test(next)) throw new Error('Non-ASCII text in train.json');
 
 if (check) {

@@ -28,6 +28,10 @@ Rule: raise `CUS_SCRIPT_API_MIN` in the mission and `CUS_SCRIPT_API` / `CUS_SCRI
 
 Legacy script (original, frozen in `tools/fixtures/train-legacy-0.997.json`): it looks at 0.997, so `MISSION_VERSION` must stay "0.997" until 0.998, where the legacy path (numbered `OBJECT1..15` locals, `accident location pregenerator CUSTOM` fallbacks for `CUS_USERA`/`CUS_RESCUE`) and the fixture go away. The test checks that every LVAR the legacy script sets is still read by the mission. Known limit: LVARs survive between scripts in the same simulator session, so a legacy script started after a new one still reads the new `CUS_SCRIPT_API`.
 
+## Formatting rule (user, 2026-10-30)
+
+The formatting of `train.json` must strictly follow the layout of the original script (`tools/fixtures/train-legacy-0.997.json`): top-level keys in the original order with a blank line between sections, one command per line, `", "` and `": "` separators, the buttons of the briefing with one command per line, the incident list one field per line. It is not the mission formatter's layout (`mission-formatter.js`), because the file is edited by hand by users. The layout is produced by `tools/train-script-format.js` (used by the sync tool) and `tools/test-custom-script.js` fails when the file differs from it. Edit the data, then run `node tools/sync-train-accidents.js` to restore the layout.
+
 ## Keeping the incident list aligned
 
 ```
