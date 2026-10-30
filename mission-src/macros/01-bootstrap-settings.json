@@ -1,6 +1,6 @@
 {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.90"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.92"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -8,8 +8,8 @@
     {"set":{"local":"BUILD_MINOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":1}}},
     {"set":{"local":"BUILD_N"},"value":{"add":[{"multiply":[{"local":"BUILD_MAJOR"},1000]},{"local":"BUILD_MINOR"}]}},
     {"set":{"local":"MINIMUM_VERSION"},"value":479},
-    {"#comment":"Custom script contract (train.json, docs/architecture/CUSTOM_SCRIPT_TRAIN.md). CUS_SCRIPT_API_MIN is the oldest script API this mission accepts: raise it, and the script's CUS_SCRIPT_API with it, only when a change makes the older script impossible. A script without CUS_SCRIPT_API is the original 0.997 one (legacy, kept until 0.998). The build is published to the script as the global CUS_LAST_BUILD, which its briefing compares with the build it needs."},
-    {"set":{"local":"CUS_SCRIPT_API_MIN"},"value":1},
+    {"#comment":"Custom scripts (train.json, docs/architecture/CUSTOM_SCRIPT_TRAIN.md). CUS_LAST_BUILD = the build of this mission, read by the script briefing against its MIN_BUILD. CUS_MIN_SCRIPT_BUILD = the oldest custom script build (SCRIPT_BUILD of train.json) this mission still works with: raise it whenever a change of the mission makes older custom scripts obsolete, the briefing of the script then says so."},
+    {"set":{"global":"CUS_MIN_SCRIPT_BUILD"},"value":169089},
     {"set":{"global":"CUS_LAST_BUILD"},"value":{"local":"BUILD_N"}}
   ],
   "settings first run defaults": [

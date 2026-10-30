@@ -61,33 +61,31 @@ for (const command of commands) {
   assert(missionText.includes(name), 'the script sets ' + name + ' but no mission macro reads it');
 }
 
-// Version contract: the script declares its API and the oldest build it needs; the mission accepts it.
+// Versions (user rule 2026-10-30, original logic kept): the script states the mission version AND build it needs (MIN_VERSION, MIN_BUILD)
+// and its own build (SCRIPT_BUILD); the mission publishes its build (CUS_LAST_BUILD) and the oldest script build it works with
+// (CUS_MIN_SCRIPT_BUILD); the briefing of the script checks both ways. Nothing is an option for the user.
 const bootstrap = read('mission-src/macros/01-bootstrap-settings.json');
-const apiMin = Number((bootstrap.match(/"CUS_SCRIPT_API_MIN"\},"value":(\d+)/) || [])[1]);
-assert(apiMin >= 1, 'version check must set CUS_SCRIPT_API_MIN');
-const scriptValue = (name) => {
-  const c = commands.find((x) => x.set && x.set.var && x.set.var[0] === name);
-  return c && c.value;
-};
-assert(scriptValue('L:CUS_SCRIPT_API') >= apiMin, 'script API is below the minimum the mission accepts');
+const local = (name) => { const c = commands.find((x) => x.set && x.set.local === name); return c && c.value; };
 const identity = (bootstrap.match(/"RELEASE_IDENTITY"\},"value":"\S+ (\d+)\.(\d+)"/) || []);
 const buildN = Number(identity[1]) * 1000 + Number(identity[2]);
-assert(scriptValue('L:CUS_SCRIPT_BUILD') <= buildN, 'script needs a newer build than this mission');
-assert(commands.some((c) => c.set && c.set.local === 'MIN_BUILD' && c.value === scriptValue('L:CUS_SCRIPT_BUILD')), 'MIN_BUILD must equal CUS_SCRIPT_BUILD');
-assert(bootstrap.includes('"CUS_LAST_BUILD"'), 'the mission must publish CUS_LAST_BUILD');
-assert(commands.some((c) => c.set && c.set.local === 'MIN_VERSION' && c.value === 0.997), 'MIN_VERSION must be the version this script needs (0.997), not the original script value');
-// Minimal information (user rule 2026-10-30): the minimum (version AND build) is CHECKED by commands, and the briefing shows ONE short
-// warning, only when the mission is too old (no build reported = older than the first build that publishes CUS_LAST_BUILD).
-const minLabel = '169.' + (scriptValue('L:CUS_SCRIPT_BUILD') % 1000);
-const minimumTexts = script.briefing.filter((item) => item.text && /needs mission/i.test(item.text));
-assert.strictEqual(minimumTexts.length, 1, 'exactly one minimum-requirement text in the briefing');
-assert(minimumTexts[0].text.includes('0.997') && minimumTexts[0].text.includes(minLabel), 'the warning names the minimum version and build');
-assert(minimumTexts[0].show_condition && minimumTexts[0].show_condition.require.local === 'SCRIPT_TOO_OLD' && minimumTexts[0].show_condition.eq === 1, 'the warning appears only when SCRIPT_TOO_OLD is 1');
-const check = JSON.stringify(commands.filter((c) => !c['#comment']));
-assert(check.includes('"if":{"local":"MIN_VERSION"},"gt":{"global":"first_run"}'), 'SCRIPT_TOO_OLD: version check missing');
-assert(check.includes('"if":{"global":"CUS_LAST_BUILD"},"eq":null'), 'SCRIPT_TOO_OLD: no reported build (older mission) check missing');
-assert(check.includes('"if":{"local":"MIN_BUILD"},"gt":{"global":"CUS_LAST_BUILD"}'), 'SCRIPT_TOO_OLD: build check missing');
-assert(missionText.includes('"custom script compatibility"') && missionText.includes('{"call_macro":"custom script compatibility"}'), 'compatibility macro missing or not called');
+assert.strictEqual(local('MIN_VERSION'), 0.997, 'MIN_VERSION is the mission version the script needs (the mission publishes 0.997)');
+assert(local('MIN_BUILD') > 0 && local('MIN_BUILD') <= buildN, 'MIN_BUILD must be a build that exists');
+const minScriptBuild = Number((bootstrap.match(/"CUS_MIN_SCRIPT_BUILD"\},"value":(\d+)/) || [])[1]);
+assert(minScriptBuild > 0 && minScriptBuild <= buildN, 'version check must set CUS_MIN_SCRIPT_BUILD');
+assert(local('SCRIPT_BUILD') >= minScriptBuild, 'the script build is below the oldest script build the mission accepts');
+assert(local('SCRIPT_BUILD') <= buildN, 'the script is newer than this mission');
+assert(bootstrap.includes('"CUS_LAST_BUILD"},"value":{"local":"BUILD_N"}'), 'the mission must publish its build in CUS_LAST_BUILD');
+assert(!JSON.stringify(commands).includes('CUS_SCRIPT_API'), 'no script API number: the versions are MIN_VERSION, MIN_BUILD, SCRIPT_BUILD');
+const label = '169.' + (local('MIN_BUILD') % 1000);
+const briefingChecks = script.briefing.filter((item) => item.text && /This script (requires|needs|is obsolete)|your mission version was/.test(item.text));
+assert.strictEqual(briefingChecks.length, 4, 'briefing: version check, two build checks (no build reported / build too old), obsolete script check');
+assert(briefingChecks.every((item) => item.show_condition), 'every minimum text is a check');
+assert(!/"or"/.test(JSON.stringify(briefingChecks.map((item) => item.show_condition))), 'show_condition does not work with or: one row per case');
+assert(JSON.stringify(briefingChecks[0].show_condition) === '{"require":{"local":"MIN_VERSION"},"gt":{"global":"first_run"}}', 'the version check is the original one');
+assert(briefingChecks[1].text.includes(label) && JSON.stringify(briefingChecks[1].show_condition) === '{"require":{"global":"CUS_LAST_BUILD"},"eq":null}', 'the first build check covers a mission that reports no build');
+assert(briefingChecks[2].text === briefingChecks[1].text && JSON.stringify(briefingChecks[2].show_condition).includes('"gt":{"global":"CUS_LAST_BUILD"}'), 'the second build check covers a reported build below MIN_BUILD');
+assert(JSON.stringify(briefingChecks[3].show_condition).includes('"gt":{"local":"SCRIPT_BUILD"}') && briefingChecks[3].params.some((p) => p.local === 'SCRIPT_BUILD'), 'the obsolete script check compares CUS_MIN_SCRIPT_BUILD with SCRIPT_BUILD');
+assert(!missionText.includes('custom script compatibility'), 'the mission-side compatibility macro was removed (versions are checked in the script briefing)');
 
 // Legacy (original 0.997 script, kept until 0.998): every variable it sets is still read by the mission.
 assert(bootstrap.includes('"MISSION_VERSION"},"value":"0.997"'), 'legacy scripts look at 0.997: do not change MISSION_VERSION before 0.998');

@@ -1066,37 +1066,8 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"next_dispatch","actor":"dispatch","target":"cooldown","state":"button released"}}
     ]}}
   ],
-  "custom script compatibility": [
-    {"#comment":"Called first by CUSTOM_MISSION. L:CUS_SCRIPT_API 0 = the original 0.997 script (legacy: numbered OBJECTn locals, no userA/rescue/objects list, accepted as is). Above 0 but below CUS_SCRIPT_API_MIN, or needing a newer build (L:CUS_SCRIPT_BUILD, same unit as BUILD_N) than this mission: a message, the dispatch continues."},
-    {"set":{"local":"custom_script_api"},"value":{"var":["L:CUS_SCRIPT_API","number"]}},
-    {"set":{"local":"custom_script_legacy"},"value":0},
-    {"if": {"local":"custom_script_api"}, "eq": 0,
-      "then": [
-        {"set":{"local":"custom_script_legacy"},"value":1}
-      ],"else": [
-        {"if": {"local":"custom_script_api"}, "lt": {"local":"CUS_SCRIPT_API_MIN"},
-          "then": [
-            {"create_thread": {
-              "commands": [
-                {"set_message":{"text":"The custom script is too old for this mission (script API {0}, minimum {1}). Update train.json.","params":[{"local":"custom_script_api"},{"local":"CUS_SCRIPT_API_MIN"}]}},
-                {"sleep":30},
-                {"set_message":{"text":""}}
-            ]}}
-        ]},
-        {"if": {"var":["L:CUS_SCRIPT_BUILD","number"]}, "gt": {"local":"BUILD_N"},
-          "then": [
-            {"create_thread": {
-              "commands": [
-                {"set_message":{"text":"The custom script needs mission build {0} or newer, this is {1}. Update the mission.","params":[{"var":["L:CUS_SCRIPT_BUILD","number"]},{"local":"BUILD_N"}]}},
-                {"sleep":30},
-                {"set_message":{"text":""}}
-            ]}}
-        ]}
-    ]}
-  ],
   "CUSTOM_MISSION": [
     {"call_macro":"trace dispatch handoff","params":{"stage":"custom_mission_start"}},
-    {"call_macro":"custom script compatibility"},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]}},
     {"set":{"local":"CRASH_VARIABLE"},"value":{"var":["L:CUS_CRASH_VARIABLE","number"]}},

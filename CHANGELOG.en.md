@@ -1,3 +1,11 @@
+## Release 0.997 169.92
+
+- Destination modals show the proposed hospital and its distance (text built into a local; set_modal params are not read by the simulator, runtime test 2026-10-30). Carries the unpublished 169.91 custom script work.
+
+## Release 0.997 169.91
+
+- Custom script versions back to the original logic: MIN_VERSION, MIN_BUILD, SCRIPT_BUILD, CUS_MIN_SCRIPT_BUILD, one-case briefing rows
+
 ## Release 0.997 169.90
 
 - Custom objects: aim location from LVARs, readable train.json layout

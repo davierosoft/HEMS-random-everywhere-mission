@@ -1,0 +1,456 @@
+{
+  "title": "MODAL PARAMS TEST",
+  "id": "modal_params_test",
+  "start_info": {
+    "icon_src": "",
+    "query": []
+  },
+  "objectives": [
+    {
+      "title": "MODAL PARAMS TEST",
+      "commands": [
+        {
+          "create_location": "heli",
+          "zones": [
+            {
+              "zone": {
+                "location": "$USER"
+              }
+            }
+          ]
+        },
+        {
+          "set": {
+            "local": "t1_status"
+          },
+          "value": "PENDING"
+        },
+        {
+          "set": {
+            "local": "t2_status"
+          },
+          "value": "PENDING"
+        },
+        {
+          "set": {
+            "local": "t3_status"
+          },
+          "value": "PENDING"
+        },
+        {
+          "set": {
+            "local": "t4_status"
+          },
+          "value": "PENDING"
+        },
+        {
+          "set_briefing_dialog": 1
+        },
+        {
+          "wait_for": 1,
+          "lt": 0
+        }
+      ]
+    }
+  ],
+  "macros": {
+    "modal test 1 text from a local": [
+      {
+        "#comment": "Variant 1: the modal text is a local built with the text/params value expression (as set_message and the status rows do)."
+      },
+      {
+        "set": {
+          "local": "t1_status"
+        },
+        "value": "MODAL OPEN: choose a button"
+      },
+      {
+        "set": {
+          "local": "dest_name"
+        },
+        "value": "SAN RAFFAELE"
+      },
+      {
+        "set": {
+          "local": "dest_km"
+        },
+        "value": 12.3
+      },
+      {
+        "set": {
+          "local": "t1_text"
+        },
+        "value": {
+          "text": "Select destination helipad. Selected: {1} (distance {0} Km)",
+          "params": [
+            {
+              "local": "dest_km"
+            },
+            {
+              "local": "dest_name"
+            }
+          ]
+        }
+      },
+      {
+        "set_modal": {
+          "title": "CHOOSE DESTINATION",
+          "text": {
+            "local": "t1_text"
+          },
+          "options": [
+            {
+              "text": "I SEE THE HOSPITAL AND THE DISTANCE",
+              "style": "primary",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t1_status"
+                  },
+                  "value": "OK: the modal shows the values"
+                }
+              ]
+            },
+            {
+              "text": "I SEE {0} / NOTHING / THE WRONG TEXT",
+              "style": "",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t1_status"
+                  },
+                  "value": "FAILED: placeholder, empty or wrong text"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "modal test 2 params in the modal": [
+      {
+        "#comment": "Variant 2: {0} placeholders in the modal text with a params array in the modal object, like set_message."
+      },
+      {
+        "set": {
+          "local": "t2_status"
+        },
+        "value": "MODAL OPEN: choose a button"
+      },
+      {
+        "set": {
+          "local": "dest_name"
+        },
+        "value": "SAN RAFFAELE"
+      },
+      {
+        "set": {
+          "local": "dest_km"
+        },
+        "value": 12.3
+      },
+      {
+        "set_modal": {
+          "title": "CHOOSE DESTINATION",
+          "text": "Select destination helipad. Selected: {1} (distance {0} Km)",
+          "params": [
+            {
+              "local": "dest_km"
+            },
+            {
+              "local": "dest_name"
+            }
+          ],
+          "options": [
+            {
+              "text": "I SEE THE HOSPITAL AND THE DISTANCE",
+              "style": "primary",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t2_status"
+                  },
+                  "value": "OK: the modal shows the values"
+                }
+              ]
+            },
+            {
+              "text": "I SEE {0} / NOTHING / THE WRONG TEXT",
+              "style": "",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t2_status"
+                  },
+                  "value": "FAILED: placeholder, empty or wrong text"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "modal test 3 title from a local": [
+      {
+        "#comment": "Variant 3: the hospital in the TITLE, taken from a local."
+      },
+      {
+        "set": {
+          "local": "t3_status"
+        },
+        "value": "MODAL OPEN: choose a button"
+      },
+      {
+        "set": {
+          "local": "dest_name"
+        },
+        "value": "SAN RAFFAELE"
+      },
+      {
+        "set": {
+          "local": "dest_km"
+        },
+        "value": 12.3
+      },
+      {
+        "set": {
+          "local": "t3_title"
+        },
+        "value": {
+          "text": "DESTINATION: {0} ({1} Km)",
+          "params": [
+            {
+              "local": "dest_name"
+            },
+            {
+              "local": "dest_km"
+            }
+          ]
+        }
+      },
+      {
+        "set_modal": {
+          "title": {
+            "local": "t3_title"
+          },
+          "text": "Select destination helipad for patient transport",
+          "options": [
+            {
+              "text": "I SEE THE HOSPITAL AND THE DISTANCE",
+              "style": "primary",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t3_status"
+                  },
+                  "value": "OK: the modal shows the values"
+                }
+              ]
+            },
+            {
+              "text": "I SEE {0} / NOTHING / THE WRONG TEXT",
+              "style": "",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t3_status"
+                  },
+                  "value": "FAILED: placeholder, empty or wrong text"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ],
+    "modal test 4 message during the modal": [
+      {
+        "#comment": "Variant 1 modal, then after 3 s and 8 s a set_message (patient values, crew line) as in the flight: the hospital text of the modal must stay on screen."
+      },
+      {
+        "set": {
+          "local": "t4_status"
+        },
+        "value": "MODAL OPEN: wait 10 s, then choose a button"
+      },
+      {
+        "set": {
+          "local": "dest_name"
+        },
+        "value": "SAN RAFFAELE"
+      },
+      {
+        "set": {
+          "local": "dest_km"
+        },
+        "value": 12.3
+      },
+      {
+        "set": {
+          "local": "t4_text"
+        },
+        "value": {
+          "text": "Select destination helipad. Selected: {1} (distance {0} Km)",
+          "params": [
+            {
+              "local": "dest_km"
+            },
+            {
+              "local": "dest_name"
+            }
+          ]
+        }
+      },
+      {
+        "create_thread": {
+          "commands": [
+            {
+              "sleep": 3
+            },
+            {
+              "set_message": {
+                "text": "Patient 2: SpO2 92.6%, HR 77, BP 115/72"
+              }
+            },
+            {
+              "sleep": 5
+            },
+            {
+              "set_message": {
+                "text": "Crew: the doctor is checking the patient"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "set_modal": {
+          "title": "CHOOSE DESTINATION",
+          "text": {
+            "local": "t4_text"
+          },
+          "options": [
+            {
+              "text": "I SEE THE HOSPITAL AND THE DISTANCE",
+              "style": "primary",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t4_status"
+                  },
+                  "value": "OK: the modal shows the values"
+                }
+              ]
+            },
+            {
+              "text": "I SEE {0} / NOTHING / THE WRONG TEXT",
+              "style": "",
+              "commands": [
+                {
+                  "set": {
+                    "local": "t4_status"
+                  },
+                  "value": "FAILED: placeholder, empty or wrong text"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "briefing": [
+    {
+      "text": "MODAL PARAMS TEST",
+      "size": "large",
+      "align": "center"
+    },
+    {
+      "text": "Can the destination modal show the selected hospital and its distance? Press 1 to 4: a modal opens, read it and press the button that says what you see. The hospital is fixed (SAN RAFFAELE, 12.3 Km), no server and no map needed. Test 4 also posts two messages during the modal."
+    },
+    {
+      "buttonbar": [
+        {
+          "title": "1 TEXT FROM A LOCAL",
+          "commands": [
+            {
+              "call_macro": "modal test 1 text from a local"
+            }
+          ]
+        },
+        {
+          "text": "{0}",
+          "params": [
+            {
+              "local": "t1_status"
+            }
+          ],
+          "color": "green"
+        }
+      ]
+    },
+    {
+      "buttonbar": [
+        {
+          "title": "2 PARAMS IN THE MODAL",
+          "commands": [
+            {
+              "call_macro": "modal test 2 params in the modal"
+            }
+          ]
+        },
+        {
+          "text": "{0}",
+          "params": [
+            {
+              "local": "t2_status"
+            }
+          ],
+          "color": "green"
+        }
+      ]
+    },
+    {
+      "buttonbar": [
+        {
+          "title": "3 TITLE FROM A LOCAL",
+          "commands": [
+            {
+              "call_macro": "modal test 3 title from a local"
+            }
+          ]
+        },
+        {
+          "text": "{0}",
+          "params": [
+            {
+              "local": "t3_status"
+            }
+          ],
+          "color": "green"
+        }
+      ]
+    },
+    {
+      "buttonbar": [
+        {
+          "title": "4 MESSAGES DURING THE MODAL",
+          "commands": [
+            {
+              "call_macro": "modal test 4 message during the modal"
+            }
+          ]
+        },
+        {
+          "text": "{0}",
+          "params": [
+            {
+              "local": "t4_status"
+            }
+          ],
+          "color": "green"
+        }
+      ]
+    }
+  ]
+}

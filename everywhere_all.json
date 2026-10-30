@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.90",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.92",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.90"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.92"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -25,8 +25,8 @@
     {"set":{"local":"BUILD_MINOR"},"value":{"parseInt":{"string:split":{"local":"DEV_VERSION"},"delimiter":".","index":1}}},
     {"set":{"local":"BUILD_N"},"value":{"add":[{"multiply":[{"local":"BUILD_MAJOR"},1000]},{"local":"BUILD_MINOR"}]}},
     {"set":{"local":"MINIMUM_VERSION"},"value":479},
-    {"#comment":"Custom script contract (train.json, docs/architecture/CUSTOM_SCRIPT_TRAIN.md). CUS_SCRIPT_API_MIN is the oldest script API this mission accepts: raise it, and the script's CUS_SCRIPT_API with it, only when a change makes the older script impossible. A script without CUS_SCRIPT_API is the original 0.997 one (legacy, kept until 0.998). The build is published to the script as the global CUS_LAST_BUILD, which its briefing compares with the build it needs."},
-    {"set":{"local":"CUS_SCRIPT_API_MIN"},"value":1},
+    {"#comment":"Custom scripts (train.json, docs/architecture/CUSTOM_SCRIPT_TRAIN.md). CUS_LAST_BUILD = the build of this mission, read by the script briefing against its MIN_BUILD. CUS_MIN_SCRIPT_BUILD = the oldest custom script build (SCRIPT_BUILD of train.json) this mission still works with: raise it whenever a change of the mission makes older custom scripts obsolete, the briefing of the script then says so."},
+    {"set":{"global":"CUS_MIN_SCRIPT_BUILD"},"value":169089},
     {"set":{"global":"CUS_LAST_BUILD"},"value":{"local":"BUILD_N"}}
   ],
   "custom settings enable": [
@@ -4468,7 +4468,6 @@
   ],
   "CUSTOM_MISSION": [
     {"call_macro":"trace dispatch handoff","params":{"stage":"custom_mission_start"}},
-    {"call_macro":"custom script compatibility"},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]}},
     {"set":{"local":"CRASH_VARIABLE"},"value":{"var":["L:CUS_CRASH_VARIABLE","number"]}},
@@ -35562,9 +35561,11 @@
         {"if": {"local":"CLOSEST_AMBULANCE"}, "eq": 0,
           "then": [
             {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
+            {"set":{"local":"destination_modal_base"},"value":"Select destination helipad for patient transport"},
+            {"call_macro":"destination modal text"},
             {"set_modal": {
                 "title": "CHOOSE DESTINATION",
-                "text": "Select destination helipad for patient transport",
+                "text": {"local":"destination_modal_text"},
                 "options": [
                   {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
                   {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
@@ -35579,9 +35580,11 @@
           ]}, "eq": 1,
           "then": [
             {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
+            {"set":{"local":"destination_modal_base"},"value":"Select destination helipad for patient transport"},
+            {"call_macro":"destination modal text"},
             {"set_modal": {
                 "title": "CHOOSE DESTINATION",
-                "text": "Select destination helipad for patient transport",
+                "text": {"local":"destination_modal_text"},
                 "options": [
                   {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
                   {"text":"Unload to closest ambulance","style":"","commands":[{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},
@@ -35610,9 +35613,11 @@
         {"set_hover_display":{"range":0}},
         {"set":{"var":["L:READY","number"]},"value":0},
         {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
+        {"set":{"local":"destination_modal_base"},"value":"Select helipad for doctor pickup"},
+        {"call_macro":"destination modal text"},
         {"set_modal": {
             "title": "CHOOSE AMBULANCE DESTINATION",
-            "text": "Select helipad for doctor pickup",
+            "text": {"local":"destination_modal_text"},
             "options": [
               {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
               {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
@@ -35629,9 +35634,11 @@
         ]}},
         {"set":{"var":["L:READY","number"]},"value":0},
         {"set_message":{"text":"Predefined destination: {1} (distance {0}Km) Do you confirm?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
+        {"set":{"local":"destination_modal_base"},"value":"Confirm organ transport destination helipad"},
+        {"call_macro":"destination modal text"},
         {"set_modal": {
             "title": "CONFIRM DESTINATION",
-            "text": "Confirm organ transport destination helipad",
+            "text": {"local":"destination_modal_text"},
             "options": [
               {"text":"Change destination","style":"","commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]},
               {"text":"Drop organ box here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
@@ -76265,9 +76272,11 @@
       ],"else": [
         {"set_message":{"text":"No hospital found. Select the hospital destination manually."}}
     ]},
+    {"set":{"local":"destination_modal_base"},"value":"Crew emergency: select the hospital for the injured crew"},
+    {"call_macro":"destination modal text"},
     {"set_modal": {
         "title": "CHOOSE DESTINATION",
-        "text": "Crew emergency: select the hospital for the injured crew",
+        "text": {"local":"destination_modal_text"},
         "options": [
           {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
           {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"crew emergency destination menu"}],"else":[{"set":{"local":"CREW_DEST_CONFIRMED"},"value":"yes"}]}]}
@@ -94847,34 +94856,6 @@
     {"call_macro":"QUERY COMPARE HOSPITAL WITH DB"},
     {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}}
   ],
-  "custom script compatibility": [
-    {"#comment":"Called first by CUSTOM_MISSION. L:CUS_SCRIPT_API 0 = the original 0.997 script (legacy: numbered OBJECTn locals, no userA/rescue/objects list, accepted as is). Above 0 but below CUS_SCRIPT_API_MIN, or needing a newer build (L:CUS_SCRIPT_BUILD, same unit as BUILD_N) than this mission: a message, the dispatch continues."},
-    {"set":{"local":"custom_script_api"},"value":{"var":["L:CUS_SCRIPT_API","number"]}},
-    {"set":{"local":"custom_script_legacy"},"value":0},
-    {"if": {"local":"custom_script_api"}, "eq": 0,
-      "then": [
-        {"set":{"local":"custom_script_legacy"},"value":1}
-      ],"else": [
-        {"if": {"local":"custom_script_api"}, "lt": {"local":"CUS_SCRIPT_API_MIN"},
-          "then": [
-            {"create_thread": {
-              "commands": [
-                {"set_message":{"text":"The custom script is too old for this mission (script API {0}, minimum {1}). Update train.json.","params":[{"local":"custom_script_api"},{"local":"CUS_SCRIPT_API_MIN"}]}},
-                {"sleep":30},
-                {"set_message":{"text":""}}
-            ]}}
-        ]},
-        {"if": {"var":["L:CUS_SCRIPT_BUILD","number"]}, "gt": {"local":"BUILD_N"},
-          "then": [
-            {"create_thread": {
-              "commands": [
-                {"set_message":{"text":"The custom script needs mission build {0} or newer, this is {1}. Update the mission.","params":[{"var":["L:CUS_SCRIPT_BUILD","number"]},{"local":"BUILD_N"}]}},
-                {"sleep":30},
-                {"set_message":{"text":""}}
-            ]}}
-        ]}
-    ]}
-  ],
   "custom object point": [
     {"if": {"local":"ce_i"}, "eq": 1,
       "then": [
@@ -96161,6 +96142,15 @@
     {"if": {"local":"ce_aim"}, "eq": 6,
       "then": [
         {"point_object":"CUSOBJ30","to":"CUSOBJ29"}
+    ]}
+  ],
+  "destination modal text": [
+    {"#comment":"Text of the destination modals: the base text in the local destination_modal_base plus the proposed hospital and its distance, so later set_message calls cannot hide what is selected. set_modal params are not read (runtime test 2026-10-30), only a text built into a local is: standalone-tests/modal-params-test.json."},
+    {"if": {"has_location":"hospital_user"}, "eq": 1,
+      "then": [
+        {"set":{"local":"destination_modal_text"},"value":{"text":"{2}. Selected: {1} (distance {0} Km)","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"},{"local":"destination_modal_base"}]}}
+      ],"else": [
+        {"set":{"local":"destination_modal_text"},"value":{"local":"destination_modal_base"}}
     ]}
   ]
 },

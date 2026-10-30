@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.90. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.92. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -789,6 +789,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 169.86.
 - **Test:** Finish a hoist operation: the "everybody inside" line comes only after the arm is in and the door is closed.
 
+### The destination choice keeps showing the hospital
+
+- When the mission proposes a hospital, the destination window now shows the proposed hospital and its distance in its own text. Before, the confirmation message with the hospital was overwritten by the patient values and the crew lines, and you were left choosing without seeing the hospital. This applies to the patient transport, the transport with the ambulance, the doctor pickup, the organ transport and the crew emergency.
+- **Build history:** 0.997 169.92.
+- **Test:** Reach the destination choice of a patient: the window shows the hospital name and the distance, and keeps them while the patient values and the crew lines appear.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1575,7 +1581,7 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### Custom mission script: objects list, own hospital, version check
 
 - The custom mission script (the train accident example) now builds the scene from a list of up to 30 objects, each with its own state and a fallback model you choose. Each object can face nothing, the injured human, the second or third injured human (when they exist), the accident place, a point you give, or the previous object of the list. The script file is laid out for easy reading: banners, labelled areas and one block per object. It can propose your own hospital first, and it declares its version: the mission tells you if the script is too old or needs a newer mission build, and the script briefing warns when your last mission build is too old. The original script keeps working. The "2 NM from the loading area" call is no longer said on top of the accident-area call when the two places are the same.
-- **Build history:** 0.997 169.87-169.90.
+- **Build history:** 0.997 169.87-169.91.
 - **Test:** Start the custom train script; the scene objects appear and face the direction chosen for each, the crew proposes your hospital if you set one, and only one 2 NM call is heard.
 
 ## Build coverage ledger
@@ -1628,4 +1634,6 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.87:** The custom mission script with the objects list, the own hospital and the version check, and the single 2 NM call (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.88:** Local test of the objects engine (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.89:** The six facing choices per object of the custom mission script (see Custom mission script: objects list, own hospital, version check).
-- **0.997 169.90 (this release):** The facing point of an object read from the script variables, and the readable layout of the script file (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.90:** The facing point of an object read from the script variables, and the readable layout of the script file (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.91:** The custom script versions back to the original logic, with the build the script needs checked against the mission build (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.92 (this release):** The destination choice that keeps showing the proposed hospital and its distance (see The destination choice keeps showing the hospital).

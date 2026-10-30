@@ -11,31 +11,12 @@
     "commands": [
     {"remote_notify": "mission_init_begin", "params": []},
 
-{"#comment": "MINIMUM MISSION: VERSION 0.997 (MIN_VERSION) AND BUILD 169.89 (MIN_BUILD, BELOW). THE ORIGINAL 0.997 MISSION IS NOT ENOUGH"},
+{"#comment": "THIS SCRIPT WORKS WITH MISSION VERSION AND BUILD EQUAL OR ABOVE TO THE FOLLOWING (DO NOT EDIT)"},
     {"set": {"local": "MIN_VERSION"}, "value": 0.997},
-
-
-{"#comment": "SCRIPT VERSION ---------------------------------------------------------------------------------------"},
-{"#comment": "CUS_SCRIPT_API: CONTRACT BETWEEN SCRIPT AND MISSION (0 OR MISSING = THE ORIGINAL 0.997 SCRIPT) -------"},
-{"#comment": "CUS_SCRIPT_BUILD: OLDEST MISSION BUILD THAT UNDERSTANDS THIS SCRIPT (169.89 = 169089) ----------------"},
-{"#comment": "CHANGE THEM ONLY WHEN MISSION AND SCRIPT CAN NO LONGER WORK TOGETHER ---------------------------------"},
-
-    {"set": {"var": ["L:CUS_SCRIPT_API", "number"]}, "value": 1},
-    {"set": {"var": ["L:CUS_SCRIPT_BUILD", "number"]}, "value": 169089},
     {"set": {"local": "MIN_BUILD"}, "value": 169089},
 
-{"#comment": "MISSION TOO OLD FOR THIS SCRIPT? (SCRIPT_TOO_OLD = 1: THE BRIEFING SHOWS ONE WARNING, OTHERWISE NOTHING)"},
-    {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 0},
-    {"if": {"local": "MIN_VERSION"}, "gt": {"global": "first_run"}, "then": [
-      {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 1}
-    ]},
-    {"if": {"global": "CUS_LAST_BUILD"}, "eq": null, "then": [
-      {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 1}
-    ], "else": [
-      {"if": {"local": "MIN_BUILD"}, "gt": {"global": "CUS_LAST_BUILD"}, "then": [
-        {"set": {"local": "SCRIPT_TOO_OLD"}, "value": 1}
-      ]}
-    ]},
+{"#comment": "BUILD OF THIS SCRIPT (DO NOT EDIT): THE MISSION TELLS YOU WHEN IT IS TOO OLD FOR THE MISSION"},
+    {"set": {"local": "SCRIPT_BUILD"}, "value": 169089},
     {"set_briefing_dialog": 0},
     {"set": {"var": ["L:SECOND_DISPATCH_ACCEPTED", "number"]}, "value": 0},
     {"set": {"var": ["L:CUS_SEND_DISPATCH", "number"]}, "value": 0},
@@ -307,7 +288,10 @@
 
   "briefing": [
     {"text": "H145 - HEMS RANDOM & EVERYWHERE build {0}", "params": [{"global": "first_run"}], "size": "large", "align": "center"},
-    {"text": "This script needs mission 0.997 build 169.89 or newer. Update the mission.", "color": "yellow", "show_condition": {"require": {"local": "SCRIPT_TOO_OLD"}, "eq": 1}},
+    {"text": "Last time the mission was started your mission version was {0}. This script requires {1} as minimum requirement.", "params": [{"global": "first_run"}, {"local": "MIN_VERSION"}], "color": "yellow", "show_condition": {"require": {"local": "MIN_VERSION"}, "gt": {"global": "first_run"}}},
+    {"text": "This script needs mission build 169.89 or newer. Update the mission.", "color": "yellow", "show_condition": {"require": {"global": "CUS_LAST_BUILD"}, "eq": null}},
+    {"text": "This script needs mission build 169.89 or newer. Update the mission.", "color": "yellow", "show_condition": {"and": [{"require": {"global": "CUS_LAST_BUILD"}, "ne": null}, {"require": {"local": "MIN_BUILD"}, "gt": {"global": "CUS_LAST_BUILD"}}], "eq": 1}},
+    {"text": "This script is obsolete for your mission: it needs script build {0} or newer, this one is {1}. Update the script.", "params": [{"global": "CUS_MIN_SCRIPT_BUILD"}, {"local": "SCRIPT_BUILD"}], "color": "yellow", "show_condition": {"and": [{"require": {"global": "CUS_MIN_SCRIPT_BUILD"}, "ne": null}, {"require": {"global": "CUS_MIN_SCRIPT_BUILD"}, "gt": {"local": "SCRIPT_BUILD"}}], "eq": 1}},
     {"text": "Mission description:"},
     {"text": "{0}", "color": "yellow", "params": [{"global": "accident_description"}]},
     {"text": "Mission objective:"},
