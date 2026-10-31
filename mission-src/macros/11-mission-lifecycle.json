@@ -2,6 +2,13 @@
     {"set":{"local":"randomize_result"},"value":null},
     {"set":{"param":"selectable_accidents"},"value":0},
     {"set":{"param":"cond_eligible"},"value":0},
+    {"#comment":"Tester report 2026-10-31 (MPR: the same quad offered four times in a row among 19 enabled missions): the dispatch snapshots now tell the ids that were selectable in this call (randomize_eligible_ids), how many draws were needed (randomize_tries), the id drawn and the ids of the last draws (randomize_picks)."},
+    {"set":{"local":"randomize_eligible_ids"},"value":""},
+    {"set":{"local":"randomize_tries"},"value":0},
+    {"if": {"local":"randomize_picks"}, "eq": null,
+      "then": [
+        {"set":{"local":"randomize_picks"},"value":""}
+    ]},
     {"call_macro":"conditions snapshot"},
     {"sleep":0.01},
     {"for_each": {"static":"accidents"},
@@ -14,6 +21,7 @@
                 {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"candidate_accident"},"path":"id"}}, "eq": true,
                   "then": [
                     {"set":{"param":"selectable_accidents"},"value":{"add":[{"param":"selectable_accidents"},1]}},
+                    {"set":{"local":"randomize_eligible_ids"},"value":{"text":"{0}{1} ","params":[{"local":"randomize_eligible_ids"},{"struct":{"param":"candidate_accident"},"path":"id"}]}},
                     {"set":{"param":"cond_pass"},"value":1},
                     {"if": {"local":"cm_active"}, "eq": 1,
                       "then": [
@@ -105,6 +113,7 @@
         {"set":{"param":"hasNextacci"},"value":false},
         {"while": {"param":"hasNextacci"}, "eq": false,
           "do": [
+            {"set":{"local":"randomize_tries"},"value":{"add":[{"local":"randomize_tries"},1]}},
             {"set":{"param":"nextaccident"},"value":{"struct":{"static":"accidents"},"index":{"floor":{"rand":[0,{"struct":{"static":"accidents"},"path":"length"}]}}}},
             {"if": {"struct":{"param":"nextaccident"},"path":"isRequirementsMet"}, "eq": true,
               "then": [
@@ -159,6 +168,7 @@
                         {"set":{"local":"Icon"},"value":{"struct":{"param":"nextaccident"},"path":"icon"}},
                         {"set":{"local":"ELT"},"value":{"struct":{"param":"nextaccident"},"path":"ELT_mode"}},
                         {"set":{"local":"VAR_MISSION_NUMBER"},"value":{"struct":{"param":"nextaccident"},"path":"ID_CARD"}},
+                        {"set":{"local":"randomize_picks"},"value":{"text":"{0}{1} ","params":[{"local":"randomize_picks"},{"struct":{"param":"nextaccident"},"path":"ID_CARD"}]}},
                         {"set":{"local":"MISSION_SCENE_TYPE"},"value":{"struct":{"param":"nextaccident"},"path":"type"}},
                         {"set":{"local":"CAMPING_VARIABLE"},"value":{"struct":{"param":"nextaccident"},"path":"camping"}},
                         {"set":{"local":"MISSION_NUMBER"},"value":{"struct":{"param":"nextaccident"},"path":"mnumber"}},

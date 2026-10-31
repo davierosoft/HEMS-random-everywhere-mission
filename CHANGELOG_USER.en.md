@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.00. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.01. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -800,6 +800,24 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - When the mission proposes a hospital, the destination window now shows the proposed hospital and its distance in its own text. Before, the confirmation message with the hospital was overwritten by the patient values and the crew lines, and you were left choosing without seeing the hospital. This applies to the patient transport, the transport with the ambulance, the doctor pickup, the organ transport and the crew emergency.
 - **Build history:** 0.997 169.92.
 - **Test:** Reach the destination choice of a patient: the window shows the hospital name and the distance, and keeps them while the patient values and the crew lines appear.
+
+### The destination window opens again after a hospital chosen from the custom database
+
+- After you chose a hospital from the custom hospital database, the confirmation window did not appear and the destination choice stayed blocked, with the old window still showing the first proposed hospital. The "Manually select destination" and "Change destination" buttons now close their window before the next one opens. The plain destination window also opens when an ambulance has no meeting point, where nothing appeared before.
+- **Build history:** 0.997 170.01.
+- **Test:** At the destination choice press "Manually select destination", then "Manually from custom DB" and set a hospital as destination: the destination window opens with the hospital you chose and its green button.
+
+### The custom visit time sets the length of the visit
+
+- With the SLOW (custom) visit time, the maximum visit time of the Medical options is now the slot of the visit: the clinical steps of every casualty are random inside it, without counting the walks, and the time the ground crew announces follows them. Before, the steps always lasted 50 to 90 seconds each whatever the maximum, so a maximum of 6 minutes could announce 13. For the heli rescuer and for the ambulance flows the visit is now one wait inside the maximum instead of the short, medium and long waits added together. The other levels (ULTRAFAST, FAST, MEDIUM) are unchanged.
+- **Build history:** 0.997 170.01.
+- **Test:** Set the visit time to SLOW (custom) with a maximum of 6 minutes and fly a mission with one patient: the visit and the time announced by the ground crew stay near or under that maximum, plus the walks.
+
+### The next dispatch is archived reliably
+
+- Pressing NEXT DISPATCH could end with a stack error while the closing dispatch was archived, so the troubleshooting file kept nothing of it. The archive is now made in two guarded steps, the error names the step, and a short row is kept when the full row cannot be built. The troubleshooting file also records which missions could be drawn for the next dispatch and which ones were drawn.
+- **Build history:** 0.997 170.01.
+- **Test:** Complete a mission and press NEXT DISPATCH: the new dispatch is offered without an error message, and the troubleshooting file lists the dispatch you closed.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1653,4 +1671,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.92:** The destination choice that keeps showing the proposed hospital and its distance (see The destination choice keeps showing the hospital).
 - **0.997 169.93:** The Halloween scene that works without the 30West add-on and has decor with it (see The Halloween scene without the 30West add-on).
 - **0.997 169.94:** The custom mission script: heading of the objects from north and the pick-up point of the heli rescuers (see Custom mission script: objects list, own hospital, version check).
-- **0.997 170.00 (this release):** The EASTER EGGS option and the language of the dispatch reading of a custom script (see Easter eggs option and the language of the dispatch of a custom script).
+- **0.997 170.00:** The EASTER EGGS option and the language of the dispatch reading of a custom script (see Easter eggs option and the language of the dispatch of a custom script).
+- **0.997 170.01 (this release):** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).

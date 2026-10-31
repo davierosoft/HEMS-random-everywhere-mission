@@ -793,7 +793,12 @@
               ]}
             }
         ]},
-        {"if": {"local":"CLOSEST_AMBULANCE"}, "eq": 0,
+        {"#comment":"Tester report 2026-10-31 (Steph): after a hospital chosen from the custom DB nothing appeared and the menu stayed blocked. The two branches below are exact complements: this one is the plain menu when there is no ambulance OR the ambulance has no meeting point (before, an ambulance without a meeting point matched neither branch and no modal was opened)."},
+        {"if": {
+          "or": [
+            {"require":{"local":"CLOSEST_AMBULANCE"},"eq":0},
+            {"require":{"has_location":"closest_ambupolice_meetpnt"},"eq":0}
+          ]}, "eq": 1,
           "then": [
             {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
             {"set":{"local":"destination_modal_base"},"value":"Select destination helipad for patient transport"},
@@ -802,7 +807,7 @@
                 "title": "CHOOSE DESTINATION",
                 "text": {"local":"destination_modal_text"},
                 "options": [
-                  {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+                  {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
                   {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
                   {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}
               ]}
@@ -821,7 +826,7 @@
                 "title": "CHOOSE DESTINATION",
                 "text": {"local":"destination_modal_text"},
                 "options": [
-                  {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+                  {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
                   {"text":"Unload to closest ambulance","style":"","commands":[{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},
                   {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
                   {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"create_thread":{"commands":[{"call_macro":"shared repeated block 050"}]}},{"call_macro":"User predestination"}]}]}
@@ -854,7 +859,7 @@
             "title": "CHOOSE AMBULANCE DESTINATION",
             "text": {"local":"destination_modal_text"},
             "options": [
-              {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+              {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
               {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
               {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"set_message":{"text":"Waiting for crew to be aboard before proceeding"}},{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"call_macro":"nation query wait","params":{"which":"hospital"}},{"set_message":{"text":"Route set to: {1} ({2}). Location: {0:LOCATION}","params":["hospital_user",{"local":"hospital_name"},{"local":"hospital_nation"}]}},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"set":{"local":"MISSION_PHASE"},"value":8},{"call_macro":"pick doctor"}]}]}
           ]}
@@ -875,7 +880,7 @@
             "title": "CONFIRM DESTINATION",
             "text": {"local":"destination_modal_text"},
             "options": [
-              {"text":"Change destination","style":"","commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]},
+              {"text":"Change destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]}}]},
               {"text":"Drop organ box here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
               {"text":"Confirm selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}
           ]}

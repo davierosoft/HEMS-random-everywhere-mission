@@ -173,6 +173,18 @@ const rows = (n, key) => Array.from({ length: n }, (_, i) => ({ [key]: i }));
   assert.equal(failing.locals.dispatch_sequence, 2, 'the sequence still advances');
   assert.equal(failing.savedTables.dispatch.last_stage, 'dispatch_closed');
   assert.match(failing.savedTables.dispatch.dispatch_archive_error, /boom/);
+  // Tester report 2026-10-31: the error names the step, and a failed row keeps the dispatch counted.
+  assert.match(failing.locals.dispatch_archive_error, /^archive row: /);
+  assert.equal(failing.locals.dispatch_archive.length, 1);
+  assert.equal(failing.locals.dispatch_archive[0].failed, 'yes');
+  assert.equal(failing.locals.dispatch_archive[0].dispatch, 1);
+}
+{
+  // Tester report 2026-10-31: the dispatch snapshot tells which ids were selectable and which were drawn.
+  const handoff = JSON.stringify(diagnostics['trace dispatch handoff']);
+  for (const field of ['randomize_eligible_ids', 'randomize_tries', 'randomize_picks', 'cm_eligible', 'cm_active']) assert.ok(handoff.includes(`"${field}":{"local":"${field}"}`), `the handoff row carries ${field}`);
+  const randomize = JSON.stringify(lifecycle.randomize);
+  assert.ok(randomize.includes('"randomize_eligible_ids"') && randomize.includes('"randomize_tries"') && randomize.includes('"randomize_picks"'), 'randomize records the ids and the draws');
 }
 {
   // The automatic snapshot of the mission that ends survives the wipe in the previous mission file.

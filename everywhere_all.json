@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.00",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.01",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.00"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.01"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -2519,6 +2519,13 @@
     {"set":{"local":"randomize_result"},"value":null},
     {"set":{"param":"selectable_accidents"},"value":0},
     {"set":{"param":"cond_eligible"},"value":0},
+    {"#comment":"Tester report 2026-10-31 (MPR: the same quad offered four times in a row among 19 enabled missions): the dispatch snapshots now tell the ids that were selectable in this call (randomize_eligible_ids), how many draws were needed (randomize_tries), the id drawn and the ids of the last draws (randomize_picks)."},
+    {"set":{"local":"randomize_eligible_ids"},"value":""},
+    {"set":{"local":"randomize_tries"},"value":0},
+    {"if": {"local":"randomize_picks"}, "eq": null,
+      "then": [
+        {"set":{"local":"randomize_picks"},"value":""}
+    ]},
     {"call_macro":"conditions snapshot"},
     {"sleep":0.01},
     {"for_each": {"static":"accidents"},
@@ -2531,6 +2538,7 @@
                 {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"candidate_accident"},"path":"id"}}, "eq": true,
                   "then": [
                     {"set":{"param":"selectable_accidents"},"value":{"add":[{"param":"selectable_accidents"},1]}},
+                    {"set":{"local":"randomize_eligible_ids"},"value":{"text":"{0}{1} ","params":[{"local":"randomize_eligible_ids"},{"struct":{"param":"candidate_accident"},"path":"id"}]}},
                     {"set":{"param":"cond_pass"},"value":1},
                     {"if": {"local":"cm_active"}, "eq": 1,
                       "then": [
@@ -2622,6 +2630,7 @@
         {"set":{"param":"hasNextacci"},"value":false},
         {"while": {"param":"hasNextacci"}, "eq": false,
           "do": [
+            {"set":{"local":"randomize_tries"},"value":{"add":[{"local":"randomize_tries"},1]}},
             {"set":{"param":"nextaccident"},"value":{"struct":{"static":"accidents"},"index":{"floor":{"rand":[0,{"struct":{"static":"accidents"},"path":"length"}]}}}},
             {"if": {"struct":{"param":"nextaccident"},"path":"isRequirementsMet"}, "eq": true,
               "then": [
@@ -2676,6 +2685,7 @@
                         {"set":{"local":"Icon"},"value":{"struct":{"param":"nextaccident"},"path":"icon"}},
                         {"set":{"local":"ELT"},"value":{"struct":{"param":"nextaccident"},"path":"ELT_mode"}},
                         {"set":{"local":"VAR_MISSION_NUMBER"},"value":{"struct":{"param":"nextaccident"},"path":"ID_CARD"}},
+                        {"set":{"local":"randomize_picks"},"value":{"text":"{0}{1} ","params":[{"local":"randomize_picks"},{"struct":{"param":"nextaccident"},"path":"ID_CARD"}]}},
                         {"set":{"local":"MISSION_SCENE_TYPE"},"value":{"struct":{"param":"nextaccident"},"path":"type"}},
                         {"set":{"local":"CAMPING_VARIABLE"},"value":{"struct":{"param":"nextaccident"},"path":"camping"}},
                         {"set":{"local":"MISSION_NUMBER"},"value":{"struct":{"param":"nextaccident"},"path":"mnumber"}},
@@ -8989,9 +8999,14 @@
         ]},
         {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
           "then": [
-            {"set":{"local":"TIME1SHORT"},"value":{"floor":{"rand":[50,90]}}},
-            {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[50,90]}}},
-            {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[50,90]}}}
+            {"#comment":"SLOW (custom): the slot is the maximum visit time CREW_SLOTH (user rule 2026-10-31, tester report of MPR: 6 minutes set, 13 announced). Only the clinical visit counts, never the walks: the six steps of every casualty are random inside the slot, so TIMERGND (the timer) and the estimate that follow it stay inside the maximum."},
+            {"set":{"local":"gt_victims"},"value":{"clamp":[{"local":"HELOVICTIMS"},1,3]}},
+            {"set":{"local":"gt_cap"},"value":{"divide":[{"subtract":[{"global":"CREW_SLOTH"},{"multiply":[{"local":"gt_victims"},20]}]},{"multiply":[{"local":"gt_victims"},6]}]}},
+            {"set":{"local":"gt_cap"},"value":{"clamp":[{"local":"gt_cap"},6,600]}},
+            {"set":{"local":"gt_low"},"value":{"clamp":[{"multiply":[{"local":"gt_cap"},0.6]},5,600]}},
+            {"set":{"local":"TIME1SHORT"},"value":{"floor":{"rand":[{"local":"gt_low"},{"local":"gt_cap"}]}}},
+            {"set":{"local":"TIME2SHORT"},"value":{"floor":{"rand":[{"local":"gt_low"},{"local":"gt_cap"}]}}},
+            {"set":{"local":"TIME3SHORT"},"value":{"floor":{"rand":[{"local":"gt_low"},{"local":"gt_cap"}]}}}
         ]}
     ]},
     {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
@@ -9002,9 +9017,9 @@
     ]},
     {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
       "then": [
-        {"set":{"local":"TIME1LONG"},"value":{"floor":{"rand":[60,{"global":"CREW_SLOTH"}]}}},
-        {"set":{"local":"TIME2LONG"},"value":{"floor":{"rand":[60,{"global":"CREW_SLOTH"}]}}},
-        {"set":{"local":"TIME3LONG"},"value":{"floor":{"rand":[60,{"global":"CREW_SLOTH"}]}}}
+        {"set":{"local":"TIME1LONG"},"value":{"floor":{"rand":[{"clamp":[{"multiply":[{"global":"CREW_SLOTH"},0.3]},10,60]},{"global":"CREW_SLOTH"}]}}},
+        {"set":{"local":"TIME2LONG"},"value":{"floor":{"rand":[{"clamp":[{"multiply":[{"global":"CREW_SLOTH"},0.3]},10,60]},{"global":"CREW_SLOTH"}]}}},
+        {"set":{"local":"TIME3LONG"},"value":{"floor":{"rand":[{"clamp":[{"multiply":[{"global":"CREW_SLOTH"},0.3]},10,60]},{"global":"CREW_SLOTH"}]}}}
     ]},
     {"sleep":1},
     {"if": {"local":"HELOVICTIMS"}, "eq": 1,
@@ -24274,10 +24289,14 @@
         {"set":{"object":"jolly","var":"VAR 1"},"value":5},
         {"sleep":[2,8]},
         {"set":{"object":"jolly","var":"VAR 1"},"value":6},
-        {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+        {"#comment":"SLOW (custom): the whole visit is one wait inside the maximum visit time CREW_SLOTH (user rule 2026-10-31), not the short and medium waits plus the long one."},
+        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 2,
           "then": [
-            {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+            {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
+            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+              "then": [
+                {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+            ]}
         ]},
         {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
           "then": [
@@ -24483,10 +24502,13 @@
             {"set":{"local":"HR_SKID_RETURNED"},"value":1},
             {"call_macro":"ground ops checkpoint","params":{"id":"hr_s_returned"}}
           ],"else": [
-            {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
-            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 2,
               "then": [
-                {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+                {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
+                {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+                  "then": [
+                    {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+                ]}
             ]},
             {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
               "then": [
@@ -35572,7 +35594,12 @@
               ]}
             }
         ]},
-        {"if": {"local":"CLOSEST_AMBULANCE"}, "eq": 0,
+        {"#comment":"Tester report 2026-10-31 (Steph): after a hospital chosen from the custom DB nothing appeared and the menu stayed blocked. The two branches below are exact complements: this one is the plain menu when there is no ambulance OR the ambulance has no meeting point (before, an ambulance without a meeting point matched neither branch and no modal was opened)."},
+        {"if": {
+          "or": [
+            {"require":{"local":"CLOSEST_AMBULANCE"},"eq":0},
+            {"require":{"has_location":"closest_ambupolice_meetpnt"},"eq":0}
+          ]}, "eq": 1,
           "then": [
             {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
             {"set":{"local":"destination_modal_base"},"value":"Select destination helipad for patient transport"},
@@ -35581,7 +35608,7 @@
                 "title": "CHOOSE DESTINATION",
                 "text": {"local":"destination_modal_text"},
                 "options": [
-                  {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+                  {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
                   {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
                   {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}
               ]}
@@ -35600,7 +35627,7 @@
                 "title": "CHOOSE DESTINATION",
                 "text": {"local":"destination_modal_text"},
                 "options": [
-                  {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+                  {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
                   {"text":"Unload to closest ambulance","style":"","commands":[{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},
                   {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
                   {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"create_thread":{"commands":[{"call_macro":"shared repeated block 050"}]}},{"call_macro":"User predestination"}]}]}
@@ -35633,7 +35660,7 @@
             "title": "CHOOSE AMBULANCE DESTINATION",
             "text": {"local":"destination_modal_text"},
             "options": [
-              {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+              {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
               {"text":"Unload patient here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
               {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"set_message":{"text":"Waiting for crew to be aboard before proceeding"}},{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"call_macro":"nation query wait","params":{"which":"hospital"}},{"set_message":{"text":"Route set to: {1} ({2}). Location: {0:LOCATION}","params":["hospital_user",{"local":"hospital_name"},{"local":"hospital_nation"}]}},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"set":{"local":"MISSION_PHASE"},"value":8},{"call_macro":"pick doctor"}]}]}
           ]}
@@ -35654,7 +35681,7 @@
             "title": "CONFIRM DESTINATION",
             "text": {"local":"destination_modal_text"},
             "options": [
-              {"text":"Change destination","style":"","commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]},
+              {"text":"Change destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]}}]},
               {"text":"Drop organ box here","style":"","commands":[{"call_macro":"user_prelocation_prerequisites"}]},
               {"text":"Confirm selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}
           ]}
@@ -54285,7 +54312,8 @@
     {"destroy_object":"ambulance1"}
   ],
   "patient_wait_interval": [
-    {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+    {"#comment":"SLOW (custom, mode 2): the visit is the long wait inside the maximum visit time CREW_SLOTH, so the medium wait is only for MEDIUM (user rule 2026-10-31)."},
+    {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 0,
       "then": [
         {"sleep":{"param":"medium_wait"}}
     ]},
@@ -74892,7 +74920,7 @@
       "then": [
         {"set":{"local":"handoff_rescue_user_m"},"value":{"round":{"object":"rescue_location","var":"distance:m"},"to":1}}
     ]},
-    {"modify_array":{"local":"dispatch_handoff_log"},"append":{"create_struct":{"stage":{"param":"stage"},"time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"second_accepted":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"second_flag":{"local":"SECOND_DISPATCH"},"cus_send":{"var":["L:CUS_SEND_DISPATCH","number"]},"reloadsaved":{"var":["L:RELOADSAVED","number"]},"skip_query":{"var":["L:SKIP_QUERY","number"]},"player":{"local":"player"},"preview_generation":{"local":"map_preview_generation"},"mission_number":{"local":"MISSION_NUMBER"},"var_mission_number":{"local":"VAR_MISSION_NUMBER"},"crash_variable":{"local":"CRASH_VARIABLE"},"scene_variant":{"local":"MISSION_SCENE_VARIANT"},"scene_macro":{"local":"scene_macro"},"query":{"local":"Query"},"location_name":{"local":"location_name"},"cus_id":{"var":["L:CUS_ID_CARD","number"]},"cus_crash":{"var":["L:CUS_CRASH_VARIABLE","number"]},"cus_variant":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]},"pre_accident_lat":{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},"pre_accident_lon":{"var":["L:PRE_ACCIDENT_LOCATION LON","number"]},"pre_rescue_lat":{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},"pre_rescue_lon":{"var":["L:PRE_RESCUE_LOCATION LON","number"]},"pre_usera_lat":{"var":["L:PRE_USERA LAT","number"]},"pre_usera_lon":{"var":["L:PRE_USERA LON","number"]},"cus_accident_lat":{"var":["L:CUS_ACCIDENT LAT","number"]},"cus_accident_lon":{"var":["L:CUS_ACCIDENT LON","number"]},"cus_rescue_lat":{"var":["L:CUS_RESCUE LAT","number"]},"cus_rescue_lon":{"var":["L:CUS_RESCUE LON","number"]},"has_accident":{"has_location":"accident_location"},"has_rescue":{"has_location":"rescue_location"},"has_userA":{"has_location":"userA"},"has_landing":{"has_location":"landing_spot"},"live_accident_lat":{"var":["L:DIAG_accident_location_LAT","number"]},"live_accident_lon":{"var":["L:DIAG_accident_location_LON","number"]},"live_rescue_lat":{"var":["L:DIAG_rescue_location_LAT","number"]},"live_rescue_lon":{"var":["L:DIAG_rescue_location_LON","number"]},"gap_accident_rescue_m":{"local":"handoff_gap_accident_rescue_m"},"gap_accident_injured_m":{"local":"handoff_gap_accident_injured_m"},"gap_landing_accident_m":{"local":"handoff_gap_landing_accident_m"},"accident_from_user_m":{"local":"handoff_accident_user_m"},"rescue_from_user_m":{"local":"handoff_rescue_user_m"},"writer_accident":{"local":"location_diagnostic_writer_accident_location"},"writer_rescue":{"local":"location_diagnostic_writer_rescue_location"}}}},
+    {"modify_array":{"local":"dispatch_handoff_log"},"append":{"create_struct":{"stage":{"param":"stage"},"time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"second_accepted":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"second_flag":{"local":"SECOND_DISPATCH"},"cus_send":{"var":["L:CUS_SEND_DISPATCH","number"]},"reloadsaved":{"var":["L:RELOADSAVED","number"]},"skip_query":{"var":["L:SKIP_QUERY","number"]},"player":{"local":"player"},"preview_generation":{"local":"map_preview_generation"},"mission_number":{"local":"MISSION_NUMBER"},"var_mission_number":{"local":"VAR_MISSION_NUMBER"},"randomize_eligible_ids":{"local":"randomize_eligible_ids"},"randomize_tries":{"local":"randomize_tries"},"randomize_picks":{"local":"randomize_picks"},"cm_eligible":{"local":"cm_eligible"},"cm_active":{"local":"cm_active"},"crash_variable":{"local":"CRASH_VARIABLE"},"scene_variant":{"local":"MISSION_SCENE_VARIANT"},"scene_macro":{"local":"scene_macro"},"query":{"local":"Query"},"location_name":{"local":"location_name"},"cus_id":{"var":["L:CUS_ID_CARD","number"]},"cus_crash":{"var":["L:CUS_CRASH_VARIABLE","number"]},"cus_variant":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]},"pre_accident_lat":{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},"pre_accident_lon":{"var":["L:PRE_ACCIDENT_LOCATION LON","number"]},"pre_rescue_lat":{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},"pre_rescue_lon":{"var":["L:PRE_RESCUE_LOCATION LON","number"]},"pre_usera_lat":{"var":["L:PRE_USERA LAT","number"]},"pre_usera_lon":{"var":["L:PRE_USERA LON","number"]},"cus_accident_lat":{"var":["L:CUS_ACCIDENT LAT","number"]},"cus_accident_lon":{"var":["L:CUS_ACCIDENT LON","number"]},"cus_rescue_lat":{"var":["L:CUS_RESCUE LAT","number"]},"cus_rescue_lon":{"var":["L:CUS_RESCUE LON","number"]},"has_accident":{"has_location":"accident_location"},"has_rescue":{"has_location":"rescue_location"},"has_userA":{"has_location":"userA"},"has_landing":{"has_location":"landing_spot"},"live_accident_lat":{"var":["L:DIAG_accident_location_LAT","number"]},"live_accident_lon":{"var":["L:DIAG_accident_location_LON","number"]},"live_rescue_lat":{"var":["L:DIAG_rescue_location_LAT","number"]},"live_rescue_lon":{"var":["L:DIAG_rescue_location_LON","number"]},"gap_accident_rescue_m":{"local":"handoff_gap_accident_rescue_m"},"gap_accident_injured_m":{"local":"handoff_gap_accident_injured_m"},"gap_landing_accident_m":{"local":"handoff_gap_landing_accident_m"},"accident_from_user_m":{"local":"handoff_accident_user_m"},"rescue_from_user_m":{"local":"handoff_rescue_user_m"},"writer_accident":{"local":"location_diagnostic_writer_accident_location"},"writer_rescue":{"local":"location_diagnostic_writer_rescue_location"}}}},
     {"if": {"struct":{"local":"dispatch_handoff_log"},"path":"length"}, "gt": 80,
       "then": [
         {"modify_array":{"local":"dispatch_handoff_log"},"removeIndex":0}
@@ -75499,9 +75527,18 @@
       "then": [
         {"set":{"local":"archive_event"},"value":"dispatch_closing"}
     ]},
+    {"#comment":"Tester report 2026-10-31 (MPR, 169.94): NEXT DISPATCH ended with RangeError: Maximum call stack size exceeded in this archive and nothing was archived. The work is now in two guarded steps (the snapshot, then the row) and archive_stage names the step in dispatch_archive_error; when the row cannot be built a small row (failed yes) is kept so dispatch_archive still counts the dispatch."},
+    {"set":{"local":"archive_stage"},"value":"sample"},
     {"try": [
         {"call_macro":"sample ground ops state"},
-        {"call_macro":"capture automatic snapshot","params":{"event":{"local":"archive_event"}}},
+        {"set":{"local":"archive_stage"},"value":"capture"},
+        {"call_macro":"capture automatic snapshot","params":{"event":{"local":"archive_event"}}}
+      ],
+      "catch": [
+        {"set":{"local":"dispatch_archive_error"},"value":{"text":"archive {0}: {1}","params":[{"local":"archive_stage"},{"param":"$ERROR"}]}}
+    ]},
+    {"set":{"local":"archive_stage"},"value":"row"},
+    {"try": [
         {"open_table":{"static":"Debug_Auto_Table"}},
         {"set":{"local":"dispatch_archive_trace"},"value":{"create_array":0}},
         {"set":{"local":"dispatch_tail_start"},"value":{"subtract":[{"struct":{"local":"ground_crew_runtime_trace"},"path":"length"},400]}},
@@ -75515,7 +75552,8 @@
         {"modify_array":{"local":"dispatch_archive"},"append":{"create_struct":{"dispatch":{"local":"dispatch_sequence"},"closed_at":{"fn":"get_time_string"},"closed_mission_timer":{"var":["L:MISSION_TIME","number"]},"release_identity":{"local":"RELEASE_IDENTITY"},"snapshot_summary":{"json:copy":{"table":{"static":"Debug_Auto_Table"},"key":"snapshot_summary"}},"snapshot_mission":{"json:copy":{"table":{"static":"Debug_Auto_Table"},"key":"snapshot_mission"}},"snapshot_ground":{"json:copy":{"table":{"static":"Debug_Auto_Table"},"key":"snapshot_ground"}},"snapshot_locations":{"json:copy":{"table":{"static":"Debug_Auto_Table"},"key":"snapshot_locations"}},"snapshot_flow":{"json:copy":{"table":{"static":"Debug_Auto_Table"},"key":"snapshot_flow"}},"snapshot_patients":{"json:copy":{"table":{"static":"Debug_Auto_Table"},"key":"snapshot_patients"}},"ground_ops_state":{"json:copy":{"local":"ground_ops_state_now"}},"location_history":{"json:copy":{"local":"location_diagnostic_history"}},"crew_movement_log":{"json:copy":{"local":"crew_movement_log"}},"ambulance_monitor_log":{"json:copy":{"local":"ambulance_monitor_log"}},"ground_crew_runtime_trace_tail":{"json:copy":{"local":"dispatch_archive_trace"}}}}}
       ],
       "catch": [
-        {"set":{"local":"dispatch_archive_error"},"value":{"text":"archive: {0}","params":[{"param":"$ERROR"}]}}
+        {"set":{"local":"dispatch_archive_error"},"value":{"text":"archive {0}: {1}","params":[{"local":"archive_stage"},{"param":"$ERROR"}]}},
+        {"modify_array":{"local":"dispatch_archive"},"append":{"create_struct":{"dispatch":{"local":"dispatch_sequence"},"closed_at":{"fn":"get_time_string"},"closed_mission_timer":{"var":["L:MISSION_TIME","number"]},"release_identity":{"local":"RELEASE_IDENTITY"},"failed":"yes"}}}
     ]},
     {"if": {"struct":{"local":"dispatch_archive"},"path":"length"}, "gt": 3,
       "then": [
@@ -76297,7 +76335,7 @@
         "title": "CHOOSE DESTINATION",
         "text": {"local":"destination_modal_text"},
         "options": [
-          {"text":"Manually select destination","style":"","commands":[{"call_macro":"Choose manual type modal"}]},
+          {"text":"Manually select destination","style":"","commands":[{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
           {"text":"Accept selection","style":"primary","commands":[{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"crew emergency destination menu"}],"else":[{"set":{"local":"CREW_DEST_CONFIRMED"},"value":"yes"}]}]}
       ]}
     }

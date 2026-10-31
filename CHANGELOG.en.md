@@ -1,3 +1,7 @@
+## Release 0.997 170.01
+
+- SLOW visit time inside the maximum visit time, dispatch archive guarded, quad draw diagnostics, destination modal opened in its own thread, menu never silent
+
 ## Release 0.997 170.00
 
 - Easter eggs option (enabled, disabled, auto), dispatch reading language for custom scripts (CUS_DISPATCH_LANGUAGE)

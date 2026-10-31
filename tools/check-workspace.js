@@ -35,6 +35,7 @@ const scripts = [
   'test-dispatch-handoff-diagnostics.js',
   'test-ground-ops-diagnostics.js',
   'test-dispatch-archive.js',
+  'test-visit-time.js',
   'test-end-of-mission-flow.js',
   'test-condition-rules.js',
   'test-crash-detection.js',

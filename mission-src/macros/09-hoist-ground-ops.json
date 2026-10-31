@@ -3119,10 +3119,14 @@
         {"set":{"object":"jolly","var":"VAR 1"},"value":5},
         {"sleep":[2,8]},
         {"set":{"object":"jolly","var":"VAR 1"},"value":6},
-        {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
-        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+        {"#comment":"SLOW (custom): the whole visit is one wait inside the maximum visit time CREW_SLOTH (user rule 2026-10-31), not the short and medium waits plus the long one."},
+        {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 2,
           "then": [
-            {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+            {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
+            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+              "then": [
+                {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+            ]}
         ]},
         {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
           "then": [
@@ -3328,10 +3332,13 @@
             {"set":{"local":"HR_SKID_RETURNED"},"value":1},
             {"call_macro":"ground ops checkpoint","params":{"id":"hr_s_returned"}}
           ],"else": [
-            {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
-            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+            {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 2,
               "then": [
-                {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+                {"sleep":{"rand":[{"local":"TIME1SHORT"},50]}},
+                {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "ne": 1,
+                  "then": [
+                    {"sleep":{"rand":[{"local":"TIME1MED"},50]}}
+                ]}
             ]},
             {"if": {"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]}, "eq": 2,
               "then": [
