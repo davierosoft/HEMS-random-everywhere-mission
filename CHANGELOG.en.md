@@ -1,3 +1,7 @@
+## Release 0.997 170.00
+
+- Easter eggs option (enabled, disabled, auto), dispatch reading language for custom scripts (CUS_DISPATCH_LANGUAGE)
+
 ## Release 0.997 169.94
 
 - Custom script: heli rescuer pick-up point (CUS_HELIRESCUER), object heading from north, CUS_USERA removed, userA at the accident place

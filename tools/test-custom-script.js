@@ -102,6 +102,14 @@ assert(navigation.includes('"L:CUS_HELIRESCUER LAT"') && navigation.includes('"L
 assert(/"ce_hdg_rel"\},"value":\{"subtract":\[\{"local":"ce_hdg"\},\{"var":\["PLANE HEADING DEGREES TRUE"/.test(navigation), 'the fixed heading is converted from north to the helicopter nose');
 assert(!navigation.includes('"heading":{"local":"ce_hdg"}'), 'create_object must use the converted heading');
 
+// 169.95: the script may choose the language in which the dispatcher reads the dispatch (local CUS_DISPATCH_LANGUAGE, a language code, empty = the voice pack).
+const voiceModule = read('mission-src/macros/03-aircraft-crew-checklists.json');
+assert(voiceModule.includes('"voice dispatch language tag": [') && voiceModule.includes('{"text":"<language:{0}>","params":[{"local":"CUS_DISPATCH_LANGUAGE"}]}'), 'the mission builds the <language:XX> tag from CUS_DISPATCH_LANGUAGE');
+assert(voiceModule.includes('<actor8><radio:ext>{3}<text:DSC.{0}.{1}>{2}') && voiceModule.includes('<actor8><radio:ext>{3}<text:DSC.VEH>'), 'the dispatcher lines of the description and of the vehicle carry the language tag');
+assert(voiceModule.includes('"lang":{"param":"vo_lt"}') && voiceModule.includes('"{2}<say:{0}>{1}"'), 'the objective carries the language tag through voice say');
+const dispatchLanguage = commands.find((c) => c.set && c.set.local === 'CUS_DISPATCH_LANGUAGE');
+if (dispatchLanguage) assert(typeof dispatchLanguage.value === 'string' && /^([A-Za-z]{2})?$/.test(dispatchLanguage.value), 'CUS_DISPATCH_LANGUAGE must be empty or a two-letter language code');
+
 const everything = JSON.stringify(script);
 assert(!/[^\x00-\x7F]/.test(everything), 'train.json must stay ASCII');
 

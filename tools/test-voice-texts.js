@@ -32,9 +32,9 @@ assert.ok(!keys.some((key) => key.startsWith('DSP.')), 'DSP.* is the prefix of t
 
 // 2. the dispatch reading: key from the incident (VAR_MISSION_NUMBER = ID_CARD, CRASH_VARIABLE), the shown English after it, the vehicle apart
 const read = JSON.stringify(macros['voice read dispatch']);
-assert.ok(read.includes('<actor8><radio:ext><text:DSC.{0}.{1}>{2}'), 'the description is spoken with its key and its English');
+assert.ok(read.includes('<actor8><radio:ext>{3}<text:DSC.{0}.{1}>{2}'), 'the description is spoken with its key and its English ({3} is the optional language tag of a custom script)');
 assert.ok(read.includes('"VAR_MISSION_NUMBER"') && read.includes('"CRASH_VARIABLE"'), 'the key is built from the incident and the variant');
-assert.ok(read.includes('<text:DSC.VEH>{0}//{1}//{2}'), 'the vehicle sentence has its own key and the values after the English');
+assert.ok(read.includes('{3}<text:DSC.VEH>{0}//{1}//{2}'),'the vehicle sentence has its own key and the values after the English');
 assert.ok(!read.includes('<plain>'), 'the description is not spoken as <plain> any more');
 assert.ok(TEMPLATES['DSC.VEH'] === 'Vehicle: {0} {1}.', 'the template of the vehicle sentence');
 const incidents = JSON.parse(fs.readFileSync(path.join(root, 'mission-src', 'data', '02-waypoints-and-categories.json'), 'utf8')).accidents;

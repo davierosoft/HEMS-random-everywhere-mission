@@ -12,6 +12,7 @@
 | `L:VARAMBUAVAIL`, `L:VARFIREAVAIL`, `L:VARPOLICEAVAIL` | ground response macros (0 absent, 1 on scene, 2 on the road) |
 | `L:CUS_CARLS_AUTOCONNECT`, `L:SKIPIFCLOSE`, `L:CUS_SEND_DISPATCH` | CARLS thread, dispatch hand-over |
 | locals `OBJECT1..15`, `L:OBJECTn LAT/LON`, `L:CUSVFXA LAT/LON` | thread created in `accident location pregenerator CUSTOM` |
+| local `CUS_DISPATCH_LANGUAGE` (string: IT, DE, FR, EN or another language code of the Companion; empty or unset = the language of the voice pack) | `voice dispatch language tag` (sources, not built) |
 | globals of the loop over `data.accidents` (briefing text, and for ID 999 the whole definition) | `missionupdate CUSTOM` |
 
 For every incident except 999 the mission takes the definition from its own `data.accidents`; the script copy is used only by the briefing shown before the mission loads (description of the chosen variant, objective, SAR, mountain rescuers). For ID 999 (`CUSTOM (EDITABLE)`) the script copy is the full definition and is the source of truth. The globals written by the loop match exactly the globals read by `missionupdate CUSTOM` (checked 2026-10-29).
@@ -85,6 +86,12 @@ The script sets `L:CUS_HOSPITAL LAT/LON` (0 = off) and the local `CUS_HOSPITAL_N
 Object `heading` of the script is measured from north. `create_object` takes a heading relative to the helicopter nose (simulator report, issue 53: wanted heading + nose heading), so `custom object create fixed heading` passes `heading - PLANE HEADING DEGREES TRUE` (plus 360 when negative), the same conversion the mission uses for `L:BRG`. Random headings (-1) are unchanged.
 
 The script sets `L:CUS_HELIRESCUER LAT/LON` (0 = off, issue 54). `Query random heli rescuer` creates `heli_rescuer_location` from them when LAT is not 0, otherwise it runs the usual query; "Modify Pickup point" still works. No name variable: nothing displays a heli rescuer place name.
+
+## Language of the dispatch reading (sources 2026-10-31, not built, runtime pending)
+
+A custom mission chooses the language in which the dispatcher reads the dispatch. The script sets the local `CUS_DISPATCH_LANGUAGE` (a string, like `CUS_HOSPITAL_NAME`, which survives `load_mission`) to a language code; empty or unset keeps the language of the voice pack. `voice dispatch language tag` turns it into the tag `<language:XX>` (the Companion accepts EN, IT, DE, FR and also US, GB, UK as English). `voice read dispatch` puts the tag after `<radio:ext>` in the description and in the vehicle sentence; `voice objective` passes it to `voice say` (parameter `lang`). Not covered: the crew readback of a dispatch heard with the radio off (`voice dispatch readback`) and the crew lines, which stay in the pack language.
+
+The Companion today applies the tag to the voice only: the key text (`<text:DSC.n.v>`) is still taken from the active pack. The complete behaviour (text of the pack of that language) is a Companion change, tracked in issue 65 of KeKKERUUU/RandomEverywhereInstaller. Until then the tag makes the actor's voice of that language read the text of the pack in use.
 
 ## Custom audio messages (design, not implemented)
 

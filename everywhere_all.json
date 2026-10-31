@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 169.94",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.00",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 169.94"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.00"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -5005,6 +5005,7 @@
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CREW_CHATTER"},"value":{"global":"CREW_CHATTER"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CREW_PROFILE"},"value":{"global":"CREW_PROFILE"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CREW_TIPS"},"value":{"global":"CREW_TIPS"}},
+    {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"EASTER_EGGS"},"value":{"global":"EASTER_EGGS"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CALLSIGN"},"value":{"global":"CALLSIGN"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"HOIST_AUDIO"},"value":{"global":"HOIST_AUDIO"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"MISSION_GUIDANCE_OVERRIDE"},"value":{"global":"MISSION_GUIDANCE_OVERRIDE"}},
@@ -5141,6 +5142,7 @@
         {"set":{"global":"CREW_CHATTER"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CREW_CHATTER"}},
         {"set":{"global":"CREW_PROFILE"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CREW_PROFILE"}},
         {"set":{"global":"CREW_TIPS"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CREW_TIPS"}},
+        {"set":{"global":"EASTER_EGGS"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"EASTER_EGGS"}},
         {"set":{"global":"CALLSIGN"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"CALLSIGN"}},
         {"set":{"global":"HOIST_AUDIO"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"HOIST_AUDIO"}},
         {"set":{"global":"MISSION_GUIDANCE_OVERRIDE"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"MISSION_GUIDANCE_OVERRIDE"}},
@@ -5731,6 +5733,8 @@
         {"text":"MISCELLANEOUS OPTIONS","color":"green","align":"center","show_condition":{"require":{"local":"tab9"},"ne":0}},
         {"text":"(P)Select which page you want to display at mission startup:","show_condition":{"require":{"local":"tab9"},"ne":0}},
         {"buttonbar":[{"title":"Homepage (default)","select_condition":{"require":{"global":"startpage"},"eq":"homepage"},"commands":[{"set":{"global":"startpage"},"value":"homepage"},{"call_macro":"mark aircraft profile custom"},{"set":{"local":"startpage"},"value":"homepage"}]},{"title":"Technical page","select_condition":{"require":{"global":"startpage"},"eq":"techpage"},"commands":[{"set":{"global":"startpage"},"value":"techpage"},{"call_macro":"mark aircraft profile custom"},{"set":{"local":"startpage"},"value":"techpage"}]},{"title":"Main screen","select_condition":{"require":{"global":"startpage"},"eq":"mainpage"},"commands":[{"set":{"global":"startpage"},"value":"mainpage"},{"call_macro":"mark aircraft profile custom"},{"set":{"local":"startpage"},"value":"mainpage"}]}],"show_condition":{"require":{"local":"tab9"},"ne":0}},
+        {"text":"(P)Easter eggs (1 April and 31 October). AUTO plays each one once per flight session:","show_condition":{"require":{"local":"tab9"},"ne":0}},
+        {"buttonbar":[{"title":"ENABLED","select_condition":{"require":{"global":"EASTER_EGGS"},"eq":"enabled"},"commands":[{"set":{"global":"EASTER_EGGS"},"value":"enabled"},{"call_macro":"mark aircraft profile custom"}]},{"title":"DISABLED","select_condition":{"require":{"global":"EASTER_EGGS"},"eq":"disabled"},"commands":[{"set":{"global":"EASTER_EGGS"},"value":"disabled"},{"call_macro":"mark aircraft profile custom"}]},{"title":"AUTO","select_condition":{"require":{"global":"EASTER_EGGS"},"eq":"auto"},"commands":[{"set":{"global":"EASTER_EGGS"},"value":"auto"},{"call_macro":"mark aircraft profile custom"}]}],"show_condition":{"require":{"local":"tab9"},"ne":0}},
         {"text":"Problems loading missions? It stucks on loading? Verify installed addon by spawning 2 objects in front of the helicopter! Results will be shown below.","show_condition":{"require":{"local":"tab9"},"ne":0}},
         {"buttonbar":[{"title":"START SPAWN TEST","disabled_condition":{"require":{"local":"testobj"},"ne":"NONE"},"select_condition":{"require":{"local":"testobj"},"eq":"NONE"},"commands":[{"call_macro":"TEST"}]},{"title":"CREW SPAWN TEST","disabled_condition":{"require":{"local":"crewtest"},"eq":"IN PROGR."},"select_condition":{"require":{"local":"crewtest"},"ne":"DONE"},"commands":[{"call_macro":"CREW SPAWN TEST"}]}],"show_condition":{"require":{"local":"tab9"},"ne":0}},
         {"text":"Crew spawn test: {0}","color":"yellow","params":[{"local":"crewtest"}],"show_condition":{"require":{"local":"tab9"},"ne":0}},
@@ -47217,6 +47221,7 @@
     {"set":{"global":"CREW_CHATTER"},"value":null},
     {"set":{"global":"CREW_PROFILE"},"value":null},
     {"set":{"global":"CREW_TIPS"},"value":null},
+    {"set":{"global":"EASTER_EGGS"},"value":null},
     {"set":{"global":"CALLSIGN"},"value":null},
     {"set":{"global":"MISSION_GUIDANCE_OVERRIDE"},"value":null},
     {"set":{"global":"VOLUME_CREW"},"value":null},
@@ -47348,7 +47353,7 @@
     ]}
   ],
   "objective1": [
-    {"set":{"var":["L:RELEASE_BUILD","number"]},"value":169},
+    {"set":{"var":["L:RELEASE_BUILD","number"]},"value":170},
     {"call_macro":"settings first run defaults"},
     {"call_macro":"start location diagnostics","params":{"init":1}},
     {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
@@ -47474,26 +47479,30 @@
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_ZOOM_SET_13"]},
     {"call_macro":"version check"},
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_{local:maptype}"]},
+    {"#comment":"Easter eggs (setting EASTER_EGGS, user request of 2026-10-31): fool on 1 April, halloween on 31 October (local date of the simulator). ENABLED plays every mission start of that day. AUTO plays once per flight session. DISABLED never plays Halloween, and plays the 1 April egg only at the first attempt of the session. The session marks L:EASTER_FOOL_SEEN and L:EASTER_HALLOWEEN_SEEN live in the simulator session: a mission reload does not clear them, the end of the flight does."},
+    {"set":{"local":"fool"},"value":0},
+    {"set":{"local":"hallomessage"},"value":null},
+    {"set":{"local":"halloween"},"value":0},
     {"if": {
       "and": [
         {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":4},
-        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":1}
+        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":1},
+        {"or":[{"require":{"global":"EASTER_EGGS"},"eq":"enabled"},{"require":{"var":["L:EASTER_FOOL_SEEN","number"]},"lt":1}],"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"fool"},"value":1}
-      ],"else": [
-        {"set":{"local":"fool"},"value":0}
+        {"set":{"local":"fool"},"value":1},
+        {"set":{"var":["L:EASTER_FOOL_SEEN","number"]},"value":1}
     ]},
-    {"set":{"local":"hallomessage"},"value":null},
     {"if": {
       "and": [
         {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":10},
-        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":31}
+        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":31},
+        {"require":{"global":"EASTER_EGGS"},"ne":"disabled"},
+        {"or":[{"require":{"global":"EASTER_EGGS"},"eq":"enabled"},{"require":{"var":["L:EASTER_HALLOWEEN_SEEN","number"]},"lt":1}],"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"halloween"},"value":1}
-      ],"else": [
-        {"set":{"local":"halloween"},"value":0}
+        {"set":{"local":"halloween"},"value":1},
+        {"set":{"var":["L:EASTER_HALLOWEEN_SEEN","number"]},"value":1}
     ]},
     {"if": {"global":"PAPERWORK"}, "eq": null,
       "then": [
@@ -86379,12 +86388,13 @@
         {"#comment":"User rules of 2026-10-18 (cold dispatch): with the radio working (voice radio ready: power and the CARLS) the dispatcher reads the dispatch and the objective; without it the dispatch is only a notification on the tablet (the program says nothing of the dispatcher) and a crew member aboard, or partly aboard, reads the message back to the crew by voice: hey crew, a dispatch came in, what do we do? The call to the dispatcher for more information and the confirmation come when the radio is on (voice briefing chat), the dispatcher asks again for the confirmation (DSA.NUDGE) and says the reassignment as before."},
         {"set":{"local":"vrd_rb"},"value":0},
         {"call_macro":"voice radio ready","result":"vrd_radio"},
+        {"call_macro":"voice dispatch language tag","result":"vrd_lt"},
         {"if": {"param":"vrd_radio"}, "eq": 1,
           "then": [
-            {"speak":{"text":"<actor8><radio:ext><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+            {"speak":{"text":"<actor8><radio:ext>{3}<text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"},{"param":"vrd_lt"}]}},
             {"if": {"local":"vrd_veh"}, "eq": 1,
               "then": [
-                {"speak":{"text":"<actor8><radio:ext><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+                {"speak":{"text":"<actor8><radio:ext>{3}<text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"},{"param":"vrd_lt"}]}}
             ]},
             {"call_macro":"voice objective"}
           ],"else": [
@@ -87005,7 +87015,12 @@
               "then": [
                 {"set":{"param":"vs_a"},"value":""}
             ]},
-            {"speak":{"text":"<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"}]}}
+            {"set":{"param":"vs_l"},"value":{"param":"lang"}},
+            {"if": {"param":"vs_l"}, "eq": null,
+              "then": [
+                {"set":{"param":"vs_l"},"value":""}
+            ]},
+            {"speak":{"text":"{2}<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"},{"param":"vs_l"}]}}
         ]}
       ],"else": [
         {"call_macro":"voice app check"}
@@ -87051,7 +87066,8 @@
   "voice objective": [
     {"#comment":"The dispatcher says the objective of the mission in a colloquial way, a text for each kind of mission (pack EN OBJ.*), after reading the description of the dispatch."},
     {"call_macro":"voice mission class","result":"vo_cls"},
-    {"call_macro":"voice say","params":{"key":{"text":"OBJ.{0}{1}","params":[{"param":"vo_cls"},{"local":"voice_sfx"}]}}}
+    {"call_macro":"voice dispatch language tag","result":"vo_lt"},
+    {"call_macro":"voice say","params":{"key":{"text":"OBJ.{0}{1}","params":[{"param":"vo_cls"},{"local":"voice_sfx"}]},"lang":{"param":"vo_lt"}}}
   ],
   "voice ground update": [
     {"#comment":"Updates during the ground operations (called every 2 s by on-site operations progress monitor). The team reports when it has news, not on a timer: a new stage of the operations (deployment, treatment with the condition of the patient from LIFESCORE, CPR, loading, return; a dead patient has its own report), a change of the time left (TIMERGND times the progress that is missing, in minutes, at most one report every 20 s), once who transports the patient. When nothing happens for 240 s and the pilot is alone (nobody else aboard, L:HMC_CREW_PRESENT) the pilot asks for the status; when nothing happens for 150 s and somebody is aboard, they make small talk (voice banter, only when voice calm allows it). Only with the Mission Companion (VCP APP). Pack EN GRD.*."},
@@ -91111,6 +91127,10 @@
     {"if": {"global":"CREW_TIPS"}, "eq": null,
       "then": [
         {"set":{"global":"CREW_TIPS"},"value":0}
+    ]},
+    {"if": {"global":"EASTER_EGGS"}, "eq": null,
+      "then": [
+        {"set":{"global":"EASTER_EGGS"},"value":"auto"}
     ]},
     {"if": {"global":"COND_MISSIONS"}, "eq": null,
       "then": [
@@ -96168,6 +96188,19 @@
       ],"else": [
         {"set":{"local":"destination_modal_text"},"value":{"local":"destination_modal_base"}}
     ]}
+  ],
+  "voice dispatch language tag": [
+    {"#comment":"The language in which the dispatcher reads the dispatch (description, vehicle, objective). A custom script (train.json) sets the local CUS_DISPATCH_LANGUAGE to a language code (IT, DE, FR, EN or another code the Mission Companion knows); the local survives load_mission. Unset or empty: no tag, the dispatch is read in the language of the voice pack, as always. Returns the tag <language:XX> or an empty text; the Mission Companion reads the segment with the voice of the actor in that language (and, once the Companion supports it, with the text of the pack of that language). Issue 65 of KeKKERUUU/RandomEverywhereInstaller (app side) and the custom script issue in this repository."},
+    {"set":{"param":"vdl_t"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"CUS_DISPATCH_LANGUAGE"},"ne":null},
+        {"require":{"local":"CUS_DISPATCH_LANGUAGE"},"ne":""}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"vdl_t"},"value":{"text":"<language:{0}>","params":[{"local":"CUS_DISPATCH_LANGUAGE"}]}}
+    ]},
+    {"return":{"param":"vdl_t"}}
   ]
 },
 

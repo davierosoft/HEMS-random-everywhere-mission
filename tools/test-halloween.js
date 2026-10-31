@@ -16,7 +16,7 @@ const text = (value) => JSON.stringify(value);
 const all = text(macros);
 
 // 1. The mode is on only on 31 October, and the scene is raised only by the two accident scenes that exist in the original.
-assert.ok(/"E:LOCAL MONTH OF YEAR","number"\]\},"eq":10\},\{"require":\{"var":\["E:LOCAL DAY OF MONTH","number"\]\},"eq":31\}[^]{0,120}"halloween"\},"value":1/.test(all), 'halloween must be set only on month 10, day 31');
+assert.ok(/"E:LOCAL MONTH OF YEAR","number"\]\},"eq":10\},\{"require":\{"var":\["E:LOCAL DAY OF MONTH","number"\]\},"eq":31\}[^]{0,400}"halloween"\},"value":1/.test(all), 'halloween must be set only on month 10, day 31 (and by the EASTER_EGGS setting, see test-easter-eggs.js)');
 const callers = Object.entries(macros).filter(([, commands]) => text(commands).includes('"call_macro":"random halloween"')).map(([name]) => name).sort();
 assert.deepEqual(callers, ['CAMPING_SITE', 'CRASH_SITE'], 'random halloween must be called by CRASH_SITE and CAMPING_SITE only');
 

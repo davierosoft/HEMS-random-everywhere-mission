@@ -2276,7 +2276,7 @@
     {"set_dispatch_dialog":1}
   ],
   "objective1": [
-    {"set":{"var":["L:RELEASE_BUILD","number"]},"value":169},
+    {"set":{"var":["L:RELEASE_BUILD","number"]},"value":170},
     {"call_macro":"settings first run defaults"},
     {"call_macro":"start location diagnostics","params":{"init":1}},
     {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
@@ -2402,26 +2402,30 @@
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_ZOOM_SET_13"]},
     {"call_macro":"version check"},
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_{local:maptype}"]},
+    {"#comment":"Easter eggs (setting EASTER_EGGS, user request of 2026-10-31): fool on 1 April, halloween on 31 October (local date of the simulator). ENABLED plays every mission start of that day. AUTO plays once per flight session. DISABLED never plays Halloween, and plays the 1 April egg only at the first attempt of the session. The session marks L:EASTER_FOOL_SEEN and L:EASTER_HALLOWEEN_SEEN live in the simulator session: a mission reload does not clear them, the end of the flight does."},
+    {"set":{"local":"fool"},"value":0},
+    {"set":{"local":"hallomessage"},"value":null},
+    {"set":{"local":"halloween"},"value":0},
     {"if": {
       "and": [
         {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":4},
-        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":1}
+        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":1},
+        {"or":[{"require":{"global":"EASTER_EGGS"},"eq":"enabled"},{"require":{"var":["L:EASTER_FOOL_SEEN","number"]},"lt":1}],"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"fool"},"value":1}
-      ],"else": [
-        {"set":{"local":"fool"},"value":0}
+        {"set":{"local":"fool"},"value":1},
+        {"set":{"var":["L:EASTER_FOOL_SEEN","number"]},"value":1}
     ]},
-    {"set":{"local":"hallomessage"},"value":null},
     {"if": {
       "and": [
         {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":10},
-        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":31}
+        {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":31},
+        {"require":{"global":"EASTER_EGGS"},"ne":"disabled"},
+        {"or":[{"require":{"global":"EASTER_EGGS"},"eq":"enabled"},{"require":{"var":["L:EASTER_HALLOWEEN_SEEN","number"]},"lt":1}],"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"halloween"},"value":1}
-      ],"else": [
-        {"set":{"local":"halloween"},"value":0}
+        {"set":{"local":"halloween"},"value":1},
+        {"set":{"var":["L:EASTER_HALLOWEEN_SEEN","number"]},"value":1}
     ]},
     {"if": {"global":"PAPERWORK"}, "eq": null,
       "then": [

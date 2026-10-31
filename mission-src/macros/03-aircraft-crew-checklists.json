@@ -1405,6 +1405,19 @@
     ]},
     {"return":{"local":"vcs_actor"}}
   ],
+  "voice dispatch language tag": [
+    {"#comment":"The language in which the dispatcher reads the dispatch (description, vehicle, objective). A custom script (train.json) sets the local CUS_DISPATCH_LANGUAGE to a language code (IT, DE, FR, EN or another code the Mission Companion knows); the local survives load_mission. Unset or empty: no tag, the dispatch is read in the language of the voice pack, as always. Returns the tag <language:XX> or an empty text; the Mission Companion reads the segment with the voice of the actor in that language (and, once the Companion supports it, with the text of the pack of that language). Issue 65 of KeKKERUUU/RandomEverywhereInstaller (app side) and the custom script issue in this repository."},
+    {"set":{"param":"vdl_t"},"value":""},
+    {"if": {
+      "and": [
+        {"require":{"local":"CUS_DISPATCH_LANGUAGE"},"ne":null},
+        {"require":{"local":"CUS_DISPATCH_LANGUAGE"},"ne":""}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"vdl_t"},"value":{"text":"<language:{0}>","params":[{"local":"CUS_DISPATCH_LANGUAGE"}]}}
+    ]},
+    {"return":{"param":"vdl_t"}}
+  ],
   "voice read dispatch": [
     {"#comment":"The dispatcher (actor 8, external radio) reads the dispatch description and objective shown on the tablet. The description is a text with a key, DSC.<incident ID_CARD>.<variant 1-4>, so a translated pack of the Mission Companion speaks its own text; the shown English follows the key and is spoken when the pack has no such text or it does not match. The vehicle of the missions 65-67 is read apart (DSC.VEH). Then the crew briefing. Only with the Mission Companion (voice code APP). Mission description runs for every dispatch received (first, next, custom menu); vrd_last stops a second reading of the same text."},
     {"if": {
@@ -1426,12 +1439,13 @@
         {"#comment":"User rules of 2026-10-18 (cold dispatch): with the radio working (voice radio ready: power and the CARLS) the dispatcher reads the dispatch and the objective; without it the dispatch is only a notification on the tablet (the program says nothing of the dispatcher) and a crew member aboard, or partly aboard, reads the message back to the crew by voice: hey crew, a dispatch came in, what do we do? The call to the dispatcher for more information and the confirmation come when the radio is on (voice briefing chat), the dispatcher asks again for the confirmation (DSA.NUDGE) and says the reassignment as before."},
         {"set":{"local":"vrd_rb"},"value":0},
         {"call_macro":"voice radio ready","result":"vrd_radio"},
+        {"call_macro":"voice dispatch language tag","result":"vrd_lt"},
         {"if": {"param":"vrd_radio"}, "eq": 1,
           "then": [
-            {"speak":{"text":"<actor8><radio:ext><text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"}]}},
+            {"speak":{"text":"<actor8><radio:ext>{3}<text:DSC.{0}.{1}>{2}","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"vrd_text"},{"param":"vrd_lt"}]}},
             {"if": {"local":"vrd_veh"}, "eq": 1,
               "then": [
-                {"speak":{"text":"<actor8><radio:ext><text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"}]}}
+                {"speak":{"text":"<actor8><radio:ext>{3}<text:DSC.VEH>{0}//{1}//{2}","params":[{"local":"sar_veh_text"},{"local":"sar_veh_color"},{"local":"sar_veh_model"},{"param":"vrd_lt"}]}}
             ]},
             {"call_macro":"voice objective"}
           ],"else": [
@@ -3613,7 +3627,12 @@
               "then": [
                 {"set":{"param":"vs_a"},"value":""}
             ]},
-            {"speak":{"text":"<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"}]}}
+            {"set":{"param":"vs_l"},"value":{"param":"lang"}},
+            {"if": {"param":"vs_l"}, "eq": null,
+              "then": [
+                {"set":{"param":"vs_l"},"value":""}
+            ]},
+            {"speak":{"text":"{2}<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"},{"param":"vs_l"}]}}
         ]}
       ],"else": [
         {"call_macro":"voice app check"}
@@ -3659,7 +3678,8 @@
   "voice objective": [
     {"#comment":"The dispatcher says the objective of the mission in a colloquial way, a text for each kind of mission (pack EN OBJ.*), after reading the description of the dispatch."},
     {"call_macro":"voice mission class","result":"vo_cls"},
-    {"call_macro":"voice say","params":{"key":{"text":"OBJ.{0}{1}","params":[{"param":"vo_cls"},{"local":"voice_sfx"}]}}}
+    {"call_macro":"voice dispatch language tag","result":"vo_lt"},
+    {"call_macro":"voice say","params":{"key":{"text":"OBJ.{0}{1}","params":[{"param":"vo_cls"},{"local":"voice_sfx"}]},"lang":{"param":"vo_lt"}}}
   ],
   "voice ground update": [
     {"#comment":"Updates during the ground operations (called every 2 s by on-site operations progress monitor). The team reports when it has news, not on a timer: a new stage of the operations (deployment, treatment with the condition of the patient from LIFESCORE, CPR, loading, return; a dead patient has its own report), a change of the time left (TIMERGND times the progress that is missing, in minutes, at most one report every 20 s), once who transports the patient. When nothing happens for 240 s and the pilot is alone (nobody else aboard, L:HMC_CREW_PRESENT) the pilot asks for the status; when nothing happens for 150 s and somebody is aboard, they make small talk (voice banter, only when voice calm allows it). Only with the Mission Companion (VCP APP). Pack EN GRD.*."},

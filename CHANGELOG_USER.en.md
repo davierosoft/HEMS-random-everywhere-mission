@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 169.93. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.00. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1591,6 +1591,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - From 169.94 the fixed heading of an object is measured from north (it no longer turns with the helicopter nose), the script can set the pick-up point of the heli rescuers in mountain missions (0 = the mission searches one), and the pick-up point of the transfer and organ missions is always the accident place (the pick-up variable of the script is gone).
 - **Test:** Start the custom train script; the scene objects appear and face the direction chosen for each (a fixed heading is the same whatever the helicopter heading), the crew proposes your hospital if you set one, and only one 2 NM call is heard.
 
+### Easter eggs option and the language of the dispatch of a custom script
+
+- New option EASTER EGGS in Settings, page Miscellaneous (enabled, disabled, auto; the standard is auto). The 1 April joke and the 31 October Halloween scene are played in auto once for each flight session, so a mission reload does not repeat them; enabled plays them at every mission start of that day; disabled never plays Halloween and plays the 1 April joke only the first time. The option is saved in the settings profiles and reset by Reset to Default.
+- A custom mission script can choose the language in which the dispatcher reads the dispatch: the line CUS_DISPATCH_LANGUAGE (IT, DE, FR or EN; empty keeps the language of the voice pack). The description, the vehicle and the objective carry the language; the crew lines stay in the language of the pack. The Mission Companion must support the language of the text to read the text of the pack of that language; until then the voice of that language reads the text of the pack in use.
+- **Build history:** 0.997 170.00.
+- **Test:** On 31 October or 1 April (or with the date set in the simulator) start a mission with EASTER EGGS on auto: the scene appears once, and a mission reload in the same session does not repeat it. With disabled there is no Halloween scene. In a custom script set CUS_DISPATCH_LANGUAGE to IT: the dispatcher reads the dispatch with the Italian voice of the dispatcher.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1645,4 +1652,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.91:** The custom script versions back to the original logic, with the build the script needs checked against the mission build (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.92:** The destination choice that keeps showing the proposed hospital and its distance (see The destination choice keeps showing the hospital).
 - **0.997 169.93:** The Halloween scene that works without the 30West add-on and has decor with it (see The Halloween scene without the 30West add-on).
-- **0.997 169.94 (this release):** The custom mission script: heading of the objects from north and the pick-up point of the heli rescuers (see Custom mission script: objects list, own hospital, version check).
+- **0.997 169.94:** The custom mission script: heading of the objects from north and the pick-up point of the heli rescuers (see Custom mission script: objects list, own hospital, version check).
+- **0.997 170.00 (this release):** The EASTER EGGS option and the language of the dispatch reading of a custom script (see Easter eggs option and the language of the dispatch of a custom script).
