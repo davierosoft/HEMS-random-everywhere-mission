@@ -90,9 +90,17 @@ assert(!missionText.includes('custom script compatibility'), 'the mission-side c
 // Legacy (original 0.997 script, kept until 0.998): every variable it sets is still read by the mission.
 assert(bootstrap.includes('"MISSION_VERSION"},"value":"0.997"'), 'legacy scripts look at 0.997: do not change MISSION_VERSION before 0.998');
 const legacyText = read('tools/fixtures/train-legacy-0.997.json');
-const unread = [...new Set([...legacyText.matchAll(/"(L:[A-Za-z0-9_ ]+)"/g)].map((m) => m[1]))].filter((n) => n !== 'L:SKIPIFCLOSE' && !missionText.includes(n));
+const unread = [...new Set([...legacyText.matchAll(/"(L:[A-Za-z0-9_ ]+)"/g)].map((m) => m[1]))].filter((n) => n !== 'L:SKIPIFCLOSE' && n !== 'L:CUS_USERA LAT' && n !== 'L:CUS_USERA LON' && !missionText.includes(n));
 assert.deepStrictEqual(unread, [], 'the mission no longer reads variables of the legacy script: ' + unread.join(', '));
 for (const name of ['OBJECT1', 'OBJECT15']) assert(missionText.includes('"' + name + '"'), 'legacy ' + name + ' path removed');
+
+// 169.94: CUS_USERA is gone (userA is the accident place), heading is measured from north, CUS_HELIRESCUER is read.
+assert(!fs.readdirSync(path.join(root, 'mission-src/macros')).some((n) => read('mission-src/macros/' + n).includes('CUS_USERA')), 'the mission must not read CUS_USERA any more');
+assert(!JSON.stringify(script).includes('CUS_USERA'), 'the script must not set CUS_USERA');
+assert(JSON.stringify(commands).includes('L:CUS_HELIRESCUER LAT') && JSON.stringify(commands).includes('L:CUS_HELIRESCUER LON'), 'the script sets CUS_HELIRESCUER');
+assert(navigation.includes('"L:CUS_HELIRESCUER LAT"') && navigation.includes('"L:CUS_HELIRESCUER LON"'), 'Query random heli rescuer reads CUS_HELIRESCUER');
+assert(/"ce_hdg_rel"\},"value":\{"subtract":\[\{"local":"ce_hdg"\},\{"var":\["PLANE HEADING DEGREES TRUE"/.test(navigation), 'the fixed heading is converted from north to the helicopter nose');
+assert(!navigation.includes('"heading":{"local":"ce_hdg"}'), 'create_object must use the converted heading');
 
 const everything = JSON.stringify(script);
 assert(!/[^\x00-\x7F]/.test(everything), 'train.json must stay ASCII');

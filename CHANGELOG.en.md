@@ -1,3 +1,8 @@
+## Release 0.997 169.94
+
+- Custom script: heli rescuer pick-up point (CUS_HELIRESCUER), object heading from north, CUS_USERA removed, userA at the accident place
+- Custom script: heli rescuer pick-up point (CUS_HELIRESCUER), object heading from north, CUS_USERA removed, userA at the accident place
+
 ## Release 0.997 169.93
 
 - Halloween scene (macro random halloween): the zombie models have a fallback title when the 30West add-on is missing, and twelve decor objects (stones, pumpkin, fallen undead) are created around the scene only with 30West. New static gate tools/test-halloween.js (date gate, HW1-HW15 counters, packs EN/DE/FR, wav and sound.xml entries, fallbacks).

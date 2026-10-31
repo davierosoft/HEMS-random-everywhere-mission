@@ -1587,8 +1587,9 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### Custom mission script: objects list, own hospital, version check
 
 - The custom mission script (the train accident example) now builds the scene from a list of up to 30 objects, each with its own state and a fallback model you choose. Each object can face nothing, the injured human, the second or third injured human (when they exist), the accident place, a point you give, or the previous object of the list. The script file is laid out for easy reading: banners, labelled areas and one block per object. It can propose your own hospital first, and it declares its version: the mission tells you if the script is too old or needs a newer mission build, and the script briefing warns when your last mission build is too old. The original script keeps working. The "2 NM from the loading area" call is no longer said on top of the accident-area call when the two places are the same.
-- **Build history:** 0.997 169.87-169.91.
-- **Test:** Start the custom train script; the scene objects appear and face the direction chosen for each, the crew proposes your hospital if you set one, and only one 2 NM call is heard.
+- **Build history:** 0.997 169.87-169.94.
+- From 169.94 the fixed heading of an object is measured from north (it no longer turns with the helicopter nose), the script can set the pick-up point of the heli rescuers in mountain missions (0 = the mission searches one), and the pick-up point of the transfer and organ missions is always the accident place (the pick-up variable of the script is gone).
+- **Test:** Start the custom train script; the scene objects appear and face the direction chosen for each (a fixed heading is the same whatever the helicopter heading), the crew proposes your hospital if you set one, and only one 2 NM call is heard.
 
 ## Build coverage ledger
 
@@ -1643,4 +1644,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 169.90:** The facing point of an object read from the script variables, and the readable layout of the script file (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.91:** The custom script versions back to the original logic, with the build the script needs checked against the mission build (see Custom mission script: objects list, own hospital, version check).
 - **0.997 169.92:** The destination choice that keeps showing the proposed hospital and its distance (see The destination choice keeps showing the hospital).
-- **0.997 169.93 (this release):** The Halloween scene that works without the 30West add-on and has decor with it (see The Halloween scene without the 30West add-on).
+- **0.997 169.93:** The Halloween scene that works without the 30West add-on and has decor with it (see The Halloween scene without the 30West add-on).
+- **0.997 169.94 (this release):** The custom mission script: heading of the objects from north and the pick-up point of the heli rescuers (see Custom mission script: objects list, own hospital, version check).

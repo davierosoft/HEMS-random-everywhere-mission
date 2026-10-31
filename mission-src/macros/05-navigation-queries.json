@@ -228,21 +228,27 @@
     ]}
   ],
   "custom object create fixed heading": [
+    {"#comment":"The script heading is measured from north; the location heading is relative to the helicopter nose, so the nose heading is subtracted (as for L:BRG)."},
+    {"set":{"local":"ce_hdg_rel"},"value":{"subtract":[{"local":"ce_hdg"},{"var":["PLANE HEADING DEGREES TRUE","DEGREES"]}]}},
+    {"if": {"local":"ce_hdg_rel"}, "lt": 0,
+      "then": [
+        {"set":{"local":"ce_hdg_rel"},"value":{"add":[{"local":"ce_hdg_rel"},360]}}
+    ]},
     {"if": {"local":"ce_fb"}, "ne": "",
       "then": [
         {"try": [
-            {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"fallback_title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+            {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"fallback_title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg_rel"},"object":"CUSOBJLOC"}}}
           ],
           "catch": [
             {"try": [
-                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg_rel"},"object":"CUSOBJLOC"}}}
               ],
               "catch": [
-                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+                {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_fb"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg_rel"},"object":"CUSOBJLOC"}}}
             ]}
         ]}
       ],"else": [
-        {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg"},"object":"CUSOBJLOC"}}}
+        {"create_object":{"name":{"local":"ce_oname"},"title":{"local":"ce_title"},"location":{"bearing":0,"dist":0,"heading":{"local":"ce_hdg_rel"},"object":"CUSOBJLOC"}}}
     ]}
   ],
   "custom object point": [
@@ -1557,23 +1563,12 @@
         ]},
         {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
         {"set":{"local":"location_diagnostic_writer_accident_location"},"value":"accident location pregenerator CUSTOM"},
-        {"if": {"var":["L:CUS_USERA LAT","number"]}, "eq": 0,
-          "then": [
-            {"#comment":"The script gave no pick-up point: the accident location is used (the transfer and organ missions need userA)."},
-            {"create_location": "userA",
-              "zones": [
-                {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
-            ]},
-            {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
-            {"set":{"local":"location_diagnostic_writer_userA"},"value":"accident location pregenerator CUSTOM"}
-          ],"else": [
-            {"create_location": "userA",
-              "zones": [
-                {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_USERA LAT","number"]},{"var":["L:CUS_USERA LON","number"]}]}}}}
-            ]},
-            {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
-            {"set":{"local":"location_diagnostic_writer_userA"},"value":"accident location pregenerator CUSTOM"}
+        {"create_location": "userA",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"accident_location"}}}
         ]},
+        {"set":{"local":"location_diagnostic_source_macro"},"value":"accident location pregenerator CUSTOM"},
+        {"set":{"local":"location_diagnostic_writer_userA"},"value":"accident location pregenerator CUSTOM"},
         {"if": {"var":["L:CUS_RESCUE LAT","number"]}, "eq": 0,
           "then": [
             {"create_location": "rescue_location",
@@ -3665,21 +3660,30 @@
     ]}
   ],
   "Query random heli rescuer": [
-    {"create_location": "heli_rescuer_location",
-      "no_results_commands": [
-        {"set_message":{"text":"Heli rescuer query failed. continue with normal mission"}},
-        {"sleep":5}
-      ],
-      "zones": [
-        {"zone": {
-            "zone_type": "query_closest_result",
-            "query": "[out:json];( nwr({{bbox}})[leisure=pitch][sport=soccer][surface!=artificial_turf][indoor!=yes];nwr({{bbox}})[leisure=pitch][surface=grass];nwr({{bbox}})[emergency=mountain_rescue];nwr({{bbox}})[amenity=fire_station]; );out center;",
-            "location": "accident_location",
-            "radius": 20000,
-            "minRadius": 1000,
-            "commands": []
-          }
-        }
+    {"#comment":"Pick-up point of the heli rescuers. Custom script (train.json): when it sets L:CUS_HELIRESCUER LAT/LON (not 0) heli_rescuer_location is that place and no query runs; otherwise the usual query. Modify Pickup point still changes it."},
+    {"if": {"var":["L:CUS_HELIRESCUER LAT","number"]}, "ne": 0,
+      "then": [
+        {"create_location": "heli_rescuer_location",
+          "zones": [
+            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUS_HELIRESCUER LAT","number"]},{"var":["L:CUS_HELIRESCUER LON","number"]}]}}}}
+        ]}
+      ],"else": [
+        {"create_location": "heli_rescuer_location",
+          "no_results_commands": [
+            {"set_message":{"text":"Heli rescuer query failed. continue with normal mission"}},
+            {"sleep":5}
+          ],
+          "zones": [
+            {"zone": {
+                "zone_type": "query_closest_result",
+                "query": "[out:json];( nwr({{bbox}})[leisure=pitch][sport=soccer][surface!=artificial_turf][indoor!=yes];nwr({{bbox}})[leisure=pitch][surface=grass];nwr({{bbox}})[emergency=mountain_rescue];nwr({{bbox}})[amenity=fire_station]; );out center;",
+                "location": "accident_location",
+                "radius": 20000,
+                "minRadius": 1000,
+                "commands": []
+              }
+            }
+        ]}
     ]},
     {"set":{"var":["L:MOUNTAIN","number"]},"value":2},
     {"set_map":{"add":{"point":{"location":"heli_rescuer_location","icon":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAAEEfUpiAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAG+SURBVEhL7VZLbgIxDJ3pgj0LOANzA6DXoHvY0SXTA0GPV26AWEz93ATys5PASJWqPsnEcWznxXGAtiEMw4CB8WLGpm1btrLBTgA2UAiHAq0bzzAGfJA63JPasJvBwuNhd7PeQMQrRLRHiGjPEPE5AngZwCPk8hhJ1zlLMumQLJSErIN3Fy7CU1VX2g2QgoGIgVRPizBZtkoWEotskXKIEmjnTa2Nz8AFdtQYAdn3kIOYwL1OjUXyCIdD72Xt+w+ZJhikZDabIWiYz+c0TftAIsN2u+XAUHa7HS37vpCoBlork6/eB7l3kFqPirhevxrNh2SPEnRdZzQfkt0rCKaLRQeFxdpcu/W1kmwke1ZaI/WuYwyhvoUS/NUEYcGkAt6Am6iV6XTK14oxXKuRKgLH44k3leR0+iS3dKwkXBoopdDeK+XRS51ANYGxke3C5XLFf4tqZbVaF51KrcBkMhmu1yvrKC8S80SB60fxzeVyUa9FJeBu+AgBAHOjJlH0RbDfvxutDDX+RQTO5y+jlaHWn69Aks3mjYYfHa6uSDaIG6dJ1TMMe4Dior6AzahFePrH4Fn8E/h1AlVNOD6a5huNhDAJvh1DQwAAAABJRU5ErkJggg==","id":"heli_rescuer_spot"}}}},
