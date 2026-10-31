@@ -58,6 +58,7 @@ const scripts = [
   'test-aircraft-profile-presets.js',
   'test-radio-context.js',
   'test-voice-texts.js',
+  'ui-texts.js',
   'test-voice-tips.js',
   'test-condition-missions.js',
   'test-sar-flag.js',
