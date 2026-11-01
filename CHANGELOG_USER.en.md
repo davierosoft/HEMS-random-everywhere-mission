@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.03. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.04. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -825,6 +825,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - A dispatch that was replaced early in the mission (for example with NEXT DISPATCH) can no longer be offered again later by the waiting first-dispatch timer. The troubleshooting file now records every step of the dispatch flow, including the state of the tablet connection, so that a dispatch without the button can be traced to its cause.
 - **Build history:** 0.997 170.02-170.03.
 - **Test:** Finish a mission, choose END MISSION and wait for the second dispatch: it appears with ACCEPT DISPATCH, and accepting it starts a new mission. With every mission disabled in the custom mission list, no dispatch must be offered.
+
+### The copilot message after the engine checks is completed and removed
+
+- After the take-off clearance and leak check, the tablet kept the line "Wait for copilot to board again" even when the copilot was already back on board, and it stayed on screen after the mission accomplished. When the copilot is back and no destination message applies (for example after the mission), the tablet now shows "Copilot is back on board. Checks completed." for a few seconds and then clears the message.
+- The troubleshooting file now records the payload weights in every phase (seats, hoist occupants, kits, the weight of each station and the total), including at the moment the copilot leaves for the engine checks and when the copilot returns, so a wrong weight after the checks can be traced.
+- **Build history:** 0.997 170.04.
+- **Test:** Start the engines and wait for the copilot to return after the leak check; after the mission accomplished the old "Wait for copilot" line must not remain on the tablet.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1681,4 +1688,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.00:** The EASTER EGGS option and the language of the dispatch reading of a custom script (see Easter eggs option and the language of the dispatch of a custom script).
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.03 (this release):** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
+- **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
+- **0.997 170.04 (this release):** The copilot message after the engine checks is completed and cleared, and payload weight diagnostics in every phase (see The copilot message after the engine checks is completed and removed).

@@ -179,7 +179,20 @@
             {"set":{"local":"sw_w"},"value":{"add":[{"local":"sw_w"},{"global":"STATION_6"}]}}
         ]}
     ]},
-    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"local":"sw_w"}}
+    {"set":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"value":{"local":"sw_w"}},
+    {"call_macro":"trace payload weights","params":{"stage":"recompute"}}
+  ],
+  "trace payload weights": [
+    {"#comment":"Weight diagnostics (Daikan report 2026-11-01, standing request: all diagnostics at once). Appends one row to payload_weight_log: the seat LVARs the thread STATION WEIGHTS follows, the hoist flags, the weight written to each payload station (read back from the simulator), the person and kit masses it adds up and the total, so that a full crew in any phase can be checked against the stations. Called at the end of station weights recompute (every change, every phase) and by the copilot exit and return of the engine checks. Read-only for the weights; the ring keeps 300 rows and goes into the manual and dispatch snapshot tables."},
+    {"if": {"local":"payload_weight_log"}, "eq": null,
+      "then": [
+        {"set":{"local":"payload_weight_log"},"value":{"create_array":0}}
+    ]},
+    {"modify_array":{"local":"payload_weight_log"},"append":{"create_struct":{"stage":{"param":"stage"},"time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"crew":{"local":"CREW"},"kit_option":{"global":"KIT_WEIGHTS"},"impl_pilot0":{"var":["L:{local:HXX}_IMPL_PILOT0","number"]},"impl_pilot1":{"var":["L:{local:HXX}_IMPL_PILOT1","number"]},"pilot_out":{"local":"PILOT_OUT"},"copilot":{"local":"COPILOT"},"pax1":{"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]},"pax2":{"var":["L:{local:HXX}_SDK_CABIN_PAX_2","number"]},"pax5":{"var":["L:{local:HXX}_SDK_CABIN_PAX_5","number"]},"pax3":{"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]},"hoistocc_1":{"global":"HOISTOCC_1"},"hoistocc_2":{"global":"HOISTOCC_2"},"hoistocc_3":{"global":"HOISTOCC_3"},"hoistocc_4":{"global":"HOISTOCC_4"},"hoistocc_5":{"global":"HOISTOCC_5"},"hoistocc_6":{"global":"HOISTOCC_6"},"set_1":{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},"set_2":{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},"set_3":{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},"set_4":{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},"set_5":{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},"set_6":{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]},"person_1":{"global":"STATION_1"},"person_2":{"global":"STATION_2"},"person_3":{"global":"STATION_3"},"person_4":{"global":"STATION_4"},"person_5":{"global":"STATION_5"},"person_6":{"global":"STATION_6"},"kit_1":{"local":"KITT_1"},"kit_2":{"local":"KITT_2"},"kit_3":{"local":"KITT_3"},"kit_4":{"local":"KITT_4"},"kit_5":{"local":"KITT_5"},"kit_6":{"local":"KITT_6"},"total_kg":{"add":[{"var":["PAYLOAD STATION WEIGHT:1","kilograms"]},{"var":["PAYLOAD STATION WEIGHT:2","kilograms"]},{"var":["PAYLOAD STATION WEIGHT:3","kilograms"]},{"var":["PAYLOAD STATION WEIGHT:4","kilograms"]},{"var":["PAYLOAD STATION WEIGHT:5","kilograms"]},{"var":["PAYLOAD STATION WEIGHT:6","kilograms"]}]}}}},
+    {"if": {"struct":{"local":"payload_weight_log"},"path":"length"}, "gt": 300,
+      "then": [
+        {"modify_array":{"local":"payload_weight_log"},"removeIndex":0}
+    ]}
   ],
   "kit weights target": [
     {"#comment":"Mass of the installed kits per station into locals KITT_1..6; zero while the option KIT_WEIGHTS is not yes. Masses are estimates (docs/architecture/KIT_WEIGHTS.md); stations 1/2 cockpit left/right, 3/4 front cabin, 5/6 rear cabin. Kits read from the SDK LVARs (HOOK, WEAPONS_SIGHT and SAFETY_PATCHES have no readable LVAR and carry no mass)."},

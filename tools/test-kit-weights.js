@@ -59,6 +59,7 @@ class Sim {
         else if (c.set.var) this.vars[this.name(c.set.var[0])] = value;
         else throw new Error(`unsupported set ${text(c.set)}`);
       } else if (c.if) this.run(this.cmp(this.q(c.if, p), c, p) ? c.then : (c.else || []), p);
+      else if (c.call_macro === 'trace payload weights') continue; // diagnostic ring, read-only (test-copilot-message-weights.js)
       else if (c.call_macro) {
         const args = Object.fromEntries(Object.entries(c.params || {}).map(([k, v]) => [k, this.q(v, p)]));
         this.run(macros[c.call_macro], args);
@@ -141,7 +142,7 @@ const installed = (s, ...names) => names.forEach((n) => s.kit(n, 1));
 
 // ---- static contract
 const all = text(macros);
-const writers = Object.entries(macros).filter(([, body]) => text(body).includes('"PAYLOAD STATION WEIGHT:')).map(([name]) => name).sort();
+const writers = Object.entries(macros).filter(([, body]) => text(body).includes('{"set":{"var":["PAYLOAD STATION WEIGHT:')).map(([name]) => name).sort();
 assert.deepEqual(writers, ['station weights recompute'], 'only the recompute macro writes the payload stations');
 assert.ok(!Object.hasOwn(macros, 'weights') && !Object.hasOwn(macros, 'kit weights sync'), 'the parked weights macro and the delta sync are gone');
 // the remaining hoist-flag writers are the hoist macros only

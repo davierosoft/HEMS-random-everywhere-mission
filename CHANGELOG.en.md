@@ -1,3 +1,8 @@
+## Release 0.997 170.04
+
+- Copilot back message (macro "copilot back message", called by preflight, engine1, engine2 and quickstart when FPL_NMBR is above 8): "Copilot is back on board. Checks completed." for 6 s, then the message is cleared; before, the "Wait for copilot to board again" line stayed after the mission because no destination message applies at FPL_NMBR 100
+- Payload weight diagnostics: macro "trace payload weights" writes a row to the payload_weight_log ring (300 rows) at every "station weights recompute" and when the copilot leaves and returns in engine1/engine2 (seat LVARs, hoist occupants, station weights read back, person and kit masses, total); the log is copied into the manual and dispatch snapshot tables
+
 ## Release 0.997 170.03
 
 - First dispatch thread guard (first_dispatch_pending: a first dispatch replaced by another one is never offered later by its sleeping thread), full dispatch flow diagnostics in the dispatch handoff log (rows at every generation of the dispatch place, ringtone, phase update, NEW DISPATCH trigger, first/next/accept/custom dispatch and the waits of ready dispatch; fields carls_connected, wifi, first_pending, lock_random; log ring 150 rows)
