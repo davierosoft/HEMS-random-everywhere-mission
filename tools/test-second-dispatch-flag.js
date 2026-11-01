@@ -32,6 +32,18 @@ assert.ok(flagWrites[2] > ready.lastIndexOf('"call_macro":"Mission description"'
 assert.ok(/"local":"randomize_result"\},"ne":"ready","then":\[\{"set":\{"local":"SECOND_DISPATCH"\},"value":0\},\{"set":\{"local":"second_dispatch_offered"\},"value":0\},\{"call_macro":"trace dispatch handoff","params":\{"stage":"ready_randomize_failed"\}\},\{"sleep":30\},\{"return":0\}\]/.test(ready), 'ready dispatch stops after a draw that is not ready');
 assert.ok(ready.indexOf('"stage":"ready_randomize_failed"') < ready.indexOf('"stage":"ready_randomized"'), 'the failed draw ends the macro before the offer');
 
+// Report of 2026-11-01 (170.02, Daikan): the thread of first_dispatch (sleep up to DISPATCH_TIME) woke up after the first dispatch had been replaced and offered the old mission type at
+// a new place, with no SECOND_DISPATCH, while ready dispatch was still waiting. A first dispatch that is not the pending one is never offered.
+const first = text(live(macros.first_dispatch));
+assert.ok(/"local":"first_dispatch_pending"\},"ne":1,"then":\[\{"call_macro":"trace dispatch handoff","params":\{"stage":"first_dispatch_skipped"\}\},\{"return":0\}\]/.test(first), 'first_dispatch returns when it is no longer the pending first dispatch');
+assert.ok(first.indexOf('first_dispatch_skipped') < first.indexOf('"local":"lock_random_dispatch"},"eq":0') && first.indexOf('"stage":"first_dispatch_offered"') < first.indexOf('"local":"lock_random_dispatch"},"eq":0'), 'the guard comes after the sleep and before the offer');
+const pendingOff = '{"set":{"local":"first_dispatch_pending"},"value":0}';
+for (const name of ['randomize', 'ready dispatch', 'next_dispatch', 'accept_dispatch', 'mission dispatched by custom menu']) {
+  assert.ok(text(live(macros[name])).includes(pendingOff), `${name} lowers first_dispatch_pending`);
+}
+const objective1First = text(live(macros.objective1));
+assert.ok(/"local":"first_dispatch_pending"\},"value":1\},\{"create_thread":\{"commands":\[\{"call_macro":"first_dispatch"\}/.test(objective1First), 'objective1 raises first_dispatch_pending right before the first_dispatch thread');
+
 const accept = text(live(macros.accept_dispatch));
 assert.ok(accept.includes('"stage":"accept_flag_restored"') && accept.includes('"local":"second_dispatch_offered"},"eq":1'), 'accept_dispatch restores the flag from second_dispatch_offered');
 assert.ok(accept.indexOf('accept_flag_restored') < accept.indexOf('"stage":"accept_second"'), 'the flag is restored before the second dispatch is accepted');
@@ -49,8 +61,18 @@ assert.ok(bars.some((line) => line.includes('"local":"second_dispatch_offered"},
 assert.ok(!/\bor\b/.test(bars.join('')), 'renderer conditions stay AND only');
 
 const diagnostics = fs.readFileSync(path.join(dir, '19-location-diagnostics.json'), 'utf8');
-for (const field of ['second_offered', 'dispatch_phase', 'dispatch_ended', 'newdispatch', 'progressive_unaccepted', 'wait_second_s', 'endwait_second', 'display_dispatch', 'hoc']) {
+for (const field of ['second_offered', 'dispatch_phase', 'dispatch_ended', 'newdispatch', 'progressive_unaccepted', 'wait_second_s', 'endwait_second', 'display_dispatch', 'hoc', 'carls_connected', 'wifi', 'first_pending', 'lock_random']) {
   assert.ok(diagnostics.includes(`"${field}":{`), `the handoff row carries ${field}`);
 }
+// every place that offers, replaces, accepts or triggers a dispatch leaves a row (standing request of 2026-11-01: all diagnostics at once, never one more update per question)
+for (const [name, stage] of [['dispatch ringtone', 'ringtone'], ['Update_raw from dispatchphase', 'dispatch_phase_raw_update'], ['first_dispatch', 'first_dispatch_enter'], ['first_dispatch', 'first_dispatch_after_waits'], ['accept_dispatch', 'accept_enter'], ['next_dispatch', 'next_dispatch_enter'], ['ready dispatch', 'ready_after_waits'], ['mission dispatched by custom menu', 'custom_menu_dispatch']]) {
+  assert.ok(text(live(macros[name])).includes(`"stage":"${stage}"`), `${name} traces ${stage}`);
+}
+assert.ok(fs.readFileSync(path.join(root, 'mission-src', 'threads', '01-startup-and-dispatch-triggers.json'), 'utf8').includes('"stage":"thread_new_dispatch_fire"'), 'the NEW DISPATCH thread traces its trigger');
+for (const name of ['trace dispatch handoff', 'snapshot dispatch diagnostics']) {
+  const body = text(macros[name]);
+  assert.ok(!/"call_macro":"(dispatch ringtone|Update_raw from dispatchphase|first_dispatch|accept_dispatch|next_dispatch|ready dispatch)"/.test(body), `${name} never calls a traced macro (no recursion)`);
+}
+assert.ok(text(live(macros['accident location pregenerator'])).includes('"stage":"pregenerator_enter"'), 'every generation of a dispatch place leaves a row, whoever called it');
 assert.ok(text(macros['refresh_unaccepted_dispatch_map']).includes('"stage":"preview_without_second_flag"'), 'a finished preview after the mission without the flag leaves a row');
 console.log('Second dispatch flag PASS: wait, offer and flag are traced, the flag is written again at the end of ready dispatch, accept restores it, a second bar covers a lost flag. HPG/MSFS PENDING.');

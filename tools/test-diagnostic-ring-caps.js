@@ -19,7 +19,7 @@ const collect = (value, predicate, found = []) => {
 };
 
 // ---- static contract --------------------------------------------------------------------------
-const rings = { ground_crew_runtime_trace: 4000, ambulance_monitor_log: 600, dispatch_handoff_log: 80, ground_ops_checkpoint_log: 600, ground_ops_watch_log: 300, dispatch_archive: 3 };
+const rings = { ground_crew_runtime_trace: 4000, ambulance_monitor_log: 600, dispatch_handoff_log: 150, ground_ops_checkpoint_log: 600, ground_ops_watch_log: 300, dispatch_archive: 3 };
 for (const [local, cap] of Object.entries(rings)) {
   const trims = [];
   for (const [name, commands] of Object.entries(macros)) for (const node of collect(commands, (c) => c.modify_array?.local === local && c.removeIndex === 0)) trims.push([name, node]);

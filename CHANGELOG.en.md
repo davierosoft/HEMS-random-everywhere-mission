@@ -1,3 +1,7 @@
+## Release 0.997 170.03
+
+- First dispatch thread guard (first_dispatch_pending: a first dispatch replaced by another one is never offered later by its sleeping thread), full dispatch flow diagnostics in the dispatch handoff log (rows at every generation of the dispatch place, ringtone, phase update, NEW DISPATCH trigger, first/next/accept/custom dispatch and the waits of ready dispatch; fields carls_connected, wifi, first_pending, lock_random; log ring 150 rows)
+
 ## Release 0.997 170.02
 
 - Second dispatch: flag raised before the draw, draw in a try, no offer of a stale dispatch after a failed draw, flag written again at the end, accept restores it, third ACCEPT bar, dispatch trace rows

@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.02",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.03",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.02"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.03"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -2517,6 +2517,7 @@
   ],
   "randomize": [
     {"set":{"local":"randomize_result"},"value":null},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"set":{"param":"selectable_accidents"},"value":0},
     {"set":{"param":"cond_eligible"},"value":0},
     {"#comment":"Tester report 2026-10-31 (MPR: the same quad offered four times in a row among 19 enabled missions): the dispatch snapshots now tell the ids that were selectable in this call (randomize_eligible_ids), how many draws were needed (randomize_tries), the id drawn and the ids of the last draws (randomize_picks)."},
@@ -3311,6 +3312,7 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"nd_run"},"value":1},
+        {"set":{"local":"first_dispatch_pending"},"value":0},
         {"set":{"local":"nddisabled"},"value":"disabled"},
         {"#comment":"Seconds the NEXT DISPATCH button stays inactive: NEXT_DISPATCH_COOLDOWN (25 s, as in the original) and NEXT_DISPATCH_COOLDOWN_FAST (10 s, with DATAQUERYSERVICE 3). They are globals set here only when missing, so a tester can change them in the global variables without editing the script."},
         {"if": {"global":"NEXT_DISPATCH_COOLDOWN"}, "eq": null,
@@ -3337,6 +3339,7 @@
       "commands": [
         {"if": {"local":"nd_run"}, "eq": 1,
           "then": [
+            {"call_macro":"trace dispatch handoff","params":{"stage":"next_dispatch_enter"}},
             {"call_macro":"archive closing dispatch"},
             {"call_macro":"start location diagnostics"},
             {"set":{"local":"map_preview_generation"},"value":{"add":[{"local":"map_preview_generation"},1]}},
@@ -5852,6 +5855,8 @@
     ]}
   ],
   "mission dispatched by custom menu": [
+    {"call_macro":"trace dispatch handoff","params":{"stage":"custom_menu_dispatch"}},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"set":{"local":"DISPLAY_DISPATCH"},"value":0},
     {"set_message":{"text":"DOWNLOADING, PLEASE WAIT..."}},
     {"set_dispatch_dialog":0},
@@ -11802,6 +11807,7 @@
   ],
   "accident location pregenerator": [
     {"set":{"local":"map_preview_generation"},"value":{"add":[{"local":"map_preview_generation"},1]}},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"pregenerator_enter"}},
     {"call_macro":"clear_unaccepted_dispatch_map"},
     {"sleep":0.1},
     {"set":{"local":"previous_queryfailed"},"value":{"local":"queryfailed"}},
@@ -49161,6 +49167,7 @@
         {"set_message":{"text":"Waiting for crew to be aboard"}},
         {"if": {"global":"REALISTIC_DISPATCH"}, "eq": 1,
           "then": [
+            {"set":{"local":"first_dispatch_pending"},"value":1},
             {"create_thread": {
               "commands": [
                 {"call_macro":"first_dispatch"}
@@ -51276,6 +51283,7 @@
   ],
   "ready dispatch": [
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_enter"}},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"if": {"local":"player"}, "eq": "singleplayer",
       "then": [
         {"set":{"local":"skip_query"},"value":"no"},
@@ -51310,6 +51318,7 @@
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
     {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_waits"}},
     {"set_message":{"text":"INCOMING NEW MESSAGE..."}},
     {"set":{"local":"Dispatcher_text"},"value":"New dispatch. See tablet."},
     {"set_message":{"text":"DOWNLOADING NEW DISPATCH, PLEASE WAIT..."}},
@@ -51455,6 +51464,7 @@
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_offered"}}
   ],
   "dispatch ringtone": [
+    {"call_macro":"trace dispatch handoff","params":{"stage":"ringtone"}},
     {"if": {"local":"player"}, "eq": "multiplayer",
       "then": [
         {"set":{"var":["L:{local:VCP}DISPATCHED4","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCHED4","number"]},1]}}
@@ -53577,6 +53587,7 @@
   ],
   "Update_raw from dispatchphase": [
     {"call_macro":"rescuetrack id guard"},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"dispatch_phase_raw_update"}},
     {"sleep":0.5},
     {"for_each": {"static":"statusMessages{local:RESCUETRACK_ID}translation"},
       "do": [
@@ -53596,6 +53607,8 @@
         {"set_message":{"text":"DISPATCH NOT AVAILABLE: crew emergency, shift terminated."}},
         {"return":1}
     ]},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"accept_enter"}},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"if": {"local":"player"}, "eq": "multiplayer",
       "then": [
         {"wait_for":{"var":["L:VAR_SEND_DISPATCH","number"]},"eq":1},
@@ -53655,6 +53668,7 @@
     ]}
   ],
   "first_dispatch": [
+    {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_enter"}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"call_macro":"UpdateRescueTrack"},
     {"if": {"global":"BOARDING_HOLD_GLOBAL"}, "eq": 0,
@@ -53673,6 +53687,15 @@
     ]},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+    {"#comment":"Tester report of 2026-11-01 (170.02, Daikan, snapshot): this thread sleeps up to DISPATCH_TIME from the start of the mission. When the first dispatch was replaced meanwhile (NEXT DISPATCH, a dispatch of the menu), the thread woke up long after, found lock_random_dispatch reset to 0 by ready dispatch and DISPLAY_DISPATCH 0, and offered the old mission type at a new place with a ringtone and a map marker, while ready dispatch was still waiting for the real second dispatch: no SECOND_DISPATCH, no ACCEPT. first_dispatch_pending is raised by objective1 and lowered by every other dispatch (randomize, ready dispatch, next_dispatch, accept, menu): a first dispatch that is no longer the pending one is never offered."},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_after_waits"}},
+    {"if": {"local":"first_dispatch_pending"}, "ne": 1,
+      "then": [
+        {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_skipped"}},
+        {"return":0}
+    ]},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_offered"}},
     {"if": {"local":"lock_random_dispatch"}, "eq": 0,
       "then": [
         {"if": {"local":"DISPLAY_DISPATCH"}, "ne": 1,
@@ -74974,8 +74997,8 @@
       "then": [
         {"set":{"local":"handoff_rescue_user_m"},"value":{"round":{"object":"rescue_location","var":"distance:m"},"to":1}}
     ]},
-    {"modify_array":{"local":"dispatch_handoff_log"},"append":{"create_struct":{"stage":{"param":"stage"},"time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"second_accepted":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"second_flag":{"local":"SECOND_DISPATCH"},"second_offered":{"local":"second_dispatch_offered"},"dispatch_phase":{"var":["L:DISPATCH_PHASE","number"]},"dispatch_ended":{"var":["L:DISPATCH_ENDED","number"]},"newdispatch":{"local":"newdispatch"},"progressive_unaccepted":{"local":"progressiveunaccepteddispatch"},"wait_second_s":{"local":"WAIT_SECOND_DISPATCH"},"endwait_second":{"local":"ENDWAIT_SECOND_DISPATCH"},"display_dispatch":{"local":"DISPLAY_DISPATCH"},"hoc":{"local":"HOCconnection"},"cus_send":{"var":["L:CUS_SEND_DISPATCH","number"]},"reloadsaved":{"var":["L:RELOADSAVED","number"]},"skip_query":{"var":["L:SKIP_QUERY","number"]},"player":{"local":"player"},"preview_generation":{"local":"map_preview_generation"},"mission_number":{"local":"MISSION_NUMBER"},"var_mission_number":{"local":"VAR_MISSION_NUMBER"},"randomize_eligible_ids":{"local":"randomize_eligible_ids"},"randomize_tries":{"local":"randomize_tries"},"randomize_picks":{"local":"randomize_picks"},"cm_eligible":{"local":"cm_eligible"},"cm_active":{"local":"cm_active"},"crash_variable":{"local":"CRASH_VARIABLE"},"scene_variant":{"local":"MISSION_SCENE_VARIANT"},"scene_macro":{"local":"scene_macro"},"query":{"local":"Query"},"location_name":{"local":"location_name"},"cus_id":{"var":["L:CUS_ID_CARD","number"]},"cus_crash":{"var":["L:CUS_CRASH_VARIABLE","number"]},"cus_variant":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]},"pre_accident_lat":{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},"pre_accident_lon":{"var":["L:PRE_ACCIDENT_LOCATION LON","number"]},"pre_rescue_lat":{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},"pre_rescue_lon":{"var":["L:PRE_RESCUE_LOCATION LON","number"]},"pre_usera_lat":{"var":["L:PRE_USERA LAT","number"]},"pre_usera_lon":{"var":["L:PRE_USERA LON","number"]},"cus_accident_lat":{"var":["L:CUS_ACCIDENT LAT","number"]},"cus_accident_lon":{"var":["L:CUS_ACCIDENT LON","number"]},"cus_rescue_lat":{"var":["L:CUS_RESCUE LAT","number"]},"cus_rescue_lon":{"var":["L:CUS_RESCUE LON","number"]},"has_accident":{"has_location":"accident_location"},"has_rescue":{"has_location":"rescue_location"},"has_userA":{"has_location":"userA"},"has_landing":{"has_location":"landing_spot"},"live_accident_lat":{"var":["L:DIAG_accident_location_LAT","number"]},"live_accident_lon":{"var":["L:DIAG_accident_location_LON","number"]},"live_rescue_lat":{"var":["L:DIAG_rescue_location_LAT","number"]},"live_rescue_lon":{"var":["L:DIAG_rescue_location_LON","number"]},"gap_accident_rescue_m":{"local":"handoff_gap_accident_rescue_m"},"gap_accident_injured_m":{"local":"handoff_gap_accident_injured_m"},"gap_landing_accident_m":{"local":"handoff_gap_landing_accident_m"},"accident_from_user_m":{"local":"handoff_accident_user_m"},"rescue_from_user_m":{"local":"handoff_rescue_user_m"},"writer_accident":{"local":"location_diagnostic_writer_accident_location"},"writer_rescue":{"local":"location_diagnostic_writer_rescue_location"}}}},
-    {"if": {"struct":{"local":"dispatch_handoff_log"},"path":"length"}, "gt": 80,
+    {"modify_array":{"local":"dispatch_handoff_log"},"append":{"create_struct":{"stage":{"param":"stage"},"time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"second_accepted":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"second_flag":{"local":"SECOND_DISPATCH"},"second_offered":{"local":"second_dispatch_offered"},"dispatch_phase":{"var":["L:DISPATCH_PHASE","number"]},"dispatch_ended":{"var":["L:DISPATCH_ENDED","number"]},"newdispatch":{"local":"newdispatch"},"progressive_unaccepted":{"local":"progressiveunaccepteddispatch"},"wait_second_s":{"local":"WAIT_SECOND_DISPATCH"},"endwait_second":{"local":"ENDWAIT_SECOND_DISPATCH"},"display_dispatch":{"local":"DISPLAY_DISPATCH"},"hoc":{"local":"HOCconnection"},"carls_connected":{"var":["L:CARLS_CONNECTED","number"]},"wifi":{"local":"wificonnect"},"first_pending":{"local":"first_dispatch_pending"},"lock_random":{"local":"lock_random_dispatch"},"cus_send":{"var":["L:CUS_SEND_DISPATCH","number"]},"reloadsaved":{"var":["L:RELOADSAVED","number"]},"skip_query":{"var":["L:SKIP_QUERY","number"]},"player":{"local":"player"},"preview_generation":{"local":"map_preview_generation"},"mission_number":{"local":"MISSION_NUMBER"},"var_mission_number":{"local":"VAR_MISSION_NUMBER"},"randomize_eligible_ids":{"local":"randomize_eligible_ids"},"randomize_tries":{"local":"randomize_tries"},"randomize_picks":{"local":"randomize_picks"},"cm_eligible":{"local":"cm_eligible"},"cm_active":{"local":"cm_active"},"crash_variable":{"local":"CRASH_VARIABLE"},"scene_variant":{"local":"MISSION_SCENE_VARIANT"},"scene_macro":{"local":"scene_macro"},"query":{"local":"Query"},"location_name":{"local":"location_name"},"cus_id":{"var":["L:CUS_ID_CARD","number"]},"cus_crash":{"var":["L:CUS_CRASH_VARIABLE","number"]},"cus_variant":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]},"pre_accident_lat":{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},"pre_accident_lon":{"var":["L:PRE_ACCIDENT_LOCATION LON","number"]},"pre_rescue_lat":{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},"pre_rescue_lon":{"var":["L:PRE_RESCUE_LOCATION LON","number"]},"pre_usera_lat":{"var":["L:PRE_USERA LAT","number"]},"pre_usera_lon":{"var":["L:PRE_USERA LON","number"]},"cus_accident_lat":{"var":["L:CUS_ACCIDENT LAT","number"]},"cus_accident_lon":{"var":["L:CUS_ACCIDENT LON","number"]},"cus_rescue_lat":{"var":["L:CUS_RESCUE LAT","number"]},"cus_rescue_lon":{"var":["L:CUS_RESCUE LON","number"]},"has_accident":{"has_location":"accident_location"},"has_rescue":{"has_location":"rescue_location"},"has_userA":{"has_location":"userA"},"has_landing":{"has_location":"landing_spot"},"live_accident_lat":{"var":["L:DIAG_accident_location_LAT","number"]},"live_accident_lon":{"var":["L:DIAG_accident_location_LON","number"]},"live_rescue_lat":{"var":["L:DIAG_rescue_location_LAT","number"]},"live_rescue_lon":{"var":["L:DIAG_rescue_location_LON","number"]},"gap_accident_rescue_m":{"local":"handoff_gap_accident_rescue_m"},"gap_accident_injured_m":{"local":"handoff_gap_accident_injured_m"},"gap_landing_accident_m":{"local":"handoff_gap_landing_accident_m"},"accident_from_user_m":{"local":"handoff_accident_user_m"},"rescue_from_user_m":{"local":"handoff_rescue_user_m"},"writer_accident":{"local":"location_diagnostic_writer_accident_location"},"writer_rescue":{"local":"location_diagnostic_writer_rescue_location"}}}},
+    {"if": {"struct":{"local":"dispatch_handoff_log"},"path":"length"}, "gt": 150,
       "then": [
         {"modify_array":{"local":"dispatch_handoff_log"},"removeIndex":0}
     ]},
@@ -142708,6 +142731,7 @@
                   {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":5},
                   {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":6}
                 ]},
+                {"call_macro":"trace dispatch handoff","params":{"stage":"thread_new_dispatch_fire"}},
                 {"call_macro":"ready dispatch"}
             ]}
           ],"else": [

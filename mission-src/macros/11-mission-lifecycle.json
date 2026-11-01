@@ -1,5 +1,6 @@
 {"randomize": [
     {"set":{"local":"randomize_result"},"value":null},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"set":{"param":"selectable_accidents"},"value":0},
     {"set":{"param":"cond_eligible"},"value":0},
     {"#comment":"Tester report 2026-10-31 (MPR: the same quad offered four times in a row among 19 enabled missions): the dispatch snapshots now tell the ids that were selectable in this call (randomize_eligible_ids), how many draws were needed (randomize_tries), the id drawn and the ids of the last draws (randomize_picks)."},
@@ -958,6 +959,7 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"nd_run"},"value":1},
+        {"set":{"local":"first_dispatch_pending"},"value":0},
         {"set":{"local":"nddisabled"},"value":"disabled"},
         {"#comment":"Seconds the NEXT DISPATCH button stays inactive: NEXT_DISPATCH_COOLDOWN (25 s, as in the original) and NEXT_DISPATCH_COOLDOWN_FAST (10 s, with DATAQUERYSERVICE 3). They are globals set here only when missing, so a tester can change them in the global variables without editing the script."},
         {"if": {"global":"NEXT_DISPATCH_COOLDOWN"}, "eq": null,
@@ -984,6 +986,7 @@
       "commands": [
         {"if": {"local":"nd_run"}, "eq": 1,
           "then": [
+            {"call_macro":"trace dispatch handoff","params":{"stage":"next_dispatch_enter"}},
             {"call_macro":"archive closing dispatch"},
             {"call_macro":"start location diagnostics"},
             {"set":{"local":"map_preview_generation"},"value":{"add":[{"local":"map_preview_generation"},1]}},
@@ -4058,6 +4061,7 @@
         {"set_message":{"text":"Waiting for crew to be aboard"}},
         {"if": {"global":"REALISTIC_DISPATCH"}, "eq": 1,
           "then": [
+            {"set":{"local":"first_dispatch_pending"},"value":1},
             {"create_thread": {
               "commands": [
                 {"call_macro":"first_dispatch"}
@@ -6173,6 +6177,7 @@
   ],
   "ready dispatch": [
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_enter"}},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"if": {"local":"player"}, "eq": "singleplayer",
       "then": [
         {"set":{"local":"skip_query"},"value":"no"},
@@ -6207,6 +6212,7 @@
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
     {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_waits"}},
     {"set_message":{"text":"INCOMING NEW MESSAGE..."}},
     {"set":{"local":"Dispatcher_text"},"value":"New dispatch. See tablet."},
     {"set_message":{"text":"DOWNLOADING NEW DISPATCH, PLEASE WAIT..."}},
@@ -6352,6 +6358,7 @@
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_offered"}}
   ],
   "dispatch ringtone": [
+    {"call_macro":"trace dispatch handoff","params":{"stage":"ringtone"}},
     {"if": {"local":"player"}, "eq": "multiplayer",
       "then": [
         {"set":{"var":["L:{local:VCP}DISPATCHED4","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCHED4","number"]},1]}}
@@ -6479,6 +6486,7 @@
   ],
   "Update_raw from dispatchphase": [
     {"call_macro":"rescuetrack id guard"},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"dispatch_phase_raw_update"}},
     {"sleep":0.5},
     {"for_each": {"static":"statusMessages{local:RESCUETRACK_ID}translation"},
       "do": [
@@ -6498,6 +6506,8 @@
         {"set_message":{"text":"DISPATCH NOT AVAILABLE: crew emergency, shift terminated."}},
         {"return":1}
     ]},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"accept_enter"}},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
     {"if": {"local":"player"}, "eq": "multiplayer",
       "then": [
         {"wait_for":{"var":["L:VAR_SEND_DISPATCH","number"]},"eq":1},
@@ -6557,6 +6567,7 @@
     ]}
   ],
   "first_dispatch": [
+    {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_enter"}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"call_macro":"UpdateRescueTrack"},
     {"if": {"global":"BOARDING_HOLD_GLOBAL"}, "eq": 0,
@@ -6575,6 +6586,15 @@
     ]},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+    {"#comment":"Tester report of 2026-11-01 (170.02, Daikan, snapshot): this thread sleeps up to DISPATCH_TIME from the start of the mission. When the first dispatch was replaced meanwhile (NEXT DISPATCH, a dispatch of the menu), the thread woke up long after, found lock_random_dispatch reset to 0 by ready dispatch and DISPLAY_DISPATCH 0, and offered the old mission type at a new place with a ringtone and a map marker, while ready dispatch was still waiting for the real second dispatch: no SECOND_DISPATCH, no ACCEPT. first_dispatch_pending is raised by objective1 and lowered by every other dispatch (randomize, ready dispatch, next_dispatch, accept, menu): a first dispatch that is no longer the pending one is never offered."},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_after_waits"}},
+    {"if": {"local":"first_dispatch_pending"}, "ne": 1,
+      "then": [
+        {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_skipped"}},
+        {"return":0}
+    ]},
+    {"set":{"local":"first_dispatch_pending"},"value":0},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_offered"}},
     {"if": {"local":"lock_random_dispatch"}, "eq": 0,
       "then": [
         {"if": {"local":"DISPLAY_DISPATCH"}, "ne": 1,
