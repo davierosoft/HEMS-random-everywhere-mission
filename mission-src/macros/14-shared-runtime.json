@@ -270,7 +270,16 @@
                     {"set":{"var":["L:PRE_USERA","number"]},"value":{"location":"userA"}}
                 ]}
             ]},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"preview_done"}}
+            {"call_macro":"trace dispatch handoff","params":{"stage":"preview_done"}},
+            {"if": {
+              "and": [
+                {"require":{"local":"MISSION_PHASE"},"gt":8},
+                {"require":{"local":"SECOND_DISPATCH"},"ne":1}
+              ]}, "eq": 1,
+              "then": [
+                {"#comment":"A dispatch preview finished after the mission ended without the second dispatch flag: ready dispatch never reached its offer (wait still open) or the flag was cleared. The row says which, with the wait, the dispatch phase and newdispatch."},
+                {"call_macro":"trace dispatch handoff","params":{"stage":"preview_without_second_flag"}}
+            ]}
           ],"else": [
             {"call_macro":"trace dispatch handoff","params":{"stage":"preview_superseded"}}
         ]}

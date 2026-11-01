@@ -1,3 +1,7 @@
+## Release 0.997 170.02
+
+- Second dispatch: flag raised before the draw, draw in a try, no offer of a stale dispatch after a failed draw, flag written again at the end, accept restores it, third ACCEPT bar, dispatch trace rows
+
 ## Release 0.997 170.01
 
 - SLOW visit time inside the maximum visit time, dispatch archive guarded, quad draw diagnostics, destination modal opened in its own thread, menu never silent

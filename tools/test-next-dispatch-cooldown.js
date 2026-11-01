@@ -52,5 +52,5 @@ assert.ok(text(second[2]).includes('button released'), 'and writes a trace row')
 
 // 4. the button still depends on the lock only
 const briefing = fs.readFileSync(path.join(root, 'mission-src', 'root', '03-briefing.json'), 'utf8');
-assert.equal((briefing.match(/"title":"NEXT DISPATCH","disabled_condition":\{"require":\{"local":"nddisabled"\},"ne":null\}/g) || []).length, 2, 'both NEXT DISPATCH buttons are disabled while nddisabled is not null');
+assert.equal((briefing.match(/"title":"NEXT DISPATCH","disabled_condition":\{"require":\{"local":"nddisabled"\},"ne":null\}/g) || []).length, 3, 'the three NEXT DISPATCH buttons (first dispatch, second dispatch, second dispatch whose flag was lost) are disabled while nddisabled is not null');
 console.log('Next dispatch cooldown PASS: the lock and the cooldown are set before both threads, nothing that gives way runs before them, the release thread reads the set cooldown. Simulator runtime PENDING.');
