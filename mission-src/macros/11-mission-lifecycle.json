@@ -1094,6 +1094,7 @@
   ],
   "Return to base or continue menu": [
     {"set_objective_title":"DESTINATION PROCEDURES COMPLETED","color":"green"},
+    {"call_macro":"trace return to base","params":{"stage":"accomplished_menu","detail":"Return to base or continue menu entered"}},
     {"set":{"local":"COMPLETED_TEMP_MISSIONS"},"value":{"add":[{"local":"COMPLETED_TEMP_MISSIONS"},1]}},
     {"set":{"global":"COMPLETED_MISSIONS"},"value":{"add":[{"global":"COMPLETED_MISSIONS"},1]}},
     {"if": {"local":"patientlife"}, "ne": "died",
@@ -1145,7 +1146,7 @@
                 "title": "Mission accomplished! WELL DONE!",
                 "text": "What do you want to do now?",
                 "options": [
-                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:RTB","number"]},"value":0},{"set_dispatch_dialog":1},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
+                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"trace return to base","params":{"stage":"end_mission_button","detail":"END MISSION, accomplished menu"}},{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"var":["L:RTB","number"]},"value":0},{"set_dispatch_dialog":1},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END MISSION accomplished menu to=1"}},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
                   {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
                   {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
               ]}
@@ -1169,7 +1170,7 @@
                 "title": "Unfortunately we arrived too late!",
                 "text": "What do you want to do now?",
                 "options": [
-                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":9},{"sleep":0.2},{"set":{"local":"MISSION_PHASE"},"value":10},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
+                  {"text":"END MISSION","style":"primary","commands":[{"call_macro":"trace return to base","params":{"stage":"end_mission_button","detail":"END MISSION, arrived too late menu"}},{"call_macro":"scene responders release later"},{"set":{"local":"MISSION_PHASE"},"value":9},{"sleep":0.2},{"set":{"local":"MISSION_PHASE"},"value":10},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END MISSION arrived too late menu to=1"}},{"set":{"local":"MISSION_END_WAITING"},"value":1}]},
                   {"text":"RECEIVE NEW DISPATCH","style":"","commands":[{"call_macro":"scene responders release"},{"call_macro":"shared repeated block 048"}]},
                   {"text":"RETURN TO HOME BASE","style":"Danger","commands":[{"call_macro":"shared repeated block 046"}]}
               ]}
@@ -1963,6 +1964,7 @@
   ],
   "return to base menu": [
     {"call_macro":"mission failure statistics"},
+    {"call_macro":"trace return to base","params":{"stage":"menu_enter","detail":"return to base menu entered"}},
     {"call_macro":"zoom out"},
     {"set":{"local":"FPL_NMBR"},"value":100},
     {"set_dispatch_dialog":0},
@@ -1972,15 +1974,23 @@
     {"set":{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},"value":{"add":[{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},1]}},
     {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
       "then": [
-        {"set_modal": {
-            "title": "DISPATCH ENDED. Destination base selection",
-            "text": "Return to mission starting point or manually select a destination base",
-            "options": [
-              {"text":"Return to starting point","style":"","commands":[{"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},{"create_location":"RTB_location","zones":[{"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}]},{"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},{"call_macro":"return to base"}]},
-              {"text":"Select a base from map","style":"","commands":[{"call_macro":"Query user position RTB"},{"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":2},{"call_macro":"return to base"}]}
-          ]}
-        }
+        {"#comment":"The base selection modal is a singleton: another modal (dispatch, crew, failure) replaces it, and a modal raised from the click of the previous one can be lost (Daikan report 2026-11-01: RETURN TO HOME BASE chosen, FPL_NMBR 100, return to base never ran, the crew never got out). The choice is kept in base_selection_state (pending until a button or the guard resolves it) and the guard shows the modal again while it is pending."},
+        {"if": {"local":"base_selection_gen"}, "eq": null,
+          "then": [
+            {"set":{"local":"base_selection_gen"},"value":0}
+        ]},
+        {"set":{"local":"base_selection_gen"},"value":{"add":[{"local":"base_selection_gen"},1]}},
+        {"set":{"local":"base_selection_state"},"value":"pending"},
+        {"set":{"local":"base_selection_shows"},"value":1},
+        {"set":{"local":"base_selection_ops_over"},"value":0},
+        {"call_macro":"trace return to base","params":{"stage":"menu_modal_show","detail":"selection mode 1, modal shown, state pending"}},
+        {"call_macro":"base selection modal"},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"base selection guard"}
+        ]}}
       ],"else": [
+        {"call_macro":"trace return to base","params":{"stage":"menu_direct","detail":"selection mode is not 1, return to starting point without a modal"}},
         {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},
         {"create_location": "RTB_location",
           "zones": [
@@ -2110,7 +2120,136 @@
         {"set":{"local":"STAT_PATIENTS_DEAD"},"value":{"add":[{"local":"STAT_PATIENTS_DEAD"},1]}}
     ]}
   ],
+  "trace return to base": [
+    {"#comment":"End of mission and return to base diagnostics (Daikan report 2026-11-01, standing request: all diagnostics at once). One row per step of the end of the mission: the buttons that end it (END MISSION, RETURN TO HOME BASE), every write of MISSION_END_WAITING, the base selection modal (shown, shown again, answered, ignored, resolved by the guard), the stages of return to base and of the deboarding, the objective titles, and a heartbeat while the base is approached. Fields: the flags that decide the flow (L:RTB, FPL_NMBR, MISSION_END_WAITING, selection mode, selection state), the aircraft state (ground, speed, collective, rotor) and the crew objects. Ring of 300 rows in base_return_log, copied into the manual and dispatch snapshot tables. Read-only for the flow."},
+    {"if": {"local":"base_return_log"}, "eq": null,
+      "then": [
+        {"set":{"local":"base_return_log"},"value":{"create_array":0}}
+    ]},
+    {"call_macro":"return to base distances"},
+    {"set":{"local":"trb_hoist_crew"},"value":0},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"set":{"local":"trb_hoist_crew"},"value":1}
+    ]},
+    {"set":{"local":"trb_pax3"},"value":0},
+    {"if": {"has_object":"pax3"}, "eq": 1,
+      "then": [
+        {"set":{"local":"trb_pax3"},"value":1}
+    ]},
+    {"modify_array":{"local":"base_return_log"},"append":{"create_struct":{"stage":{"param":"stage"},"detail":{"param":"detail"},"time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"dispatch_phase":{"var":["L:DISPATCH_PHASE","number"]},"dispatch_ended":{"var":["L:DISPATCH_ENDED","number"]},"fpl":{"local":"FPL_NMBR"},"rtb":{"var":["L:RTB","number"]},"end_waiting":{"local":"MISSION_END_WAITING"},"selection_mode":{"global":"DESTINATION_SELECTION_MODE"},"bs_state":{"local":"base_selection_state"},"bs_shows":{"local":"base_selection_shows"},"bs_gen":{"local":"base_selection_gen"},"bs_ops_over":{"local":"base_selection_ops_over"},"location_name":{"local":"location_name"},"destination_confirmed":{"local":"destination_confirmed"},"on_ground":{"var":["SIM ON GROUND","bool"]},"ground_speed_kt":{"var":["GPS GROUND SPEED","knots"]},"collective_ft":{"var":["L:Collective","feet"]},"rotor_rpm":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"dist_start_m":{"local":"trb_dist_start"},"dist_rtb_m":{"local":"trb_dist_rtb"},"ready":{"var":["L:READY","number"]},"step":{"var":["L:STEP","number"]},"hold":{"var":["L:HOLD","number"]},"crew":{"local":"CREW"},"copilot":{"local":"COPILOT"},"hoist_crew":{"local":"trb_hoist_crew"},"pax3":{"local":"trb_pax3"},"whobringpatient":{"local":"whobringpatient"},"second_dispatch":{"local":"SECOND_DISPATCH"}}}},
+    {"if": {"struct":{"local":"base_return_log"},"path":"length"}, "gt": 300,
+      "then": [
+        {"modify_array":{"local":"base_return_log"},"removeIndex":0}
+    ]}
+  ],
+  "return to base distances": [
+    {"#comment":"Meters from the aircraft to the mission starting point and to the selected base, -1 while the location does not exist (diagnostics and the base selection guard)."},
+    {"set":{"local":"trb_dist_start"},"value":-1},
+    {"set":{"local":"trb_dist_rtb"},"value":-1},
+    {"if": {"has_location":"mission_start_location"}, "eq": 1,
+      "then": [
+        {"set":{"local":"trb_dist_start"},"value":{"round":{"location":"mission_start_location","var":"distance:m"},"to":1}}
+    ]},
+    {"if": {"has_location":"RTB_location"}, "eq": 1,
+      "then": [
+        {"set":{"local":"trb_dist_rtb"},"value":{"round":{"location":"RTB_location","var":"distance:m"},"to":1}}
+    ]}
+  ],
+  "base selection modal": [
+    {"set_modal": {
+        "title": "DISPATCH ENDED. Destination base selection",
+        "text": "Return to mission starting point or manually select a destination base",
+        "options": [
+          {"text":"Return to starting point","style":"","commands":[{"call_macro":"base selection start point","params":{"source":"button"}}]},
+          {"text":"Select a base from map","style":"","commands":[{"call_macro":"base selection map"}]}
+      ]}
+    }
+  ],
+  "base selection start point": [
+    {"#comment":"Return to the mission starting point. Runs once per base selection: the button, or the guard when the aircraft is already on the ground at the starting point and nobody answered. A second answer (a modal shown again and clicked after the guard decided) is ignored and traced."},
+    {"if": {"local":"base_selection_state"}, "eq": "pending",
+      "then": [
+        {"set":{"local":"base_selection_state"},"value":"start_point"},
+        {"call_macro":"trace return to base","params":{"stage":"modal_choice","detail":{"text":"return to starting point, source {0}","params":[{"param":"source"}]}}},
+        {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},
+        {"create_location": "RTB_location",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}
+        ]},
+        {"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},
+        {"call_macro":"return to base"}
+      ],"else": [
+        {"call_macro":"trace return to base","params":{"stage":"modal_choice_ignored","detail":"return to starting point after the selection was already resolved"}}
+    ]}
+  ],
+  "base selection map": [
+    {"if": {"local":"base_selection_state"}, "eq": "pending",
+      "then": [
+        {"set":{"local":"base_selection_state"},"value":"map"},
+        {"call_macro":"trace return to base","params":{"stage":"modal_choice","detail":"select a base from the map"}},
+        {"call_macro":"Query user position RTB"},
+        {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":2},
+        {"call_macro":"return to base"}
+      ],"else": [
+        {"call_macro":"trace return to base","params":{"stage":"modal_choice_ignored","detail":"select a base from the map after the selection was already resolved"}}
+    ]}
+  ],
+  "base selection guard": [
+    {"#comment":"Secondary safeguard of the base selection modal (the modal is a singleton and can be replaced or lost). The modal is shown well before the operations at the destination end, so the guard does nothing until the aircraft has left the ground after the menu (end of the operations, traced as modal_guard_clock_start); from then on, while the selection is pending, it shows the modal again every 30 s (20 times at most, every show traced) and, when the aircraft stands on the ground within 700 m of the mission starting point, takes the answer Return to starting point by itself so that return to base and the deboarding run."},
+    {"set":{"param":"gen"},"value":{"local":"base_selection_gen"}},
+    {"set":{"param":"ticks"},"value":0},
+    {"while": {"local":"base_selection_state"}, "eq": "pending",
+      "do": [
+        {"sleep":10},
+        {"if": {"local":"base_selection_gen"}, "ne": {"param":"gen"},
+          "then": [
+            {"break":1}
+        ]},
+        {"if": {"local":"base_selection_ops_over"}, "eq": 0,
+          "then": [
+            {"if": {"var":["SIM ON GROUND","bool"]}, "eq": 0,
+              "then": [
+                {"set":{"local":"base_selection_ops_over"},"value":1},
+                {"call_macro":"trace return to base","params":{"stage":"modal_guard_clock_start","detail":"aircraft left the ground after the menu, the 30 s clock starts now"}}
+            ]}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"base_selection_state"},"eq":"pending"},
+            {"require":{"local":"base_selection_ops_over"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"return to base distances"},
+            {"if": {
+              "and": [
+                {"require":{"var":["SIM ON GROUND","bool"]},"eq":1},
+                {"require":{"var":["GPS GROUND SPEED","knots"]},"lte":1},
+                {"require":{"local":"trb_dist_start"},"gte":0},
+                {"require":{"local":"trb_dist_start"},"lt":700}
+              ]}, "eq": 1,
+              "then": [
+                {"call_macro":"trace return to base","params":{"stage":"modal_guard_auto","detail":"on the ground at the starting point, selection still pending"}},
+                {"call_macro":"base selection start point","params":{"source":"guard"}}
+              ],"else": [
+                {"set":{"param":"ticks"},"value":{"add":[{"param":"ticks"},1]}},
+                {"if": {"param":"ticks"}, "gte": 3,
+                  "then": [
+                    {"set":{"param":"ticks"},"value":0},
+                    {"if": {"local":"base_selection_shows"}, "lt": 20,
+                      "then": [
+                        {"set":{"local":"base_selection_shows"},"value":{"add":[{"local":"base_selection_shows"},1]}},
+                        {"call_macro":"trace return to base","params":{"stage":"modal_guard_reshow","detail":"selection still pending, modal shown again"}},
+                        {"call_macro":"base selection modal"}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"trace return to base","params":{"stage":"modal_guard_end","detail":"guard ended, selection resolved or replaced"}}
+  ],
   "return to base": [
+    {"call_macro":"trace return to base","params":{"stage":"rtb_enter","detail":"return to base entered"}},
     {"set_hover_display":{"range":0}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
@@ -2142,7 +2281,21 @@
     {"sleep":3},
     {"set_message":{"text":"Route set for base return in {1}. Location: {0:LOCATION}","params":["RTB_location",{"local":"start_nation"}]}},
     {"set":{"var":["L:READY","number"]},"value":1},
+    {"call_macro":"trace return to base","params":{"stage":"rtb_route_set","detail":"route to the base set, waiting for 2 km"}},
+    {"set":{"local":"rtb_heartbeat"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"while": {"local":"rtb_heartbeat"}, "eq": 1,
+          "do": [
+            {"sleep":30},
+            {"if": {"local":"rtb_heartbeat"}, "eq": 1,
+              "then": [
+                {"call_macro":"trace return to base","params":{"stage":"rtb_heartbeat","detail":"approaching or waiting at the base"}}
+            ]}
+        ]}
+    ]}},
     {"wait_for":{"location":"RTB_location","var":"distance"},"lt":2},
+    {"call_macro":"trace return to base","params":{"stage":"rtb_within_2km","detail":"base within 2 km"}},
     {"sleep":1},
     {"#comment":"The police (and the ambulance for a casualty aboard) wait at the base after a crew emergency or with a hurt crew member aboard (crew base scene need); they are parked while the base is approached."},
     {"call_macro":"crew base scene need"},
@@ -2207,6 +2360,7 @@
       ],"else": [
         {"wait_for":{"location":"RTB_location","var":"distance"},"lt":0.7}
     ]},
+    {"call_macro":"trace return to base","params":{"stage":"rtb_within_0_7km","detail":"base within 0.7 km"}},
     {"sleep":2},
     {"set_message":{"text":"APPROACH, LAND AND PERFORM SHUT DOWN PROCEDURE"}},
     {"and": [
@@ -2214,6 +2368,7 @@
       {"wait_for":{"var":["L:Collective","feet"]},"lt":32},
       {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":1}
     ]},
+    {"call_macro":"trace return to base","params":{"stage":"rtb_landed","detail":"landed at the base, ground and speed conditions met"}},
     {"set":{"var":["L:READY","number"]},"value":0},
     {"sleep":5},
     {"create_thread": {
@@ -2275,6 +2430,8 @@
     {"call_macro":"heli rescuer aboard gate","params":{"where":"base"}},
     {"#comment":"Landed at the base: the end menu (MISSION_END_WAITING 1) is offered at once and the deboarding runs in parallel. The user may shut down and deboard, or end the shift right there (the mission is already counted as completed by Return to base or continue menu). With a crew emergency, or a hurt crew member aboard, the base scene runs first and raises the menu when it is done. Nothing here ends the mission; only END SHIFT in the end menu does."},
     {"call_macro":"crew base scene need"},
+    {"call_macro":"trace return to base","params":{"stage":"rtb_deboarding_launch","detail":{"text":"base scene need {0}","params":[{"local":"CCS_BASE_NEED"}]}}},
+    {"set":{"local":"rtb_heartbeat"},"value":0},
     {"if": {"local":"CCS_BASE_NEED"}, "eq": "yes",
       "then": [
         {"call_macro":"crew casualty destination scene"}
@@ -2284,6 +2441,7 @@
             {"call_macro":"deboarding"}
         ]}}
     ]},
+    {"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"return to base to=1"}},
     {"set":{"local":"MISSION_END_WAITING"},"value":1},
     {"call_macro":"end menu"},
     {"set_dispatch_dialog":1}
@@ -3820,6 +3978,7 @@
         ]}
     ]},
     {"set":{"local":"pisteur3_guidance_initialized"},"value":0},
+    {"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"mission start to=0"}},
     {"set":{"local":"MISSION_END_WAITING"},"value":0},
     {"set":{"var":["L:MENU","number"]},"value":0},
     {"set":{"var":["L:MISSION_HOIST","number"]},"value":0},
@@ -4829,13 +4988,15 @@
     {"wait_for":{"local":"MISSION_PHASE"},"gt":9}
   ],
   "objective10": [
+    {"call_macro":"trace return to base","params":{"stage":"objective10_enter","detail":"objective RETURN TO BASE started"}},
     {"sleep":5},
     {"if": {"local":"whobringpatient"}, "ne": "organ",
       "then": [
         {"call_macro":"Patient status"}
     ]},
     {"set":{"var":["L:READY","number"]},"value":1},
-    {"wait_for":{"local":"MISSION_END_WAITING"},"eq":1}
+    {"wait_for":{"local":"MISSION_END_WAITING"},"eq":1},
+    {"call_macro":"trace return to base","params":{"stage":"objective10_done","detail":"MISSION_END_WAITING reached 1, objective RETURN TO BASE completed"}}
   ],
   "delayed threads": [
     {"call_macro":"initialize crew lifescores for shift"},

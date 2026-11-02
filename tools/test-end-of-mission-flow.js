@@ -35,7 +35,11 @@ const collect = (value, predicate, found = []) => {
   assert.ok(reload.commands.some((c) => c.set?.local === 'dispatch_diag_keep' && c.value === 1), 'a reload keeps the dispatch diagnostics file');
 
   // 2. At the base the end menu is offered at once and the deboarding runs in parallel; deboarding never overwrites END SHIFT.
-  const deboarding = macros.deboarding;
+  // the return to base diagnostics (trace return to base rows) are not part of the flow
+  const stripTrace = (value) => (Array.isArray(value)
+    ? value.filter((c) => !(c && c.call_macro === 'trace return to base')).map(stripTrace)
+    : (value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key, child]) => [key, stripTrace(child)])) : value));
+  const deboarding = stripTrace(macros.deboarding);
   assert.deepEqual(deboarding.slice(-2), [
     { wait_for: { local: 'deboard_pilot_done' }, eq: 1 },
     { if: { local: 'MISSION_END_WAITING' }, eq: 0, then: [{ set: { local: 'MISSION_END_WAITING' }, value: 1 }] },
@@ -269,7 +273,7 @@ class Sim {
         this.log.push(['call', name, p]); return true;
       case 'crew members cap': this.locals.CREW_MEMBER_CAP = this.locals.CREW; return true;
       case 'crew presence flags': for (const n of [1, 2, 3, 4, 5]) this.locals[`CREW_PRESENT_${n}`] = this.presence[n]; return true;
-      case 'ground crew runtime trace': case 'crew spawn launch': case 'crew spawn wait': return true;
+      case 'ground crew runtime trace': case 'trace return to base': case 'crew spawn launch': case 'crew spawn wait': return true;
       case 'crew spawn failure': throw new Error(`crew spawn failure ${p.crew_name}`);
       case 'Ambulance5': this.objects.add('ambulance5'); this.pos.ambulance5 = [0, 0]; this.log.push(['create', 'ambulance5']); return true;
       case 'Police7': this.objects.add('police7'); this.pos.police7 = [0, 0]; this.log.push(['create', 'police7']); return true;

@@ -67,7 +67,7 @@ const scripts = [
   'test-query-nonblocking.js',
   'test-next-dispatch-cooldown.js',
   'test-second-dispatch-flag.js',
-  'test-copilot-message-weights.js',
+  'test-copilot-message-weights.js', 'test-return-to-base-modal.js',
   'test-hr-skid-choreography.js',
   'test-shared-data.js',
   'test-accident-demographics.js',

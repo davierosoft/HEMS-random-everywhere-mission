@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.04. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.05. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -832,6 +832,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The troubleshooting file now records the payload weights in every phase (seats, hoist occupants, kits, the weight of each station and the total), including at the moment the copilot leaves for the engine checks and when the copilot returns, so a wrong weight after the checks can be traced.
 - **Build history:** 0.997 170.04.
 - **Test:** Start the engines and wait for the copilot to return after the leak check; after the mission accomplished the old "Wait for copilot" line must not remain on the tablet.
+
+### The base selection window at the end of the mission cannot get lost
+
+- A tester chose RETURN TO HOME BASE after the mission accomplished window and nothing happened: the helicopter could not unload the crew at the base and the tablet kept old messages. The window asking where to land (starting point or a base chosen from the map) is now kept as a pending question: your answer is recorded once, and if the window disappeared it is shown again every 30 seconds, but only after the helicopter has taken off again following the menu, so nothing changes while the operations are still running. If the helicopter is already standing at the starting point it is answered "Return to starting point" automatically.
+- Every step of the end of the mission (the window, the answer, the flight to the base, the crew leaving the helicopter, the mission accomplished bar) is now written to the troubleshooting file, and the SUMMARY page of the debug screen shows the state of the selection.
+- **Build history:** 0.997 170.05.
+- **Test:** At the end of a mission choose RETURN TO HOME BASE and answer the window: the helicopter must fly to the chosen base and the crew must leave it. Do not answer, take off and land back at the starting point: the window reappears every 30 seconds after take-off.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1689,4 +1696,5 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.04 (this release):** The copilot message after the engine checks is completed and cleared, and payload weight diagnostics in every phase (see The copilot message after the engine checks is completed and removed).
+- **0.997 170.05 (this release):** The base selection window at the end of the mission is shown again until you answer it, and the end of the mission is fully recorded for troubleshooting (see The base selection window at the end of the mission cannot get lost).
+- **0.997 170.04:** The copilot message after the engine checks is completed and cleared, and payload weight diagnostics in every phase (see The copilot message after the engine checks is completed and removed).

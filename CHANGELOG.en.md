@@ -1,3 +1,11 @@
+## Release 0.997 170.05
+
+- SUMMARY snapshot keys formatted
+- SUMMARY snapshot keys for the return to base state
+- SUMMARY snapshot keys for the return to base state
+- Return to base: the base selection modal is its own macro ("base selection modal"); the answer is kept once in base_selection_state (pending, start_point, map) by the macros "base selection start point" and "base selection map" (a second answer is ignored); the thread "base selection guard" shows the modal again every 30 s (20 times at most) and answers "Return to starting point" when the aircraft stands stopped on the ground within 700 m of the starting point, both only after the aircraft has left the ground following the menu (end of the operations; simulator test 2026-11-02: showing the singleton modal again only replaces its text, nothing stays under it)
+- Return to base diagnostics: macro "trace return to base" writes the base_return_log ring (300 rows) at the menu, the modal, the answers, the guard, every step of "return to base" (with a 30 s heartbeat), "deboarding", "Return to base or continue menu", the END MISSION buttons, objective10, the two objectives and every one of the 19 writers of MISSION_END_WAITING; the log is copied into the manual and dispatch snapshot tables and a RETURN TO BASE row is added to the SUMMARY page
+
 ## Release 0.997 170.04
 
 - Copilot back message (macro "copilot back message", called by preflight, engine1, engine2 and quickstart when FPL_NMBR is above 8): "Copilot is back on board. Checks completed." for 6 s, then the message is cleared; before, the "Wait for copilot to board again" line stayed after the mission because no destination message applies at FPL_NMBR 100
