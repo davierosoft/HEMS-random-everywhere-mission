@@ -3461,7 +3461,7 @@
         ]},
         {"if": {"global":"location_ref"}, "eq": null,
           "then": [
-            {"set":{"global":"location_ref"},"value":"$USER"}
+            {"set":{"global":"location_ref"},"value":"mission_start_location"}
         ]},
         {"set_briefing_dialog":0},
         {"set":{"var":["L:LOADSTART","number"]},"value":12},
@@ -3869,12 +3869,25 @@
     {"set":{"local":"RESCUE_DISPATCHED"},"value":0},
     {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
       "then": [
-        {"create_location": "mission_start_location",
-          "zones": [
-            {"zone":{"location":"$USER"}}
+        {"#comment": "Start modes (location_ref). START (default) and CUSTOM: the starting point is written once into the LVARs L:MISSION_START_LOCATION and reused, never overwritten; it is calculated from the helicopter only when the LVARs are 0 (first run, or the flight reloaded in MSFS). $USER: the starting point is the position of the helicopter at every objective1 (the second dispatch accept refreshes it, see accept_dispatch).", "if": {
+          "and": [
+            {"require":{"var":["L:MISSION_START_LOCATION LAT","number"]},"ne":0},
+            {"require":{"global":"location_ref"},"ne":"$USER"}
+          ]}, "eq": 1,
+          "then": [
+            {"create_location": "mission_start_location",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}
+            ]},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_reused","detail":{"text":"starting point reused from the LVARs {0},{1} (mode {2}), {3} m from the helicopter","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"location_ref"},{"round":{"location":"mission_start_location","var":"distance:m","to":"$USER"},"to":1}]}}}
+          ],"else": [
+            {"create_location": "mission_start_location",
+              "zones": [
+                {"zone":{"location":"$USER"}}
+            ]},
+            {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_new","detail":{"text":"new starting point at the helicopter {0},{1} (mode {2}, flag {3})","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"location_ref"},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}]}}}
         ]},
-        {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},
-        {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_new","detail":{"text":"new starting point at the helicopter {0},{1} (flag {2})","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}]}}},
         {"call_macro":"trace location reference","params":{"stage":"start_location_new"}},
         {"create_thread": {
           "commands": [
@@ -3903,9 +3916,19 @@
             {"call_macro":"multiplayer resveh"}
         ]},
         {"set":{"var":["L:MISSION_TIME_OFFSET","number"]},"value":{"var":["L:MISSION_TIME","number"]}},
-        {"create_location": "mission_start_location",
-          "zones": [
-            {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}
+        {"if": {"var":["L:MISSION_START_LOCATION LAT","number"]}, "eq": 0,
+          "then": [
+            {"create_location": "mission_start_location",
+              "zones": [
+                {"zone":{"location":"$USER"}}
+            ]},
+            {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_recalculated","detail":{"text":"the LVARs of the starting point were 0 at the second dispatch, calculated at the helicopter {0},{1}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}
+          ],"else": [
+            {"create_location": "mission_start_location",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}
+            ]}
         ]},
         {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_restored","detail":{"text":"starting point restored {0},{1}, {2} m from the helicopter","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"round":{"location":"mission_start_location","var":"distance:m"},"to":0}]}}},
         {"call_macro":"trace location reference","params":{"stage":"start_location_restored"}},
@@ -3957,6 +3980,22 @@
         {"call_macro":"trace dispatch handoff","params":{"stage":"objective1_rebuilt"}}
     ]},
     {"sleep":0.2},
+    {"#comment": "The custom centre is created at the start from the starting point and then kept like the starting point (LVARs L:CUSTOM_CENTER_LOCATION, never saved in the profile). The user customizes it with Query dispatcher position custom.", "if": {"has_location":"custom_center_location"}, "ne": 1,
+      "then": [
+        {"if": {"var":["L:CUSTOM_CENTER_LOCATION LAT","number"]}, "ne": 0,
+          "then": [
+            {"create_location": "custom_center_location",
+              "zones": [
+                {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:CUSTOM_CENTER_LOCATION LAT","number"]},{"var":["L:CUSTOM_CENTER_LOCATION LON","number"]}]}}}}
+            ]}
+          ],"else": [
+            {"create_location": "custom_center_location",
+              "zones": [
+                {"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}
+            ]},
+            {"set":{"var":["L:CUSTOM_CENTER_LOCATION","number"]},"value":{"location":"custom_center_location"}}
+        ]}
+    ]},
     {"if": {
       "and": [
         {"require":{"global":"location_ref"},"eq":"custom_center_location"},
@@ -6838,6 +6877,13 @@
             {"set_briefing_dialog":0},
             {"call_macro":"crew reboard snapshot"},
             {"#comment":"Report of Daikan, 2026-11-03: after accepting the second dispatch the starting point was the position of the helicopter and the mission did not end at the original one. The mission restarts here (reload_mission) and objective1 rebuilds mission_start_location from the LVAR L:MISSION_START_LOCATION when L:SECOND_DISPATCH_ACCEPTED is 1. The starting point and a pending mark are also kept in globals, so that objective1 can repair the flag and the LVARs if they did not survive the restart (second_start_repair)."},
+            {"#comment": "Mode $USER: every accept moves the starting point to the helicopter, fixed by objective1 after the restart. START and CUSTOM keep the starting point of the LVARs.", "if": {"global":"location_ref"}, "eq": "$USER",
+              "then": [
+                {"create_location": "mission_start_location",
+                  "zones": [
+                    {"zone":{"location":"$USER"}}
+                ]}
+            ]},
             {"if": {"has_location":"mission_start_location"}, "eq": 1,
               "then": [
                 {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}}
