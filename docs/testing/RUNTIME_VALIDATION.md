@@ -735,3 +735,12 @@ Report of Steph and Andrew: heli rescuers walking down a glacier to a helicopter
 4. With the helicopter hovering far away: the heli rescuers go to the hoist pick-up (reason hover); the crew keep waiting on the ground. Move the setting to 300 m and repeat with the helicopter 200 m away: they walk.
 5. Skid landing operations with the heli rescuer: unchanged (the skid point wait).
 6. Hoist operations (HOISTING): the decision "hoist or stay here" is unchanged.
+
+## Release 170.08 (2026-11-03, PENDING)
+
+Read the rows named below in `ground_ops_checkpoint_log` and `dispatch_handoff_log`.
+
+1. Ambulance shuttle: custom landing spot more than 200 m from the patient, ambulance on the scene (`shuttle_decide` shuttle=1), with 3, 4 and 5 crew: the ambulance carries the crew and the patient (`shuttle_enter`, `shuttle_route`, `shuttle_arrived`, `shuttle_exit`, `shuttle_release`); the ambulance leaves only afterwards. Near landing or no ambulance: the crew walks as before (shuttle=0 with the reason).
+2. Start modes: START (default) keeps the starting point through a second dispatch (`start_location_reused`); CUSTOM LOCATION behaves the same and the custom point is kept; PRESENT POSITION moves the starting point to the helicopter at the accept (`accept_second_start`, `start_location_restored`). After reloading the flight the starting point is recalculated (`start_location_new`).
+3. Skid operations with 4 or 5 crew: both crew members crouch at the patient and stand up at the end.
+4. Police carrying the crew from a far landing spot: `drive_watchdog_police_state` no longer ends as failed without a `drv_pol_timeout` of its own drive; no stray move of the car.

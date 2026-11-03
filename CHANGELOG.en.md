@@ -1,3 +1,12 @@
+## Release 0.997 170.08
+
+- Includes the ground return gate of 170.07 (not supplied as a separate release).
+- Ambulance shuttle (`docs/architecture/AMBULANCE_SHUTTLE.md`, `tools/test-ambulance-shuttle.js`): macros `ambulance shuttle decide`, `ambulance crew shuttle`, `ambulance shuttle release`, board/unload helpers; called by `3 crew ground ops` and `4 or 5 crew ground ops`; `ambulance1 stand down` waits for `ambulance1_shuttle_hold` (watchdog 1500 s). Rows `shuttle_*` in `ground_ops_checkpoint_log`.
+- Start modes (`docs/architecture/START_MODES.md`, `tools/test-start-modes.js`): START default (LVARs written once, recalculated only at 0), CUSTOM created at the start, `$USER` moves the starting point at every second-dispatch accept; `accept_dispatch` and `objective1` keep `SECOND_RESTART_*` globals and repair the flag. Rows `start_location_new/reused/recalculated/restored`, `accept_second_start`, `objective1_location_ref` (`trace location reference`) in `dispatch_handoff_log`.
+- Rear crew member (`pax3`, 4 or 5 crew) crouches at the patient (`multipatient registry assistant stand up`, `tools/test-assistant-crouch.js`).
+- Drive watchdogs: the watchdog of the 18 `drive ... safe` macros acts only when the newest call has run for its own timeout (`tools/test-drive-watchdog-generation.js`); the police snap to POL has a short timeout; `tools/test-ambulance-availability-contract.js` brought to the 169.62 parking design and registered.
+- Runtime status: PENDING (`docs/testing/RUNTIME_VALIDATION.md`).
+
 ## Release 0.997 170.07
 
 - New macro `ground return gate` (module 09): before the way back to the helicopter the crew and the heli rescuers compare the helicopter with the landing spot (`landing_spot` closer than `ldg_spot_area_size`, the radius `LANDING_SPOT_GND`). Outside they wait, the tablet gives distance and limit, the user action WALK TO THE HELICOPTER ANYWAY is the user choice (`grg_walk_far`), a hovering helicopter ends the wait of the heli rescuers only (`hover_ok`), skid operations (`MISSION_HOIST` 2) and a mission without landing spot pass. Rows `ret_gate_enter`, `ret_gate_wait`, `ret_gate_user_walk`, `ret_gate_passed` in `ground_ops_checkpoint_log`.

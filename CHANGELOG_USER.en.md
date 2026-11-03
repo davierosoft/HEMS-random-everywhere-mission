@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.07. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.08. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -859,6 +859,31 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The skid landing operations keep their own wait at the skid point.
 - **Build history:** 0.997 170.07.
 - **Test:** On a mountain call leave the heli rescuers at the landing spot, take off, fly farther than the landing spot radius and land: nobody walks and the tablet shows the distance and the button. Fly back inside the lime area and stop the rotor: they walk to the helicopter. Repeat and press WALK TO THE HELICOPTER ANYWAY, or hover over them.
+
+### The ambulance carries the crew when the helicopter landed far from the patient
+
+- Report of a tester (custom landing spot 288 m from the patient, ambulance already on the scene): the crew walked back to the helicopter to fetch the stretcher. When the patient is transported by your helicopter, the helicopter is on the ground more than the minimum distance (200 m by default) from the patient and the ambulance is on the scene, the ambulance now carries the crew to the helicopter, back to the patient with the stretcher, and the crew and the patient to the helicopter (3, 4 and 5 crew). The ambulance stays until the patient is aboard. With a near landing or no ambulance on the scene the crew walks as before.
+- **Build history:** 0.997 170.08.
+- **Test:** Land far from the accident with an ambulance on the scene, send the crew and follow the ambulance with each crew size.
+
+### The starting point follows the option of the dispatcher area
+
+- The option "Dispatcher coverage area is centered on" now decides how the starting point behaves. START LOCATION (the new default) keeps the position of the first start for the whole session and recalculates it only when the flight is reloaded in the simulator. CUSTOM LOCATION is created at the start from the starting point, behaves like it and can be changed with the CUSTOM LOCATION button. PRESENT POSITION moves the starting point to the helicopter at every accepted second dispatch (more variety, but the return base moves).
+- Report of a tester: after accepting the second dispatch the starting point had become the position of the helicopter. START and CUSTOM no longer change it.
+- **Build history:** 0.997 170.08.
+- **Test:** Fly a call, accept a second dispatch with each option and check the base after the restart (RETURN TO HOME BASE).
+
+### The rear crew member crouches at the patient
+
+- Report of a tester on skid operations with four or five crew: the doctor did not crouch when the pilot approached the crew and the patient while the medic did. The rear crew member now crouches like the first one during the assessment and stands up when the visit ends.
+- **Build history:** 0.997 170.08.
+- **Test:** Land on the skid with four crew and watch both crew members at the patient.
+
+### Police and ambulance drives no longer fail by an old timer
+
+- Report of a tester: after several short drives the police car was moved to a stale position by the timer of an earlier drive. A drive timer now acts only when its own drive has run for its time; the short move of the police car to the landing spot has a short timer.
+- **Build history:** 0.997 170.08.
+- **Test:** Use the police to carry the crew from a far landing spot and follow the car and the crew.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1731,7 +1756,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.07 (this release):** The crew and the heli rescuers do not walk to a helicopter that landed outside the landing spot area unless you choose (see The crew and the heli rescuers do not walk to a helicopter that landed far away).
+- **0.997 170.08 (this release):** The ambulance carries the crew when the helicopter landed far from the patient, the starting point follows the dispatcher area option, the rear crew member crouches at the patient, and old drive timers no longer fail later drives (see The ambulance carries the crew when the helicopter landed far from the patient, The starting point follows the option of the dispatcher area, The rear crew member crouches at the patient and Police and ambulance drives no longer fail by an old timer).
+- **0.997 170.07:** The crew and the heli rescuers do not walk to a helicopter that landed outside the landing spot area unless you choose (see The crew and the heli rescuers do not walk to a helicopter that landed far away).
 - **0.997 170.06:** The ambulance of a train station call reaches the scene, no stray hospital marks at the world origin on the map, every step of RETURN TO HOME BASE recorded, and the list of injured models, sex, age and state for the custom script (see The ambulance of a train station call reaches the scene, No stray hospital marks on the map, Every step of RETURN TO HOME BASE is recorded and Custom mission script: choose the injured).
 - **0.997 170.05:** The base selection window at the end of the mission is shown again until you answer it, and the end of the mission is fully recorded for troubleshooting (see The base selection window at the end of the mission cannot get lost).
 - **0.997 170.04:** The copilot message after the engine checks is completed and cleared, and payload weight diagnostics in every phase (see The copilot message after the engine checks is completed and removed).
