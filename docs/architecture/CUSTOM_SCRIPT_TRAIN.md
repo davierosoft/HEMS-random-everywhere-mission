@@ -53,6 +53,25 @@ Order in `objective2` (`11-mission-lifecycle.json`): `accident demographics sex`
 - Test: `tools/test-custom-injured.js` runs the macros in a small interpreter in the order above (empty, fewer, as many, more with 300 seeds and no repeat, sex and age travelling with the entry and winning over the dispatch, invalid sex and age, `NO`/number/missing `var1`/`var2`, unknown model, fallback from the list, different per injured, reused, never empty, reload, regular mission, a list of a previous dispatch) and checks the call order, the call sites and that `train.json` ships an empty list with entries that carry sex, age, `var1` and `var2`.
 - Open: (1) simulator test that `create_object` with a misspelled title takes the fallback and that a title with spaces and digits is read as typed; (2) which `VAR 1` and `VAR 2` values each model understands (the user's choice); (3) whether the script needs `MIN_BUILD` raised: a new script on an older mission ignores the list silently, so the number of the release that carries this feature decides (the release number is not assigned yet).
 
+## Older scripts with a newer mission (decision of 2026-11-03)
+
+Question: does an older `train.json` still work with mission 0.997 170.07, and so must `CUS_MIN_SCRIPT_BUILD` (the oldest script build the mission accepts, 169089) be raised? Answer: it works, and the number stays 169089. The script states of the history are the original script (no `SCRIPT_BUILD`, numbered `OBJECT1..15`), the scripts of 2026-10-29/30 (no build, then 169089), 169094 (adds `CUS_HELIRESCUER`) and the current one (adds `CUS_INJURED`, shipped empty).
+
+What the mission reads and an older script does not set:
+
+| Variable | Added | Read as | Unset means |
+| --- | --- | --- | --- |
+| `CUS_OBJECTS` | 169.87 | `ne null` | the numbered `OBJECT1..15` path of the original script |
+| `CUS_HOSPITAL LAT/LON` | 169.87 | `ne 0` (`Query closest hospital`) | the nearest hospital is proposed |
+| `CUS_RESCUE LAT/LON` | before | `eq 0` | the accident place |
+| `CUS_HELIRESCUER LAT/LON` | 169.94 | `ne 0` | the mission searches a pick-up point |
+| `CUS_DISPATCH_LANGUAGE` | 170.00 | `ne null` and `ne ""` | the language of the voice pack |
+| `CUS_INJURED` | 170.06 | `ne null` and `player` is `custom` | the mission chooses every injured |
+
+Rule kept: `CUS_MIN_SCRIPT_BUILD` goes up only when a change of the mission makes older scripts impossible (a renamed or removed variable, a changed meaning), never for an addition that older scripts do not set. `tools/test-custom-script.js` ("Older scripts with a newer mission") checks that the frozen original script sets none of the additions, that every reader above holds its guard (in the reader or in its only callers), that `CUS_INJURED` is read in one macro, and that the number is still 169089; raising it means changing that line of the test and writing the reason here.
+
+The script side is separate. `MIN_BUILD` (the mission build the script needs, 169094) is not raised for `CUS_INJURED`: the list is empty by default, so the current script works with a mission older than 170.06, which ignores the list; the cost is that a user who fills the list on an older mission sees no effect and no warning, and raising `MIN_BUILD` to 170006 would warn everybody with an older mission, also the ones who do not use the list. `SCRIPT_BUILD` (169094) is the build of the script; it would be 170006 for the script that carries `CUS_INJURED`, a change that belongs to the next release of the script (the test accepts it: `SCRIPT_BUILD` must stay between `CUS_MIN_SCRIPT_BUILD` and the build of the mission).
+
 ## Formatting rule (user, 2026-10-30)
 
 The formatting of `train.json` follows the layout of the original script (`tools/fixtures/train-legacy-0.997.json`), whose goal is the easiest possible reading: minimal text, delimited areas, spaces and tabs that make everything easy to find. Top-level keys in the original order with a blank line between sections, `", "` and `": "` separators, the buttons of the briefing with one command per line, the incident list one field per line. Readability pass of the same day (user: the flat layout was hard to read): in the command list the instructions are dashed banner comments in capitals (102 columns, two blank lines before the group, one after); the editable areas are opened and closed by `EDITABLE AREA STARTS/ENDS HERE` banners and their settings are indented with a tab under a short label comment; each custom object is a labelled block of aligned rows (title, lat/lon, var1/var2, aim, fallback, heading) with a blank line between objects; long commands (`for_each`, `if`) open over several lines with their `do`/`then`/`else` lists one command per line. It is not the mission formatter's layout (`mission-formatter.js`), because the file is edited by hand by users. The layout is produced by `tools/train-script-format.js` (used by the sync tool) and `tools/test-custom-script.js` fails when the file differs from it. Edit the data, then run `node tools/sync-train-accidents.js` to restore the layout.

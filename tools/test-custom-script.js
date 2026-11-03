@@ -110,6 +110,41 @@ assert(voiceModule.includes('"lang":{"param":"vo_lt"}') && voiceModule.includes(
 const dispatchLanguage = commands.find((c) => c.set && c.set.local === 'CUS_DISPATCH_LANGUAGE');
 if (dispatchLanguage) assert(typeof dispatchLanguage.value === 'string' && /^([A-Za-z]{2})?$/.test(dispatchLanguage.value), 'CUS_DISPATCH_LANGUAGE must be empty or a two-letter language code');
 
+// Older scripts with a newer mission (decision of 2026-11-03, docs/architecture/CUSTOM_SCRIPT_TRAIN.md "Older scripts"): the mission keeps working
+// with a script that does not set what was added later, so CUS_MIN_SCRIPT_BUILD is not raised for additions. Every variable that older scripts
+// do not set is read with a guard that gives the default; the frozen original script is the proof that the premise holds (no checkout history
+// is needed, the continuous integration clones one commit only).
+{
+  const macrosDir = path.join(root, 'mission-src/macros');
+  const allMacros = {};
+  for (const name of fs.readdirSync(macrosDir).filter((n) => n.endsWith('.json'))) Object.assign(allMacros, JSON.parse(read('mission-src/macros/' + name)));
+  const readers = (needle) => Object.entries(allMacros).filter(([, body]) => JSON.stringify(body).includes(needle)).map(([name]) => name);
+  const additions = ['CUS_INJURED', 'CUS_HELIRESCUER', 'CUS_DISPATCH_LANGUAGE', 'CUS_OBJECTS', 'CUS_HOSPITAL'];
+  for (const name of additions) assert(!legacyText.includes(name), 'the original script is the premise: it does not set ' + name);
+  // what each reader does when the script does not set it
+  const guard = (needle, guardText, why) => {
+    const found = readers(needle);
+    assert(found.length > 0, needle + ' is no longer read by the mission');
+    for (const macro of found) {
+      if (JSON.stringify(allMacros[macro]).includes(guardText)) continue;
+      // the guard may live in the only macros that call the reader (one level)
+      const callers = readers('"call_macro":"' + macro + '"');
+      assert(callers.length > 0 && callers.every((c) => JSON.stringify(allMacros[c]).includes(guardText)), macro + ' reads ' + needle + ' without the guard (and its callers do not hold it): ' + why);
+    }
+  };
+  guard('"CUS_INJURED"', '{"require":{"local":"CUS_INJURED"},"ne":null}', 'an unset list leaves the mission choice of the injured');
+  assert.deepStrictEqual(readers('"CUS_INJURED"'), ['custom injured assets prepare'], 'CUS_INJURED is read in one place only');
+  assert(JSON.stringify(allMacros['custom injured assets prepare']).includes('{"require":{"local":"player"},"eq":"custom"}'), 'the injured list is used only in a custom mission');
+  guard('"CUS_DISPATCH_LANGUAGE"', '{"require":{"local":"CUS_DISPATCH_LANGUAGE"},"ne":null}', 'an unset language is the language of the voice pack');
+  guard('"CUS_DISPATCH_LANGUAGE"', '{"require":{"local":"CUS_DISPATCH_LANGUAGE"},"ne":""}', 'an empty language is the language of the voice pack');
+  guard('L:CUS_HELIRESCUER LAT', '"if":{"var":["L:CUS_HELIRESCUER LAT","number"]},"ne":0', 'an unset pick-up point (0) means the mission searches one');
+  guard('L:CUS_HOSPITAL LAT', '{"require":{"var":["L:CUS_HOSPITAL LAT","number"]},"ne":0}', 'an unset hospital (0) means the nearest one');
+  guard('"CUS_OBJECTS"', '"if":{"local":"CUS_OBJECTS"},"ne":null', 'an unset list of objects goes to the numbered OBJECT1..15 path of the original script');
+  guard('"resolve_location":{"create_array":[{"var":["L:CUS_RESCUE LAT","number"]},{"var":["L:CUS_RESCUE LON","number"]}', '"if":{"var":["L:CUS_RESCUE LAT","number"]},"eq":0', 'an unset rescue point (0) means the accident place');
+  // the decision itself: raise it only when a change of the mission makes older scripts impossible, and say why in the document
+  assert.strictEqual(minScriptBuild, 169089, 'CUS_MIN_SCRIPT_BUILD changed: raise it only when a change of the mission makes older scripts impossible (not for an addition that older scripts do not set) and write the reason in docs/architecture/CUSTOM_SCRIPT_TRAIN.md, section "Older scripts with a newer mission"');
+}
+
 const everything = JSON.stringify(script);
 assert(!/[^\x00-\x7F]/.test(everything), 'train.json must stay ASCII');
 
