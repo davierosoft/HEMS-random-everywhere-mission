@@ -33,7 +33,7 @@ There is a single branch (`main`) and no PR/merge step: a pushed commit is live 
 
 ## Release assets
 
-The Mission Companion downloads `everywhere_all.json`, `train.json` and `ui-texts.json` from the GitHub release of a tag (for example `v0.997-170.06`, tag on the release commit, no other files). A release without them breaks the update (the release 0.997 170.06 was published without assets). `.github/workflows/release-assets.yml` attaches the three files of the tagged commit when a release is published, and by hand for an existing tag (Actions, Release assets, Run workflow). It is the only workflow with write permission; `workspace-checks.yml` stays read-only.
+The Mission Companion downloads `everywhere_all.json`, `train.json` and `ui-texts.json` from the GitHub release of a tag (for example `v0.997-170.06`, tag on the release commit, no other files). A release without them breaks the update (the release 0.997 170.06 was published without assets). `.github/workflows/release-assets.yml` attaches the three files of the tagged commit when a release is published, and by hand for an existing tag (Actions, Release assets, Run workflow). `.github/workflows/publish-release.yml` creates the tag (lightweight, on the release commit) and the release itself with the three files, from a run by hand or from the API (`workflow_dispatch` inputs tag, title, target, notes); it refuses a commit whose `tools/release-ledger.json` does not name the release, and it updates a release that exists. The session tools cannot push tags or write releases (the proxy refuses), a workflow can. These two are the only workflows with write permission; `workspace-checks.yml` stays read-only.
 
 ## CI contract
 

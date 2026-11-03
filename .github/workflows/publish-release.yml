@@ -1,0 +1,58 @@
+name: Publish release
+
+# Creates the tag and the GitHub release of a mission build and attaches everywhere_all.json, train.json and ui-texts.json of
+# that commit (the files the Mission Companion downloads). Run by hand: Actions, Publish release, Run workflow (or the API).
+# The tag is a lightweight tag on the commit, like the tags of the previous releases. When the release exists already, its
+# notes and title are updated and the three files are replaced (--clobber).
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag, for example v0.997-170.07"
+        required: true
+      title:
+        description: "Release name, the mission release number, for example 0.997 170.07"
+        required: true
+      target:
+        description: "Commit of the release (sha or branch)"
+        required: true
+        default: main
+      notes:
+        description: "Release notes (FIXES, UI, NEW FUNCTIONS, written for pilots)"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Create the release
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.target }}
+          persist-credentials: false
+      - name: Check that the commit is the build named by the release
+        env:
+          TITLE: ${{ inputs.title }}
+        run: |
+          for f in everywhere_all.json train.json ui-texts.json; do test -s "$f" || { echo "missing file: $f"; exit 1; }; done
+          node -e 'const l=JSON.parse(require("fs").readFileSync("tools/release-ledger.json","utf8")); if (l.lastSuppliedRelease !== process.env.TITLE) { console.error("ledger says " + l.lastSuppliedRelease + ", release is " + process.env.TITLE); process.exit(1); } console.log("ledger:", l.lastSuppliedRelease, l.artifactSha256);'
+          echo "sha256 of everywhere_all.json: $(sha256sum everywhere_all.json | cut -c1-64)"
+      - name: Create or update the release and attach the files
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+          TITLE: ${{ inputs.title }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          SHA="$(git rev-parse HEAD)"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --title "$TITLE" --notes "$NOTES"
+            gh release upload "$TAG" everywhere_all.json train.json ui-texts.json --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$TAG" everywhere_all.json train.json ui-texts.json --repo "$GITHUB_REPOSITORY" --target "$SHA" --title "$TITLE" --notes "$NOTES"
+          fi
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json tagName,name,assets --jq '{tag: .tagName, name: .name, assets: [.assets[].name]}'
