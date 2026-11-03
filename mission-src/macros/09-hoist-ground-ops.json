@@ -5436,6 +5436,7 @@
                             ]}
                           ],"else": [
                             {"set":{"local":"crewgoforstretcherload"},"value":"yes"},
+                            {"call_macro":"ambulance shuttle decide","params":{"source":"4 or 5 crew ground ops"}},
                             {"if": {"global":"ASSISTANT"}, "ne": "no",
                               "then": [
                                 {"call_macro":"45 crew assistant"}
@@ -5508,6 +5509,11 @@
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_door","detail":"close cargo_right"}},
                                 {"sleep":1}
                             ]},
+                            {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                              "then": [
+                                {"wait_for":{"local":"ambu_shuttle_at_heli"},"eq":"yes"},
+                                {"call_macro":"ambulance crew shuttle","params":{"dir":"to_patient","hc":1,"px":0,"x":12}}
+                            ]},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
                             {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":160,"dist":5.5},{"bearing":235,"dist":5.5}],"to":"{local:HEMS_PATIENT_OBJECT}"}],"VAR1":10,"speed":6}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
@@ -5547,11 +5553,16 @@
                                 {"set":{"var":["L:READY","number"]},"value":0},
                                 {"set":{"local":"MISSION_PHASE"},"value":8},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"pax3"}},
-                                {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":6,"vmax":7},"result":"cws_sp"},
-                                {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
-                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"pax3"}},
-                                {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                                {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                                  "then": [
+                                    {"wait_for":{"local":"ambu_shuttle_leg3"},"eq":"done"}
+                                  ],"else": [
+                                    {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"pax3"}},
+                                    {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":6,"vmax":7},"result":"cws_sp"},
+                                    {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
+                                    {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"pax3"}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                                ]},
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"pax3"}},
                                 {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":40,"dist":4},{"bearing":90,"dist":4},{"bearing":150,"dist":4}],"to":"pax3"}],"VAR1":3,"speed":6}},
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"pax3"}},
@@ -5576,19 +5587,26 @@
                               "then": [
                                 {"set":{"var":["L:PLT{local:VCP}36","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}36","number"]},1]}}
                             ]},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
-                            {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":4,"vmax":7},"result":"cws_sp"},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"$USER"}],"VAR1":11,"speed":{"param":"cws_sp"}}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":40,"dist":5},{"bearing":320,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":5},{"bearing":270,"dist":6}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":140,"dist":5},{"bearing":250,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
+                            {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                              "then": [
+                                {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                                {"call_macro":"ambulance crew shuttle","params":{"dir":"to_heli","hc":1,"px":1,"x":11}},
+                                {"call_macro":"ambulance shuttle release","params":{"why":"the crew and the patient are at the helicopter"}}
+                              ],"else": [
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
+                                {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":4,"vmax":7},"result":"cws_sp"},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"$USER"}],"VAR1":11,"speed":{"param":"cws_sp"}}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":40,"dist":5},{"bearing":320,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":5},{"bearing":270,"dist":6}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":140,"dist":5},{"bearing":250,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}}
+                            ]},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_start","detail":"hoist_crew"}},
                             {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":170,"dist":4},{"bearing":220,"dist":4.5}],"to":"hoist_crew"},{"bearing":175,"dist":3.5},{"bearing":195,"dist":1.5}],"VAR1":11,"speed":5}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c45_drive_done","detail":"hoist_crew"}},
@@ -6922,14 +6940,20 @@
                             ]}
                           ],"else": [
                             {"set":{"local":"crewgoforstretcherload"},"value":"yes"},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":45,"dist":7},{"bearing":135,"dist":15},{"bearing":225,"dist":15},{"bearing":270,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
-                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":225,"dist":10},{"bearing":150,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
-                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                            {"call_macro":"ambulance shuttle decide","params":{"source":"3 crew ground ops"}},
+                            {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                              "then": [
+                                {"call_macro":"ambulance crew shuttle","params":{"dir":"to_heli","hc":1,"px":0,"x":1}}
+                              ],"else": [
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":45,"dist":7},{"bearing":135,"dist":15},{"bearing":225,"dist":15},{"bearing":270,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
+                                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":225,"dist":10},{"bearing":150,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
+                                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
+                            ]},
                             {"set":{"var":["L:STEP","number"]},"value":9},
                             {"call_macro":"select HEMS patient"},
                             {"call_macro":"prepare selected HEMS patient","result":"prepared"},
@@ -6990,6 +7014,11 @@
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_door","detail":"close cargo_right"}},
                                 {"sleep":1}
                             ]},
+                            {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                              "then": [
+                                {"wait_for":{"local":"ambu_shuttle_at_heli"},"eq":"yes"},
+                                {"call_macro":"ambulance crew shuttle","params":{"dir":"to_patient","hc":1,"px":0,"x":12}}
+                            ]},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
                             {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":160,"dist":5.5},{"bearing":235,"dist":5.5}],"to":"{local:HEMS_PATIENT_OBJECT}"}],"VAR1":10,"speed":6}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
@@ -7029,11 +7058,16 @@
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_wait_ok","detail":"('local':'CREW_ASSISTANT_BUSY')"}},
                                 {"sleep":[1,3]},
                                 {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"pax3"}},
-                                {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":6,"vmax":7},"result":"cws_sp"},
-                                {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":{"param":"cws_sp"}}},
-                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"pax3"}},
-                                {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                                {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                                  "then": [
+                                    {"wait_for":{"local":"ambu_shuttle_leg3"},"eq":"done"}
+                                  ],"else": [
+                                    {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"pax3"}},
+                                    {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":6,"vmax":7},"result":"cws_sp"},
+                                    {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":{"param":"cws_sp"}}},
+                                    {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"pax3"}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                                ]},
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"pax3"}},
                                 {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing":320,"dist":5},{"bearing":270,"dist":5},{"bearing":220,"dist":5}],"to":"pax3"}],"VAR1":16,"speed":6}},
                                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"pax3"}},
@@ -7070,19 +7104,26 @@
                                 {"set":{"var":["L:PLT{local:VCP}36","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}36","number"]},1]}}
                             ]},
                             {"sleep":1},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
-                            {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":4,"vmax":7},"result":"cws_sp"},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"$USER"}],"VAR1":11,"speed":{"param":"cws_sp"}}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":40,"dist":5},{"bearing":320,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":5},{"bearing":270,"dist":6}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
-                            {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":140,"dist":5},{"bearing":250,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
-                            {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
+                            {"if": {"local":"ambu_shuttle"}, "eq": 1,
+                              "then": [
+                                {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+                                {"call_macro":"ambulance crew shuttle","params":{"dir":"to_heli","hc":1,"px":1,"x":11}},
+                                {"call_macro":"ambulance shuttle release","params":{"why":"the crew and the patient are at the helicopter"}}
+                              ],"else": [
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
+                                {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":4,"vmax":7},"result":"cws_sp"},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"$USER"}],"VAR1":11,"speed":{"param":"cws_sp"}}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":40,"dist":5},{"bearing":320,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":90,"dist":5},{"bearing":270,"dist":6}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
+                                {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":140,"dist":5},{"bearing":250,"dist":5}],"to":"hoist_crew"}],"VAR1":11,"speed":5}},
+                                {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}}
+                            ]},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_start","detail":"hoist_crew"}},
                             {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing":170,"dist":4},{"bearing":220,"dist":4.5}],"to":"hoist_crew"},{"bearing":175,"dist":3.5},{"bearing":195,"dist":1.5}],"VAR1":11,"speed":5}},
                             {"call_macro":"ground ops checkpoint","params":{"id":"c3_drive_done","detail":"hoist_crew"}},
@@ -11172,5 +11213,251 @@
             ]}
         ]}
     ]}}
+  ],
+  "ambulance shuttle decide": [
+    {"#comment":"Report of Daikan, 2026-11-03 (170.05, mission 31, 3 crew): the helicopter landed 288 m from the patient (custom landing spot, police carried the crew), the ambulance was on the scene 30 m from the patient, and after the visit the crew walked back to the helicopter to get the stretcher. AMBUFAR is never evaluated in the live patient registry (ambustretcher full returns before it), so the branch of the original mission that sent the ambulance to carry crew and patient to the helicopter never ran. Decision, called by 3 crew ground ops and 4 or 5 crew ground ops at the start of the stretcher branch (patient transported by us): ambu_shuttle is 1 when the live registry is on, the ambulance is on the scene (AMBU_AVAIL 1, ambulance1 exists and reaches the patient: multipatient registry ambulance reach), the helicopter is on the ground and farther from the patient than ambulance_return_crew_min_dist (200 m by default). Then the ambulance is held (ambulance1_shuttle_hold: ambulance1 stand down waits for it), its parking place is remembered (shuttle_home) and a watchdog releases the hold after 1500 s. With 4 or 5 crew the ambulance is sent to the helicopter at once (the stretcher is fetched there). Otherwise nothing changes and the crew walks as before."},
+    {"set":{"local":"ambu_shuttle"},"value":0},
+    {"set":{"local":"ambu_shuttle_why"},"value":"the live patient registry is off"},
+    {"set":{"local":"ambu_shuttle_leg3"},"value":"no"},
+    {"set":{"local":"ambu_shuttle_at_heli"},"value":"no"},
+    {"set":{"local":"shuttle_hc_aboard"},"value":"no"},
+    {"set":{"local":"shuttle_px_aboard"},"value":"no"},
+    {"set":{"local":"ambu_shuttle_dist"},"value":{"round":{"location":"INJURED","var":"distance:m"},"to":0}},
+    {"if": {"local":"patient_live_mode"}, "eq": 1,
+      "then": [
+        {"set":{"local":"ambu_shuttle_why"},"value":"no ambulance on the scene"},
+        {"if": {
+          "and": [
+            {"require":{"local":"AMBU_AVAIL"},"eq":1},
+            {"require":{"has_object":"ambulance1"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"ambu_shuttle_why"},"value":"the helicopter is in the air or near the patient"},
+            {"if": {
+              "and": [
+                {"require":{"var":["SIM ON GROUND","bool"]},"eq":1},
+                {"require":{"location":"INJURED","var":"distance:m"},"gt":{"local":"ambulance_return_crew_min_dist"}}
+              ]}, "eq": 1,
+              "then": [
+                {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":"ambulance1","patient":1},"result":"asd_reach"},
+                {"set":{"local":"ambu_shuttle_why"},"value":"the ambulance is too far from the patient"},
+                {"if": {"param":"asd_reach"}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"ambu_shuttle"},"value":1},
+                    {"set":{"local":"ambu_shuttle_why"},"value":"far landing spot, ambulance on the scene"},
+                    {"set":{"local":"ambulance1_shuttle_hold"},"value":"yes"},
+                    {"create_location": "shuttle_home",
+                      "zones": [
+                        {"zone":{"location":{"bearing":0,"dist":0,"object":"ambulance1"}}}
+                    ]},
+                    {"create_thread": {
+                      "commands": [
+                        {"sleep":1500},
+                        {"if": {"local":"ambulance1_shuttle_hold"}, "eq": "yes",
+                          "then": [
+                            {"call_macro":"ambulance shuttle release","params":{"why":"watchdog 1500 s"}}
+                        ]}
+                    ]}},
+                    {"if": {"local":"CREW"}, "gt": 3,
+                      "then": [
+                        {"create_thread": {
+                          "commands": [
+                            {"call_macro":"ambulance crew shuttle","params":{"dir":"to_heli","hc":0,"px":0,"x":1}}
+                        ]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_decide","detail":{"text":"source={0} shuttle={1} why={2} heli_to_patient_m={3} limit_m={4} crew={5}","params":[{"param":"source"},{"local":"ambu_shuttle"},{"local":"ambu_shuttle_why"},{"local":"ambu_shuttle_dist"},{"local":"ambulance_return_crew_min_dist"},{"local":"CREW"}]}}}
+  ],
+  "ambulance shuttle release": [
+    {"#comment":"Gives the ambulance back: ambulance1 stand down can depart. Safe to call more than once. The legs that did not run yet go back to walking (ambu_shuttle 0). Param why: text of the trace."},
+    {"if": {"local":"ambulance1_shuttle_hold"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"ambulance1_shuttle_hold"},"value":"no"},
+        {"set":{"local":"ambu_shuttle"},"value":0},
+        {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_release","detail":{"text":"why={0}","params":[{"param":"why"}]}}}
+    ]}
+  ],
+  "ambulance shuttle board hoist_crew": [
+    {"#comment":"The crew member walks to the ambulance and boards it (hidden, VAR 1 -1, as the police and ambulance returns of the original mission). The drive is synchronous: no distance watchdog decides the end of the walk. State 3 walking, 1 standing."},
+    {"if": {"has_object":"hoist_crew"}, "eq": 1,
+      "then": [
+        {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_board","detail":{"text":"hoist_crew walks to the ambulance","params":[]}}},
+        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+        {"drive_object":{"name":"hoist_crew","to":[{"closest":[{"bearing2":180,"dist":6,"object":"ambulance1"},{"bearing2":90,"dist":4,"object":"ambulance1"}],"to":"hoist_crew"},"ambulance1"],"VAR1":3,"speed":6}},
+        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":-1},
+        {"set":{"local":"shuttle_hc_aboard"},"value":"yes"}
+    ]}
+  ],
+  "ambulance shuttle board pax3": [
+    {"#comment":"pax3 boards the ambulance. With 3 crew pax3 is the pilot asset: only the pilot states 16 walking and 14 standing, standing set before and after the drive. With 4 or 5 crew pax3 is a rear crew member: 3 walking, 1 standing."},
+    {"if": {"has_object":"pax3"}, "eq": 1,
+      "then": [
+        {"if": {"local":"CREW"}, "eq": 3,
+          "then": [
+            {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_board","detail":{"text":"pax3 walks to the ambulance","params":[]}}},
+            {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+            {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":180,"dist":6,"object":"ambulance1"},{"bearing2":90,"dist":4,"object":"ambulance1"}],"to":"pax3"},"ambulance1"],"VAR1":16,"speed":6}},
+            {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+            {"set":{"object":"pax3","var":"VAR 1"},"value":-1}
+          ],"else": [
+            {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_board","detail":{"text":"pax3 walks to the ambulance","params":[]}}},
+            {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+            {"drive_object":{"name":"pax3","to":[{"closest":[{"bearing2":180,"dist":6,"object":"ambulance1"},{"bearing2":90,"dist":4,"object":"ambulance1"}],"to":"pax3"},"ambulance1"],"VAR1":3,"speed":6}},
+            {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+            {"set":{"object":"pax3","var":"VAR 1"},"value":-1}
+        ]},
+        {"set":{"local":"shuttle_px_aboard"},"value":"yes"}
+    ]}
+  ],
+  "ambulance shuttle unload hoist_crew": [
+    {"#comment":"The crew member leaves the ambulance behind it and takes the state of the next step: param x 12 carrying the empty stretcher, 11 carrying the patient, otherwise standing (1)."},
+    {"if": {"local":"shuttle_hc_aboard"}, "eq": "yes",
+      "then": [
+        {"if": {"has_object":"hoist_crew"}, "eq": 1,
+          "then": [
+            {"move_object":"hoist_crew","to":{"bearing2":180,"dist":3.6,"heading":100,"object":"ambulance1"}},
+            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+            {"if": {"param":"x"}, "eq": 12,
+              "then": [
+                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":12}
+            ]},
+            {"if": {"param":"x"}, "eq": 11,
+              "then": [
+                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":11}
+            ]}
+        ]},
+        {"set":{"local":"shuttle_hc_aboard"},"value":"no"}
+    ]}
+  ],
+  "ambulance shuttle unload pax3": [
+    {"#comment":"pax3 leaves the ambulance behind it, standing (14 with 3 crew, 1 with 4 or 5 crew)."},
+    {"if": {"local":"shuttle_px_aboard"}, "eq": "yes",
+      "then": [
+        {"if": {"has_object":"pax3"}, "eq": 1,
+          "then": [
+            {"move_object":"pax3","to":{"bearing2":180,"dist":3.2,"heading":100,"object":"ambulance1"}},
+            {"if": {"local":"CREW"}, "eq": 3,
+              "then": [
+                {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+              ],"else": [
+                {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+            ]}
+        ]},
+        {"set":{"local":"shuttle_px_aboard"},"value":"no"}
+    ]}
+  ],
+  "ambulance crew shuttle": [
+    {"#comment":"One leg of the ambulance shuttle of the crew (see ambulance shuttle decide). Params: dir to_heli (a point 25 m from the helicopter, bearing 160) or to_patient (shuttle_home, where the ambulance was parked), hc 1 when hoist_crew rides, px 1 when pax3 rides, x the state of hoist_crew when it steps out (12 carrying the empty stretcher, 11 carrying the patient, 1 standing). The riders walk to the ambulance (synchronous drives), the ambulance drives on the route of the car (create_route, the multiplier of the police) or straight, with the watchdog of the safe drive macros that moves it to the destination on timeout; this macro also moves it when its own wait ends, so the leg always ends. Then the riders step out behind it. A leg with hc 0 and px 0 only positions the ambulance (4 or 5 crew: the stretcher is at the helicopter). Every step writes a row ground ops checkpoint (shuttle_*)."},
+    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_enter","detail":{"text":"dir={0} hc={1} px={2} x={3}","params":[{"param":"dir"},{"param":"hc"},{"param":"px"},{"param":"x"}]}}},
+    {"if": {"param":"dir"}, "eq": "to_heli",
+      "then": [
+        {"create_location": "shuttle_dest",
+          "zones": [
+            {"zone":{"location":{"bearing":160,"dist":25}}}
+        ]}
+      ],"else": [
+        {"create_location": "shuttle_dest",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":0,"object":"shuttle_home"}}}
+        ]}
+    ]},
+    {"if": {"param":"hc"}, "eq": 1,
+      "then": [
+        {"call_macro":"ambulance shuttle board hoist_crew"}
+    ]},
+    {"if": {"param":"px"}, "eq": 1,
+      "then": [
+        {"call_macro":"ambulance shuttle board pax3"}
+    ]},
+    {"call_macro":"legacy scene routing check"},
+    {"set":{"local":"rd_shuttle_route"},"value":"no"},
+    {"set":{"local":"shuttle_route_s"},"value":0},
+    {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+      "then": [
+        {"create_route":{"name":"shuttle_route","query":{"to":"shuttle_dest","from":"ambulance1","type":"car"}}},
+        {"set":{"local":"shuttle_route_s"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+        {"if": {"local":"shuttle_route_s"}, "gt": 0,
+          "then": [
+            {"set":{"local":"rd_shuttle_route"},"value":"yes"}
+        ]}
+    ]},
+    {"set":{"local":"shuttle_dist_m"},"value":{"round":{"location":"ambulance1","var":"distance:m","to":"shuttle_dest"},"to":0}},
+    {"if": {"local":"rd_shuttle_route"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"shuttle_timeout"},"value":{"add":[{"divide":[{"local":"shuttle_route_s"},{"local":"poli_multiplier"}]},120]}}
+      ],"else": [
+        {"set":{"local":"shuttle_timeout"},"value":{"add":[{"divide":[{"local":"shuttle_dist_m"},6]},120]}}
+    ]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_route","detail":{"text":"route_ok={0} route_s={1} dist_m={2} timeout_s={3}","params":[{"local":"rd_shuttle_route"},{"local":"shuttle_route_s"},{"local":"shuttle_dist_m"},{"local":"shuttle_timeout"}]}}},
+    {"set":{"object":"ambulance1","var":"VAR 1"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"ambulance_restart_at_slow_speed"}
+    ]}},
+    {"if": {"local":"rd_shuttle_route"}, "eq": "yes",
+      "then": [
+        {"call_macro":"drive ambulance1 safe multiplier","params":{"to":"shuttle_route","fallback":"shuttle_dest","speed":4,"var1":0,"timeout":{"add":[{"divide":[{"local":"shuttle_route_s"},{"local":"poli_multiplier"}]},120]},"speedMultiplier":{"local":"poli_multiplier"}}}
+      ],"else": [
+        {"call_macro":"drive ambulance1 safe","params":{"to":["shuttle_dest"],"fallback":"shuttle_dest","speed":14,"var1":0,"timeout":{"add":[{"divide":[{"local":"shuttle_dist_m"},6]},120]}}}
+    ]},
+    {"set":{"local":"shuttle_waited"},"value":0},
+    {"set":{"local":"shuttle_moving"},"value":1},
+    {"while": {"local":"shuttle_moving"}, "eq": 1,
+      "do": [
+        {"sleep":1},
+        {"set":{"local":"shuttle_waited"},"value":{"add":[{"local":"shuttle_waited"},1]}},
+        {"if": {"local":"rd_shuttle_route"}, "eq": "yes",
+          "then": [
+            {"if": {"local":"drive_watchdog_ambulance1_mult_state"}, "ne": "moving",
+              "then": [
+                {"set":{"local":"shuttle_moving"},"value":0}
+            ]}
+          ],"else": [
+            {"if": {"local":"drive_watchdog_ambulance1_state"}, "ne": "moving",
+              "then": [
+                {"set":{"local":"shuttle_moving"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"shuttle_waited"}, "gt": {"add":[{"local":"shuttle_timeout"},40]},
+          "then": [
+            {"set":{"local":"shuttle_moving"},"value":0},
+            {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_force","detail":{"text":"the drive did not report an end in {0} s, the ambulance is moved to the destination","params":[{"local":"shuttle_waited"}]}}},
+            {"if": {"has_object":"ambulance1"}, "eq": 1,
+              "then": [
+                {"move_object":"ambulance1","to":"shuttle_dest"}
+            ]}
+        ]}
+    ]},
+    {"set":{"object":"ambulance1","var":"VAR 1"},"value":0},
+    {"set":{"object":"ambulance1","var":"VELOCITY Z"},"value":0},
+    {"set":{"object":"ambulance1","var":"WP INDEX"},"value":0},
+    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_arrived","detail":{"text":"dir={0} waited_s={1} ambulance_to_dest_m={2}","params":[{"param":"dir"},{"local":"shuttle_waited"},{"round":{"location":"ambulance1","var":"distance:m","to":"shuttle_dest"},"to":0}]}}},
+    {"if": {"param":"hc"}, "eq": 1,
+      "then": [
+        {"call_macro":"ambulance shuttle unload hoist_crew","params":{"x":{"param":"x"}}}
+    ]},
+    {"if": {"param":"px"}, "eq": 1,
+      "then": [
+        {"call_macro":"ambulance shuttle unload pax3"}
+    ]},
+    {"if": {"param":"dir"}, "eq": "to_heli",
+      "then": [
+        {"set":{"local":"ambu_shuttle_at_heli"},"value":"yes"}
+      ],"else": [
+        {"set":{"local":"ambu_shuttle_at_heli"},"value":"no"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"dir"},"eq":"to_heli"},
+        {"require":{"param":"px"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"ambu_shuttle_leg3"},"value":"done"}
+    ]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_exit","detail":{"text":"dir={0}","params":[{"param":"dir"}]}}}
   ]
 }
