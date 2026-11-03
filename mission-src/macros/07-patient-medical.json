@@ -21,6 +21,160 @@
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"up_end patient={local:HOIST_CABLE_PATIENT} phase={local:HOIST_CABLE_PHASE}"}}
   ],
+  "custom injured assets prepare": [
+    {"#comment":"Models of the injured chosen by the custom script (train.json, local CUS_INJURED: array of structures {title}, in the order of the injured). Runs once per scene, from random injured, only in a custom mission (player custom) and not on a reload. Empty or absent list: nothing changes. Fewer titles than injured (HELOVICTIMS): the pick is the list in order, the remaining injured keep the choice of the mission. As many: the list in order. More titles than injured: HELOVICTIMS titles drawn at random, each list entry at most once. The pick is cus_injured_pick, an array of structures {title}; custom injured asset reads it."},
+    {"set":{"local":"cus_injured_pick"},"value":{"create_array":0}},
+    {"set":{"local":"cus_inj_count"},"value":0},
+    {"set":{"local":"cus_fb_picked"},"value":{"create_array":0}},
+    {"if": {
+      "and": [
+        {"require":{"local":"player"},"eq":"custom"},
+        {"require":{"local":"CUS_INJURED"},"ne":null}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"cus_inj_count"},"value":{"struct":{"local":"CUS_INJURED"},"path":"length"}},
+        {"if": {"local":"cus_inj_count"}, "gt": 0,
+          "then": [
+            {"if": {"local":"cus_inj_count"}, "lte": {"local":"HELOVICTIMS"},
+              "then": [
+                {"for_each": {"local":"CUS_INJURED"},
+                  "do": [
+                    {"modify_array":{"local":"cus_injured_pick"},"append":{"param":"$item"}}
+                ]}
+              ],"else": [
+                {"set":{"local":"cus_inj_picked"},"value":0},
+                {"while": {"local":"cus_inj_picked"}, "lt": {"local":"HELOVICTIMS"},
+                  "do": [
+                    {"set":{"local":"cus_inj_idx"},"value":{"floor":{"rand":[0,{"local":"cus_inj_count"}]}}},
+                    {"set":{"local":"cus_inj_taken"},"value":0},
+                    {"for_each": {"local":"cus_injured_pick"},
+                      "do": [
+                        {"if": {"struct":{"param":"$item"},"path":"idx"}, "eq": {"local":"cus_inj_idx"},
+                          "then": [
+                            {"set":{"local":"cus_inj_taken"},"value":1}
+                        ]}
+                    ]},
+                    {"if": {"local":"cus_inj_taken"}, "eq": 0,
+                      "then": [
+                        {"set":{"param":"cus_inj_entry"},"value":{"struct":{"local":"CUS_INJURED"},"index":{"local":"cus_inj_idx"}}},
+                        {"modify_array":{"local":"cus_injured_pick"},"append":{"create_struct":{"title":{"struct":{"param":"cus_inj_entry"},"path":"title"},"idx":{"local":"cus_inj_idx"}}}},
+                        {"set":{"local":"cus_inj_picked"},"value":{"add":[{"local":"cus_inj_picked"},1]}}
+                    ]},
+                    {"sleep":0.02}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"custom_injured","actor":"n/a","target":"prepare","state":"player={local:player} list={local:cus_inj_count} injured={local:HELOVICTIMS}"}}
+  ],
+  "custom injured fallback": [
+    {"#comment":"Fallback model of a custom injured title: the title can be misspelled or not installed, and create_object then takes its fallback_title. The fallback is drawn at random from the static injured_fallback (the H145 injured models of the mission) and is a different one for each injured while the list has enough entries (cus_fb_picked holds the ones already given, cleared when the list is used up). Result in cus_fb_title."},
+    {"set":{"local":"cus_fb_title"},"value":"Airbus H145 Injured Human"},
+    {"set":{"local":"cus_fb_count"},"value":{"struct":{"static":"injured_fallback"},"path":"length"}},
+    {"if": {"local":"cus_fb_count"}, "gt": 0,
+      "then": [
+        {"if": {"struct":{"local":"cus_fb_picked"},"path":"length"}, "gte": {"local":"cus_fb_count"},
+          "then": [
+            {"set":{"local":"cus_fb_picked"},"value":{"create_array":0}}
+        ]},
+        {"set":{"local":"cus_fb_done"},"value":0},
+        {"while": {"local":"cus_fb_done"}, "eq": 0,
+          "do": [
+            {"set":{"local":"cus_fb_idx"},"value":{"floor":{"rand":[0,{"local":"cus_fb_count"}]}}},
+            {"set":{"local":"cus_fb_taken"},"value":0},
+            {"for_each": {"local":"cus_fb_picked"},
+              "do": [
+                {"if": {"struct":{"param":"$item"},"path":"idx"}, "eq": {"local":"cus_fb_idx"},
+                  "then": [
+                    {"set":{"local":"cus_fb_taken"},"value":1}
+                ]}
+            ]},
+            {"if": {"local":"cus_fb_taken"}, "eq": 0,
+              "then": [
+                {"set":{"param":"cus_fb_entry"},"value":{"struct":{"static":"injured_fallback"},"index":{"local":"cus_fb_idx"}}},
+                {"set":{"local":"cus_fb_title"},"value":{"struct":{"param":"cus_fb_entry"},"path":"id"}},
+                {"modify_array":{"local":"cus_fb_picked"},"append":{"create_struct":{"idx":{"local":"cus_fb_idx"}}}},
+                {"set":{"local":"cus_fb_done"},"value":1}
+            ]},
+            {"sleep":0.02}
+        ]}
+    ]}
+  ],
+  "custom injured asset": [
+    {"#comment":"Applies the pick of custom injured assets prepare to one injured (param slot 1 to 3): the title replaces injuredN, var_compatibleN comes from the catalog of the mission when the title is in one of its lists (injured, injured_workers, injured_motorcyclists) and is no (fixed model, the safe answer) for a title the mission does not know. SEXn and AGEn are not touched: they follow the dispatch. No pick for the slot: nothing changes."},
+    {"set":{"param":"cia_title"},"value":null},
+    {"set":{"param":"cia_idx"},"value":-1},
+    {"if": {"param":"slot"}, "eq": 1,
+      "then": [
+        {"set":{"param":"cia_idx"},"value":0}
+    ]},
+    {"if": {"param":"slot"}, "eq": 2,
+      "then": [
+        {"set":{"param":"cia_idx"},"value":1}
+    ]},
+    {"if": {"param":"slot"}, "eq": 3,
+      "then": [
+        {"set":{"param":"cia_idx"},"value":2}
+    ]},
+    {"if": {"struct":{"local":"cus_injured_pick"},"path":"length"}, "gt": {"param":"cia_idx"},
+      "then": [
+        {"set":{"param":"cia_entry"},"value":{"struct":{"local":"cus_injured_pick"},"index":{"param":"cia_idx"}}},
+        {"set":{"param":"cia_title"},"value":{"struct":{"param":"cia_entry"},"path":"title"}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"cia_idx"},"gte":0},
+        {"require":{"param":"cia_title"},"ne":null},
+        {"require":{"param":"cia_title"},"ne":""}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"cia_vc"},"value":"no"},
+        {"for_each": {"static":"injured"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"param":"cia_title"},
+              "then": [
+                {"set":{"param":"cia_vc"},"value":{"struct":{"param":"$item"},"path":"variable_compatible"}}
+            ]}
+        ]},
+        {"for_each": {"static":"injured_workers"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"param":"cia_title"},
+              "then": [
+                {"set":{"param":"cia_vc"},"value":{"struct":{"param":"$item"},"path":"variable_compatible"}}
+            ]}
+        ]},
+        {"for_each": {"static":"injured_motorcyclists"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"param":"cia_title"},
+              "then": [
+                {"set":{"param":"cia_vc"},"value":{"struct":{"param":"$item"},"path":"variable_compatible"}}
+            ]}
+        ]},
+        {"call_macro":"custom injured fallback"},
+        {"if": {"param":"slot"}, "eq": 1,
+          "then": [
+            {"set":{"local":"injured1"},"value":{"param":"cia_title"}},
+            {"set":{"local":"var_compatible1"},"value":{"param":"cia_vc"}},
+            {"set":{"local":"injured1_fallback"},"value":{"local":"cus_fb_title"}}
+        ]},
+        {"if": {"param":"slot"}, "eq": 2,
+          "then": [
+            {"set":{"local":"injured2"},"value":{"param":"cia_title"}},
+            {"set":{"local":"var_compatible2"},"value":{"param":"cia_vc"}},
+            {"set":{"local":"injured2_fallback"},"value":{"local":"cus_fb_title"}}
+        ]},
+        {"if": {"param":"slot"}, "eq": 3,
+          "then": [
+            {"set":{"local":"injured3"},"value":{"param":"cia_title"}},
+            {"set":{"local":"var_compatible3"},"value":{"param":"cia_vc"}},
+            {"set":{"local":"injured3_fallback"},"value":{"local":"cus_fb_title"}}
+        ]},
+        {"set":{"local":"cus_inj_log_slot"},"value":{"param":"slot"}},
+        {"set":{"local":"cus_inj_log_title"},"value":{"param":"cia_title"}},
+        {"set":{"local":"cus_inj_log_vc"},"value":{"param":"cia_vc"}},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"custom_injured","actor":"n/a","target":"slot {local:cus_inj_log_slot}","state":"title={local:cus_inj_log_title} var_compatible={local:cus_inj_log_vc} fallback={local:cus_fb_title}"}}
+    ]}
+  ],
   "random injured": [
     {"sleep":0.2},
     {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
@@ -63,7 +217,13 @@
         {"set":{"local":"SEX1"},"value":{"global":"TEMPSEX1"}},
         {"set":{"local":"var_compatible1"},"value":{"global":"TEMPvar_compatible1"}}
     ]},
-    {"create_object":{"name":"injured_human","title":{"local":"injured1"},"fallback_title":"Airbus H145 Injured Human","location":{"bearing":0,"dist":5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"set":{"local":"injured1_fallback"},"value":"Airbus H145 Injured Human"},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"call_macro":"custom injured assets prepare"},
+        {"call_macro":"custom injured asset","params":{"slot":1}}
+    ]},
+    {"create_object":{"name":"injured_human","title":{"local":"injured1"},"fallback_title":{"local":"injured1_fallback"},"location":{"bearing":0,"dist":5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human","var":"VAR 1"},"value":0},
     {"sleep":0.2},
     {"create_location": "INJURED",
@@ -139,7 +299,12 @@
     {"set":{"var":["L:LOAD","number"]},"value":25.6},
     {"set_message":{"text":"Cabin preparation, 25.6% completed... please wait, it can take a while"}},
     {"sleep":0.5},
-    {"create_object":{"name":"injured_human2","title":{"local":"injured2"},"fallback_title":"Airbus H145 Injured Human","location":{"bearing":{"rand":[60,90]},"dist":5.5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"set":{"local":"injured2_fallback"},"value":"Airbus H145 Injured Human"},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"call_macro":"custom injured asset","params":{"slot":2}}
+    ]},
+    {"create_object":{"name":"injured_human2","title":{"local":"injured2"},"fallback_title":{"local":"injured2_fallback"},"location":{"bearing":{"rand":[60,90]},"dist":5.5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human2","var":"VAR 1"},"value":0},
     {"set":{"var":["L:LOAD","number"]},"value":25.7},
     {"set_message":{"text":"Cabin preparation, 25.7% completed... please wait, it can take a while"}},
@@ -269,7 +434,12 @@
     {"set":{"var":["L:LOAD","number"]},"value":26.5},
     {"set_message":{"text":"Cabin preparation, 26.5% completed... please wait, it can take a while"}},
     {"sleep":0.5},
-    {"create_object":{"name":"injured_human3","title":{"local":"injured3"},"fallback_title":"Airbus H145 Injured Human","location":{"bearing":{"rand":[231,265]},"dist":6,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"set":{"local":"injured3_fallback"},"value":"Airbus H145 Injured Human"},
+    {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
+      "then": [
+        {"call_macro":"custom injured asset","params":{"slot":3}}
+    ]},
+    {"create_object":{"name":"injured_human3","title":{"local":"injured3"},"fallback_title":{"local":"injured3_fallback"},"location":{"bearing":{"rand":[231,265]},"dist":6,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human3","var":"VAR 1"},"value":0},
     {"set":{"var":["L:LOAD","number"]},"value":26.6},
     {"set_message":{"text":"Cabin preparation, 26.6% completed... please wait, it can take a while"}},

@@ -710,3 +710,16 @@ Result of test 1 (2026-10-31): a `text`, `title` or `link` widget given a `struc
 Original text of the test:
 
 Question: can the text, title and link widgets of the tablet read a translated text from a data table, with the language chosen at run time? `standalone-tests/ui-translation-test.json` (copy in Desktop\claude\tests) holds a table `ui_texts` with five texts in EN, IT, DE and FR and six lines: 1 a fixed column (always Italian), 2 the column taken from a local, 3 a template with `{0}` and `{1}` filled by `params`, 4 a title, 5 a link (the counter must grow), 6 the title of a button (expected NOT to translate). Press EN, IT, DE, FR: lines 2 to 5 must change language at once. Report which lines work. Design: `docs/architecture/UI_TRANSLATION.md`.
+
+## Custom injured models (sources 2026-11-03, not built, PENDING)
+
+Script `train.json` with `CUS_INJURED` (see `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`). Custom mission with 3 injured (`HELOVICTIMS_CUSTOM` 3), read the rows `custom_injured` of `ground_crew_runtime_trace` in the manual snapshot.
+
+1. Empty list: the injured are the ones the mission chooses (no `custom_injured` slot rows).
+2. One title: injured 1 is that model, injured 2 and 3 are the mission choice.
+3. Three titles: injured 1, 2, 3 in the order of the list.
+4. Five titles, three injured: three different titles of the list; repeat the mission a few times, the choice changes.
+5. A misspelled title and a title of a package not installed: the injured appears as one of `Airbus H145 Injured Human`, `... Human 2`, `... Injured Engineer`, a different one for each injured (row `fallback=`). Check that `create_object` takes `fallback_title` when `title` is a local that holds a text with spaces and digits.
+6. A title with a pose (`VAR 1`) used by the mission (treatment, stretcher): the injured does not turn into a pilot or a wrong pose (`var_compatible` is `no` for a title not in the catalog).
+7. Save and reload the mission: the injured keep the models.
+8. A regular (non custom) mission after a custom one in the same session: no custom model.
