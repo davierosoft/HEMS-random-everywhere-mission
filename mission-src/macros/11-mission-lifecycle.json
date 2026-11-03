@@ -2538,6 +2538,26 @@
   "objective1": [
     {"set":{"var":["L:RELEASE_BUILD","number"]},"value":170},
     {"call_macro":"settings first run defaults"},
+    {"#comment":"second_start_repair: the accept of a second dispatch left SECOND_RESTART_PENDING and the starting point in globals before reload_mission. If the LVAR flag or the LVARs of the starting point did not survive the restart they are written back here, before anything reads them (start location diagnostics and the two branches below decide by L:SECOND_DISPATCH_ACCEPTED). The mark is cleared at once: a later fresh start never inherits it."},
+    {"if": {"global":"SECOND_RESTART_PENDING"}, "eq": 1,
+      "then": [
+        {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
+          "then": [
+            {"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":"the flag of the second dispatch was lost by the restart and is set again"}}
+        ]},
+        {"if": {
+          "or": [
+            {"require":{"var":["L:MISSION_START_LOCATION LAT","number"]},"ne":{"global":"SECOND_RESTART_LAT"}},
+            {"require":{"var":["L:MISSION_START_LOCATION LON","number"]},"ne":{"global":"SECOND_RESTART_LON"}}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":{"text":"the starting point was overwritten: LVAR {0},{1} written back from {2},{3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"SECOND_RESTART_LAT"},{"global":"SECOND_RESTART_LON"}]}}},
+            {"set":{"var":["L:MISSION_START_LOCATION LAT","number"]},"value":{"global":"SECOND_RESTART_LAT"}},
+            {"set":{"var":["L:MISSION_START_LOCATION LON","number"]},"value":{"global":"SECOND_RESTART_LON"}}
+        ]},
+        {"set":{"global":"SECOND_RESTART_PENDING"},"value":0}
+    ]},
     {"call_macro":"start location diagnostics","params":{"init":1}},
     {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
     {"set":{"local":"START_PHASE_SEEN"},"value":{"var":["L:DISPATCH_PHASE","number"]}},
@@ -3854,6 +3874,7 @@
             {"zone":{"location":"$USER"}}
         ]},
         {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},
+        {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_new","detail":{"text":"new starting point at the helicopter {0},{1} (flag {2})","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}]}}},
         {"create_thread": {
           "commands": [
             {"call_macro":"kit globals population"},
@@ -3885,6 +3906,7 @@
           "zones": [
             {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}
         ]},
+        {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_restored","detail":{"text":"starting point restored {0},{1}, {2} m from the helicopter","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"round":{"location":"mission_start_location","var":"distance:m"},"to":0}]}}},
         {"if": {"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]}, "ne": 0,
           "then": [
             {"create_location": "accident_location",
@@ -6811,6 +6833,15 @@
             {"sleep":0.5},
             {"set_briefing_dialog":0},
             {"call_macro":"crew reboard snapshot"},
+            {"#comment":"Report of Daikan, 2026-11-03: after accepting the second dispatch the starting point was the position of the helicopter and the mission did not end at the original one. The mission restarts here (reload_mission) and objective1 rebuilds mission_start_location from the LVAR L:MISSION_START_LOCATION when L:SECOND_DISPATCH_ACCEPTED is 1. The starting point and a pending mark are also kept in globals, so that objective1 can repair the flag and the LVARs if they did not survive the restart (second_start_repair)."},
+            {"if": {"has_location":"mission_start_location"}, "eq": 1,
+              "then": [
+                {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}}
+            ]},
+            {"set":{"global":"SECOND_RESTART_LAT"},"value":{"var":["L:MISSION_START_LOCATION LAT","number"]}},
+            {"set":{"global":"SECOND_RESTART_LON"},"value":{"var":["L:MISSION_START_LOCATION LON","number"]}},
+            {"set":{"global":"SECOND_RESTART_PENDING"},"value":1},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"accept_second_start","detail":{"text":"start lat={0} lon={1} flag={2} pending={3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},{"global":"SECOND_RESTART_PENDING"}]}}},
             {"reload_mission":1}
         ]},
         {"if": {"local":"MISSION_PHASE"}, "lt": 2,

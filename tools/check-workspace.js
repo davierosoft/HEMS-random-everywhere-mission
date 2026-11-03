@@ -79,7 +79,7 @@ const scripts = [
   'test-hoist-return.js',
   'test-flight-report-2026-10-20.js',
   'test-flight-report-2026-10-21.js',
-  'test-custom-script.js',
+  'test-custom-script.js', 'test-second-dispatch-start.js',
   'test-flight-report-2026-10-23.js',
   'test-destination-modal-text.js',
   'test-halloween.js',
