@@ -1,3 +1,9 @@
+## Release 0.997 170.07
+
+- New macro `ground return gate` (module 09): before the way back to the helicopter the crew and the heli rescuers compare the helicopter with the landing spot (`landing_spot` closer than `ldg_spot_area_size`, the radius `LANDING_SPOT_GND`). Outside they wait, the tablet gives distance and limit, the user action WALK TO THE HELICOPTER ANYWAY is the user choice (`grg_walk_far`), a hovering helicopter ends the wait of the heli rescuers only (`hover_ok`), skid operations (`MISSION_HOIST` 2) and a mission without landing spot pass. Rows `ret_gate_enter`, `ret_gate_wait`, `ret_gate_user_walk`, `ret_gate_passed` in `ground_ops_checkpoint_log`.
+- Call sites: `3 crew ground ops` and `4 or 5 crew ground ops` (before the NR gate of the return), `gnd ops heli rescuer down` and `hoist heli rescuer down` (before the choice between hoist and ground); the user choice is cleared in `ground ops`, `gnd ops heli rescuer down`, `hoist heli rescuer down`. Cause: `ground ops NR gate` waited only for the rotor and the heli rescuer chose by `SIM ON GROUND` alone (`docs/architecture/GROUND_RETURN_GATE.md`, `tools/test-ground-return-gate.js`).
+- Runtime status: PENDING (`docs/testing/RUNTIME_VALIDATION.md`).
+
 ## Release 0.997 170.06
 
 - Train station dispatch (`Query random train_station`) runs the road approach points launcher like every residential query: `wph/wprescue/wpc/wpt` and `amburoad` exist, the ambulance is no longer moved to the unresolved name `wprescue{amburoad}` (0,0).

@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.06. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.07. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -851,6 +851,14 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - A tester reported that after RETURN TO HOME BASE the crew did not leave the helicopter at the base. The troubleshooting file now records every step from the button to the route to the base (the windows, each choice, the route, the arrival and the crew leaving) and every button pressed in the mission windows, and it notes the last step reached if the return stops. This is a diagnostic: it does not change what the mission does.
 - **Build history:** 0.997 170.06.
 - **Test:** At the end of a mission choose RETURN TO HOME BASE and fly back. If the crew does not leave, send the two snapshot files: the last step is written in them.
+
+### The crew and the heli rescuers do not walk to a helicopter that landed far away
+
+- Report of two testers on a mountain rescue: after the heli rescuers were left at the landing spot of the accident, the helicopter flew down to the valley and landed on a pad, and the heli rescuers started walking down the glacier toward it. The same could happen to the ground crew at the end of the visit. Neither of them walks any more to a helicopter that stands outside the landing spot area (the radius set in Settings, Radius of the landing spot, ground ops).
+- The tablet tells how far the helicopter is and what the limit is, and you choose: bring the helicopter back inside the lime area on the map, hover over the heli rescuers for the hoist pick-up, or press WALK TO THE HELICOPTER ANYWAY. Landing at the landing spot is not required: you may land anywhere and decide.
+- The skid landing operations keep their own wait at the skid point.
+- **Build history:** 0.997 170.07.
+- **Test:** On a mountain call leave the heli rescuers at the landing spot, take off, fly farther than the landing spot radius and land: nobody walks and the tablet shows the distance and the button. Fly back inside the lime area and stop the rotor: they walk to the helicopter. Repeat and press WALK TO THE HELICOPTER ANYWAY, or hover over them.
 
 ### Search and rescue: the crew sides and the order of the find calls
 
@@ -1723,6 +1731,7 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.06 (this release):** The ambulance of a train station call reaches the scene, no stray hospital marks at the world origin on the map, every step of RETURN TO HOME BASE recorded, and the list of injured models, sex, age and state for the custom script (see The ambulance of a train station call reaches the scene, No stray hospital marks on the map, Every step of RETURN TO HOME BASE is recorded and Custom mission script: choose the injured).
+- **0.997 170.07 (this release):** The crew and the heli rescuers do not walk to a helicopter that landed outside the landing spot area unless you choose (see The crew and the heli rescuers do not walk to a helicopter that landed far away).
+- **0.997 170.06:** The ambulance of a train station call reaches the scene, no stray hospital marks at the world origin on the map, every step of RETURN TO HOME BASE recorded, and the list of injured models, sex, age and state for the custom script (see The ambulance of a train station call reaches the scene, No stray hospital marks on the map, Every step of RETURN TO HOME BASE is recorded and Custom mission script: choose the injured).
 - **0.997 170.05:** The base selection window at the end of the mission is shown again until you answer it, and the end of the mission is fully recorded for troubleshooting (see The base selection window at the end of the mission cannot get lost).
 - **0.997 170.04:** The copilot message after the engine checks is completed and cleared, and payload weight diagnostics in every phase (see The copilot message after the engine checks is completed and removed).
