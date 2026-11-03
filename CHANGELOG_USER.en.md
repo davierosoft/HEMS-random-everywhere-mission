@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.05. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.06. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -840,6 +840,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.05.
 - **Test:** At the end of a mission choose RETURN TO HOME BASE and answer the window: the helicopter must fly to the chosen base and the crew must leave it. Do not answer, take off and land back at the starting point: the window reappears every 30 seconds after take-off.
 
+### The ambulance of a train station call reaches the scene
+
+- In calls at a railway station the ambulance could appear at the world origin (latitude 0, longitude 0, in the Gulf of Guinea) and never move, so the patient was never handed over. The ambulance now gets the same approach road as in every other residential call and drives to the scene.
+- **Build history:** 0.997 170.06.
+- **Test:** Start a call at a railway station: the ambulance appears near the scene on a road and drives in; it is not shown in the Gulf of Guinea on the tablet map.
+
+### Every step of RETURN TO HOME BASE is recorded
+
+- A tester reported that after RETURN TO HOME BASE the crew did not leave the helicopter at the base. The troubleshooting file now records every step from the button to the route to the base (the windows, each choice, the route, the arrival and the crew leaving) and every button pressed in the mission windows, and it notes the last step reached if the return stops. This is a diagnostic: it does not change what the mission does.
+- **Build history:** 0.997 170.06.
+- **Test:** At the end of a mission choose RETURN TO HOME BASE and fly back. If the crew does not leave, send the two snapshot files: the last step is written in them.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1036,6 +1048,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The button LOAD PATIENT ON HELO no longer ends with an equals sign.
 - **Build history:** 0.997 169.83.
 - **Test:** Open the tablet when a patient can be loaded: the button reads LOAD PATIENT ON HELO.
+
+### No stray hospital marks on the map
+
+- The tablet map no longer shows the green hospital cross at latitude 0, longitude 0 for the custom hospital places you did not fill in. Only the custom hospitals you added are drawn.
+- **Build history:** 0.997 170.06.
+- **Test:** Start a mission without custom hospitals: no green cross appears in the Gulf of Guinea. Add one custom hospital: only that one is drawn.
 
 ## NEW FUNCTIONS
 
@@ -1637,6 +1655,15 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.00.
 - **Test:** On 31 October or 1 April (or with the date set in the simulator) start a mission with EASTER EGGS on auto: the scene appears once, and a mission reload in the same session does not repeat it. With disabled there is no Halloween scene. In a custom script set CUS_DISPATCH_LANGUAGE to IT: the dispatcher reads the dispatch with the Italian voice of the dispatcher.
 
+### Custom mission script: choose the injured
+
+- The custom mission script has a new list, CUS_INJURED (request of a user of the custom script): one line for each injured person with the exact model title, the sex (male or female), the age, and the two state numbers of the model (NO leaves them to the mission, a number is your choice: 0, 1, 2 and so on). The first line is the first injured person, the second line the second one, and so on. The list is empty by default: the mission chooses as before.
+- With fewer lines than injured people the first ones use your lines and the others are chosen by the mission. With as many lines as injured people each one gets his or her line. With more lines than injured people the mission draws among the lines at random and never uses the same line twice.
+- Your sex and age win over the words of the dispatch and over its age range; the patient and the dispatch text follow them.
+- If a model title is misspelled or its package is not installed, the injured person appears as one of the standard H145 injured models (a different one for each person while they last), never as a missing person.
+- **Build history:** 0.997 170.06.
+- **Test:** In the custom script file add lines to CUS_INJURED, start the mission and check the dispatch text (age and sex), the models of the injured and their state; then write a wrong title: a standard injured model appears. Leave the list empty: the injured are chosen by the mission as before.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1696,5 +1723,6 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.05 (this release):** The base selection window at the end of the mission is shown again until you answer it, and the end of the mission is fully recorded for troubleshooting (see The base selection window at the end of the mission cannot get lost).
+- **0.997 170.06 (this release):** The ambulance of a train station call reaches the scene, no stray hospital marks at the world origin on the map, every step of RETURN TO HOME BASE recorded, and the list of injured models, sex, age and state for the custom script (see The ambulance of a train station call reaches the scene, No stray hospital marks on the map, Every step of RETURN TO HOME BASE is recorded and Custom mission script: choose the injured).
+- **0.997 170.05:** The base selection window at the end of the mission is shown again until you answer it, and the end of the mission is fully recorded for troubleshooting (see The base selection window at the end of the mission cannot get lost).
 - **0.997 170.04:** The copilot message after the engine checks is completed and cleared, and payload weight diagnostics in every phase (see The copilot message after the engine checks is completed and removed).

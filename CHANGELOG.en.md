@@ -1,3 +1,11 @@
+## Release 0.997 170.06
+
+- Train station dispatch (`Query random train_station`) runs the road approach points launcher like every residential query: `wph/wprescue/wpc/wpt` and `amburoad` exist, the ambulance is no longer moved to the unresolved name `wprescue{amburoad}` (0,0).
+- `CUSTOM HOSPITAL DB map update` draws only the custom hospital slots with coordinates (the empty slots drew a cross at 0,0).
+- Return to base: `rtb step` marks every command from the RETURN TO HOME BASE button (shared block 046, `return to base menu`, the modal choices, `return to base`, `routeupdate`, `Update_raw from dispatchphase`, marshaller restore) in `base_return_log`; `rtb step watch` writes the last step every 3 s (then 30 s) until the route is set; `trace button` writes a row for each of the 47 modal option buttons (`test-rtb-step-trace.js`, `test-button-trace.js`).
+- Custom script: `CUS_INJURED` entries `{title, sex, age, var1, var2}` (empty = mission choice, fewer = first injured, as many = in order, more = random without repeat), sex before the pathology engine and age after the age ranges, `injured_fallback` data list of H145 names, a fallback name on every injured creation (`test-custom-injured.js`, `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`).
+- Runtime status: PENDING (`docs/testing/RUNTIME_VALIDATION.md`).
+
 ## Release 0.997 170.05
 
 - SUMMARY snapshot keys formatted
