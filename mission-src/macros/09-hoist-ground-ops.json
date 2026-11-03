@@ -2946,6 +2946,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"doors","actor":"crew","target":{"param":"door"},"state":{"text":"{0} result (state read 4 s later {1})","params":[{"param":"want"},{"param":"edt_state"}]}}}
   ],
   "hoist heli rescuer down": [
+    {"set":{"local":"grg_walk_far"},"value":0},
     {"call_macro":"multipatient registry crew first target"},
     {"create_thread": {
       "commands": [
@@ -3190,6 +3191,7 @@
             ]}
         ]},
         {"wait_for":{"local":"HR_HOISTING_LOCK"},"eq":0},
+        {"call_macro":"ground return gate","params":{"source":"hoist heli rescuer down","hover_ok":1}},
         {"if": {"var":["SIM ON GROUND","bool"]}, "ne": 1,
           "then": [
             {"call_macro":"hoist heli rescuer up"}
@@ -3198,7 +3200,108 @@
         ]}
     ]}}
   ],
+  "ground return gate": [
+    {"#comment":"Report of Steph and Andrew, 2026-11-03: after the heli rescuers were left at the landing spot the helicopter flew down the valley and landed far away, and they started walking toward it wherever it was (the ground ops NR gate waits only for the rotor, never for the position). The margin is the one of the user, the radius of the landing spot of the ground operations (LANDING_SPOT_GND, in ldg_spot_area_size): the heli rescuers and the crew never start walking to a helicopter that stands outside the landing spot area. They wait, the tablet says why and how far the helicopter is, and the user chooses: bring the helicopter inside the lime area, hover for the hoist (heli rescuers only, hover_ok 1), or WALK TO THE HELICOPTER ANYWAY. Skid landing operations (MISSION_HOIST 2) keep their own wait at the skid point. Params: source (text for the trace), hover_ok (1 when a hovering helicopter ends the wait). The crew and the heli rescuers can wait here at the same time: the state is in params of each caller, the user choice grg_walk_far is shared (cleared at the start of the ground operations and of each heli rescuer), the button exists while grg_waiters is above 0."},
+    {"if": {"local":"grg_waiters"}, "eq": null,
+      "then": [
+        {"set":{"local":"grg_waiters"},"value":0}
+    ]},
+    {"set":{"param":"grg_state"},"value":"checking"},
+    {"set":{"param":"grg_reason"},"value":""},
+    {"set":{"param":"grg_tick"},"value":10},
+    {"set":{"param":"grg_dist"},"value":-1},
+    {"set":{"param":"grg_counted"},"value":0},
+    {"if": {
+      "or": [
+        {"require":{"var":["L:MISSION_HOIST","number"]},"eq":2},
+        {"require":{"has_location":"landing_spot"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"grg_state"},"value":"passed"},
+        {"set":{"param":"grg_reason"},"value":"skid landing or no landing spot"}
+    ]},
+    {"if": {"param":"grg_state"}, "ne": "passed",
+      "then": [
+        {"set":{"param":"grg_dist"},"value":{"round":{"location":"landing_spot","var":"distance:m"},"to":0}},
+        {"call_macro":"ground ops checkpoint","params":{"id":"ret_gate_enter","detail":{"text":"source={0} dist={1} limit={2} hover_ok={3}","params":[{"param":"source"},{"param":"grg_dist"},{"local":"ldg_spot_area_size"},{"param":"hover_ok"}]}}}
+    ]},
+    {"while": {"param":"grg_state"}, "ne": "passed",
+      "do": [
+        {"set":{"param":"grg_dist"},"value":{"round":{"location":"landing_spot","var":"distance:m"},"to":0}},
+        {"if": {"location":"landing_spot","var":"distance:m"}, "lt": {"local":"ldg_spot_area_size"},
+          "then": [
+            {"set":{"param":"grg_state"},"value":"passed"},
+            {"set":{"param":"grg_reason"},"value":"the helicopter is inside the landing spot area"}
+        ]},
+        {"if": {"param":"grg_state"}, "ne": "passed",
+          "then": [
+            {"if": {"local":"grg_walk_far"}, "eq": 1,
+              "then": [
+                {"set":{"param":"grg_state"},"value":"passed"},
+                {"set":{"param":"grg_reason"},"value":"the user chose to walk"}
+            ]}
+        ]},
+        {"if": {"param":"grg_state"}, "ne": "passed",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"param":"hover_ok"},"eq":1},
+                {"require":{"var":["SIM ON GROUND","bool"]},"ne":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"grg_state"},"value":"passed"},
+                {"set":{"param":"grg_reason"},"value":"the helicopter hovers, hoist pick-up"}
+            ]}
+        ]},
+        {"if": {"param":"grg_state"}, "ne": "passed",
+          "then": [
+            {"if": {"param":"grg_state"}, "ne": "waiting",
+              "then": [
+                {"set":{"param":"grg_state"},"value":"waiting"},
+                {"set":{"param":"grg_tick"},"value":10},
+                {"set":{"param":"grg_counted"},"value":1},
+                {"set":{"local":"grg_waiters"},"value":{"add":[{"local":"grg_waiters"},1]}},
+                {"set_message":{"text":"Ground crew and heli-rescuers stay here: the helicopter is {0} m from the landing spot, the limit is {1} m. Bring the helicopter inside the lime area, or choose WALK TO THE HELICOPTER ANYWAY","params":[{"param":"grg_dist"},{"local":"ldg_spot_area_size"}]}},
+                {"if": {"has_user_action":"grg_walk"}, "eq": 0,
+                  "then": [
+                    {"create_user_action": {
+                        "id": "grg_walk",
+                        "title": "WALK TO THE HELICOPTER ANYWAY",
+                        "click_commands": [
+                          {"set":{"local":"grg_walk_far"},"value":1},
+                          {"call_macro":"ground ops checkpoint","params":{"id":"ret_gate_user_walk","detail":"the user chose to walk to the helicopter"}},
+                          {"destroy_user_action":"grg_walk"}
+                        ],
+                        "show_condition": {"require":{"local":"grg_waiters"},"gt":0}
+                      }
+                    }
+                ]}
+            ]},
+            {"set":{"param":"grg_tick"},"value":{"add":[{"param":"grg_tick"},1]}},
+            {"if": {"param":"grg_tick"}, "gte": 10,
+              "then": [
+                {"set":{"param":"grg_tick"},"value":0},
+                {"call_macro":"ground ops checkpoint","params":{"id":"ret_gate_wait","detail":{"text":"source={0} dist={1} limit={2} ground={3}","params":[{"param":"source"},{"param":"grg_dist"},{"local":"ldg_spot_area_size"},{"var":["SIM ON GROUND","bool"]}]}}}
+            ]},
+            {"sleep":1}
+        ]}
+    ]},
+    {"if": {"param":"grg_counted"}, "eq": 1,
+      "then": [
+        {"set":{"local":"grg_waiters"},"value":{"add":[{"local":"grg_waiters"},-1]}},
+        {"if": {"local":"grg_waiters"}, "lt": 1,
+          "then": [
+            {"set":{"local":"grg_waiters"},"value":0},
+            {"if": {"has_user_action":"grg_walk"}, "eq": 1,
+              "then": [
+                {"destroy_user_action":"grg_walk"}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"ret_gate_passed","detail":{"text":"source={0} dist={1} limit={2} reason={3}","params":[{"param":"source"},{"param":"grg_dist"},{"local":"ldg_spot_area_size"},{"param":"grg_reason"}]}}}
+  ],
   "gnd ops heli rescuer down": [
+    {"set":{"local":"grg_walk_far"},"value":0},
     {"set":{"local":"HR_TERRAIN_STEEP"},"value":0},
     {"call_macro":"multipatient registry crew first target"},
     {"create_thread": {
@@ -3354,6 +3457,7 @@
         {"sleep":[1,3]},
         {"set":{"object":"jolly","var":"VAR 1"},"value":1},
         {"wait_for":{"local":"HOLDHOISTED"},"eq":1},
+        {"call_macro":"ground return gate","params":{"source":"gnd ops heli rescuer down","hover_ok":1}},
         {"if": {"var":["SIM ON GROUND","bool"]}, "ne": 1,
           "then": [
             {"call_macro":"hoist heli rescuer up"}
@@ -4623,6 +4727,7 @@
   "ground ops": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"ground_ops","actor":"hems","target":"n/a","state":"entered"}},
     {"call_macro":"ground ops watch start"},
+    {"set":{"local":"grg_walk_far"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"go_entered","detail":{"text":"crew={0} nr={1}","params":[{"local":"CREW"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"set_objective_title":"PREPARING FOR RESCUE OPERATION","color":"yellow"},
     {"set_message":{"text":"Please make sure you are within the landing spot area (lime area on the map)"}},
@@ -5296,6 +5401,7 @@
                 ]},
                 {"set_message":{"text":"Ground crew operations are almost complete, land and set engines to idle or stop..."}},
                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_message","detail":"Ground crew operations are almost complete, land and set engines to idle or stop"}},
+                {"call_macro":"ground return gate","params":{"source":"4 or 5 crew ground ops","hover_ok":0}},
                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_nr_gate_call","detail":{"text":"rpm={0} need<{1}","params":[{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1},{"local":"gndopsNR"}]}}},
                 {"call_macro":"ground ops NR gate","params":{"source":"4 or 5 crew ground ops"}},
                 {"call_macro":"ground ops checkpoint","params":{"id":"c45_nr_gate_returned"}},
@@ -6782,6 +6888,7 @@
                 ]},
                 {"set_message":{"text":"Ground crew operations are almost complete, land and set engines to idle or stop..."}},
                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_message","detail":"Ground crew operations are almost complete, land and set engines to idle or stop"}},
+                {"call_macro":"ground return gate","params":{"source":"3 crew ground ops","hover_ok":0}},
                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_nr_gate_call","detail":{"text":"rpm={0} need<{1}","params":[{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1},{"local":"gndopsNR"}]}}},
                 {"call_macro":"ground ops NR gate","params":{"source":"3 crew ground ops"}},
                 {"call_macro":"ground ops checkpoint","params":{"id":"c3_nr_gate_returned"}},

@@ -724,3 +724,14 @@ Script `train.json` with `CUS_INJURED`, entries `{title, sex, age, var1, var2}` 
 7. A title with a pose (`VAR 1`) used by the mission (treatment, stretcher): the injured does not turn into a pilot or a wrong pose (`var_compatible` is `no` for a title not in the catalog).
 8. Save and reload the mission: the injured keep the models, sex and age.
 9. A regular (non custom) mission after a custom one in the same session: no custom model, sex or age.
+
+## Ground return gate (sources 2026-11-03, not built, PENDING)
+
+Report of Steph and Andrew: heli rescuers walking down a glacier to a helicopter parked in the valley. Mountain call with the heli rescuer and the ground operations; read the rows `ret_gate_*` of `ground_ops_checkpoint_log` in the manual snapshot. Landing spot radius: Settings, `Radius of the landing spot (ground ops)`.
+
+1. Leave the heli rescuers at the landing spot (DROP HELIRESCUER HERE), take off, fly more than the radius away and land on a pad. The heli rescuers and the crew do not walk; the tablet says how far the helicopter is and the limit; the button WALK TO THE HELICOPTER ANYWAY is shown. Row `ret_gate_enter` then `ret_gate_wait` every 10 s.
+2. Fly back inside the lime area and stop the rotor: they walk and board (`ret_gate_passed`, reason inside the landing spot area); the button disappears.
+3. With the helicopter far, press WALK TO THE HELICOPTER ANYWAY: they walk (`ret_gate_user_walk`). The choice is not kept for the next scene.
+4. With the helicopter hovering far away: the heli rescuers go to the hoist pick-up (reason hover); the crew keep waiting on the ground. Move the setting to 300 m and repeat with the helicopter 200 m away: they walk.
+5. Skid landing operations with the heli rescuer: unchanged (the skid point wait).
+6. Hoist operations (HOISTING): the decision "hoist or stay here" is unchanged.
