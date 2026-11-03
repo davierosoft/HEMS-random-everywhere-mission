@@ -1605,7 +1605,20 @@
     {"if": {"param":"assistant"}, "ne": null,
       "then": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_assistant_dispatch"}},
-        {"call_macro":"multipatient registry assistant dispatch","params":{"actor":{"param":"assistant"},"object":{"param":"visit","path":"object"},"walk":{"param":"assistant_walk"},"side":270}}
+        {"call_macro": "multipatient registry assistant dispatch",
+          "params": {
+            "actor": {"param":"assistant"},
+            "object": {"param":"visit","path":"object"},
+            "walk": {"param":"assistant_walk"},
+            "side": 270,
+            "hems": {
+              "if": {"param":"resource"},
+              "eq": "hems",
+              "then": 1,
+              "else": 0
+            }
+          }
+        }
     ]},
     {"set":{"param":"arrived"},"value":0},
     {"try": [
@@ -1712,11 +1725,13 @@
           "then": [
             {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_leave_assessment"}},
             {"call_macro":"multipatient registry crew leave assessment","params":{"actor":{"local":"patient_crew_visit_actor"}}},
+            {"call_macro":"multipatient registry assistant stand up"},
             {"call_macro":"multipatient registry scene defibrillator remove","params":{"patient":{"param":"patient"}}},
             {"call_macro":"multipatient registry crew set standing","params":{"actor":{"local":"patient_crew_visit_actor"},"walk":{"param":"walk"}}}
         ]}
       ],
       "catch": [
+        {"call_macro":"multipatient registry assistant stand up"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_release"}},
         {"call_macro":"multipatient registry crew release","params":{"visit":{"param":"visit"},"resource":{"param":"resource"}}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_state"}},
@@ -7039,6 +7054,7 @@
     {"set":{"local":"CREW_ASSISTANT_OBJECT"},"value":{"param":"object"}},
     {"set":{"local":"CREW_ASSISTANT_WALK"},"value":{"param":"walk"}},
     {"set":{"local":"CREW_ASSISTANT_SIDE"},"value":{"param":"side"}},
+    {"set":{"local":"CREW_ASSISTANT_HEMS"},"value":{"if":{"param":"hems"},"eq":1,"then":1,"else":0}},
     {"create_thread": {
       "commands": [
         {"sleep":[0.5,2]},
@@ -7046,7 +7062,18 @@
             {"call_macro":"multipatient registry crew move","params":{"actor":{"local":"CREW_ASSISTANT_ACTOR"},"object":{"local":"CREW_ASSISTANT_OBJECT"},"walk":{"local":"CREW_ASSISTANT_WALK"},"side":{"local":"CREW_ASSISTANT_SIDE"},"crew_walk_recovery":1},"result":"assistant_moved"},
             {"if": {"param":"assistant_moved"}, "eq": 1,
               "then": [
-                {"call_macro":"multipatient registry crew set standing","params":{"actor":{"local":"CREW_ASSISTANT_ACTOR"},"walk":{"local":"CREW_ASSISTANT_WALK"}}}
+                {"if": {
+                  "and": [
+                    {"require":{"local":"CREW_ASSISTANT_ACTOR"},"eq":"pax3"},
+                    {"require":{"local":"CREW"},"ne":3},
+                    {"require":{"local":"CREW_ASSISTANT_HEMS"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"CREW_ASSISTANT_CROUCHED"},"value":1},
+                    {"call_macro":"multipatient registry crew set assessment","params":{"actor":"pax3"}}
+                  ],"else": [
+                    {"call_macro":"multipatient registry crew set standing","params":{"actor":{"local":"CREW_ASSISTANT_ACTOR"},"walk":{"local":"CREW_ASSISTANT_WALK"}}}
+                ]}
             ]}
           ],
           "catch": [
@@ -7144,5 +7171,15 @@
         {"sleep":0.1}
     ]},
     {"set":{"local":"registry_pump_rescue_active"},"value":0}
+  ],
+  "multipatient registry assistant stand up": [
+    {"#comment":"Report of MPR (2026-11-03, skid operations, 4 crew, build 170.07): the rear crew member (pax3, the assistant) walked to the patient and stayed standing while the primary crew member crouched for the assessment. The assistant crouches like the primary one (states 5 then 6, multipatient registry crew set assessment) when the assistant move ends, and this macro raises it at the end of the visit (state 5, then standing, as multipatient registry crew leave assessment and crew set standing do for the primary). Safe to call when the assistant did not crouch. Waits for the assistant move to finish first (CREW_ASSISTANT_BUSY is always released by its worker)."},
+    {"if": {"local":"CREW_ASSISTANT_CROUCHED"}, "eq": 1,
+      "then": [
+        {"wait_for":{"local":"CREW_ASSISTANT_BUSY"},"eq":0},
+        {"set":{"local":"CREW_ASSISTANT_CROUCHED"},"value":0},
+        {"call_macro":"multipatient registry crew leave assessment","params":{"actor":"pax3"}},
+        {"call_macro":"multipatient registry crew set standing","params":{"actor":"pax3","walk":{"local":"CREW_ASSISTANT_WALK"}}}
+    ]}
   ]
 }
