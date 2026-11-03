@@ -2195,7 +2195,9 @@
       "then": [
         {"set":{"local":"routeupdate_lock"},"value":0}
     ]},
+    {"set":{"local":"rtb_step"},"value":"routeupdate:wait_lock"},
     {"wait_for":{"local":"routeupdate_lock"},"eq":0},
+    {"set":{"local":"rtb_step"},"value":"routeupdate:lock_taken"},
     {"set":{"local":"routeupdate_lock"},"value":1},
     {"set":{"local":"routeupdate_target"},"value":{"local":"location_name"}},
     {"set":{"local":"routeupdate_valid"},"value":0},
@@ -2208,15 +2210,20 @@
             {"set":{"local":"routeupdate_valid"},"value":1}
         ]}
     ]},
+    {"set":{"local":"rtb_step"},"value":"routeupdate:target_checked"},
     {"if": {"local":"routeupdate_valid"}, "eq": 1,
       "then": [
+        {"set":{"local":"rtb_step"},"value":"routeupdate:create_route_start"},
         {"create_location": "route_start",
           "zones": [
             {"zone":{"location":"$USER"}}
         ]},
+        {"set":{"local":"rtb_step"},"value":"routeupdate:route_start_created"},
         {"if": {"global":"NOCONNEXT"}, "eq": 0,
           "then": [
+            {"set":{"local":"rtb_step"},"value":"routeupdate:sleep_2"},
             {"sleep":2},
+            {"set":{"local":"rtb_step"},"value":"routeupdate:set_route"},
             {"try": [
                 {"set_route":{"local":"routeupdate_target"}}
               ],
@@ -2262,7 +2269,8 @@
         ]},
         {"set_map":{"remove":{"line":{"id":"ROUTE"}}}}
     ]},
-    {"set":{"local":"routeupdate_lock"},"value":0}
+    {"set":{"local":"routeupdate_lock"},"value":0},
+    {"set":{"local":"rtb_step"},"value":"routeupdate:done"}
   ],
   "legcolor": [
     {"if": {"global":"NOCONNEXT"}, "eq": 1,

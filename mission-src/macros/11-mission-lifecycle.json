@@ -2248,43 +2248,91 @@
     ]},
     {"call_macro":"trace return to base","params":{"stage":"modal_guard_end","detail":"guard ended, selection resolved or replaced"}}
   ],
+  "rtb step": [
+    {"#comment":"Every step of return to base from entry to the route set is marked here: the local rtb_step names the step being run and a trace row is written when it is entered, so the last row of base_return_log and the rtb_step_watch rows name the step that did not complete (Daikan report 2026-11-02, the macro stopped after rtb_enter)."},
+    {"set":{"local":"rtb_step"},"value":{"param":"name"}},
+    {"call_macro":"trace return to base","params":{"stage":"rtb_step","detail":{"text":"step {0}","params":[{"param":"name"}]}}}
+  ],
+  "rtb step watch": [
+    {"#comment":"Separate thread: while return to base has not set the route it writes the step reached every 3 s (then every 30 s), so a step that blocks or a macro that ends silently is named in the log."},
+    {"set":{"param":"ticks"},"value":0},
+    {"while": {"local":"rtb_watch"}, "eq": 1,
+      "do": [
+        {"if": {"param":"ticks"}, "lt": 20,
+          "then": [
+            {"sleep":3}
+          ],"else": [
+            {"sleep":30}
+        ]},
+        {"if": {"local":"rtb_watch"}, "eq": 1,
+          "then": [
+            {"call_macro":"trace return to base","params":{"stage":"rtb_step_watch","detail":{"text":"not completed, last step {0}","params":[{"local":"rtb_step"}]}}},
+            {"set":{"param":"ticks"},"value":{"add":[{"param":"ticks"},1]}},
+            {"if": {"param":"ticks"}, "gt": 80,
+              "then": [
+                {"set":{"local":"rtb_watch"},"value":0}
+            ]}
+        ]}
+    ]}
+  ],
   "return to base": [
+    {"set":{"local":"rtb_step"},"value":"enter"},
+    {"set":{"local":"rtb_watch"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"rtb step watch"}
+    ]}},
     {"call_macro":"trace return to base","params":{"stage":"rtb_enter","detail":"return to base entered"}},
+    {"call_macro":"rtb step","params":{"name":"set_hover_display"}},
     {"set_hover_display":{"range":0}},
+    {"call_macro":"rtb step","params":{"name":"dispatch_phase_check"}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
         {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
           "then": [
+            {"call_macro":"rtb step","params":{"name":"dispatch_phase_set"}},
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
+            {"call_macro":"rtb step","params":{"name":"update_raw_from_dispatchphase"}},
             {"call_macro":"Update_raw from dispatchphase"}
         ]}
     ]},
+    {"call_macro":"rtb step","params":{"name":"set_dispatch_dialog"}},
     {"set_dispatch_dialog":1},
+    {"call_macro":"rtb step","params":{"name":"mission_phase_10"}},
     {"set":{"local":"MISSION_PHASE"},"value":10},
-    {"call_macro":"trace return to base","params":{"stage":"rtb_phase_set","detail":"dispatch dialog shown, phase 10 set"}},
+    {"call_macro":"rtb step","params":{"name":"marshal_decision"}},
     {"if": {
       "or": [
         {"and":[{"require":{"global":"MARSHAL_START_ENABLED"},"eq":"yes"},{"require":{"local":"hangar_wp_match"},"ne":"yes"}],"eq":1},
         {"and":[{"require":{"local":"hangar_wp_match"},"eq":"yes"},{"require":{"local":"hangar_marshal_present"},"eq":"yes"}],"eq":1}
       ]}, "eq": 1,
       "then": [
+        {"call_macro":"rtb step","params":{"name":"marshal_restore"}},
         {"set":{"var":["L:BASE_MARSHAL_SESSION","number"]},"value":1},
         {"call_macro":"restore return base marshall"}
       ],"else": [
+        {"call_macro":"rtb step","params":{"name":"marshal_none"}},
         {"set":{"var":["L:BASE_MARSHAL_SESSION","number"]},"value":0}
     ]},
+    {"call_macro":"rtb step","params":{"name":"sleep_after_marshal"}},
     {"sleep":0.5},
-    {"call_macro":"trace return to base","params":{"stage":"rtb_marshal_done","detail":"base marshaller step passed"}},
+    {"call_macro":"rtb step","params":{"name":"location_name_rtb"}},
     {"set":{"local":"location_name"},"value":"RTB_location"},
+    {"call_macro":"rtb step","params":{"name":"destination_confirmed"}},
     {"set":{"local":"destination_confirmed"},"value":"yes"},
+    {"call_macro":"rtb step","params":{"name":"sleep_0_1"}},
     {"sleep":0.1},
+    {"call_macro":"rtb step","params":{"name":"fpl_nmbr_6"}},
     {"set":{"local":"FPL_NMBR"},"value":6},
-    {"call_macro":"trace return to base","params":{"stage":"rtb_routeupdate_call","detail":"calling routeupdate for the base"}},
+    {"call_macro":"rtb step","params":{"name":"routeupdate"}},
     {"call_macro":"routeupdate"},
-    {"call_macro":"trace return to base","params":{"stage":"rtb_routeupdate_back","detail":"routeupdate returned"}},
+    {"call_macro":"rtb step","params":{"name":"sleep_after_routeupdate"}},
     {"sleep":3},
+    {"call_macro":"rtb step","params":{"name":"set_message_route"}},
     {"set_message":{"text":"Route set for base return in {1}. Location: {0:LOCATION}","params":["RTB_location",{"local":"start_nation"}]}},
+    {"call_macro":"rtb step","params":{"name":"ready_1"}},
     {"set":{"var":["L:READY","number"]},"value":1},
+    {"set":{"local":"rtb_watch"},"value":0},
     {"call_macro":"trace return to base","params":{"stage":"rtb_route_set","detail":"route to the base set, waiting for 2 km"}},
     {"set":{"local":"rtb_heartbeat"},"value":1},
     {"create_thread": {
@@ -6650,20 +6698,27 @@
     ]}
   ],
   "Update_raw from dispatchphase": [
+    {"set":{"local":"rtb_step"},"value":"update_raw:enter"},
+    {"set":{"local":"rtb_step"},"value":"update_raw:rescuetrack_id_guard"},
     {"call_macro":"rescuetrack id guard"},
+    {"set":{"local":"rtb_step"},"value":"update_raw:trace_dispatch_handoff"},
     {"call_macro":"trace dispatch handoff","params":{"stage":"dispatch_phase_raw_update"}},
+    {"set":{"local":"rtb_step"},"value":"update_raw:sleep_0_5"},
     {"sleep":0.5},
+    {"set":{"local":"rtb_step"},"value":"update_raw:for_each_status_messages"},
     {"for_each": {"static":"statusMessages{local:RESCUETRACK_ID}translation"},
       "do": [
         {"if": {"struct":{"param":"$item"},"path":"LVAR"}, "eq": {"var":["L:DISPATCH_PHASE","number"]},
           "then": [
+            {"set":{"local":"rtb_step"},"value":"update_raw:item_match"},
             {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":{"struct":{"param":"$item"},"path":"id"}},
             {"set":{"local":"rescuetrack_name"},"value":{"struct":{"param":"$item"},"path":"name"}},
             {"sleep":0.1},
             {"set":{"var":["L:CARLS_RT_BUTTON","number"]},"value":{"var":["L:DISPATCH_PHASE_RAW","number"]}}
         ]},
         {"sleep":0.01}
-    ]}
+    ]},
+    {"set":{"local":"rtb_step"},"value":"update_raw:done"}
   ],
   "accept_dispatch": [
     {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "eq": "yes",
