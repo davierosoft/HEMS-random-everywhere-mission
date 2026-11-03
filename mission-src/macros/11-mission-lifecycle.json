@@ -1210,6 +1210,7 @@
     ]}
   ],
   "scene responders release later": [
+    {"set":{"local":"rtb_step"},"value":"scene_release_later:enter"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"scene_release","actor":"mission","target":"scene responders release later","state":"waiting for 1 NM from the landing spot"}},
     {"create_thread": {
       "commands": [
@@ -1963,15 +1964,24 @@
     ]}
   ],
   "return to base menu": [
+    {"call_macro":"rtb step","params":{"name":"menu_mission_failure_statistics"}},
     {"call_macro":"mission failure statistics"},
     {"call_macro":"trace return to base","params":{"stage":"menu_enter","detail":"return to base menu entered"}},
+    {"call_macro":"rtb step","params":{"name":"menu_zoom_out"}},
     {"call_macro":"zoom out"},
+    {"call_macro":"rtb step","params":{"name":"menu_fpl_100"}},
     {"set":{"local":"FPL_NMBR"},"value":100},
+    {"call_macro":"rtb step","params":{"name":"menu_dispatch_dialog_0"}},
     {"set_dispatch_dialog":0},
+    {"call_macro":"rtb step","params":{"name":"menu_dispatch_ended"}},
     {"set":{"var":["L:DISPATCH_ENDED","number"]},"value":1},
+    {"call_macro":"rtb step","params":{"name":"menu_sex_time"}},
     {"set":{"local":"SEX_TIME"},"value":2},
+    {"call_macro":"rtb step","params":{"name":"menu_patology_time"}},
     {"set":{"var":["L:PATOLOGY_TIME","number"]},"value":0},
+    {"call_macro":"rtb step","params":{"name":"menu_counter"}},
     {"set":{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},"value":{"add":[{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},1]}},
+    {"call_macro":"rtb step","params":{"name":"menu_selection_mode_check"}},
     {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
       "then": [
         {"#comment":"The base selection modal is a singleton: another modal (dispatch, crew, failure) replaces it, and a modal raised from the click of the previous one can be lost (Daikan report 2026-11-01: RETURN TO HOME BASE chosen, FPL_NMBR 100, return to base never ran, the crew never got out). The choice is kept in base_selection_state (pending until a button or the guard resolves it) and the guard shows the modal again while it is pending."},
@@ -1984,19 +1994,25 @@
         {"set":{"local":"base_selection_shows"},"value":1},
         {"set":{"local":"base_selection_ops_over"},"value":0},
         {"call_macro":"trace return to base","params":{"stage":"menu_modal_show","detail":"selection mode 1, modal shown, state pending"}},
+        {"call_macro":"rtb step","params":{"name":"menu_base_selection_modal"}},
         {"call_macro":"base selection modal"},
+        {"call_macro":"rtb step","params":{"name":"menu_modal_shown_waiting_answer"}},
         {"create_thread": {
           "commands": [
             {"call_macro":"base selection guard"}
         ]}}
       ],"else": [
         {"call_macro":"trace return to base","params":{"stage":"menu_direct","detail":"selection mode is not 1, return to starting point without a modal"}},
+        {"call_macro":"rtb step","params":{"name":"direct_marshal_return_mode"}},
         {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},
+        {"call_macro":"rtb step","params":{"name":"direct_create_rtb_location"}},
         {"create_location": "RTB_location",
           "zones": [
             {"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}
         ]},
+        {"call_macro":"rtb step","params":{"name":"direct_rtb_location_name"}},
         {"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},
+        {"call_macro":"rtb step","params":{"name":"direct_call_return_to_base"}},
         {"call_macro":"return to base"}
     ]}
   ],
@@ -2011,6 +2027,7 @@
     {"set":{"local":"STAT_PATIENTS_DEAD"},"value":0}
   ],
   "mission failure statistics": [
+    {"set":{"local":"rtb_step"},"value":"mission_failure_statistics:enter"},
     {"#comment":"Failure statistics of the old dispatch page: crew members seriously injured (LifeScore above 0 and at or below CREW_AMBULANCE_LIMIT) and deceased, patients deceased (only when the scene was reached). Computed when the dispatch ends, so it is the state at the end of the mission; idempotent."},
     {"set":{"local":"STAT_CREW_CRITICAL"},"value":0},
     {"set":{"local":"STAT_CREW_DEAD"},"value":0},
@@ -2157,6 +2174,7 @@
     ]}
   ],
   "base selection modal": [
+    {"set":{"local":"rtb_step"},"value":"base_selection_modal:enter"},
     {"set_modal": {
         "title": "DISPATCH ENDED. Destination base selection",
         "text": "Return to mission starting point or manually select a destination base",
@@ -2172,12 +2190,16 @@
       "then": [
         {"set":{"local":"base_selection_state"},"value":"start_point"},
         {"call_macro":"trace return to base","params":{"stage":"modal_choice","detail":{"text":"return to starting point, source {0}","params":[{"param":"source"}]}}},
+        {"call_macro":"rtb step","params":{"name":"start_point_marshal_return_mode"}},
         {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":1},
+        {"call_macro":"rtb step","params":{"name":"start_point_create_rtb_location"}},
         {"create_location": "RTB_location",
           "zones": [
             {"zone":{"location":{"bearing":0,"dist":0,"object":"mission_start_location"}}}
         ]},
+        {"call_macro":"rtb step","params":{"name":"start_point_rtb_location_name"}},
         {"copy_stringtoken":"mission_start_location_Name","to":"RTB_location_Name"},
+        {"call_macro":"rtb step","params":{"name":"start_point_call_return_to_base"}},
         {"call_macro":"return to base"}
       ],"else": [
         {"call_macro":"trace return to base","params":{"stage":"modal_choice_ignored","detail":"return to starting point after the selection was already resolved"}}
@@ -2188,8 +2210,11 @@
       "then": [
         {"set":{"local":"base_selection_state"},"value":"map"},
         {"call_macro":"trace return to base","params":{"stage":"modal_choice","detail":"select a base from the map"}},
+        {"call_macro":"rtb step","params":{"name":"map_query_user_position_rtb"}},
         {"call_macro":"Query user position RTB"},
+        {"call_macro":"rtb step","params":{"name":"map_marshal_return_mode"}},
         {"set":{"var":["L:BASE_MARSHAL_RETURN_MODE","number"]},"value":2},
+        {"call_macro":"rtb step","params":{"name":"map_call_return_to_base"}},
         {"call_macro":"return to base"}
       ],"else": [
         {"call_macro":"trace return to base","params":{"stage":"modal_choice_ignored","detail":"select a base from the map after the selection was already resolved"}}
@@ -2257,6 +2282,18 @@
     {"set":{"local":"rtb_step"},"value":{"param":"name"}},
     {"call_macro":"trace return to base","params":{"stage":"rtb_step","detail":{"text":"step {0}","params":[{"param":"name"}]}}}
   ],
+  "rtb watch start": [
+    {"#comment":"Starts the step watcher once per return to base, from the RETURN TO HOME BASE button (or from return to base itself when it is entered without the button)."},
+    {"if": {"local":"rtb_watch"}, "ne": 1,
+      "then": [
+        {"set":{"local":"rtb_step"},"value":"watch_start"},
+        {"set":{"local":"rtb_watch"},"value":1},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"rtb step watch"}
+        ]}}
+    ]}
+  ],
   "rtb step watch": [
     {"#comment":"Separate thread: while return to base has not set the route it writes the step reached every 3 s (then every 30 s), so a step that blocks or a macro that ends silently is named in the log."},
     {"set":{"param":"ticks"},"value":0},
@@ -2281,11 +2318,7 @@
   ],
   "return to base": [
     {"set":{"local":"rtb_step"},"value":"enter"},
-    {"set":{"local":"rtb_watch"},"value":1},
-    {"create_thread": {
-      "commands": [
-        {"call_macro":"rtb step watch"}
-    ]}},
+    {"call_macro":"rtb watch start"},
     {"call_macro":"trace return to base","params":{"stage":"rtb_enter","detail":"return to base entered"}},
     {"call_macro":"rtb step","params":{"name":"set_hover_display"}},
     {"set_hover_display":{"range":0}},
