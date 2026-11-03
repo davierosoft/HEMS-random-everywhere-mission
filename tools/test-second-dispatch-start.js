@@ -44,3 +44,14 @@ assert.deepStrictEqual(marks, ['accept_dispatch'], 'only the accept sets the mar
 // the rows carry a detail
 assert.ok(text(diag['trace dispatch handoff']).includes('"detail":{"param":"detail"}'), 'trace dispatch handoff writes the detail');
 console.log('Second dispatch start PASS: the accept keeps the starting point and a mark in globals before reload_mission, objective1 repairs the flag and the LVARs before anything reads them and clears the mark, both branches write a row with their values. HPG/MSFS PENDING.');
+
+// location_ref diagnostics (Daikan 2026-11-03): rows with the dispatcher centre option at the points where the starting point is decided
+{
+  const lc = fs.readFileSync(path.join(__dirname, '..', 'mission-src/macros/11-mission-lifecycle.json'), 'utf8');
+  for (const stage of ['start_location_new', 'start_location_restored', 'accept_second_start', 'objective1_location_ref']) {
+    assert.ok(lc.includes('"call_macro": "trace location reference"') ? lc.includes(`"stage": "${stage}"`) : lc.includes(`"stage":"${stage}"`), 'row ' + stage);
+  }
+  const diag = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'mission-src/macros/19-location-diagnostics.json'), 'utf8'));
+  const text = JSON.stringify(diag['trace location reference']);
+  for (const need of ['location_ref', 'CUSTOM_CENTER_LOCATION', 'MISSION_START_LOCATION', 'heli_to_start_m']) assert.ok(text.includes(need), 'diagnostic carries ' + need);
+}

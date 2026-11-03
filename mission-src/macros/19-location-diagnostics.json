@@ -300,6 +300,15 @@
         {"call_macro":"location diagnostics monitor","params":{"generation":{"param":"generation"}}}
     ]}}
   ],
+  "trace location reference": [
+    {"#comment":"Row of dispatch_handoff_log with the dispatcher centre option (location_ref: $USER = present position, mission_start_location = start location, custom_center_location = custom location), the starting point and custom centre LVARs (session only: the profile saves only the name of the option, never the coordinates of the custom centre) and the distance of the helicopter from the starting point. Param stage: name of the row. Added after the report of Daikan 2026-11-03: the snapshot did not tell which option was active when the starting point moved."},
+    {"set":{"local":"locref_start_m"},"value":-1},
+    {"if": {"has_location":"mission_start_location"}, "eq": 1,
+      "then": [
+        {"set":{"local":"locref_start_m"},"value":{"round":{"location":"mission_start_location","var":"distance:m","to":"$USER"},"to":1}}
+    ]},
+    {"call_macro":"trace dispatch handoff","params":{"stage":{"param":"stage"},"detail":{"text":"location_ref={0} has_start={1} start_lvar={2},{3} has_custom={4} custom_lvar={5},{6} heli_to_start_m={7} second={8}","params":[{"global":"location_ref"},{"has_location":"mission_start_location"},{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"has_location":"custom_center_location"},{"var":["L:CUSTOM_CENTER_LOCATION LAT","number"]},{"var":["L:CUSTOM_CENTER_LOCATION LON","number"]},{"local":"locref_start_m"},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}]}}}
+  ],
   "trace dispatch handoff": [
     {"#comment":"Appends one row to dispatch_handoff_log. The local survives reload_mission and is deliberately not reset by start location diagnostics, so preview, accept, rebuild and scene-ready rows of the same second dispatch (or custom/reload launch) stay in one ordered list. Distances use the location API; coordinates come from LVARs."},
     {"if": {"local":"dispatch_handoff_log"}, "eq": null,
