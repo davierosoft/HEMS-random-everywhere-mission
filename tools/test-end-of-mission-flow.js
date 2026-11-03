@@ -204,7 +204,7 @@ const collect = (value, predicate, found = []) => {
   const guard = macros['ground ops'].find((c) => c.if?.local === 'CREW_DIVERT' && c.ne === 'yes' && JSON.stringify(c.then).includes('L:STAT_TTG'));
   assert.ok(guard && JSON.stringify(guard.then).includes('L:OLD_HELOVICTIMS'), 'a diverted mission writes no time to the scene');
   assert.equal(collect(macros['ground ops'], (c) => c.set?.var?.[0] === 'L:STAT_TTG').length, 1, 'the only writer of the time to the scene in ground ops is the guarded one');
-  assert.ok(macros['delayed threads'].some((c) => c.call_macro === 'reset mission statistics') && macros['return to base menu'][0].call_macro === 'mission failure statistics', 'cleared at the mission start, failure counted when the dispatch ends');
+  assert.ok(macros['delayed threads'].some((c) => c.call_macro === 'reset mission statistics') && macros['return to base menu'].find((c) => c.call_macro && c.call_macro !== 'rtb step').call_macro === 'mission failure statistics', 'cleared at the mission start, failure counted when the dispatch ends');
   const allRoles = Object.values(macros).flatMap((m) => collect(m, (c) => c.set?.local === 'crew_role_name').map((c) => c.value));
   assert.deepEqual(allRoles.slice(0, 5), ['PILOT', 'MEDIC', 'COPILOT', 'HEMS 1', 'HEMS 2']);
   const debug = JSON.stringify(macros['debug page']);

@@ -82,7 +82,7 @@ const guardText = JSON.stringify(guard);
 assert.ok(guardText.includes('"local":"RESCUETRACK_ID"},"eq":null') && guardText.includes('"local":"RESCUETRACK_ID"},"gt":1'), 'the guard replaces a missing or out of range id (statics exist for 0 and 1)');
 for (const name of ['UpdateRescueTrack', 'Update_dispatchphase from raw', 'Update_raw from dispatchphase']) {
   assert.ok(life[name], `${name} exists`);
-  assert.deepEqual(life[name][0], { call_macro: 'rescuetrack id guard' }, `${name} starts with the id guard`);
+  assert.deepEqual(life[name].filter((c) => !(c.set && c.set.local === 'rtb_step') && c.call_macro !== 'rtb step')[0], { call_macro: 'rescuetrack id guard' }, `${name} starts with the id guard (step markers aside)`);
 }
 
 // 4. Second tester report (2026-10-11, build 169.45, German ambulance): the ambulance loaded the patient on the stretcher, the stretcher walked to

@@ -24,14 +24,14 @@ const traceCalls = (value) => collect(value, (c) => c.call_macro === 'trace retu
 
 // ---- the menu: the modal is a macro, the selection is pending until answered, a guard watches it ------------------------------------
 const menu = macros['return to base menu'];
-assert.equal(menu[0].call_macro, 'mission failure statistics', 'the failure statistics stay the first command');
+assert.equal(menu.filter((c) => c.call_macro !== 'rtb step')[0].call_macro, 'mission failure statistics', 'the failure statistics stay the first command');
 const mode = menu.find((c) => c.if?.global === 'DESTINATION_SELECTION_MODE');
 const thenText = text(live(mode.then));
 assert.ok(thenText.includes('"local":"base_selection_ops_over"},"value":0') && thenText.includes('"local":"base_selection_state"},"value":"pending"') && thenText.includes('"call_macro":"base selection modal"') && thenText.includes('"create_thread":{"commands":[{"call_macro":"base selection guard"}]}'), 'selection mode 1: state pending, modal shown by its macro, guard started in its own thread');
 assert.ok(!text(menu).includes('set_modal'), 'the menu holds no inline modal any more');
 assert.ok(text(live(mode.else)).includes('"call_macro":"return to base"'), 'without selection mode 1 the return to base starts at once, as before');
 
-const modal = macros['base selection modal'][0].set_modal;
+const modal = macros['base selection modal'].find((c) => c.set_modal).set_modal;
 assert.equal(modal.title, 'DISPATCH ENDED. Destination base selection');
 assert.deepEqual(modal.options.map((o) => o.text), ['Return to starting point', 'Select a base from map']);
 assert.ok(!text(modal).includes('"params":[') || !/"text":"[^"]*\{0/.test(text(modal)), 'no params in the modal text (simulator test 2026-10-30)');
@@ -44,6 +44,7 @@ const run = (name, state, params = {}) => {
   const walk = (list) => {
     for (const c of list) {
       if (c['#comment']) continue;
+      if (c.call_macro === 'rtb step') continue; // step markers (rtb step) are checked by test-rtb-step-trace.js
       if (c.if) {
         const value = locals[c.if.local];
         const hit = c.eq !== undefined ? value === c.eq : value !== c.ne;
@@ -111,7 +112,8 @@ for (const [name, commands] of Object.entries(macros)) if (name !== 'trace retur
 assert.equal(writes, 19, `all ${writes} writers of MISSION_END_WAITING are traced`);
 
 // the buttons, the snapshots
-assert.equal(macros['shared repeated block 046'][0].call_macro, 'trace return to base', 'RETURN TO HOME BASE is traced first');
+assert.equal(macros['shared repeated block 046'][0].call_macro, 'rtb watch start', 'the step watcher starts first');
+assert.equal(macros['shared repeated block 046'][1].call_macro, 'trace return to base', 'RETURN TO HOME BASE is traced right after the watcher starts');
 assert.ok(text(macros['return to base menu']).indexOf('"stage":"menu_modal_show"') > text(macros['return to base menu']).indexOf('"value":100'), 'the modal row is written after FPL_NMBR 100');
 for (const name of ['capture crew movement snapshot', 'snapshot dispatch diagnostics']) {
   const json = text(macros[name]);
