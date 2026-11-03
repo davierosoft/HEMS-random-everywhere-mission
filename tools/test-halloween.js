@@ -29,7 +29,7 @@ assert.ok(text(macros['random halloween']).includes('"local":"crewvisitended"') 
 for (const local of ['crewvisitended', 'crewpatientloaded']) assert.ok(Object.entries(macros).some(([name, commands]) => name !== 'random halloween' && text(commands).includes(`"set":{"local":"${local}"},"value":"yes"`)), `${local} is never set to yes`);
 
 // 3. Companion packs: text, lvar and wav for each line.
-const packs = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+const packs = path.join(root, 'voicepacks');
 if (fs.existsSync(packs)) {
   for (const lang of ['EN', 'DE', 'FR']) {
     const xml = fs.readFileSync(path.join(packs, `${lang}.xml`), 'utf8');

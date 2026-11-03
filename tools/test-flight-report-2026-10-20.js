@@ -152,7 +152,7 @@ const walk = (node, fn) => {
 
 // 10. the pack of the Companion (when its folder is next to this repository): the new keys are there, six options, versions 22 and 10
 {
-  const packFile = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+  const packFile = path.join(root, 'voicepacks', 'EN.xml');
   if (fs.existsSync(packFile)) {
     const xml = fs.readFileSync(packFile, 'utf8');
     const used = new Set([...text(macros).matchAll(/"(?:HRQ\.(?:DSP|APR\.PLT|APR\.A)|SAR\.FND\.(?:PLT|A)|HOS\.(?:MAR|FIN|PAD|DEP)\.[PA]|HOS\.(?:Q|A|ORG\.LT)|PCK\.(?:CALL|REPLY)\.(?:TRF|ORG)|ORG\.(?:INF|WARN|LATE|PCK\.[GR]|DEL\.(?:OK|LT))|TRF\.INF|RAD\.REM)"/g)].map((m) => m[0].slice(1, -1)));

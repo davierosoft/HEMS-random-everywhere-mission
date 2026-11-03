@@ -52,7 +52,7 @@ assert.equal(buttons.length, 2, 'the settings page has TIPS ON and TIPS OFF');
 assert.ok(buttons.every((b) => JSON.stringify(b.commands).includes('mark aircraft profile custom')), 'a change of the setting marks the profile CUSTOM');
 
 // 5. the pack EN of the Companion repository (when it is next to this one)
-const packFile = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+const packFile = path.join(root, 'voicepacks', 'EN.xml');
 if (fs.existsSync(packFile)) {
   const xml = fs.readFileSync(packFile, 'utf8');
   const messages = {};

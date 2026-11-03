@@ -11,7 +11,7 @@ const dir = path.join(root, 'mission-src', 'macros');
 const macros = {};
 for (const file of fs.readdirSync(dir).filter((name) => name.endsWith('.json'))) Object.assign(macros, JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')));
 const text = (value) => JSON.stringify(value);
-const packDir = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+const packDir = path.join(root, 'voicepacks');
 
 // every failure code the engine can draw (1-28, 30-40) is announced; 29 (leakage) by its own thread
 const announce = text(macros['failure crew announce']);

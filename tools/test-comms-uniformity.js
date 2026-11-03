@@ -22,7 +22,7 @@ const all = text(macros);
 const lv = (n) => `"L:{local:VCP}${n}","number"`;
 
 // 1. every static voice key used by the mission is a message of the base pack EN
-const packPath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+const packPath = path.join(root, 'voicepacks', 'EN.xml');
 let pack = null;
 if (fs.existsSync(packPath)) {
   pack = fs.readFileSync(packPath, 'utf8');
@@ -47,7 +47,7 @@ if (fs.existsSync(packPath)) {
     assert.equal(count(block, '<o>'), 6, `${key} has six options`);
   }
   assert.ok(Number((/<voicepack name="EN"[^>]* version="(\d+)"/.exec(pack) || [])[1]) >= 27, 'the base pack EN is version 27 or later');
-  const dePath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml');
+  const dePath = path.join(root, 'voicepacks', 'DE.xml');
   if (fs.existsSync(dePath)) {
     const de = fs.readFileSync(dePath, 'utf8');
     { const m = /<voicepack name="DE"[^>]* version="(\d+)" basever="(\d+)"/.exec(de); assert.ok(m && Number(m[1]) >= 15 && Number(m[2]) >= 27, 'the pack DE is version 15 or later on the base 27 or later'); }
@@ -124,7 +124,7 @@ const hangarMacro = Object.values(macros).map(text).find((body) => body.includes
 assert.ok(hangarMacro && hangarMacro.includes('"local":"VCP"},"eq":"APP","then":[{"call_macro":"voice hangar greeting"}]') && hangarMacro.includes('L:FRA{local:VCP}7') && hangarMacro.includes('"local":"VCP"},"ne":"APP"') && hangarMacro.includes('L:CPL{local:VCP}23'), 'the boarding at the hangar: the greeting with the Companion, the original lines FRA 7 and CPL 23 with a wav pack');
 assert.ok(all.includes('<pack:EN:27>') && !all.includes('<pack:EN:26>'), 'the mission declares the pack EN 27 (SVC and SCN lines on top of HOS.PAP on top of the radio calls of the flight of 2026-10-20)');
 if (pack) {
-  const dePack = fs.existsSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8') : null;
+  const dePack = fs.existsSync(path.join(root, 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, 'voicepacks', 'DE.xml'), 'utf8') : null;
   const block = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); return xml.slice(at, xml.indexOf('</message>', at)); };
   const technician = ['GRT.TEC.M', 'GRT.TEC.A', 'GRT.TEC.E', 'CHT.TEC', 'CHT.TEC2'];
   const others = ['GRT.CPL.M', 'GRT.CPL.A', 'GRT.CPL.E', 'GRT.PLT.M', 'GRT.PLT.A', 'GRT.PLT.E', 'CHT.CPL'];
@@ -151,7 +151,7 @@ const brief = text(macros['voice briefing chat']);
 assert.ok(brief.indexOf('"call_macro":"voice weather brief"') > brief.indexOf('L:PLT{local:VCP}50'), 'the weather comes at the end of the briefing thread');
 assert.ok(text(macros['voice weather brief']).includes('<say:WXB.{0}>{1}//{2}//{3}//{4}') && text(macros['voice weather brief']).includes('"value":"OK"'), 'the briefing says the wind, the temperature and the visibility; WXB.OK when nothing is remarkable');
 if (pack) {
-  const dePack2 = fs.existsSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8') : null;
+  const dePack2 = fs.existsSync(path.join(root, 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, 'voicepacks', 'DE.xml'), 'utf8') : null;
   const blk = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); assert.ok(at >= 0, `${key} is in the pack`); return xml.slice(at, xml.indexOf('</message>', at)); };
   for (const xml of [pack, dePack2].filter(Boolean)) {
     for (const sfx of ['RL', 'RH', 'SN', 'HT', 'CD', 'FZ', 'FG', 'WD', 'FR']) {

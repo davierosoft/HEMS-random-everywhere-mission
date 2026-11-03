@@ -2,6 +2,9 @@
 
 The mission already had a mode for an external audio program: `L:AUDIOINHIBIT` not 0 makes `VCP` equal to `APP` (macro `mission start` area of `11-mission-lifecycle.json` and the thread `EXTERNAL XML AUDIO ENABLE` in `threads/01-startup-and-dispatch-triggers.json`), so every voice and sound call `L:<role>{local:VCP}<n> += 1` increments `L:<role>APP<n>`, a counter that no `sound.xml` of the wav packs knows: the aircraft plays nothing and the external program reacts to the counter. The HPG Mission Companion (repository `HPG-Mission-Companion`, version 0.5 or later) is that program: it sets `L:AUDIOINHIBIT` to 1, reads the counters through SimConnect and speaks the matching message of its voice pack EN (`voicepacks/EN.xml`: key `ROLE.NUMBER` = LVAR `L:ROLE{VCP}NUMBER`). Sounds without voice (ringtones `L:{VCP}DISPATCHED..4`, `DISPATCH2`, `DEAD`) are played by the program as wav files of its audio folder. The new message tone (`L:{VCP}NEWMSG`) is not in the pack on purpose: the tablet plays its own sound, which has no `VCP` in its name and is never inhibited, so playing it too would double it. The call sites of the mission did not change.
 
+Voice packs: the text packs (`EN.xml` base pack, `DE.xml`, `FR.xml`) live in `voicepacks/` of this repository from 2026-11-03 (see `voicepacks/README.md`); the Companion reads them from here in its next releases, and until then both repositories are updated. The checks `tools/voice-texts.js` and the pack tests read this folder.
+
+
 ## Macros added (`03-aircraft-crew-checklists.json`)
 
 | Macro | Role |

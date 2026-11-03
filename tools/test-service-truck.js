@@ -59,7 +59,7 @@ assert.ok(ccs.includes('"key":"SCN.POL.AMB"') && ccs.includes('"key":"SCN.POL"')
 assert.ok(text('deceased patient police scene').includes('"key":"SCN.POL"'), 'police announced at the deceased patient scene');
 
 // 5. the packs of the Companion carry the texts (EN base, DE and FR translations, versions)
-const packDir = path.join(__dirname, '..', '..', 'HPG-Mission-Companion', 'voicepacks');
+const packDir = path.join(__dirname, '..', 'voicepacks');
 if (fs.existsSync(packDir)) {
   const keys = ['SVC.REQ', 'SVC.ACK', 'SVC.ARR', 'SCN.POL.AMB', 'SCN.POL'];
   for (const lang of ['EN', 'DE', 'FR']) {

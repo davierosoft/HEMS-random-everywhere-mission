@@ -3,13 +3,13 @@
 
 // Keys of the texts that the mission speaks as free text, for the voice packs of the Mission Companion (translations).
 //
-//   node tools/voice-texts.js check     verify the sources and tools/voice-texts.json (and the base pack of the Companion when its folder is next to this one)
+//   node tools/voice-texts.js check     verify the sources and tools/voice-texts.json and the base pack of this repository (voicepacks/EN.xml)
 //   node tools/voice-texts.js assign    write a key <text:CHK.<macro>.<nn>> in front of every checklist text that has none (macros/22-checklists.json)
 //   node tools/voice-texts.js sync      rewrite tools/voice-texts.json from the sources
 //
 // The spoken English stays in the mission (it is also the text spoken when a pack has no translation of it): <text:KEY>English text.
 // A key never changes once it is in the sources; a new text takes the next number. The Companion pack EN holds the same texts under the same keys
-// (node tools/sync-pack-texts.js in the Companion folder) and the translated packs copy it. See docs/VOICE_APP_MODE.md.
+// (node tools/sync-pack-texts.js) and the translated packs copy it. See docs/architecture/VOICE_APP_MODE.md and voicepacks/README.md.
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -18,7 +18,7 @@ const macroDir = path.join(root, 'mission-src', 'macros');
 const checklistFile = path.join(macroDir, '22-checklists.json');
 const accidentFile = path.join(root, 'mission-src', 'data', '02-waypoints-and-categories.json');
 const outFile = path.join(__dirname, 'voice-texts.json');
-const companionPack = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+const companionPack = path.join(root, 'voicepacks', 'EN.xml');
 
 const KEY_RX = /^[A-Za-z0-9_.-]{1,40}$/;
 const TEXT_TAG_RX = /<text:([^<>\[\]]{1,60})>/;
@@ -162,7 +162,7 @@ function xmlUnescape(text) {
   return text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
 }
 
-// the base pack of the Companion (only when its folder is next to this repository)
+// the base pack of the mission repository, voicepacks/EN.xml
 function companionKeys() {
   if (!fs.existsSync(companionPack)) return null;
   const xml = fs.readFileSync(companionPack, 'utf8');
@@ -192,12 +192,12 @@ function check() {
   const notes = [];
   if (base) {
     const missing = Object.keys(built.texts).filter((key) => !base.has(key));
-    if (missing.length) fail([`The base pack of the Companion (${path.relative(root, companionPack)}) lacks ${missing.length} text(s), first: ${missing.slice(0, 5).join(', ')}`, 'Update it: in the Companion folder run node tools/sync-pack-texts.js, then build the program with the new pack (the pack version goes up).', 'voice-texts check: FAILED']);
+    if (missing.length) fail([`The base pack (${path.relative(root, companionPack)}) lacks ${missing.length} text(s), first: ${missing.slice(0, 5).join(', ')}`, 'Update it: run node tools/sync-pack-texts.js (the pack version goes up). Until the Companion reads the packs from this repository, run it also with --pack ../HPG-Mission-Companion/voicepacks/EN.xml.', 'voice-texts check: FAILED']);
     const stale = Object.entries(built.texts).filter(([key, text]) => !/\{\d+\}/.test(text) && normal(base.get(key)) !== normal(text)).length;
-    if (stale) notes.push(`${stale} text(s) of the Companion base pack differ from the mission (run node tools/sync-pack-texts.js there)`);
+    if (stale) notes.push(`${stale} text(s) of the base pack differ from the mission (run node tools/sync-pack-texts.js)`);
     const extra = [...base.keys()].filter((key) => /^(CHK|DSC)\./.test(key) && !(key in built.texts)).length;
-    if (extra) notes.push(`${extra} CHK/DSC key(s) of the Companion base pack are no longer in the mission`);
-  } else notes.push('the Companion folder is not next to this repository: its base pack was not compared');
+    if (extra) notes.push(`${extra} CHK/DSC key(s) of the base pack are no longer in the mission`);
+  } else notes.push('voicepacks/EN.xml is missing: the base pack was not compared');
   console.log(`voice-texts check: PASS (${Object.keys(built.texts).length} texts: ${Object.keys(built.texts).filter((k) => k.startsWith('CHK.')).length} checklist rows, ${Object.keys(built.texts).filter((k) => k.startsWith('DSC.') && k !== 'DSC.VEH').length} dispatch descriptions)`);
   for (const note of notes) console.log(`  note: ${note}`);
 }

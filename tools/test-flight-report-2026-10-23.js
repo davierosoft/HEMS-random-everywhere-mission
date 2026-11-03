@@ -61,7 +61,7 @@ const text = (value) => JSON.stringify(value);
   assert.ok(t.includes('"text":"HRS.W.{0}","params":[{"local":"hrw_miss"}]'), 'the line is the pack key of the missing condition');
   assert.ok(t.includes('"value":10') && t.includes('"value":45'), 'spoken after 10 s, then every 45 s');
   // the voice packs live in the Companion repository: checked only when its folder is next to this one (as voice-texts.js and the other checks below)
-  const packDir = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  const packDir = path.join(root, 'voicepacks');
   if (fs.existsSync(packDir)) {
     const pack = (name) => fs.readFileSync(path.join(packDir, name + '.xml'), 'utf8');
     for (const lang of ['EN', 'DE']) {
@@ -89,7 +89,7 @@ const text = (value) => JSON.stringify(value);
   const t = text(macros.paperwork);
   assert.ok(t.includes('"call_macro":"voice say","params":{"key":"HOS.PAP"}') && t.includes('"call_macro":"voice say","params":{"key":"HOS.PAP.O"}'), 'paperwork says HOS.PAP / HOS.PAP.O');
   assert.ok(t.indexOf('HOS.PAP"') > t.indexOf('"Crew will follow the patient to ER'), 'said when the crew goes inside');
-  const packDir = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  const packDir = path.join(root, 'voicepacks');
   if (fs.existsSync(packDir)) {
     const pack = (name) => fs.readFileSync(path.join(packDir, name + '.xml'), 'utf8');
     for (const lang of ['EN', 'DE']) {
@@ -195,7 +195,7 @@ const text = (value) => JSON.stringify(value);
   const sight = text(macros['SAR mapldgspot']);
   assert.ok(sight.indexOf('"local":"patient_found"') < sight.indexOf('{local:VCP}78'), 'the crew sighting sets patient_found and speaks PAX1.78');
   assert.ok(!/LOAD PATIENT ON HELO[^"]/.test(text(macros)), 'the load patient button titles end with HELO');
-  const packs = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  const packs = path.join(root, 'voicepacks');
   if (fs.existsSync(packs)) {
     const word = { EN: [/\bright side\b|\bright for me\b|\bright\b/i, /\bleft\b/i], DE: [/rechte|rechts/i, /linke|links/i], FR: [/droit/i, /gauche/i] };
     for (const lang of ['EN', 'DE', 'FR']) {
@@ -223,7 +223,7 @@ const text = (value) => JSON.stringify(value);
   assert.ok(tr14.includes('"key":"SAR.FLS"') && tr14.includes('"key":"SAR.FLN"') && !/SAR\.FLS\.[KN]/.test(fs14 + tr14), 'one line in meters, no units option');
   assert.ok(tr14.includes('"local":"patient_found"},"ne":"yes"') && fs14.includes('"local":"patient_found"},"eq":"yes"'), 'never after the real sighting');
   assert.ok(text(macros['SAR sighting']).includes('"call_macro":"SAR false sighting"'), 'started in an own thread by SAR sighting');
-  const packs14 = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  const packs14 = path.join(root, 'voicepacks');
   if (fs.existsSync(packs14)) {
     for (const lang of ['EN', 'DE', 'FR']) {
       const xml = fs.readFileSync(path.join(packs14, lang + '.xml'), 'utf8');

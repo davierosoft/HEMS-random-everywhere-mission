@@ -51,7 +51,7 @@ for (const name of ['voice hospital approach', 'voice hospital final']) {
   assert.ok(text(macros['speech bridge loop']).includes('speech readback'), 'the loop starts the readback');
   assert.ok(text(macros['speech readback']).includes('CMD.{0}'), 'the readback says CMD.<code>');
   for (const lang of ['EN', 'DE', 'FR']) {
-    const file = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', lang + '.xml');
+    const file = path.join(root, 'voicepacks', lang + '.xml');
     if (!fs.existsSync(file)) continue;
     const xml = fs.readFileSync(file, 'utf8');
     for (let code = 101; code <= 114; code++) assert.ok(xml.includes(`key="CMD.${code}"`), `${lang} pack has CMD.${code}`);

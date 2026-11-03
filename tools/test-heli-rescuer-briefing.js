@@ -65,7 +65,7 @@ const cruise = strip(macros['voice cruise chat']);
 assert.ok(cruise.includes('"wait_for":{"local":"hrb_busy"},"ne":"yes"') && cruise.indexOf('"wait_for":{"local":"hrb_busy"},"ne":"yes"') < cruise.indexOf('"key":"CRZ.OUT.PLT"'), 'the chat of the leg to the scene waits for the end of the briefing');
 
 // 5. the pack EN of the Companion repository (when it is next to this one)
-const packFile = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+const packFile = path.join(root, 'voicepacks', 'EN.xml');
 if (fs.existsSync(packFile)) {
   const xml = fs.readFileSync(packFile, 'utf8');
   const messages = {};

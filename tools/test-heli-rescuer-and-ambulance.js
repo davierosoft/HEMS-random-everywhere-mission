@@ -101,7 +101,7 @@ assert.ok(JSON.stringify(macros.settings).includes('"textbox":"callsign_input"')
 assert.ok(text('ensure door').includes('ensure door trace') && text('ensure door trace').includes('result (state read 4 s later'), 'ensure door logs the result');
 
 // 7. the pack EN of the Companion repository (when it is next to this one)
-const packFile = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+const packFile = path.join(root, 'voicepacks', 'EN.xml');
 if (fs.existsSync(packFile)) {
   const xml = fs.readFileSync(packFile, 'utf8');
   const messages = {};

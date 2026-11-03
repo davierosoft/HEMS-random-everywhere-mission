@@ -135,7 +135,7 @@ const text = (value) => JSON.stringify(value);
 
 // 6. the packs (when the Companion folder is next to this repository): the pause tag, the variety of the pilot answers, the German descriptions
 {
-  const dir = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  const dir = path.join(root, 'voicepacks');
   if (fs.existsSync(dir)) {
     for (const lang of ['EN', 'DE']) {
       const xml = fs.readFileSync(path.join(dir, lang + '.xml'), 'utf8');

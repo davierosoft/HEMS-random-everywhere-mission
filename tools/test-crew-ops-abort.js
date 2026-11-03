@@ -114,7 +114,7 @@ assert.ok(limits.every((v) => v <= 32), `no skid collective limit above 32 (foun
 assert.ok(!/"L:Collective","number"\]\},"gt":(35|37)\b/.test(all), 'no old limit 35 or 37 is left in the macros');
 
 // 8. the packs (when the Companion repository is next to this one)
-const packPath = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'EN.xml');
+const packPath = path.join(root, 'voicepacks', 'EN.xml');
 if (fs.existsSync(packPath)) {
   const pack = fs.readFileSync(packPath, 'utf8');
   const keys = new Set([...pack.matchAll(/<message key="([^"]+)"/g)].map((m) => m[1]));
@@ -124,7 +124,7 @@ if (fs.existsSync(packPath)) {
     const block = pack.slice(pack.indexOf(`<message key="${key}"`), pack.indexOf('</message>', pack.indexOf(`<message key="${key}"`)));
     assert.equal(count(block, '<o>'), 6, `${key}: six options`);
   }
-  const de = fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', 'DE.xml'), 'utf8');
+  const de = fs.readFileSync(path.join(root, 'voicepacks', 'DE.xml'), 'utf8');
   for (const key of wanted) assert.ok(de.includes(`<message key="${key}"`), `${key} in the pack DE`);
   assert.ok(/<message key="DSP\.RQ" actor="2"/.test(pack), 'the call to the dispatcher is made by the copilot');
   for (const key of ['CPL.7', 'CPL.9', 'CPL.25']) assert.ok(new RegExp(`<message key="${key.replace('.', '\\.')}"[^>]*standin="1"`).test(pack), `${key} goes to another crew member when the copilot cannot speak`);
