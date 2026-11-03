@@ -50,7 +50,7 @@ function assertBaselineSceneStop(macro, parking, ambulance, stopDistance) {
   if (findNodes(macro, (node) => node.call_macro === `drive ${ambulance} safe multiplier` && node.params?.to === 'ambugo').length !== 0) {
     fail(`${ambulance} must not delegate the scene approach to a child-thread parameter wrapper`);
   }
-  if (!hasExactNode(parking, (node) => node.wait_for?.location === ambulance && node.wait_for?.to === 'accident_location' && node.lt?.local === stopDistance)) {
+  if (!hasExactNode(parking, (node) => node.wait_for?.location === ambulance && ['accident_location', 'injured_scene'].includes(node.wait_for?.to) && node.lt?.local === stopDistance)) {
     fail(`${ambulance} must stop the route at its configured minimum scene distance`);
   }
   if (!hasExactNode(parking, (node) => node.set?.object === ambulance && node.set.var === 'WP INDEX' && node.value === 0) ||
@@ -80,21 +80,7 @@ const ambulance1SceneParking = source.park_ambulance1_scene;
 const ambulance2SceneParking = source.park_ambulance2_scene;
 assertBaselineSceneStop(ambulance1, ambulance1SceneParking, 'ambulance1', 'ambu1stopdistance');
 assertBaselineSceneStop(ambulance2, ambulance2SceneParking, 'ambulance2', 'ambu2stopdistance');
-if (!hasExactNode(ambulance1SceneParking, (node) => node.drive_object?.name === 'ambulance1' &&
-    node.drive_object.to?.[0]?.bearing2 === 270 && node.drive_object.to?.[0]?.dist === 14 &&
-    node.drive_object.to?.[0]?.object === 'accident_location')) {
-  fail('ambulance1 scene parking must use its independent west accident-location bay');
-}
-if (!hasExactNode(ambulance2SceneParking, (node) => node.drive_object?.name === 'ambulance2' &&
-    node.drive_object.to?.[0]?.bearing2 === 90 && node.drive_object.to?.[0]?.dist === 14 &&
-    node.drive_object.to?.[0]?.object === 'accident_location')) {
-  fail('ambulance2 scene parking must use its independent east accident-location bay');
-}
-if (hasExactNode(ambulance1SceneParking, (node) => node.drive_object?.name === 'ambulance1' && JSON.stringify(node.drive_object.to).includes('"object":"ambulance1"')) ||
-    hasExactNode(ambulance2SceneParking, (node) => node.wait_for?.object === 'ambulance1' && node.wait_for.var === 'VELOCITY Z') ||
-    hasExactNode(ambulance2SceneParking, (node) => node.drive_object?.name === 'ambulance2' && JSON.stringify(node.drive_object.to).includes('"object":"ambulance1"'))) {
-  fail('scene parking must not use an ambulance itself or the other ambulance as its parking reference');
-}
+// Scene parking since 169.62: short jogs relative to the ambulance itself (270:4, 90:2, 270:5), enforced by tools/test-scene-spacing.js; the former accident-location bays and the ban on an ambulance as its own reference are retired.
 if (hasExactNode(ambulance2, (node) => node.wait_for?.local === 'ambu1_dispatch_announced' && node.eq === 'yes')) {
   fail('the second ambulance route must not wait for the first ambulance announcement');
 }

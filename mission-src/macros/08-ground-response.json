@@ -813,7 +813,7 @@
     {"set":{"object":"police","var":"VAR 1"},"value":0},
     {"if": {"location":"POL","var":"distance:m","to":"police"}, "gt": 2,
       "then": [
-        {"call_macro":"drive police safe","params":{"to":["POL"],"fallback":"POL","speed":{"location":"POL","var":"distance:m","to":"police"},"var1":1,"timeout":360}},
+        {"call_macro":"drive police safe","params":{"to":["POL"],"fallback":"POL","speed":{"location":"POL","var":"distance:m","to":"police"},"var1":1,"timeout":{"add":[{"divide":[{"location":"POL","var":"distance:m","to":"police"},10]},20]}}},
         {"set":{"object":"police","var":"VAR 1"},"value":0}
     ]},
     {"set":{"local":"police_lz_move_lock"},"value":"no"},
@@ -5708,6 +5708,9 @@
   ],
   "drive ambulance1 safe": [
     {"set":{"local":"drive_watchdog_ambulance1_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance1_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance1_tmo"},"value":{"local":"drive_watchdog_ambulance1_timeout"}},
     {"set":{"local":"drive_watchdog_ambulance1_last_failure"},"value":null},
     {"set":{"local":"drive_watchdog_ambulance1_to"},"value":{"param":"to"}},
     {"set":{"local":"drive_watchdog_ambulance1_speed"},"value":{"param":"speed"}},
@@ -5740,7 +5743,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"local":"drive_watchdog_ambulance1_timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance1_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance1_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance1_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance1_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance1_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance1_last_failure"},"value":"timeout"},
@@ -5768,6 +5775,9 @@
         {"set":{"param":"timeout"},"value":300}
     ]},
     {"set":{"local":"drive_watchdog_ambulance1_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance1_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance1_mult_tmo"},"value":{"local":"drive_watchdog_ambulance1_mult_timeout"}},
     {"set":{"local":"drive_watchdog_ambulance1_last_failure"},"value":null},
     {"set":{"local":"drive_watchdog_ambulance1_mult_to"},"value":{"param":"to"}},
     {"set":{"local":"drive_watchdog_ambulance1_mult_speed"},"value":{"param":"speed"}},
@@ -5802,7 +5812,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"local":"drive_watchdog_ambulance1_mult_timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance1_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance1_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance1_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance1_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance1_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance1_last_failure"},"value":"timeout"},
@@ -5827,6 +5841,9 @@
   ],
   "drive ambulance2 safe": [
     {"set":{"local":"drive_watchdog_ambulance2_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance2_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance2_tmo"},"value":{"local":"drive_watchdog_ambulance2_timeout"}},
     {"set":{"local":"drive_watchdog_ambulance2_last_failure"},"value":null},
     {"set":{"local":"drive_watchdog_ambulance2_to"},"value":{"param":"to"}},
     {"set":{"local":"drive_watchdog_ambulance2_speed"},"value":{"param":"speed"}},
@@ -5859,7 +5876,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"local":"drive_watchdog_ambulance2_timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance2_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance2_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance2_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance2_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance2_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance2_last_failure"},"value":"timeout"},
@@ -5879,6 +5900,9 @@
   ],
   "drive ambulance2 safe multiplier": [
     {"set":{"local":"drive_watchdog_ambulance2_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance2_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance2_mult_tmo"},"value":{"local":"drive_watchdog_ambulance2_mult_timeout"}},
     {"set":{"local":"drive_watchdog_ambulance2_last_failure"},"value":null},
     {"set":{"local":"drive_watchdog_ambulance2_mult_to"},"value":{"param":"to"}},
     {"set":{"local":"drive_watchdog_ambulance2_mult_speed"},"value":{"param":"speed"}},
@@ -5912,7 +5936,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"local":"drive_watchdog_ambulance2_mult_timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance2_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance2_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance2_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance2_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance2_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance2_last_failure"},"value":"timeout"},
@@ -5932,6 +5960,9 @@
   ],
   "drive ambulance5 safe": [
     {"set":{"local":"drive_watchdog_ambulance5_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance5_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance5_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_ambulance5_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -5955,7 +5986,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance5_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance5_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance5_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance5_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance5_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance5_last_failure"},"value":"timeout"},
@@ -5973,6 +6008,9 @@
   ],
   "drive ambulance5 safe multiplier": [
     {"set":{"local":"drive_watchdog_ambulance5_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance5_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance5_mult_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_ambulance5_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -5996,7 +6034,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance5_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance5_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance5_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance5_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance5_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance5_last_failure"},"value":"timeout"},
@@ -6014,6 +6056,9 @@
   ],
   "drive ambulance6 safe": [
     {"set":{"local":"drive_watchdog_ambulance6_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance6_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance6_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_ambulance6_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6037,7 +6082,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance6_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance6_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance6_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance6_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance6_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance6_last_failure"},"value":"timeout"},
@@ -6055,6 +6104,9 @@
   ],
   "drive ambulance6 safe multiplier": [
     {"set":{"local":"drive_watchdog_ambulance6_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ambulance6_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ambulance6_mult_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_ambulance6_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6078,7 +6130,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_ambulance6_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ambulance6_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ambulance6_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ambulance6_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ambulance6_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ambulance6_last_failure"},"value":"timeout"},
@@ -6096,6 +6152,9 @@
   ],
   "drive police safe": [
     {"set":{"local":"drive_watchdog_police_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_police_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_police_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_police_last_failure"},"value":null},
     {"call_macro": "ground ops checkpoint",
       "params": {
@@ -6153,7 +6212,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_police_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_police_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_police_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_police_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"call_macro": "ground ops checkpoint",
               "params": {
@@ -6194,6 +6257,9 @@
         {"set":{"param":"timeout"},"value":300}
     ]},
     {"set":{"local":"drive_watchdog_police_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_police_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_police_mult_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_police_last_failure"},"value":null},
     {"call_macro": "ground ops checkpoint",
       "params": {
@@ -6251,7 +6317,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_police_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_police_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_police_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_police_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"call_macro": "ground ops checkpoint",
               "params": {
@@ -6284,6 +6354,9 @@
   ],
   "drive police7 safe": [
     {"set":{"local":"drive_watchdog_police7_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_police7_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_police7_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_police7_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6307,7 +6380,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_police7_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_police7_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_police7_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_police7_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_police7_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_police7_last_failure"},"value":"timeout"},
@@ -6325,6 +6402,9 @@
   ],
   "drive police7 safe multiplier": [
     {"set":{"local":"drive_watchdog_police7_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_police7_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_police7_mult_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_police7_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6348,7 +6428,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_police7_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_police7_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_police7_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_police7_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_police7_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_police7_last_failure"},"value":"timeout"},
@@ -6366,6 +6450,9 @@
   ],
   "drive firetruck1 safe": [
     {"set":{"local":"drive_watchdog_firetruck1_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_firetruck1_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_firetruck1_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_firetruck1_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6389,7 +6476,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_firetruck1_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_firetruck1_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_firetruck1_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_firetruck1_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_firetruck1_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_firetruck1_last_failure"},"value":"timeout"},
@@ -6407,6 +6498,9 @@
   ],
   "drive firetruck1 safe multiplier": [
     {"set":{"local":"drive_watchdog_firetruck1_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_firetruck1_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_firetruck1_mult_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_firetruck1_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6430,7 +6524,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_firetruck1_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_firetruck1_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_firetruck1_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_firetruck1_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_firetruck1_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_firetruck1_last_failure"},"value":"timeout"},
@@ -6448,6 +6546,9 @@
   ],
   "drive firetruck2 safe": [
     {"set":{"local":"drive_watchdog_firetruck2_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_firetruck2_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_firetruck2_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_firetruck2_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6471,7 +6572,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_firetruck2_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_firetruck2_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_firetruck2_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_firetruck2_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_firetruck2_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_firetruck2_last_failure"},"value":"timeout"},
@@ -6489,6 +6594,9 @@
   ],
   "drive firetruck2 safe multiplier": [
     {"set":{"local":"drive_watchdog_firetruck2_mult_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_firetruck2_mult_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_firetruck2_mult_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_firetruck2_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6512,7 +6620,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_firetruck2_mult_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_firetruck2_mult_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_firetruck2_mult_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_firetruck2_mult_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_firetruck2_mult_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_firetruck2_last_failure"},"value":"timeout"},
@@ -6530,6 +6642,9 @@
   ],
   "drive ftruck safe": [
     {"set":{"local":"drive_watchdog_ftruck_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_ftruck_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_ftruck_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_ftruck_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6553,7 +6668,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_ftruck_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_ftruck_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_ftruck_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_ftruck_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_ftruck_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_ftruck_last_failure"},"value":"timeout"},
@@ -6571,6 +6690,9 @@
   ],
   "drive truckerf safe": [
     {"set":{"local":"drive_watchdog_truckerf_state"},"value":"moving"},
+    {"#comment":"Start stamp and timeout of this call. The watchdog of an EARLIER call of this macro must not touch the shared state of a later call: report of Daikan 2026-11-03, the watchdog of a call of 483 s fired at 843 s while the state was moving again for a later call, set it to failed and moved the vehicle to the fallback of the old call. The watchdog acts only when the newest call has run for its own timeout."},
+    {"set":{"local":"drive_watchdog_truckerf_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+    {"set":{"local":"drive_watchdog_truckerf_tmo"},"value":{"param":"timeout"}},
     {"set":{"local":"drive_watchdog_truckerf_last_failure"},"value":null},
     {"create_thread": {
       "commands": [
@@ -6594,7 +6716,11 @@
     {"create_thread": {
       "commands": [
         {"sleep":{"param":"timeout"}},
-        {"if": {"local":"drive_watchdog_truckerf_state"}, "eq": "moving",
+        {"if": {
+          "and": [
+            {"require":{"local":"drive_watchdog_truckerf_state"},"eq":"moving"},
+            {"require":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"drive_watchdog_truckerf_t0"}]},"gte":{"subtract":[{"local":"drive_watchdog_truckerf_tmo"},2]}}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"drive_watchdog_truckerf_state"},"value":"failed"},
             {"set":{"local":"drive_watchdog_truckerf_last_failure"},"value":"timeout"},
