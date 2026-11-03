@@ -22,12 +22,13 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"up_end patient={local:HOIST_CABLE_PATIENT} phase={local:HOIST_CABLE_PHASE}"}}
   ],
   "custom injured assets prepare": [
-    {"#comment":"Models of the injured chosen by the custom script (train.json, local CUS_INJURED: array of structures {title}, in the order of the injured). Runs once per scene, from random injured, only in a custom mission (player custom) and not on a reload. Empty or absent list: nothing changes. Fewer titles than injured (HELOVICTIMS): the pick is the list in order, the remaining injured keep the choice of the mission. As many: the list in order. More titles than injured: HELOVICTIMS titles drawn at random, each list entry at most once. The pick is cus_injured_pick, an array of structures {title}; custom injured asset reads it."},
+    {"#comment":"Models of the injured chosen by the custom script (train.json, local CUS_INJURED: array of structures {title, sex, age, var1, var2}, in the order of the injured). Runs once per dispatch from objective2, after accident demographics sex and before the pathology engine, only in a custom mission (player custom) and not on a reload. The pick is always cleared first, so a list of a previous dispatch never survives. Empty or absent list: nothing changes. Fewer entries than injured (HELOVICTIMS): the pick is the list in order, the remaining injured keep the choice of the mission. As many: the list in order. More entries than injured: HELOVICTIMS entries drawn at random, each list entry at most once. The pick is cus_injured_pick (an array of the entries, with idx when drawn); custom injured entry reads it."},
     {"set":{"local":"cus_injured_pick"},"value":{"create_array":0}},
     {"set":{"local":"cus_inj_count"},"value":0},
     {"set":{"local":"cus_fb_picked"},"value":{"create_array":0}},
     {"if": {
       "and": [
+        {"require":{"var":["L:RELOADSAVED","number"]},"ne":1},
         {"require":{"local":"player"},"eq":"custom"},
         {"require":{"local":"CUS_INJURED"},"ne":null}
       ]}, "eq": 1,
@@ -57,7 +58,7 @@
                     {"if": {"local":"cus_inj_taken"}, "eq": 0,
                       "then": [
                         {"set":{"param":"cus_inj_entry"},"value":{"struct":{"local":"CUS_INJURED"},"index":{"local":"cus_inj_idx"}}},
-                        {"modify_array":{"local":"cus_injured_pick"},"append":{"create_struct":{"title":{"struct":{"param":"cus_inj_entry"},"path":"title"},"idx":{"local":"cus_inj_idx"}}}},
+                        {"modify_array":{"local":"cus_injured_pick"},"append":{"create_struct":{"title":{"struct":{"param":"cus_inj_entry"},"path":"title"},"sex":{"struct":{"param":"cus_inj_entry"},"path":"sex"},"age":{"struct":{"param":"cus_inj_entry"},"path":"age"},"var1":{"struct":{"param":"cus_inj_entry"},"path":"var1"},"var2":{"struct":{"param":"cus_inj_entry"},"path":"var2"},"idx":{"local":"cus_inj_idx"}}}},
                         {"set":{"local":"cus_inj_picked"},"value":{"add":[{"local":"cus_inj_picked"},1]}}
                     ]},
                     {"sleep":0.02}
@@ -65,7 +66,104 @@
             ]}
         ]}
     ]},
-    {"call_macro":"ground crew runtime trace","params":{"macro":"custom_injured","actor":"n/a","target":"prepare","state":"player={local:player} list={local:cus_inj_count} injured={local:HELOVICTIMS}"}}
+    {"set":{"local":"cus_inj_log_count"},"value":{"struct":{"local":"cus_injured_pick"},"path":"length"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"custom_injured","actor":"n/a","target":"prepare","state":"player={local:player} list={local:cus_inj_count} injured={local:HELOVICTIMS} picked={local:cus_inj_log_count}"}}
+  ],
+  "custom injured entry": [
+    {"#comment":"Reads the pick of the injured of param slot (1 to 3) into cie_title, cie_sex, cie_age, cie_var1, cie_var2 (null when the slot has no entry or the field is missing)."},
+    {"set":{"local":"cie_title"},"value":null},
+    {"set":{"local":"cie_sex"},"value":null},
+    {"set":{"local":"cie_age"},"value":null},
+    {"set":{"local":"cie_var1"},"value":null},
+    {"set":{"local":"cie_var2"},"value":null},
+    {"set":{"param":"cie_idx"},"value":-1},
+    {"if": {"param":"slot"}, "eq": 1,
+      "then": [
+        {"set":{"param":"cie_idx"},"value":0}
+    ]},
+    {"if": {"param":"slot"}, "eq": 2,
+      "then": [
+        {"set":{"param":"cie_idx"},"value":1}
+    ]},
+    {"if": {"param":"slot"}, "eq": 3,
+      "then": [
+        {"set":{"param":"cie_idx"},"value":2}
+    ]},
+    {"if": {"struct":{"local":"cus_injured_pick"},"path":"length"}, "gt": {"param":"cie_idx"},
+      "then": [
+        {"set":{"param":"cie_entry"},"value":{"struct":{"local":"cus_injured_pick"},"index":{"param":"cie_idx"}}},
+        {"set":{"local":"cie_title"},"value":{"struct":{"param":"cie_entry"},"path":"title"}},
+        {"set":{"local":"cie_sex"},"value":{"struct":{"param":"cie_entry"},"path":"sex"}},
+        {"set":{"local":"cie_age"},"value":{"struct":{"param":"cie_entry"},"path":"age"}},
+        {"set":{"local":"cie_var1"},"value":{"struct":{"param":"cie_entry"},"path":"var1"}},
+        {"set":{"local":"cie_var2"},"value":{"struct":{"param":"cie_entry"},"path":"var2"}}
+    ]}
+  ],
+  "custom injured demographics sex": [
+    {"#comment":"Sex of the injured chosen by the user (entry field sex, male or female, lowercase; anything else leaves the sex of the mission). Runs right after accident demographics sex, so that the pathology engine picks profiles of that sex. The user wins over the wording of the dispatch."},
+    {"call_macro":"custom injured entry","params":{"slot":1}},
+    {"if": {"local":"cie_sex"}, "eq": "male",
+      "then": [
+        {"set":{"local":"SEX1"},"value":"male"}
+    ]},
+    {"if": {"local":"cie_sex"}, "eq": "female",
+      "then": [
+        {"set":{"local":"SEX1"},"value":"female"}
+    ]},
+    {"call_macro":"custom injured entry","params":{"slot":2}},
+    {"if": {"local":"cie_sex"}, "eq": "male",
+      "then": [
+        {"set":{"local":"SEX2"},"value":"male"}
+    ]},
+    {"if": {"local":"cie_sex"}, "eq": "female",
+      "then": [
+        {"set":{"local":"SEX2"},"value":"female"}
+    ]},
+    {"call_macro":"custom injured entry","params":{"slot":3}},
+    {"if": {"local":"cie_sex"}, "eq": "male",
+      "then": [
+        {"set":{"local":"SEX3"},"value":"male"}
+    ]},
+    {"if": {"local":"cie_sex"}, "eq": "female",
+      "then": [
+        {"set":{"local":"SEX3"},"value":"female"}
+    ]}
+  ],
+  "custom injured demographics ages": [
+    {"#comment":"Age of the injured chosen by the user (entry field age, a number). Runs right after accident demographics ages, so the user wins over the range of the dispatch and over the age of a pathology profile. A field that is not a number leaves the age of the mission."},
+    {"call_macro":"custom injured entry","params":{"slot":1}},
+    {"if": {"local":"cie_age"}, "ne": null,
+      "then": [
+        {"if": {"local":"cie_age"}, "ne": "",
+          "then": [
+            {"if": {"isNaN":{"local":"cie_age"}}, "eq": 0,
+              "then": [
+                {"set":{"local":"AGE1"},"value":{"local":"cie_age"}}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"custom injured entry","params":{"slot":2}},
+    {"if": {"local":"cie_age"}, "ne": null,
+      "then": [
+        {"if": {"local":"cie_age"}, "ne": "",
+          "then": [
+            {"if": {"isNaN":{"local":"cie_age"}}, "eq": 0,
+              "then": [
+                {"set":{"local":"AGE2"},"value":{"local":"cie_age"}}
+            ]}
+        ]}
+    ]},
+    {"call_macro":"custom injured entry","params":{"slot":3}},
+    {"if": {"local":"cie_age"}, "ne": null,
+      "then": [
+        {"if": {"local":"cie_age"}, "ne": "",
+          "then": [
+            {"if": {"isNaN":{"local":"cie_age"}}, "eq": 0,
+              "then": [
+                {"set":{"local":"AGE3"},"value":{"local":"cie_age"}}
+            ]}
+        ]}
+    ]}
   ],
   "custom injured fallback": [
     {"#comment":"Fallback model of a custom injured title: the title can be misspelled or not installed, and create_object then takes its fallback_title. The fallback is drawn at random from the static injured_fallback (the H145 injured models of the mission) and is a different one for each injured while the list has enough entries (cus_fb_picked holds the ones already given, cleared when the list is used up). Result in cus_fb_title."},
@@ -101,33 +199,15 @@
     ]}
   ],
   "custom injured asset": [
-    {"#comment":"Applies the pick of custom injured assets prepare to one injured (param slot 1 to 3): the title replaces injuredN, var_compatibleN comes from the catalog of the mission when the title is in one of its lists (injured, injured_workers, injured_motorcyclists) and is no (fixed model, the safe answer) for a title the mission does not know. SEXn and AGEn are not touched: they follow the dispatch. No pick for the slot: nothing changes."},
-    {"set":{"param":"cia_title"},"value":null},
-    {"set":{"param":"cia_idx"},"value":-1},
-    {"if": {"param":"slot"}, "eq": 1,
-      "then": [
-        {"set":{"param":"cia_idx"},"value":0}
-    ]},
-    {"if": {"param":"slot"}, "eq": 2,
-      "then": [
-        {"set":{"param":"cia_idx"},"value":1}
-    ]},
-    {"if": {"param":"slot"}, "eq": 3,
-      "then": [
-        {"set":{"param":"cia_idx"},"value":2}
-    ]},
-    {"if": {"struct":{"local":"cus_injured_pick"},"path":"length"}, "gt": {"param":"cia_idx"},
-      "then": [
-        {"set":{"param":"cia_entry"},"value":{"struct":{"local":"cus_injured_pick"},"index":{"param":"cia_idx"}}},
-        {"set":{"param":"cia_title"},"value":{"struct":{"param":"cia_entry"},"path":"title"}}
-    ]},
+    {"#comment":"Applies the pick of custom injured assets prepare to one injured (param slot 1 to 3), from random injured, before the creation: the title replaces injuredN, var_compatibleN comes from the catalog of the mission when the title is in one of its lists (injured, injured_workers, injured_motorcyclists) and is no (fixed model, the safe answer) for a title the mission does not know, the fallback of a title that is misspelled or not installed is drawn from injured_fallback. SEXn and AGEn are set again from the entry (a workers mission puts male in SEX1 while it chooses the model). No entry for the slot: nothing changes."},
+    {"call_macro":"custom injured entry","params":{"slot":{"param":"slot"}}},
     {"if": {
       "and": [
-        {"require":{"param":"cia_idx"},"gte":0},
-        {"require":{"param":"cia_title"},"ne":null},
-        {"require":{"param":"cia_title"},"ne":""}
+        {"require":{"local":"cie_title"},"ne":null},
+        {"require":{"local":"cie_title"},"ne":""}
       ]}, "eq": 1,
       "then": [
+        {"set":{"param":"cia_title"},"value":{"local":"cie_title"}},
         {"set":{"param":"cia_vc"},"value":"no"},
         {"for_each": {"static":"injured"},
           "do": [
@@ -169,10 +249,85 @@
             {"set":{"local":"var_compatible3"},"value":{"param":"cia_vc"}},
             {"set":{"local":"injured3_fallback"},"value":{"local":"cus_fb_title"}}
         ]},
+        {"call_macro":"custom injured entry","params":{"slot":{"param":"slot"}}},
+        {"call_macro":"custom injured demographics sex"},
+        {"call_macro":"custom injured demographics ages"},
         {"set":{"local":"cus_inj_log_slot"},"value":{"param":"slot"}},
         {"set":{"local":"cus_inj_log_title"},"value":{"param":"cia_title"}},
         {"set":{"local":"cus_inj_log_vc"},"value":{"param":"cia_vc"}},
         {"call_macro":"ground crew runtime trace","params":{"macro":"custom_injured","actor":"n/a","target":"slot {local:cus_inj_log_slot}","state":"title={local:cus_inj_log_title} var_compatible={local:cus_inj_log_vc} fallback={local:cus_fb_title}"}}
+    ]}
+  ],
+  "custom injured vars": [
+    {"#comment":"VAR 1 and VAR 2 of an injured chosen by the user (entry fields var1 and var2: NO or a missing field leaves what the mission does, a number is set). Runs right after the creation of the injured (param slot 1 to 3), after the mission has set VAR 1 to 0. Later events of the mission can change the state again."},
+    {"call_macro":"custom injured entry","params":{"slot":{"param":"slot"}}},
+    {"if": {
+      "and": [
+        {"require":{"local":"cie_title"},"ne":null},
+        {"require":{"local":"cie_title"},"ne":""}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"civ1"},"value":0},
+        {"set":{"param":"civ2"},"value":0},
+        {"if": {"local":"cie_var1"}, "ne": null,
+          "then": [
+            {"if": {"local":"cie_var1"}, "ne": "NO",
+              "then": [
+                {"if": {"local":"cie_var1"}, "ne": "",
+                  "then": [
+                    {"if": {"isNaN":{"local":"cie_var1"}}, "eq": 0,
+                      "then": [
+                        {"set":{"param":"civ1"},"value":1}
+                    ]}
+                ]}
+            ]}
+        ]},
+        {"if": {"local":"cie_var2"}, "ne": null,
+          "then": [
+            {"if": {"local":"cie_var2"}, "ne": "NO",
+              "then": [
+                {"if": {"local":"cie_var2"}, "ne": "",
+                  "then": [
+                    {"if": {"isNaN":{"local":"cie_var2"}}, "eq": 0,
+                      "then": [
+                        {"set":{"param":"civ2"},"value":1}
+                    ]}
+                ]}
+            ]}
+        ]},
+        {"if": {"param":"slot"}, "eq": 1,
+          "then": [
+            {"if": {"param":"civ1"}, "eq": 1,
+              "then": [
+                {"set":{"object":"injured_human","var":"VAR 1"},"value":{"local":"cie_var1"}}
+            ]},
+            {"if": {"param":"civ2"}, "eq": 1,
+              "then": [
+                {"set":{"object":"injured_human","var":"VAR 2"},"value":{"local":"cie_var2"}}
+            ]}
+        ]},
+        {"if": {"param":"slot"}, "eq": 2,
+          "then": [
+            {"if": {"param":"civ1"}, "eq": 1,
+              "then": [
+                {"set":{"object":"injured_human2","var":"VAR 1"},"value":{"local":"cie_var1"}}
+            ]},
+            {"if": {"param":"civ2"}, "eq": 1,
+              "then": [
+                {"set":{"object":"injured_human2","var":"VAR 2"},"value":{"local":"cie_var2"}}
+            ]}
+        ]},
+        {"if": {"param":"slot"}, "eq": 3,
+          "then": [
+            {"if": {"param":"civ1"}, "eq": 1,
+              "then": [
+                {"set":{"object":"injured_human3","var":"VAR 1"},"value":{"local":"cie_var1"}}
+            ]},
+            {"if": {"param":"civ2"}, "eq": 1,
+              "then": [
+                {"set":{"object":"injured_human3","var":"VAR 2"},"value":{"local":"cie_var2"}}
+            ]}
+        ]}
     ]}
   ],
   "random injured": [
@@ -220,11 +375,11 @@
     {"set":{"local":"injured1_fallback"},"value":"Airbus H145 Injured Human"},
     {"if": {"var":["L:RELOADSAVED","number"]}, "ne": 1,
       "then": [
-        {"call_macro":"custom injured assets prepare"},
         {"call_macro":"custom injured asset","params":{"slot":1}}
     ]},
     {"create_object":{"name":"injured_human","title":{"local":"injured1"},"fallback_title":{"local":"injured1_fallback"},"location":{"bearing":0,"dist":5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human","var":"VAR 1"},"value":0},
+    {"call_macro":"custom injured vars","params":{"slot":1}},
     {"sleep":0.2},
     {"create_location": "INJURED",
       "zones": [
@@ -306,6 +461,7 @@
     ]},
     {"create_object":{"name":"injured_human2","title":{"local":"injured2"},"fallback_title":{"local":"injured2_fallback"},"location":{"bearing":{"rand":[60,90]},"dist":5.5,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human2","var":"VAR 1"},"value":0},
+    {"call_macro":"custom injured vars","params":{"slot":2}},
     {"set":{"var":["L:LOAD","number"]},"value":25.7},
     {"set_message":{"text":"Cabin preparation, 25.7% completed... please wait, it can take a while"}},
     {"create_thread": {
@@ -441,6 +597,7 @@
     ]},
     {"create_object":{"name":"injured_human3","title":{"local":"injured3"},"fallback_title":{"local":"injured3_fallback"},"location":{"bearing":{"rand":[231,265]},"dist":6,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human3","var":"VAR 1"},"value":0},
+    {"call_macro":"custom injured vars","params":{"slot":3}},
     {"set":{"var":["L:LOAD","number"]},"value":26.6},
     {"set_message":{"text":"Cabin preparation, 26.6% completed... please wait, it can take a while"}},
     {"sleep":0.5},
@@ -2941,7 +3098,7 @@
         {"set":{"var":["L:BYPASS_NEOFLY","number"]},"value":1}
     ]},
     {"sleep":5},
-    {"create_object":{"name":"injured_human","title":{"local":"injured1"},"location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"accident_location"}}},
+    {"create_object":{"name":"injured_human","title":{"local":"injured1"},"fallback_title":"Airbus H145 Injured Human","location":{"bearing":0,"dist":0,"heading":{"rand":[0,359]},"object":"accident_location"}}},
     {"set":{"object":"injured_human","var":"VAR 1"},"value":0},
     {"sleep":0.1},
     {"set":{"var":["L:MISSION_HOIST","number"]},"value":0},

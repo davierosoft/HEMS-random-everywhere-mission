@@ -27,21 +27,31 @@ Rule: raise `CUS_MIN_SCRIPT_BUILD` in the mission when a change of the mission m
 Legacy script (original, frozen in `tools/fixtures/train-legacy-0.997.json`): it looks at 0.997, so `MISSION_VERSION` must stay "0.997" until 0.998, where the legacy path (numbered `OBJECT1..15` locals, `accident location pregenerator CUSTOM` `CUS_RESCUE` fallback) and the fixture go away. The test checks that every LVAR the legacy script sets is still read by the mission.
 ## Injured models (sources 2026-11-03, not built, runtime pending)
 
-Request of Steph (2026-11-02): the user chooses the asset of the injured of a custom mission. The script sets the local `CUS_INJURED`, an array of `{title}` (the same append form as `CUS_OBJECTS`, proven in the simulator; a plain string append is not used because the baseline has no example of it). Shipped empty: the mission chooses, as before.
+Request of Steph (2026-11-02), additions of the user (2026-11-03): the user chooses the model, the sex, the age and the initial state of the injured of a custom mission. The script sets the local `CUS_INJURED`, an array of `{title, sex, age, var1, var2}` (the same append form as `CUS_OBJECTS`, proven in the simulator; a plain string append is not used because the baseline has no example of it). Shipped empty: the mission chooses, as before.
+
+| Field | Meaning |
+| --- | --- |
+| `title` | exact model title; not installed or misspelled = a fallback name (below) |
+| `sex` | `"male"` or `"female"` (lowercase); anything else leaves the sex of the mission |
+| `age` | a number (0 is valid); anything else, empty included, leaves the age of the mission |
+| `var1`, `var2` | `"NO"` (or missing) leaves what the mission does; a number (0, 1, 2, ...) is the state the user wants at the start |
 
 | List | Result |
 | --- | --- |
 | empty or absent | nothing changes, the mission chooses every injured |
-| fewer titles than injured (`HELOVICTIMS`) | injured 1.. take the titles in order, the others keep the choice of the mission |
+| fewer entries than injured (`HELOVICTIMS`) | injured 1.. take the entries in order, the others keep the choice of the mission |
 | as many | one each, in order |
-| more | `HELOVICTIMS` titles drawn at random, a list entry at most once (the same title written twice is two entries) |
+| more | `HELOVICTIMS` entries drawn at random, a list entry at most once (the same title written twice is two entries) |
 
-- Only in a custom mission (`player` is `custom`) and not on a reload (`RELOADSAVED`): a list left over from a custom mission never reaches a regular one, and a saved mission keeps the models it saved (`TEMPinjured1..3`). The `injuredN_fallback` of a reloaded mission is the standard one.
-- The mission sets `injuredN` and `var_compatibleN` only. `SEXn` and `AGEn` follow the dispatch and are not touched: a model of the other sex than the dispatch says is the choice of the user. `var_compatibleN` comes from the catalog (`injured`, `injured_workers`, `injured_motorcyclists`) when the title is there, and is `no` (fixed model, the safe answer) for any other title.
-- Fallback: a title can be misspelled or not installed, and `create_object` then takes its `fallback_title`. For a custom title the fallback is drawn from the static `injured_fallback` (`data/03-people-and-names.json`: the H145 injured models, all `variable_compatible: yes`), a different one for each injured while the list has enough entries. The other injured keep `Airbus H145 Injured Human`. Each creation reads `injuredN_fallback`, set before the pick. The fourth creation of `injured_human` (a separate flow, no fallback) is not changed.
-- Diagnostics: rows `custom_injured` in `ground_crew_runtime_trace` (list size, injured, and per slot the title, `var_compatible` and fallback).
-- Test: `tools/test-custom-injured.js` runs the two macros in a small interpreter (empty, fewer, as many, more with 300 seeds and no repeat, unknown model, fallback from the list and different per injured, regular mission, call sites before `create_object` and skipped on a reload) and checks that `train.json` ships an empty list.
-- Open: (1) simulator test that `create_object` with a misspelled title takes the fallback and that a title with spaces and digits is read as typed; (2) whether the script needs `MIN_BUILD` raised: a new script on an older mission ignores the list silently, so the number of the release that carries this feature decides (the release number is not assigned yet).
+Order in `objective2` (`11-mission-lifecycle.json`): `accident demographics sex`, `custom injured assets prepare` (the pick, always cleared first, so a list of a previous dispatch never survives), `custom injured demographics sex` (before the pathology engine, which picks profiles of that sex), the pathology engine, `accident demographics ages`, `custom injured demographics ages` (after the age ranges of the dispatch and the ages of the profiles, so the user wins), `Mission dispatch`. Later, `random injured`, `random injured2`, `random injured3` call `custom injured asset` before the creation (title, `var_compatibleN`, fallback, and `SEXn` and `AGEn` again: a workers mission puts `male` in `SEX1` while it chooses the model) and `custom injured vars` right after the mission has set `VAR 1` to 0.
+
+- Only in a custom mission (`player` is `custom`) and not on a reload (`RELOADSAVED`): a list left over from a custom mission never reaches a regular one, and a saved mission keeps the models it saved (`TEMPinjured1..3`, `TEMPSEX`, `TEMPAGE`). The `injuredN_fallback` of a reloaded mission is the standard one.
+- `var_compatibleN` comes from the catalog (`injured`, `injured_workers`, `injured_motorcyclists`) when the title is there, and is `no` (fixed model, the safe answer) for any other title.
+- `var1`/`var2`: set once after the creation. A later event of the mission that writes `VAR 1` of the injured (treatment, assessment, loading) overwrites the user's state; with `var_compatible` `no` the mission does not drive the model states.
+- Fallback: a title can be misspelled or not installed, and `create_object` then takes its `fallback_title`. For a custom entry the fallback is drawn from the static `injured_fallback` (`data/03-people-and-names.json`: the H145 injured models, all `variable_compatible: yes`), a different one for each injured while the list has enough entries and a name reused after (never empty, an empty list gives `Airbus H145 Injured Human`). Every creation of an injured model has a fallback name: the three of `random injured*` read `injuredN_fallback` (standard `Airbus H145 Injured Human` unless the entry draws another), the fourth one (a separate flow) has the standard name written in it.
+- Diagnostics: rows `custom_injured` in `ground_crew_runtime_trace` (list size, injured, picked, and per slot the title, `var_compatible` and fallback).
+- Test: `tools/test-custom-injured.js` runs the macros in a small interpreter in the order above (empty, fewer, as many, more with 300 seeds and no repeat, sex and age travelling with the entry and winning over the dispatch, invalid sex and age, `NO`/number/missing `var1`/`var2`, unknown model, fallback from the list, different per injured, reused, never empty, reload, regular mission, a list of a previous dispatch) and checks the call order, the call sites and that `train.json` ships an empty list with entries that carry sex, age, `var1` and `var2`.
+- Open: (1) simulator test that `create_object` with a misspelled title takes the fallback and that a title with spaces and digits is read as typed; (2) which `VAR 1` and `VAR 2` values each model understands (the user's choice); (3) whether the script needs `MIN_BUILD` raised: a new script on an older mission ignores the list silently, so the number of the release that carries this feature decides (the release number is not assigned yet).
 
 ## Formatting rule (user, 2026-10-30)
 

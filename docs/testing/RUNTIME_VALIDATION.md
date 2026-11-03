@@ -713,13 +713,14 @@ Question: can the text, title and link widgets of the tablet read a translated t
 
 ## Custom injured models (sources 2026-11-03, not built, PENDING)
 
-Script `train.json` with `CUS_INJURED` (see `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`). Custom mission with 3 injured (`HELOVICTIMS_CUSTOM` 3), read the rows `custom_injured` of `ground_crew_runtime_trace` in the manual snapshot.
+Script `train.json` with `CUS_INJURED`, entries `{title, sex, age, var1, var2}` (see `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`). Custom mission with 3 injured (`HELOVICTIMS_CUSTOM` 3); read the rows `custom_injured` of `ground_crew_runtime_trace` in the manual snapshot and the dispatch text ("Update: 3 injured. 1: {age} {sex} ...").
 
-1. Empty list: the injured are the ones the mission chooses (no `custom_injured` slot rows).
-2. One title: injured 1 is that model, injured 2 and 3 are the mission choice.
-3. Three titles: injured 1, 2, 3 in the order of the list.
-4. Five titles, three injured: three different titles of the list; repeat the mission a few times, the choice changes.
+1. Empty list: the injured are the ones the mission chooses (rows `prepare` only, `picked=0`).
+2. One entry (female, 33): injured 1 is that model, the dispatch and the clinical record say 33 and female (also when the dispatch wording says a man), injured 2 and 3 are the mission choice.
+3. Three entries: injured 1, 2, 3 in the order of the list, each with its sex and age; the pathology profile of patient 1 is of the sex given.
+4. Five entries, three injured: three different entries; repeat the mission a few times, the choice changes.
 5. A misspelled title and a title of a package not installed: the injured appears as one of `Airbus H145 Injured Human`, `... Human 2`, `... Injured Engineer`, a different one for each injured (row `fallback=`). Check that `create_object` takes `fallback_title` when `title` is a local that holds a text with spaces and digits.
-6. A title with a pose (`VAR 1`) used by the mission (treatment, stretcher): the injured does not turn into a pilot or a wrong pose (`var_compatible` is `no` for a title not in the catalog).
-7. Save and reload the mission: the injured keep the models.
-8. A regular (non custom) mission after a custom one in the same session: no custom model.
+6. `var1` 2 and `var2` 1 on a model that supports them: the injured starts in that state; `"NO"`: the mission state. Note which later event overwrites it.
+7. A title with a pose (`VAR 1`) used by the mission (treatment, stretcher): the injured does not turn into a pilot or a wrong pose (`var_compatible` is `no` for a title not in the catalog).
+8. Save and reload the mission: the injured keep the models, sex and age.
+9. A regular (non custom) mission after a custom one in the same session: no custom model, sex or age.
