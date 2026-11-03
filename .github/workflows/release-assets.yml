@@ -1,0 +1,36 @@
+name: Release assets
+
+# Attaches the three mission files of the tagged commit to its GitHub release (the Mission Companion downloads them from the
+# release): everywhere_all.json, train.json and ui-texts.json. Runs when a release is published, or by hand for an existing tag
+# (Actions, Release assets, Run workflow, tag for example v0.997-170.06). --clobber replaces files already attached.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag, for example v0.997-170.06"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  assets:
+    name: Attach the mission files
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.event.release.tag_name || inputs.tag }}
+          persist-credentials: false
+      - name: Check that the files are there and are the mission of the tag
+        run: |
+          for f in everywhere_all.json train.json ui-texts.json; do test -s "$f" || { echo "missing file: $f"; exit 1; }; done
+          node -e 'const j=JSON.parse(require("fs").readFileSync("everywhere_all.json","utf8")); console.log("everywhere_all.json:", j.title || "")'
+      - name: Attach the files to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: gh release upload "$TAG" everywhere_all.json train.json ui-texts.json --clobber --repo "$GITHUB_REPOSITORY"

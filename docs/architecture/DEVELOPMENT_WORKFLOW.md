@@ -31,6 +31,10 @@ There is a single branch (`main`) and no PR/merge step: a pushed commit is live 
 4. Watch the Windows/Linux static CI jobs on the pushed commit. If a job fails after push, report the condition and land a follow-up commit; do not force-push to rewrite what is already live on `main`.
 5. Verify the remote `main` commit matches what was intended. A code checkpoint remains runtime-pending after push.
 
+## Release assets
+
+The Mission Companion downloads `everywhere_all.json`, `train.json` and `ui-texts.json` from the GitHub release of a tag (for example `v0.997-170.06`, tag on the release commit, no other files). A release without them breaks the update (the release 0.997 170.06 was published without assets). `.github/workflows/release-assets.yml` attaches the three files of the tagged commit when a release is published, and by hand for an existing tag (Actions, Release assets, Run workflow). It is the only workflow with write permission; `workspace-checks.yml` stays read-only.
+
 ## CI contract
 
 `.github/workflows/workspace-checks.yml` runs the same dependency-free Node gate on Windows and Linux for every push to `main`. Actions are pinned, permissions are read-only, credentials are not persisted, stale runs are cancelled, and no build or package is generated. The CI-contract test catches missing platforms/gates and privilege escalation.
