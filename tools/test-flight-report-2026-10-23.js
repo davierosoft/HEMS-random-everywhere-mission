@@ -60,16 +60,20 @@ const text = (value) => JSON.stringify(value);
   for (const k of ['COLL', 'STILL', 'GND', 'POS']) assert.ok(t.includes('"hrw_miss"},"value":"' + k + '"'), 'missing condition ' + k);
   assert.ok(t.includes('"text":"HRS.W.{0}","params":[{"local":"hrw_miss"}]'), 'the line is the pack key of the missing condition');
   assert.ok(t.includes('"value":10') && t.includes('"value":45'), 'spoken after 10 s, then every 45 s');
-  const pack = (name) => fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', name + '.xml'), 'utf8');
-  for (const lang of ['EN', 'DE']) {
-    const xml = pack(lang);
-    for (const k of ['POS', 'GND', 'STILL', 'COLL']) {
-      const m = new RegExp('<message key="HRS\\.W\\.' + k + '"[^>]*>([\\s\\S]*?)</message>').exec(xml);
-      assert.ok(m && (m[1].match(/<o>/g) || []).length === 6, lang + ' HRS.W.' + k + ' has 6 options');
+  // the voice packs live in the Companion repository: checked only when its folder is next to this one (as voice-texts.js and the other checks below)
+  const packDir = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  if (fs.existsSync(packDir)) {
+    const pack = (name) => fs.readFileSync(path.join(packDir, name + '.xml'), 'utf8');
+    for (const lang of ['EN', 'DE']) {
+      const xml = pack(lang);
+      for (const k of ['POS', 'GND', 'STILL', 'COLL']) {
+        const m = new RegExp('<message key="HRS\\.W\\.' + k + '"[^>]*>([\\s\\S]*?)</message>').exec(xml);
+        assert.ok(m && (m[1].match(/<o>/g) || []).length === 6, lang + ' HRS.W.' + k + ' has 6 options');
+      }
     }
+    assert.ok(/<voicepack name="EN"[^>]* version="(?:2[7-9]|[3-9]\d)"/.test(pack('EN')), 'base pack EN 27');
+    assert.ok(/<voicepack name="DE"[^>]* version="\d+" basever="\d+"/.test(pack('DE')), 'pack DE 15 on the base 27');
   }
-  assert.ok(/<voicepack name="EN"[^>]* version="(?:2[7-9]|[3-9]\d)"/.test(pack('EN')), 'base pack EN 27');
-  assert.ok(/<voicepack name="DE"[^>]* version="\d+" basever="\d+"/.test(pack('DE')), 'pack DE 15 on the base 27');
 }
 
 // 6. the heli rescuer boarding closes each door once (report: the door closed and opened again; close_door is not idempotent)
@@ -85,11 +89,14 @@ const text = (value) => JSON.stringify(value);
   const t = text(macros.paperwork);
   assert.ok(t.includes('"call_macro":"voice say","params":{"key":"HOS.PAP"}') && t.includes('"call_macro":"voice say","params":{"key":"HOS.PAP.O"}'), 'paperwork says HOS.PAP / HOS.PAP.O');
   assert.ok(t.indexOf('HOS.PAP"') > t.indexOf('"Crew will follow the patient to ER'), 'said when the crew goes inside');
-  const pack = (name) => fs.readFileSync(path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks', name + '.xml'), 'utf8');
-  for (const lang of ['EN', 'DE']) {
-    for (const k of ['HOS.PAP', 'HOS.PAP.O']) {
-      const m = new RegExp('<message key="' + k.replace(/\./g, '\\.') + '"[^>]*>([\\s\\S]*?)</message>').exec(pack(lang));
-      assert.ok(m && (m[1].match(/<o>/g) || []).length === 6, lang + ' ' + k + ' has 6 options');
+  const packDir = path.join(root, '..', 'HPG-Mission-Companion', 'voicepacks');
+  if (fs.existsSync(packDir)) {
+    const pack = (name) => fs.readFileSync(path.join(packDir, name + '.xml'), 'utf8');
+    for (const lang of ['EN', 'DE']) {
+      for (const k of ['HOS.PAP', 'HOS.PAP.O']) {
+        const m = new RegExp('<message key="' + k.replace(/\./g, '\\.') + '"[^>]*>([\\s\\S]*?)</message>').exec(pack(lang));
+        assert.ok(m && (m[1].match(/<o>/g) || []).length === 6, lang + ' ' + k + ' has 6 options');
+      }
     }
   }
 }
