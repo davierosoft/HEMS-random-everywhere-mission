@@ -32,7 +32,7 @@ const dec = JSON.stringify(all['ambulance shuttle decide']);
 for (const need of ['patient_live_mode', 'AMBU_AVAIL', 'ambulance_return_crew_min_dist', 'multipatient registry ambulance reach', 'ambulance1_shuttle_hold', 'SIM ON GROUND'])
   assert.ok(dec.includes(need), 'decision uses ' + need);
 // never stall: the hold has a watchdog and the leg a forced move
-assert.ok(dec.includes('"sleep":1500'), 'watchdog of the hold');
+assert.ok(dec.includes('"shuttle_deadline"') && dec.includes('1500'), 'watchdog of the hold on the mission clock');
 assert.ok(JSON.stringify(all['ambulance crew shuttle']).includes('shuttle_force'), 'forced move on timeout');
 assert.ok(JSON.stringify(all['ambulance1 stand down']).includes('"ambulance1_shuttle_hold"'), 'stand down waits for the hold');
 console.log('ambulance shuttle contract ok');

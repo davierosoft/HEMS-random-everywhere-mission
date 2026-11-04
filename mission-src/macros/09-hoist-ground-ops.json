@@ -11256,7 +11256,9 @@
                     ]},
                     {"create_thread": {
                       "commands": [
-                        {"sleep":1500},
+                        {"#comment":"Watchdog of the hold: the mission clock reaches the deadline (1500 s). One long sleep is not trusted: the second dispatch wait of 170.05 shows a sleep of 1960 s that ended in 6 s (Daikan, report of 2026-11-04)."},
+                        {"set":{"local":"shuttle_deadline"},"value":{"add":[{"var":["L:MISSION_TIME","number"]},1500]}},
+                        {"wait_for":{"var":["L:MISSION_TIME","number"]},"gte":{"local":"shuttle_deadline"}},
                         {"if": {"local":"ambulance1_shuttle_hold"}, "eq": "yes",
                           "then": [
                             {"call_macro":"ambulance shuttle release","params":{"why":"watchdog 1500 s"}}
