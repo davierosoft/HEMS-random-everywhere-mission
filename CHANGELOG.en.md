@@ -1,3 +1,17 @@
+## Release 0.997 170.10
+
+- Nested group comparator fixed in voice hoist cable
+- Scope of the 170.07 to 170.09 changes not yet in the baseline of the ledger
+- Hoist operator cable calls (HCL.*, pack EN 37), hoist panel for the manual hoist, LINK line in the briefing, second dispatch waits the configured time
+
+## Release 0.997 170.10
+
+- Second dispatch wait (report of Daikan 2026-11-04, 170.09): `ready dispatch` waited with one `sleep` of `WAIT_SECOND_DISPATCH` and the dispatch snapshot of 170.05 shows `ready_wait_start` with 1960 s and `ready_wait_end` 6 s later. The wait is a loop of 5 s sleeps that counts the seconds (`rdw_waited`); the row `ready_wait_end` says "waited X s of Y s". The cause of the short sleep is not proven; the loop does not depend on it (`tools/test-second-dispatch-wait.js` runs the loop with a clock).
+- Hoist operator calls on the cable: keys `HCL.DOWN`, `HCL.GND`, `HCL.UP`, `HCL.DOOR` in the packs EN 37, DE 25, FR 26, macro `voice hoist cable` called by `hoist down`, `hoist up 1 operator` and `hoist up operator+injured`; the heli rescuer going down keeps `HRS.*`; the mission declares `<pack:EN:37>`. The packs must also be in `davierosoft/HPG-Mission-Companion/voicepacks` until the Companion reads them from here (`tools/test-hoist-cable-calls.js`).
+- Hoist panel (tablet page `hoist panel`, link `- HOIST PANEL` in the briefing and on the Mission dispatch page while the hoist switch is on): cable out, hook height estimate, hook state, person and patient on the hook, radio height, indicated airspeed, bank, the hoist window of 40 to 160 ft and the speed and bank steps of the hoist out as the code applies them.
+- Briefing line `LINK: radio | wifi | HOC | voice app` with the raw states before the mission starts.
+- Runtime status: PENDING (`docs/testing/RUNTIME_VALIDATION.md`).
+
 ## Release 0.997 170.09
 
 - Scope of the 170.07 and 170.08 changes not yet supplied through the ledger baseline

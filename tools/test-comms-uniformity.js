@@ -122,7 +122,7 @@ for (const key of ['CHT.TEC', 'CHT.CPL', 'CHT.TEC2']) assert.ok(greet.includes(`
 assert.ok(greet.includes('"local":"VCP"},"eq":"APP"') && greet.includes('"local":"TTS"},"eq":1') && greet.includes('"global":"AUDIO_DECLUT"},"eq":0') && greet.includes('"global":"AUDIO_DECLUT"},"gt":3'), 'only with the Mission Companion and the chatter levels of the original lines');
 const hangarMacro = Object.values(macros).map(text).find((body) => body.includes('"call_macro":"voice hangar greeting"'));
 assert.ok(hangarMacro && hangarMacro.includes('"local":"VCP"},"eq":"APP","then":[{"call_macro":"voice hangar greeting"}]') && hangarMacro.includes('L:FRA{local:VCP}7') && hangarMacro.includes('"local":"VCP"},"ne":"APP"') && hangarMacro.includes('L:CPL{local:VCP}23'), 'the boarding at the hangar: the greeting with the Companion, the original lines FRA 7 and CPL 23 with a wav pack');
-assert.ok(all.includes('<pack:EN:27>') && !all.includes('<pack:EN:26>'), 'the mission declares the pack EN 27 (SVC and SCN lines on top of HOS.PAP on top of the radio calls of the flight of 2026-10-20)');
+assert.ok(Number((all.match(/<pack:EN:(\d+)>/) || [])[1]) >= 27, 'the mission declares the pack EN 27 (SVC and SCN lines on top of HOS.PAP on top of the radio calls of the flight of 2026-10-20)');
 if (pack) {
   const dePack = fs.existsSync(path.join(root, 'voicepacks', 'DE.xml')) ? fs.readFileSync(path.join(root, 'voicepacks', 'DE.xml'), 'utf8') : null;
   const block = (xml, key) => { const at = xml.indexOf(`<message key="${key}"`); return xml.slice(at, xml.indexOf('</message>', at)); };

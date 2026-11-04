@@ -88,5 +88,5 @@ if (fs.existsSync(packDir)) {
 const greet = JSON.stringify(macros['voice hangar greeting']);
 assert.ok(greet.includes('<say:GRT.TEC.R{0}>') && greet.includes('"local":"CREW_MEMBER_CAP"'), 'the technician greeting of the rest of the crew by the size of the crew');
 assert.ok(greet.indexOf('GRT.TEC.R{0}') > greet.indexOf('GRT.TEC.{0}') && greet.indexOf('GRT.TEC.R{0}') < greet.indexOf('GRT.CPL.{0}'), 'right after the first technician greeting');
-assert.ok(JSON.stringify(macros['voice app connect']).includes('<pack:EN:27>'), 'the mission declares the pack EN 27');
+assert.ok(Number((JSON.stringify(macros['voice app connect']).match(/<pack:EN:(\d+)>/) || [])[1]) >= 27, 'the mission declares the pack EN 27 or later');
 console.log('Service truck PASS: damage state, truck only in the van branch with damage, lights on, rear sector away from the van and the crew walk, radio SVC.* and SCN.*, packs EN 27 / DE 15 / FR 17. Simulator runtime PENDING (VAR 1 of the truck, the route, the sound of the radio).');

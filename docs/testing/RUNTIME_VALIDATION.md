@@ -748,3 +748,10 @@ Read the rows named below in `ground_ops_checkpoint_log` and `dispatch_handoff_l
 ## Release 170.09 (2026-11-04, PENDING)
 
 Hotfix of 170.08 (reports of billy5bellys and NotRob). New flight in MSFS: the row `start_location_new` of `dispatch_handoff_log` shows `has_start=1` and a start LVAR other than 0,0, the dispatch has a location (no ERR99), the briefing shows "Connected with HEMS Operation Center" and then the ACCEPT DISPATCH and NEXT DISPATCH bars. START: the second dispatch keeps the base; CUSTOM: the custom point exists from the start; PRESENT POSITION: the base follows the helicopter at the accept.
+
+## Release 170.10 (2026-11-04, PENDING)
+
+1. Second dispatch wait: set the maximum waiting time to 2 h, finish a mission: the row `ready_wait_end` of the dispatch snapshot says "waited X s of Y s" with X at least Y, and the dispatch comes after that time (`ENDWAIT_SECOND_DISPATCH` on the debug page).
+2. Hoist cable calls with the Companion (packs EN 37, DE 25, FR 26 installed): lower the doctor (DOWN, GND), bring up a person and a patient (UP, DOOR); a heli rescuer going down has only `HRS.*`.
+3. Hoist panel: HOIST PANEL appears while the hoist switch is on; the values follow the cable and the helicopter; the estimate of the hook height is close to the real one.
+4. Briefing LINK line shows radio, wifi, HOC and voice app before the mission starts.

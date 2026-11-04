@@ -1043,7 +1043,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:27>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:37>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice app lost": [
@@ -7357,5 +7357,18 @@
         {"call_macro":"voice say","params":{"key":"BRF.INT.CHF","declut":1}},
         {"sleep":0.6}
     ]}
+  ],
+  "voice hoist cable": [
+    {"#comment":"Calls of the hoist operator on the cable (user request of 2026-11-04, pack EN 37, keys HCL.*): DOWN a person rides the hook down, GND the hook is on the ground, UP the hook is loaded and goes up, DOOR the hook is close to the door. Params stage and who (the person_type of the cable: crew, helirescuer or none for an empty hook). The heli rescuer going down has his own lines (HRS.*), so DOWN and GND are not said for him. Mission Companion only (voice say); chatter, skipped by the AUDIO_DECLUT levels 1 to 3. The distance and height calls of the crew guidance stay as they are."},
+    {"if": {
+      "and": [
+        {"require":{"param":"who"},"eq":"helirescuer"},
+        {"or":[{"require":{"param":"stage"},"eq":"DOWN"},{"require":{"param":"stage"},"eq":"GND"}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"param":"hcl_key"},"value":{"text":"HCL.{0}","params":[{"param":"stage"}]}},
+    {"call_macro":"voice say","params":{"key":{"param":"hcl_key"},"declut":1}}
   ]
 }

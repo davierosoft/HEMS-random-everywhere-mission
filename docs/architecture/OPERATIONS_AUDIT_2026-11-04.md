@@ -43,7 +43,7 @@ The existing guidance call, for the record: `play_guidance_message` toward `land
 
 | Id | Item | Feasible because | Priority |
 |---|---|---|---|
-| H1 | Check and extend the coverage of the guidance call: it follows `landing_spot`, so it is silent when the hoist has no landing spot, when a heli rescuer is picked up or dropped by the hoist, and in the hoist out; the target would be the person or the point the hook waits for | the engine call takes any target; [verify] which targets and ranges it accepts | P1 |
+| H1 | Check and extend the coverage of the guidance call (answer of the author: every object or location is a valid target, and a custom guidance may be built for each case): it follows `landing_spot`, so it is silent when the hoist has no landing spot, when a heli rescuer is picked up or dropped by the hoist, and in the hoist out; the target would be the person or the point the hook waits for | the engine call takes any object or location as target (author, 2026-11-04) | P1 |
 | H2 | Hoist operator phase calls that are not distances: "hooked", "ready to lift", "lifting", "patient at the door", "inside" (the end call `PAX1.INS` exists) | `HOIST_CABLE_PHASE` and the hoist states are known to the mission | P1 |
 | H3 | Pause and abort of the hoist when speed or bank pass a soft limit below the casualty limits; `PAX2.5` (paused) and `PAX2.6` (abort) are in the pack with their wav files and nothing triggers them | speed and bank are read already by the hoist out ladders | P1 |
 | H4 | Hook height calls where the guidance does not reach (see H1), from `hoist_get_distance_from_ground` and the reel length | the values are read in `09-hoist-ground-ops.json` (23 sites) | P2 |
@@ -103,7 +103,7 @@ Pack 36 has 1518 keys: checklists 377, dispatch readings 321, rear crew 104, cop
 | V6 | Triage (G1), destination (G2), structured handover (G3) | new keys, same order of the record | P2 |
 | V7 | Dispatcher status messages: RescueTrack texts exist; spoken ones are the briefing, the vehicles and the hospital | spoken status for on scene, patient aboard, en route, available | P2 |
 | V8 | Wind call at the site (L1), orbit complete (L2) | two keys | P2 and P3 |
-| V9 | Radio with ATC or the flight information service | optional calls at departure and arrival (`RADIO_CLASSES.md`) | P3 |
+| V9 | Radio with ATC: not wanted, the default one of the simulator stays | none | removed |
 | V10 | Rescuer left on the ground: status, patient and ETA of the ambulance during a long wait | calls on a timer with the existing wait states | P3 |
 | V11 | Debrief that names the events of the mission (a death, a hard landing, a failure, a long wait) | pick lines from the event flags | P3 |
 
@@ -144,4 +144,14 @@ Findings [data] [code]:
 
 Before recording any voice line, the wording and the order of the hoist calls (V1, V3) must be confirmed by a person who works the hoist.
 
-Nothing in this audit changes the mission: no source was edited for it.
+## 6. Status of the work (2026-11-04)
+
+Decided by the author: the hoist calls are added (H2, V1); a hoist panel for the manual hoist (U1); the P2 voice and P2 interface items; P3 without ATC and with the debrief. Implemented in the sources (not built, runtime PENDING):
+
+- H2, V1: keys `HCL.DOWN`, `HCL.GND`, `HCL.UP`, `HCL.DOOR` in the three packs (EN 37, DE 25, FR 26), macro `voice hoist cable` called by `hoist down`, `hoist up 1 operator` and `hoist up operator+injured`; the heli rescuer going down keeps `HRS.*` (`tools/test-hoist-cable-calls.js`).
+- U1: macro `hoist panel` (cable out, hook height estimate, hook state, person and patient on the hook, radio height, ground speed, bank, the hoist window of 40 to 160 ft) with a link `- HOIST PANEL` in the briefing and on the Mission dispatch page while the hoist switch is on.
+- U3: line `LINK: radio | wifi | HOC | voice app` at the top of the briefing before the mission starts.
+- Next action strip (U2): the tablet already shows `ON-SITE OPERATIONS` with the stage and, when stalled, `Still open`; what remains is a short line in the briefing with the button that the step waits for (needs a map from stage to button).
+- Pause and abort of the hoist (H3): to design with the author (see the answer of 2026-11-04).
+
+Nothing else of this audit changes the mission.

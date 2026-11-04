@@ -6512,8 +6512,14 @@
             {"sleep":[3,7]},
             {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
             {"set_message":{"text":"AVAILABILITY STATUS SENT CORRECTLY"}},
-            {"sleep":{"local":"WAIT_SECOND_DISPATCH"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_end"}}
+            {"#comment":"Report of Daikan 2026-11-04 (170.09): the second dispatch comes at once, the configured waiting time (up to 2 h) is ignored. The dispatch snapshot of 170.05 shows the same: ready_wait_start with WAIT_SECOND_DISPATCH 1960 s and ready_wait_end 6 s later (the sleep of [3,7] only). One long sleep of a local is no longer trusted: the wait is a loop of 5 s sleeps that counts the seconds it has waited, so it ends only when WAIT_SECOND_DISPATCH has been waited. The row ready_wait_end says how long it waited."},
+            {"set":{"local":"rdw_waited"},"value":0},
+            {"while": {"local":"rdw_waited"}, "lt": {"local":"WAIT_SECOND_DISPATCH"},
+              "do": [
+                {"sleep":5},
+                {"set":{"local":"rdw_waited"},"value":{"add":[{"local":"rdw_waited"},5]}}
+            ]},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_end","detail":{"text":"waited {0} s of {1} s","params":[{"local":"rdw_waited"},{"local":"WAIT_SECOND_DISPATCH"}]}}}
         ]},
         {"set":{"local":"newdispatch"},"value":"done"}
       ],"else": [

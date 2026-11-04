@@ -65,7 +65,8 @@
             {"set":{"local":"HOIST_CABLE_PERSON_TYPE"},"value":{"param":"person_type"}}
         ]},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"person_on type={local:HOIST_CABLE_PERSON_TYPE} member={local:HOIST_CABLE_MEMBER} object={local:HOIST_CABLE_OBJECT} phase=down"}},
-        {"call_macro":"start hoist attached risk monitor"}
+        {"call_macro":"start hoist attached risk monitor"},
+        {"call_macro":"voice hoist cable","params":{"stage":"DOWN","who":{"param":"person_type"}}}
     ]},
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"gt":10},
@@ -77,7 +78,8 @@
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"hook_at_ground person={local:HOIST_CREW_ON_CABLE} type={local:HOIST_CABLE_PERSON_TYPE}"}},
-    {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"}
+    {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"},
+    {"call_macro":"voice hoist cable","params":{"stage":"GND","who":{"param":"person_type"}}}
   ],
   "hoist up empty": [
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"empty"},
@@ -98,10 +100,12 @@
     {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":1},
     {"call_macro":"start hoist attached risk monitor"},
+    {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.15,1.7]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:m"},"lt":8},
+    {"call_macro":"voice hoist cable","params":{"stage":"DOOR"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"lt":1},
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":0},

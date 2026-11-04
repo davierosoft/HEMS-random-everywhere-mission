@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.09. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.10. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -891,6 +891,24 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.09.
 - **Test:** Start a mission on a new flight: the dispatch arrives with a location and the ACCEPT DISPATCH and NEXT DISPATCH bars are in the briefing. Accept a second dispatch with each option.
 
+### The second dispatch waits for the time you set
+
+- Report of a tester: the second dispatch came at once whatever the maximum waiting time of the settings (he had set two hours). The wait now counts the seconds it has waited and ends only when the drawn time is over.
+- **Build history:** 0.997 170.10.
+- **Test:** Set the maximum waiting time for the next dispatches to a long value, finish a mission and wait: the next dispatch comes after a random time up to that value, not at once.
+
+### The hoist operator speaks on the cable
+
+- With the Mission Companion the hoist operator now calls the cable: going down, the hook on the ground, lifting, and at the door. The heli rescuer keeps his own lines when he goes down.
+- **Build history:** 0.997 170.10.
+- **Test:** With the Companion connected, lower the doctor or a heli rescuer and bring them or the patient up: the operator speaks at each step.
+
+### Hoist panel and connection line
+
+- For the manual hoist the tablet has a HOIST PANEL (link in the briefing while the hoist switch is on): cable out, estimated hook height, hook state, radio height, indicated airspeed, bank, the hoist window and the speed and bank steps that damage the hoist out. The briefing shows a line with the state of radio, wifi, the operation center and the voice app before the mission starts.
+- **Build history:** 0.997 170.10.
+- **Test:** Switch the hoist on and open HOIST PANEL: the values follow the helicopter and the cable. Before the dispatch, check the LINK line of the briefing.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1762,7 +1780,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.09 (this release):** A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again (see A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again).
+- **0.997 170.10 (this release):** The second dispatch waits for the time you set, the hoist operator speaks on the cable, and the hoist panel and the connection line (see The second dispatch waits for the time you set, The hoist operator speaks on the cable and Hoist panel and connection line).
+- **0.997 170.09:** A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again (see A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again).
 - **0.997 170.08:** The ambulance carries the crew when the helicopter landed far from the patient, the starting point follows the dispatcher area option, the rear crew member crouches at the patient, and old drive timers no longer fail later drives (see The ambulance carries the crew when the helicopter landed far from the patient, The starting point follows the option of the dispatcher area, The rear crew member crouches at the patient and Police and ambulance drives no longer fail by an old timer).
 - **0.997 170.07:** The crew and the heli rescuers do not walk to a helicopter that landed outside the landing spot area unless you choose (see The crew and the heli rescuers do not walk to a helicopter that landed far away).
 - **0.997 170.06:** The ambulance of a train station call reaches the scene, no stray hospital marks at the world origin on the map, every step of RETURN TO HOME BASE recorded, and the list of injured models, sex, age and state for the custom script (see The ambulance of a train station call reaches the scene, No stray hospital marks on the map, Every step of RETURN TO HOME BASE is recorded and Custom mission script: choose the injured).

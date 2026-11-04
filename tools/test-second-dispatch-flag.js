@@ -20,7 +20,7 @@ const ready = text(live(macros['ready dispatch']));
 for (const stage of ['ready_enter', 'ready_wait_start', 'ready_wait_end', 'ready_randomized', 'ready_offered']) {
   assert.ok(ready.includes(`"stage":"${stage}"`), `ready dispatch traces ${stage}`);
 }
-assert.ok(ready.indexOf('"stage":"ready_wait_start"') < ready.indexOf('"sleep":{"local":"WAIT_SECOND_DISPATCH"}') && ready.indexOf('"sleep":{"local":"WAIT_SECOND_DISPATCH"}') < ready.indexOf('"stage":"ready_wait_end"'), 'the wait is traced before and after the sleep');
+assert.ok(ready.indexOf('"stage":"ready_wait_start"') < ready.indexOf('"while":{"local":"rdw_waited"}') && ready.indexOf('"while":{"local":"rdw_waited"}') < ready.indexOf('"stage":"ready_wait_end"'), 'the wait is traced before and after the sleep');
 assert.ok(ready.includes('{"set":{"local":"second_dispatch_offered"},"value":1}'), 'the offer is recorded in second_dispatch_offered');
 const flagWrites = [...ready.matchAll(/\{"set":\{"local":"SECOND_DISPATCH"\},"value":1\}/g)].map((m) => m.index);
 assert.equal(flagWrites.length, 3, 'ready dispatch writes SECOND_DISPATCH 1 three times: before the draw, right after it and again at the end');

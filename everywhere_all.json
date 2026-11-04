@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.09",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.10",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.09"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.10"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -4264,6 +4264,7 @@
         {"link":"+ Quick links (click to show):","commands":[{"set":{"local":"dtab0"},"value":1},{"set":{"local":"medical_page_link_visible"},"value":"yes"}],"show_condition":{"require":{"local":"dtab0"},"eq":0}},
         {"link":"- Quick links (click to hide):","commands":[{"set":{"local":"dtab0"},"value":0},{"set":{"local":"medical_page_link_visible"},"value":"no"},{"if":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual","then":[{"set":{"local":"medical_page_link_visible"},"value":"yes"}]}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
         {"link":"- TECHNICAL PAGE & GROUND OPS","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"techpage"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["SIM ON GROUND","bool"]},"eq":1}},
+        {"link":"- HOIST PANEL","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"hoist panel"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1}},
         {"link":"- CHECKLISTS PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"checklist home"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
         {"link":"- DISPATCH CONTROL PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"dispatch control"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
         {"link":"- MEDICAL DIAGNOSTIC PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"patient health"},{"set_dispatch_dialog":1}],"show_condition":{"and":[{"require":{"local":"medical_page_link_visible"},"eq":"yes"},{"require":{"local":"MISSION_NUMBER"},"ne":"organ"}],"eq":1}},
@@ -9091,7 +9092,8 @@
             {"set":{"local":"HOIST_CABLE_PERSON_TYPE"},"value":{"param":"person_type"}}
         ]},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"person_on type={local:HOIST_CABLE_PERSON_TYPE} member={local:HOIST_CABLE_MEMBER} object={local:HOIST_CABLE_OBJECT} phase=down"}},
-        {"call_macro":"start hoist attached risk monitor"}
+        {"call_macro":"start hoist attached risk monitor"},
+        {"call_macro":"voice hoist cable","params":{"stage":"DOWN","who":{"param":"person_type"}}}
     ]},
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"gt":10},
@@ -9103,7 +9105,8 @@
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"hook_at_ground person={local:HOIST_CREW_ON_CABLE} type={local:HOIST_CABLE_PERSON_TYPE}"}},
-    {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"}
+    {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"},
+    {"call_macro":"voice hoist cable","params":{"stage":"GND","who":{"param":"person_type"}}}
   ],
   "hoist up empty": [
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"empty"},
@@ -9124,10 +9127,12 @@
     {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":1},
     {"call_macro":"start hoist attached risk monitor"},
+    {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.15,1.7]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:m"},"lt":8},
+    {"call_macro":"voice hoist cable","params":{"stage":"DOOR"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"lt":1},
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":0},
@@ -9141,10 +9146,12 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"up_start person={local:HOIST_CREW_ON_CABLE} patient=1 out={local:HOIST_OUT}"}},
     {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
     {"set":{"local":"HOIST_CABLE_PATIENT"},"value":1},
+    {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.1,1.5]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:m"},"lt":8},
+    {"call_macro":"voice hoist cable","params":{"stage":"DOOR"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"lt":1},
     {"#comment":"With the hoist out the operator and the patient stay on the hook (HOIST_OUT 1): the baseline speed, bank and load ladders of Hoisting back up take over. Otherwise they are aboard."},
@@ -51582,8 +51589,14 @@
             {"sleep":[3,7]},
             {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
             {"set_message":{"text":"AVAILABILITY STATUS SENT CORRECTLY"}},
-            {"sleep":{"local":"WAIT_SECOND_DISPATCH"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_end"}}
+            {"#comment":"Report of Daikan 2026-11-04 (170.09): the second dispatch comes at once, the configured waiting time (up to 2 h) is ignored. The dispatch snapshot of 170.05 shows the same: ready_wait_start with WAIT_SECOND_DISPATCH 1960 s and ready_wait_end 6 s later (the sleep of [3,7] only). One long sleep of a local is no longer trusted: the wait is a loop of 5 s sleeps that counts the seconds it has waited, so it ends only when WAIT_SECOND_DISPATCH has been waited. The row ready_wait_end says how long it waited."},
+            {"set":{"local":"rdw_waited"},"value":0},
+            {"while": {"local":"rdw_waited"}, "lt": {"local":"WAIT_SECOND_DISPATCH"},
+              "do": [
+                {"sleep":5},
+                {"set":{"local":"rdw_waited"},"value":{"add":[{"local":"rdw_waited"},5]}}
+            ]},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_end","detail":{"text":"waited {0} s of {1} s","params":[{"local":"rdw_waited"},{"local":"WAIT_SECOND_DISPATCH"}]}}}
         ]},
         {"set":{"local":"newdispatch"},"value":"done"}
       ],"else": [
@@ -86966,7 +86979,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:27>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:37>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice new shift": [
@@ -97690,6 +97703,38 @@
         {"set":{"local":"CREW_ASSISTANT_CROUCHED"},"value":0},
         {"call_macro":"multipatient registry crew leave assessment","params":{"actor":"pax3"}},
         {"call_macro":"multipatient registry crew set standing","params":{"actor":"pax3","walk":{"local":"CREW_ASSISTANT_WALK"}}}
+    ]}
+  ],
+  "voice hoist cable": [
+    {"#comment":"Calls of the hoist operator on the cable (user request of 2026-11-04, pack EN 37, keys HCL.*): DOWN a person rides the hook down, GND the hook is on the ground, UP the hook is loaded and goes up, DOOR the hook is close to the door. Params stage and who (the person_type of the cable: crew, helirescuer or none for an empty hook). The heli rescuer going down has his own lines (HRS.*), so DOWN and GND are not said for him. Mission Companion only (voice say); chatter, skipped by the AUDIO_DECLUT levels 1 to 3. The distance and height calls of the crew guidance stay as they are."},
+    {"if": {
+      "and": [
+        {"require":{"param":"who"},"eq":"helirescuer"},
+        {"or":[{"require":{"param":"stage"},"eq":"DOWN"},{"require":{"param":"stage"},"eq":"GND"}],"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"param":"hcl_key"},"value":{"text":"HCL.{0}","params":[{"param":"stage"}]}},
+    {"call_macro":"voice say","params":{"key":{"param":"hcl_key"},"declut":1}}
+  ],
+  "hoist panel": [
+    {"set_dispatch": [
+        {"image":"homebar","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"ne":"yes"}},
+        {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
+        {"link":"Back to main screen","commands":[{"call_macro":"shared repeated block 029"}]},
+        {"text":"- - - - - - - - - - - - - HOIST PANEL - - - - - - - - - - - - -","align":"center"},
+        {"text":" "},
+        {"text":"Hoist switch (1 = on): {0} | cable out: {1} ft","params":[{"var":["L:H145_SDK_OH_HOIST","number"]},{"round":{"var":["L:{local:HXX}_SDK_HOIST_CABLE_FT","number"]},"to":0}],"color":"white"},
+        {"text":"Hook height above the ground, estimate (below 0 = on the ground): {0} ft","params":[{"round":{"subtract":[{"var":["RADIO HEIGHT","feet"]},{"var":["L:{local:HXX}_SDK_HOIST_CABLE_FT","number"]}]},"to":0}],"color":"white"},
+        {"text":"Hook state: {0} (blank = idle) | person on the hook (1 = yes): {1} | patient hooked (1 = yes): {2} | hoist out (1 = yes): {3}","params":[{"local":"HOIST_CABLE_PHASE"},{"local":"HOIST_CREW_ON_CABLE"},{"local":"HOIST_CABLE_PATIENT"},{"local":"HOIST_OUT"}],"color":"white"},
+        {"text":"Helicopter: radio height {0} ft | indicated airspeed {1} kt | bank {2} deg","params":[{"round":{"var":["RADIO HEIGHT","feet"]},"to":0},{"round":{"var":["AIRSPEED INDICATED","knots"]},"to":0},{"round":{"var":["PLANE BANK DEGREES","degrees"]},"to":0}],"color":"white"},
+        {"text":"Hoist window: radio height 40 to 160 ft. Too high.","color":"red","show_condition":{"require":{"var":["RADIO HEIGHT","feet"]},"gt":163}},
+        {"text":"Hoist window: radio height 40 to 160 ft. Too low.","color":"red","show_condition":{"require":{"var":["RADIO HEIGHT","feet"]},"lt":40}},
+        {"text":"Hoist window: radio height 40 to 160 ft. Inside.","color":"green","show_condition":{"and":[{"require":{"var":["RADIO HEIGHT","feet"]},"gte":40},{"require":{"var":["RADIO HEIGHT","feet"]},"lte":163}],"eq":1}},
+        {"text":"Hoist out only, bank: 30 degrees limit, boom and cable damaged above 40, casualty lost above 46, medic and casualty lost above 52.","color":"gray"},
+        {"text":"Hoist out only, indicated airspeed: 70 kt limit, cable damaged above 95, casualty lost above 105, medic and casualty lost above 115.","color":"gray"},
+        {"text":"The hook height is the radio height minus the cable out: it is an estimate, the real hook height is used by the mission for the touch down.","color":"gray"}
     ]}
   ]
 },
@@ -144571,6 +144616,7 @@
     {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
     {"text":"R&E Mission generator {0}{1}{2} - MESSAGE AREA","params":[{"local":"MISSION_VERSION"},{"local":"DEV_TYPE"},{"local":"DEV_VERSION"}],"align":"center"},
     {"text":" "},
+    {"text":"LINK: radio {0} (1 = connected) | wifi {1} | HOC {2} | voice app {3} (1 = connected)","params":[{"var":["L:CARLS_CONNECTED","number"]},{"local":"wificonnect"},{"local":"HOCconnection"},{"local":"TTS"}],"align":"center","color":"gray","show_condition":{"require":{"local":"MISSION_PHASE"},"lt":2}},
     {"text":"CAUTION CICERS OSM API key will expire in {0:TIME}(...mm:ss)","params":[{"local":"CICERS_REMAINING_S"}],"align":"center","color":"orange","show_condition":{"and":[{"require":{"local":"CICERS_REMAINING_S"},"lt":43200},{"require":{"local":"CICERS_REMAINING_S"},"gt":0}],"eq":1}},
     {"describe_icon":"newico","color":"green","description":"New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!","params":[{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],"commands":[{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],"align":"center","show_condition":{"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}},
     {"describe_icon":"newico","color":"green","description":"New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!","params":[{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],"commands":[{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],"align":"center","show_condition":{"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}},
@@ -144646,6 +144692,7 @@
     {"link":"+ Quick links (click to show):","commands":[{"set":{"local":"dtab0"},"value":1}],"show_condition":{"require":{"local":"dtab0"},"eq":0}},
     {"link":"- Quick links (click to hide):","commands":[{"set":{"local":"dtab0"},"value":0}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
     {"link":"- TECHNICAL PAGE & GROUND OPS","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"techpage"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["SIM ON GROUND","bool"]},"eq":1}},
+    {"link":"- HOIST PANEL","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"hoist panel"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1}},
     {"link":"- CHECKLISTS PAGE","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"checklist home"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
     {"link":"- DISPATCH CONTROL PAGE","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"dispatch control"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
     {"link":"- Start boarding procedures","commands":[{"set":{"local":"BOARDING_HOLD"},"value":0}],"show_condition":{"and":[{"require":{"local":"BOARDING_HOLD"},"eq":1},{"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":10}],"eq":1}},
