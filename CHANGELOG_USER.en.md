@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.08. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.09. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -885,6 +885,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.08.
 - **Test:** Use the police to carry the crew from a far landing spot and follow the car and the crew.
 
+### A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again
+
+- Report of testers on 0.997 170.08: on a new flight the dispatch failed with "ERR99 FAILED to find a suitable location" and the briefing had no ACCEPT DISPATCH and NEXT DISPATCH bars. The starting point of the mission was not created, so the dispatch had no centre and the radio connection of the briefing never completed. The starting point is created at the first start again, as the options START LOCATION, CUSTOM LOCATION and PRESENT POSITION describe.
+- **Build history:** 0.997 170.09.
+- **Test:** Start a mission on a new flight: the dispatch arrives with a location and the ACCEPT DISPATCH and NEXT DISPATCH bars are in the briefing. Accept a second dispatch with each option.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1756,7 +1762,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.08 (this release):** The ambulance carries the crew when the helicopter landed far from the patient, the starting point follows the dispatcher area option, the rear crew member crouches at the patient, and old drive timers no longer fail later drives (see The ambulance carries the crew when the helicopter landed far from the patient, The starting point follows the option of the dispatcher area, The rear crew member crouches at the patient and Police and ambulance drives no longer fail by an old timer).
+- **0.997 170.09 (this release):** A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again (see A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again).
+- **0.997 170.08:** The ambulance carries the crew when the helicopter landed far from the patient, the starting point follows the dispatcher area option, the rear crew member crouches at the patient, and old drive timers no longer fail later drives (see The ambulance carries the crew when the helicopter landed far from the patient, The starting point follows the option of the dispatcher area, The rear crew member crouches at the patient and Police and ambulance drives no longer fail by an old timer).
 - **0.997 170.07:** The crew and the heli rescuers do not walk to a helicopter that landed outside the landing spot area unless you choose (see The crew and the heli rescuers do not walk to a helicopter that landed far away).
 - **0.997 170.06:** The ambulance of a train station call reaches the scene, no stray hospital marks at the world origin on the map, every step of RETURN TO HOME BASE recorded, and the list of injured models, sex, age and state for the custom script (see The ambulance of a train station call reaches the scene, No stray hospital marks on the map, Every step of RETURN TO HOME BASE is recorded and Custom mission script: choose the injured).
 - **0.997 170.05:** The base selection window at the end of the mission is shown again until you answer it, and the end of the mission is fully recorded for troubleshooting (see The base selection window at the end of the mission cannot get lost).

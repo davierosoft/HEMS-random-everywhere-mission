@@ -24,3 +24,26 @@ assert.ok(/"global":"location_ref"\},"eq":null,"then":\[\{"set":\{"global":"loca
 const ac = fs.readFileSync(path.join(__dirname, '..', 'mission-src/macros/03-aircraft-crew-checklists.json'), 'utf8');
 assert.ok(!/"location_ref"\},\s*"value":\s*"\$USER"/.test(ac), 'aircraft profile defaults are START');
 console.log('start modes ok');
+
+// A command object must not carry a "#comment" key beside its command: the engine takes it for a comment and skips the command.
+// Report of NotRob (2026-11-04, 170.08): the start location block of objective1 shared an object with its comment, mission_start_location
+// was never created (L:MISSION_START_LOCATION 0,0 twelve minutes later), the HOC connection thread waits for it, HOCconnection stayed
+// Disconnected and the briefing had no ACCEPT DISPATCH bar.
+{
+  const dirs = ['macros', 'threads', 'root', 'data'];
+  const bad = [];
+  const walk = (o, where) => {
+    if (Array.isArray(o)) o.forEach((c, i) => walk(c, where + '[' + i + ']'));
+    else if (o && typeof o === 'object') {
+      const k = Object.keys(o);
+      if (k.includes('#comment') && k.length > 1) bad.push(where + ' ' + k.join(','));
+      Object.entries(o).forEach(([a, b]) => walk(b, where + '/' + a));
+    }
+  };
+  for (const d of dirs) {
+    const dir = path.join(__dirname, '..', 'mission-src', d);
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) walk(JSON.parse(fs.readFileSync(path.join(dir, f), 'utf8')), d + '/' + f);
+  }
+  assert.deepStrictEqual(bad, [], 'objects with a #comment key beside a command: ' + bad.join('; '));
+}

@@ -1,3 +1,13 @@
+## Release 0.997 170.09
+
+- Scope of the 170.07 and 170.08 changes not yet supplied through the ledger baseline
+- Hotfix of 170.08: the start modes blocks of objective1 and accept_dispatch shared an object with their comment and were skipped
+
+## Release 0.997 170.09
+
+- Hotfix of 170.08. In `objective1` and `accept_dispatch` the start modes blocks (start location, custom centre, `$USER` refresh) were written as one object with their `#comment` key; the engine takes such an object for a comment and skips the command. `mission_start_location` was never created on a new flight: `L:MISSION_START_LOCATION` stayed 0,0, the dispatch centre (START is the default) did not exist (ERR99 "FAILED to find a suitable location"), and the thread "HOC connection", which waits for the location, never set `HOCconnection` (no ACCEPT DISPATCH and NEXT DISPATCH bars). Evidence: snapshot of NotRob 2026-11-04 (`start_location_new` row with `has_start=0`, `L:MISSION_START_LOCATION` 0,0 twelve minutes later). The comments are separate objects now; `tools/test-start-modes.js` fails when any command object carries a `#comment` key.
+- Runtime status: PENDING (`docs/testing/RUNTIME_VALIDATION.md`).
+
 ## Release 0.997 170.08
 
 - Includes the ground return gate of 170.07 (not supplied as a separate release).

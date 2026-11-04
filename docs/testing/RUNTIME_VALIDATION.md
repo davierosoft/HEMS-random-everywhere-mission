@@ -744,3 +744,7 @@ Read the rows named below in `ground_ops_checkpoint_log` and `dispatch_handoff_l
 2. Start modes: START (default) keeps the starting point through a second dispatch (`start_location_reused`); CUSTOM LOCATION behaves the same and the custom point is kept; PRESENT POSITION moves the starting point to the helicopter at the accept (`accept_second_start`, `start_location_restored`). After reloading the flight the starting point is recalculated (`start_location_new`).
 3. Skid operations with 4 or 5 crew: both crew members crouch at the patient and stand up at the end.
 4. Police carrying the crew from a far landing spot: `drive_watchdog_police_state` no longer ends as failed without a `drv_pol_timeout` of its own drive; no stray move of the car.
+
+## Release 170.09 (2026-11-04, PENDING)
+
+Hotfix of 170.08 (reports of billy5bellys and NotRob). New flight in MSFS: the row `start_location_new` of `dispatch_handoff_log` shows `has_start=1` and a start LVAR other than 0,0, the dispatch has a location (no ERR99), the briefing shows "Connected with HEMS Operation Center" and then the ACCEPT DISPATCH and NEXT DISPATCH bars. START: the second dispatch keeps the base; CUSTOM: the custom point exists from the start; PRESENT POSITION: the base follows the helicopter at the accept.
