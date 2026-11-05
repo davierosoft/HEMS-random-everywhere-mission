@@ -16,6 +16,7 @@ const scripts = [
   'check-canonical-artifact.js',
   'test-mission-formatting.js',
   'check-workspace-consistency.js',
+  'check-dead-macros.js',
   'test-ci-workflow.js',
   'validate-mission.js',
   'validate-df-regression.js',

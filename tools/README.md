@@ -7,6 +7,7 @@ All commands run with the Node runtime already required by the repository. No pa
 | `node tools/assert-cicers-branch.js` | Fails unless the checked-out branch is `main`. | No |
 | `node tools/assert-safe-push.js` | Pre-push stdin validator; rejects any branch destination other than `refs/heads/main`. | No |
 | `node tools/check-workspace-consistency.js` | Verifies manifest/module/docs/scripts/AGENTS consistency and retired-handoff cleanup. | No |
+| `node tools/check-dead-macros.js [--list]` | Finds macros that no thread, root section or data entry reaches (also through call_macro placeholders such as `ELT {local:ELT}`); fails for a dead macro missing from `tools/dead-macros-allowlist.json` (with its reason) and for a listed one that is no longer dead. | No |
 | `node tools/test-hvar-command-compatibility.js` | Verifies every current HVAR trigger and assignment form against the documented HPG command contract. | No |
 | `node tools/mission-workspace.js locate "text"` | Finds the owning module of a macro, data table, thread, icon or root key without loading the monolith into agent context. | No |
 | `node tools/mission-workspace.js check` | Proves modular sources rebuild the deployment artifact byte-for-byte. | No |
