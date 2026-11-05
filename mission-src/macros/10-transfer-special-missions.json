@@ -466,6 +466,34 @@
             ]}
         ]}
     ]}},
+    {"#comment":"Guidance of the hoist to the patient when there is no landing spot (user answer of 2026-11-04, audit item H1: every object or location is a valid target of the guidance). The thread above guides to landing_spot; without it the hoist hover had no guidance. Same gates as above (AUDIO_DECLUT, radio height above 30 ft, ground speed 25 kt or less, MISSION_GUIDANCE_ACTIVE) and the same call, with injured_human as the target, within 10 m of it; polled every 3 s, no blocking wait on a location that may not exist."},
+    {"create_thread": {
+      "commands": [
+        {"while": {"var":["L:HOISTED","number"]}, "ne": 1,
+          "do": [
+            {"sleep":3},
+            {"if": {
+              "and": [
+                {"require":{"has_location":"landing_spot"},"eq":0},
+                {"require":{"has_object":"injured_human"},"eq":1},
+                {"require":{"local":"MISSION_GUIDANCE_ACTIVE"},"eq":1},
+                {"require":{"var":["RADIO HEIGHT","feet"]},"gt":30},
+                {"require":{"var":["GPS GROUND SPEED","knots"]},"lte":25},
+                {"require":{"object":"injured_human","var":"distance:m"},"lt":10}
+              ]}, "eq": 1,
+              "then": [
+                {"if": {
+                  "or": [
+                    {"require":{"global":"AUDIO_DECLUT"},"lt":2},
+                    {"require":{"global":"AUDIO_DECLUT"},"eq":5}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"play_guidance_message":{"target":"injured_human","self":"$USER:HOIST","vertical":[15,10000]}},
+                    {"sleep":3}
+                ]}
+            ]}
+        ]}
+    ]}},
     {"create_thread": {
       "commands": [
         {"wait_for":{"object":"landing_spot","var":"distance"},"lt":0.4},
