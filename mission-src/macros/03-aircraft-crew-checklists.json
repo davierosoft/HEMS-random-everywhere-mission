@@ -7509,5 +7509,61 @@
       ],"else": [
         {"call_macro":"voice say","params":{"key":{"local":"hhp_key"},"a":{"text":"{0}","params":[{"local":"hhp_age"}]}}}
     ]}
+  ],
+  "voice site orbit": [
+    {"#comment":"User request of 2026-11-04 (audit item L2, pack EN 37): the pilot flies an orbit over the accident and the copilot says that it is completed (APR.ORB), once for each dispatch. No finding is claimed: the mission cannot see obstacles. The orbit is the sum of the heading changes (one direction) reaching 330 degrees within 0.6 NM of the accident below 1500 ft of radio height, in flight, between MISSION_PHASE 2 and 7; the sum restarts when the helicopter leaves that circle. Flags vso_done and vso_total, cleared when a new dispatch is shown. Mission Companion only (voice say), chatter. Started by delayed threads."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":1},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vso_done"},"value":0},
+            {"set":{"local":"vso_total"},"value":0},
+            {"set":{"local":"vso_prev"},"value":null}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":8},
+            {"require":{"local":"vso_done"},"ne":1},
+            {"require":{"has_location":"accident_location"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vso_h"},"value":{"var":["A:PLANE HEADING DEGREES MAGNETIC","degrees"]}},
+            {"if": {
+              "and": [
+                {"require":{"location":"accident_location","var":"distance"},"lt":0.6},
+                {"require":{"var":["RADIO HEIGHT","feet"]},"lt":1500},
+                {"require":{"var":["SIM ON GROUND","bool"]},"ne":1}
+              ]}, "eq": 1,
+              "then": [
+                {"if": {"local":"vso_prev"}, "ne": null,
+                  "then": [
+                    {"set":{"local":"vso_d"},"value":{"subtract":[{"local":"vso_h"},{"local":"vso_prev"}]}},
+                    {"if": {"local":"vso_d"}, "gt": 180,
+                      "then": [
+                        {"set":{"local":"vso_d"},"value":{"subtract":[{"local":"vso_d"},360]}}
+                    ]},
+                    {"if": {"local":"vso_d"}, "lt": -180,
+                      "then": [
+                        {"set":{"local":"vso_d"},"value":{"add":[{"local":"vso_d"},360]}}
+                    ]},
+                    {"set":{"local":"vso_total"},"value":{"add":[{"local":"vso_total"},{"local":"vso_d"}]}}
+                ]},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"vso_total"},"gte":330},
+                    {"require":{"local":"vso_total"},"lte":-330}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"vso_done"},"value":1},
+                    {"call_macro":"voice say","params":{"key":"APR.ORB","declut":1}}
+                ]}
+              ],"else": [
+                {"set":{"local":"vso_total"},"value":0}
+            ]},
+            {"set":{"local":"vso_prev"},"value":{"local":"vso_h"}}
+        ]}
+    ]}
   ]
 }

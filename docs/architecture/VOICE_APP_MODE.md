@@ -222,3 +222,7 @@ Question: the names of places and hospitals often differ from the English pack (
 ## Handover with the data of the patient (2026-11-04, pack EN 37)
 
 `voice hospital handover patient` (called by `voice hospital handover` in place of the generic `HOS.HND`, which stays in the pack): the doctor says sex and age of the transported patient (`SEX1-3`, `AGE1-3`, patient `HEMS_PATIENT_NUMBER`) and the state by the Life Score (60 or more stable, 30 to 59 serious, under 30 critical). Keys `HOS.HND.<M|F|U>.<S|M|C>`; the argument is the age, used only with a known sex and an age above 0, otherwise the neutral key U. The hospital team lines (`HOS.WEL`, `HOS.Q`, `HOS.A`, `HOS.THX`) are unchanged. Test: `tools/test-voice-handover-patient.js`. Runtime PENDING.
+
+## Orbit over the accident (2026-11-05, pack EN 37)
+
+`voice site orbit` (thread started by `delayed threads`): in flight, MISSION_PHASE 2 to 7, within 0.6 NM of the accident and below 1500 ft of radio height, the heading changes (one direction) are summed from the magnetic heading every second; at 330 degrees the copilot says `APR.ORB` ("Orbit completed", no finding is claimed: the mission cannot see obstacles), once for each dispatch. The sum restarts when the helicopter leaves the circle. Test: `tools/test-voice-site-orbit-snapshot-link.js` (it also checks the link `- CAPTURE DIAGNOSTIC SNAPSHOT` of the briefing and of the Mission dispatch page, which calls `capture diagnostic snapshot` for `Debug_Table`, as the button of the debug page). Runtime PENDING.

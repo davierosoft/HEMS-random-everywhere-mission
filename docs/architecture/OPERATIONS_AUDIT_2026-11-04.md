@@ -154,6 +154,7 @@ Decided by the author: the hoist calls are added (H2, V1); a hoist panel for the
 - L1, V8, V5 (2026-11-05): wind at the site and fuel in flight, see `VOICE_APP_MODE.md` (sources, runtime PENDING).
 - G3 (2026-11-05): handover of the doctor with sex, age and state of the patient (`HOS.HND.*`), see `VOICE_APP_MODE.md`.
 - V7 (dispatcher status messages) is not built: `RESCUETRACK_MESSAGES.md` says the dispatcher knows only what it decides and what its callers tell it, and the pilot has no status call to the dispatcher in the mission.
+- L2 and U9 (2026-11-05): orbit completed call and the snapshot link in the briefing and on the Mission dispatch page.
 - Next action strip (U2): the tablet already shows `ON-SITE OPERATIONS` with the stage and, when stalled, `Still open`; what remains is a short line in the briefing with the button that the step waits for (needs a map from stage to button).
 - Pause and abort of the hoist (H3, 2026-11-05): calls only, limits by common sense, see `HOIST_CABLE_CASUALTIES.md`.
 
