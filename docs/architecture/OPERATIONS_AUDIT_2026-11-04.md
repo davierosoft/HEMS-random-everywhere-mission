@@ -151,6 +151,7 @@ Decided by the author: the hoist calls are added (H2, V1); a hoist panel for the
 - H2, V1: keys `HCL.DOWN`, `HCL.GND`, `HCL.UP`, `HCL.DOOR` in the three packs (EN 37, DE 25, FR 26), macro `voice hoist cable` called by `hoist down`, `hoist up 1 operator` and `hoist up operator+injured`; the heli rescuer going down keeps `HRS.*` (`tools/test-hoist-cable-calls.js`).
 - U1: macro `hoist panel` (cable out, hook height estimate, hook state, person and patient on the hook, radio height, ground speed, bank, the hoist window of 40 to 160 ft) with a link `- HOIST PANEL` in the briefing and on the Mission dispatch page while the hoist switch is on.
 - U3: line `LINK: radio | wifi | HOC | voice app` at the top of the briefing before the mission starts.
+- L1, V8, V5 (2026-11-05): wind at the site and fuel in flight, see `VOICE_APP_MODE.md` (sources, runtime PENDING).
 - Next action strip (U2): the tablet already shows `ON-SITE OPERATIONS` with the stage and, when stalled, `Still open`; what remains is a short line in the briefing with the button that the step waits for (needs a map from stage to button).
 - Pause and abort of the hoist (H3): to design with the author (see the answer of 2026-11-04).
 

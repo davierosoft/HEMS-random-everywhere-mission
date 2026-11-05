@@ -7370,5 +7370,76 @@
     ]},
     {"set":{"param":"hcl_key"},"value":{"text":"HCL.{0}","params":[{"param":"stage"}]}},
     {"call_macro":"voice say","params":{"key":{"param":"hcl_key"},"declut":1}}
+  ],
+  "voice site wind": [
+    {"#comment":"User request of 2026-11-04 (audit, item L1, pack EN 37): one nautical mile from the accident the copilot reads the wind at the site, once for each dispatch (APR.WND with the direction the wind comes from, rounded to 10 degrees, and the knots; APR.WND.C under 5 knots). The wind is that of the simulator at the helicopter, the same values as the weather briefing (voice weather class). Mission Companion only (voice say), chatter (AUDIO_DECLUT levels 1 to 3 skip it). Started by delayed threads. The flag vsw_done is cleared when a new dispatch is shown (MISSION_PHASE below 2)."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":5},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vsw_done"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":8},
+            {"require":{"local":"vsw_done"},"ne":1},
+            {"require":{"has_location":"accident_location"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"location":"accident_location","var":"distance"}, "lt": 1,
+              "then": [
+                {"set":{"local":"vsw_done"},"value":1},
+                {"call_macro":"voice weather class"},
+                {"if": {"local":"vw_spd"}, "lt": 5,
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":"APR.WND.C","declut":1}}
+                  ],"else": [
+                    {"call_macro":"voice say","params":{"key":"APR.WND","declut":1,"a":{"text":"{0}//{1}","params":[{"local":"vw_dir"},{"local":"vw_spd"}]}}}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "voice fuel watch": [
+    {"#comment":"User request of 2026-11-04 (audit, item V5, pack EN 37): the copilot speaks about the fuel in flight during a mission, once for each dispatch: FUEL.MIN when the fuel falls to half of the limit of the mission option LOWFUELTHRSLD (percent, 0 = off), FUEL.LOW when it falls to the limit. The measure is the one that the mission already compares with the limit (FUEL TANK CENTER LEVEL percent). Not on the ground, not before the dispatch is accepted (MISSION_PHASE 2 to 9). The flags vfw_low and vfw_min are cleared when a new dispatch is shown (MISSION_PHASE below 2); when the fuel is already under half of the limit only FUEL.MIN is said. Mission Companion only (voice say), chatter. Started by delayed threads."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":10},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vfw_low"},"value":0},
+            {"set":{"local":"vfw_min"},"value":0}
+        ]},
+        {"set":{"local":"vfw_f"},"value":{"floor":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]}}},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":10},
+            {"require":{"var":["SIM ON GROUND","bool"]},"ne":1},
+            {"require":{"global":"LOWFUELTHRSLD"},"gt":0},
+            {"require":{"local":"vfw_f"},"lte":{"floor":{"divide":[{"global":"LOWFUELTHRSLD"},2]}}},
+            {"require":{"local":"vfw_min"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vfw_min"},"value":1},
+            {"set":{"local":"vfw_low"},"value":1},
+            {"call_macro":"voice say","params":{"key":"FUEL.MIN","declut":1,"a":{"text":"{0}","params":[{"local":"vfw_f"}]}}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":10},
+            {"require":{"var":["SIM ON GROUND","bool"]},"ne":1},
+            {"require":{"global":"LOWFUELTHRSLD"},"gt":0},
+            {"require":{"local":"vfw_f"},"lte":{"global":"LOWFUELTHRSLD"}},
+            {"require":{"local":"vfw_low"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vfw_low"},"value":1},
+            {"call_macro":"voice say","params":{"key":"FUEL.LOW","declut":1,"a":{"text":"{0}","params":[{"local":"vfw_f"}]}}}
+        ]}
+    ]}
   ]
 }

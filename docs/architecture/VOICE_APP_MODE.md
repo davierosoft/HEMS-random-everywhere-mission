@@ -212,3 +212,9 @@ Question: the names of places and hospitals often differ from the English pack (
 ## Hoist operator calls on the cable (2026-11-04, pack EN 37)
 
 `voice hoist cable` (module 03) speaks `HCL.<stage>` through `voice say` as chatter (skipped by the AUDIO_DECLUT levels 1 to 3), Companion only. Stages: DOWN a person of the crew rides the hook down, GND the hook is on the ground, UP the hook is loaded and goes up, DOOR the hook is within 8 m of the door on the way up. Called by the four cable macros (`hoist down`, `hoist up 1 operator`, `hoist up operator+injured`); the heli rescuer going down has `HRS.*`, the empty hook going up is not announced. The distance and height calls of the crew guidance (`play_guidance_message`) are not changed. Test: `tools/test-hoist-cable-calls.js`. Runtime PENDING.
+
+## Wind at the site and fuel in flight (2026-11-04, pack EN 37)
+
+- `voice site wind` (thread started by `delayed threads`): one nautical mile from the accident, between MISSION_PHASE 2 and 7, once for each dispatch, the copilot says `APR.WND` (arguments `dir//knots`, the direction the wind comes from rounded to 10 degrees, as the weather briefing) or `APR.WND.C` under 5 knots. Flag `vsw_done`, cleared when a new dispatch is shown.
+- `voice fuel watch` (same start): in flight, MISSION_PHASE 2 to 9, the copilot says `FUEL.MIN` at half of the limit `LOWFUELTHRSLD` and `FUEL.LOW` at the limit (argument: fuel percent of `FUEL TANK CENTER LEVEL`, the measure that the mission compares with the limit); limit 0 = off; flags `vfw_low` and `vfw_min` cleared with a new dispatch; under half of the limit only `FUEL.MIN`.
+- Both are chatter (`voice say` with `declut` 1) and Companion only. Test: `tools/test-voice-site-wind-fuel.js` runs the loops with a small interpreter. Runtime PENDING.
