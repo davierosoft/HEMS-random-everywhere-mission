@@ -77,6 +77,9 @@
       {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"gt":120}
     ]},
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
+    {"call_macro":"voice hoist height","params":{"who":{"param":"person_type"}}},
+    {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"lt":3},
+    {"call_macro":"voice hoist height","params":{"who":{"param":"person_type"}}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"hook_at_ground person={local:HOIST_CREW_ON_CABLE} type={local:HOIST_CABLE_PERSON_TYPE}"}},
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"},
@@ -142,9 +145,11 @@
         {"set":{"var":["L:{local:VCP}86","number"]},"value":{"add":[{"var":["L:{local:VCP}86","number"]},1]}},
         {"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1},
         {"call_macro":"ground ops checkpoint","params":{"id":"hoist_switch_ok"}}
-    ]}
+    ]},
+    {"call_macro":"voice hoist precheck"}
   ],
   "HOISTING": [
+    {"set":{"local":"HPC_DONE"},"value":0},
     {"call_macro":"multipatient registry crew first target"},
     {"set":{"local":"HOIST_CABLE_PERSON_TYPE"},"value":"crew"},
     {"set":{"local":"chevuoifare"},"value":null},
@@ -11197,6 +11202,7 @@
           "then": [
             {"set":{"local":"fa_type"},"value":"LEAK"},
             {"set":{"local":"fa_arg"},"value":1},
+            {"set":{"var":["L:DBF_FAIL","number"]},"value":{"add":[{"var":["L:DBF_FAIL","number"]},1]}},
             {"call_macro":"failure crew speak"}
         ]}
     ]}},

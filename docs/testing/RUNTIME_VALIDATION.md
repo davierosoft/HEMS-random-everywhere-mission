@@ -763,3 +763,11 @@ At least four testers, mixed versions (the original 0.997 among them), always at
 1. First dispatch with the wifi only, with the radio only, with both, with 5G: the bars appear with the dispatch, also after RELOAD A MISSION and with the radio already connected at the start.
 2. With ERR6 or ERR99 on the tablet the bars are there (ACCEPT disabled, NEXT DISPATCH active).
 3. Second dispatch after a finished mission: the bar of the flag and the bar for an offered dispatch appear with the same rule.
+
+## Hoist pre-check, hook height, debrief by events (sources 2026-11-05, not built, PENDING)
+
+With the Companion and the packs EN 37, DE 25, FR 26 installed:
+
+1. Hoist pre-check: when the arm is out (and with manual arming the switch is on) the operator says `HPC.Q` and the pilot `HPC.A`, once; a second hoist in the same operation does not repeat it; the cable goes down without waiting for the voice.
+2. Hook height: while the cable goes down the operator says "35 feet" at about 10 m and "10 feet" at about 3 m, then `HCL.GND`; a heli rescuer going down has only `HRS.*`.
+3. Debrief: finish a dispatch with a hard landing, with a failure, with a long wait on site (120 s), with a patient death: at the base the lines `DBF.*` follow the debrief chat, one for each event, in order; a clean dispatch with a good outcome gets `DBF.OK`; the next dispatch starts with no events counted.

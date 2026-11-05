@@ -2029,6 +2029,7 @@
   ],
   "failure crew announce": [
     {"#comment":"In flight the pilot and the copilot announce a random failure (user request of 2026-10-25): either one says what failed and the other verifies (Check / Verified), or one says that there is a failure and the other says which. Called by the failure engine (not by the crash tiers) with param code. The failure type is kept for the report to the technician (failure tech report). Mission Companion only; without it the old copilot line CPL 9 is played."},
+    {"set":{"var":["L:DBF_FAIL","number"]},"value":{"add":[{"var":["L:DBF_FAIL","number"]},1]}},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -2675,6 +2676,60 @@
             ]}}
         ]}
     ]}
+  ],
+  "voice debrief events": [
+    {"#comment":"User request of 2026-11-05 (audit, item V11, pack EN 37, keys DBF.*): after the debrief chat at the base the crew names what happened during the dispatch, from the counters that the events write: L:DBF_DEAD (voice patient died, a patient died), L:DBF_HARD (thread landing hard, a hard landing of 400 to 550 ft/min), L:DBF_FAIL (an aircraft failure or the fuel leak), L:DBF_WAIT (the on-site operations were 120 s without progress, ops_progress_warning). The counters are cleared by accept_dispatch (new dispatch) and here after the lines. One line for each event, in this order: death, hard landing, failure, long wait; a dispatch without events with LIFESCORE above 3 gets DBF.OK. The lines are spoken after the chat (a thread of 9 s, the chat takes about 3 s with its own wav counters) and only with the Mission Companion (voice say), chatter. Without the Companion the counters are cleared and nothing is said."},
+    {"set":{"local":"vde_dead"},"value":{"var":["L:DBF_DEAD","number"]}},
+    {"set":{"local":"vde_hard"},"value":{"var":["L:DBF_HARD","number"]}},
+    {"set":{"local":"vde_fail"},"value":{"var":["L:DBF_FAIL","number"]}},
+    {"set":{"local":"vde_wait"},"value":{"var":["L:DBF_WAIT","number"]}},
+    {"set":{"var":["L:DBF_DEAD","number"]},"value":0},
+    {"set":{"var":["L:DBF_HARD","number"]},"value":0},
+    {"set":{"var":["L:DBF_FAIL","number"]},"value":0},
+    {"set":{"var":["L:DBF_WAIT","number"]},"value":0},
+    {"set":{"local":"vde_any"},"value":0},
+    {"if": {
+      "or": [
+        {"require":{"local":"vde_dead"},"gt":0},
+        {"require":{"local":"vde_hard"},"gt":0},
+        {"require":{"local":"vde_fail"},"gt":0},
+        {"require":{"local":"vde_wait"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vde_any"},"value":1}
+    ]},
+    {"create_thread": {
+      "commands": [
+        {"sleep":9},
+        {"if": {"local":"vde_dead"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.DEAD","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {"local":"vde_hard"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.HARD","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {"local":"vde_fail"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.FAIL","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {"local":"vde_wait"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.WAIT","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"vde_any"},"eq":0},
+            {"require":{"local":"LIFESCORE"},"gt":3}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.OK","declut":1}}
+        ]}
+    ]}}
   ],
   "voice debrief chat": [
     {"#comment":"Crew debriefing on the ground at the base: LIFESCORE above 3 the good outcome (pack EN group debriefok, PLT 51-52, CPL 67, PAX3 40, 92), otherwise the bad one (debriefbad, PLT 53-54, CPL 68, PAX3 41). Only with the Mission Companion."},
@@ -3910,6 +3965,7 @@
   "voice patient died": [
     {"#comment":"A patient died (called by multipatient registry event DIED): the doctor says it and the pilot answers; after the impact of a hard landing the copilot asks first and the lines are about the impact (the death cause is not the clinical deterioration). Not more than one reading every 20 s. Pack EN DTH.*."},
     {"#comment":"No scream for a patient (user correction 2026-10-25): the L:DEAD sound AND.dead.wav is the scream of a hoist operator who falls and is played only by the hoist casualties, never by a patient death. The survivors speak: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
+    {"set":{"var":["L:DBF_DEAD","number"]},"value":{"add":[{"var":["L:DBF_DEAD","number"]},1]}},
     {"set":{"local":"vpd_now"},"value":{"var":["L:MISSION_TIME","number"]}},
     {"if": {"local":"vpd_last"}, "eq": null,
       "then": [
@@ -6784,6 +6840,7 @@
         {"set":{"var":["L:PLT{local:VCP}10","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}10","number"]},1]}}
     ]},
     {"call_macro":"voice debrief chat"},
+    {"call_macro":"voice debrief events"},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":40},
     {"call_macro":"zoom out"},
     {"sleep":2},
@@ -7370,6 +7427,37 @@
     ]},
     {"set":{"param":"hcl_key"},"value":{"text":"HCL.{0}","params":[{"param":"stage"}]}},
     {"call_macro":"voice say","params":{"key":{"param":"hcl_key"},"declut":1}}
+  ],
+  "voice hoist precheck": [
+    {"#comment":"User request of 2026-11-05 (audit, item V3, pack EN 37, keys HPC.Q and HPC.A): challenge and response between the hoist operator and the pilot once the hoist arm is out and the hoist is on, before the first cable goes down: the operator says that the arm is out and the hook and cable are free (HPC.Q), the pilot answers that he holds the hover (HPC.A). Said once for each hoist operation (the flag HPC_DONE is cleared by HOISTING). The mission does not read the boom or the control mode (SDK_HOIST_CONTROL_MODE is not read anywhere and would need a simulator check), so the lines say only what the sequence already guarantees: the arm was deployed and, with manual arming, the switch was waited for. The thread keeps the hoist from waiting for the voice. Mission Companion only (voice say), chatter."},
+    {"if": {"local":"HPC_DONE"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"HPC_DONE"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice say","params":{"key":"HPC.Q","declut":1}},
+        {"sleep":4.5},
+        {"call_macro":"voice say","params":{"key":"HPC.A","declut":1}}
+    ]}}
+  ],
+  "voice hoist height": [
+    {"#comment":"User request of 2026-11-05 (audit, item H4, pack EN 37, key HCL.H): the hoist operator calls the height of the hook above the ground while the cable goes down (called by hoist down at about 10 m and at about 3 m, the cable slows down at 10 m). The height is read from the engine (hoist_get_distance_from_ground, feet), rounded to 5 feet and said only between 4 and 45 feet, so a hook that is still high when the reel limit stops the first wait is not given a wrong height. The heli rescuer going down has his own lines (HRS.*) and is not called. These calls are about the hook; the guidance call play_guidance_message is about the helicopter over the landing spot or the patient and stays as it is. Mission Companion only (voice say), chatter."},
+    {"if": {"param":"who"}, "eq": "helirescuer",
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"vhh_ft"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+    {"if": {
+      "and": [
+        {"require":{"local":"vhh_ft"},"gte":4},
+        {"require":{"local":"vhh_ft"},"lte":45}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vhh_r"},"value":{"multiply":[{"round":{"divide":[{"local":"vhh_ft"},5]},"to":0},5]}},
+        {"call_macro":"voice say","params":{"key":"HCL.H","declut":1,"a":{"text":"{0}","params":[{"local":"vhh_r"}]}}}
+    ]}
   ],
   "voice site wind": [
     {"#comment":"User request of 2026-11-04 (audit, item L1, pack EN 37): one nautical mile from the accident the copilot reads the wind at the site, once for each dispatch (APR.WND with the direction the wind comes from, rounded to 10 degrees, and the knots; APR.WND.C under 5 knots). The wind is that of the simulator at the helicopter, the same values as the weather briefing (voice weather class). Mission Companion only (voice say), chatter (AUDIO_DECLUT levels 1 to 3 skip it). Started by delayed threads. The flag vsw_done is cleared when a new dispatch is shown (MISSION_PHASE below 2)."},
