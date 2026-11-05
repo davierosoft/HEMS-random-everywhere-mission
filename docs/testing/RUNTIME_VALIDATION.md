@@ -755,3 +755,11 @@ Hotfix of 170.08 (reports of billy5bellys and NotRob). New flight in MSFS: the r
 2. Hoist cable calls with the Companion (packs EN 37, DE 25, FR 26 installed): lower the doctor (DOWN, GND), bring up a person and a patient (UP, DOOR); a heli rescuer going down has only `HRS.*`.
 3. Hoist panel: HOIST PANEL appears while the hoist switch is on; the values follow the cable and the helicopter; the estimate of the hook height is close to the real one.
 4. Briefing LINK line shows radio, wifi, HOC and voice app before the mission starts.
+
+## ACCEPT DISPATCH bars at the first dispatch (sources 2026-11-05, not built, PENDING)
+
+At least four testers, mixed versions (the original 0.997 among them), always at the first dispatch, no logs: the dispatch is shown, the radio or the wifi is connected, the bars are missing. The bars no longer depend on `HOCconnection` (thread "HOC connection": waits for a location, reset by `objective1`, only a set of `Connected` after a wait for both connections to drop). Each bar is two rows (the renderer takes no OR): wifi not Disconnected, or wifi Disconnected and `CARLS_CONNECTED` not 0 — the connection that `first_dispatch` waits for. The LINK line of the briefing is always shown and carries radio, wifi, HOC, voice app, `MISSION_PHASE` and the dispatch flag: a screenshot of a missing bar now says why.
+
+1. First dispatch with the wifi only, with the radio only, with both, with 5G: the bars appear with the dispatch, also after RELOAD A MISSION and with the radio already connected at the start.
+2. With ERR6 or ERR99 on the tablet the bars are there (ACCEPT disabled, NEXT DISPATCH active).
+3. Second dispatch after a finished mission: the bar of the flag and the bar for an offered dispatch appear with the same rule.

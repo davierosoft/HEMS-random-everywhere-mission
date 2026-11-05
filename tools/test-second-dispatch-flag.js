@@ -55,7 +55,7 @@ assert.ok(objective4.includes('"stage":"second_flag_cleared_objective4"') && obj
 
 const briefing = fs.readFileSync(path.join(root, 'mission-src', 'root', '03-briefing.json'), 'utf8');
 const bars = briefing.match(/"show_condition": \{"and":\[\{"require":\{"local":"MISSION_PHASE"\},"gt":8\},[^\n]*\n/g) || [];
-assert.equal(bars.length, 2, 'two ACCEPT bars for a finished mission');
+assert.equal(bars.length, 4, 'two ACCEPT bars for a finished mission, each in two rows (wifi, radio only): the renderer takes no OR');
 assert.ok(bars.some((line) => line.includes('"local":"SECOND_DISPATCH"},"eq":1')), 'the bar of the flag');
 assert.ok(bars.some((line) => line.includes('"local":"second_dispatch_offered"},"eq":1') && line.includes('"local":"SECOND_DISPATCH"},"ne":1')), 'the bar for an offered dispatch whose flag was lost');
 assert.ok(!/\bor\b/.test(bars.join('')), 'renderer conditions stay AND only');
