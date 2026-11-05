@@ -771,3 +771,7 @@ With the Companion and the packs EN 37, DE 25, FR 26 installed:
 1. Hoist pre-check: when the arm is out (and with manual arming the switch is on) the operator says `HPC.Q` and the pilot `HPC.A`, once; a second hoist in the same operation does not repeat it; the cable goes down without waiting for the voice.
 2. Hook height: while the cable goes down the operator says "35 feet" at about 10 m and "10 feet" at about 3 m, then `HCL.GND`; a heli rescuer going down has only `HRS.*`.
 3. Debrief: finish a dispatch with a hard landing, with a failure, with a long wait on site (120 s), with a patient death: at the base the lines `DBF.*` follow the debrief chat, one for each event, in order; a clean dispatch with a good outcome gets `DBF.OK`; the next dispatch starts with no events counted.
+
+## Destination talk after the hospital proposal (sources 2026-11-05, not built, PENDING)
+
+With the Companion: when the hospital appears on the tablet, after the name the copilot says the minutes of flight from the scene and the doctor answers (short, middle, long flight); the minutes are close to the real flight at about 120 kt; no talk for the organ transport; the tablet hospital does not change.

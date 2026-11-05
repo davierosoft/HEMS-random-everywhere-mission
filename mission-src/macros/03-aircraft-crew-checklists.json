@@ -3640,7 +3640,8 @@
             {"require":{"local":"TTS"},"eq":1}
           ]}, "eq": 1,
           "then": [
-            {"speak":{"text":"<say:HOSP.FOUND>{0}","params":[{"local":"hospital_name"}]}}
+            {"speak":{"text":"<say:HOSP.FOUND>{0}","params":[{"local":"hospital_name"}]}},
+            {"call_macro":"voice hospital destination"}
           ],"else": [
             {"set":{"var":["L:PAX3{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}6","number"]},1]}}
         ]}
@@ -3654,6 +3655,35 @@
             {"speak":"<say:HOSP.NONE>"}
         ]}
     ]}
+  ],
+  "voice hospital destination": [
+    {"#comment":"User request of 2026-11-05 (audit, item G2, generic version: the mission has no data on the kind of a hospital, so the destination is always the closest one that the query found and nothing is said about its services). After HOSP.FOUND the copilot gives the time of flight from the scene to the proposed hospital (HOS.DST.ETA, minutes: distance from accident_location to hospital_user at an assumed 120 kt, clamped 2 to 60) and the doctor answers by the length of the flight (HOS.DST.S up to 8 minutes, HOS.DST.M 9 to 19, HOS.DST.L 20 or more: the doctor says that the destination is confirmed or changed after the assessment of the patient, since at this time nobody has seen the patient). Not for the organ transport (MISSION_NUMBER 4, the hospital is the destination of the organ). Called by voice hospital proposal when the hospital is found, only with the Mission Companion (voice say, chatter, AUDIO_DECLUT levels 1 to 3 skip it). A thread spaces the two lines."},
+    {"if": {
+      "or": [
+        {"require":{"local":"MISSION_NUMBER"},"eq":4},
+        {"require":{"has_location":"accident_location"},"ne":1},
+        {"require":{"has_location":"hospital_user"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"vhd_min"},"value":{"clamp":[{"round":{"divide":[{"location":"hospital_user","var":"distance:m","to":"accident_location"},3708]},"to":0},2,60]}},
+    {"set":{"local":"vhd_k"},"value":"HOS.DST.M"},
+    {"if": {"local":"vhd_min"}, "lte": 8,
+      "then": [
+        {"set":{"local":"vhd_k"},"value":"HOS.DST.S"}
+    ]},
+    {"if": {"local":"vhd_min"}, "gte": 20,
+      "then": [
+        {"set":{"local":"vhd_k"},"value":"HOS.DST.L"}
+    ]},
+    {"create_thread": {
+      "commands": [
+        {"sleep":5},
+        {"call_macro":"voice say","params":{"key":"HOS.DST.ETA","declut":1,"a":{"local":"vhd_min"}}},
+        {"sleep":4.5},
+        {"call_macro":"voice say","params":{"key":{"local":"vhd_k"},"declut":1}}
+    ]}}
   ],
   "voice say": [
     {"#comment":"One line of the pack (Mission Companion, voice code APP): <say:KEY> with the argument a for {0}. declut 1 = chatter, skipped by the AUDIO_DECLUT levels 1 to 3 like the other conversations. Used by the macros below."},

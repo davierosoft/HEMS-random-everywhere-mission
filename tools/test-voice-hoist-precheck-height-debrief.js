@@ -12,7 +12,7 @@ const threadsSrc = fs.readFileSync(path.join(root, 'mission-src/threads/03-fligh
 const txt = (n) => JSON.stringify(macros[n]);
 
 // packs
-const keys = { 'HCL.H': [1, '{0}'], 'HPC.Q': [4, null], 'HPC.A': [1, null], 'DBF.DEAD': [3, null], 'DBF.HARD': [2, null], 'DBF.FAIL': [2, null], 'DBF.WAIT': [1, null], 'DBF.OK': [1, null] };
+const keys = { 'HOS.DST.ETA': [2, '{0}'], 'HOS.DST.S': [3, null], 'HOS.DST.M': [3, null], 'HOS.DST.L': [3, null], 'HCL.H': [1, '{0}'], 'HPC.Q': [4, null], 'HPC.A': [1, null], 'DBF.DEAD': [3, null], 'DBF.HARD': [2, null], 'DBF.FAIL': [2, null], 'DBF.WAIT': [1, null], 'DBF.OK': [1, null] };
 for (const L of ['EN', 'DE', 'FR']) {
   const xml = fs.readFileSync(path.join(root, 'voicepacks', L + '.xml'), 'utf8');
   for (const k of Object.keys(keys)) {
@@ -31,10 +31,13 @@ function makeEnv(init) {
 function run(cmds, env) {
   const val = (x) => {
     if (x === null || typeof x !== 'object') return x;
+    if ('location' in x) return env.distM;
     if ('local' in x) return env.locals[x.local] === undefined ? null : env.locals[x.local];
     if ('param' in x) return env.params[x.param] === undefined ? null : env.params[x.param];
     if ('var' in x) return env.lv[x.var[0]] === undefined ? 0 : env.lv[x.var[0]];
     if ('fn' in x) return env.fn[x.fn];
+    if ('has_location' in x) return (env.locs || []).includes(x.has_location) ? 1 : 0;
+    if ('clamp' in x) return Math.min(Math.max(val(x.clamp[0]), x.clamp[1]), x.clamp[2]);
     if ('add' in x) return x.add.reduce((a, b) => a + val(b), 0);
     if ('multiply' in x) return x.multiply.reduce((a, b) => a * val(b), 1);
     if ('divide' in x) return val(x.divide[0]) / val(x.divide[1]);
@@ -129,4 +132,20 @@ function run(cmds, env) {
   assert.ok(JSON.stringify(macros).includes('{"set":{"local":"ops_progress_warning"},"value":1},{"set":{"var":["L:DBF_WAIT","number"]},"value":1}'), 'stall warning counted');
   assert.ok(['DBF_HARD', 'DBF_DEAD', 'DBF_FAIL', 'DBF_WAIT'].every((n) => txt('accept_dispatch').includes(`L:${n}`)), 'cleared at a new dispatch');
 }
-console.log('hoist pre-check, hook height and debrief events ok');
+
+// G2 (generic): time of flight to the proposed hospital and the answer of the doctor
+{
+  const g = (distM, o = {}) => run(macros['voice hospital destination'], makeEnv({ distM, locs: ['accident_location', 'hospital_user'], locals: { MISSION_NUMBER: 1 }, ...o }));
+  assert.deepStrictEqual(g(14832).said, [['HOS.DST.ETA', 4], ['HOS.DST.S', null]].map(([k, a]) => [k, a === null ? null : a]), '14.8 km: 4 minutes, short');
+  assert.deepStrictEqual(g(40000).said.map((s) => s[0]), ['HOS.DST.ETA', 'HOS.DST.M'], 'about 11 minutes: middle');
+  assert.deepStrictEqual(g(100000).said, [['HOS.DST.ETA', 27], ['HOS.DST.L', null]], '100 km: 27 minutes, long');
+  assert.deepStrictEqual(g(500).said[0], ['HOS.DST.ETA', 2], 'at least 2 minutes');
+  assert.deepStrictEqual(g(900000).said[0], ['HOS.DST.ETA', 60], 'at most 60 minutes');
+  assert.deepStrictEqual(g(40000, { locals: { MISSION_NUMBER: 4 } }).said, [], 'organ transport: silent');
+  assert.deepStrictEqual(g(40000, { locs: ['hospital_user'] }).said, [], 'no accident location: silent');
+  assert.deepStrictEqual(g(40000, { locs: ['accident_location'] }).said, [], 'no hospital: silent');
+  const prop = JSON.stringify(macros['voice hospital proposal']);
+  assert.ok(prop.indexOf('<say:HOSP.FOUND>') < prop.indexOf('voice hospital destination') && prop.indexOf('voice hospital destination') < prop.indexOf('<say:HOSP.NONE>'), 'called after HOSP.FOUND, in the Companion branch');
+  assert.ok(!/restaurant|trauma|burn|speciality/i.test(JSON.stringify(macros['voice hospital destination'].filter((c) => c['#comment'] === undefined))), 'nothing about the services of the hospital');
+}
+console.log('hoist pre-check, hook height, debrief events and hospital destination ok');

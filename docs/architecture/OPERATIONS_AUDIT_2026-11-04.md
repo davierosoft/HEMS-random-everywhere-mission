@@ -168,4 +168,6 @@ Checked on 2026-11-05 (with the reason when an item is not built):
 - V3 and H4 (hoist pre-check and hook height): built on 2026-11-05 after the author's request, wording by common sense; the pre-check does not read the boom or the control mode, see `VOICE_APP_MODE.md`. The hook height calls cover `hoist down` (not the heli rescuer, who has `HRS.*`); the other cable macros are not called.
 - U5, U8, M1, P3 clinical (G4 to G6): design decisions with a large surface; each needs the author's choice before work.
 
+- G2 (generic, 2026-11-05): the mission has no data on the kind of a hospital; built as the time of flight to the proposed hospital and the answer of the doctor, see `VOICE_APP_MODE.md`. Hospitals by type (OSM tags) are left out for now.
+
 Nothing else of this audit changes the mission.
