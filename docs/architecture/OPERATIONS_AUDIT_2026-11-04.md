@@ -159,4 +159,13 @@ Decided by the author: the hoist calls are added (H2, V1); a hoist panel for the
 - Next action strip (U2): the tablet already shows `ON-SITE OPERATIONS` with the stage and, when stalled, `Still open`; what remains is a short line in the briefing with the button that the step waits for (needs a map from stage to button).
 - Pause and abort of the hoist (H3, 2026-11-05): calls only, limits by common sense, see `HOIST_CABLE_CASUALTIES.md`.
 
+Checked on 2026-11-05 and not built, with the reason:
+
+- H6 (hover power): the only torque read in the mission is `SDK_ENG_1_TRQ` minus `SDK_ENG_2_TRQ` in the take-off checklist (a difference between engines, limit of 2). The unit and the margin of a single engine are not known from the sources, so a power call would need limits that nobody verified in the simulator.
+- V10 (rescuer left on the ground): the waits of the heli rescuer (`HR_HOIST_AT_MEET`, `HR_SKID_AT_MEET`) are states of the route, not timed waits with a patient status or an ambulance ETA; a timed call needs a decision on which wait it speaks for and what it says.
+- V11 (debrief by events): `voice debrief chat` chooses only between the good and the bad outcome by `LIFESCORE`; a line per event (a death, a hard landing, a failure, a long wait) needs one reliable event flag for each, and today only some of them exist.
+- U2 (next action strip): `ops_progress_stage` holds six progress stages (crew deployment, assessment, CPR, loading, final return, complete); it is not the action that the pilot must do, so the strip needs a table stage to action to button chosen by the author.
+- V3 and H4 (hoist pre-check and hook height where the guidance does not reach): the wording and the order of the calls must be confirmed by a person who works the hoist (section 5).
+- U5, U8, M1, P3 clinical (G4 to G6): design decisions with a large surface; each needs the author's choice before work.
+
 Nothing else of this audit changes the mission.
