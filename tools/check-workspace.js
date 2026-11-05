@@ -67,7 +67,7 @@ const scripts = [
   'test-query-nonblocking.js',
   'test-next-dispatch-cooldown.js',
   'test-second-dispatch-flag.js',
-  'test-copilot-message-weights.js', 'test-return-to-base-modal.js', 'test-rtb-step-trace.js', 'test-button-trace.js', 'test-custom-injured.js', 'test-ground-return-gate.js', 'test-ambulance-shuttle.js', 'test-assistant-crouch.js', 'test-start-modes.js', 'test-hoist-cable-calls.js', 'test-voice-site-wind-fuel.js', 'test-voice-handover-patient.js', 'test-hoist-drift-monitor.js', 'test-voice-site-orbit-snapshot-link.js', 'test-locref-profile-migration.js', 'test-accept-bar-condition.js', 'test-drive-watchdog-generation.js', 'test-ambulance-availability-contract.js',
+  'test-copilot-message-weights.js', 'test-return-to-base-modal.js', 'test-rtb-step-trace.js', 'test-button-trace.js', 'test-custom-injured.js', 'test-ground-return-gate.js', 'test-ambulance-shuttle.js', 'test-assistant-crouch.js', 'test-start-modes.js', 'test-hoist-cable-calls.js', 'test-voice-site-wind-fuel.js', 'test-voice-handover-patient.js', 'test-hoist-drift-monitor.js', 'test-voice-triage-stall-link.js', 'test-voice-site-orbit-snapshot-link.js', 'test-locref-profile-migration.js', 'test-accept-bar-condition.js', 'test-drive-watchdog-generation.js', 'test-ambulance-availability-contract.js',
   'test-hr-skid-choreography.js',
   'test-shared-data.js',
   'test-accident-demographics.js',

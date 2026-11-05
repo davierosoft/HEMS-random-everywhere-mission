@@ -155,6 +155,7 @@ Decided by the author: the hoist calls are added (H2, V1); a hoist panel for the
 - G3 (2026-11-05): handover of the doctor with sex, age and state of the patient (`HOS.HND.*`), see `VOICE_APP_MODE.md`.
 - V7 (dispatcher status messages) is not built: `RESCUETRACK_MESSAGES.md` says the dispatcher knows only what it decides and what its callers tell it, and the pilot has no status call to the dispatcher in the mission.
 - L2 and U9 (2026-11-05): orbit completed call and the snapshot link in the briefing and on the Mission dispatch page.
+- G1 and U7 (2026-11-05): triage category after the visit in hoist and skid operations; snapshot link in the stalled block. Checked and not needed: U4 (the Mission dispatch page already shows the Life Score of every crew member, lines at about 248 of module 04, so only place and task are missing) and U6 (the ambulance shuttle has no user choice and the hoist panel has no buttons, so there is nothing to add to the speech inventory).
 - Next action strip (U2): the tablet already shows `ON-SITE OPERATIONS` with the stage and, when stalled, `Still open`; what remains is a short line in the briefing with the button that the step waits for (needs a map from stage to button).
 - Pause and abort of the hoist (H3, 2026-11-05): calls only, limits by common sense, see `HOIST_CABLE_CASUALTIES.md`.
 

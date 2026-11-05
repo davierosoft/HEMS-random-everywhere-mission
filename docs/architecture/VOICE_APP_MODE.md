@@ -226,3 +226,7 @@ Question: the names of places and hospitals often differ from the English pack (
 ## Orbit over the accident (2026-11-05, pack EN 37)
 
 `voice site orbit` (thread started by `delayed threads`): in flight, MISSION_PHASE 2 to 7, within 0.6 NM of the accident and below 1500 ft of radio height, the heading changes (one direction) are summed from the magnetic heading every second; at 330 degrees the copilot says `APR.ORB` ("Orbit completed", no finding is claimed: the mission cannot see obstacles), once for each dispatch. The sum restarts when the helicopter leaves the circle. Test: `tools/test-voice-site-orbit-snapshot-link.js` (it also checks the link `- CAPTURE DIAGNOSTIC SNAPSHOT` of the briefing and of the Mission dispatch page, which calls `capture diagnostic snapshot` for `Debug_Table`, as the button of the debug page). Runtime PENDING.
+
+## Triage category (2026-11-05, pack EN 37)
+
+`voice hoist visit`, stage DONE, with `HELOVICTIMS` 2 or more: after the `HST.DONE.*` line the doctor says `TRI.<R|Y|G>` with the patient number: red (critical, Life Score under 30), yellow (serious, 30 to 59), green (stable, 60 or more). Hoist and skid operations; the ground operations keep `GRD.*`. The Mission dispatch page shows the link `- Stuck? CAPTURE SNAPSHOT NOW` while the on-site operations are stalled (`ops_progress_warning` 1). Test: `tools/test-voice-triage-stall-link.js`. Runtime PENDING.
