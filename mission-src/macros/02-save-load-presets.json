@@ -824,6 +824,7 @@
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SAR_HISTORY"},"value":{"global":"SAR_HISTORY"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"MOUNT_AUTO_RNG"},"value":{"global":"MOUNT_AUTO_RNG"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref"},"value":{"global":"location_ref"}},
+    {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref_v"},"value":2},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"REALISTIC_DISPATCH"},"value":{"global":"REALISTIC_DISPATCH"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"DISPATCH_TIME"},"value":{"global":"DISPATCH_TIME"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"TIME_SECOND_DISPATCH"},"value":{"global":"TIME_SECOND_DISPATCH"}},
@@ -961,6 +962,14 @@
         {"set":{"global":"SAR_HISTORY"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SAR_HISTORY"}},
         {"set":{"global":"MOUNT_AUTO_RNG"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"MOUNT_AUTO_RNG"}},
         {"set":{"global":"location_ref"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref"}},
+        {"#comment":"Profiles saved before 170.08 hold $USER, which was the default of the option and not a choice (the default is START LOCATION now). A profile without the mark location_ref_v 2 that holds $USER loads as START LOCATION; the mark is written at every save, so $USER chosen afterwards stays (report of Daikan 2026-11-05: the return base moved to the place of the second accept)."},
+        {"if": {"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref_v"}, "ne": 2,
+          "then": [
+            {"if": {"global":"location_ref"}, "eq": "$USER",
+              "then": [
+                {"set":{"global":"location_ref"},"value":"mission_start_location"}
+            ]}
+        ]},
         {"set":{"global":"REALISTIC_DISPATCH"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"REALISTIC_DISPATCH"}},
         {"set":{"global":"DISPATCH_TIME"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"DISPATCH_TIME"}},
         {"set":{"global":"TIME_SECOND_DISPATCH"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"TIME_SECOND_DISPATCH"}},

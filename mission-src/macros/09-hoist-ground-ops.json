@@ -66,7 +66,8 @@
         ]},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"person_on type={local:HOIST_CABLE_PERSON_TYPE} member={local:HOIST_CABLE_MEMBER} object={local:HOIST_CABLE_OBJECT} phase=down"}},
         {"call_macro":"start hoist attached risk monitor"},
-        {"call_macro":"voice hoist cable","params":{"stage":"DOWN","who":{"param":"person_type"}}}
+        {"call_macro":"voice hoist cable","params":{"stage":"DOWN","who":{"param":"person_type"}}},
+        {"call_macro":"hoist drift monitor"}
     ]},
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"gt":10},
@@ -100,6 +101,7 @@
     {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":1},
     {"call_macro":"start hoist attached risk monitor"},
+    {"call_macro":"hoist drift monitor"},
     {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
@@ -11465,5 +11467,96 @@
         {"set":{"local":"ambu_shuttle_leg3"},"value":"done"}
     ]},
     {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_exit","detail":{"text":"dir={0}","params":[{"param":"dir"}]}}}
+  ],
+  "hoist drift monitor": [
+    {"#comment":"Hoist operator pause and abort calls (user request of 2026-11-04, audit item H3; the limits are chosen by common sense, the author left them to the mission). Runs while somebody or the patient rides the cable on the way down or up (HOIST_CABLE_PHASE down or up; not on the ground, not with the hoist out, which has its own ladders): PAUSE when the ground speed is 10 knots or more or the bank 15 degrees or more (the operator tells the pilot to hold and stabilise the hover, pack PAX2.5), ABORT when the ground speed is 25 knots or more or the bank 30 degrees or more (pack PAX2.6, once for each trip). The pause is over after 2 s with the ground speed under 6 knots and the bank under 10 degrees. The operator only calls: the cable is not stopped (the effect of the limits on the cable, the casualties, stays with the ground impact monitor and the ladders of the hoist out). HOIST_PAUSE_STATE (empty, pause, abort) is on the hoist panel. One monitor at a time (HOIST_DRIFT_ACTIVE); started by the cable macros that put a person or the patient on the hook."},
+    {"if": {"local":"HOIST_DRIFT_ACTIVE"}, "ne": 1,
+      "then": [
+        {"set":{"local":"HOIST_DRIFT_ACTIVE"},"value":1},
+        {"set":{"local":"HOIST_PAUSE_STATE"},"value":""},
+        {"set":{"local":"hdm_calm"},"value":0},
+        {"set":{"local":"hdm_abort"},"value":0},
+        {"create_thread": {
+          "commands": [
+            {"while": {"local":"HOIST_DRIFT_ACTIVE"}, "eq": 1,
+              "do": [
+                {"sleep":0.5},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"HOIST_CREW_ON_CABLE"},"ne":1},
+                    {"require":{"local":"HOIST_CABLE_PATIENT"},"ne":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"HOIST_DRIFT_ACTIVE"},"value":0},
+                    {"set":{"local":"HOIST_PAUSE_STATE"},"value":""}
+                  ],"else": [
+                    {"if": {
+                      "or": [
+                        {"require":{"local":"HOIST_CABLE_PHASE"},"eq":"down"},
+                        {"require":{"local":"HOIST_CABLE_PHASE"},"eq":"up"}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"hdm_gs"},"value":{"floor":{"var":["GPS GROUND SPEED","knots"]}}},
+                        {"set":{"local":"hdm_bk"},"value":{"floor":{"var":["PLANE BANK DEGREES","degrees"]}}},
+                        {"if": {
+                          "or": [
+                            {"require":{"local":"hdm_gs"},"gte":25},
+                            {"require":{"local":"hdm_bk"},"gte":30},
+                            {"require":{"local":"hdm_bk"},"lte":-30}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"if": {"local":"hdm_abort"}, "ne": 1,
+                              "then": [
+                                {"set":{"local":"hdm_abort"},"value":1},
+                                {"set":{"local":"HOIST_PAUSE_STATE"},"value":"abort"},
+                                {"set":{"local":"hdm_calm"},"value":0},
+                                {"set_message":{"text":"Hoist operator: ABORT, the hoist is outside the limits. Stabilise the hover at once."}},
+                                {"set":{"var":["L:PAX2{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX2{local:VCP}6","number"]},1]}}
+                            ]}
+                          ],"else": [
+                            {"if": {
+                              "or": [
+                                {"require":{"local":"hdm_gs"},"gte":10},
+                                {"require":{"local":"hdm_bk"},"gte":15},
+                                {"require":{"local":"hdm_bk"},"lte":-15}
+                              ]}, "eq": 1,
+                              "then": [
+                                {"set":{"local":"hdm_calm"},"value":0},
+                                {"if": {"local":"HOIST_PAUSE_STATE"}, "eq": "",
+                                  "then": [
+                                    {"set":{"local":"HOIST_PAUSE_STATE"},"value":"pause"},
+                                    {"set_message":{"text":"Hoist operator: HOLD, hoist paused. Stabilise the hover."}},
+                                    {"set":{"var":["L:PAX2{local:VCP}5","number"]},"value":{"add":[{"var":["L:PAX2{local:VCP}5","number"]},1]}}
+                                ]}
+                              ],"else": [
+                                {"if": {
+                                  "and": [
+                                    {"require":{"local":"hdm_gs"},"lt":6},
+                                    {"require":{"local":"hdm_bk"},"lt":10},
+                                    {"require":{"local":"hdm_bk"},"gt":-10}
+                                  ]}, "eq": 1,
+                                  "then": [
+                                    {"set":{"local":"hdm_calm"},"value":{"add":[{"local":"hdm_calm"},1]}},
+                                    {"if": {
+                                      "and": [
+                                        {"require":{"local":"hdm_calm"},"gte":4},
+                                        {"require":{"local":"HOIST_PAUSE_STATE"},"ne":""}
+                                      ]}, "eq": 1,
+                                      "then": [
+                                        {"set":{"local":"HOIST_PAUSE_STATE"},"value":""},
+                                        {"set":{"local":"hdm_calm"},"value":0}
+                                    ]}
+                                  ],"else": [
+                                    {"set":{"local":"hdm_calm"},"value":0}
+                                ]}
+                            ]}
+                        ]}
+                      ],"else": [
+                        {"set":{"local":"HOIST_PAUSE_STATE"},"value":""}
+                    ]}
+                ]}
+            ]}
+        ]}}
+    ]}
   ]
 }

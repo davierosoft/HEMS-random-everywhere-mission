@@ -155,6 +155,6 @@ Decided by the author: the hoist calls are added (H2, V1); a hoist panel for the
 - G3 (2026-11-05): handover of the doctor with sex, age and state of the patient (`HOS.HND.*`), see `VOICE_APP_MODE.md`.
 - V7 (dispatcher status messages) is not built: `RESCUETRACK_MESSAGES.md` says the dispatcher knows only what it decides and what its callers tell it, and the pilot has no status call to the dispatcher in the mission.
 - Next action strip (U2): the tablet already shows `ON-SITE OPERATIONS` with the stage and, when stalled, `Still open`; what remains is a short line in the briefing with the button that the step waits for (needs a map from stage to button).
-- Pause and abort of the hoist (H3): to design with the author (see the answer of 2026-11-04).
+- Pause and abort of the hoist (H3, 2026-11-05): calls only, limits by common sense, see `HOIST_CABLE_CASUALTIES.md`.
 
 Nothing else of this audit changes the mission.

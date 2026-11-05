@@ -69,7 +69,7 @@ const walk = (node, fn) => {
     if (o.if && o.if.global && o.eq === null && Array.isArray(o.then)) for (const c of o.then) if (c.set && c.set.global === o.if.global) guarded.add(o.if.global);
   });
   // meta keys of the table, a variable (PERSIST_MISSION_WAIT_TIME), values with their own normalisation macro, and CALLSIGN (null and empty both mean HEMS)
-  const exempt = new Set(['valid', 'name', 'saved_at', 'PERSIST_MISSION_WAIT_TIME', 'CALLSIGN', 'HOIST_SAFETY_MONITOR', 'MISSION_ACCIDENT_MAX_RADIUS', 'MISSION_ACCIDENT_MIN_RADIUS']);
+  const exempt = new Set(['valid', 'name', 'saved_at', 'location_ref_v', 'PERSIST_MISSION_WAIT_TIME', 'CALLSIGN', 'HOIST_SAFETY_MONITOR', 'MISSION_ACCIDENT_MAX_RADIUS', 'MISSION_ACCIDENT_MIN_RADIUS']);
   const missing = keys.filter((k) => !guarded.has(k) && !exempt.has(k));
   assert.deepEqual(missing, [], `settings without a null-guarded first-run default: ${missing.join(', ')}`);
   assert.ok(text(macros['objective1']).includes('"call_macro":"settings first run defaults"'), 'objective1 gives the defaults');

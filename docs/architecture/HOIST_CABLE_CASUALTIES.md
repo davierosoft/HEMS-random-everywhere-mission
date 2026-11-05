@@ -80,3 +80,7 @@ The three ladders of the original mission keep their thresholds and messages. Th
 | A monitor thread blocks forever on a wait | the impact monitor waits for the hook or for the end of the trip; one thread per kind, with a guard |
 
 Not covered: the swing of the cable is not simulated; an operator hurt on the way up is not released (the flows count him as aboard: it would need an "operator left on the ground" state); the cable of the fire rescue and the winch of the second hoist have no extra model.
+
+## Pause and abort calls of the hoist operator (2026-11-05)
+
+`hoist drift monitor` (module 09), started by `hoist down`, `hoist up 1 operator` and `hoist up operator+injured`: while somebody or the patient rides the cable down or up (`HOIST_CABLE_PHASE` down or up; not on the ground, not with the hoist out) the operator calls PAUSE (pack `PAX2.5`) at 10 kt of ground speed or 15 degrees of bank, and ABORT (`PAX2.6`, once for each trip) at 25 kt or 30 degrees. The pause is over after 2 s under 6 kt and 10 degrees. The limits are chosen by common sense (the author left them to the mission). The operator only calls: the cable is not stopped, the consequences stay with the ground impact monitor and the ladders of the hoist out. `HOIST_PAUSE_STATE` is on the hoist panel. Test: `tools/test-hoist-drift-monitor.js`. Runtime PENDING.
