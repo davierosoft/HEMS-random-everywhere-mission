@@ -4433,7 +4433,7 @@
           ],"else": [
             {"call_macro":"voice say","params":{"key":"HOS.WEL"}},
             {"sleep":4.5},
-            {"call_macro":"voice say","params":{"key":"HOS.HND"}},
+            {"call_macro":"voice hospital handover patient"},
             {"sleep":5},
             {"call_macro":"voice say","params":{"key":"HOS.Q"}},
             {"sleep":4.5},
@@ -7440,6 +7440,74 @@
             {"set":{"local":"vfw_low"},"value":1},
             {"call_macro":"voice say","params":{"key":"FUEL.LOW","declut":1,"a":{"text":"{0}","params":[{"local":"vfw_f"}]}}}
         ]}
+    ]}
+  ],
+  "voice hospital handover patient": [
+    {"#comment":"Handover of the doctor at the hospital with what the crew knows of the patient it brings (user request of 2026-11-04, audit item G3, pack EN 37): sex and age (SEX1-3, AGE1-3 of the transported patient HEMS_PATIENT_NUMBER) and the state by the Life Score, 60 or more stable, 30 to 59 serious, under 30 critical (as HST.*). Key HOS.HND.<M|F|U>.<S|M|C>; the argument is the age, only with a known sex and an age above 0, otherwise the neutral key U. Replaces the one generic HOS.HND, which stays in the pack. Mission Companion only (voice say)."},
+    {"set":{"local":"hhp_n"},"value":{"local":"HEMS_PATIENT_NUMBER"}},
+    {"if": {"local":"hhp_n"}, "eq": null,
+      "then": [
+        {"set":{"local":"hhp_n"},"value":1}
+    ]},
+    {"set":{"local":"hhp_ls"},"value":{"local":"LIFESCORE"}},
+    {"if": {"local":"hhp_n"}, "eq": 2,
+      "then": [
+        {"set":{"local":"hhp_ls"},"value":{"local":"LIFESCORE2"}}
+    ]},
+    {"if": {"local":"hhp_n"}, "eq": 3,
+      "then": [
+        {"set":{"local":"hhp_ls"},"value":{"local":"LIFESCORE3"}}
+    ]},
+    {"set":{"local":"hhp_sex"},"value":{"local":"SEX1"}},
+    {"if": {"local":"hhp_n"}, "eq": 2,
+      "then": [
+        {"set":{"local":"hhp_sex"},"value":{"local":"SEX2"}}
+    ]},
+    {"if": {"local":"hhp_n"}, "eq": 3,
+      "then": [
+        {"set":{"local":"hhp_sex"},"value":{"local":"SEX3"}}
+    ]},
+    {"set":{"local":"hhp_age"},"value":{"local":"AGE1"}},
+    {"if": {"local":"hhp_n"}, "eq": 2,
+      "then": [
+        {"set":{"local":"hhp_age"},"value":{"local":"AGE2"}}
+    ]},
+    {"if": {"local":"hhp_n"}, "eq": 3,
+      "then": [
+        {"set":{"local":"hhp_age"},"value":{"local":"AGE3"}}
+    ]},
+    {"set":{"local":"hhp_c"},"value":"S"},
+    {"if": {"local":"hhp_ls"}, "lt": 60,
+      "then": [
+        {"set":{"local":"hhp_c"},"value":"M"}
+    ]},
+    {"if": {"local":"hhp_ls"}, "lt": 30,
+      "then": [
+        {"set":{"local":"hhp_c"},"value":"C"}
+    ]},
+    {"set":{"local":"hhp_s"},"value":"U"},
+    {"if": {
+      "and": [
+        {"require":{"local":"hhp_sex"},"eq":"male"},
+        {"require":{"local":"hhp_age"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hhp_s"},"value":"M"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"hhp_sex"},"eq":"female"},
+        {"require":{"local":"hhp_age"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hhp_s"},"value":"F"}
+    ]},
+    {"set":{"local":"hhp_key"},"value":{"text":"HOS.HND.{0}.{1}","params":[{"local":"hhp_s"},{"local":"hhp_c"}]}},
+    {"if": {"local":"hhp_s"}, "eq": "U",
+      "then": [
+        {"call_macro":"voice say","params":{"key":{"local":"hhp_key"}}}
+      ],"else": [
+        {"call_macro":"voice say","params":{"key":{"local":"hhp_key"},"a":{"text":"{0}","params":[{"local":"hhp_age"}]}}}
     ]}
   ]
 }
