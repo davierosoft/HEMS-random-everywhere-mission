@@ -25,9 +25,14 @@ for (let i = 0; i < bars.length; i += 2) {
 }
 for (const b of bars) assert.ok(!JSON.stringify(b.show_condition).includes('HOCconnection'), 'no bar depends on HOCconnection');
 assert.ok(!/"or"/.test(raw), 'the briefing renderer has no OR');
-const link = briefing.find((o) => o.text && o.text.startsWith('LINK:'));
-assert.ok(link, 'LINK line');
-const lp = JSON.stringify(link.params);
-assert.ok(lp.includes('HOCconnection') && lp.includes('MISSION_PHASE') && lp.includes('DISPLAY_DISPATCH'), 'LINK line carries HOC, phase and dispatch flag');
-assert.ok(!link.show_condition, 'LINK line is always shown: a hidden bar must be explainable from a screenshot');
+const lines = briefing.filter((o) => o.text && o.text.includes('| DISPATCHER: '));
+assert.strictEqual(lines.length, 2, 'two rows: the dispatcher with and without the app (a * after the name)');
+for (const l of lines) {
+  const lp = JSON.stringify(l.params);
+  assert.ok(['CARLS CONNECTED', '5G', 'WIFI', 'NO CONNECTION AVAILABLE', 'GRPNAME', 'L:CARLS_CONNECTED', 'TABLET_5G_ENABLED', 'wificonnect'].every((k) => lp.includes(k)), 'connection mode and dispatcher name');
+  assert.ok(!/HOCconnection|MISSION_PHASE|DISPLAY_DISPATCH|location_ref/.test(lp), 'no debug value on the briefing');
+}
+assert.ok(lines[0].show_condition.eq === 1 && !lines[0].text.endsWith('*'), 'app connected: no star');
+assert.ok(lines[1].show_condition.ne === 1 && lines[1].text.endsWith('*'), 'app not connected: star after the dispatcher');
+assert.ok(!briefing.some((o) => o.text && o.text.startsWith('LINK:')), 'the debug LINK line is gone');
 console.log('accept bar condition ok');

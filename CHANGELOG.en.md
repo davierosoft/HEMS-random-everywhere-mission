@@ -1,3 +1,12 @@
+## Release 0.997 170.14
+
+- Briefing connection line without debug values (mode and dispatcher, star without the app), no modal for the Companion connection
+
+## Release 0.997 170.14
+
+- Briefing: the LINK debug line is replaced by the connection mode and DISPATCHER (GRPNAME), with a star without the Companion; the macro voice app popup and its modal are removed.
+- Macro voice app lost no longer calls a popup.
+
 ## Release 0.997 170.13
 
 - The macro version check carries the release number (scope of the release identity).

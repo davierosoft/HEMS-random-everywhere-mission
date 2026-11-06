@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.13. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.14. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -942,6 +942,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 
 ## UI
 
+### Briefing connection line without debug values
+
+- The briefing shows one short line: how you reach the dispatcher (CARLS CONNECTED, 5G, WIFI or NO CONNECTION AVAILABLE) and DISPATCHER: the name of the group chosen on the CARLS. A star after the name means the Mission Companion voice app is not connected. The debug values (phase, dispatch flag, HOC, location option) are no longer on the briefing; they stay on the Debug page and in the snapshot.
+- The window "Mission Companion not connected" is gone: when the Companion is not there the mission goes back to the wav voices without any window, and the star shows it.
+- **Build history:** 0.997 170.14.
+- **Test:** Open the briefing with and without the Companion running: the line shows the connection mode and the dispatcher, with the star only without the app, and no window about the Companion appears.
+
 ### The random voices list shows sex, quality and use, can be sorted, and copies its choices
 
 - In the window of the random voices (Actors and voices, button Voices...), every voice now shows its sex (female, male or unknown), its quality, and where it is already used: "used for Pilot, Copilot" when one of the other actors has chosen it. Click the title of a column to sort by name, sex, quality or use (used first or free first).
@@ -1834,7 +1841,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.13 (this release):** A patient of the previous dispatch is no longer counted as already carried by the ambulance (see A patient is no longer taken as already carried by the ambulance).
+- **0.997 170.14 (this release):** The briefing connection line without debug values and no window for the Companion connection (see Briefing connection line without debug values).
+- **0.997 170.13:** A patient of the previous dispatch is no longer counted as already carried by the ambulance (see A patient is no longer taken as already carried by the ambulance).
 - **0.997 170.12:** The hoist guidance without a landing spot, the ACCEPT DISPATCH bars and old saved profiles, plus the new calls of the copilot, the doctor and the hoist operator (see the entries of this build).
 - **0.997 170.11:** The second dispatch waits for the time you set, the hoist operator speaks on the cable, and the hoist panel and the connection line (see The second dispatch waits for the time you set, The hoist operator speaks on the cable and Hoist panel and connection line).
 - **0.997 170.09:** A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again (see A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again).

@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.13",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.14",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.13"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.14"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -90440,7 +90440,7 @@
     {"call_macro":"patient death outcome"}
   ],
   "voice app lost": [
-    {"#comment":"The Mission Companion is not there (the voice server refused or dropped the connection, or never answered, see voice app check). Only for the app selection (L:AUDIOINHIBIT not 0 and not 100): the mission goes back to the last selection of the user, the wav voice pack (VCP = VOICEPACK, L:AUDIOINHIBIT 0 as the original thread does when the external program is off), so that the sound LVARs play the wavs, and tells the user once per simulator session (L:HMC_APP_POPUP_SHOWN). With a wav pack selected nothing is shown. The Companion that starts later writes L:AUDIOINHIBIT 1 again and the thread EXTERNAL XML AUDIO ENABLE connects it. Tester report 2026-10-18: Companion not connected, TTS 0 and AUDIOINHIBIT 1 left silence for every voice and sound."},
+    {"#comment":"The Mission Companion is not there (the voice server refused or dropped the connection, or never answered, see voice app check). Only for the app selection (L:AUDIOINHIBIT not 0 and not 100): the mission goes back to the last selection of the user, the wav voice pack (VCP = VOICEPACK, L:AUDIOINHIBIT 0 as the original thread does when the external program is off), so that the sound LVARs play the wavs. With a wav pack selected nothing is shown. The Companion that starts later writes L:AUDIOINHIBIT 1 again and the thread EXTERNAL XML AUDIO ENABLE connects it. Tester report 2026-10-18: Companion not connected, TTS 0 and AUDIOINHIBIT 1 left silence for every voice and sound."},
     {"set":{"local":"TTS"},"value":0},
     {"set":{"local":"voice_app_lost"},"value":"yes"},
     {"if": {
@@ -90458,22 +90458,7 @@
           ],"else": [
             {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"voice_vcp","actor":"n/a","target":{"local":"VCP"},"state":{"text":"VCP now {0} (set in voice app lost): AUDIOINHIBIT={1} TTS={2}","params":[{"local":"VCP"},{"var":["L:AUDIOINHIBIT","number"]},{"local":"TTS"}]}}}
-        ]},
-        {"call_macro":"voice app popup"}
-    ]}
-  ],
-  "voice app popup": [
-    {"#comment":"One popup for the whole simulator session (L:HMC_APP_POPUP_SHOWN, an LVAR: it survives a mission reload and is cleared when the flight is loaded again): the Companion is not connected. Called only by voice app lost, which runs for the app selection and never with a wav pack."},
-    {"if": {"var":["L:HMC_APP_POPUP_SHOWN","number"]}, "eq": 0,
-      "then": [
-        {"set":{"var":["L:HMC_APP_POPUP_SHOWN","number"]},"value":1},
-        {"set_modal": {
-            "title": "Mission Companion not connected",
-            "text": "The voice and sound app is selected but it is not running or not connected. The mission uses the wav voice pack you selected until the Companion is started: it then connects by itself. This message is shown once.",
-            "options": [
-              {"text":"OK","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"OK"}},{"set":{"local":"voice_app_popup_ok"},"value":1}]}
-          ]}
-        }
+        ]}
     ]}
   ],
   "voice app check": [
@@ -144877,7 +144862,8 @@
     {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
     {"text":"R&E Mission generator {0}{1}{2} - MESSAGE AREA","params":[{"local":"MISSION_VERSION"},{"local":"DEV_TYPE"},{"local":"DEV_VERSION"}],"align":"center"},
     {"text":" "},
-    {"text":"LINK: radio {0} (1 = connected) | wifi {1} | HOC {2} | voice app {3} (1 = connected) | phase {4} | dispatch shown {5} | ref {6}","params":[{"var":["L:CARLS_CONNECTED","number"]},{"local":"wificonnect"},{"local":"HOCconnection"},{"local":"TTS"},{"local":"MISSION_PHASE"},{"local":"DISPLAY_DISPATCH"},{"global":"location_ref"}],"align":"center","color":"gray"},
+    {"text":"{0} | DISPATCHER: {1}","params":[{"if":{"var":["L:CARLS_CONNECTED","number"]},"eq":1,"then":"CARLS CONNECTED","else":{"if":{"global":"TABLET_5G_ENABLED"},"eq":"yes","then":"5G","else":{"if":{"local":"wificonnect"},"eq":"Connected","then":"WIFI","else":"NO CONNECTION AVAILABLE"}}},{"if":{"global":"GRPNAME"},"ne":null,"then":{"global":"GRPNAME"},"else":"NONE"}],"align":"center","color":"gray","show_condition":{"require":{"local":"TTS"},"eq":1}},
+    {"text":"{0} | DISPATCHER: {1}*","params":[{"if":{"var":["L:CARLS_CONNECTED","number"]},"eq":1,"then":"CARLS CONNECTED","else":{"if":{"global":"TABLET_5G_ENABLED"},"eq":"yes","then":"5G","else":{"if":{"local":"wificonnect"},"eq":"Connected","then":"WIFI","else":"NO CONNECTION AVAILABLE"}}},{"if":{"global":"GRPNAME"},"ne":null,"then":{"global":"GRPNAME"},"else":"NONE"}],"align":"center","color":"gray","show_condition":{"require":{"local":"TTS"},"ne":1}},
     {"text":"CAUTION CICERS OSM API key will expire in {0:TIME}(...mm:ss)","params":[{"local":"CICERS_REMAINING_S"}],"align":"center","color":"orange","show_condition":{"and":[{"require":{"local":"CICERS_REMAINING_S"},"lt":43200},{"require":{"local":"CICERS_REMAINING_S"},"gt":0}],"eq":1}},
     {"describe_icon":"newico","color":"green","description":"New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!","params":[{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],"commands":[{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],"align":"center","show_condition":{"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}},
     {"describe_icon":"newico","color":"green","description":"New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!","params":[{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],"commands":[{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],"align":"center","show_condition":{"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}},

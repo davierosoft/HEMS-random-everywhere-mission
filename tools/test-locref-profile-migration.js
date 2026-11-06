@@ -32,7 +32,6 @@ function findArrays(node, out = []) { if (Array.isArray(node)) { out.push(node);
 const arr = findArrays(macros).find((a) => a.includes(mig));
 const iSet = arr.findIndex((c) => c.set && c.set.global === 'location_ref' && c.value && c.value.key === 'location_ref');
 assert.ok(iSet >= 0 && iSet < arr.indexOf(mig), 'the migration follows the load of the value');
-// the briefing line shows the option
-const link = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'mission-src/root/03-briefing.json'), 'utf8')).briefing.find((o) => o.text && o.text.startsWith('LINK:'));
-assert.ok(link.text.includes('ref {6}') && JSON.stringify(link.params).includes('"global":"location_ref"'), 'LINK line shows location_ref');
+// the briefing does not show the option (user rule 2026-11-06: no debug values on the briefing)
+assert.ok(!fs.readFileSync(path.join(__dirname, '..', 'mission-src/root/03-briefing.json'), 'utf8').includes('location_ref'), 'briefing has no location_ref');
 console.log('location_ref profile migration ok');

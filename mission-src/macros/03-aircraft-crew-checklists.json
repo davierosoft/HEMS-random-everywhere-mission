@@ -1047,7 +1047,7 @@
     ]}
   ],
   "voice app lost": [
-    {"#comment":"The Mission Companion is not there (the voice server refused or dropped the connection, or never answered, see voice app check). Only for the app selection (L:AUDIOINHIBIT not 0 and not 100): the mission goes back to the last selection of the user, the wav voice pack (VCP = VOICEPACK, L:AUDIOINHIBIT 0 as the original thread does when the external program is off), so that the sound LVARs play the wavs, and tells the user once per simulator session (L:HMC_APP_POPUP_SHOWN). With a wav pack selected nothing is shown. The Companion that starts later writes L:AUDIOINHIBIT 1 again and the thread EXTERNAL XML AUDIO ENABLE connects it. Tester report 2026-10-18: Companion not connected, TTS 0 and AUDIOINHIBIT 1 left silence for every voice and sound."},
+    {"#comment":"The Mission Companion is not there (the voice server refused or dropped the connection, or never answered, see voice app check). Only for the app selection (L:AUDIOINHIBIT not 0 and not 100): the mission goes back to the last selection of the user, the wav voice pack (VCP = VOICEPACK, L:AUDIOINHIBIT 0 as the original thread does when the external program is off), so that the sound LVARs play the wavs. With a wav pack selected nothing is shown. The Companion that starts later writes L:AUDIOINHIBIT 1 again and the thread EXTERNAL XML AUDIO ENABLE connects it. Tester report 2026-10-18: Companion not connected, TTS 0 and AUDIOINHIBIT 1 left silence for every voice and sound."},
     {"set":{"local":"TTS"},"value":0},
     {"set":{"local":"voice_app_lost"},"value":"yes"},
     {"if": {
@@ -1065,22 +1065,7 @@
           ],"else": [
             {"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"voice_vcp","actor":"n/a","target":{"local":"VCP"},"state":{"text":"VCP now {0} (set in voice app lost): AUDIOINHIBIT={1} TTS={2}","params":[{"local":"VCP"},{"var":["L:AUDIOINHIBIT","number"]},{"local":"TTS"}]}}}
-        ]},
-        {"call_macro":"voice app popup"}
-    ]}
-  ],
-  "voice app popup": [
-    {"#comment":"One popup for the whole simulator session (L:HMC_APP_POPUP_SHOWN, an LVAR: it survives a mission reload and is cleared when the flight is loaded again): the Companion is not connected. Called only by voice app lost, which runs for the app selection and never with a wav pack."},
-    {"if": {"var":["L:HMC_APP_POPUP_SHOWN","number"]}, "eq": 0,
-      "then": [
-        {"set":{"var":["L:HMC_APP_POPUP_SHOWN","number"]},"value":1},
-        {"set_modal": {
-            "title": "Mission Companion not connected",
-            "text": "The voice and sound app is selected but it is not running or not connected. The mission uses the wav voice pack you selected until the Companion is started: it then connects by itself. This message is shown once.",
-            "options": [
-              {"text":"OK","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"OK"}},{"set":{"local":"voice_app_popup_ok"},"value":1}]}
-          ]}
-        }
+        ]}
     ]}
   ],
   "voice app check": [

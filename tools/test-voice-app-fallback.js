@@ -29,10 +29,6 @@ const lost = text(macros['voice app lost']);
 assert.ok(lost.includes('"local":"TTS"},"value":0') && lost.includes('"local":"voice_app_lost"},"value":"yes"'), 'voice app lost marks the app as lost');
 assert.ok(lost.includes('{"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":0}') && lost.includes('{"require":{"var":["L:AUDIOINHIBIT","number"]},"ne":100}'), 'the fallback applies only to the app selection (L:AUDIOINHIBIT not 0 and not 100)');
 assert.ok(lost.includes('"set":{"var":["L:AUDIOINHIBIT","number"]},"value":0') && lost.includes('"set":{"local":"VCP"},"value":{"global":"VOICEPACK"}'), 'the fallback is the last wav selection: VCP = VOICEPACK and L:AUDIOINHIBIT 0');
-assert.ok(lost.indexOf('"call_macro":"voice app popup"') > lost.indexOf('"set":{"local":"VCP"}'), 'the popup comes after the fallback, inside the app selection check');
-assert.ok(count(allMacroText, '"call_macro":"voice app popup"') === 1, 'the popup has one call site (voice app lost): never with a wav pack');
-const popup = text(macros['voice app popup']);
-assert.ok(popup.includes('"L:HMC_APP_POPUP_SHOWN","number"]},"eq":0') && popup.includes('"L:HMC_APP_POPUP_SHOWN","number"]},"value":1') && popup.includes('"set_modal"') && popup.includes('Mission Companion not connected'), 'one popup per simulator session, kept in an LVAR');
 
 // 3. the check: a message requested (voice say) or the thread every second counts the silence after 25 s as lost
 const check = text(macros['voice app check']);
@@ -44,11 +40,12 @@ assert.ok(thread.includes('"call_macro":"voice app check"') && thread.includes('
 
 // 4. the checklist assistant connection keeps its own handlers (a wav pack with the old audio service): no popup, no fallback
 const checklistsConnect = fs.readFileSync(path.join(root, 'mission-src', 'macros', '22-checklists.json'), 'utf8');
-assert.ok(!checklistsConnect.includes('voice app lost'), 'the checklist assistant connection must not trigger the app fallback or its popup');
+assert.ok(!checklistsConnect.includes('voice app lost'), 'the checklist assistant connection must not trigger the app fallback');
+assert.ok(!allMacroText.includes('voice app popup') && !allMacroText.includes('HMC_APP_POPUP_SHOWN') && !allMacroText.includes('Mission Companion not connected'), 'no modal for the Companion connection');
 
 // 5. the debug row of the time to second dispatch: a number for the TIME format, shown only while a second dispatch is scheduled
 const debug = text(macros['debug page']);
 assert.ok(!debug.includes('"tofixed":{"subtract":[{"local":"ENDWAIT_SECOND_DISPATCH"}'), 'the time to second dispatch is not a tofixed string any more (the TIME format printed 00:0-210.0)');
 assert.ok(debug.includes('"floor":{"subtract":[{"local":"ENDWAIT_SECOND_DISPATCH"},{"var":["L:MISSION_TIME","number"]}]}') && debug.includes('"local":"ENDWAIT_SECOND_DISPATCH"},"gt":{"var":["L:MISSION_TIME","number"]}'), 'the countdown is a floored number shown only while ENDWAIT_SECOND_DISPATCH is in the future');
 assert.ok(debug.includes('Time to second dispatch: not scheduled') && debug.includes('Time to second dispatch: reached'), 'without a scheduled second dispatch the row says so');
-console.log('Voice app fallback PASS: wav pack fallback with the app selected and no Companion, one popup per session (never with a wav pack), debug countdown. HPG/MSFS PENDING.');
+console.log('Voice app fallback PASS: wav pack fallback with the app selected and no Companion, no popup (user rule 2026-11-06), debug countdown. HPG/MSFS PENDING.');
