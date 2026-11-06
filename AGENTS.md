@@ -12,6 +12,7 @@
 - Edit `mission-src/` modules, not generated `everywhere_all.json`; rebuild only after explicit authorization.
 - Original-behavior baseline is exactly `starting point/baseline-0.997-original-fully-functional.json`; never edit it or substitute another baseline.
 - `train.json` is independent. Its formatting follows the layout and the readability goal of the original custom script (`tools/fixtures/train-legacy-0.997.json`: minimal text, delimited areas, tabs and blank lines; produced by `tools/train-script-format.js`, user rule of 2026-10-30, readability pass the same day), never the mission formatter's; contract in `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`. `global.json` is not a repository or delivery artifact and must never be written.
+- `train.json` (the "custom mission prototype") must always carry its version as the plain `SCRIPT_BUILD` line written in the script itself (`major*1000+minor`), raised on every published change: the Companion displays exactly that value and never a git hash (user rule of 2026-10-31; `docs/architecture/CUSTOM_SCRIPT_TRAIN.md`).
 - Use `mission-workspace.js locate`; inspect each affected caller. Use `apply_patch` for surgical edits; formatting-only normalization may use the official formatter.
 - Fix the primary command/state/prerequisite/destination/movement/ownership defect first. Fallbacks and watchdogs are secondary safeguards, never the solution.
 - `bearing` is helicopter-relative; ground offsets use only cardinal `bearing2` (`0/90/180/270`); ambulance/stretcher rear ingress/egress is `bearing2:180`.

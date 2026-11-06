@@ -1,3 +1,9 @@
+## Release 0.997 170.12
+
+- Scope list completed with the macros and data of 170.06 to 170.11 that are older than the scope baseline of 2026-11-02 (already delivered in the ledger baseline).
+- Custom script train.json: SCRIPT_BUILD raised to 170012 (shown as 170.12); version check and the landing hard thread follow the sources.
+- Local test build of the sources after 170.11: voice calls (site wind, orbit, triage, hospital handover and proposal with flight time, hoist pre-check, hook height, debrief events, fuel watch), hoist operator pause and abort calls, hoist guidance without a landing spot, ACCEPT DISPATCH bars follow the offer connection, five uncalled macros of the original script removed. Runtime status pending.
+
 ## Release 0.997 170.11
 
 - The number 170.10 was built locally and never supplied; its content is part of 170.11 (a number of the ledger is never reused).

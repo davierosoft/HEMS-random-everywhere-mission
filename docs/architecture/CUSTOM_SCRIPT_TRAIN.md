@@ -24,6 +24,8 @@ Plain lines of the script, readable and not options: `MIN_VERSION` (0.997) and `
 
 Rule: raise `CUS_MIN_SCRIPT_BUILD` in the mission when a change of the mission makes older custom scripts impossible; the script then needs a new `SCRIPT_BUILD` (and `MIN_BUILD`). Additions that older scripts simply do not set never raise it. The mission has no script API number and no mission-side compatibility macro: the check is in the briefing. `tools/test-custom-script.js` checks the numbers and the three briefing lines, and that `MISSION_VERSION` stays "0.997". A mission older than the first build that writes `CUS_MIN_SCRIPT_BUILD` cannot tell an obsolete script: the build line covers the opposite case only.
 
+Display rule (user, 2026-10-31): the Companion shows the version of this script exactly as the script writes it, the `SCRIPT_BUILD` line (`major*1000+minor`, 169094 is shown as `169.94`). The line must therefore always exist, as a plain `{"set": {"local": "SCRIPT_BUILD"}, "value": NNNNNN}`, and be raised on every published change of the script. The git blob hash the Companion uses to compare files is never shown to people. The script is called "custom mission prototype" in every screen.
+
 Legacy script (original, frozen in `tools/fixtures/train-legacy-0.997.json`): it looks at 0.997, so `MISSION_VERSION` must stay "0.997" until 0.998, where the legacy path (numbered `OBJECT1..15` locals, `accident location pregenerator CUSTOM` `CUS_RESCUE` fallback) and the fixture go away. The test checks that every LVAR the legacy script sets is still read by the mission.
 ## Injured models (sources 2026-11-03, not built, runtime pending)
 

@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.11. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.12. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -909,6 +909,24 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.11.
 - **Test:** Switch the hoist on and open HOIST PANEL: the values follow the helicopter and the cable. Before the dispatch, check the LINK line of the briefing.
 
+### The hoist guidance finds the patient when there is no landing spot
+
+- When the accident has no landing spot, the hoist guidance now leads you to the patient himself, the same call you hear for the landing spot, instead of staying silent.
+- **Build history:** 0.997 170.12.
+- **Test:** Start a call without a landing spot, fly over the patient and switch the hoist on: the guidance speaks while you are within 10 m of the patient, above 30 ft and below 25 kt.
+
+### The ACCEPT DISPATCH bars follow the connection of the offer
+
+- The ACCEPT DISPATCH bars follow the connection of the offer of the dispatch: they are shown when the wifi is not Disconnected or the radio is not 0. The briefing line LINK shows the phase and the dispatch flag at every moment.
+- **Build history:** 0.997 170.12.
+- **Test:** Receive a dispatch with the radio connected and with the wifi only: the bars appear in both cases.
+
+### Saved profiles with the old $USER starting point
+
+- A profile saved before 170.08 held $USER as the starting point, which was the default and not a choice. Such a profile now loads as START LOCATION. The LINK line of the briefing shows the option in use.
+- **Build history:** 0.997 170.12.
+- **Test:** Load a profile saved with an old build: the starting point option is START LOCATION.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1721,6 +1739,36 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.06.
 - **Test:** In the custom script file add lines to CUS_INJURED, start the mission and check the dispatch text (age and sex), the models of the injured and their state; then write a wrong title: a standard injured model appears. Leave the list empty: the injured are chosen by the mission as before.
 
+### Hospital flight time and the answer of the doctor
+
+- After the hospital proposal the copilot gives the time of flight from the scene and the doctor answers according to its length (short, medium or long). It needs the voice packs EN 37, DE 25 and FR 26 of the Mission Companion.
+- **Build history:** 0.997 170.12.
+- **Test:** Accept a hospital proposal with the Companion connected: the copilot says the flight time and the doctor answers.
+
+### Hoist pre-check, hook height and the pause and abort calls of the operator
+
+- Before the cable goes down the crew does a hoist pre-check (a question and its answer). While the cable goes down the operator calls the height of the hook. If the helicopter drifts with somebody or the patient on the cable, the operator calls HOLD at 10 kt of ground speed or 15 degrees of bank and ABORT at 25 kt or 30 degrees; the call is shown as a line of the hoist panel and as a message.
+- **Build history:** 0.997 170.12.
+- **Test:** Lower the doctor and drift: HOLD is called, the hoist resumes after a few seconds of steady hover; exceed 25 kt or 30 degrees of bank: ABORT is called.
+
+### Wind, fuel and orbit calls of the copilot
+
+- The copilot reads the wind at the site one nautical mile from the accident, says when the fuel is low or at the minimum, and says when an orbit over the accident is completed (without claiming a find).
+- **Build history:** 0.997 170.12.
+- **Test:** Approach an accident with the Companion connected and fly an orbit over it: the wind and the end of the orbit are called; burn fuel to the limits and listen for the fuel calls.
+
+### Triage category, hospital handover and the debrief of the dispatch
+
+- With more than one patient the doctor gives the triage category after each visit: red (Life Score under 30), yellow (30 to 59) or green (60 or more). At the hospital the doctor hands over the patient with sex, age and state. The debrief names the events of the dispatch: dead patients, hard landings, failures, waits, or that all went well.
+- **Build history:** 0.997 170.12.
+- **Test:** Fly a call with two patients: after each visit the doctor says the category; at the hospital listen to the handover and at the end to the debrief.
+
+### Snapshot link in the briefing
+
+- The briefing and the Mission dispatch page have a link to capture a diagnostic snapshot at once (Stuck? CAPTURE SNAPSHOT NOW) and the Debug page has CAPTURE DIAGNOSTIC SNAPSHOT, so a problem can be reported with its data.
+- **Build history:** 0.997 170.12.
+- **Test:** When a mission stalls, use the link and send the snapshot file of the Debug table.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1780,7 +1828,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.11 (this release):** The second dispatch waits for the time you set, the hoist operator speaks on the cable, and the hoist panel and the connection line (see The second dispatch waits for the time you set, The hoist operator speaks on the cable and Hoist panel and connection line).
+- **0.997 170.12 (this release):** The hoist guidance without a landing spot, the ACCEPT DISPATCH bars and old saved profiles, plus the new calls of the copilot, the doctor and the hoist operator (see the entries of this build).
+- **0.997 170.11:** The second dispatch waits for the time you set, the hoist operator speaks on the cable, and the hoist panel and the connection line (see The second dispatch waits for the time you set, The hoist operator speaks on the cable and Hoist panel and connection line).
 - **0.997 170.09:** A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again (see A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again).
 - **0.997 170.08:** The ambulance carries the crew when the helicopter landed far from the patient, the starting point follows the dispatcher area option, the rear crew member crouches at the patient, and old drive timers no longer fail later drives (see The ambulance carries the crew when the helicopter landed far from the patient, The starting point follows the option of the dispatcher area, The rear crew member crouches at the patient and Police and ambulance drives no longer fail by an old timer).
 - **0.997 170.07:** The crew and the heli rescuers do not walk to a helicopter that landed outside the landing spot area unless you choose (see The crew and the heli rescuers do not walk to a helicopter that landed far away).

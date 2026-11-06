@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.11",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.12",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.11"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.12"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -4254,6 +4254,7 @@
         {"text":"ON-SITE OPERATIONS: {0}% - {1}","params":[{"round":{"var":["L:SATISFACTION","number"]},"to":0},{"local":"ops_progress_stage"}],"color":"gray","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"timed_bar_active"},"ne":1},{"require":{"global":"showaddinfo"},"eq":"show"}],"eq":1}},
         {"text":"{2}: no progress for {0} s after step: {1}","params":[{"local":"ops_progress_stalled_seconds"},{"local":"ops_progress_stage"},{"local":"ground_ops_reason_title"}],"color":"yellow","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
         {"text":"Still open: {0}","params":[{"local":"ground_ops_blockers"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_blockers"},"ne":null}],"eq":1}},
+        {"link":"- Stuck? CAPTURE SNAPSHOT NOW","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"set_message":{"text":"Diagnostic snapshot captured. Send the snapshot file of the Debug table."}}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
         {"text":"Probable cause: {0}","params":[{"local":"ground_ops_reason"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason"},"ne":null}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"gray","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"gte":30}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"yellow","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"lt":30},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"gte":10}],"eq":1}},
@@ -4272,6 +4273,7 @@
         {"link":"- MULTIPLAYER DEBUG PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"multiplayer page"},{"set_dispatch_dialog":1}],"show_condition":{"and":[{"require":{"local":"dtab0"},"ne":0},{"require":{"local":"player"},"eq":"multiplayer"}],"eq":1}},
         {"link":"- SETTINGS","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"settings"},{"set_dispatch_dialog":1}]},
         {"link":"- Debug","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"debug page"},{"set_dispatch_dialog":1}]},
+        {"link":"- CAPTURE DIAGNOSTIC SNAPSHOT","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"set_message":{"text":"Diagnostic snapshot captured. Send the snapshot file of the Debug table when you report a problem."}}]},
         {"link":"- SUBMIT MISSION REPORT","commands":[{"set_dispatch_dialog":0},{"call_macro":"submit report"},{"set_dispatch_dialog":1}],"color":"green","show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"SUBMITTED"},"eq":0},{"require":{"local":"dtab0"},"ne":0}],"eq":1}},
         {"link":"- Teleport close to destination","commands":[{"call_macro":"teleport"}],"show_condition":{"and":[{"require":{"var":["GPS GROUND SPEED","knots"]},"gt":60},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"global":"TELEPORT_ASSIST_ENABLED"},"eq":"yes"},{"require":{"local":"dtab0"},"ne":0}],"eq":1}},
         {"image":"bar"},
@@ -5002,6 +5004,7 @@
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SAR_HISTORY"},"value":{"global":"SAR_HISTORY"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"MOUNT_AUTO_RNG"},"value":{"global":"MOUNT_AUTO_RNG"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref"},"value":{"global":"location_ref"}},
+    {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref_v"},"value":2},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"REALISTIC_DISPATCH"},"value":{"global":"REALISTIC_DISPATCH"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"DISPATCH_TIME"},"value":{"global":"DISPATCH_TIME"}},
     {"set":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"TIME_SECOND_DISPATCH"},"value":{"global":"TIME_SECOND_DISPATCH"}},
@@ -5139,6 +5142,14 @@
         {"set":{"global":"SAR_HISTORY"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SAR_HISTORY"}},
         {"set":{"global":"MOUNT_AUTO_RNG"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"MOUNT_AUTO_RNG"}},
         {"set":{"global":"location_ref"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref"}},
+        {"#comment":"Profiles saved before 170.08 hold $USER, which was the default of the option and not a choice (the default is START LOCATION now). A profile without the mark location_ref_v 2 that holds $USER loads as START LOCATION; the mark is written at every save, so $USER chosen afterwards stays (report of Daikan 2026-11-05: the return base moved to the place of the second accept)."},
+        {"if": {"table":{"static":{"param":"PROFILE_TABLE"}},"key":"location_ref_v"}, "ne": 2,
+          "then": [
+            {"if": {"global":"location_ref"}, "eq": "$USER",
+              "then": [
+                {"set":{"global":"location_ref"},"value":"mission_start_location"}
+            ]}
+        ]},
         {"set":{"global":"REALISTIC_DISPATCH"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"REALISTIC_DISPATCH"}},
         {"set":{"global":"DISPATCH_TIME"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"DISPATCH_TIME"}},
         {"set":{"global":"TIME_SECOND_DISPATCH"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"TIME_SECOND_DISPATCH"}},
@@ -9093,7 +9104,8 @@
         ]},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"person_on type={local:HOIST_CABLE_PERSON_TYPE} member={local:HOIST_CABLE_MEMBER} object={local:HOIST_CABLE_OBJECT} phase=down"}},
         {"call_macro":"start hoist attached risk monitor"},
-        {"call_macro":"voice hoist cable","params":{"stage":"DOWN","who":{"param":"person_type"}}}
+        {"call_macro":"voice hoist cable","params":{"stage":"DOWN","who":{"param":"person_type"}}},
+        {"call_macro":"hoist drift monitor"}
     ]},
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"gt":10},
@@ -9103,6 +9115,9 @@
       {"wait_for":{"fn":"hoist_get_reel_distance:ft"},"gt":120}
     ]},
     {"hoist_control":"reel_down","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
+    {"call_macro":"voice hoist height","params":{"who":{"param":"person_type"}}},
+    {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"lt":3},
+    {"call_macro":"voice hoist height","params":{"who":{"param":"person_type"}}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:ft"},"lt":1},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"hook_at_ground person={local:HOIST_CREW_ON_CABLE} type={local:HOIST_CABLE_PERSON_TYPE}"}},
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"},
@@ -9127,6 +9142,7 @@
     {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":1},
     {"call_macro":"start hoist attached risk monitor"},
+    {"call_macro":"hoist drift monitor"},
     {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
@@ -9146,6 +9162,7 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"hoist_cable","actor":"crew","target":"hoist","state":"up_start person={local:HOIST_CREW_ON_CABLE} patient=1 out={local:HOIST_OUT}"}},
     {"set":{"local":"HOIST_CABLE_INJURED"},"value":0},
     {"set":{"local":"HOIST_CABLE_PATIENT"},"value":1},
+    {"call_macro":"hoist drift monitor"},
     {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
@@ -9192,9 +9209,11 @@
         {"set":{"var":["L:{local:VCP}86","number"]},"value":{"add":[{"var":["L:{local:VCP}86","number"]},1]}},
         {"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1},
         {"call_macro":"ground ops checkpoint","params":{"id":"hoist_switch_ok"}}
-    ]}
+    ]},
+    {"call_macro":"voice hoist precheck"}
   ],
   "HOISTING": [
+    {"set":{"local":"HPC_DONE"},"value":0},
     {"call_macro":"multipatient registry crew first target"},
     {"set":{"local":"HOIST_CABLE_PERSON_TYPE"},"value":"crew"},
     {"set":{"local":"chevuoifare"},"value":null},
@@ -13245,34 +13264,6 @@
     {"set":{"local":"location_name"},"value":"accident_location"},
     {"set_briefing_dialog":1}
   ],
-  "Query user position transfer": [
-    {"set_message":{"text":"Select a point or POI on the map and click 'Accept Destination'."}},
-    {"set":{"local":"FPL_NMBR"},"value":0},
-    {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_H_HOSPITAL"]},
-    {"clear_user_poi":1},
-    {"create_user_action": {
-        "id": "accept_hospital",
-        "title": "Accept Destination",
-        "show_condition": {"require":{"or":[{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":1},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":2},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":3},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":4},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":5}]},"eq":1},
-        "click_commands": [
-          {"destroy_user_action":"accept_hospital"}
-      ]}
-    },
-    {"wait_for":{"has_user_action":"accept_hospital"},"eq":0},
-    {"create_location": "userA",
-      "zones": [
-        {"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_SELECTED_POI_LOCATION"}}}
-    ]},
-    {"set":{"local":"location_diagnostic_source_macro"},"value":"Query user position transfer"},
-    {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query user position transfer"},
-    {"copy_stringtoken":"$MISSION_SELECTED_POI_LOCATION_Name","to":{"local":"userA_name"}},
-    {"set":{"var":["L:POI_TYPE","number"]},"value":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]}},
-    {"sleep":0.1},
-    {"clear_user_poi":1},
-    {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},
-    {"set":{"local":"location_name"},"value":"userA"},
-    {"set_message":{"text":""}}
-  ],
   "Query user position midway": [
     {"set_briefing_dialog":0},
     {"set_dispatch_dialog":0},
@@ -15417,87 +15408,6 @@
     {"set_message":{"text":""}},
     {"set":{"local":"accept"},"value":null}
   ],
-  "Query list hospital destination ONLY": [
-    {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
-      "then": [
-        {"create_location": "hospital_user",
-          "no_results_commands": [
-            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
-            {"set_message":{"text":"ERR122 failed to retrieve location. Try another OSM Service provider."}},
-            {"set":{"local":"queryfailed"},"value":"ERR122  failed to retrieve location. Try another OSM Service provider."}
-          ],
-          "zones": [
-            {"zone": {
-                "zone_type": "query_list_result",
-                "query": {"query":"[out:json];(nwr({{bbox}})[amenity=hospital]; nwr({{bbox}})[aeroway=helipad];); out center;","groups":[{"amenity":"hospital"},{"aeroway":"helipad"}],"logic":{"intersection":0.2}},
-                "location": {"global":"location_ref"},
-                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
-                "commands": []
-              }
-            }
-        ]},
-        {"set":{"local":"hospital_name"},"value":"hospital_user_Name"}
-    ]},
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
-      "then": [
-        {"if": {"global":"DESTINATION_UNLOCKED"}, "eq": 0,
-          "then": [
-            {"set_message":{"text":"Select a hospital helipad on the map and click 'Accept Destination'."}},
-            {"set":{"local":"FPL_NMBR"},"value":0},
-            {"set_route":[]},
-            {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_H_HOSPITAL"]},
-            {"clear_user_poi":1},
-            {"create_user_action": {
-                "id": "accept_hospital",
-                "title": "Accept Destination",
-                "show_condition": {"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":2},
-                "click_commands": [
-                  {"destroy_user_action":"accept_hospital"}
-              ]}
-            },
-            {"wait_for":{"has_user_action":"accept_hospital"},"eq":0},
-            {"create_location": "hospital_user",
-              "zones": [
-                {"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_SELECTED_POI_LOCATION"}}}
-            ]},
-            {"copy_stringtoken":"$MISSION_SELECTED_POI_LOCATION_Name","to":"hospital_user_Name"},
-            {"set":{"var":["L:POI_TYPE","number"]},"value":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]}},
-            {"sleep":0.1},
-            {"clear_user_poi":1},
-            {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},
-            {"set":{"local":"hospital_name"},"value":"hospital_user_Name"},
-            {"set_message":{"text":""}}
-          ],"else": [
-            {"set_message":{"text":"Select a hospital helipad on the map and click 'Accept Destination'. WARNING: UNLOCKED SELECTION MODE, note that landing area MUST be very close to a hospital"}},
-            {"set":{"local":"FPL_NMBR"},"value":0},
-            {"set_route":[]},
-            {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_H_HOSPITAL"]},
-            {"clear_user_poi":1},
-            {"create_user_action": {
-                "id": "accept_hospital",
-                "title": "Accept Destination",
-                "show_condition": {"require":{"has_location":"$MISSION_SELECTED_POI_LOCATION"},"eq":1},
-                "click_commands": [
-                  {"destroy_user_action":"accept_hospital"}
-              ]}
-            },
-            {"wait_for":{"has_user_action":"accept_hospital"},"eq":0},
-            {"create_location": "hospital_user",
-              "zones": [
-                {"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_SELECTED_POI_LOCATION"}}}
-            ]},
-            {"copy_stringtoken":"$MISSION_SELECTED_POI_LOCATION_Name","to":"hospital_user_Name"},
-            {"set":{"var":["L:POI_TYPE","number"]},"value":2},
-            {"sleep":0.1},
-            {"clear_user_poi":1},
-            {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},
-            {"set":{"local":"hospital_name"},"value":"hospital_user_Name"},
-            {"set_message":{"text":""}}
-        ]}
-    ]},
-    {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}}
-  ],
   "Query list helipad destination": [
     {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
     {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
@@ -15525,162 +15435,6 @@
         {"call_macro":"Query list hospital destination"}
     ]},
     {"set_map":{"add":{"point":{"location":"hospital_user","icon":"mkr","id":"hospital_user_icon"}}}}
-  ],
-  "Query list hospital transfer": [
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
-      "then": [
-        {"if": {"global":"ONLINE_QUERY"}, "eq": 0,
-          "then": [
-            {"create_location": "userA",
-              "no_results_commands": [
-                {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
-                {"set_message":{"text":"ERR124 failed to retrieve location. Try another OSM Service provider."}},
-                {"set":{"local":"queryfailed"},"value":"ERR124 failed to retrieve location. Try another OSM Service provider."}
-              ],
-              "zones": [
-                {"zone": {
-                    "zone_type": "query_list_result",
-                    "query": {"query":"[out:json];(nwr({{bbox}})[amenity=hospital]; nwr({{bbox}})[aeroway=helipad];); out center;","groups":[{"amenity":"hospital"},{"aeroway":"helipad"}],"logic":{"intersection":0.2}},
-                    "location": {"global":"location_ref"},
-                    "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
-                    "commands": []
-                  }
-                }
-            ]},
-            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query list hospital transfer"},
-            {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query list hospital transfer"}
-          ],"else": [
-            {"create_location": "userA",
-              "no_results_commands": [
-                {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
-                {"set_message":{"text":"ERR124 failed to retrieve location,If error persists, try another OSM Service provider Push 'NEXT DISPATCH'for another dispatch."}},
-                {"set":{"local":"queryfailed"},"value":"ERR124 failed to retrieve location,If error persists, try another OSM Service provider Push 'NEXT DISPATCH'for another dispatch."}
-              ],
-              "zones": [
-                {"zone": {
-                    "zone_type": "query_list_result",
-                    "query": "DB:H_HOSPITAL",
-                    "location": {"global":"location_ref"},
-                    "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
-                    "commands": []
-                  }
-                }
-            ]},
-            {"set":{"local":"location_diagnostic_source_macro"},"value":"Query list hospital transfer"},
-            {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query list hospital transfer"}
-        ]},
-        {"set":{"local":"userA_name"},"value":"userA_Name"}
-    ]},
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
-      "then": [
-        {"set_message":{"text":"Select a hospital - helipad on the map and click 'Accept Destination'."}},
-        {"set":{"local":"FPL_NMBR"},"value":0},
-        {"set_route":[]},
-        {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_H_HOSPITAL"]},
-        {"clear_user_poi":1},
-        {"create_user_action": {
-            "id": "accept_hospital",
-            "title": "Accept Destination",
-            "show_condition": {"require":{"or":[{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":2},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":3},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":4},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":5}]},"eq":1},
-            "click_commands": [
-              {"destroy_user_action":"accept_hospital"}
-          ]}
-        },
-        {"wait_for":{"has_user_action":"accept_hospital"},"eq":0},
-        {"create_location": "userA",
-          "zones": [
-            {"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_SELECTED_POI_LOCATION"}}}
-        ]},
-        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query list hospital transfer"},
-        {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query list hospital transfer"},
-        {"copy_stringtoken":"$MISSION_SELECTED_POI_LOCATION_Name","to":{"local":"userA_name"}},
-        {"set":{"var":["L:POI_TYPE","number"]},"value":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]}},
-        {"sleep":0.1},
-        {"clear_user_poi":1},
-        {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},
-        {"set_message":{"text":""}}
-    ]}
-  ],
-  "Query list helipad transfer": [
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
-      "then": [
-        {"create_location": "userA",
-          "no_results_commands": [
-            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
-            {"set_message":{"text":"ERR125 failed to retrieve location. Try another OSM Service provider."}},
-            {"set":{"local":"queryfailed"},"value":"ERR125 failed to retrieve location. Try another OSM Service provider."}
-          ],
-          "zones": [
-            {"zone": {
-                "zone_type": "query_list_result",
-                "query": {"query":"[out:json];nwr({{bbox}})[aeroway=helipad]; out center;","groups":[{"aeroway":"helipad"},{"aeroway":"helipad"}],"logic":{"intersection":100}},
-                "location": {"global":"location_ref"},
-                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
-                "commands": []
-              }
-            }
-        ]},
-        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query list helipad transfer"},
-        {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query list helipad transfer"}
-    ]},
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
-      "then": [
-        {"call_macro":"Query list hospital transfer"}
-    ]},
-    {"set":{"local":"userA_name"},"value":"userA_Name"}
-  ],
-  "Query list airport transfer": [
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 0,
-      "then": [
-        {"create_location": "userA",
-          "no_results_commands": [
-            {"set":{"var":["L:VAR_PROPOSE_COMMAND","number"]},"value":-1},
-            {"set_message":{"text":"ERR126 failed to retrieve location. Try another OSM Service provider."}},
-            {"set":{"local":"queryfailed"},"value":"ERR126 failed to retrieve location. Try another OSM Service provider."}
-          ],
-          "zones": [
-            {"zone": {
-                "zone_type": "query_list_result",
-                "query": {"query":"[out:json];nwr({{bbox}})[aeroway=aerodrome];out center;","groups":[{"aeroway":"aerodrome"},{"aeroway":"aerodrome"}],"logic":{"intersection":1000}},
-                "location": {"global":"location_ref"},
-                "radius": {"var":["L:SPECIAL_ACCIDENT_MAX_RADIUS","number"]},
-                "commands": []
-              }
-            }
-        ]},
-        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query list airport transfer"},
-        {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query list airport transfer"},
-        {"set":{"local":"userA_name"},"value":"userA_Name"}
-    ]},
-    {"if": {"global":"DESTINATION_SELECTION_MODE"}, "eq": 1,
-      "then": [
-        {"set_message":{"text":"Select an airport on the map and click 'Accept Destination'."}},
-        {"set":{"local":"FPL_NMBR"},"value":0},
-        {"set_route":[]},
-        {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_SET_DB_LAYER_ON_H_HOSPITAL"]},
-        {"clear_user_poi":1},
-        {"create_user_action": {
-            "id": "accept_hospital",
-            "title": "Accept Destination",
-            "show_condition": {"require":{"or":[{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":4},{"require":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]},"eq":5}]},"eq":1},
-            "click_commands": [
-              {"destroy_user_action":"accept_hospital"}
-          ]}
-        },
-        {"wait_for":{"has_user_action":"accept_hospital"},"eq":0},
-        {"create_location": "userA",
-          "zones": [
-            {"zone":{"location":{"bearing":0,"dist":0,"object":"$MISSION_SELECTED_POI_LOCATION"}}}
-        ]},
-        {"set":{"local":"location_diagnostic_source_macro"},"value":"Query list airport transfer"},
-        {"set":{"local":"location_diagnostic_writer_userA"},"value":"Query list airport transfer"},
-        {"copy_stringtoken":"$MISSION_SELECTED_POI_LOCATION_Name","to":{"local":"userA_name"}},
-        {"set":{"var":["L:POI_TYPE","number"]},"value":{"var":["L:MISSION_SELECTED_POI_TYPE","number"]}},
-        {"sleep":0.1},
-        {"clear_user_poi":1},
-        {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},
-        {"set_message":{"text":""}}
-    ]}
   ],
   "Query random transfer": [
     {"if": {"local":"skip_query"}, "ne": "yes",
@@ -30248,6 +30002,34 @@
             ]}
         ]}
     ]}},
+    {"#comment":"Guidance of the hoist to the patient when there is no landing spot (user answer of 2026-11-04, audit item H1: every object or location is a valid target of the guidance). The thread above guides to landing_spot; without it the hoist hover had no guidance. Same gates as above (AUDIO_DECLUT, radio height above 30 ft, ground speed 25 kt or less, MISSION_GUIDANCE_ACTIVE) and the same call, with injured_human as the target, within 10 m of it; polled every 3 s, no blocking wait on a location that may not exist."},
+    {"create_thread": {
+      "commands": [
+        {"while": {"var":["L:HOISTED","number"]}, "ne": 1,
+          "do": [
+            {"sleep":3},
+            {"if": {
+              "and": [
+                {"require":{"has_location":"landing_spot"},"eq":0},
+                {"require":{"has_object":"injured_human"},"eq":1},
+                {"require":{"local":"MISSION_GUIDANCE_ACTIVE"},"eq":1},
+                {"require":{"var":["RADIO HEIGHT","feet"]},"gt":30},
+                {"require":{"var":["GPS GROUND SPEED","knots"]},"lte":25},
+                {"require":{"object":"injured_human","var":"distance:m"},"lt":10}
+              ]}, "eq": 1,
+              "then": [
+                {"if": {
+                  "or": [
+                    {"require":{"global":"AUDIO_DECLUT"},"lt":2},
+                    {"require":{"global":"AUDIO_DECLUT"},"eq":5}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"play_guidance_message":{"target":"injured_human","self":"$USER:HOIST","vertical":[15,10000]}},
+                    {"sleep":3}
+                ]}
+            ]}
+        ]}
+    ]}},
     {"create_thread": {
       "commands": [
         {"wait_for":{"object":"landing_spot","var":"distance"},"lt":0.4},
@@ -30390,6 +30172,7 @@
                           ]}, "eq": 1,
                           "then": [
                             {"set":{"local":"ops_progress_warning"},"value":1},
+                            {"set":{"var":["L:DBF_WAIT","number"]},"value":1},
                             {"call_macro":"capture automatic snapshot","params":{"event":"ops_progress_stall"}},
                             {"#comment":"Reports Daikan and MPR 2026-10-25: the message says what the wait is (ground ops stall reason): the crew still walking (PAX3.42), the helicopter not at the spot (PAX3.43) or the hoist waiting for the pilot (PAX3.44). Only an unexplained stall keeps the old 'delayed' message (PAX3.36)."},
                             {"if": {"local":"ground_ops_reason_code"}, "eq": "CREW_MOVING",
@@ -44647,6 +44430,7 @@
         {"set":{"var":["L:PLT{local:VCP}10","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}10","number"]},1]}}
     ]},
     {"call_macro":"voice debrief chat"},
+    {"call_macro":"voice debrief events"},
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":40},
     {"call_macro":"zoom out"},
     {"sleep":2},
@@ -50999,6 +50783,18 @@
     {"create_thread": {
       "commands": [
         {"call_macro":"voice cruise chat"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice site wind"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice fuel watch"}
+    ]}},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice site orbit"}
     ]}}
   ],
   "submit report": [
@@ -53908,6 +53704,10 @@
         {"return":1}
     ]},
     {"call_macro":"trace dispatch handoff","params":{"stage":"accept_enter"}},
+    {"set":{"var":["L:DBF_HARD","number"]},"value":0},
+    {"set":{"var":["L:DBF_DEAD","number"]},"value":0},
+    {"set":{"var":["L:DBF_FAIL","number"]},"value":0},
+    {"set":{"var":["L:DBF_WAIT","number"]},"value":0},
     {"set":{"local":"first_dispatch_pending"},"value":0},
     {"if": {"local":"player"}, "eq": "multiplayer",
       "then": [
@@ -79295,6 +79095,7 @@
           "then": [
             {"set":{"local":"fa_type"},"value":"LEAK"},
             {"set":{"local":"fa_arg"},"value":1},
+            {"set":{"var":["L:DBF_FAIL","number"]},"value":{"add":[{"var":["L:DBF_FAIL","number"]},1]}},
             {"call_macro":"failure crew speak"}
         ]}
     ]}},
@@ -87921,6 +87722,7 @@
   "voice patient died": [
     {"#comment":"A patient died (called by multipatient registry event DIED): the doctor says it and the pilot answers; after the impact of a hard landing the copilot asks first and the lines are about the impact (the death cause is not the clinical deterioration). Not more than one reading every 20 s. Pack EN DTH.*."},
     {"#comment":"No scream for a patient (user correction 2026-10-25): the L:DEAD sound AND.dead.wav is the scream of a hoist operator who falls and is played only by the hoist casualties, never by a patient death. The survivors speak: with the Companion the pack DTH.*, with a wav pack the existing wav PAX3 7 (The patient has died.). Called by patient death notice after voice app lost, so VCP is never APP without the Companion at this point."},
+    {"set":{"var":["L:DBF_DEAD","number"]},"value":{"add":[{"var":["L:DBF_DEAD","number"]},1]}},
     {"set":{"local":"vpd_now"},"value":{"var":["L:MISSION_TIME","number"]}},
     {"if": {"local":"vpd_last"}, "eq": null,
       "then": [
@@ -88227,7 +88029,7 @@
           ],"else": [
             {"call_macro":"voice say","params":{"key":"HOS.WEL"}},
             {"sleep":4.5},
-            {"call_macro":"voice say","params":{"key":"HOS.HND"}},
+            {"call_macro":"voice hospital handover patient"},
             {"sleep":5},
             {"call_macro":"voice say","params":{"key":"HOS.Q"}},
             {"sleep":4.5},
@@ -88628,7 +88430,8 @@
             {"require":{"local":"TTS"},"eq":1}
           ]}, "eq": 1,
           "then": [
-            {"speak":{"text":"<say:HOSP.FOUND>{0}","params":[{"local":"hospital_name"}]}}
+            {"speak":{"text":"<say:HOSP.FOUND>{0}","params":[{"local":"hospital_name"}]}},
+            {"call_macro":"voice hospital destination"}
           ],"else": [
             {"set":{"var":["L:PAX3{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}6","number"]},1]}}
         ]}
@@ -89719,6 +89522,25 @@
         ]},
         {"set":{"param":"vhv_key"},"value":{"text":"HST.{0}.{1}","params":[{"param":"stage"},{"param":"vhv_c"}]}},
         {"call_macro":"voice say","params":{"key":{"param":"vhv_key"}}},
+        {"#comment":"Triage category of the patient just visited when there are more patients (user request of 2026-11-04, audit item G1, pack EN 37): red (Life Score under 30, critical), yellow (30 to 59, serious), green (60 or more, stable), TRI.<R|Y|G> with the patient number. Hoist and skid operations; the ground operations keep GRD.*."},
+        {"if": {
+          "and": [
+            {"require":{"param":"stage"},"eq":"DONE"},
+            {"require":{"local":"HELOVICTIMS"},"gte":2}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vht_l"},"value":"G"},
+            {"if": {"param":"vhv_c"}, "eq": "M",
+              "then": [
+                {"set":{"local":"vht_l"},"value":"Y"}
+            ]},
+            {"if": {"param":"vhv_c"}, "eq": "C",
+              "then": [
+                {"set":{"local":"vht_l"},"value":"R"}
+            ]},
+            {"set":{"local":"vht_key"},"value":{"text":"TRI.{0}","params":[{"local":"vht_l"}]}},
+            {"call_macro":"voice say","params":{"key":{"local":"vht_key"},"a":{"text":"{0}","params":[{"param":"patient"}]}}}
+        ]},
         {"#comment":"Uniform with the landing operations (voice ground update): when the doctor reaches the first patient the chief says the time left, from the estimate of the ground time (MINGND, minutes). Once every 5 minutes at most, so a second patient does not repeat it."},
         {"set":{"local":"vhv_now"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"if": {"local":"vhv_eta_t"}, "eq": null,
@@ -94398,6 +94220,7 @@
   ],
   "failure crew announce": [
     {"#comment":"In flight the pilot and the copilot announce a random failure (user request of 2026-10-25): either one says what failed and the other verifies (Check / Verified), or one says that there is a failure and the other says which. Called by the failure engine (not by the crash tiers) with param code. The failure type is kept for the report to the technician (failure tech report). Mission Companion only; without it the old copilot line CPL 9 is played."},
+    {"set":{"var":["L:DBF_FAIL","number"]},"value":{"add":[{"var":["L:DBF_FAIL","number"]},1]}},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -97727,6 +97550,7 @@
         {"text":"Hook height above the ground, estimate (below 0 = on the ground): {0} ft","params":[{"round":{"subtract":[{"var":["RADIO HEIGHT","feet"]},{"var":["L:{local:HXX}_SDK_HOIST_CABLE_FT","number"]}]},"to":0}],"color":"white"},
         {"text":"Hook state: {0} (blank = idle) | person on the hook (1 = yes): {1} | patient hooked (1 = yes): {2} | hoist out (1 = yes): {3}","params":[{"local":"HOIST_CABLE_PHASE"},{"local":"HOIST_CREW_ON_CABLE"},{"local":"HOIST_CABLE_PATIENT"},{"local":"HOIST_OUT"}],"color":"white"},
         {"text":"Helicopter: radio height {0} ft | indicated airspeed {1} kt | bank {2} deg","params":[{"round":{"var":["RADIO HEIGHT","feet"]},"to":0},{"round":{"var":["AIRSPEED INDICATED","knots"]},"to":0},{"round":{"var":["PLANE BANK DEGREES","degrees"]},"to":0}],"color":"white"},
+        {"text":"Hoist operator call: {0} (blank = none; pause at 10 kt ground speed or 15 degrees of bank, abort at 25 kt or 30 degrees)","params":[{"local":"HOIST_PAUSE_STATE"}],"color":"white"},
         {"text":"Hoist window: radio height 40 to 160 ft. Too high.","color":"red","show_condition":{"require":{"var":["RADIO HEIGHT","feet"]},"gt":163}},
         {"text":"Hoist window: radio height 40 to 160 ft. Too low.","color":"red","show_condition":{"require":{"var":["RADIO HEIGHT","feet"]},"lt":40}},
         {"text":"Hoist window: radio height 40 to 160 ft. Inside.","color":"green","show_condition":{"and":[{"require":{"var":["RADIO HEIGHT","feet"]},"gte":40},{"require":{"var":["RADIO HEIGHT","feet"]},"lte":163}],"eq":1}},
@@ -97734,6 +97558,406 @@
         {"text":"Hoist out only, indicated airspeed: 70 kt limit, cable damaged above 95, casualty lost above 105, medic and casualty lost above 115.","color":"gray"},
         {"text":"The hook height is the radio height minus the cable out: it is an estimate, the real hook height is used by the mission for the touch down.","color":"gray"}
     ]}
+  ],
+  "voice site wind": [
+    {"#comment":"User request of 2026-11-04 (audit, item L1, pack EN 37): one nautical mile from the accident the copilot reads the wind at the site, once for each dispatch (APR.WND with the direction the wind comes from, rounded to 10 degrees, and the knots; APR.WND.C under 5 knots). The wind is that of the simulator at the helicopter, the same values as the weather briefing (voice weather class). Mission Companion only (voice say), chatter (AUDIO_DECLUT levels 1 to 3 skip it). Started by delayed threads. The flag vsw_done is cleared when a new dispatch is shown (MISSION_PHASE below 2)."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":5},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vsw_done"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":8},
+            {"require":{"local":"vsw_done"},"ne":1},
+            {"require":{"has_location":"accident_location"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"location":"accident_location","var":"distance"}, "lt": 1,
+              "then": [
+                {"set":{"local":"vsw_done"},"value":1},
+                {"call_macro":"voice weather class"},
+                {"if": {"local":"vw_spd"}, "lt": 5,
+                  "then": [
+                    {"call_macro":"voice say","params":{"key":"APR.WND.C","declut":1}}
+                  ],"else": [
+                    {"call_macro":"voice say","params":{"key":"APR.WND","declut":1,"a":{"text":"{0}//{1}","params":[{"local":"vw_dir"},{"local":"vw_spd"}]}}}
+                ]}
+            ]}
+        ]}
+    ]}
+  ],
+  "voice fuel watch": [
+    {"#comment":"User request of 2026-11-04 (audit, item V5, pack EN 37): the copilot speaks about the fuel in flight during a mission, once for each dispatch: FUEL.MIN when the fuel falls to half of the limit of the mission option LOWFUELTHRSLD (percent, 0 = off), FUEL.LOW when it falls to the limit. The measure is the one that the mission already compares with the limit (FUEL TANK CENTER LEVEL percent). Not on the ground, not before the dispatch is accepted (MISSION_PHASE 2 to 9). The flags vfw_low and vfw_min are cleared when a new dispatch is shown (MISSION_PHASE below 2); when the fuel is already under half of the limit only FUEL.MIN is said. Mission Companion only (voice say), chatter. Started by delayed threads."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":10},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vfw_low"},"value":0},
+            {"set":{"local":"vfw_min"},"value":0}
+        ]},
+        {"set":{"local":"vfw_f"},"value":{"floor":{"var":["FUEL TANK CENTER LEVEL","PERCENT"]}}},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":10},
+            {"require":{"var":["SIM ON GROUND","bool"]},"ne":1},
+            {"require":{"global":"LOWFUELTHRSLD"},"gt":0},
+            {"require":{"local":"vfw_f"},"lte":{"floor":{"divide":[{"global":"LOWFUELTHRSLD"},2]}}},
+            {"require":{"local":"vfw_min"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vfw_min"},"value":1},
+            {"set":{"local":"vfw_low"},"value":1},
+            {"call_macro":"voice say","params":{"key":"FUEL.MIN","declut":1,"a":{"text":"{0}","params":[{"local":"vfw_f"}]}}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":10},
+            {"require":{"var":["SIM ON GROUND","bool"]},"ne":1},
+            {"require":{"global":"LOWFUELTHRSLD"},"gt":0},
+            {"require":{"local":"vfw_f"},"lte":{"global":"LOWFUELTHRSLD"}},
+            {"require":{"local":"vfw_low"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vfw_low"},"value":1},
+            {"call_macro":"voice say","params":{"key":"FUEL.LOW","declut":1,"a":{"text":"{0}","params":[{"local":"vfw_f"}]}}}
+        ]}
+    ]}
+  ],
+  "voice hospital handover patient": [
+    {"#comment":"Handover of the doctor at the hospital with what the crew knows of the patient it brings (user request of 2026-11-04, audit item G3, pack EN 37): sex and age (SEX1-3, AGE1-3 of the transported patient HEMS_PATIENT_NUMBER) and the state by the Life Score, 60 or more stable, 30 to 59 serious, under 30 critical (as HST.*). Key HOS.HND.<M|F|U>.<S|M|C>; the argument is the age, only with a known sex and an age above 0, otherwise the neutral key U. Replaces the one generic HOS.HND, which stays in the pack. Mission Companion only (voice say)."},
+    {"set":{"local":"hhp_n"},"value":{"local":"HEMS_PATIENT_NUMBER"}},
+    {"if": {"local":"hhp_n"}, "eq": null,
+      "then": [
+        {"set":{"local":"hhp_n"},"value":1}
+    ]},
+    {"set":{"local":"hhp_ls"},"value":{"local":"LIFESCORE"}},
+    {"if": {"local":"hhp_n"}, "eq": 2,
+      "then": [
+        {"set":{"local":"hhp_ls"},"value":{"local":"LIFESCORE2"}}
+    ]},
+    {"if": {"local":"hhp_n"}, "eq": 3,
+      "then": [
+        {"set":{"local":"hhp_ls"},"value":{"local":"LIFESCORE3"}}
+    ]},
+    {"set":{"local":"hhp_sex"},"value":{"local":"SEX1"}},
+    {"if": {"local":"hhp_n"}, "eq": 2,
+      "then": [
+        {"set":{"local":"hhp_sex"},"value":{"local":"SEX2"}}
+    ]},
+    {"if": {"local":"hhp_n"}, "eq": 3,
+      "then": [
+        {"set":{"local":"hhp_sex"},"value":{"local":"SEX3"}}
+    ]},
+    {"set":{"local":"hhp_age"},"value":{"local":"AGE1"}},
+    {"if": {"local":"hhp_n"}, "eq": 2,
+      "then": [
+        {"set":{"local":"hhp_age"},"value":{"local":"AGE2"}}
+    ]},
+    {"if": {"local":"hhp_n"}, "eq": 3,
+      "then": [
+        {"set":{"local":"hhp_age"},"value":{"local":"AGE3"}}
+    ]},
+    {"set":{"local":"hhp_c"},"value":"S"},
+    {"if": {"local":"hhp_ls"}, "lt": 60,
+      "then": [
+        {"set":{"local":"hhp_c"},"value":"M"}
+    ]},
+    {"if": {"local":"hhp_ls"}, "lt": 30,
+      "then": [
+        {"set":{"local":"hhp_c"},"value":"C"}
+    ]},
+    {"set":{"local":"hhp_s"},"value":"U"},
+    {"if": {
+      "and": [
+        {"require":{"local":"hhp_sex"},"eq":"male"},
+        {"require":{"local":"hhp_age"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hhp_s"},"value":"M"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"hhp_sex"},"eq":"female"},
+        {"require":{"local":"hhp_age"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hhp_s"},"value":"F"}
+    ]},
+    {"set":{"local":"hhp_key"},"value":{"text":"HOS.HND.{0}.{1}","params":[{"local":"hhp_s"},{"local":"hhp_c"}]}},
+    {"if": {"local":"hhp_s"}, "eq": "U",
+      "then": [
+        {"call_macro":"voice say","params":{"key":{"local":"hhp_key"}}}
+      ],"else": [
+        {"call_macro":"voice say","params":{"key":{"local":"hhp_key"},"a":{"text":"{0}","params":[{"local":"hhp_age"}]}}}
+    ]}
+  ],
+  "hoist drift monitor": [
+    {"#comment":"Hoist operator pause and abort calls (user request of 2026-11-04, audit item H3; the limits are chosen by common sense, the author left them to the mission). Runs while somebody or the patient rides the cable on the way down or up (HOIST_CABLE_PHASE down or up; not on the ground, not with the hoist out, which has its own ladders): PAUSE when the ground speed is 10 knots or more or the bank 15 degrees or more (the operator tells the pilot to hold and stabilise the hover, pack PAX2.5), ABORT when the ground speed is 25 knots or more or the bank 30 degrees or more (pack PAX2.6, once for each trip). The pause is over after 2 s with the ground speed under 6 knots and the bank under 10 degrees. The operator only calls: the cable is not stopped (the effect of the limits on the cable, the casualties, stays with the ground impact monitor and the ladders of the hoist out). HOIST_PAUSE_STATE (empty, pause, abort) is on the hoist panel. One monitor at a time (HOIST_DRIFT_ACTIVE); started by the cable macros that put a person or the patient on the hook."},
+    {"if": {"local":"HOIST_DRIFT_ACTIVE"}, "ne": 1,
+      "then": [
+        {"set":{"local":"HOIST_DRIFT_ACTIVE"},"value":1},
+        {"set":{"local":"HOIST_PAUSE_STATE"},"value":""},
+        {"set":{"local":"hdm_calm"},"value":0},
+        {"set":{"local":"hdm_abort"},"value":0},
+        {"create_thread": {
+          "commands": [
+            {"while": {"local":"HOIST_DRIFT_ACTIVE"}, "eq": 1,
+              "do": [
+                {"sleep":0.5},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"HOIST_CREW_ON_CABLE"},"ne":1},
+                    {"require":{"local":"HOIST_CABLE_PATIENT"},"ne":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"HOIST_DRIFT_ACTIVE"},"value":0},
+                    {"set":{"local":"HOIST_PAUSE_STATE"},"value":""}
+                  ],"else": [
+                    {"if": {
+                      "or": [
+                        {"require":{"local":"HOIST_CABLE_PHASE"},"eq":"down"},
+                        {"require":{"local":"HOIST_CABLE_PHASE"},"eq":"up"}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"hdm_gs"},"value":{"floor":{"var":["GPS GROUND SPEED","knots"]}}},
+                        {"set":{"local":"hdm_bk"},"value":{"floor":{"var":["PLANE BANK DEGREES","degrees"]}}},
+                        {"if": {
+                          "or": [
+                            {"require":{"local":"hdm_gs"},"gte":25},
+                            {"require":{"local":"hdm_bk"},"gte":30},
+                            {"require":{"local":"hdm_bk"},"lte":-30}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"if": {"local":"hdm_abort"}, "ne": 1,
+                              "then": [
+                                {"set":{"local":"hdm_abort"},"value":1},
+                                {"set":{"local":"HOIST_PAUSE_STATE"},"value":"abort"},
+                                {"set":{"local":"hdm_calm"},"value":0},
+                                {"set_message":{"text":"Hoist operator: ABORT, the hoist is outside the limits. Stabilise the hover at once."}},
+                                {"set":{"var":["L:PAX2{local:VCP}6","number"]},"value":{"add":[{"var":["L:PAX2{local:VCP}6","number"]},1]}}
+                            ]}
+                          ],"else": [
+                            {"if": {
+                              "or": [
+                                {"require":{"local":"hdm_gs"},"gte":10},
+                                {"require":{"local":"hdm_bk"},"gte":15},
+                                {"require":{"local":"hdm_bk"},"lte":-15}
+                              ]}, "eq": 1,
+                              "then": [
+                                {"set":{"local":"hdm_calm"},"value":0},
+                                {"if": {"local":"HOIST_PAUSE_STATE"}, "eq": "",
+                                  "then": [
+                                    {"set":{"local":"HOIST_PAUSE_STATE"},"value":"pause"},
+                                    {"set_message":{"text":"Hoist operator: HOLD, hoist paused. Stabilise the hover."}},
+                                    {"set":{"var":["L:PAX2{local:VCP}5","number"]},"value":{"add":[{"var":["L:PAX2{local:VCP}5","number"]},1]}}
+                                ]}
+                              ],"else": [
+                                {"if": {
+                                  "and": [
+                                    {"require":{"local":"hdm_gs"},"lt":6},
+                                    {"require":{"local":"hdm_bk"},"lt":10},
+                                    {"require":{"local":"hdm_bk"},"gt":-10}
+                                  ]}, "eq": 1,
+                                  "then": [
+                                    {"set":{"local":"hdm_calm"},"value":{"add":[{"local":"hdm_calm"},1]}},
+                                    {"if": {
+                                      "and": [
+                                        {"require":{"local":"hdm_calm"},"gte":4},
+                                        {"require":{"local":"HOIST_PAUSE_STATE"},"ne":""}
+                                      ]}, "eq": 1,
+                                      "then": [
+                                        {"set":{"local":"HOIST_PAUSE_STATE"},"value":""},
+                                        {"set":{"local":"hdm_calm"},"value":0}
+                                    ]}
+                                  ],"else": [
+                                    {"set":{"local":"hdm_calm"},"value":0}
+                                ]}
+                            ]}
+                        ]}
+                      ],"else": [
+                        {"set":{"local":"HOIST_PAUSE_STATE"},"value":""}
+                    ]}
+                ]}
+            ]}
+        ]}}
+    ]}
+  ],
+  "voice site orbit": [
+    {"#comment":"User request of 2026-11-04 (audit item L2, pack EN 37): the pilot flies an orbit over the accident and the copilot says that it is completed (APR.ORB), once for each dispatch. No finding is claimed: the mission cannot see obstacles. The orbit is the sum of the heading changes (one direction) reaching 330 degrees within 0.6 NM of the accident below 1500 ft of radio height, in flight, between MISSION_PHASE 2 and 7; the sum restarts when the helicopter leaves that circle. Flags vso_done and vso_total, cleared when a new dispatch is shown. Mission Companion only (voice say), chatter. Started by delayed threads."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":1},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vso_done"},"value":0},
+            {"set":{"local":"vso_total"},"value":0},
+            {"set":{"local":"vso_prev"},"value":null}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":8},
+            {"require":{"local":"vso_done"},"ne":1},
+            {"require":{"has_location":"accident_location"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vso_h"},"value":{"var":["A:PLANE HEADING DEGREES MAGNETIC","degrees"]}},
+            {"if": {
+              "and": [
+                {"require":{"location":"accident_location","var":"distance"},"lt":0.6},
+                {"require":{"var":["RADIO HEIGHT","feet"]},"lt":1500},
+                {"require":{"var":["SIM ON GROUND","bool"]},"ne":1}
+              ]}, "eq": 1,
+              "then": [
+                {"if": {"local":"vso_prev"}, "ne": null,
+                  "then": [
+                    {"set":{"local":"vso_d"},"value":{"subtract":[{"local":"vso_h"},{"local":"vso_prev"}]}},
+                    {"if": {"local":"vso_d"}, "gt": 180,
+                      "then": [
+                        {"set":{"local":"vso_d"},"value":{"subtract":[{"local":"vso_d"},360]}}
+                    ]},
+                    {"if": {"local":"vso_d"}, "lt": -180,
+                      "then": [
+                        {"set":{"local":"vso_d"},"value":{"add":[{"local":"vso_d"},360]}}
+                    ]},
+                    {"set":{"local":"vso_total"},"value":{"add":[{"local":"vso_total"},{"local":"vso_d"}]}}
+                ]},
+                {"if": {
+                  "or": [
+                    {"require":{"local":"vso_total"},"gte":330},
+                    {"require":{"local":"vso_total"},"lte":-330}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"vso_done"},"value":1},
+                    {"call_macro":"voice say","params":{"key":"APR.ORB","declut":1}}
+                ]}
+              ],"else": [
+                {"set":{"local":"vso_total"},"value":0}
+            ]},
+            {"set":{"local":"vso_prev"},"value":{"local":"vso_h"}}
+        ]}
+    ]}
+  ],
+  "voice debrief events": [
+    {"#comment":"User request of 2026-11-05 (audit, item V11, pack EN 37, keys DBF.*): after the debrief chat at the base the crew names what happened during the dispatch, from the counters that the events write: L:DBF_DEAD (voice patient died, a patient died), L:DBF_HARD (thread landing hard, a hard landing of 400 to 550 ft/min), L:DBF_FAIL (an aircraft failure or the fuel leak), L:DBF_WAIT (the on-site operations were 120 s without progress, ops_progress_warning). The counters are cleared by accept_dispatch (new dispatch) and here after the lines. One line for each event, in this order: death, hard landing, failure, long wait; a dispatch without events with LIFESCORE above 3 gets DBF.OK. The lines are spoken after the chat (a thread of 9 s, the chat takes about 3 s with its own wav counters) and only with the Mission Companion (voice say), chatter. Without the Companion the counters are cleared and nothing is said."},
+    {"set":{"local":"vde_dead"},"value":{"var":["L:DBF_DEAD","number"]}},
+    {"set":{"local":"vde_hard"},"value":{"var":["L:DBF_HARD","number"]}},
+    {"set":{"local":"vde_fail"},"value":{"var":["L:DBF_FAIL","number"]}},
+    {"set":{"local":"vde_wait"},"value":{"var":["L:DBF_WAIT","number"]}},
+    {"set":{"var":["L:DBF_DEAD","number"]},"value":0},
+    {"set":{"var":["L:DBF_HARD","number"]},"value":0},
+    {"set":{"var":["L:DBF_FAIL","number"]},"value":0},
+    {"set":{"var":["L:DBF_WAIT","number"]},"value":0},
+    {"set":{"local":"vde_any"},"value":0},
+    {"if": {
+      "or": [
+        {"require":{"local":"vde_dead"},"gt":0},
+        {"require":{"local":"vde_hard"},"gt":0},
+        {"require":{"local":"vde_fail"},"gt":0},
+        {"require":{"local":"vde_wait"},"gt":0}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vde_any"},"value":1}
+    ]},
+    {"create_thread": {
+      "commands": [
+        {"sleep":9},
+        {"if": {"local":"vde_dead"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.DEAD","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {"local":"vde_hard"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.HARD","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {"local":"vde_fail"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.FAIL","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {"local":"vde_wait"}, "gt": 0,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.WAIT","declut":1}},
+            {"sleep":5}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"vde_any"},"eq":0},
+            {"require":{"local":"LIFESCORE"},"gt":3}
+          ]}, "eq": 1,
+          "then": [
+            {"call_macro":"voice say","params":{"key":"DBF.OK","declut":1}}
+        ]}
+    ]}}
+  ],
+  "voice hoist precheck": [
+    {"#comment":"User request of 2026-11-05 (audit, item V3, pack EN 37, keys HPC.Q and HPC.A): challenge and response between the hoist operator and the pilot once the hoist arm is out and the hoist is on, before the first cable goes down: the operator says that the arm is out and the hook and cable are free (HPC.Q), the pilot answers that he holds the hover (HPC.A). Said once for each hoist operation (the flag HPC_DONE is cleared by HOISTING). The mission does not read the boom or the control mode (SDK_HOIST_CONTROL_MODE is not read anywhere and would need a simulator check), so the lines say only what the sequence already guarantees: the arm was deployed and, with manual arming, the switch was waited for. The thread keeps the hoist from waiting for the voice. Mission Companion only (voice say), chatter."},
+    {"if": {"local":"HPC_DONE"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"HPC_DONE"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"voice say","params":{"key":"HPC.Q","declut":1}},
+        {"sleep":4.5},
+        {"call_macro":"voice say","params":{"key":"HPC.A","declut":1}}
+    ]}}
+  ],
+  "voice hoist height": [
+    {"#comment":"User request of 2026-11-05 (audit, item H4, pack EN 37, key HCL.H): the hoist operator calls the height of the hook above the ground while the cable goes down (called by hoist down at about 10 m and at about 3 m, the cable slows down at 10 m). The height is read from the engine (hoist_get_distance_from_ground, feet), rounded to 5 feet and said only between 4 and 45 feet, so a hook that is still high when the reel limit stops the first wait is not given a wrong height. The heli rescuer going down has his own lines (HRS.*) and is not called. These calls are about the hook; the guidance call play_guidance_message is about the helicopter over the landing spot or the patient and stays as it is. Mission Companion only (voice say), chatter."},
+    {"if": {"param":"who"}, "eq": "helirescuer",
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"vhh_ft"},"value":{"fn":"hoist_get_distance_from_ground:ft"}},
+    {"if": {
+      "and": [
+        {"require":{"local":"vhh_ft"},"gte":4},
+        {"require":{"local":"vhh_ft"},"lte":45}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vhh_r"},"value":{"multiply":[{"round":{"divide":[{"local":"vhh_ft"},5]},"to":0},5]}},
+        {"call_macro":"voice say","params":{"key":"HCL.H","declut":1,"a":{"text":"{0}","params":[{"local":"vhh_r"}]}}}
+    ]}
+  ],
+  "voice hospital destination": [
+    {"#comment":"User request of 2026-11-05 (audit, item G2, generic version: the mission has no data on the kind of a hospital, so the destination is always the closest one that the query found and nothing is said about its services). After HOSP.FOUND the copilot gives the time of flight from the scene to the proposed hospital (HOS.DST.ETA, minutes: distance from accident_location to hospital_user at an assumed 120 kt, clamped 2 to 60) and the doctor answers by the length of the flight (HOS.DST.S up to 8 minutes, HOS.DST.M 9 to 19, HOS.DST.L 20 or more: the doctor says that the destination is confirmed or changed after the assessment of the patient, since at this time nobody has seen the patient). Not for the organ transport (MISSION_NUMBER 4, the hospital is the destination of the organ). Called by voice hospital proposal when the hospital is found, only with the Mission Companion (voice say, chatter, AUDIO_DECLUT levels 1 to 3 skip it). A thread spaces the two lines."},
+    {"if": {
+      "or": [
+        {"require":{"local":"MISSION_NUMBER"},"eq":4},
+        {"require":{"has_location":"accident_location"},"ne":1},
+        {"require":{"has_location":"hospital_user"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"vhd_min"},"value":{"clamp":[{"round":{"divide":[{"location":"hospital_user","var":"distance:m","to":"accident_location"},3708]},"to":0},2,60]}},
+    {"set":{"local":"vhd_k"},"value":"HOS.DST.M"},
+    {"if": {"local":"vhd_min"}, "lte": 8,
+      "then": [
+        {"set":{"local":"vhd_k"},"value":"HOS.DST.S"}
+    ]},
+    {"if": {"local":"vhd_min"}, "gte": 20,
+      "then": [
+        {"set":{"local":"vhd_k"},"value":"HOS.DST.L"}
+    ]},
+    {"create_thread": {
+      "commands": [
+        {"sleep":5},
+        {"call_macro":"voice say","params":{"key":"HOS.DST.ETA","declut":1,"a":{"local":"vhd_min"}}},
+        {"sleep":4.5},
+        {"call_macro":"voice say","params":{"key":{"local":"vhd_k"},"declut":1}}
+    ]}}
   ]
 },
 
@@ -144005,6 +144229,7 @@
               {"wait_for":{"var":["L:{local:HXX}_SDK_LAST_LANDING_RATE","number"]},"gt":-551}
             ]},
             {"set":{"var":["L:CPL{local:VCP}39","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}39","number"]},1]}},
+            {"set":{"var":["L:DBF_HARD","number"]},"value":{"add":[{"var":["L:DBF_HARD","number"]},1]}},
             {"call_macro":"voice hard landing"},
             {"sleep":3},
             {"if": {"var":["L:CRASH","number"]}, "eq": 0,
@@ -144614,7 +144839,7 @@
     {"image":"homebar5g","show_condition":{"require":{"global":"TABLET_5G_ENABLED"},"eq":"yes"}},
     {"text":"R&E Mission generator {0}{1}{2} - MESSAGE AREA","params":[{"local":"MISSION_VERSION"},{"local":"DEV_TYPE"},{"local":"DEV_VERSION"}],"align":"center"},
     {"text":" "},
-    {"text":"LINK: radio {0} (1 = connected) | wifi {1} | HOC {2} | voice app {3} (1 = connected)","params":[{"var":["L:CARLS_CONNECTED","number"]},{"local":"wificonnect"},{"local":"HOCconnection"},{"local":"TTS"}],"align":"center","color":"gray","show_condition":{"require":{"local":"MISSION_PHASE"},"lt":2}},
+    {"text":"LINK: radio {0} (1 = connected) | wifi {1} | HOC {2} | voice app {3} (1 = connected) | phase {4} | dispatch shown {5} | ref {6}","params":[{"var":["L:CARLS_CONNECTED","number"]},{"local":"wificonnect"},{"local":"HOCconnection"},{"local":"TTS"},{"local":"MISSION_PHASE"},{"local":"DISPLAY_DISPATCH"},{"global":"location_ref"}],"align":"center","color":"gray"},
     {"text":"CAUTION CICERS OSM API key will expire in {0:TIME}(...mm:ss)","params":[{"local":"CICERS_REMAINING_S"}],"align":"center","color":"orange","show_condition":{"and":[{"require":{"local":"CICERS_REMAINING_S"},"lt":43200},{"require":{"local":"CICERS_REMAINING_S"},"gt":0}],"eq":1}},
     {"describe_icon":"newico","color":"green","description":"New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!","params":[{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],"commands":[{"open_url":{"local":"LINK0"}},{"open_url":{"local":"LINK2"}}],"align":"center","show_condition":{"and":[{"require":{"local":"MGsounds_installed"},"eq":"NO"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}},
     {"describe_icon":"newico","color":"green","description":"New R&E {0} {1} {2} is available, CLICK TO DOWNLOAD!","params":[{"local":"LATEST_RE_VERSION"},{"local":"LATEST_DEV_TYPE"},{"local":"LATEST_DEV_VERSION"}],"commands":[{"open_url":{"local":"LINK1"}},{"open_url":{"local":"LINK2"}}],"align":"center","show_condition":{"and":[{"require":{"local":"MGsounds_installed"},"eq":"OK"},{"require":{"local":"UPD_SERVER"},"eq":1}],"eq":1}},
@@ -144677,9 +144902,12 @@
     {"text":"The injured may have been extracted from the incident site and gathered by rescuers at the designated rescue location.","color":"red","show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":6},{"require":{"local":"MISSION_SCENE_VARIANT"},"eq":3},{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}},
     {"text":"WARNING: Be sure to be within 100km from closest high mountains with glaciers for this mission.","color":"red","show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":2},{"require":{"local":"CAMPING_VARIABLE"},"eq":8},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}},
     {"text":"(IN1) INJURED ONLY MISSION. A man is asking for medical assistance. No details are provided ","color":"yellow","show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":3},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1}},
-    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"HOCconnection"},"eq":"Connected"}],"eq":1}},
-    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"HOCconnection"},"eq":"Connected"}],"eq":1}},
-    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"second_dispatch_offered"},"eq":1},{"require":{"local":"SECOND_DISPATCH"},"ne":1},{"require":{"local":"HOCconnection"},"eq":"Connected"}],"eq":1}},
+    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1}},
+    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"wificonnect"},"eq":"Disconnected"},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":0}],"eq":1}},
+    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1}},
+    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"wificonnect"},"eq":"Disconnected"},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":0}],"eq":1}},
+    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"second_dispatch_offered"},"eq":1},{"require":{"local":"SECOND_DISPATCH"},"ne":1},{"require":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1}},
+    {"buttonbar":[{"title":"ACCEPT DISPATCH","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"ne":0},{"require":{"local":"DISPLAY_DISPATCH"},"eq":1}],"eq":1},"commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"BOARDING_HOLD"},"value":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},{"call_macro":"Update_raw from dispatchphase"},{"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},{"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},{"set":{"local":"ringed"},"value":0}]},{"title":"NEXT DISPATCH","disabled_condition":{"require":{"local":"nddisabled"},"ne":null},"commands":[{"call_macro":"next_dispatch"}]},{"title":"CUSTOM MISSION","disabled_condition":{"require":{"local":"player"},"eq":"multiplayer"},"commands":[{"call_macro":"shared repeated block 049"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"gt":8},{"require":{"local":"second_dispatch_offered"},"eq":1},{"require":{"local":"SECOND_DISPATCH"},"ne":1},{"require":{"local":"wificonnect"},"eq":"Disconnected"},{"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":0}],"eq":1}},
     {"text":"OSM Service: Overpass DE","size":"small","color":"blue","show_condition":{"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":0},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}},
     {"text":"OSM Service: Mail.RU","size":"small","color":"blue","show_condition":{"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":1},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}},
     {"text":"OSM Service: Kumi","size":"small","color":"blue","show_condition":{"and":[{"require":{"var":["L:{local:HXX}_PERSIST_MISSION_ENDPOINT_OPTION","number"]},"eq":2},{"require":{"local":"has_location"},"eq":"no"}],"eq":1}},
@@ -144698,6 +144926,7 @@
     {"image":"bar"},
     {"link":"- RELOAD A MISSION","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"savegame page"},{"set_dispatch_dialog":1}]},
     {"link":"- SETTINGS","commands":[{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"settings"},{"set_dispatch_dialog":1}]},
+    {"link":"- CAPTURE DIAGNOSTIC SNAPSHOT","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"set_message":{"text":"Diagnostic snapshot captured. Send the snapshot file of the Debug table when you report a problem."}}]},
     {"link":"- MANUAL MISSION SELECTION (ADVANCED USERS)","commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"mission manual new"},{"set_dispatch_dialog":1}],"show_condition":{"and":[{"require":{"local":"SECOND_DISPATCH"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":8}],"eq":1}},
     {"link":"- MANUAL MISSION SELECTION (ADVANCED USERS)","commands":[{"set":{"local":"lock_random_dispatch"},"value":1},{"set":{"local":"prev_page"},"value":"briefing"},{"call_macro":"mission manual new"},{"set_dispatch_dialog":1}],"show_condition":{"and":[{"require":{"local":"SECOND_DISPATCH"},"eq":0},{"require":{"local":"MISSION_PHASE"},"lt":2}],"eq":1}},
     {"text":" "},
