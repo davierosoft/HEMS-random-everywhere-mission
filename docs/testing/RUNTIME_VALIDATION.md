@@ -775,3 +775,7 @@ With the Companion and the packs EN 37, DE 25, FR 26 installed:
 ## Destination talk after the hospital proposal (sources 2026-11-05, not built, PENDING)
 
 With the Companion: when the hospital appears on the tablet, after the name the copilot says the minutes of flight from the scene and the doctor answers (short, middle, long flight); the minutes are close to the real flight at about 120 kt; no talk for the organ transport; the tablet hospital does not change.
+
+## Status bar image test (standalone mission, 2026-11-07)
+
+Mission: `standalone-tests/status-bar-image-test.json` (separate mission, never touches `mission-src/`; copied to `Desktop\claude\tests` and to the `hpgmission` folder of the mission pack, not to `RANDOM AND EVERYWHERE`). Purpose: decide whether the image of the status bar can be chosen by a variable, so that one bar out of many pre-drawn variants (5G, wifi level, USB for CARLS) replaces the two static rows at the 28 call sites. Forms: A `{"image":{"local":...}}`, B `{"image":{"global":...}}`, C `{"image":{"if":...}}`, D a dispatch page (`set_dispatch`) with a local. Reference rows use the static names. Pass: the bar of the form changes between `homebar` and `homebar5g` with the buttons. Runtime status: PENDING.
