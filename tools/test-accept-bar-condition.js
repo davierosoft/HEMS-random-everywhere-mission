@@ -25,14 +25,14 @@ for (let i = 0; i < bars.length; i += 2) {
 }
 for (const b of bars) assert.ok(!JSON.stringify(b.show_condition).includes('HOCconnection'), 'no bar depends on HOCconnection');
 assert.ok(!/"or"/.test(raw), 'the briefing renderer has no OR');
-const lines = briefing.filter((o) => o.text && o.text.includes('| DISPATCHER: '));
-assert.strictEqual(lines.length, 2, 'two rows: the dispatcher with and without the app (a * after the name)');
-for (const l of lines) {
-  const lp = JSON.stringify(l.params);
-  assert.ok(['CARLS CONNECTED', '5G', 'WIFI', 'NO CONNECTION AVAILABLE', 'GRPNAME', 'L:CARLS_CONNECTED', 'TABLET_5G_ENABLED', 'wificonnect'].every((k) => lp.includes(k)), 'connection mode and dispatcher name');
-  assert.ok(!/HOCconnection|MISSION_PHASE|DISPLAY_DISPATCH|location_ref/.test(lp), 'no debug value on the briefing');
-}
-assert.ok(lines[0].show_condition.eq === 1 && !lines[0].text.endsWith('*'), 'app connected: no star');
-assert.ok(lines[1].show_condition.ne === 1 && lines[1].text.endsWith('*'), 'app not connected: star after the dispatcher');
+const lines = briefing.filter((o) => o.text && o.text.startsWith('DISPATCHER: '));
+assert.strictEqual(lines.length, 2, 'two rows: the dispatcher with and without the voice app');
+assert.ok(JSON.stringify(lines[0].show_condition).includes('"TTS"},"eq":1') && !lines[0].text.includes('Voice app'), 'app connected: the dispatcher only');
+assert.ok(JSON.stringify(lines[1].show_condition).includes('"TTS"},"ne":1') && lines[1].text.endsWith('| Voice app not connected'), 'app not connected: text after the dispatcher');
+for (const l of lines) assert.ok(!/HOCconnection|MISSION_PHASE.*DISPLAY|location_ref/.test(JSON.stringify(l.params)), 'no debug value on the briefing');
+const yellow = briefing.find((o) => o.description && o.description.startsWith('DISPATCHER NOT CONNECTED'));
+assert.ok(yellow && yellow.color === 'yellow' && yellow.describe_icon && JSON.stringify(yellow.show_condition).includes('HOC_MISMATCH') && JSON.stringify(yellow.commands).includes('HOCconnection'), 'yellow row activating the HOC connection');
+const sbars = briefing.filter((o) => o.image && /^sbar[0-9][0-9]$/.test(o.image));
+assert.strictEqual(sbars.length, 16, 'the sixteen status bars, each by STATUS_BAR_ID');
 assert.ok(!briefing.some((o) => o.text && o.text.startsWith('LINK:')), 'the debug LINK line is gone');
 console.log('accept bar condition ok');

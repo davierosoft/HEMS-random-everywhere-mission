@@ -39,6 +39,6 @@ console.log('hoist cable calls ok');
   assert.ok(JSON.stringify(macros['Mission dispatch']).includes('"call_macro":"hoist panel"'), 'link on the Mission dispatch page');
   const brief = fs.readFileSync(path.join(root, 'mission-src/root/03-briefing.json'), 'utf8');
   assert.ok(brief.includes('"call_macro":"hoist panel"'), 'link in the briefing');
-  assert.ok(brief.includes('| DISPATCHER: {1}') && brief.includes('CARLS CONNECTED') && brief.includes('"global":"GRPNAME"'), 'connection line in the briefing (mode and dispatcher)');
+  assert.ok(brief.includes('"text": "DISPATCHER: {0}/{1}"') && brief.includes('Voice app not connected') && brief.includes('HOC_MISMATCH'), 'connection rows in the briefing (dispatcher, voice app, yellow HOC)');
 }
 console.log('hoist panel and link line ok');

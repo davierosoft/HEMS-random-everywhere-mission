@@ -124,6 +124,105 @@
             {"sleep":[3,10]}
         ]}
     ]},
+  "STATUS BAR":     {
+      "commands": [
+        {"#comment":"Status bar of the tablet (user request of 2026-11-07): STATUS_BAR_ID = 8 for the tablet 5G + 4 for the CARLS radio connected (USB icon) + 0..3 wifi waves (wifi connected, by the distance from the wifi reference: up to 100 m 3, 200 m 2, 300 m 1). HOC_MISMATCH is 1 when the radio/wifi state and HOCconnection disagree for 5 s (yellow DISPATCHER NOT CONNECTED row of the briefing). The images sbar00..sbar15 are drawn by tools/build-status-bars.js; every page shows the one whose STATUS_BAR_ID matches (live: the page is never rebuilt)."},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"set":{"local":"sb_id"},"value":0},
+            {"if": {"global":"TABLET_5G_ENABLED"}, "eq": "yes",
+              "then": [
+                {"set":{"local":"sb_id"},"value":8}
+            ]},
+            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+              "then": [
+                {"set":{"local":"sb_id"},"value":{"add":[{"local":"sb_id"},4]}}
+            ]},
+            {"set":{"local":"sb_wifi"},"value":0},
+            {"if": {"local":"wificonnect"}, "eq": "Connected",
+              "then": [
+                {"if": {"global":"location_ref"}, "eq": "custom_center_location",
+                  "then": [
+                    {"if": {
+                      "and": [
+                        {"require":{"has_location":"custom_center_location"},"eq":1},
+                        {"require":{"location":"custom_center_location","var":"distance:m"},"lte":300}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"sb_wifi"},"value":1},
+                        {"if": {
+                          "and": [
+                            {"require":{"location":"custom_center_location","var":"distance:m"},"lte":200}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"sb_wifi"},"value":2}
+                        ]},
+                        {"if": {
+                          "and": [
+                            {"require":{"location":"custom_center_location","var":"distance:m"},"lte":100}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"sb_wifi"},"value":3}
+                        ]}
+                    ]}
+                  ],"else": [
+                    {"if": {
+                      "and": [
+                        {"require":{"has_location":"mission_start_location"},"eq":1},
+                        {"require":{"location":"mission_start_location","var":"distance:m"},"lte":300}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"sb_wifi"},"value":1},
+                        {"if": {
+                          "and": [
+                            {"require":{"location":"mission_start_location","var":"distance:m"},"lte":200}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"sb_wifi"},"value":2}
+                        ]},
+                        {"if": {
+                          "and": [
+                            {"require":{"location":"mission_start_location","var":"distance:m"},"lte":100}
+                          ]}, "eq": 1,
+                          "then": [
+                            {"set":{"local":"sb_wifi"},"value":3}
+                        ]}
+                    ]}
+                ]}
+            ]},
+            {"set":{"local":"sb_conn"},"value":0},
+            {"if": {"local":"wificonnect"}, "eq": "Connected",
+              "then": [
+                {"set":{"local":"sb_conn"},"value":1}
+            ]},
+            {"if": {"var":["L:CARLS_CONNECTED","number"]}, "eq": 1,
+              "then": [
+                {"set":{"local":"sb_conn"},"value":1}
+            ]},
+            {"if": {"local":"sb_mm"}, "eq": null,
+              "then": [
+                {"set":{"local":"sb_mm"},"value":0}
+            ]},
+            {"set":{"local":"sb_hoc"},"value":0},
+            {"if": {"local":"HOCconnection"}, "eq": "Connected",
+              "then": [
+                {"set":{"local":"sb_hoc"},"value":1}
+            ]},
+            {"if": {"local":"sb_conn"}, "eq": {"local":"sb_hoc"},
+              "then": [
+                {"set":{"local":"sb_mm"},"value":0}
+              ],"else": [
+                {"set":{"local":"sb_mm"},"value":{"add":[{"local":"sb_mm"},1]}}
+            ]},
+            {"set":{"local":"HOC_MISMATCH"},"value":0},
+            {"if": {"local":"sb_mm"}, "gte": 5,
+              "then": [
+                {"set":{"local":"HOC_MISMATCH"},"value":1}
+            ]},
+            {"set":{"local":"STATUS_BAR_ID"},"value":{"add":[{"local":"sb_id"},{"local":"sb_wifi"}]}},
+            {"sleep":1}
+        ]}
+    ]},
   "TABLET 5G connection":     {
       "commands": [
         {"while": 1, "gt": 0,

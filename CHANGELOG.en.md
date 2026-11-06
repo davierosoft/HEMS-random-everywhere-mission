@@ -1,3 +1,18 @@
+## Release 0.997 170.15
+
+- validator syntax fixes
+- snapshot common keys
+- snapshot carries STATUS_BAR_ID and HOC_MISMATCH
+- no modal for the Companion connection
+- Status bar images in every page, thread STATUS BAR
+- Status bar with 5G, wifi level and USB icons (16 images, live), dispatcher message without the connection part, voice app not connected text, yellow DISPATCHER NOT CONNECTED row, no debug line
+
+## Release 0.997 170.15
+
+- Status bar: sixteen images sbar00-sbar15 (tools/build-status-bars.js) replace homebar/homebar5g in every page, chosen by STATUS_BAR_ID of the new thread STATUS BAR (5G, USB for CARLS, three wifi levels by distance).
+- Briefing: green DISPATCHER message with the voice app text, yellow DISPATCHER NOT CONNECTED row (HOC_MISMATCH, 5 s), no debug line; macro voice app popup stays removed.
+- Snapshot carries STATUS_BAR_ID and HOC_MISMATCH.
+
 ## Release 0.997 170.14
 
 - Briefing connection line without debug values (mode and dispatcher, star without the app), no modal for the Companion connection
