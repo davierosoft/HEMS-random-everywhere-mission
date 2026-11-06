@@ -171,7 +171,40 @@
             {"if": {"local":"HEMS_DECISION_FORCE"}, "eq": 1,
               "then": [
                 {"set":{"local":"HEMS_DECISION_STATE"},"value":"no_transport_required"},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"hems patient decision","actor":"hems","target":"n/a","state":"forced_reserve_failed_no_transport"}},
+                {"call_macro":"multipatient registry crew eligibility","params":{"patient":1},"result":"elig1"},
+                {"call_macro": "ground crew runtime trace",
+                  "params": {
+                    "macro": "hems patient decision",
+                    "actor": "hems",
+                    "target": "n/a",
+                    "state": {
+                      "text": "forced_reserve_failed_no_transport unassigned={0} P1_GROUND_TRANSPORTED={1} P1_GROUND_PROVIDER={2} P1_AMBULANCE_STAGE={3} handover={4} elig1={5}",
+                      "params": [
+                        {"local":"patient_unassigned_transport"},
+                        {"if": {"local":"P1_GROUND_TRANSPORTED"},
+                          "ne": null,
+                          "then": {"local":"P1_GROUND_TRANSPORTED"},
+                          "else": "unset"
+                        },
+                        {"if": {"local":"P1_GROUND_PROVIDER"},
+                          "ne": null,
+                          "then": {"local":"P1_GROUND_PROVIDER"},
+                          "else": "none"
+                        },
+                        {"if": {"local":"P1_AMBULANCE_STAGE"},
+                          "ne": null,
+                          "then": {"local":"P1_AMBULANCE_STAGE"},
+                          "else": "none"
+                        },
+                        {"if": {"local":"ambulance_handover_status"},
+                          "ne": null,
+                          "then": {"local":"ambulance_handover_status"},
+                          "else": "unset"
+                        },
+                        {"param":"elig1"}
+                    ]}
+                  }
+                },
                 {"set":{"local":"whobringpatient"},"value":"ambulance"}
               ],"else": [
                 {"set":{"local":"HEMS_DECISION_STATE"},"value":"awaiting_transport_resource"}

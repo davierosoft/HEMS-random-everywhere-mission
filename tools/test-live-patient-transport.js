@@ -365,4 +365,19 @@ for (const resource of ['ambulance1', 'ambulance2']) {
   for (const patient of [1, 2, 3]) assert.equal(h.locals[`P${patient}_GROUND_PROVIDER`], null, `provider of patient ${patient} cleared`);
   assert.equal(h.call(prefix + 'crew eligibility', {patient: 1}), 'eligible', 'after the start of the next dispatch the patient is visited again');
 }
+// Report MPR 2026-11-06: P1_GROUND_TRANSPORTED yes left by the previous dispatch (the clinical reset cleared P2 and P3 only) made crew eligibility answer "assigned" for
+// patient 1: the crew never visited him, the forced HEMS reserve found no eligible patient and the crew left him to an ambulance still kilometres away.
+{
+  const h = new Live();
+  h.locals.P1_GROUND_TRANSPORTED = 'yes';
+  assert.equal(h.call(prefix + 'crew eligibility', {patient: 1}), 'assigned', 'a stale transported flag hides the patient from every crew');
+  h.call(prefix + 'live initialize');
+  for (const patient of [1, 2, 3]) assert.equal(h.locals[`P${patient}_GROUND_TRANSPORTED`], 'no', `transported flag of patient ${patient} cleared`);
+  assert.equal(h.call(prefix + 'crew eligibility', {patient: 1}), 'eligible', 'after the start of the next dispatch the patient is visited again');
+}
+{
+  const clinical = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'mission-src', 'macros', '07-patient-medical.json'), 'utf8'))['initialize multipatient clinical state'];
+  const text = JSON.stringify(clinical);
+  for (const patient of [1, 2, 3]) assert.ok(text.includes(`{"set":{"local":"P${patient}_GROUND_TRANSPORTED"},"value":"no"}`), `the clinical reset clears P${patient}_GROUND_TRANSPORTED`);
+}
 console.log('Live patient transport PASS: visit barrier, queue ownership, nine slot/resource combinations, clinical priority, recovery, independent physiology, real CPR/manual workers and three save slots. HPG/MSFS PENDING.');

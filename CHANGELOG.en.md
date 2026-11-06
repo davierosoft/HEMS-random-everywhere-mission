@@ -1,3 +1,8 @@
+## Release 0.997 170.13
+
+- The macro version check carries the release number (scope of the release identity).
+- Fix: P1_GROUND_TRANSPORTED of the previous dispatch left patient 1 assigned to the ambulance; cleared at every dispatch start, logged in the snapshot and in the forced failure trace
+
 ## Release 0.997 170.12
 
 - Scope list completed with the macros and data of 170.06 to 170.11 that are older than the scope baseline of 2026-11-02 (already delivered in the ledger baseline).

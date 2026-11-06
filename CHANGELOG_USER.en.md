@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.12. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.13. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -927,6 +927,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.12.
 - **Test:** Load a profile saved with an old build: the starting point option is START LOCATION.
 
+### A patient is no longer taken as already carried by the ambulance
+
+- Reported by a tester: after a previous dispatch the crew could consider patient 1 as already transported by the ambulance, so a patient nobody had visited was left to an ambulance that was far away. The transport flag of the previous dispatch is now cleared at the start of every dispatch.
+- **Build history:** 0.997 170.13.
+- **Test:** Fly two dispatches in a row, the first with a patient taken by an ambulance: in the second the crew visits patient 1 and takes the decision as for a new patient.
+
 ### Search and rescue: the crew sides and the order of the find calls
 
 - In the search and rescue briefing the crew member takes the right side and the copilot, who sits on the left, takes the left side (voice packs EN 35, DE 23 and FR 24).
@@ -1828,7 +1834,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.12 (this release):** The hoist guidance without a landing spot, the ACCEPT DISPATCH bars and old saved profiles, plus the new calls of the copilot, the doctor and the hoist operator (see the entries of this build).
+- **0.997 170.13 (this release):** A patient of the previous dispatch is no longer counted as already carried by the ambulance (see A patient is no longer taken as already carried by the ambulance).
+- **0.997 170.12:** The hoist guidance without a landing spot, the ACCEPT DISPATCH bars and old saved profiles, plus the new calls of the copilot, the doctor and the hoist operator (see the entries of this build).
 - **0.997 170.11:** The second dispatch waits for the time you set, the hoist operator speaks on the cable, and the hoist panel and the connection line (see The second dispatch waits for the time you set, The hoist operator speaks on the cable and Hoist panel and connection line).
 - **0.997 170.09:** A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again (see A new flight starts with a dispatch and the ACCEPT and NEXT DISPATCH bars again).
 - **0.997 170.08:** The ambulance carries the crew when the helicopter landed far from the patient, the starting point follows the dispatcher area option, the rear crew member crouches at the patient, and old drive timers no longer fail later drives (see The ambulance carries the crew when the helicopter landed far from the patient, The starting point follows the option of the dispatcher area, The rear crew member crouches at the patient and Police and ambulance drives no longer fail by an old timer).
