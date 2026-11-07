@@ -1,3 +1,12 @@
+## Release 0.997 170.16
+
+- Status bar icons in the blue part: USB turned by 90 degrees, wifi raised to 1 px from the top
+
+## Release 0.997 170.16
+
+- Status bar images redrawn (tools/build-status-bars.js): USB trident turned by 90 degrees, wifi waves raised to 1 px from the top, all inside the blue part.
+- The macro version check carries the release number.
+
 ## Release 0.997 170.15
 
 - validator syntax fixes

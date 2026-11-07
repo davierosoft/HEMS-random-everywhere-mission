@@ -42,10 +42,14 @@ const seg = (x0, y0, x1, y1, w) => (x, y) => { const dx = x1 - x0, dy = y1 - y0;
 const tri = (ax, ay, bx, by, cx, cy) => (x, y) => { const s = (px, py, qx, qy) => (x - qx) * (py - qy) - (px - qx) * (y - qy); const d1 = s(ax, ay, bx, by), d2 = s(bx, by, cx, cy), d3 = s(cx, cy, ax, ay); return !((d1 < 0 || d2 < 0 || d3 < 0) && (d1 > 0 || d2 > 0 || d3 > 0)); };
 const arc = (cx, cy, r, w) => (x, y) => { const d = Math.hypot(x - cx, y - cy); if (Math.abs(d - r) > w / 2) return false; const a = Math.atan2(x - cx, cy - y); return Math.abs(a) <= 0.82; };
 function wifiShapes(level, cx, base) { const s = [disc(cx, base, 1.9)]; for (let i = 1; i <= level; i++) s.push(arc(cx, base, 3.2 + i * 3.7, 1.9)); return s; }
+// the USB trident drawn upright in local coordinates (tip up), then turned by 90 degrees (tip to the right) and scaled to sit in the blue part of the bar
 function usbShapes(cx) {
-  return [seg(cx, 6, cx, 26, 1.8), tri(cx - 3, 8.5, cx + 3, 8.5, cx, 3), disc(cx, 27, 2.6),
-    seg(cx, 20, cx - 6, 15.5, 1.5), seg(cx - 6, 15.5, cx - 6, 11, 1.5), rect(cx - 7.8, 8, cx - 4.2, 11.4),
-    seg(cx, 16, cx + 6, 12.5, 1.5), seg(cx + 6, 12.5, cx + 6, 10, 1.5), disc(cx + 6, 8.3, 2.2)];
+  const lu = 0, s = 0.8, cy = 11.5; // local u offset, scale, centre line in the blue part (y 1..22)
+  const local = [seg(lu, 6, lu, 26, 2.4), tri(lu - 3.4, 8.8, lu + 3.4, 8.8, lu, 2.5), disc(lu, 27, 3),
+    seg(lu, 20, lu - 6, 15.5, 2), seg(lu - 6, 15.5, lu - 6, 11, 2), rect(lu - 8.2, 7.8, lu - 3.8, 11.6),
+    seg(lu, 16, lu + 6, 12.5, 2), seg(lu + 6, 12.5, lu + 6, 10, 2), disc(lu + 6, 8.3, 2.6)];
+  // device (x, y) -> local (u, v): tip (v = 2.5) at the right, base (v = 27) at the left
+  return local.map((f) => (x, y) => f((y - cy) / s, 16 - (x - cx) / s));
 }
 function paint(pix, shapes) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
@@ -62,7 +66,7 @@ for (let id = 0; id < 16; id++) {
   const g5 = (id >> 3) & 1, usb = (id >> 2) & 1, wifi = id & 3; const pix = Buffer.from(base[g5]); const shapes = [];
   const ux = g5 ? 578 : 636, wx = g5 ? 604 : 664;
   if (usb) shapes.push(...usbShapes(ux));
-  if (wifi) shapes.push(...wifiShapes(wifi, wx, 25));
+  if (wifi) shapes.push(...wifiShapes(wifi, wx, 16.3));
   paint(pix, shapes); bars['sbar' + String(id).padStart(2, '0')] = 'data:image/png;base64,' + encode(pix).toString('base64');
 }
 if (process.argv[2] === '--preview') { const dir = process.argv[3]; for (const [k, v] of Object.entries(bars)) fs.writeFileSync(path.join(dir, k + '.png'), Buffer.from(v.split(',')[1], 'base64')); process.exit(0); }

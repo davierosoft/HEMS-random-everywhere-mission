@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.15. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.16. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -947,7 +947,7 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The bar at the top of every tablet page now shows, like a phone, the 5G, the wifi waves (three levels by the distance from the wifi point: up to 100 m, 200 m, 300 m) and a USB icon when the CARLS radio is connected. The icons change by themselves while you fly.
 - The briefing has no debug line any more. The green message is DISPATCHER: the group chosen on the CARLS, followed by | Voice app not connected when the Mission Companion is not connected. If the dispatcher connection and the radio or wifi disagree for more than 5 seconds a yellow DISPATCHER NOT CONNECTED row appears; pressing it activates the connection again. The red and yellow rows of before are unchanged.
 - The window "Mission Companion not connected" is gone: without the Companion the mission goes back to the wav voices without any window.
-- **Build history:** 0.997 170.14-170.15.
+- **Build history:** 0.997 170.14-170.16.
 - **Test:** Fly with the radio on, then off, near and far from the wifi point, with and without the Companion: the bar icons follow, the briefing shows the dispatcher and the voice app text, no window about the Companion appears.
 
 ### The random voices list shows sex, quality and use, can be sorted, and copies its choices
@@ -1842,7 +1842,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.15 (this release):** The status bar with 5G, wifi and USB icons, the clean dispatcher message and no window for the Companion connection (see Status bar with connection icons and a clean dispatcher message).
+- **0.997 170.16 (this release):** The status bar icons fit in the blue part of the bar: the USB icon is turned by 90 degrees and the wifi waves reach up to the top edge (see Status bar with connection icons and a clean dispatcher message).
+- **0.997 170.15:** The status bar with 5G, wifi and USB icons, the clean dispatcher message and no window for the Companion connection (see Status bar with connection icons and a clean dispatcher message).
 - **0.997 170.14:** The briefing connection line without debug values and no window for the Companion connection (see Status bar with connection icons and a clean dispatcher message).
 - **0.997 170.13:** A patient of the previous dispatch is no longer counted as already carried by the ambulance (see A patient is no longer taken as already carried by the ambulance).
 - **0.997 170.12:** The hoist guidance without a landing spot, the ACCEPT DISPATCH bars and old saved profiles, plus the new calls of the copilot, the doctor and the hoist operator (see the entries of this build).
