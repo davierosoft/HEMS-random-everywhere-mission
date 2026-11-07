@@ -7,11 +7,13 @@
 //   node tools/ui-texts.js sync     add the keys of new texts to tools/ui-text-keys.json and rewrite ui-texts.json from everywhere_all.json
 //   node tools/ui-texts.js stats    counts by kind and the longest texts
 //
-// ui-texts.json is the manifest published next to everywhere_all.json in every release: version 1, { mission, fields: [ { key, kind, en, max, paths } ] }.
+// ui-texts.json is the manifest published next to everywhere_all.json in every release: version 1, { mission, updates, fields: [ { key, kind, en, max, paths } ] }.
+// `updates` (mission tag/size/SHA-256, train.json hash/size/version) lets the Companion check for updates with one read of this file instead of GitHub API calls (issue 81 of KeKKERUUU/RandomEverywhereInstaller).
 // paths are RFC 6901 JSON pointers into everywhere_all.json; the app replaces only the string values still equal to `en`.
 // A key names one text of one kind and never changes: a changed English text takes a new key and the old key stays in the registry, unused.
 // Texts that are spoken (`speak`, the voice packs), the data records (descriptions, medical lines), names, conditions and every value that is
 // compared or stored are not fields: see docs/architecture/UI_TRANSLATION.md.
+const crypto = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -140,9 +142,35 @@ function missionBuild(artifact) {
   return match ? match[0] : '';
 }
 
-function manifestText(artifact, fields) {
+// What is published, for the Mission Companion: it reads this one file from the repository (raw.githubusercontent.com, not limited like the GitHub API)
+// instead of asking the releases and commits API for each part. Everything here is computed from the files of this repository.
+//   mission  tag, size and SHA-256 of everywhere_all.json: the release asset of that build is downloaded from the tag and checked against them
+//   train    git blob hash, size and SCRIPT_BUILD version of train.json: the Companion offers it when the hash differs and verifies what it downloads
+const trainFile = path.join(root, 'train.json');
+
+function gitBlobSha(bytes) {
+  return crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`blob ${bytes.length}\0`), bytes])).digest('hex');
+}
+
+function trainVersion(bytes) {
+  const match = /"local"\s*:\s*"SCRIPT_BUILD"\s*\}\s*,\s*"value"\s*:\s*(\d{4,9})/.exec(bytes.toString('utf8'));
+  return match ? `${Math.floor(Number(match[1]) / 1000)}.${Number(match[1]) % 1000}` : '';
+}
+
+function updatesBlock(artifactBytes, artifact) {
+  const build = missionBuild(artifact);
+  const updates = { mission: build ? { tag: `v${build.replace(' ', '-')}`, size: artifactBytes.length, sha256: crypto.createHash('sha256').update(artifactBytes).digest('hex') } : null };
+  if (fs.existsSync(trainFile)) {
+    const bytes = fs.readFileSync(trainFile);
+    updates.train = { blobSha: gitBlobSha(bytes), size: bytes.length, version: trainVersion(bytes) };
+  }
+  return updates;
+}
+
+function manifestText(artifact, fields, artifactBytes) {
   const lines = fields.map((f) => `    ${JSON.stringify(f)}`);
-  return `{\n  "version": 1,\n  "mission": ${JSON.stringify(missionBuild(artifact))},\n  "fields": [\n${lines.join(',\n')}\n  ]\n}\n`;
+  const updates = updatesBlock(artifactBytes, artifact);
+  return `{\n  "version": 1,\n  "mission": ${JSON.stringify(missionBuild(artifact))},\n  "updates": ${JSON.stringify(updates)},\n  "fields": [\n${lines.join(',\n')}\n  ]\n}\n`;
 }
 
 function registryText(registry) {
@@ -174,7 +202,8 @@ function validate(artifact, fields) {
 function main() {
   const command = process.argv[2] || 'check';
   if (!['check', 'sync', 'stats'].includes(command)) fail(['usage: node tools/ui-texts.js [check|sync|stats]']);
-  const artifact = JSON.parse(fs.readFileSync(artifactFile, 'utf8'));
+  const artifactBytes = fs.readFileSync(artifactFile);
+  const artifact = JSON.parse(artifactBytes.toString('utf8'));
   const registry = loadRegistry();
   if (command === 'stats') {
     const { fields } = build(artifact, registry, true);
@@ -189,7 +218,7 @@ function main() {
     if (problems.length) fail(problems.slice(0, 20));
     registry.keys.push(...created);
     fs.writeFileSync(registryFile, registryText(registry));
-    fs.writeFileSync(manifestFile, manifestText(artifact, fields));
+    fs.writeFileSync(manifestFile, manifestText(artifact, fields, artifactBytes));
     console.log(`UI texts synced: ${fields.length} texts, ${fields.reduce((n, f) => n + f.paths.length, 0)} places, ${created.length} new keys, mission ${missionBuild(artifact)}.`);
     return;
   }
@@ -198,7 +227,7 @@ function main() {
   for (const item of unkeyed.slice(0, 15)) problems.push(`Screen text without a key (${item.kind}): ${item.en}`);
   if (unkeyed.length > 15) problems.push(`... and ${unkeyed.length - 15} more screen texts without a key`);
   problems.push(...validate(artifact, fields));
-  const expected = manifestText(artifact, fields);
+  const expected = manifestText(artifact, fields, artifactBytes);
   const actual = fs.existsSync(manifestFile) ? fs.readFileSync(manifestFile, 'utf8') : '';
   if (!problems.length && actual !== expected) problems.push('ui-texts.json is out of date: run node tools/ui-texts.js sync');
   if (problems.length) fail(['UI texts FAIL:', ...problems.slice(0, 25)]);

@@ -135,7 +135,7 @@ function runRefresh(world) {
   const run = (commands) => {
     for (const command of commands) {
       if (command['#comment'] !== undefined || command.set_map || command.sleep !== undefined) continue;
-      if (command.call_macro === 'trace dispatch handoff' || command.call_macro === 'clear_unaccepted_dispatch_map') continue;
+      if (command.call_macro === 'trace dispatch handoff' || command.call_macro === 'dispatch step row' || command.call_macro === 'clear_unaccepted_dispatch_map') continue;
       if (command.call_macro) { run(shared[command.call_macro]); continue; }
       if (command.set) {
         const key = command.set.var[0].replace(/^L:/, '');

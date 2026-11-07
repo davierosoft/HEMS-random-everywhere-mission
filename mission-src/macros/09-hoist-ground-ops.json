@@ -11260,6 +11260,7 @@
   "ambulance shuttle decide": [
     {"#comment":"Report of Daikan, 2026-11-03 (170.05, mission 31, 3 crew): the helicopter landed 288 m from the patient (custom landing spot, police carried the crew), the ambulance was on the scene 30 m from the patient, and after the visit the crew walked back to the helicopter to get the stretcher. AMBUFAR is never evaluated in the live patient registry (ambustretcher full returns before it), so the branch of the original mission that sent the ambulance to carry crew and patient to the helicopter never ran. Decision, called by 3 crew ground ops and 4 or 5 crew ground ops at the start of the stretcher branch (patient transported by us): ambu_shuttle is 1 when the live registry is on, the ambulance is on the scene (AMBU_AVAIL 1, ambulance1 exists and reaches the patient: multipatient registry ambulance reach), the helicopter is on the ground and farther from the patient than ambulance_return_crew_min_dist (200 m by default). Then the ambulance is held (ambulance1_shuttle_hold: ambulance1 stand down waits for it), its parking place is remembered (shuttle_home) and a watchdog releases the hold after 1500 s. With 4 or 5 crew the ambulance is sent to the helicopter at once (the stretcher is fetched there). Otherwise nothing changes and the crew walks as before."},
     {"set":{"local":"ambu_shuttle"},"value":0},
+    {"set":{"local":"ambu_shuttle_amb_m"},"value":-1},
     {"set":{"local":"ambu_shuttle_why"},"value":"the live patient registry is off"},
     {"set":{"local":"ambu_shuttle_leg3"},"value":"no"},
     {"set":{"local":"ambu_shuttle_at_heli"},"value":"no"},
@@ -11282,8 +11283,15 @@
                 {"require":{"location":"INJURED","var":"distance:m"},"gt":{"local":"ambulance_return_crew_min_dist"}}
               ]}, "eq": 1,
               "then": [
+                {"#comment":"Report of kingle, 2026-11-07 (170.18, mission 36): the reach macro answers 1 when patient 1 no longer exists, so the crew waited for an ambulance that was 26 km away. The ambulance must be on the site now (distance to the scene), otherwise the crew walks: nobody waits for it before starting."},
                 {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":"ambulance1","patient":1},"result":"asd_reach"},
+                {"set":{"local":"ambu_shuttle_amb_m"},"value":{"round":{"location":"ambulance1","var":"distance:m","to":"INJURED"},"to":0}},
                 {"set":{"local":"ambu_shuttle_why"},"value":"the ambulance is too far from the patient"},
+                {"if": {"local":"ambu_shuttle_amb_m"}, "gt": {"local":"ambulance_return_crew_min_dist"},
+                  "then": [
+                    {"set":{"param":"asd_reach"},"value":0},
+                    {"set":{"local":"ambu_shuttle_why"},"value":"the ambulance is not on the site, the crew walks"}
+                ]},
                 {"if": {"param":"asd_reach"}, "eq": 1,
                   "then": [
                     {"set":{"local":"ambu_shuttle"},"value":1},
@@ -11314,7 +11322,7 @@
             ]}
         ]}
     ]},
-    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_decide","detail":{"text":"source={0} shuttle={1} why={2} heli_to_patient_m={3} limit_m={4} crew={5}","params":[{"param":"source"},{"local":"ambu_shuttle"},{"local":"ambu_shuttle_why"},{"local":"ambu_shuttle_dist"},{"local":"ambulance_return_crew_min_dist"},{"local":"CREW"}]}}}
+    {"call_macro":"ground ops checkpoint","params":{"id":"shuttle_decide","detail":{"text":"source={0} shuttle={1} why={2} heli_to_patient_m={3} limit_m={4} crew={5} ambulance_to_scene_m={6}","params":[{"param":"source"},{"local":"ambu_shuttle"},{"local":"ambu_shuttle_why"},{"local":"ambu_shuttle_dist"},{"local":"ambulance_return_crew_min_dist"},{"local":"CREW"},{"local":"ambu_shuttle_amb_m"}]}}}
   ],
   "ambulance shuttle release": [
     {"#comment":"Gives the ambulance back: ambulance1 stand down can depart. Safe to call more than once. The legs that did not run yet go back to walking (ambu_shuttle 0). Param why: text of the trace."},

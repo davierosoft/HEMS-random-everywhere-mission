@@ -270,7 +270,9 @@
                     {"set":{"var":["L:PRE_USERA","number"]},"value":{"location":"userA"}}
                 ]}
             ]},
+            {"call_macro":"dispatch step row","params":{"stage":"before_preview_done"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"preview_done"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_preview_done"}},
             {"if": {
               "and": [
                 {"require":{"local":"MISSION_PHASE"},"gt":8},
@@ -278,10 +280,14 @@
               ]}, "eq": 1,
               "then": [
                 {"#comment":"A dispatch preview finished after the mission ended without the second dispatch flag: ready dispatch never reached its offer (wait still open) or the flag was cleared. The row says which, with the wait, the dispatch phase and newdispatch."},
-                {"call_macro":"trace dispatch handoff","params":{"stage":"preview_without_second_flag"}}
+                {"call_macro":"dispatch step row","params":{"stage":"before_preview_without_second_flag"}},
+                {"call_macro":"trace dispatch handoff","params":{"stage":"preview_without_second_flag"}},
+                {"call_macro":"dispatch step row","params":{"stage":"after_preview_without_second_flag"}}
             ]}
           ],"else": [
-            {"call_macro":"trace dispatch handoff","params":{"stage":"preview_superseded"}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_preview_superseded"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"preview_superseded"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_preview_superseded"}}
         ]}
     ]}}
   ],
@@ -1397,6 +1403,7 @@
   "shared repeated block 048": [
     {"set":{"local":"newdispatch"},"value":"yes"},
     {"sleep":0.2},
+    {"set":{"local":"dispatch_phase_writer"},"value":"14 shared repeated block 048"},
     {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
     {"call_macro":"Update_raw from dispatchphase"}
   ],

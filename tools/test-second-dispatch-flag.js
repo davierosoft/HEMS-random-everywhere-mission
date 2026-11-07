@@ -14,7 +14,9 @@ const macros = {};
 const dir = path.join(root, 'mission-src', 'macros');
 for (const file of fs.readdirSync(dir).filter((name) => name.endsWith('.json'))) Object.assign(macros, JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8')));
 const live = (list) => list.filter((entry) => !(entry && typeof entry === 'object' && '#comment' in entry));
-const text = (value) => JSON.stringify(value);
+// The light rows (dispatch step row) that wrap every call of the trace macro are diagnostics of build 170.19; they are removed before the adjacency checks below.
+const stepRow = /{"call_macro":"dispatch step row","params":{"stage":"[^"]*"}}/g;
+const text = (value) => JSON.stringify(value).replace(new RegExp(stepRow.source + ",", "g"), "").replace(new RegExp("," + stepRow.source, "g"), "");
 
 const ready = text(live(macros['ready dispatch']));
 for (const stage of ['ready_enter', 'ready_wait_start', 'ready_wait_end', 'ready_randomized', 'ready_offered']) {
@@ -66,7 +68,8 @@ for (const field of ['second_offered', 'dispatch_phase', 'dispatch_ended', 'newd
 }
 // every place that offers, replaces, accepts or triggers a dispatch leaves a row (standing request of 2026-11-01: all diagnostics at once, never one more update per question)
 for (const [name, stage] of [['dispatch ringtone', 'ringtone'], ['Update_raw from dispatchphase', 'dispatch_phase_raw_update'], ['first_dispatch', 'first_dispatch_enter'], ['first_dispatch', 'first_dispatch_after_waits'], ['accept_dispatch', 'accept_enter'], ['next_dispatch', 'next_dispatch_enter'], ['ready dispatch', 'ready_after_waits'], ['mission dispatched by custom menu', 'custom_menu_dispatch']]) {
-  assert.ok(text(live(macros[name])).includes(`"stage":"${stage}"`), `${name} traces ${stage}`);
+  // Update_raw from dispatchphase writes a light row since 170.19, so the stage is searched in the unstripped source.
+  assert.ok(JSON.stringify(live(macros[name])).includes(`"stage":"${stage}"`), `${name} traces ${stage}`);
 }
 assert.ok(fs.readFileSync(path.join(root, 'mission-src', 'threads', '01-startup-and-dispatch-triggers.json'), 'utf8').includes('"stage":"thread_new_dispatch_fire"'), 'the NEW DISPATCH thread traces its trigger');
 for (const name of ['trace dispatch handoff', 'snapshot dispatch diagnostics']) {

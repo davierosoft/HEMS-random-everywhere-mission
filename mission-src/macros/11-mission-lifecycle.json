@@ -986,7 +986,9 @@
       "commands": [
         {"if": {"local":"nd_run"}, "eq": 1,
           "then": [
+            {"call_macro":"dispatch step row","params":{"stage":"before_next_dispatch_enter"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"next_dispatch_enter"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_next_dispatch_enter"}},
             {"call_macro":"archive closing dispatch"},
             {"call_macro":"start location diagnostics"},
             {"set":{"local":"map_preview_generation"},"value":{"add":[{"local":"map_preview_generation"},1]}},
@@ -1020,7 +1022,9 @@
                 {"sleep":0.5},
                 {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
                 {"sleep":0.1},
+                {"call_macro":"dispatch step row","params":{"stage":"before_randomized"}},
                 {"call_macro":"trace dispatch handoff","params":{"stage":"randomized"}},
+                {"call_macro":"dispatch step row","params":{"stage":"after_randomized"}},
                 {"if": {"local":"prelocation"}, "eq": "yes",
                   "then": [
                     {"call_macro":"accident location pregenerator"}
@@ -1080,7 +1084,9 @@
     ]}}
   ],
   "CUSTOM_MISSION": [
+    {"call_macro":"dispatch step row","params":{"stage":"before_custom_mission_start"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"custom_mission_start"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_custom_mission_start"}},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"var":["L:CUS_MISSION_SCENE_VARIANT","number"]}},
     {"set":{"local":"CRASH_VARIABLE"},"value":{"var":["L:CUS_CRASH_VARIABLE","number"]}},
@@ -1088,7 +1094,9 @@
     {"call_macro":"missionupdate CUSTOM"},
     {"call_macro":"accident location pregenerator CUSTOM"},
     {"call_macro":"accident location pregenerator multiplayer map"},
+    {"call_macro":"dispatch step row","params":{"stage":"before_custom_pregenerated"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"custom_pregenerated"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_custom_pregenerated"}},
     {"call_macro":"Mission dispatch"},
     {"call_macro":"multiplayer resveh"}
   ],
@@ -1775,6 +1783,7 @@
           "then": [
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
               "then": [
+                {"set":{"local":"dispatch_phase_writer"},"value":"11 lifecycle line 1778 (DISPATCHER_AUTO 0)"},
                 {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
                 {"call_macro":"Update_raw from dispatchphase"}
             ]}
@@ -2347,6 +2356,7 @@
         {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
           "then": [
             {"call_macro":"rtb step","params":{"name":"dispatch_phase_set"}},
+            {"set":{"local":"dispatch_phase_writer"},"value":"11 return to base"},
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
             {"call_macro":"rtb step","params":{"name":"update_raw_from_dispatchphase"}},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -2563,7 +2573,9 @@
         {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
           "then": [
             {"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":"the flag of the second dispatch was lost by the restart and is set again"}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_second_start_repair"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":"the flag of the second dispatch was lost by the restart and is set again"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_second_start_repair"}}
         ]},
         {"if": {
           "or": [
@@ -2571,7 +2583,9 @@
             {"require":{"var":["L:MISSION_START_LOCATION LON","number"]},"ne":{"global":"SECOND_RESTART_LON"}}
           ]}, "eq": 1,
           "then": [
+            {"call_macro":"dispatch step row","params":{"stage":"before_second_start_repair"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":{"text":"the starting point was overwritten: LVAR {0},{1} written back from {2},{3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"SECOND_RESTART_LAT"},{"global":"SECOND_RESTART_LON"}]}}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_second_start_repair"}},
             {"set":{"var":["L:MISSION_START_LOCATION LAT","number"]},"value":{"global":"SECOND_RESTART_LAT"}},
             {"set":{"var":["L:MISSION_START_LOCATION LON","number"]},"value":{"global":"SECOND_RESTART_LON"}}
         ]},
@@ -2588,7 +2602,9 @@
         {"call_macro":"crew reboard clear"}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"mission_start","actor":"dispatch","target":"phase","state":"phase_seen={local:START_PHASE_SEEN} second_accepted={local:START_SECOND_SEEN}"}},
+    {"call_macro":"dispatch step row","params":{"stage":"before_objective1_start"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"objective1_start"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_objective1_start"}},
     {"set":{"local":"CREW_MONITOR_RUNNING"},"value":0},
     {"set":{"local":"PATIENT_DEATH_CAUSE"},"value":null},
     {"set":{"local":"DEATH_TIME_1"},"value":null},
@@ -3899,14 +3915,18 @@
               "zones": [
                 {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}
             ]},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_reused","detail":{"text":"starting point reused from the LVARs {0},{1} (mode {2}), {3} m from the helicopter","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"location_ref"},{"round":{"location":"mission_start_location","var":"distance:m","to":"$USER"},"to":1}]}}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_start_location_reused"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_reused","detail":{"text":"starting point reused from the LVARs {0},{1} (mode {2}), {3} m from the helicopter","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"location_ref"},{"round":{"location":"mission_start_location","var":"distance:m","to":"$USER"},"to":1}]}}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_start_location_reused"}}
           ],"else": [
             {"create_location": "mission_start_location",
               "zones": [
                 {"zone":{"location":"$USER"}}
             ]},
             {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_new","detail":{"text":"new starting point at the helicopter {0},{1} (mode {2}, flag {3})","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"location_ref"},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}]}}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_start_location_new"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_new","detail":{"text":"new starting point at the helicopter {0},{1} (mode {2}, flag {3})","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"location_ref"},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}]}}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_start_location_new"}}
         ]},
         {"call_macro":"trace location reference","params":{"stage":"start_location_new"}},
         {"create_thread": {
@@ -3943,14 +3963,18 @@
                 {"zone":{"location":"$USER"}}
             ]},
             {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_recalculated","detail":{"text":"the LVARs of the starting point were 0 at the second dispatch, calculated at the helicopter {0},{1}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_start_location_recalculated"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_recalculated","detail":{"text":"the LVARs of the starting point were 0 at the second dispatch, calculated at the helicopter {0},{1}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_start_location_recalculated"}}
           ],"else": [
             {"create_location": "mission_start_location",
               "zones": [
                 {"zone":{"location":{"resolve_location":{"create_array":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]}]}}}}
             ]}
         ]},
+        {"call_macro":"dispatch step row","params":{"stage":"before_start_location_restored"}},
         {"call_macro":"trace dispatch handoff","params":{"stage":"start_location_restored","detail":{"text":"starting point restored {0},{1}, {2} m from the helicopter","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"round":{"location":"mission_start_location","var":"distance:m"},"to":0}]}}},
+        {"call_macro":"dispatch step row","params":{"stage":"after_start_location_restored"}},
         {"call_macro":"trace location reference","params":{"stage":"start_location_restored"}},
         {"if": {"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]}, "ne": 0,
           "then": [
@@ -3997,7 +4021,9 @@
             {"call_macro":"timefororgantransport"}
         ]},
         {"call_macro":"missionupdate"},
-        {"call_macro":"trace dispatch handoff","params":{"stage":"objective1_rebuilt"}}
+        {"call_macro":"dispatch step row","params":{"stage":"before_objective1_rebuilt"}},
+        {"call_macro":"trace dispatch handoff","params":{"stage":"objective1_rebuilt"}},
+        {"call_macro":"dispatch step row","params":{"stage":"after_objective1_rebuilt"}}
     ]},
     {"sleep":0.2},
     {"#comment":"The custom centre is created at the start from the starting point and then kept like the starting point (LVARs L:CUSTOM_CENTER_LOCATION, never saved in the profile). The user customizes it with Query dispatcher position custom."},
@@ -4516,6 +4542,7 @@
     {"set":{"local":"has_location"},"value":"no"},
     {"set_briefing_dialog":0},
     {"set_objective_title":"Preflight operations, wait for rear crew clearance!","color":"yellow"},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_title"}},
     {"set_map":{"remove":{"point":{"id":"BASE_inner"}}}},
     {"set_map":{"remove":{"point":{"id":"BASE_outer"}}}},
     {"set_map":{"remove":{"point":{"id":"BASE_special"}}}},
@@ -4524,10 +4551,14 @@
         {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},
         {"call_macro":"Update_raw from dispatchphase"}
     ]},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_before_follow"}},
     {"trigger":["H:{local:HXX}_SDK_TABLET_MAPSAPP_FOLLOWME_ON"]},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_after_follow"}},
     {"set":{"var":["L:{local:VCP}2","number"]},"value":{"add":[{"var":["L:{local:VCP}2","number"]},1]}},
     {"set_progressbar":{"min":0,"max":100,"var":["L:LOAD","number"],"color":"yellow"}},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_after_progressbar"}},
     {"set":{"var":["L:LOAD","number"]},"value":1},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_1"}},
     {"set_message":{"text":"Cabin preparation, 1% completed... please wait, it can take a while"}},
     {"create_thread": {
       "commands": [
@@ -4536,7 +4567,9 @@
     ]}},
     {"create_thread": {
       "commands": [
+        {"call_macro":"dispatch step row","params":{"stage":"obj2_thread_start"}},
         {"sleep":[20,600]},
+        {"call_macro":"dispatch step row","params":{"stage":"obj2_thread_after_sleep"}},
         {"if": {"local":"whobringpatient"}, "ne": "organ",
           "then": [
             {"if": {"local":"SEX_TIME"}, "eq": 0,
@@ -4627,6 +4660,7 @@
         {"call_macro":"pathology random engine"}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":5},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_5"}},
     {"set_message":{"text":"Cabin preparation, 5% completed... please wait, it can take a while"}},
     {"sleep":1},
     {"if": {"var":["L:NEOFLY","number"]}, "ne": 1,
@@ -4644,6 +4678,7 @@
     {"sleep":0.5},
     {"call_macro":"Mission dispatch"},
     {"set":{"var":["L:LOAD","number"]},"value":10},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_10"}},
     {"set_message":{"text":"Cabin preparation, 10% completed... please wait, it can take a while"}},
     {"if": {"global":"HOIST_CONTROL_PROFILE"},
       "then": [
@@ -4656,9 +4691,11 @@
         {"trigger":["H:{local:HXX}_SDK_HOIST_CONTROL_MODE_MANUAL"]}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":12},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_12"}},
     {"set_message":{"text":"Cabin preparation, 12% completed... please wait, it can take a while"}},
     {"call_macro":"failure engine"},
     {"set":{"var":["L:LOAD","number"]},"value":15},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_15"}},
     {"set_message":{"text":"Cabin preparation, 15% completed... please wait, it can take a while"}},
     {"set":{"var":["L:READY","number"]},"value":1},
     {"set":{"var":["L:MISSION_HOIST","number"]},"value":0},
@@ -4676,6 +4713,7 @@
         ]}
     ]},
     {"set":{"var":["L:LOAD","number"]},"value":20},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_20"}},
     {"set_message":{"text":"Cabin preparation, 20% completed... please wait, it can take a while"}},
     {"if": {"local":"MISSION_NUMBER"}, "eq": 1,
       "then": [
@@ -4719,6 +4757,7 @@
         ]}
     ]}},
     {"set":{"var":["L:LOAD","number"]},"value":100},
+    {"call_macro":"dispatch step row","params":{"stage":"obj2_load_100"}},
     {"set_message":{"text":"All set, wait for cabin clearance. If this message stays long time after crew boarding, something went wrong and mission cannot continue "}},
     {"wait_for":{"var":["L:HOLD","number"]},"eq":0},
     {"set":{"var":["L:{local:VCP}1","number"]},"value":{"add":[{"var":["L:{local:VCP}1","number"]},1]}},
@@ -4749,7 +4788,9 @@
     {"remote_notify":"mission_init_complete","params":[]}
   ],
   "objective4": [
+    {"call_macro":"dispatch step row","params":{"stage":"before_scene_ready"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"scene_ready"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_scene_ready"}},
     {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
     {"create_thread": {
       "commands": [
@@ -4779,7 +4820,9 @@
     ]},
     {"if": {"local":"SECOND_DISPATCH"}, "eq": 1,
       "then": [
-        {"call_macro":"trace dispatch handoff","params":{"stage":"second_flag_cleared_objective4"}}
+        {"call_macro":"dispatch step row","params":{"stage":"before_second_flag_cleared_objective4"}},
+        {"call_macro":"trace dispatch handoff","params":{"stage":"second_flag_cleared_objective4"}},
+        {"call_macro":"dispatch step row","params":{"stage":"after_second_flag_cleared_objective4"}}
     ]},
     {"set":{"local":"SECOND_DISPATCH"},"value":0},
     {"set":{"local":"second_dispatch_offered"},"value":0},
@@ -6551,7 +6594,16 @@
     ]}
   ],
   "ready dispatch": [
+    {"#comment":"Diagnostics of the second dispatch wait (user request of 2026-11-07, five reports of a second dispatch that ignores TIME_SECOND_DISPATCH): ready_copy_seq counts every entry of this macro, ready_copy_id keeps the number of the last entry (if two entries overlap, the id seen by a row is not the one of its own copy, which is itself the evidence); rows follow every step of the wait."},
+    {"if": {"local":"ready_copy_seq"}, "eq": null,
+      "then": [
+        {"set":{"local":"ready_copy_seq"},"value":0}
+    ]},
+    {"set":{"local":"ready_copy_seq"},"value":{"add":[{"local":"ready_copy_seq"},1]}},
+    {"set":{"local":"ready_copy_id"},"value":{"local":"ready_copy_seq"}},
+    {"call_macro":"dispatch step row","params":{"stage":"before_ready_enter"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_enter"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_ready_enter"}},
     {"set":{"local":"first_dispatch_pending"},"value":0},
     {"if": {"local":"player"}, "eq": "singleplayer",
       "then": [
@@ -6563,14 +6615,44 @@
             {"set":{"local":"WAIT_SECOND_DISPATCH"},"value":{"rand":[1,{"global":"TIME_SECOND_DISPATCH"}]}},
             {"set":{"local":"ENDWAIT_SECOND_DISPATCH"},"value":{"add":[{"var":["L:MISSION_TIME","number"]},{"local":"WAIT_SECOND_DISPATCH"}]}},
             {"#comment":"Tester report of 2026-11-01 (170.00, Daikan): a dispatch was proposed after the mission without the ACCEPT bar and without SECOND_DISPATCH. The rows ready_wait_start, ready_wait_end, ready_randomized and ready_offered of the dispatch snapshot say, for every second dispatch, when the wait began and how long it is, when it ended and what the flag was at each step."},
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_wait_start"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_start"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_wait_start"}},
             {"sleep":[3,7]},
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_after_sleep"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_sleep"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_after_sleep"}},
             {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_after_connect"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_connect"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_after_connect"}},
             {"set_message":{"text":"AVAILABILITY STATUS SENT CORRECTLY"}},
             {"#comment":"Report of Daikan 2026-11-04 (170.09): the second dispatch comes at once, the configured waiting time (up to 2 h) is ignored. The dispatch snapshot of 170.05 shows the same: ready_wait_start with WAIT_SECOND_DISPATCH 1960 s and ready_wait_end 6 s later (the sleep of [3,7] only). The end of the wait is now the mission clock itself: wait_for L:MISSION_TIME reaches ENDWAIT_SECOND_DISPATCH (computed above as MISSION_TIME plus WAIT_SECOND_DISPATCH, the value that the debug page shows as Time to second dispatch). Same primitive and same pattern as ambulance1 stand down. rdw_t0 is the clock at the start of the wait; the row ready_wait_end says how many seconds passed against how many were asked."},
             {"set":{"local":"rdw_t0"},"value":{"var":["L:MISSION_TIME","number"]}},
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_wait_armed"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_armed"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_wait_armed"}},
+            {"create_thread": {
+              "commands": [
+                {"sleep":20},
+                {"while": {"var":["L:MISSION_TIME","number"]}, "lt": {"local":"ENDWAIT_SECOND_DISPATCH"},
+                  "do": [
+                    {"if": {"local":"dispatch_handoff_log"}, "eq": null,
+                      "then": [
+                        {"set":{"local":"dispatch_handoff_log"},"value":{"create_array":0}}
+                    ]},
+                    {"modify_array":{"local":"dispatch_handoff_log"},"append":{"create_struct":{"stage":"ready_wait_heartbeat","mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"dispatch_phase":{"var":["L:DISPATCH_PHASE","number"]},"copy_seq":{"local":"ready_copy_seq"},"copy_id":{"local":"ready_copy_id"},"ndt_runs":{"local":"ndt_runs"},"wait_second_s":{"local":"WAIT_SECOND_DISPATCH"},"endwait_s":{"local":"ENDWAIT_SECOND_DISPATCH"},"rdw_t0":{"local":"rdw_t0"}}}},
+                    {"if": {"struct":{"local":"dispatch_handoff_log"},"path":"length"}, "gt": 150,
+                      "then": [
+                        {"modify_array":{"local":"dispatch_handoff_log"},"removeIndex":0}
+                    ]},
+                    {"sleep":20}
+                ]}
+            ]}},
             {"wait_for":{"var":["L:MISSION_TIME","number"]},"gte":{"local":"ENDWAIT_SECOND_DISPATCH"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_end","detail":{"text":"waited {0} s of {1} s (clock {2}, end {3})","params":[{"round":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"rdw_t0"}]},"to":0},{"round":{"local":"WAIT_SECOND_DISPATCH"},"to":0},{"round":{"var":["L:MISSION_TIME","number"]},"to":0},{"round":{"local":"ENDWAIT_SECOND_DISPATCH"},"to":0}]}}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_wait_end"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_wait_end","detail":{"text":"waited {0} s of {1} s (clock {2}, end {3})","params":[{"round":{"subtract":[{"var":["L:MISSION_TIME","number"]},{"local":"rdw_t0"}]},"to":0},{"round":{"local":"WAIT_SECOND_DISPATCH"},"to":0},{"round":{"var":["L:MISSION_TIME","number"]},"to":0},{"round":{"local":"ENDWAIT_SECOND_DISPATCH"},"to":0}]}}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_wait_end"}}
         ]},
         {"set":{"local":"newdispatch"},"value":"done"}
       ],"else": [
@@ -6589,7 +6671,9 @@
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
     {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
+    {"call_macro":"dispatch step row","params":{"stage":"before_ready_after_waits"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_waits"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_ready_after_waits"}},
     {"set_message":{"text":"INCOMING NEW MESSAGE..."}},
     {"set":{"local":"Dispatcher_text"},"value":"New dispatch. See tablet."},
     {"set_message":{"text":"DOWNLOADING NEW DISPATCH, PLEASE WAIT..."}},
@@ -6607,7 +6691,9 @@
           "catch": [
             {"set":{"local":"randomize_error"},"value":{"param":"$ERROR"}},
             {"sleep":0.01},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_randomize_error"}}
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_randomize_error"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"ready_randomize_error"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_randomize_error"}}
         ]},
         {"sleep":0.5},
         {"#comment":"randomize says ready only when it drew a dispatch; with no enabled mission (no_active_missions) or after an error it leaves the variables of the previous dispatch untouched, and the old flow went on to offer that stale dispatch again at a new place (tester reports of 2026-10-31 and 2026-11-01: the same incident offered again). Nothing is offered then: the flags are lowered, the row ready_randomize_failed says why and the macro ends after a pause (the thread that calls it would otherwise call it again at once)."},
@@ -6615,14 +6701,18 @@
           "then": [
             {"set":{"local":"SECOND_DISPATCH"},"value":0},
             {"set":{"local":"second_dispatch_offered"},"value":0},
+            {"call_macro":"dispatch step row","params":{"stage":"before_ready_randomize_failed"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"ready_randomize_failed"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_ready_randomize_failed"}},
             {"sleep":30},
             {"return":0}
         ]}
     ]},
     {"set":{"local":"SECOND_DISPATCH"},"value":1},
     {"set":{"local":"second_dispatch_offered"},"value":1},
+    {"call_macro":"dispatch step row","params":{"stage":"before_ready_randomized"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_randomized"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_ready_randomized"}},
     {"set":{"var":["H:{local:HXX}_SDK_IS_DISPATCH_MESSAGE","number"]},"value":1},
     {"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},
     {"set":{"var":["L:Dispatch","number"]},"value":1},
@@ -6732,10 +6822,14 @@
     {"set":{"local":"SECOND_DISPATCH"},"value":1},
     {"set_briefing_dialog":1},
     {"set":{"local":"DISPLAY_DISPATCH"},"value":1},
-    {"call_macro":"trace dispatch handoff","params":{"stage":"ready_offered"}}
+    {"call_macro":"dispatch step row","params":{"stage":"before_ready_offered"}},
+    {"call_macro":"trace dispatch handoff","params":{"stage":"ready_offered"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_ready_offered"}}
   ],
   "dispatch ringtone": [
+    {"call_macro":"dispatch step row","params":{"stage":"before_ringtone"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"ringtone"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_ringtone"}},
     {"if": {"local":"player"}, "eq": "multiplayer",
       "then": [
         {"set":{"var":["L:{local:VCP}DISPATCHED4","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCHED4","number"]},1]}}
@@ -6866,9 +6960,11 @@
     {"set":{"local":"rtb_step"},"value":"update_raw:rescuetrack_id_guard"},
     {"call_macro":"rescuetrack id guard"},
     {"set":{"local":"rtb_step"},"value":"update_raw:trace_dispatch_handoff"},
-    {"call_macro":"trace dispatch handoff","params":{"stage":"dispatch_phase_raw_update"}},
+    {"#comment":"Build 170.19 (2026-11-07): this row was a full call of trace dispatch handoff since 170.03; with the calls of accept_dispatch, objective2 and the phase thread at the same second, objective2 never came back from this macro (no progress bar, mission stuck at the preflight objective). Now a light row."},
+    {"call_macro":"dispatch step row","params":{"stage":"dispatch_phase_raw_update"}},
     {"set":{"local":"rtb_step"},"value":"update_raw:sleep_0_5"},
     {"sleep":0.5},
+    {"call_macro":"dispatch step row","params":{"stage":"update_raw_after_sleep"}},
     {"set":{"local":"rtb_step"},"value":"update_raw:for_each_status_messages"},
     {"for_each": {"static":"statusMessages{local:RESCUETRACK_ID}translation"},
       "do": [
@@ -6882,7 +6978,8 @@
         ]},
         {"sleep":0.01}
     ]},
-    {"set":{"local":"rtb_step"},"value":"update_raw:done"}
+    {"set":{"local":"rtb_step"},"value":"update_raw:done"},
+    {"call_macro":"dispatch step row","params":{"stage":"update_raw_done"}}
   ],
   "accept_dispatch": [
     {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "eq": "yes",
@@ -6890,7 +6987,9 @@
         {"set_message":{"text":"DISPATCH NOT AVAILABLE: crew emergency, shift terminated."}},
         {"return":1}
     ]},
+    {"call_macro":"dispatch step row","params":{"stage":"before_accept_enter"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"accept_enter"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_accept_enter"}},
     {"set":{"var":["L:DBF_HARD","number"]},"value":0},
     {"set":{"var":["L:DBF_DEAD","number"]},"value":0},
     {"set":{"var":["L:DBF_FAIL","number"]},"value":0},
@@ -6921,7 +7020,9 @@
           ]}, "eq": 1,
           "then": [
             {"#comment":"ready dispatch offered this dispatch as a second one (second_dispatch_offered), so it is accepted as one even if the flag was cleared after the offer."},
+            {"call_macro":"dispatch step row","params":{"stage":"before_accept_flag_restored"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"accept_flag_restored"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_accept_flag_restored"}},
             {"set":{"local":"SECOND_DISPATCH"},"value":1}
         ]},
         {"if": {
@@ -6932,7 +7033,9 @@
           "then": [
             {"call_macro":"snapshot base marshall"},
             {"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1},
+            {"call_macro":"dispatch step row","params":{"stage":"before_accept_second"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"accept_second"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_accept_second"}},
             {"set":{"local":"MISSION_PHASE"},"value":2},
             {"set_briefing_dialog":0},
             {"set":{"local":"SUBMITTED"},"value":0},
@@ -6955,8 +7058,18 @@
             {"set":{"global":"SECOND_RESTART_LAT"},"value":{"var":["L:MISSION_START_LOCATION LAT","number"]}},
             {"set":{"global":"SECOND_RESTART_LON"},"value":{"var":["L:MISSION_START_LOCATION LON","number"]}},
             {"set":{"global":"SECOND_RESTART_PENDING"},"value":1},
+            {"call_macro":"dispatch step row","params":{"stage":"before_accept_second_start"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"accept_second_start","detail":{"text":"start lat={0} lon={1} flag={2} pending={3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},{"global":"SECOND_RESTART_PENDING"}]}}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_accept_second_start"}},
             {"call_macro":"trace location reference","params":{"stage":"accept_second_start"}},
+            {"if": {"local":"reload_mission_count"}, "eq": null,
+              "then": [
+                {"set":{"local":"reload_mission_count"},"value":0}
+            ]},
+            {"set":{"local":"reload_mission_count"},"value":{"add":[{"local":"reload_mission_count"},1]}},
+            {"call_macro":"dispatch step row","params":{"stage":"before_reload_mission_call"}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"reload_mission_call"}},
+            {"call_macro":"dispatch step row","params":{"stage":"after_reload_mission_call"}},
             {"reload_mission":1}
         ]},
         {"if": {"local":"MISSION_PHASE"}, "lt": 2,
@@ -6973,7 +7086,9 @@
     ]}
   ],
   "first_dispatch": [
+    {"call_macro":"dispatch step row","params":{"stage":"before_first_dispatch_enter"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_enter"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_first_dispatch_enter"}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"call_macro":"UpdateRescueTrack"},
     {"if": {"global":"BOARDING_HOLD_GLOBAL"}, "eq": 0,
@@ -6993,14 +7108,20 @@
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
     {"#comment":"Tester report of 2026-11-01 (170.02, Daikan, snapshot): this thread sleeps up to DISPATCH_TIME from the start of the mission. When the first dispatch was replaced meanwhile (NEXT DISPATCH, a dispatch of the menu), the thread woke up long after, found lock_random_dispatch reset to 0 by ready dispatch and DISPLAY_DISPATCH 0, and offered the old mission type at a new place with a ringtone and a map marker, while ready dispatch was still waiting for the real second dispatch: no SECOND_DISPATCH, no ACCEPT. first_dispatch_pending is raised by objective1 and lowered by every other dispatch (randomize, ready dispatch, next_dispatch, accept, menu): a first dispatch that is no longer the pending one is never offered."},
+    {"call_macro":"dispatch step row","params":{"stage":"before_first_dispatch_after_waits"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_after_waits"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_first_dispatch_after_waits"}},
     {"if": {"local":"first_dispatch_pending"}, "ne": 1,
       "then": [
+        {"call_macro":"dispatch step row","params":{"stage":"before_first_dispatch_skipped"}},
         {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_skipped"}},
+        {"call_macro":"dispatch step row","params":{"stage":"after_first_dispatch_skipped"}},
         {"return":0}
     ]},
     {"set":{"local":"first_dispatch_pending"},"value":0},
+    {"call_macro":"dispatch step row","params":{"stage":"before_first_dispatch_offered"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_offered"}},
+    {"call_macro":"dispatch step row","params":{"stage":"after_first_dispatch_offered"}},
     {"if": {"local":"lock_random_dispatch"}, "eq": 0,
       "then": [
         {"if": {"local":"DISPLAY_DISPATCH"}, "ne": 1,

@@ -1,3 +1,21 @@
+## Release 0.997 170.20
+
+- Declare the threads (NEW DISPATCH, DISPATCH PHASE TRACE) and icons roots changed since the 170.18 snapshot
+- Carries every 170.19 change (start at 0 percent, objective2 stuck in Update_raw, overlapped trace calls, 43 before/after rows); diagnostics of the second dispatch wait and of the mission start; the crew no longer waits for an ambulance that is not on the site (shuttle decision uses the ambulance distance)
+
+## Release 0.997 170.19
+
+- A light checkpoint row before and after every call of trace dispatch handoff (43 sites)
+- Update_raw from dispatchphase writes a light row and trace dispatch handoff no longer runs overlapped (objective2 stuck in Update_raw)
+- Light checkpoint rows between the objective title and LOAD 1 and at every LOAD step of objective2 (mission stuck before the progress bar)
+- Heartbeat row without timestamp (test of the clock stamps)
+- Threads write their diagnostic rows directly, without calling trace dispatch handoff in parallel (same number by user exception)
+- Diagnostic trace rows of the new threads wait for the cockpit power (same number by user exception)
+- Initialise the diagnostic locals before the trace rows read them (stuck at 0 percent on the first 170.19 build; same number by user exception)
+- Declare the macros changed since the scope snapshot of 2026-11-07
+- Declare the macros changed since the scope snapshot of 2026-11-07
+- Diagnostics of the second dispatch wait: copy ids, every step of ready dispatch, wait heartbeat, phase change thread, reload counter
+
 ## Release 0.997 170.18
 
 - Declare the macros changed since the scope snapshot of 2026-11-07

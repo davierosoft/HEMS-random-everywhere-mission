@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.18. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.20. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -949,6 +949,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.17-170.18.
 - **Test:** Hold the hover for a crew hoist and for a recovery with the voice pack chosen: only that pack speaks the position calls, nothing is said after the hook is up, and the door, arm, hooking and cable follow each other with clear pauses.
 
+### The mission no longer freezes at start or in the preflight step
+
+- The diagnostic rows of the dispatch (build 170.19) first made the mission stay at 0 percent loading, and a custom mission at a custom location stay on "Preflight operations, wait for rear crew clearance!" without progress bar. Cause: heavy diagnostic calls ran at the same instant from several threads (accept dispatch, the mission objective, the phase thread) and one of them was called before the cockpit was powered. The diagnostic rows now wait for the cockpit power, the heavy diagnostic call no longer runs overlapped, and the objective writes light checkpoint rows at every loading step.
+- **Build history:** 0.997 170.19-170.20.
+- **Test:** Start a mission and a custom mission at a custom location from the map (START SEL. MISSN @CUSTOM LOC): the progress bar runs and the mission starts.
+
+### The crew no longer waits for an ambulance that is far away
+
+- Report of a tester (170.18): after the first patient had been taken to the hospital, the helicopter landed 159 m from the next patient and the crew stood still for many minutes, waiting for an ambulance that was 26 km away. The ambulance shuttle of the crew now starts only when the ambulance is on the site (within the minimum distance of the scene); otherwise the crew walks at once, without waiting for it.
+- **Build history:** 0.997 170.20.
+- **Test:** Land far from the patient while the ambulance is driving away or is far from the scene: the crew walks to the patient at once. With the ambulance on the scene the shuttle works as before.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1851,7 +1863,9 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.18 (this release):** The hoist calls follow your voice pack and the hoist keeps human pauses (see The hoist calls follow your voice pack and the hoist keeps human pauses).
+- **0.997 170.20 (this release):** The mission no longer freezes at start or in the preflight step, and the crew walks at once when the ambulance is not on the site (see The crew no longer waits for an ambulance that is far away).
+- **0.997 170.19:** The mission start and the custom mission at a custom location no longer freeze, plus diagnostic rows for the second dispatch wait (see The mission no longer freezes at start or in the preflight step).
+- **0.997 170.18:** The hoist calls follow your voice pack and the hoist keeps human pauses (see The hoist calls follow your voice pack and the hoist keeps human pauses).
 - **0.997 170.17:** The same entry (hoist calls and pauses, first version).
 - **0.997 170.16:** The status bar icons fit in the blue part of the bar: the USB icon is turned by 90 degrees and the wifi waves reach up to the top edge (see Status bar with connection icons and a clean dispatcher message).
 - **0.997 170.15:** The status bar with 5G, wifi and USB icons, the clean dispatcher message and no window for the Companion connection (see Status bar with connection icons and a clean dispatcher message).

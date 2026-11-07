@@ -319,6 +319,11 @@
     ]},
   "NEW DISPATCH":     {
       "commands": [
+        {"if": {"local":"ndt_runs"}, "eq": null,
+          "then": [
+            {"set":{"local":"ndt_runs"},"value":0}
+        ]},
+        {"set":{"local":"ndt_runs"},"value":{"add":[{"local":"ndt_runs"},1]}},
         {"sleep":5},
         {"wait_for":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
         {"if": {"local":"player"}, "eq": "singleplayer",
@@ -329,7 +334,9 @@
                   {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":5},
                   {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":6}
                 ]},
+                {"call_macro":"dispatch step row","params":{"stage":"before_thread_new_dispatch_fire"}},
                 {"call_macro":"trace dispatch handoff","params":{"stage":"thread_new_dispatch_fire"}},
+                {"call_macro":"dispatch step row","params":{"stage":"after_thread_new_dispatch_fire"}},
                 {"call_macro":"ready dispatch"}
             ]}
           ],"else": [
@@ -342,6 +349,60 @@
               {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"eq":6}
             ]},
             {"call_macro":"ready dispatch"}
+        ]}
+    ]},
+  "DISPATCH PHASE TRACE":     {
+      "commands": [
+        {"#comment":"Diagnostics (2026-11-07): one row for every change of L:DISPATCH_PHASE, written directly into dispatch_handoff_log (a call of trace dispatch handoff from this thread ran at the same time as the one of accept_dispatch and froze the mission, build 170.19 first attempts), with the writer that declared itself in dispatch_phase_writer (phase_writer) and the step of the end of the mission (rtb_step)."},
+        {"sleep":5},
+        {"wait_for":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+        {"if": {"local":"ready_copy_seq"}, "eq": null,
+          "then": [
+            {"set":{"local":"ready_copy_seq"},"value":0}
+        ]},
+        {"if": {"local":"ready_copy_id"}, "eq": null,
+          "then": [
+            {"set":{"local":"ready_copy_id"},"value":0}
+        ]},
+        {"if": {"local":"ndt_runs"}, "eq": null,
+          "then": [
+            {"set":{"local":"ndt_runs"},"value":0}
+        ]},
+        {"if": {"local":"rdw_t0"}, "eq": null,
+          "then": [
+            {"set":{"local":"rdw_t0"},"value":0}
+        ]},
+        {"if": {"local":"WAIT_SECOND_DISPATCH"}, "eq": null,
+          "then": [
+            {"set":{"local":"WAIT_SECOND_DISPATCH"},"value":0}
+        ]},
+        {"if": {"local":"ENDWAIT_SECOND_DISPATCH"}, "eq": null,
+          "then": [
+            {"set":{"local":"ENDWAIT_SECOND_DISPATCH"},"value":0}
+        ]},
+        {"if": {"local":"rtb_step"}, "eq": null,
+          "then": [
+            {"set":{"local":"rtb_step"},"value":"none"}
+        ]},
+        {"if": {"local":"dispatch_phase_writer"}, "eq": null,
+          "then": [
+            {"set":{"local":"dispatch_phase_writer"},"value":"none"}
+        ]},
+        {"set":{"local":"dph_trace_prev"},"value":{"var":["L:DISPATCH_PHASE","number"]}},
+        {"while": 1, "gt": 0,
+          "do": [
+            {"wait_for":{"local":"dph_trace_prev"},"ne":{"var":["L:DISPATCH_PHASE","number"]}},
+            {"set":{"local":"dph_trace_prev"},"value":{"var":["L:DISPATCH_PHASE","number"]}},
+            {"if": {"local":"dispatch_handoff_log"}, "eq": null,
+              "then": [
+                {"set":{"local":"dispatch_handoff_log"},"value":{"create_array":0}}
+            ]},
+            {"modify_array":{"local":"dispatch_handoff_log"},"append":{"create_struct":{"stage":"dispatch_phase_changed","time":{"fn":"get_time_string"},"mission_timer":{"var":["L:MISSION_TIME","number"]},"phase":{"local":"MISSION_PHASE"},"dispatch_phase":{"var":["L:DISPATCH_PHASE","number"]},"phase_raw":{"var":["L:DISPATCH_PHASE_RAW","number"]},"phase_writer":{"local":"dispatch_phase_writer"},"rtb_step":{"local":"rtb_step"},"copy_seq":{"local":"ready_copy_seq"},"copy_id":{"local":"ready_copy_id"},"ndt_runs":{"local":"ndt_runs"},"wait_second_s":{"local":"WAIT_SECOND_DISPATCH"},"endwait_s":{"local":"ENDWAIT_SECOND_DISPATCH"},"rdw_t0":{"local":"rdw_t0"}}}},
+            {"if": {"struct":{"local":"dispatch_handoff_log"},"path":"length"}, "gt": 150,
+              "then": [
+                {"modify_array":{"local":"dispatch_handoff_log"},"removeIndex":0}
+            ]},
+            {"sleep":0.2}
         ]}
     ]},
   "DISPATCH MFD DISPLAY":     {
