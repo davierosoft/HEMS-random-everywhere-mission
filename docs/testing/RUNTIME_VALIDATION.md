@@ -779,3 +779,17 @@ With the Companion: when the hospital appears on the tablet, after the name the 
 ## Status bar image test (standalone mission, 2026-11-07)
 
 Mission: `standalone-tests/status-bar-image-test.json` (separate mission, never touches `mission-src/`; copied to `Desktop\claude\tests` and to the `hpgmission` folder of the mission pack, not to `RANDOM AND EVERYWHERE`). Purpose: decide whether the image of the status bar can be chosen by a variable, so that one bar out of many pre-drawn variants (5G, wifi level, USB for CARLS) replaces the two static rows at the 28 call sites. Forms: A `{"image":{"local":...}}`, B `{"image":{"global":...}}`, C `{"image":{"if":...}}`, D a dispatch page (`set_dispatch`) with a local. Reference rows use the static names. Pass: the bar of the form changes between `homebar` and `homebar5g` with the buttons. Runtime status: PENDING.
+
+## Hoist position guidance (2026-11-07, pending)
+
+Document: `docs/architecture/HOIST_POSITION_GUIDANCE.md`. Hover over the landing spot with the Italian voice pack installed and another pack chosen: only the chosen voice speaks (no Italian). Offset the hook 5 m to the right of the target: "left" then "five"; 2 m ahead: "backward" then "two"; within 1 m: "on top". Check the sign of each axis and the hook offset (`hg_hook_x`, `hg_hook_y`), a call is not repeated by time, no height callout outside the landing area. `ground_ops_checkpoint_log` rows `guidance_call` and `guidance_flag` show x, y and the flag.
+
+Hoist position guidance, second part (2026-11-07, pending): speed gates (callout 50 m up to 25 kt, 20 m up to 15 kt, 10 m and the box up to 7 kt); after the hook is up nothing is said on the same hover, and after moving away more than 3 m farther than during the hoist the callouts come again (`guidance_rearmed`); the speaker follows the hoist seat: 3 crew the copilot, 4 crew one hoist the first rear crew member, 4 crew second hoist the copilot, 5 crew the rear crew member that moves to the seat; with the TTS the voice is that of the actor, with the pack sounds the recorded one.
+
+## Hoist pauses harmonized and cable checkpoints (user decision 2026-11-07, sources only, not built)
+
+Status: runtime pending.
+
+- Hooking a seated person and the last check before lowering: 10 to 20 s everywhere (HOISTING main and second hoist, hoist heli rescuer down, drop heli rescuer hoist). Door to arm: 2 to 4 s everywhere. Empty hook lowered after the arm (Hoisting back up, pick heli rescuer hoist): 4 to 8 s. Lifting: 2 to 4 s between the last hook action and the cable going up.
+- New checkpoints: `hoist_arm_deploy` (every arm out, detail names the macro), `hoist_cable_down_start`, `hoist_cable_up_start`.
+- Test: run a crew-down hoist and a recovery; in the flight log the times between `hoist_arm_deploy` and `hoist_cable_down_start` must be about 10 to 40 s for a person on the cable and 4 to 12 s for an empty hook.

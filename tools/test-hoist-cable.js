@@ -141,6 +141,7 @@ class World {
     this.calls.push(c.call_macro);
     let result;
     switch (c.call_macro) {
+      case 'ground ops checkpoint': return; // checkpoints are diagnostics only (2026-11-07)
       case 'ground crew runtime trace': this.trace.push(this.interpolate(args.state)); return;
       case 'apply crew lifescore impact':
         this.stubCalls.push({ macro: c.call_macro, ...args });

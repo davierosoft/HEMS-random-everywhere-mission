@@ -106,7 +106,7 @@ assert(!navigation.includes('"heading":{"local":"ce_hdg"}'), 'create_object must
 const voiceModule = read('mission-src/macros/03-aircraft-crew-checklists.json');
 assert(voiceModule.includes('"voice dispatch language tag": [') && voiceModule.includes('{"text":"<language:{0}>","params":[{"local":"CUS_DISPATCH_LANGUAGE"}]}'), 'the mission builds the <language:XX> tag from CUS_DISPATCH_LANGUAGE');
 assert(voiceModule.includes('<actor8><radio:ext>{3}<text:DSC.{0}.{1}>{2}') && voiceModule.includes('<actor8><radio:ext>{3}<text:DSC.VEH>'), 'the dispatcher lines of the description and of the vehicle carry the language tag');
-assert(voiceModule.includes('"lang":{"param":"vo_lt"}') && voiceModule.includes('"{2}<say:{0}>{1}"'), 'the objective carries the language tag through voice say');
+assert(voiceModule.includes('"lang":{"param":"vo_lt"}') && voiceModule.includes('"{2}{3}<say:{0}>{1}"'), 'the objective carries the language tag through voice say');
 const dispatchLanguage = commands.find((c) => c.set && c.set.local === 'CUS_DISPATCH_LANGUAGE');
 if (dispatchLanguage) assert(typeof dispatchLanguage.value === 'string' && /^([A-Za-z]{2})?$/.test(dispatchLanguage.value), 'CUS_DISPATCH_LANGUAGE must be empty or a two-letter language code');
 

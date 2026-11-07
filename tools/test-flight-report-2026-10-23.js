@@ -158,9 +158,9 @@ const text = (value) => JSON.stringify(value);
   for (const id of ['hoist_stretcher_drive', 'hoist_stretcher_done', 'hoist_arming', 'hoist_cable_down']) assert.ok(hb.includes('"id":"' + id + '"'), 'checkpoint ' + id);
   assert.ok(hb.indexOf('hoist_stretcher_drive') < hb.indexOf('hoist_stretcher_done') && hb.indexOf('hoist_stretcher_done') < hb.indexOf('hoist_arming') && hb.indexOf('hoist_arming') < hb.indexOf('hoist_cable_down'), 'checkpoints follow the path');
   assert.ok(!text(macros).includes('"to":"{local:HEMS_PATIENT_OBJECT}"},"lte":1.5'), 'no other crew-to-patient distance gate');
-  // the overhead switch turns on with the arm extension (original mission: no switch wait): never awaited before the arm is out
+  // user decision 2026-11-07: manual HOIST_ARMING waits for the switch before the arm extension (the switch extends the arm); automatic mode never waits
   const sw = text(macros['set hoist switch to on']);
-  assert.ok(!/"wait_for"|"sleep"|"create_thread"|"set_message"/.test(sw), 'set hoist switch to on only traces: no wait before the arm extension');
+  assert.ok(sw.includes('"HOIST_ARMING"') && sw.includes('"ne":"auto"') && sw.includes('"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1'), 'set hoist switch to on waits for the switch in manual mode only');
   const arm = text(macros['hoist_arming_and extension']);
   assert.ok(arm.indexOf('HOIST_ARM_DEPLOY') < arm.indexOf('"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1'), 'manual mode checks the switch after the arm is out');
   assert.ok(arm.includes('"id":"hoist_arm_out"') && arm.includes('"id":"hoist_switch_ok"'), 'arm out and switch ok are traced');

@@ -439,47 +439,36 @@
       "then": [
         {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":1}
     ]},
+    {"#comment":"Hoist position guidance (user decision of 2026-11-07). The engine guidance (play_guidance_message with the fixed LVARs H145_<GUID> of sound.xml) is gone for good: the Italian pack won over the others in the simulator file system, so the English or Italian voice depended on the folder order, not on the voice pack chosen. The mission now speaks its own callouts with the LVARs of the chosen pack (L:{VCP}27..41), inside 10 m of the target on both axes; farther away only the 50, 20 and 10 m distance callouts and the arming callouts of module 11 speak."},
     {"create_thread": {
       "commands": [
         {"while": {"var":["L:HOISTED","number"]}, "ne": 1,
           "do": [
-            {"if": {
-              "or": [
-                {"require":{"global":"AUDIO_DECLUT"},"lt":2},
-                {"require":{"global":"AUDIO_DECLUT"},"eq":5}
-              ]}, "eq": 1,
+            {"sleep":2},
+            {"set":{"param":"hg_tg"},"value":""},
+            {"if": {"has_location":"landing_spot"}, "eq": 1,
               "then": [
-                {"and": [
-                  {"wait_for":{"var":["RADIO HEIGHT","feet"]},"gt":30},
-                  {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":25},
-                  {"wait_for":{"local":"MISSION_GUIDANCE_ACTIVE"},"eq":1}
-                ]},
-                {"wait_for":{"location":"landing_spot","var":"distance"},"lt":0.0054},
-                {"play_guidance_message":{"target":"landing_spot","self":"$USER:HOIST","vertical":[15,10000]}},
-                {"if": {"location":"landing_spot","var":"distance"}, "gt": 0.0028,
-                  "then": [
-                    {"sleep":3}
-                ]},
-                {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"gte":0.3}
+                {"set":{"param":"hg_tg"},"value":"landing_spot"}
               ],"else": [
-                {"sleep":3}
-            ]}
-        ]}
-    ]}},
-    {"#comment":"Guidance of the hoist to the patient when there is no landing spot (user answer of 2026-11-04, audit item H1: every object or location is a valid target of the guidance). The thread above guides to landing_spot; without it the hoist hover had no guidance. Same gates as above (AUDIO_DECLUT, radio height above 30 ft, ground speed 25 kt or less, MISSION_GUIDANCE_ACTIVE) and the same call, with injured_human as the target, within 10 m of it; polled every 3 s, no blocking wait on a location that may not exist."},
-    {"create_thread": {
-      "commands": [
-        {"while": {"var":["L:HOISTED","number"]}, "ne": 1,
-          "do": [
-            {"sleep":3},
+                {"if": {"has_object":"injured_human"}, "eq": 1,
+                  "then": [
+                    {"set":{"param":"hg_tg"},"value":"injured_human"}
+                ]}
+            ]},
+            {"#comment":"User rules of 2026-11-07: no callout while the cable is out (hoist guidance cable keeps the hold), none outside the 10 m box, none at speed (50 m 25 kt, 20 m 15 kt, 10 m and below 7 kt: the step macro checks the 7 kt), none with the audio level gate closed."},
+            {"if": {"param":"hg_tg"}, "eq": "landing_spot",
+              "then": [
+                {"call_macro":"hoist guidance cable","params":{"target":"landing_spot"}}
+            ]},
+            {"if": {"param":"hg_tg"}, "eq": "injured_human",
+              "then": [
+                {"call_macro":"hoist guidance cable","params":{"target":"injured_human"}}
+            ]},
             {"if": {
               "and": [
-                {"require":{"has_location":"landing_spot"},"eq":0},
-                {"require":{"has_object":"injured_human"},"eq":1},
                 {"require":{"local":"MISSION_GUIDANCE_ACTIVE"},"eq":1},
                 {"require":{"var":["RADIO HEIGHT","feet"]},"gt":30},
-                {"require":{"var":["GPS GROUND SPEED","knots"]},"lte":25},
-                {"require":{"object":"injured_human","var":"distance:m"},"lt":10}
+                {"require":{"var":["GPS GROUND SPEED","knots"]},"lt":7}
               ]}, "eq": 1,
               "then": [
                 {"if": {
@@ -488,8 +477,14 @@
                     {"require":{"global":"AUDIO_DECLUT"},"eq":5}
                   ]}, "eq": 1,
                   "then": [
-                    {"play_guidance_message":{"target":"injured_human","self":"$USER:HOIST","vertical":[15,10000]}},
-                    {"sleep":3}
+                    {"if": {"param":"hg_tg"}, "eq": "landing_spot",
+                      "then": [
+                        {"call_macro":"hoist position guidance","params":{"target":"landing_spot"}}
+                    ]},
+                    {"if": {"param":"hg_tg"}, "eq": "injured_human",
+                      "then": [
+                        {"call_macro":"hoist position guidance","params":{"target":"injured_human"}}
+                    ]}
                 ]}
             ]}
         ]}
@@ -521,6 +516,162 @@
         {"set":{"local":"MISSION_PHASE"},"value":7}
     ]},
     {"set":{"var":["L:WAVING_CIVILIAN_STOP","number"]},"value":1}
+  ],
+  "hoist guidance cable": [
+    {"#comment":"User rule of 2026-11-07: with the cable out (reel more than 3 ft) the callouts are off and the aircraft is held (hg_hold 1) at the distance of the hoist operation (hg_prev_dist). When the hook is up they are NOT armed again: only if the aircraft is now more than 3 m farther from the target than it was during the hoist (a new hoist is expected and the aircraft came back from somewhere else) the hold ends and every call is armed again. A hover on the same point says nothing. Param target."},
+    {"if": {"local":"hg_hold"}, "eq": null,
+      "then": [
+        {"set":{"local":"hg_hold"},"value":0}
+    ]},
+    {"set":{"param":"hc_cable"},"value":{"fn":"hoist_get_reel_distance:ft"}},
+    {"set":{"param":"hc_d"},"value":{"object":{"param":"target"},"var":"distance:m"}},
+    {"if": {"param":"hc_cable"}, "gt": 3,
+      "then": [
+        {"set":{"local":"hg_hold"},"value":1},
+        {"set":{"local":"hg_prev_dist"},"value":{"param":"hc_d"}}
+      ],"else": [
+        {"if": {"local":"hg_hold"}, "eq": 1,
+          "then": [
+            {"if": {"param":"hc_d"}, "gt": {"add":[{"local":"hg_prev_dist"},3]},
+              "then": [
+                {"set":{"local":"hg_hold"},"value":0},
+                {"set":{"local":"hg_last_sig"},"value":""},
+                {"call_macro":"ground ops checkpoint","params":{"id":"guidance_rearmed","detail":{"text":"farther than at the hoist: {0} m against {1} m","params":[{"round":{"param":"hc_d"},"to":0},{"round":{"local":"hg_prev_dist"},"to":0}]}}}
+            ]}
+        ]}
+    ]}
+  ],
+  "hoist position guidance": [
+    {"#comment":"One step of the hoist position guidance. Param target: the location or object the hook has to reach. Geometry: bearing from the aircraft to the target, minus the true heading, gives the angle from the nose (0 ahead, 90 right); with the distance in meters x (right) and y (ahead) follow with sin and cos, then the position of the hook on the aircraft (hg_hook_x right, hg_hook_y ahead, to be checked in the simulator) is taken away so the offsets are those of the hook. Inside 10 m on both axes: on top inside 1 m on both, otherwise the larger axis is called, direction then distance rounded to 1, 2, 5 or 10 m (3, 4, 6, 7, 8 and 9 are not used). Calls: LVARs of the chosen pack, 35 backward, 36 forward, 39 left, 41 right, 40 on top, 27 one, 28 two, 31 five, 32 ten. A call is said once: it disarms and is armed again only when another call has been said (no time repetition)."},
+    {"set":{"param":"hg_hook_x"},"value":1.5},
+    {"set":{"param":"hg_hook_y"},"value":0},
+    {"set":{"param":"hg_rel"},"value":{"add360":[{"bearing":{"from":"$USER","to":{"param":"target"}}},{"subtract":[360,{"var":["A:PLANE HEADING DEGREES TRUE","degrees"]}]}]}},
+    {"set":{"param":"hg_rad"},"value":{"multiply":[{"param":"hg_rel"},0.017453292]}},
+    {"set":{"param":"hg_d"},"value":{"object":{"param":"target"},"var":"distance:m"}},
+    {"if": {"local":"hg_hold"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"hg_x"},"value":{"subtract":[{"multiply":[{"param":"hg_d"},{"Math.sin":{"param":"hg_rad"}}]},{"param":"hg_hook_x"}]}},
+    {"set":{"local":"hg_y"},"value":{"subtract":[{"multiply":[{"param":"hg_d"},{"Math.cos":{"param":"hg_rad"}}]},{"param":"hg_hook_y"}]}},
+    {"set":{"param":"hg_ax"},"value":{"abs":{"local":"hg_x"}}},
+    {"set":{"param":"hg_ay"},"value":{"abs":{"local":"hg_y"}}},
+    {"set":{"param":"hg_sig"},"value":"out"},
+    {"set":{"param":"hg_dir"},"value":0},
+    {"set":{"param":"hg_num"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"param":"hg_ax"},"lt":10},
+        {"require":{"param":"hg_ay"},"lt":10}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"hg_sig"},"value":"top"},
+        {"if": {
+          "or": [
+            {"require":{"param":"hg_ax"},"gte":1},
+            {"require":{"param":"hg_ay"},"gte":1}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"param":"hg_ay"}, "gte": {"param":"hg_ax"},
+              "then": [
+                {"set":{"param":"hg_mag"},"value":{"param":"hg_ay"}},
+                {"if": {"local":"hg_y"}, "gt": 0,
+                  "then": [
+                    {"set":{"param":"hg_dir"},"value":36}
+                  ],"else": [
+                    {"set":{"param":"hg_dir"},"value":35}
+                ]}
+              ],"else": [
+                {"set":{"param":"hg_mag"},"value":{"param":"hg_ax"}},
+                {"if": {"local":"hg_x"}, "gt": 0,
+                  "then": [
+                    {"set":{"param":"hg_dir"},"value":41}
+                  ],"else": [
+                    {"set":{"param":"hg_dir"},"value":39}
+                ]}
+            ]},
+            {"set":{"param":"hg_num"},"value":32},
+            {"if": {"param":"hg_mag"}, "lt": 7.5,
+              "then": [
+                {"set":{"param":"hg_num"},"value":31}
+            ]},
+            {"if": {"param":"hg_mag"}, "lt": 3.5,
+              "then": [
+                {"set":{"param":"hg_num"},"value":28}
+            ]},
+            {"if": {"param":"hg_mag"}, "lt": 1.5,
+              "then": [
+                {"set":{"param":"hg_num"},"value":27}
+            ]},
+            {"set":{"param":"hg_sig"},"value":{"text":"{0}/{1}","params":[{"param":"hg_dir"},{"param":"hg_num"}]}}
+        ]}
+    ]},
+    {"if": {"param":"hg_sig"}, "ne": "out",
+      "then": [
+        {"#comment":"User rule of 2026-11-07: a call disarms after being said and is armed again only when another call has been said; leaving the 10 m box does not arm it (no repetition by time, it sounds robotic)."},
+        {"if": {"param":"hg_sig"}, "ne": {"local":"hg_last_sig"},
+          "then": [
+            {"set":{"local":"hg_last_sig"},"value":{"param":"hg_sig"}},
+            {"call_macro":"ground ops checkpoint","params":{"id":"guidance_call","detail":{"text":"target={0} x={1} y={2} call={3}","params":[{"param":"target"},{"round":{"local":"hg_x"},"to":1},{"round":{"local":"hg_y"},"to":1},{"param":"hg_sig"}]}}},
+            {"if": {"param":"hg_sig"}, "eq": "top",
+              "then": [
+                {"set":{"var":["L:{local:VCP}40","number"]},"value":{"add":[{"var":["L:{local:VCP}40","number"]},1]}}
+              ],"else": [
+                {"call_macro":"hoist guidance say","params":{"dir":{"param":"hg_dir"},"num":{"param":"hg_num"}}}
+            ]}
+        ]}
+    ]}
+  ],
+  "hoist guidance say": [
+    {"#comment":"Says the direction (param dir: 35, 36, 39 or 41) and after a pause the distance (param num: 27, 28, 31 or 32). Companion with TTS (VCP APP, TTS 1): the pack message PAX1.<n> spoken by the crew member who sits at the hoist seat (hoist operator actor: the copilot with 3 crew, the rear crew member that the seat tracker puts in PAX_2 with 4 and 5 crew); nobody able to speak, no call. Otherwise (legacy sounds of the pack and recorded Companion): the LVAR of the chosen pack is raised, written out, no interpolated parameter in a variable name."},
+    {"call_macro":"hoist operator actor","result":"hs_actor"},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"param":"hs_actor"}, "gt": 0,
+          "then": [
+            {"speak":{"text":"<actor{0}><say:PAX1.{1}>","params":[{"param":"hs_actor"},{"param":"dir"}]}},
+            {"sleep":1.3},
+            {"speak":{"text":"<actor{0}><say:PAX1.{1}>","params":[{"param":"hs_actor"},{"param":"num"}]}}
+        ]}
+      ],"else": [
+        {"if": {"param":"dir"}, "eq": 35,
+          "then": [
+            {"set":{"var":["L:{local:VCP}35","number"]},"value":{"add":[{"var":["L:{local:VCP}35","number"]},1]}}
+        ]},
+        {"if": {"param":"dir"}, "eq": 36,
+          "then": [
+            {"set":{"var":["L:{local:VCP}36","number"]},"value":{"add":[{"var":["L:{local:VCP}36","number"]},1]}}
+        ]},
+        {"if": {"param":"dir"}, "eq": 39,
+          "then": [
+            {"set":{"var":["L:{local:VCP}39","number"]},"value":{"add":[{"var":["L:{local:VCP}39","number"]},1]}}
+        ]},
+        {"if": {"param":"dir"}, "eq": 41,
+          "then": [
+            {"set":{"var":["L:{local:VCP}41","number"]},"value":{"add":[{"var":["L:{local:VCP}41","number"]},1]}}
+        ]},
+        {"sleep":1.3},
+        {"if": {"param":"num"}, "eq": 27,
+          "then": [
+            {"set":{"var":["L:{local:VCP}27","number"]},"value":{"add":[{"var":["L:{local:VCP}27","number"]},1]}}
+        ]},
+        {"if": {"param":"num"}, "eq": 28,
+          "then": [
+            {"set":{"var":["L:{local:VCP}28","number"]},"value":{"add":[{"var":["L:{local:VCP}28","number"]},1]}}
+        ]},
+        {"if": {"param":"num"}, "eq": 31,
+          "then": [
+            {"set":{"var":["L:{local:VCP}31","number"]},"value":{"add":[{"var":["L:{local:VCP}31","number"]},1]}}
+        ]},
+        {"if": {"param":"num"}, "eq": 32,
+          "then": [
+            {"set":{"var":["L:{local:VCP}32","number"]},"value":{"add":[{"var":["L:{local:VCP}32","number"]},1]}}
+        ]}
+    ]}
   ],
   "on-site operations progress monitor": [
     {"#comment":"ON-SITE OPERATIONS PROGRESS MONITOR - TIMERGND PACES VISITS ONLY; ACTUAL MILESTONES CONTROL COMPLETION"},

@@ -3702,7 +3702,15 @@
               "then": [
                 {"set":{"param":"vs_l"},"value":""}
             ]},
-            {"speak":{"text":"{2}<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"},{"param":"vs_l"}]}}
+            {"set":{"param":"vs_act"},"value":""},
+            {"if": {"param":"actor"}, "ne": null,
+              "then": [
+                {"if": {"param":"actor"}, "gt": 0,
+                  "then": [
+                    {"set":{"param":"vs_act"},"value":{"text":"<actor{0}>","params":[{"param":"actor"}]}}
+                ]}
+            ]},
+            {"speak":{"text":"{2}{3}<say:{0}>{1}","params":[{"param":"key"},{"param":"vs_a"},{"param":"vs_l"},{"param":"vs_act"}]}}
         ]}
       ],"else": [
         {"call_macro":"voice app check"}
@@ -7444,6 +7452,45 @@
         {"sleep":0.6}
     ]}
   ],
+  "hoist operator actor": [
+    {"#comment":"The actor number (2 copilot, 3 doctor, 4 HEMS 1, 5 HEMS 2) of the hoist operator, 0 when nobody can speak. The hoist operator is the crew member who sits at the hoist seat PAX_2 (SEAT_P2 of crew seat tracker tick: the member numbers 2 doctor, 3 copilot, 4 HEMS 1, 5 HEMS 2): the copilot with 3 crew and with a second hoist in 4 crew (he moves to PAX_2 while the second operator is lowered), HEMS 1 with 4 crew and one hoist and with 5 crew (the rear crew moves to PAX_2), HEMS 2 when he sits there. The doctor on the hook is never the operator. Seat unknown: the copilot with 3 crew, HEMS 1 otherwise. Member able to speak: voice crew member ok (exists, alive, not below 15)."},
+    {"call_macro":"crew seat tracker tick"},
+    {"set":{"param":"hoa_m"},"value":{"local":"SEAT_P2"}},
+    {"if": {"param":"hoa_m"}, "eq": null,
+      "then": [
+        {"set":{"param":"hoa_m"},"value":0}
+    ]},
+    {"if": {"param":"hoa_m"}, "eq": 2,
+      "then": [
+        {"set":{"param":"hoa_m"},"value":0}
+    ]},
+    {"if": {"param":"hoa_m"}, "eq": 0,
+      "then": [
+        {"set":{"param":"hoa_m"},"value":4},
+        {"if": {"local":"CREW"}, "eq": 3,
+          "then": [
+            {"set":{"param":"hoa_m"},"value":3}
+        ]}
+    ]},
+    {"call_macro":"voice crew member ok","params":{"member":{"param":"hoa_m"},"aboard":0},"result":"hoa_ok"},
+    {"set":{"param":"hoa_a"},"value":0},
+    {"if": {"param":"hoa_ok"}, "eq": 1,
+      "then": [
+        {"if": {"param":"hoa_m"}, "eq": 3,
+          "then": [
+            {"set":{"param":"hoa_a"},"value":2}
+        ]},
+        {"if": {"param":"hoa_m"}, "eq": 4,
+          "then": [
+            {"set":{"param":"hoa_a"},"value":4}
+        ]},
+        {"if": {"param":"hoa_m"}, "eq": 5,
+          "then": [
+            {"set":{"param":"hoa_a"},"value":5}
+        ]}
+    ]},
+    {"return":{"param":"hoa_a"}}
+  ],
   "voice hoist cable": [
     {"#comment":"Calls of the hoist operator on the cable (user request of 2026-11-04, pack EN 37, keys HCL.*): DOWN a person rides the hook down, GND the hook is on the ground, UP the hook is loaded and goes up, DOOR the hook is close to the door. Params stage and who (the person_type of the cable: crew, helirescuer or none for an empty hook). The heli rescuer going down has his own lines (HRS.*), so DOWN and GND are not said for him. Mission Companion only (voice say); chatter, skipped by the AUDIO_DECLUT levels 1 to 3. The distance and height calls of the crew guidance stay as they are."},
     {"if": {
@@ -7455,7 +7502,8 @@
         {"return":0}
     ]},
     {"set":{"param":"hcl_key"},"value":{"text":"HCL.{0}","params":[{"param":"stage"}]}},
-    {"call_macro":"voice say","params":{"key":{"param":"hcl_key"},"declut":1}}
+    {"call_macro":"hoist operator actor","result":"hcl_actor"},
+    {"call_macro":"voice say","params":{"key":{"param":"hcl_key"},"declut":1,"actor":{"param":"hcl_actor"}}}
   ],
   "voice hoist precheck": [
     {"#comment":"User request of 2026-11-05 (audit, item V3, pack EN 37, keys HPC.Q and HPC.A): challenge and response between the hoist operator and the pilot once the hoist arm is out and the hoist is on, before the first cable goes down: the operator says that the arm is out and the hook and cable are free (HPC.Q), the pilot answers that he holds the hover (HPC.A). Said once for each hoist operation (the flag HPC_DONE is cleared by HOISTING). The mission does not read the boom or the control mode (SDK_HOIST_CONTROL_MODE is not read anywhere and would need a simulator check), so the lines say only what the sequence already guarantees: the arm was deployed and, with manual arming, the switch was waited for. The thread keeps the hoist from waiting for the voice. Mission Companion only (voice say), chatter."},
@@ -7466,7 +7514,8 @@
     {"set":{"local":"HPC_DONE"},"value":1},
     {"create_thread": {
       "commands": [
-        {"call_macro":"voice say","params":{"key":"HPC.Q","declut":1}},
+        {"call_macro":"hoist operator actor","result":"hpc_actor"},
+        {"call_macro":"voice say","params":{"key":"HPC.Q","declut":1,"actor":{"param":"hpc_actor"}}},
         {"sleep":4.5},
         {"call_macro":"voice say","params":{"key":"HPC.A","declut":1}}
     ]}}
@@ -7485,7 +7534,8 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"vhh_r"},"value":{"multiply":[{"round":{"divide":[{"local":"vhh_ft"},5]},"to":0},5]}},
-        {"call_macro":"voice say","params":{"key":"HCL.H","declut":1,"a":{"text":"{0}","params":[{"local":"vhh_r"}]}}}
+        {"call_macro":"hoist operator actor","result":"hch_actor"},
+        {"call_macro":"voice say","params":{"key":"HCL.H","declut":1,"a":{"text":"{0}","params":[{"local":"vhh_r"}]},"actor":{"param":"hch_actor"}}}
     ]}
   ],
   "voice site wind": [

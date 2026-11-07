@@ -51,6 +51,7 @@
     {"return":{"param":"cws_v"}}
   ],
   "hoist down": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_cable_down_start","detail":"hoist down"}},
     {"#comment":"param person 1: somebody rides the hook down (hoist operator or heli rescuer); person_type crew or helirescuer. Without it the hook is empty (it goes down to pick people up) and nobody is on the cable."},
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"down"},
     {"if": {"param":"person"}, "eq": 1,
@@ -86,6 +87,7 @@
     {"call_macro":"voice hoist cable","params":{"stage":"GND","who":{"param":"person_type"}}}
   ],
   "hoist up empty": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_cable_up_start","detail":"hoist up empty"}},
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"empty"},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.2,2]}},
     {"wait_for":{"fn":"hoist_get_reel_distance:m"},"lt":7},
@@ -94,6 +96,7 @@
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":""}
   ],
   "hoist up 1 operator": [
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_cable_up_start","detail":"hoist up 1 operator"}},
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"up"},
     {"if": {"param":"member"}, "ne": null,
       "then": [
@@ -146,6 +149,8 @@
         {"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1},
         {"call_macro":"ground ops checkpoint","params":{"id":"hoist_switch_ok"}}
     ]},
+    {"#comment":"User decision of 2026-11-07: after the arm is out the operator checks it and the cable before the pre-check and the lowering of the hook (4 to 8 s); the hook went down 2 s after the arm in the flight log of 2026-11-07."},
+    {"sleep":[4,8]},
     {"call_macro":"voice hoist precheck"}
   ],
   "HOISTING": [
@@ -282,7 +287,8 @@
                 {"set":{"var":["L:{local:VCP}55","number"]},"value":{"add":[{"var":["L:{local:VCP}55","number"]},1]}},
                 {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
                 {"sleep":[2,4]},
-                {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]}
+                {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
+                {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_deploy","detail":"HOISTING second hoist"}}
             ]},
             {"sleep":1},
             {"set":{"var":["L:{local:VCP}9","number"]},"value":{"add":[{"var":["L:{local:VCP}9","number"]},1]}},
@@ -309,7 +315,7 @@
             {"sleep":[3,5]},
             {"set":{"var":["L:{local:VCP}16","number"]},"value":{"add":[{"var":["L:{local:VCP}16","number"]},1]}},
             {"set_message":{"text":"Steady!"}},
-            {"sleep":[5,10]},
+            {"sleep":[10,20]},
             {"set":{"var":["L:{local:VCP}57","number"]},"value":{"add":[{"var":["L:{local:VCP}57","number"]},1]}},
             {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_ON","number"]},"value":0},
             {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_ON","number"]},"value":0},
@@ -324,7 +330,7 @@
               "then": [
                 {"trigger":["H:{local:HXX}_SDK_PAX_1_OFF"]}
             ]},
-            {"sleep":[5,15]},
+            {"sleep":[10,20]},
             {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
             {"set_message":{"text":"Hoist is running down"}},
             {"sleep":1},
@@ -346,7 +352,7 @@
             {"set_message":{"text":"Personnel on ground and disconnected"}},
             {"set":{"var":["L:{local:VCP}21","number"]},"value":{"add":[{"var":["L:{local:VCP}21","number"]},1]}},
             {"set":{"object":"hpax1","var":"COUPLED"},"value":0},
-            {"sleep":[1,3]},
+            {"sleep":[2,4]},
             {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
             {"set_message":{"text":"Hoist is running up"}},
             {"call_macro":"hoist up empty"},
@@ -512,6 +518,7 @@
             {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
             {"sleep":[2,4]},
             {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
+            {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_deploy","detail":"HOISTING main"}},
             {"sleep":[2,4]},
             {"set":{"var":["L:{local:VCP}52","number"]},"value":{"add":[{"var":["L:{local:VCP}52","number"]},1]}}
         ]}
@@ -526,7 +533,7 @@
     {"set":{"var":["L:{local:VCP}16","number"]},"value":{"add":[{"var":["L:{local:VCP}16","number"]},1]}},
     {"set_message":{"text":"Steady!"}},
     {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":{"global":"MISSION_GUIDANCE_OVERRIDE"}},
-    {"sleep":[5,20]},
+    {"sleep":[10,20]},
     {"#comment":"il medico viene agganciato prima di svolgere il cavo"},
     {"set":{"var":["L:{local:VCP}51","number"]},"value":{"add":[{"var":["L:{local:VCP}51","number"]},1]}},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_ON","number"]},"value":0},
@@ -534,7 +541,7 @@
     {"trigger":["H:{local:HXX}_SDK_PAX_2_ON","H:{local:HXX}_SDK_PAX_3_OFF"]},
     {"call_macro":"set station weight","params":{"station":3,"occupied":0}},
     {"call_macro":"set station weight","params":{"station":4,"occupied":1}},
-    {"sleep":[5,20]},
+    {"sleep":[10,20]},
     {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
     {"sleep":[1,2]},
     {"set_message":{"text":"Hoist is running down"}},
@@ -567,7 +574,7 @@
     {"set":{"local":"ops_progress_last"},"value":0},
     {"set":{"local":"ops_progress_visit_plan"},"value":0},
     {"call_macro":"on-site operations progress monitor"},
-    {"sleep":[2,3]},
+    {"sleep":[2,4]},
     {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
     {"set_message":{"text":"hoist is running up"}},
     {"call_macro":"hoist up empty"},
@@ -1043,6 +1050,7 @@
         {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":4,"vmax":5},"result":"cws_sp"},
         {"call_macro":"ground ops checkpoint","params":{"id":"hoist_stretcher_drive","detail":{"local":"HEMS_PATIENT_OBJECT"}}},
         {"drive_object":{"name":"hoist_crew","to":["{local:HEMS_PATIENT_OBJECT}",{"closest":["LUP","RUP","LDWN","RDWN"],"to":"hoist_crew"},{"bearing":30,"dist":1.5}],"VAR1":3,"speed":{"param":"cws_sp"}}},
+        {"wait_for":{"has_object":"{local:HEMS_PATIENT_OBJECT}"},"eq":1},
         {"#comment":"Reports 2026-10-26 (sssnake74, MPR, a third tester): the doctor stood by the patient and the cable never came down. The drive above is synchronous: its end is the arrival. The original had no distance gate here; the 1.5 m wait after it compared the crew with a patient that the other thread parks 3 m from the same corner (and may pick another corner), so it could never be true. No distance decides completion (repository rule)."},
         {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
         {"call_macro":"ground ops checkpoint","params":{"id":"hoist_stretcher_done"}},
@@ -1124,6 +1132,7 @@
             {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
             {"call_macro":"set station weight","params":{"station":3,"occupied":1}},
             {"destroy_object":"hpax1"},
+            {"sleep":[2,4]},
             {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
             {"set_message":{"text":"Hoist is running up"}},
             {"call_macro":"hoist up 1 operator","params":{"member":4,"object":"hpax1"}},
@@ -1606,6 +1615,7 @@
                 ]}}
             ]},
             {"drive_object":{"name":"hoist_crew","to":["{local:HEMS_PATIENT_OBJECT}",{"closest":[{"bearing":45,"dist":7},{"bearing":135,"dist":15},{"bearing":225,"dist":15},{"bearing":270,"dist":10}],"to":"hoist_crew"}],"VAR1":3,"speed":5}},
+            {"wait_for":{"has_object":"{local:HEMS_PATIENT_OBJECT}"},"eq":1},
             {"#comment":"Same defect as in Hoisting back up: the drive is synchronous, a 1.5 m wait after it never held (the crew ends at a far point, not at the patient)."},
             {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
             {"sleep":2},
@@ -1991,8 +2001,24 @@
     {"set":{"var":["L:HOISTED","number"]},"value":1}
   ],
   "set hoist switch to on": [
-    {"#comment":"Reports 2026-10-26: with HOIST ARMING manual the crew waited here for a switch that the aircraft turns on by itself when the hoist arm is extended, and the arm is extended only after this macro: the operation never started (MPR screenshot: arm closed). The original mission has no switch wait. Callers extend the arm right after this macro, so it only traces; the manual check of the switch runs after the extension (hoist_arming_and extension)."},
-    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_switch_note","detail":{"text":"switch {0}: it turns on with the arm extension, not awaited before it","params":[{"var":["L:H145_SDK_OH_HOIST","number"]}]}}}
+    {"#comment":"User decision of 2026-11-07: the original wait is back. In manual HOIST_ARMING the crew waits for the pilot to set the HOIST switch ON (the switch extends the arm, and the arm turns the switch on); in automatic mode there is no wait. The condition is inside the macro so every caller is safe."},
+    {"if": {
+      "and": [
+        {"require":{"global":"HOIST_ARMING"},"ne":"auto"},
+        {"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set_message":{"text":"Set HOIST switch to ON position to start hoist operations"}},
+        {"create_thread": {
+          "commands": [
+            {"while": {"var":["L:H145_SDK_OH_HOIST","number"]}, "ne": 1,
+              "do": [
+                {"set":{"var":["L:{local:VCP}86","number"]},"value":{"add":[{"var":["L:{local:VCP}86","number"]},1]}},
+                {"sleep":[20,60]}
+            ]}
+        ]}},
+        {"wait_for":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1}
+    ]}
   ],
   "pick heli rescuer": [
     {"set":{"local":"HELIRESCUER_BOARDED"},"value":0},
@@ -2286,8 +2312,9 @@
     ]},
     {"sleep":[2,4]},
     {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
-    {"sleep":[1,3]},
+    {"sleep":[2,4]},
     {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_deploy","detail":"pick heli rescuer hoist"}},
     {"set":{"var":["L:{local:VCP}52","number"]},"value":{"add":[{"var":["L:{local:VCP}52","number"]},1]}},
     {"if": {
       "and": [
@@ -2312,7 +2339,7 @@
                 {"track_object":{"object":"pisteur1","icon":"ki_target"}}
             ]}}
         ]},
-        {"sleep":1},
+        {"sleep":[4,8]},
         {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
         {"set_message":{"text":"Hoist is running down, stay within 20m from operator"}},
         {"call_macro":"hoist down"},
@@ -3014,6 +3041,7 @@
             {"sleep":2}
         ]},
         {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_deploy","detail":"hoist heli rescuer down"}},
         {"sleep":1},
         {"set":{"var":["L:{local:VCP}9","number"]},"value":{"add":[{"var":["L:{local:VCP}9","number"]},1]}},
         {"sleep":2},
@@ -3036,12 +3064,12 @@
         {"sleep":[3,5]},
         {"set":{"var":["L:{local:VCP}16","number"]},"value":{"add":[{"var":["L:{local:VCP}16","number"]},1]}},
         {"set_message":{"text":"Steady!"}},
-        {"sleep":[5,10]},
+        {"sleep":[10,20]},
         {"set":{"var":["L:{local:VCP}57","number"]},"value":{"add":[{"var":["L:{local:VCP}57","number"]},1]}},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_ON","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_ON","number"]},"value":0},
         {"trigger":["H:{local:HXX}_SDK_PAX_1_OFF"]},
-        {"sleep":[5,15]},
+        {"sleep":[10,20]},
         {"set_message":{"text":"Hoist is running down"}},
         {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
         {"call_macro":"hoist down","params":{"person":1,"person_type":"helirescuer"}},
@@ -3061,7 +3089,7 @@
         {"set":{"object":"jolly","var":"COUPLED"},"value":0},
         {"set":{"object":"jolly","var":"VAR 1"},"value":1},
         {"set":{"object":"jolly","var":"VAR 2"},"value":0},
-        {"sleep":[2,3]},
+        {"sleep":[2,4]},
         {"set_message":{"text":"Hoist is running up"}},
         {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
         {"call_macro":"hoist up empty"},
@@ -3767,8 +3795,9 @@
         ]},
         {"sleep":[2,4]},
         {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
-        {"sleep":[1,2]},
+        {"sleep":[2,4]},
         {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
+        {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_deploy","detail":"hoist heli rescuer up"}},
         {"#comment":"He walks to the cable point only when the hover is stable inside the landing spot (he used to start walking toward a helicopter that was still moving); otherwise he waits."},
         {"set_message":{"text":"Heli-rescuer is waiting for a stable hover inside the landing spot"}},
         {"call_macro":"ground ops checkpoint","params":{"id":"hr_h_up_hover_wait"}},
@@ -4537,8 +4566,9 @@
     ]},
     {"sleep":[2,4]},
     {"call_macro":"ensure door","params":{"door":"pax_right","want":"open"}},
-    {"sleep":[1,3]},
+    {"sleep":[2,4]},
     {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]},
+    {"call_macro":"ground ops checkpoint","params":{"id":"hoist_arm_deploy","detail":"drop heli rescuer hoist"}},
     {"set":{"var":["L:{local:VCP}52","number"]},"value":{"add":[{"var":["L:{local:VCP}52","number"]},1]}},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
     {"and": [
@@ -4548,11 +4578,11 @@
       {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":163}
     ]},
     {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":{"global":"MISSION_GUIDANCE_OVERRIDE"}},
-    {"sleep":3},
+    {"sleep":[10,20]},
     {"trigger":["H:{local:HXX}_SDK_PAX_1_OFF"]},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_ON","number"]},"value":0},
     {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_ON","number"]},"value":0},
-    {"sleep":[5,15]},
+    {"sleep":[10,20]},
     {"set_message":{"text":"Hoist is running down"}},
     {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
     {"call_macro":"hoist down","params":{"person":1,"person_type":"helirescuer"}},
@@ -4571,7 +4601,7 @@
     {"set":{"object":"pisteur2","var":"VAR 1"},"value":1},
     {"set":{"object":"pisteur2","var":"COUPLED"},"value":0},
     {"call_macro":"set station weight","params":{"station":3,"occupied":0}},
-    {"sleep":[2,3]},
+    {"sleep":[2,4]},
     {"set_message":{"text":"Hoist is running up"}},
     {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
     {"call_macro":"hoist up empty"},
@@ -4612,11 +4642,11 @@
           {"wait_for":{"var":["RADIO HEIGHT","feet"]},"lt":163}
         ]},
         {"set":{"local":"MISSION_GUIDANCE_ACTIVE"},"value":{"global":"MISSION_GUIDANCE_OVERRIDE"}},
-        {"sleep":5},
+        {"sleep":[10,20]},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_ON","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_ON","number"]},"value":0},
         {"trigger":["H:{local:HXX}_SDK_PAX_1_OFF"]},
-        {"sleep":[5,15]},
+        {"sleep":[10,20]},
         {"set_message":{"text":"Hoist is running down"}},
         {"set":{"var":["L:{local:VCP}11","number"]},"value":{"add":[{"var":["L:{local:VCP}11","number"]},1]}},
         {"call_macro":"hoist down","params":{"person":1,"person_type":"helirescuer"}},
@@ -4635,7 +4665,7 @@
         {"set":{"object":"pisteur1","var":"VAR 1"},"value":1},
         {"set":{"object":"pisteur1","var":"COUPLED"},"value":0},
         {"call_macro":"set station weight","params":{"station":3,"occupied":0}},
-        {"sleep":[2,3]},
+        {"sleep":[2,4]},
         {"set_message":{"text":"Hoist is running up"}},
         {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
         {"call_macro":"hoist up empty"},
@@ -4738,6 +4768,7 @@
   "ground ops": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"ground_ops","actor":"hems","target":"n/a","state":"entered"}},
     {"call_macro":"ground ops watch start"},
+    {"call_macro":"guidance active watch start"},
     {"set":{"local":"grg_walk_far"},"value":0},
     {"call_macro":"ground ops checkpoint","params":{"id":"go_entered","detail":{"text":"crew={0} nr={1}","params":[{"local":"CREW"},{"round":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"to":1}]}}},
     {"set_objective_title":"PREPARING FOR RESCUE OPERATION","color":"yellow"},

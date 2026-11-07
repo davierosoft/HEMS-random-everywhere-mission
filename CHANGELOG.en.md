@@ -1,3 +1,14 @@
+## Release 0.997 170.18
+
+- Declare the macros changed since the scope snapshot of 2026-11-07
+- Hoist guidance rebuilt inside the mission, hoist pauses harmonized (10-20 s hooking, 2-4 s door to arm, 4-8 s empty hook, 2-4 s before lifting), cable checkpoints, hoist switch wait kept in manual mode, TTS actor by hoist seat
+
+## Release 0.997 170.17
+
+- set hoist switch to on: original manual-mode wait restored inside the macro (user decision 2026-11-07)
+- Declare version check (release number) and root icons: icons are identical to HEAD 170.16, the scope snapshot predated the 170.16 status bar images
+- Hoist guidance rebuilt inside the mission (engine guidance removed), hoist switch feature restored, TTS actor by hoist seat, speed gates, guidance diagnostics, checklist sound entries removed
+
 ## Release 0.997 170.16
 
 - Status bar icons in the blue part: USB turned by 90 degrees, wifi raised to 1 px from the top

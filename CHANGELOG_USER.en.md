@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.16. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.18. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -940,6 +940,15 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 169.83.
 - **Test:** Start a search and rescue mission and listen to the briefing: the copilot has the left side. Find the person: the crew speaks first, then the report to the dispatcher.
 
+### The hoist calls follow your voice pack and the hoist keeps human pauses
+
+- The position calls while you hold the hover for the hoist (direction, then one, two, five or ten meters, and on top) are now spoken by the mission with the voice pack you chose, for the person who sits at the hoist seat. They no longer depend on the order of the voice packs in the simulator, so you never hear another language. They stop when the hoist starts, when you leave the hoist area or when you fly faster than 7 knots, and they repeat only when the situation changes.
+- The distance calls at 50, 20 and 10 meters have their own speed limits (25, 15 and 7 knots) and start only inside the landing area.
+- Between the door, the arm, the hooking of the person and the lowering of the cable there are now realistic pauses: 2 to 4 seconds from the door to the arm, 10 to 20 seconds to hook a seated person and check, 4 to 8 seconds before an empty hook goes down, and 2 to 4 seconds before the cable goes up.
+- In manual hoist mode the crew waits for you to switch the hoist on, as in the original mission; in automatic mode it does not wait.
+- **Build history:** 0.997 170.17-170.18.
+- **Test:** Hold the hover for a crew hoist and for a recovery with the voice pack chosen: only that pack speaks the position calls, nothing is said after the hook is up, and the door, arm, hooking and cable follow each other with clear pauses.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1842,7 +1851,9 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.16 (this release):** The status bar icons fit in the blue part of the bar: the USB icon is turned by 90 degrees and the wifi waves reach up to the top edge (see Status bar with connection icons and a clean dispatcher message).
+- **0.997 170.18 (this release):** The hoist calls follow your voice pack and the hoist keeps human pauses (see The hoist calls follow your voice pack and the hoist keeps human pauses).
+- **0.997 170.17:** The same entry (hoist calls and pauses, first version).
+- **0.997 170.16:** The status bar icons fit in the blue part of the bar: the USB icon is turned by 90 degrees and the wifi waves reach up to the top edge (see Status bar with connection icons and a clean dispatcher message).
 - **0.997 170.15:** The status bar with 5G, wifi and USB icons, the clean dispatcher message and no window for the Companion connection (see Status bar with connection icons and a clean dispatcher message).
 - **0.997 170.14:** The briefing connection line without debug values and no window for the Companion connection (see Status bar with connection icons and a clean dispatcher message).
 - **0.997 170.13:** A patient of the previous dispatch is no longer counted as already carried by the ambulance (see A patient is no longer taken as already carried by the ambulance).

@@ -1,0 +1,24 @@
+# Hoist position guidance (user decision of 2026-11-07)
+
+## Why the engine guidance is gone
+
+`play_guidance_message` plays the recorded callouts through fixed LVARs `H145_<GUID>`. In `sound.xml` each of those 15 LVARs is bound to an English (`AND.`) and an Italian (`ITA.`) file at once, and the simulator file system lets the voice pack folder that sorts last win: with the Italian pack installed the pilot heard Italian whatever voice pack was chosen. The mission therefore never calls the engine guidance again (permanent, user decision).
+
+## What speaks now
+
+- Every pack has its own prefixed files and its own numbered LVARs in `sound.xml` (`ANDREW`/`AND.`, `DUSTIN`/`DUS.`, `ITALIAN`/`ITA.`, `KEKKERU`/`KEK.`, LVARs 27 to 48, checked by `tools/test-hoist-position-guidance.js`). The mission raises `L:{VCP}nn` of the chosen pack, so the recorded file and the Companion text (`PAX1.nn` of the pack) are the same call.
+- Macro `hoist position guidance` (module 10), called every 2 s by the thread of `crash site approach` with the target `landing_spot` or, without it, `injured_human`. Gates: guidance active, height above 30 ft, ground speed under 5 kt (5 for the test, 10 kt later), `AUDIO_DECLUT` 0, 1 or 5, cable not out (reel distance 3 ft or less); with the cable out the callouts stop and every call is armed again for the next hoist operation.
+- Geometry: relative angle = bearing(aircraft, target) - true heading; x (right) = d sin, y (ahead) = d cos, d in meters; the hook offset on the aircraft (`hg_hook_x` 1.5 m right, `hg_hook_y` 0 ahead) is subtracted. **Both hook offsets are estimates to be checked in the simulator.**
+- Inside 10 m on both axes: `on top` (40) inside 1 m on both; otherwise the larger axis: forward 36 / backward 35 / right 41 / left 39, then the distance rounded to 1 (27), 2 (28), 5 (31) or 10 (32) m. The numbers 3, 4, 6, 7, 8 and 9 are not used (3 and 4 have no caller in the mission). A call is said once: it disarms and is armed again only when another call has been said (no repetition by time, leaving the box does not arm it).
+- Farther than 10 m: the 50, 20 and 10 m distance callouts of module 11 (`accident_location`) and the arming callouts (`distancearm`: close 43/44, too far 45, with `too_far_mute`) stay as they were.
+- Height callouts (too high above 163 ft, too low below 40 ft, height good) now wait until the aircraft is inside the landing area (or within 30 m of the patient without a landing spot): outside the area nothing is said.
+- Diagnostics: rows `guidance_call` (target, x, y, call), `guidance_flag` (every change of `MISSION_GUIDANCE_ACTIVE`) in `ground_ops_checkpoint_log`.
+
+Runtime status: pending. To verify in the simulator: sign of x and y (left/right, forward/backward), the hook offset, that no Italian voice is heard with another pack.
+
+## Rules added the same day (user, 2026-11-07)
+
+- **Speed by distance.** The 50 m callout needs 25 kt or less, the 20 m one 15 kt, the 10 m one and the guidance inside the box 7 kt (the guidance requires a ground speed under 7 kt).
+- **Hold and rearm.** With the cable out (reel above 3 ft) `hoist guidance cable` sets `hg_hold` and stores the distance to the target (`hg_prev_dist`). With the hook up the callouts are NOT armed again. They are armed again (`guidance_rearmed` checkpoint, `hg_last_sig` emptied) only when a new hoist is still expected (the thread lives while `L:HOISTED` is not 1 and the guidance flag is on) and the aircraft is more than 3 m farther from the target than it was during the hoist. A hover on the same point says nothing.
+- **Who speaks.** The hoist operator is the crew member in the hoist seat `PAX_2`: `hoist operator actor` reads `SEAT_P2` of `crew seat tracker tick` (member 3 copilot, 4 HEMS 1, 5 HEMS 2; the doctor on the hook never is the operator) and returns the actor number (copilot 2, HEMS 1 4, HEMS 2 5), 0 when that member cannot speak (`voice crew member ok`). With TTS (VCP APP, TTS 1) the guidance says `<actorN><say:PAX1.n>`; the cable calls HCL.*, the pre-check HPC.Q and the hook height HCL.H pass the same actor to `voice say` (new optional param `actor`). Seat unknown: the copilot with 3 crew, HEMS 1 otherwise. The legacy sounds and the recorded Companion raise the LVAR of the pack, whose voice is the recorded one.
+- **Legacy `sound.xml`.** The EMS `sound.xml` is the only one the simulator reads (the voice packs ship no `sound.xml`): it binds the callouts 27 to 48 of every installed pack (ANDREW, DUSTIN, ITALIAN, KEKKERU, KEKRADIO) to its prefixed file. The checklist recordings `CPLTCHKA1-12` are discontinued: their 36 entries were removed from the installed `sound.xml`; the basepack keeps only `CPLTCHKA12` (the three entries AND, DUS and ITA), the one the mission raises (`22-checklists.json`). The installed pack and the basepack therefore differ on those three entries until the author decides.

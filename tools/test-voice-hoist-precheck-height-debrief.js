@@ -62,6 +62,7 @@ function run(cmds, env) {
       else if (x.return !== undefined) return 'return';
       else if (x.sleep !== undefined) env.sleeps.push(x.sleep);
       else if (x.create_thread) { const r = exec(x.create_thread.commands); if (r === 'return') return r; }
+      else if (x.call_macro === 'hoist operator actor') { if (x.result) env.params[x.result] = 0; } // hoist seat speaker: 0 = the default speaker of the key (2026-11-07)
       else if (x.call_macro === 'voice say') env.said.push([val(x.params.key), x.params.a === undefined ? null : val(x.params.a)]);
       else throw new Error('unsupported command ' + JSON.stringify(x).slice(0, 80));
     }
