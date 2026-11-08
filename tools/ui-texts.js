@@ -14,6 +14,7 @@
 // Texts that are spoken (`speak`, the voice packs), the data records (descriptions, medical lines), names, conditions and every value that is
 // compared or stored are not fields: see docs/architecture/UI_TRANSLATION.md.
 const crypto = require('node:crypto');
+const childProcess = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -177,7 +178,72 @@ function updatesBlock(artifactBytes, artifact) {
     const bytes = fs.readFileSync(trainFile);
     updates.train = { blobSha: gitBlobSha(bytes), size: bytes.length, version: trainVersion(bytes) };
   }
+  updates.languages = languagesBlock();
+  updates.voicepacks = voicepacksBlock();
+  updates.basepack = basepackBlock();
   return updates;
+}
+
+// Text of a published file as the Companion hashes it: UTF-8 without byte order mark, LF line ends (issues 56 and 95).
+function textBytes(file) {
+  const text = fs.readFileSync(file, 'utf8').replace(/^﻿/, '').replace(/\r\n/g, '\n');
+  return Buffer.from(text, 'utf8');
+}
+
+function languagesBlock() {
+  const dir = path.join(root, 'uitexts');
+  const block = {};
+  if (!fs.existsSync(dir)) return block;
+  for (const name of fs.readdirSync(dir).sort()) {
+    const code = /^([A-Z]{2})\.json$/.exec(name);
+    if (!code) continue;
+    const bytes = textBytes(path.join(dir, name));
+    const data = JSON.parse(bytes.toString('utf8'));
+    block[code[1]] = { file: `uitexts/${name}`, size: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), keys: Object.keys(data.texts || {}).length };
+  }
+  return block;
+}
+
+function voicepacksBlock() {
+  const dir = path.join(root, 'voicepacks');
+  const block = {};
+  for (const name of fs.readdirSync(dir).sort()) {
+    const code = /^([A-Z]{2})\.xml$/.exec(name);
+    if (!code) continue;
+    const bytes = textBytes(path.join(dir, name));
+    const head = /<voicepack\b[^>]*>/.exec(bytes.toString('utf8'))[0];
+    const entry = { file: `voicepacks/${name}`, size: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), version: Number((/\bversion="(\d+)"/.exec(head) || [])[1]) };
+    const basever = /\bbasever="(\d+)"/.exec(head);
+    if (basever) entry.basever = Number(basever[1]);
+    block[code[1]] = entry;
+  }
+  return block;
+}
+
+// Git tree hash of basepack/ and its files (without layout.json and hpgmission/), computed from the working files so the block is right before the commit.
+function basepackBlock() {
+  const base = path.join(root, 'basepack');
+  const files = [];
+  const treeHash = (dir, rel) => {
+    const entries = [];
+    for (const name of fs.readdirSync(dir)) {
+      const full = path.join(dir, name);
+      const relPath = rel ? `${rel}/${name}` : name;
+      if (fs.statSync(full).isDirectory()) entries.push({ name, sortName: name + '/', mode: '40000', sha: treeHash(full, relPath) });
+      else {
+        const data = fs.readFileSync(full);
+        const sha = childProcess.execFileSync('git', ['hash-object', '--path', `basepack/${relPath}`, '--stdin'], { cwd: root, input: data }).toString().trim();
+        entries.push({ name, sortName: name, mode: '100644', sha });
+        if (relPath !== 'layout.json' && !relPath.startsWith('hpgmission/')) files.push({ path: relPath, size: data.length, sha });
+      }
+    }
+    entries.sort((a, b) => (a.sortName < b.sortName ? -1 : a.sortName > b.sortName ? 1 : 0));
+    const body = Buffer.concat(entries.map((e) => Buffer.concat([Buffer.from(`${e.mode} ${e.name}\0`), Buffer.from(e.sha, 'hex')])));
+    return crypto.createHash('sha1').update(Buffer.concat([Buffer.from(`tree ${body.length}\0`), body])).digest('hex');
+  };
+  const tree = treeHash(base, '');
+  files.sort((a, b) => (a.path < b.path ? -1 : 1));
+  return { tree, files };
 }
 
 function manifestText(artifact, fields, artifactBytes) {
@@ -212,6 +278,30 @@ function validate(artifact, fields) {
   return problems;
 }
 
+function languageProblems(fields) {
+  const problems = [];
+  const dir = path.join(root, 'uitexts');
+  if (!fs.existsSync(dir)) return ['uitexts/ is missing: the screen language files travel with the release (issue 56)'];
+  for (const name of fs.readdirSync(dir).sort()) {
+    const code = /^([A-Z]{2}).json$/.exec(name);
+    if (!code) continue;
+    const data = JSON.parse(textBytes(path.join(dir, name)).toString('utf8'));
+    if (data.language !== code[1]) problems.push(`${name}: the language field is not ${code[1]}`);
+    const texts = data.texts || {};
+    const found = { missing: 0, over: 0, wide: 0, holders: 0 };
+    for (const f of fields) {
+      const t = texts[f.key];
+      if (typeof t !== 'string') { found.missing++; continue; }
+      if (f.max && t.length > f.max) found.over++;
+      if (/[^\x00-\xff]/.test(t)) found.wide++;
+      const holders = (x) => (x.match(/{d+}/g) || []).sort().join(',');
+      if (holders(t) !== holders(f.en)) found.holders++;
+    }
+    for (const [what, n] of Object.entries(found)) if (n) problems.push(`${name}: ${n} keys ${what === 'missing' ? 'missing' : what === 'over' ? 'over max' : what === 'wide' ? 'with a character above U+00FF' : 'with changed {n} placeholders'}`);
+  }
+  return problems;
+}
+
 function main() {
   const command = process.argv[2] || 'check';
   if (!['check', 'sync', 'stats'].includes(command)) fail(['usage: node tools/ui-texts.js [check|sync|stats]']);
@@ -240,6 +330,7 @@ function main() {
   for (const item of unkeyed.slice(0, 15)) problems.push(`Screen text without a key (${item.kind}): ${item.en}`);
   if (unkeyed.length > 15) problems.push(`... and ${unkeyed.length - 15} more screen texts without a key`);
   problems.push(...validate(artifact, fields));
+  problems.push(...languageProblems(fields));
   const expected = manifestText(artifact, fields, artifactBytes);
   const actual = fs.existsSync(manifestFile) ? fs.readFileSync(manifestFile, 'utf8') : '';
   if (!problems.length && actual !== expected) problems.push('ui-texts.json is out of date: run node tools/ui-texts.js sync');
