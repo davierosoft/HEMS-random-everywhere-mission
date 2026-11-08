@@ -26,7 +26,7 @@ for (const L of ['EN', 'DE', 'FR']) {
     assert.ok((m[1].match(/<o>/g) || []).length >= 3, `${L} HCL.${s} has variants`);
   }
   versions[L] = Number((xml.match(/<voicepack\b[^>]*\bversion="(\d+)"/) || [])[1]);
-  if (L !== 'EN') assert.strictEqual(Number((xml.match(/basever="(\d+)"/) || [])[1]), 37, L + ' translates the base pack 37');
+  if (L !== 'EN') assert.ok(Number((xml.match(/basever="(\d+)"/) || [])[1]) >= 37, L + ' translates the base pack 37 or later');
 }
 assert.ok(versions.EN >= 37, 'base pack 37 or later');
 assert.ok(txt('voice app connect').includes('<pack:EN:37>') || JSON.stringify(macros).includes('<pack:EN:37>'), 'the mission declares the pack EN 37');

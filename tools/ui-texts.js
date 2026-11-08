@@ -50,6 +50,18 @@ function maxLength(kind, english) {
   return Math.ceil(length * 1.5) + 10;
 }
 
+// Texts of the data records that the screen shows (second pass of 2026-11-08, kind data): the dispatch descriptions and objectives, the pathology diagnoses,
+// the symptoms and the medical actions, the CARLS messages. Names, ids (they are lookup keys), macro names, vehicle models and every other record field stay out.
+const DATA_TEXT_RX = /^\/(accidents\/\d+\/(description\d|general_description|objective)|health[a-z0-9]*\/\d+\/(diagnosis|medical_symptoms|medical_action_\d+)|CARLSmessages\/\d+)$/;
+function collectData(data, add) {
+  (function walkData(value, tokens) {
+    if (typeof value === 'string') {
+      if (DATA_TEXT_RX.test('/' + tokens.join('/'))) add('data', value, ['data'].concat(tokens));
+    } else if (Array.isArray(value)) value.forEach((item, index) => walkData(item, tokens.concat(String(index))));
+    else if (value && typeof value === 'object') for (const [key, child] of Object.entries(value)) walkData(child, tokens.concat(key));
+  })(data, []);
+}
+
 // Collect every on-screen string with its pointer. `chain` holds the property names (and '#' for an array index) from the root.
 function collect(artifact) {
   const found = [];
@@ -95,6 +107,7 @@ function collect(artifact) {
   walk(artifact.briefing, ['briefing'], 'briefing', []);
   const { briefing, ...rest } = artifact;
   walk(rest, [], null, []);
+  collectData(artifact.data, add);
   return found;
 }
 

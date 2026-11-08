@@ -43,11 +43,12 @@ assert.equal(result.count, bridge.ACTIONS.length);
   assert.equal(text(run[1]), '{"set":{"local":"sp_result"},"value":2}', 'the default result is 2 (not available)');
   const t = text(run);
   const triggers = t.split('"trigger_user_action"').length - 1;
-  assert.ok(triggers >= bridge.ACTIONS.length, 'every declared action has a click');
+  assert.ok(triggers >= bridge.ACTIONS.filter((a) => !a.macro).length, 'every user action has a click');
+  for (const need of ['"call_macro":"Ambulance1"', '"call_macro":"Firetruck1"', '"call_macro":"Police1"', '"set_dispatch_dialog":1', '"set_briefing_dialog":0']) assert.ok(t.includes(need), 'macro action runs ' + need);
   for (const action of bridge.ACTIONS) assert.ok(t.includes(`"param":"code"},"eq":${action.code},"then":[{"try":`), 'code ' + action.code + ' is a guarded branch');
-  for (const userAction of bridge.ACTIONS.flatMap((a) => a.userActions)) assert.ok(t.includes(`{"trigger_user_action":"${userAction}"},{"set":{"local":"sp_result"},"value":1}`), userAction + ' sets result 1 right after the click');
+  for (const userAction of bridge.ACTIONS.flatMap((a) => a.userActions || [])) assert.ok(t.includes(`{"trigger_user_action":"${userAction}"},{"set":{"local":"sp_result"},"value":1}`), userAction + ' sets result 1 right after the click');
   assert.ok(!/trigger_user_action":"(accept|reject)_/.test(t), 'the map dialogs (accept/reject) have no voice control');
-  assert.ok(!/trigger_user_action":"(skip|history|reposition)/.test(t), 'convenience skips are not in the first batch');
+  assert.ok(!/trigger_user_action":"history/.test(t), 'the SAR track history has no voice control (the skips and reposition_sarah were added by the user on 2026-11-08)');
 }
 
 // 4. the setting SPEECH_COMMANDS: default on in every layer, in the profiles, on the tablet, started at the load
@@ -88,4 +89,27 @@ assert.equal(result.count, bridge.ACTIONS.length);
   assert.ok(contract.actions.find((a) => a.id === 'skid_landing').phrases.EN.includes('skid') && contract.actions.find((a) => a.id === 'begin_gnd_loading').phrases.EN.includes('ground'));
 }
 
+// 6. tips line (user request 2026-11-08) and the commands page
+{
+  const mission = JSON.parse(fs.readFileSync(path.join(root, 'mission-src', 'threads', '01-startup-and-dispatch-triggers.json'), 'utf8'));
+  const th = JSON.stringify(mission['SPEECH TIPS']);
+  for (const need of ['"global":"SPEECH_TIPS"},"eq":"yes"', '"global":"SPEECH_COMMANDS"},"eq":"yes"', '"local":"TTS"},"eq":1', 'L:HMC_SPEECH_READY', 'speech tips line', '"gt":5']) assert.ok(th.includes(need), 'tips thread uses ' + need);
+  const line = JSON.stringify(macros['speech tips line']);
+  for (const action of bridge.ACTIONS) assert.ok(line.includes('L:HMC_SPEECH_OK_' + action.id.toUpperCase()), 'the tips line knows ' + action.id);
+  assert.ok(/^[ -~]*$/.test(JSON.stringify(macros['speech commands page'])), 'the commands page is ASCII');
+  assert.ok(text(macros.settings).includes('"call_macro":"speech commands page"'), 'link to the commands page under the options');
+}
+// 7. read-only commands (user list 2026-11-08): the pack has every key they speak, no readback of their own, the patient status follows ops_progress_active
+{
+  const pack = fs.readFileSync(path.join(root, 'voicepacks', 'EN.xml'), 'utf8');
+  const keys = [];
+  for (const who of ['F', 'G']) for (const k of ['S', 'W', 'C', 'D', 'U']) keys.push('PST.' + who + '.' + k);
+  for (const k of ['S', 'H', 'B']) keys.push('DST.' + k, 'TIM.' + k);
+  keys.push('TIM.NA');
+  for (const key of keys) assert.ok(pack.includes('<message key="' + key + '"'), 'pack EN has ' + key);
+  assert.ok(pack.includes('key="PST.G.S" actor="3" radio="on"') && pack.includes('key="PST.F.S" actor="3" radio="auto"'), 'ground status on the polycon, flight status on the intercom, both the doctor');
+  const rb = text(macros['speech readback']);
+  for (const a of bridge.ACTIONS.filter((x) => x.noReadback)) assert.ok(rb.includes('"eq":' + a.code + ',"then":[{"return":0}]'), 'no readback for ' + a.id);
+  assert.ok(text(macros['speech patient status']).includes('"local":"ops_progress_active"},"eq":1') && text(macros['speech read dispatch']).includes('"vrd_last"'), 'patient status splits flight and ground, repeat dispatch clears the memory of the read');
+}
 console.log(`Speech bridge PASS: ${bridge.ACTIONS.length} actions generated from the live button conditions, mailbox order, setting in every layer, declaration for the Companion. HPG/MSFS and Companion runtime PENDING.`);

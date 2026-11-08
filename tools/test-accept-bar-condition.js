@@ -33,6 +33,6 @@ for (const l of lines) assert.ok(!/HOCconnection|MISSION_PHASE.*DISPLAY|locatio
 const yellow = briefing.find((o) => o.description && o.description.startsWith('DISPATCHER NOT CONNECTED'));
 assert.ok(yellow && yellow.color === 'yellow' && yellow.describe_icon && JSON.stringify(yellow.show_condition).includes('HOC_MISMATCH') && JSON.stringify(yellow.commands).includes('HOCconnection'), 'yellow row activating the HOC connection');
 const sbars = briefing.filter((o) => o.image && /^sbar[0-9][0-9]$/.test(o.image));
-assert.strictEqual(sbars.length, 16, 'the sixteen status bars, each by STATUS_BAR_ID');
+assert.strictEqual(sbars.length, 20, 'the twenty status bars, each by STATUS_BAR_ID');
 assert.ok(!briefing.some((o) => o.text && o.text.startsWith('LINK:')), 'the debug LINK line is gone');
 console.log('accept bar condition ok');

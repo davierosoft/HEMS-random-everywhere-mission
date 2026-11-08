@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.20. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.21. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -961,6 +961,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.20.
 - **Test:** Land far from the patient while the ambulance is driving away or is far from the scene: the crew walks to the patient at once. With the ambulance on the scene the shuttle works as before.
 
+### The accident location line waits for the location
+
+- The line "Accident Location" shown while you prepare the flight and start the engines no longer appears with empty or zero coordinates: it waits until the location of the call is known.
+- **Build history:** 0.997 170.21.
+- **Test:** Accept a dispatch and start the preflight: the line shows the name of the place and the nation, never 0, 0.
+
+### No old destination window in missions with more than one patient
+
+- In the missions with more than one patient a destination window left over from the previous step no longer comes back with old values: the window always shows the destination of the step you are in.
+- **Build history:** 0.997 170.21.
+- **Test:** Fly a call with two patients and open the destination window after the first handover: it shows the current destination.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1164,6 +1176,20 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The tablet map no longer shows the green hospital cross at latitude 0, longitude 0 for the custom hospital places you did not fill in. Only the custom hospitals you added are drawn.
 - **Build history:** 0.997 170.06.
 - **Test:** Start a mission without custom hospitals: no green cross appears in the Gulf of Guinea. Add one custom hospital: only that one is drawn.
+
+### Voice commands by phase page, speech tips and wifi option
+
+- The tablet has a new page VOICE COMMANDS BY PHASE: before the mission, flight to the scene, approach and landing, ground operations, hoist, transport, hospital and return, each with the phrases you can say and what they do. The first phrase of each command is the main one.
+- A new setting turns on or off the speech tips: while the voice commands are on and the Mission Companion is connected, the top bar shows now and then a line with the phrases you can say at that moment (HINTS ON by default). A new setting chooses how the tablet connects to the wifi inside the wifi range (default MANUAL).
+- The bar at the top of the tablet is now 20 pixels high, with the icons sized to it.
+- **Build history:** 0.997 170.21.
+- **Test:** Open the commands page from the Settings, switch the hints off and on and watch the top bar while the commands are on; change the wifi option and fly in and out of the wifi range.
+
+### Dispatch texts in German, French and Italian
+
+- The descriptions of the dispatches, the objectives, the diagnoses, the symptoms, the medical actions and the CARLS messages can now be shown in German, French and Italian when the screen language of the Mission Companion is set, together with the new texts of the options above.
+- **Build history:** 0.997 170.21.
+- **Test:** Choose German, French or Italian as screen language in the Mission Companion, update the mission and read a dispatch and the briefing.
 
 ## NEW FUNCTIONS
 
@@ -1804,6 +1830,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.12.
 - **Test:** When a mission stalls, use the link and send the snapshot file of the Debug table.
 
+### 33 voice commands and the phrases of the crew
+
+- The voice commands of the mission buttons grow from 14 to 33: they now cover skipping the boarding wait, the ambulance travel and the paperwork, showing and hiding the dispatch and the briefing pages, accepting and repeating the dispatch, asking for the next dispatch, requesting an ambulance, a fire engine or the police, the distance and the time to the destination, the patient status and the technician. The crew answers each command with a short readback in your voice pack (English, German and French).
+- **Build history:** 0.997 170.21.
+- **Test:** With the voice commands on, hold push-to-talk and say "show dispatch", "request ambulance" and "distance to destination"; listen to the answer of the crew.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1863,7 +1895,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.20 (this release):** The mission no longer freezes at start or in the preflight step, and the crew walks at once when the ambulance is not on the site (see The crew no longer waits for an ambulance that is far away).
+- **0.997 170.21 (this release):** The accident location line waits for the location, no old destination window with more than one patient, the voice commands page and 33 voice commands, the speech tips and wifi options, the 20 pixel status bar and the dispatch texts in German, French and Italian (see 33 voice commands and the phrases of the crew).
+- **0.997 170.20:** The mission no longer freezes at start or in the preflight step, and the crew walks at once when the ambulance is not on the site (see The crew no longer waits for an ambulance that is far away).
 - **0.997 170.19:** The mission start and the custom mission at a custom location no longer freeze, plus diagnostic rows for the second dispatch wait (see The mission no longer freezes at start or in the preflight step).
 - **0.997 170.18:** The hoist calls follow your voice pack and the hoist keeps human pauses (see The hoist calls follow your voice pack and the hoist keeps human pauses).
 - **0.997 170.17:** The same entry (hoist calls and pauses, first version).

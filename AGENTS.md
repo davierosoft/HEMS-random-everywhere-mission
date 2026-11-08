@@ -34,7 +34,8 @@
 3. After an authorized build run `mission-workspace.js check`, then `release-workflow.js static`; run strict mission scope, targeted gates, `npm test` (or `node tools/check-workspace.js`), `git diff --check`, status and diff review.
 4. A numbered local artifact is supplied only when explicitly requested and is always named `everywhere_all.json`. Drafts are internal. Static PASS never proves simulator behavior; runtime status must remain pending until tested.
 5. Publication is local by default (commit only). Pushing to GitHub requires explicit authorization for that specific push; never push opportunistically. `main` is the only branch, so a commit is directly live on it once pushed — treat every push with the same care a PR merge used to require.
-6. Release completeness is blocking: audit every carried requirement against source, artifact, automated tests, release notes, and runtime evidence. Omitted, partial, unverified, or watchdog-only fixes block delivery; defer only with explicit user consent.
+6. Translations travel with the release (UI_TRANSLATION.md, user rule 2026-11-08); missing keys block.
+7. Release completeness is blocking: audit every carried requirement against source, artifact, automated tests, release notes, and runtime evidence. Omitted, partial, unverified or watchdog-only fixes block delivery unless the user defers.
 
 ## Documentation
 

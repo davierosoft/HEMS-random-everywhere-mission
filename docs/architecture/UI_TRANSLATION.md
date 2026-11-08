@@ -17,7 +17,7 @@ The user asked for a table with the translated texts of everything on the screen
 | button titles and modal options (stay English) | 414 |
 | dispatch descriptions (`description1-4`, 72 incidents) | 320 |
 
-Also outside the macros and not counted above: texts inside `data` (pathology names, symptoms, medical actions, message tables). They are a second pass.
+Also outside the macros and not counted above: texts inside `data`. Since 2026-11-08 the ones the screen shows are fields of kind `data` (507 texts, 5131 places): the dispatch descriptions `description1-4`, `general_description` and `objective` of the incidents, the `diagnosis`, `medical_symptoms` and `medical_action_N` of the health profiles (`health*`), and the `CARLSmessages`. Names, ids (they are lookup keys), macro names, vehicle models and the other records stay out. The English of the descriptions equals the voice pack text `DSC.<ID_CARD>.<variant>`, so the DE and FR screen texts of the descriptions are taken from the packs; the pathology names (`id` of the health profiles) and `statusMessages` are still a second pass.
 
 ## Speech stays in the audio language
 
@@ -52,3 +52,7 @@ File format agreed with the app side (issue 65): the manifest above and a langua
 ## Not in this document
 
 The translations themselves (about 3000 texts per language, plus the data texts) are produced from the manifest, not from the sources. The proper names (places, hospitals, patients) are not translated: see the question of the names read with a foreign accent in `VOICE_APP_MODE.md`.
+
+## Release rule (user, 2026-11-08)
+
+Every mission release with a changed or new screen text (rows, buttons, links, messages, modals, titles, data texts) must update uitexts/DE.json, FR.json, IT.json of the Companion repository, and any other language file, after node tools/ui-texts.js sync. A release with keys missing in a language file is incomplete and blocks delivery unless the user defers it. Spoken texts follow the voice-pack rule.

@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 'use strict';
-// Builds the 16 status bars of the tablet (700x34 PNG, icons sbar00..sbar15) from the two original bars in tools/fixtures/status-bar:
+// Builds the 20 status bars of the tablet (700x20 PNG, icons sbar00..sbar19) from the two original bars in tools/fixtures/status-bar:
 // bit 3 = 5G (the original 5G bar), bit 2 = USB (CARLS radio connected), bits 0-1 = wifi level 0..3 (0 nothing, 1-3 waves).
 // Icons are drawn here (white, anti-aliased) over the original bar; the result goes into mission-src/icons/01-interface-icons.json.
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
 const root = path.resolve(__dirname, '..');
-const W = 700, H = 34;
+const W = 700, H = 34, OUT_H = 20; // source bars are 700x34; the output keeps only the blue part (rows 0-19), the grey reflection below is cut (user 2026-11-08: the bar must be as high as a text row)
 
 function decode(file) {
   const b = fs.readFileSync(file);
@@ -30,9 +30,9 @@ const crcTable = (() => { const t = []; for (let n = 0; n < 256; n++) { let c = 
 const crc = (buf) => { let c = 0xffffffff; for (const x of buf) c = crcTable[(c ^ x) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; };
 function chunk(type, data) { const l = Buffer.alloc(4); l.writeUInt32BE(data.length); const td = Buffer.concat([Buffer.from(type, 'latin1'), data]); const c = Buffer.alloc(4); c.writeUInt32BE(crc(td)); return Buffer.concat([l, td, c]); }
 function encode(pix) {
-  const stride = W * 4; const raw = Buffer.alloc(H * (stride + 1));
-  for (let y = 0; y < H; y++) { raw[y * (stride + 1)] = 0; pix.copy(raw, y * (stride + 1) + 1, y * stride, (y + 1) * stride); }
-  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(W, 0); ihdr.writeUInt32BE(H, 4); ihdr[8] = 8; ihdr[9] = 6;
+  const stride = W * 4; const raw = Buffer.alloc(OUT_H * (stride + 1));
+  for (let y = 0; y < OUT_H; y++) { raw[y * (stride + 1)] = 0; pix.copy(raw, y * (stride + 1) + 1, y * stride, (y + 1) * stride); }
+  const ihdr = Buffer.alloc(13); ihdr.writeUInt32BE(W, 0); ihdr.writeUInt32BE(OUT_H, 4); ihdr[8] = 8; ihdr[9] = 6;
   return Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), chunk('IHDR', ihdr), chunk('IDAT', zlib.deflateSync(raw, { level: 9 })), chunk('IEND', Buffer.alloc(0))]);
 }
 // shapes: function (x, y) -> inside, sampled 4x4 per pixel
@@ -44,30 +44,46 @@ const arc = (cx, cy, r, w) => (x, y) => { const d = Math.hypot(x - cx, y - cy); 
 function wifiShapes(level, cx, base) { const s = [disc(cx, base, 1.9)]; for (let i = 1; i <= level; i++) s.push(arc(cx, base, 3.2 + i * 3.7, 1.9)); return s; }
 // the USB trident drawn upright in local coordinates (tip up), then turned by 90 degrees (tip to the right) and scaled to sit in the blue part of the bar
 function usbShapes(cx) {
-  const lu = 0, s = 0.8, cy = 11.5; // local u offset, scale, centre line in the blue part (y 1..22)
+  const lu = 0, s = 0.8, cy = 10.5; // local u offset, scale, centre line in the blue part (rows 0-19, centre 10)
   const local = [seg(lu, 6, lu, 26, 2.4), tri(lu - 3.4, 8.8, lu + 3.4, 8.8, lu, 2.5), disc(lu, 27, 3),
     seg(lu, 20, lu - 6, 15.5, 2), seg(lu - 6, 15.5, lu - 6, 11, 2), rect(lu - 8.2, 7.8, lu - 3.8, 11.6),
     seg(lu, 16, lu + 6, 12.5, 2), seg(lu + 6, 12.5, lu + 6, 10, 2), disc(lu + 6, 8.3, 2.6)];
   // device (x, y) -> local (u, v): tip (v = 2.5) at the right, base (v = 27) at the left
   return local.map((f) => (x, y) => f((y - cy) / s, 16 - (x - cx) / s));
 }
-function paint(pix, shapes) {
+function paint(pix, shapes, alpha = 1) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     let hit = 0; for (let sy = 0; sy < 4; sy++) for (let sx = 0; sx < 4; sx++) { const px = x + (sx + 0.5) / 4, py = y + (sy + 0.5) / 4; if (shapes.some((f) => f(px, py))) hit++; }
-    if (!hit) continue; const a = hit / 16, o = (y * W + x) * 4;
+    if (!hit) continue; const a = hit / 16 * alpha, o = (y * W + x) * 4;
     for (let k = 0; k < 3; k++) pix[o + k] = Math.round(pix[o + k] * (1 - a) + 255 * a);
     pix[o + 3] = Math.max(pix[o + 3], Math.round(255 * a));
   }
 }
 const fix = path.join(__dirname, 'fixtures', 'status-bar');
 const base = [decode(path.join(fix, 'homebar.png')), decode(path.join(fix, 'homebar5g.png'))];
+// the original 5G bar has the "5G" text (x 615-649, rows 8-16) and the phone signal bars (x 650-699, rows 11-20) too low for the 20 px bar:
+// move them up so their vertical centre is row 10, like the title (user 2026-11-08); pixels of the row background are taken at x 612
+function liftRegion(pix, x0, x1, dy) {
+  const bgOf = (y) => pix.subarray((y * W + 612) * 4, (y * W + 612) * 4 + 4);
+  const fg = [];
+  for (let y = 6; y < 26; y++) for (let x = x0; x < x1; x++) {
+    const o = (y * W + x) * 4, bg = bgOf(y);
+    if (pix[o] > 120 && pix[o + 1] > 120 && (Math.abs(pix[o] - bg[0]) > 30 || Math.abs(pix[o + 2] - bg[2]) > 30)) fg.push([x, y, Buffer.from(pix.subarray(o, o + 4))]);
+  }
+  for (const [x, y] of fg) bgOf(y).copy(pix, (y * W + x) * 4);
+  for (const [x, y, c] of fg) c.copy(pix, ((y - dy) * W + x) * 4);
+}
+liftRegion(base[1], 615, 650, 2);
+liftRegion(base[1], 650, 700, 5);
 const bars = {};
-for (let id = 0; id < 16; id++) {
-  const g5 = (id >> 3) & 1, usb = (id >> 2) & 1, wifi = id & 3; const pix = Buffer.from(base[g5]); const shapes = [];
+// ids 0-15: wifi connected (level 0 = no icon, 1-3 waves); ids 16-19 = wifi available but NOT connected (dimmed waves), bit 0 = USB, bit 1 = 5G (user 2026-11-08)
+for (let id = 0; id < 20; id++) {
+  const dim = id >= 16, g5 = dim ? (id >> 1) & 1 : (id >> 3) & 1, usb = dim ? id & 1 : (id >> 2) & 1, wifi = dim ? 3 : id & 3; const pix = Buffer.from(base[g5]); const shapes = [];
   const ux = g5 ? 578 : 636, wx = g5 ? 604 : 664;
   if (usb) shapes.push(...usbShapes(ux));
-  if (wifi) shapes.push(...wifiShapes(wifi, wx, 16.3));
-  paint(pix, shapes); bars['sbar' + String(id).padStart(2, '0')] = 'data:image/png;base64,' + encode(pix).toString('base64');
+  if (wifi && !dim) shapes.push(...wifiShapes(wifi, wx, 16.3));
+  paint(pix, shapes);
+  if (dim) paint(pix, wifiShapes(3, wx, 16.3), 0.4); bars['sbar' + String(id).padStart(2, '0')] = 'data:image/png;base64,' + encode(pix).toString('base64');
 }
 if (process.argv[2] === '--preview') { const dir = process.argv[3]; for (const [k, v] of Object.entries(bars)) fs.writeFileSync(path.join(dir, k + '.png'), Buffer.from(v.split(',')[1], 'base64')); process.exit(0); }
 const file = path.join(root, 'mission-src', 'icons', '01-interface-icons.json');

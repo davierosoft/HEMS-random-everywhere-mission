@@ -22,7 +22,7 @@ const names = arr.map((c) => (c.set && c.set.local) || (c.call_macro ? c.call_ma
 const pos = (n) => names.indexOf(n);
 assert.ok(pos('ENDWAIT_SECOND_DISPATCH') < pos('trace dispatch handoff:ready_wait_start'), 'end computed before the start row');
 assert.ok(pos('trace dispatch handoff:ready_wait_start') < pos('sleep') && pos('sleep') < pos('clockwait') && pos('clockwait') < pos('trace dispatch handoff:ready_wait_end'), 'start row, short sleep, clock wait, end row');
-assert.ok(JSON.stringify(arr[idx + 1].params.detail).includes('rdw_t0'), 'the end row says the seconds waited');
+assert.ok(JSON.stringify(arr.slice(idx + 1).find((c) => c.call_macro === 'trace dispatch handoff' && c.params.stage === 'ready_wait_end').params.detail).includes('rdw_t0'), 'the end row says the seconds waited');
 const endSet = arr.find((c) => c.set && c.set.local === 'ENDWAIT_SECOND_DISPATCH');
 assert.ok(JSON.stringify(endSet.value).includes('L:MISSION_TIME') && JSON.stringify(endSet.value).includes('WAIT_SECOND_DISPATCH'), 'end = clock + wait');
 

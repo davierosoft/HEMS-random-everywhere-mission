@@ -1,3 +1,10 @@
+## Release 0.997 170.21
+
+- Voice commands: 33 actions, readback and the VOICE COMMANDS BY PHASE page; speech tips line with its option; WIFI_AUTO option
+- 20 px status bar with 16+4 image set; MPR stale destination modal fix; accident location wait before the preflight and engine messages
+- UI texts manifest extended with kind data (507 dispatch texts), 48 new keys; voice packs EN 41, DE 27 and FR 28 with the 31 new keys
+- Diagnostic snapshot carries TIP_SHOW and TIP_LINE
+
 ## Release 0.997 170.20
 
 - Declare the threads (NEW DISPATCH, DISPATCH PHASE TRACE) and icons roots changed since the 170.18 snapshot
