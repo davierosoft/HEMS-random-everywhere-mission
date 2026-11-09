@@ -1,6 +1,6 @@
-99 - Optional ambulance at custom hospitals: yes/no choice and parking location
+100 - Optional ambulance at custom hospitals: yes/no choice and parking location
 
-Repository: KeKKERUUU/RandomEverywhereInstaller (draft, not posted yet)
+Repository: KeKKERUUU/RandomEverywhereInstaller (posted)
 
 ## Request for the app
 
