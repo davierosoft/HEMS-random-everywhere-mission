@@ -1,3 +1,7 @@
+## Release 0.997 170.23
+
+- Ambulance 2 crew stays aboard when every patient is out of reach
+
 ## Release 0.997 170.22
 
 - Stuck help page, phase stall detectors, tips, ambulance reach by slope, fuel hose torn off

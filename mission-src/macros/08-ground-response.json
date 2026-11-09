@@ -6757,6 +6757,16 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambulance2 secondary rescue","state":"wait_local.ambu2arrived_eq_yes"}},
         {"wait_for":{"local":"ambu2arrived"},"eq":"yes"},
         {"set":{"local":"ambulance2_secondary_gate"},"value":"ambulance_arrived"},
+        {"#comment":"User rule 2026-11-09 (as ambustretcher full for ambulance 1): the ambulance has stopped and every patient is out of its reach (distance or slope): its crew does not appear, only the notice. Runtime PENDING."},
+        {"call_macro":"multipatient registry ambulance all blocked","params":{"vehicle":"ambulance2"},"result":"amb2_blocked"},
+        {"if": {"param":"amb2_blocked"}, "eq": 1,
+          "then": [
+            {"set":{"local":"ambulance2_unreachable"},"value":"yes"},
+            {"set":{"local":"ambulance2_secondary_gate"},"value":"scene_unreachable"},
+            {"set":{"local":"ambulance2_secondary_log"},"value":"Patient out of reach of the ambulance, its crew stays aboard"},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambulance2 secondary rescue","state":"scene_unreachable_crew_stays_aboard"}},
+            {"return":0}
+        ]},
         {"set":{"local":"ambulance2_secondary_log"},"value":"ambulance arrived; creating medic"},
         {"if": {"has_object":"ambumedic2"}, "eq": 0,
           "then": [

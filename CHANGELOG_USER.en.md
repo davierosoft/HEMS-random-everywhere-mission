@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.22. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.23. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -976,7 +976,7 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### An ambulance that cannot reach the patient says so and its crew stays aboard
 
 - When the ambulance has stopped and every patient is too far or on ground too steep (more than 35 percent from where it parked), its crew no longer gets out and walks. The ambulance says once that it cannot intervene, the patient stays with the helicopter, and you can still choose Unload to ambulance to hand the patient over. The helicopter crew then tells the ambulance on the radio.
-- **Build history:** 0.997 170.22.
+- **Build history:** 0.997 170.22-170.23.
 - **Test:** Call an ambulance to a patient on a steep slope: its crew stays in the vehicle and the message appears once. On level ground the ambulance works as before.
 
 ### The fuel truck leaves when you fly away with the hose connected
@@ -1921,7 +1921,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.22 (this release):** The help page for stalled operations, ambulances that cannot reach the patient stay aboard, the fuel truck leaves when you fly away with the hose connected, and new crew tips (see the new sections above).
+- **0.997 170.23 (this release):** The second ambulance too keeps its crew aboard when no patient is within its reach (see the ambulance section above).
+- **0.997 170.22:** The help page for stalled operations, ambulances that cannot reach the patient stay aboard, the fuel truck leaves when you fly away with the hose connected, and new crew tips (see the new sections above).
 - **0.997 170.21:** The accident location line waits for the location, no old destination window with more than one patient, the voice commands page and 33 voice commands, the speech tips and wifi options, the 20 pixel status bar and the dispatch texts in German, French and Italian (see 33 voice commands and the phrases of the crew).
 - **0.997 170.20:** The mission no longer freezes at start or in the preflight step, and the crew walks at once when the ambulance is not on the site (see The crew no longer waits for an ambulance that is far away).
 - **0.997 170.19:** The mission start and the custom mission at a custom location no longer freeze, plus diagnostic rows for the second dispatch wait (see The mission no longer freezes at start or in the preflight step).
