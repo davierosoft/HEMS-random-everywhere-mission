@@ -31,6 +31,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `shared-data/` | Shared hangar/hospital waypoints (`waypoints.json`), changes to the offline databases of the H145 (`db/<type>.json`) and `manifest.json` (revision and hashes); maintained with `tools/shared-data.js`, downloaded by the Companion app. |
 | `docs/architecture/OPERATIONS_AUDIT_2026-11-04.md` | Audit of crew and helicopter rescue procedures against the real ones, mixed operations, voice gaps and UI usability, with a prioritised roadmap (no source changed). |
 | `docs/architecture/GROUND_RETURN_GATE.md` | Why the crew and the heli rescuers walked to a helicopter that landed far away (report of 2026-11-03), the margin of the landing spot of the ground operations and where it was missing, the gate `ground return gate` with its call sites and the user choice, what is not covered. |
+| `docs/architecture/HANDOFF_2026-11-09.md` | User-requested handoff of the cloud session of 2026-11-03 to 2026-11-09: open work, undecided proposals, verification debts, working rules and engine facts. Read before planning new work. |
 | `docs/architecture/DEBUG_HANDOFF_2026-09-12.md` | User-requested handoff: preserved behavior, ownership and next debug work. Read before changing the P1-P3 integration. |
 | `docs/architecture/CICERS_WORKSPACE_OPTIMIZATION.md` | Technical report covering workspace modularization, safeguards, validation, and residual limitations. |
 | `tools/` | Dependency-free assemblers, scope guards, validators, and regression tests. |
