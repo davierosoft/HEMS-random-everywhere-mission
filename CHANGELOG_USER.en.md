@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.23. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.24. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -964,7 +964,8 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### The accident location line waits for the location
 
 - The line "Accident Location" shown while you prepare the flight and start the engines no longer appears with empty or zero coordinates: it waits until the location of the call is known.
-- **Build history:** 0.997 170.21.
+- The same line during the engine start and quickstart steps now reads the accident location itself, so in scenes such as hunting it no longer shows 0, 0 with the right nation (tester report, 2026-11-09).
+- **Build history:** 0.997 170.21, 170.24.
 - **Test:** Accept a dispatch and start the preflight: the line shows the name of the place and the nation, never 0, 0.
 
 ### No old destination window in missions with more than one patient
@@ -1921,7 +1922,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.23 (this release):** The second ambulance too keeps its crew aboard when no patient is within its reach (see the ambulance section above).
+- **0.997 170.24 (this release):** The accident location line in the engine start and quickstart steps no longer shows 0, 0 (see the accident location line above).
+- **0.997 170.23:** The second ambulance too keeps its crew aboard when no patient is within its reach (see the ambulance section above).
 - **0.997 170.22:** The help page for stalled operations, ambulances that cannot reach the patient stay aboard, the fuel truck leaves when you fly away with the hose connected, and new crew tips (see the new sections above).
 - **0.997 170.21:** The accident location line waits for the location, no old destination window with more than one patient, the voice commands page and 33 voice commands, the speech tips and wifi options, the 20 pixel status bar and the dispatch texts in German, French and Italian (see 33 voice commands and the phrases of the crew).
 - **0.997 170.20:** The mission no longer freezes at start or in the preflight step, and the crew walks at once when the ambulance is not on the site (see The crew no longer waits for an ambulance that is far away).

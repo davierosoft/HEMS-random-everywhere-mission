@@ -1,3 +1,7 @@
+## Release 0.997 170.24
+
+- Accident location on the preflight, engine and quickstart messages reads the accident location, not rescue_location (0,0 on hunting scenes)
+
 ## Release 0.997 170.23
 
 - Ambulance 2 crew stays aboard when every patient is out of reach
