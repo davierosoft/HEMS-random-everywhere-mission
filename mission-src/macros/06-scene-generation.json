@@ -1975,6 +1975,17 @@
       "then": [
         {"return":0}
     ]},
+    {"#comment":"User rule 2026-11-09: when the ambulance has stopped (this macro runs after ambu1arrived) and every patient is out of its reach (too far or ground too steep, multipatient registry ambulance reach), its crew does not appear at all: no medic, no stretcher walk. The ambulance only says that it cannot intervene (ambulance cannot reach notice). If the pilot chooses Unload to ambulance, the crew comes down with the procedures of that handover. Runtime PENDING."},
+    {"call_macro":"multipatient registry ambulance all blocked","params":{"vehicle":"ambulance1"},"result":"amb_blocked"},
+    {"if": {"param":"amb_blocked"}, "eq": 1,
+      "then": [
+        {"set":{"local":"ambulance1_unreachable"},"value":"yes"},
+        {"set":{"local":"ambulance1_gate"},"value":"scene_unreachable"},
+        {"set":{"local":"ambulance1_log"},"value":"Patient out of reach of the ambulance, its crew stays aboard"},
+        {"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambustretcher full","state":"scene_unreachable_crew_stays_aboard"}},
+        {"return":0}
+    ]},
     {"set":{"local":"ambulance1_thread_started"},"value":"yes"},
     {"set":{"local":"ambulance1_gate"},"value":"crew_deployment_started"},
     {"set":{"local":"ambulance1_log"},"value":"ambulance1 crew thread entered"},

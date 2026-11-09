@@ -1991,6 +1991,16 @@
         ]}
     ]}
   ],
+  "ambulance cannot reach notice": [
+    {"#comment":"User rule 2026-11-09: the ambulance stopped where it can park, but the patient is too far or on ground too steep (multipatient registry ambulance reach, reason in ambulance_unreach_reason). Once per mission it says it cannot intervene; the patient stays with HEMS, and the pilot may land near the ambulance and hand the patient over (Unload to ambulance). Tablet and RescueTrack line from the ambulance; with the Mission Companion the dispatcher relays it (pack EN AMB.UNR.DSP). Runtime PENDING."},
+    {"set_message":{"text":"Ambulance on site: the patient cannot be reached from here (too far or too steep). HEMS keeps the patient."}},
+    {"call_macro":"post dispatcher message","params":{"text":"We cannot reach the patient from here, too far or too steep. HEMS keeps the patient.","from":"ambulance"}},
+    {"call_macro":"voice say","params":{"key":"AMB.UNR.DSP"}}
+  ],
+  "ambulance unload radio": [
+    {"#comment":"User rule 2026-11-09: radio call of the helicopter when the pilot hands the patient over to the ambulance (Unload to ambulance, called by Ambulance5). Pack EN AMB.UNL.RAD, only with the Mission Companion. Runtime PENDING."},
+    {"call_macro":"voice say","params":{"key":"AMB.UNL.RAD"}}
+  ],
   "return to base menu": [
     {"call_macro":"rtb step","params":{"name":"menu_mission_failure_statistics"}},
     {"call_macro":"mission failure statistics"},
@@ -2052,7 +2062,8 @@
     {"set":{"var":["L:OLD_HELOVICTIMS","number"]},"value":0},
     {"set":{"local":"STAT_CREW_CRITICAL"},"value":0},
     {"set":{"local":"STAT_CREW_DEAD"},"value":0},
-    {"set":{"local":"STAT_PATIENTS_DEAD"},"value":0}
+    {"set":{"local":"STAT_PATIENTS_DEAD"},"value":0},
+    {"set":{"local":"FUEL_HOSE_TORN"},"value":0}
   ],
   "mission failure statistics": [
     {"set":{"local":"rtb_step"},"value":"mission_failure_statistics:enter"},
@@ -2336,12 +2347,41 @@
         {"if": {"local":"rtb_watch"}, "eq": 1,
           "then": [
             {"call_macro":"trace return to base","params":{"stage":"rtb_step_watch","detail":{"text":"not completed, last step {0}","params":[{"local":"rtb_step"}]}}},
+            {"#comment":"Stuck help page (user request of 2026-11-09): the step name that does not change for 60 s is a stalled return to base. Read-only detector: it only sets the phase_stall_* fields that the Dispatch page and the help page show; nothing waits for it and it changes no mission state."},
+            {"if": {"local":"rtb_step"}, "ne": {"local":"rtb_stall_step"},
+              "then": [
+                {"set":{"local":"rtb_stall_step"},"value":{"local":"rtb_step"}},
+                {"set":{"local":"rtb_stall_seconds"},"value":0},
+                {"if": {"local":"phase_stall_code"}, "eq": "RTB_STEP",
+                  "then": [
+                    {"set":{"local":"phase_stall_active"},"value":0}
+                ]}
+              ],"else": [
+                {"set":{"param":"rtb_inc"},"value":30},
+                {"if": {"param":"ticks"}, "lt": 20,
+                  "then": [
+                    {"set":{"param":"rtb_inc"},"value":3}
+                ]},
+                {"set":{"local":"rtb_stall_seconds"},"value":{"add":[{"local":"rtb_stall_seconds"},{"param":"rtb_inc"}]}},
+                {"if": {"local":"rtb_stall_seconds"}, "gte": 60,
+                  "then": [
+                    {"set":{"local":"phase_stall_active"},"value":1},
+                    {"set":{"local":"phase_stall_code"},"value":"RTB_STEP"},
+                    {"set":{"local":"phase_stall_title"},"value":"RETURN TO BASE STUCK"},
+                    {"set":{"local":"phase_stall_seconds"},"value":{"local":"rtb_stall_seconds"}},
+                    {"set":{"local":"phase_stall_reason"},"value":{"text":"return to base has not moved on for {0} s, last step {1}","params":[{"round":{"local":"rtb_stall_seconds"},"to":0},{"local":"rtb_step"}]}}
+                ]}
+            ]},
             {"set":{"param":"ticks"},"value":{"add":[{"param":"ticks"},1]}},
             {"if": {"param":"ticks"}, "gt": 80,
               "then": [
                 {"set":{"local":"rtb_watch"},"value":0}
             ]}
         ]}
+    ]},
+    {"if": {"local":"phase_stall_code"}, "eq": "RTB_STEP",
+      "then": [
+        {"set":{"local":"phase_stall_active"},"value":0}
     ]}
   ],
   "return to base": [
@@ -3800,6 +3840,7 @@
     {"set":{"local":"OBJECT15"},"value":null},
     {"set":{"local":"queryfailed"},"value":null},
     {"set":{"local":"amb_cancel_said"},"value":0},
+    {"set":{"local":"amb_unreach_said"},"value":0},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"fence"},"value":null},
     {"set":{"local":"customLZ"},"value":"no"},
@@ -6677,9 +6718,60 @@
         {"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},
         {"set":{"local":"newdispatch"},"value":"done"}
     ]},
+    {"#comment":"Stuck help page (user request of 2026-11-09, five reports of a second dispatch that never offers ACCEPT): the three waits below are the only things that can hold the offer once the clock wait is over. This read-only watcher names the one that holds it after 30 s (phase_stall_code SD_CONNECT, SD_PHASE or SD_EMERGENCY) for the Dispatch page and the help page. It changes no mission state and ends with the waits."},
+    {"set":{"local":"sd_watch"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"set":{"param":"sdw_t"},"value":0},
+        {"while": {"local":"sd_watch"}, "eq": 1,
+          "do": [
+            {"sleep":5},
+            {"set":{"param":"sdw_t"},"value":{"add":[{"param":"sdw_t"},5]}},
+            {"if": {"param":"sdw_t"}, "gte": 30,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1},
+                    {"require":{"local":"wificonnect"},"ne":"Connected"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"phase_stall_active"},"value":1},
+                    {"set":{"local":"phase_stall_code"},"value":"SD_CONNECT"},
+                    {"set":{"local":"phase_stall_title"},"value":"NEXT DISPATCH WAITS FOR THE LINK"},
+                    {"set":{"local":"phase_stall_reason"},"value":"the next dispatch waits for CARLS or the wifi link"}
+                  ],"else": [
+                    {"if": {
+                      "or": [
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"lte":4},
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":7}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"phase_stall_active"},"value":1},
+                        {"set":{"local":"phase_stall_code"},"value":"SD_PHASE"},
+                        {"set":{"local":"phase_stall_title"},"value":"NEXT DISPATCH WAITS FOR THE END OF THE LAST ONE"},
+                        {"set":{"local":"phase_stall_reason"},"value":{"text":"the next dispatch waits for the last dispatch to finish (dispatch phase {0})","params":[{"var":["L:DISPATCH_PHASE","number"]}]}}
+                      ],"else": [
+                        {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "eq": "yes",
+                          "then": [
+                            {"set":{"local":"phase_stall_active"},"value":1},
+                            {"set":{"local":"phase_stall_code"},"value":"SD_EMERGENCY"},
+                            {"set":{"local":"phase_stall_title"},"value":"NEXT DISPATCH WAITS FOR THE CREW EMERGENCY"},
+                            {"set":{"local":"phase_stall_reason"},"value":"the next dispatch waits for the crew emergency to be closed"}
+                        ]}
+                    ]}
+                ]},
+                {"set":{"local":"phase_stall_seconds"},"value":{"param":"sdw_t"}}
+            ]}
+        ]}
+    ]}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
     {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
+    {"set":{"local":"sd_watch"},"value":0},
+    {"if": {"local":"phase_stall_code"}, "ne": "RTB_STEP",
+      "then": [
+        {"set":{"local":"phase_stall_active"},"value":0}
+    ]},
     {"call_macro":"dispatch step row","params":{"stage":"before_ready_after_waits"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_waits"}},
     {"call_macro":"dispatch step row","params":{"stage":"after_ready_after_waits"}},

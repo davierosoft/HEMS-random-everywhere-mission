@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.21",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.22",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.21"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.22"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -3493,6 +3493,7 @@
           "then": [
             {"call_macro":"fuel truck"},
             {"wait_for":{"local":"fuel truck arrived"},"eq":"yes"},
+            {"call_macro":"fuel hose watch"},
             {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lt": {"local":"FUEL REQUEST"},
               "then": [
                 {"create_thread": {
@@ -3600,21 +3601,26 @@
                 {"if": {"has_object":"ftruck"}, "eq": 1,
                   "then": [
                     {"wait_for":{"local":"fuel truck arrived"},"eq":null},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":355,"dist":13},{"bearing":345,"dist":5},{"bearing":270,"dist":2.5}],"fallback":{"bearing":270,"dist":2.5},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"point_object":"truckerf","to":"$USER"},
-                    {"sleep":3},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":350,"dist":9}],"fallback":{"bearing":350,"dist":9},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"destroy_object":"truckerf"},
-                    {"sleep":4},
-                    {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":275,"dist":20},{"bearing":305,"dist":20},{"bearing":0,"dist":20},{"bearing":50,"dist":43}],"fallback":{"bearing":50,"dist":43},"speed":7,"var1":0,"timeout":180}},
-                    {"sleep":1},
-                    {"destroy_object":"ftruck"}
+                    {"if": {"local":"fuel_truck_forced_end"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"truckerf"}
+                      ],"else": [
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":355,"dist":13},{"bearing":345,"dist":5},{"bearing":270,"dist":2.5}],"fallback":{"bearing":270,"dist":2.5},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"point_object":"truckerf","to":"$USER"},
+                        {"sleep":3},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":350,"dist":9}],"fallback":{"bearing":350,"dist":9},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"destroy_object":"truckerf"},
+                        {"sleep":4},
+                        {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":275,"dist":20},{"bearing":305,"dist":20},{"bearing":0,"dist":20},{"bearing":50,"dist":43}],"fallback":{"bearing":50,"dist":43},"speed":7,"var1":0,"timeout":180}},
+                        {"sleep":1},
+                        {"destroy_object":"ftruck"}
+                    ]}
                 ]}
             ]}}
         ]}
@@ -3653,28 +3659,33 @@
                 {"if": {"has_object":"ftruck"}, "eq": 1,
                   "then": [
                     {"wait_for":{"local":"fuel truck arrived"},"eq":null},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":300,"dist":13.5},{"bearing":315,"dist":12},{"bearing":300,"dist":1.5}],"fallback":{"bearing":300,"dist":1.5},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"point_object":"truckerf","to":"$USER"},
-                    {"sleep":3},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":310,"dist":10}],"fallback":{"bearing":310,"dist":10},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"destroy_object":"truckerf"},
-                    {"sleep":4},
-                    {"create_thread": {
-                      "commands": [
-                        {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":-4},
-                        {"sleep":15},
-                        {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":0}
-                    ]}},
-                    {"sleep":16.5},
-                    {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":300,"dist":16},{"bearing":290,"dist":30}],"fallback":{"bearing":290,"dist":30},"speed":7,"var1":0,"timeout":180}},
-                    {"sleep":1},
-                    {"destroy_object":"ftruck"}
+                    {"if": {"local":"fuel_truck_forced_end"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"truckerf"}
+                      ],"else": [
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":300,"dist":13.5},{"bearing":315,"dist":12},{"bearing":300,"dist":1.5}],"fallback":{"bearing":300,"dist":1.5},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"point_object":"truckerf","to":"$USER"},
+                        {"sleep":3},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":310,"dist":10}],"fallback":{"bearing":310,"dist":10},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"destroy_object":"truckerf"},
+                        {"sleep":4},
+                        {"create_thread": {
+                          "commands": [
+                            {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":-4},
+                            {"sleep":15},
+                            {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":0}
+                        ]}},
+                        {"sleep":16.5},
+                        {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":300,"dist":16},{"bearing":290,"dist":30}],"fallback":{"bearing":290,"dist":30},"speed":7,"var1":0,"timeout":180}},
+                        {"sleep":1},
+                        {"destroy_object":"ftruck"}
+                    ]}
                 ]}
             ]}}
         ]}
@@ -3713,7 +3724,8 @@
                 {"if": {
                   "and": [
                     {"require":{"object":"ftruck","var":"distance:m"},"lt":100},
-                    {"require":{"has_object":"ftruck"},"eq":1}
+                    {"require":{"has_object":"ftruck"},"eq":1},
+                    {"require":{"local":"fuel_truck_forced_end"},"ne":1}
                   ]}, "eq": 1,
                   "then": [
                     {"point_object":"truckerf","to":"$USER"},
@@ -4247,6 +4259,7 @@
         {"text":"Cause: {0}","params":[{"local":"CREW_EMERGENCY_CAUSE"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
         {"text":"Crew seriously injured: {0}. Crew deceased: {1}.","params":[{"local":"STAT_CREW_CRITICAL"},{"local":"STAT_CREW_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
         {"text":"Patients deceased: {0}.","params":[{"local":"STAT_PATIENTS_DEAD"}],"color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"STAT_PATIENTS_DEAD"},"gt":0}],"eq":1}},
+        {"text":"Fuel hose torn off: the helicopter left with the hose connected.","color":"red","show_condition":{"and":[{"require":{"var":["L:DISPATCH_ENDED","number"]},"eq":1},{"require":{"local":"FUEL_HOSE_TORN"},"eq":1}],"eq":1}},
         {"text":"At least one injured, waiting for info...","color":"yellow","show_condition":{"and":[{"require":{"local":"SEX_TIME"},"eq":0},{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"ne":"yes"},{"require":{"local":"MISSION_PHASE"},"gt":2}],"eq":1}},
         {"text":"3 injured//{0} yrs, {1}, {2}, {3}//{4} yrs, {5}, {6}, {7}//{8} yrs, {9}, {10}, {11}","params":[{"local":"AGE1"},{"local":"SEX1"},{"local":"consciousness1"},{"local":"generic_pathology1"},{"local":"AGE2"},{"local":"SEX2"},{"local":"consciousness2"},{"local":"generic_pathology2"},{"local":"AGE3"},{"local":"SEX3"},{"local":"consciousness3"},{"local":"generic_pathology3"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"ne":"yes"},{"require":{"local":"SEX_TIME"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"var":["L:DISPATCH_ENDED","number"]},"ne":1}],"eq":1}},
         {"text":"3 person(s)//{0} yrs, {1}//{2} yrs, {3}//{4} yrs, {5}","params":[{"local":"AGE1"},{"local":"SEX1"},{"local":"AGE2"},{"local":"SEX2"},{"local":"AGE3"},{"local":"SEX3"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"HELOVICTIMS"},"eq":3},{"require":{"local":"MISSION_NUMBER"},"ne":4},{"require":{"local":"SAR"},"eq":"yes"},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"var":["L:DISPATCH_ENDED","number"]},"ne":1}],"eq":1}},
@@ -4301,9 +4314,10 @@
         {"progressbar":{"min":0,"max":100,"color":"gray","var":["L:SATISFACTION","number"]},"show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"timed_bar_active"},"ne":1}],"eq":1}},
         {"text":"ON-SITE OPERATIONS: {0}% - {1}","params":[{"round":{"var":["L:SATISFACTION","number"]},"to":0},{"local":"ops_progress_stage"}],"color":"gray","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"timed_bar_active"},"ne":1},{"require":{"global":"showaddinfo"},"eq":"show"}],"eq":1}},
         {"text":"{2}: no progress for {0} s after step: {1}","params":[{"local":"ops_progress_stalled_seconds"},{"local":"ops_progress_stage"},{"local":"ground_ops_reason_title"}],"color":"yellow","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
-        {"text":"Still open: {0}","params":[{"local":"ground_ops_blockers"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_blockers"},"ne":null}],"eq":1}},
+        {"link":"- STUCK? OPEN THE HELP PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"stuck help page"},{"set_dispatch_dialog":1}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
         {"link":"- Stuck? CAPTURE SNAPSHOT NOW","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"set_message":{"text":"Diagnostic snapshot captured. Send the snapshot file of the Debug table."}}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1}],"eq":1}},
-        {"text":"Probable cause: {0}","params":[{"local":"ground_ops_reason"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason"},"ne":null}],"eq":1}},
+        {"text":"{1}: no progress for {0} s","params":[{"round":{"local":"phase_stall_seconds"},"to":0},{"local":"phase_stall_title"}],"color":"yellow","align":"center","show_condition":{"require":{"local":"phase_stall_active"},"eq":1}},
+        {"link":"- STUCK? OPEN THE HELP PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"stuck help page"},{"set_dispatch_dialog":1}],"color":"yellow","show_condition":{"require":{"local":"phase_stall_active"},"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"gray","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"gte":30}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"yellow","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"lt":30},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"gte":10}],"eq":1}},
         {"progressbar":{"min":0,"max":100,"color":"red","var":["L:TIMED_LEFT_PCT","number"]},"show_condition":{"and":[{"require":{"local":"timed_bar_active"},"eq":1},{"require":{"var":["L:TIMED_LEFT_PCT","number"]},"lt":10}],"eq":1}},
@@ -4313,6 +4327,7 @@
         {"link":"+ Quick links (click to show):","commands":[{"set":{"local":"dtab0"},"value":1},{"set":{"local":"medical_page_link_visible"},"value":"yes"}],"show_condition":{"require":{"local":"dtab0"},"eq":0}},
         {"link":"- Quick links (click to hide):","commands":[{"set":{"local":"dtab0"},"value":0},{"set":{"local":"medical_page_link_visible"},"value":"no"},{"if":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual","then":[{"set":{"local":"medical_page_link_visible"},"value":"yes"}]}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
         {"link":"- TECHNICAL PAGE & GROUND OPS","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"techpage"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["SIM ON GROUND","bool"]},"eq":1}},
+        {"link":"- MISSION STUCK? HELP PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"stuck help page"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
         {"link":"- HOIST PANEL","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"hoist panel"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1}},
         {"link":"- CHECKLISTS PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"checklist home"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
         {"link":"- DISPATCH CONTROL PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"dispatch control"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"local":"dtab0"},"ne":0}},
@@ -4401,7 +4416,8 @@
         {"slider":{"min":10,"max":100,"local":"LIFESCORE3"},"show_condition":{"and":[{"require":{"has_object":"injured_human3"},"eq":1},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"whobringpatient"},"ne":"organ"},{"require":{"local":"dispatch_lifescores_visible"},"eq":1},{"require":{"local":"dispatch_lifescore_show_3"},"eq":1}],"eq":1}},
         {"text":"Organ cooler box status {0}%.Exp. time countdown: {1:TIME}","params":[{"tofixed":{"local":"LIFESCORE"},"digits":1},{"tofixed":{"local":"organcountdown"},"digits":0}],"color":"orange","show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":4},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"whobringpatient"},"eq":"organ"}],"eq":1}},
         {"slider":{"min":10,"max":100,"local":"LIFESCORE"},"show_condition":{"and":[{"require":{"local":"MISSION_NUMBER"},"eq":4},{"require":{"local":"MISSION_PHASE"},"gt":2},{"require":{"local":"whobringpatient"},"eq":"organ"}],"eq":1}},
-        {"text":"CHECK ON-SITE OPERATIONS: no progress detected for more than two minutes. Verify crew, patient, vehicle, or aircraft state.","color":"orange","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}}
+        {"text":"CHECK ON-SITE OPERATIONS: no progress detected for more than two minutes. Verify crew, patient, vehicle, or aircraft state.","color":"orange","align":"center","show_condition":{"and":[{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}},
+        {"link":"- STUCK? OPEN THE HELP PAGE","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"stuck help page"},{"set_dispatch_dialog":1}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_warning"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}}
     ]},
     {"sleep":0.5}
   ],
@@ -7504,7 +7520,7 @@
         {"text":" ","align":"center"},
         {"text":"Status reports to dispatcher are sent:","align":"center"},
         {"buttonbar":[{"title":" AUTOMATICALLY ","select_condition":{"require":{"global":"DISPATCHER_AUTO"},"eq":0},"commands":[{"set":{"global":"DISPATCHER_AUTO"},"value":0},{"set":{"local":"DISPATCHER_AUTO"},"value":0}]},{"title":" MANUALLY ","select_condition":{"require":{"global":"DISPATCHER_AUTO"},"eq":1},"commands":[{"set":{"global":"DISPATCHER_AUTO"},"value":1},{"set":{"local":"DISPATCHER_AUTO"},"value":1}]}]},
-        {"text":"Status report disagree. L{0}G{1}. If L is 1 status report is forced by multiplayer to manual.","params":[{"local":"DISPATCHER_AUTO"},{"global":"DISPATCHER_AUTO"}],"color":"gray","show_condition":{"require":{"global":"DISPATCHER_AUTO"},"ne":{"local":"DISPATCHER_AUTO"}}},
+        {"text":"The status report setting is out of step: press AUTOMATICALLY or MANUALLY again. In multiplayer it is forced to manual.","color":"yellow","show_condition":{"require":{"global":"DISPATCHER_AUTO"},"ne":{"local":"DISPATCHER_AUTO"}}},
         {"text":" ","align":"center"},
         {"text":"Time of messages, ETA and time of death (simulator clock):","align":"center"},
         {"buttonbar":[{"title":" UTC (Z) ","select_condition":{"require":{"global":"CLOCK_MODE"},"ne":"local"},"commands":[{"set":{"global":"CLOCK_MODE"},"value":"utc"}]},{"title":" LOCAL (L) ","select_condition":{"require":{"global":"CLOCK_MODE"},"eq":"local"},"commands":[{"set":{"global":"CLOCK_MODE"},"value":"local"}]}]},
@@ -22429,6 +22445,17 @@
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance1_crew_worker","actor":"ambumedic7","target":"ambulance1","state":"started"}},
     {"if": {"local":"ambulance1_thread_started"}, "eq": "yes",
       "then": [
+        {"return":0}
+    ]},
+    {"#comment":"User rule 2026-11-09: when the ambulance has stopped (this macro runs after ambu1arrived) and every patient is out of its reach (too far or ground too steep, multipatient registry ambulance reach), its crew does not appear at all: no medic, no stretcher walk. The ambulance only says that it cannot intervene (ambulance cannot reach notice). If the pilot chooses Unload to ambulance, the crew comes down with the procedures of that handover. Runtime PENDING."},
+    {"call_macro":"multipatient registry ambulance all blocked","params":{"vehicle":"ambulance1"},"result":"amb_blocked"},
+    {"if": {"param":"amb_blocked"}, "eq": 1,
+      "then": [
+        {"set":{"local":"ambulance1_unreachable"},"value":"yes"},
+        {"set":{"local":"ambulance1_gate"},"value":"scene_unreachable"},
+        {"set":{"local":"ambulance1_log"},"value":"Patient out of reach of the ambulance, its crew stays aboard"},
+        {"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ambustretcher full","state":"scene_unreachable_crew_stays_aboard"}},
         {"return":0}
     ]},
     {"set":{"local":"ambulance1_thread_started"},"value":"yes"},
@@ -42383,6 +42410,7 @@
     ]}}
   ],
   "Ambulance5": [
+    {"call_macro":"ambulance unload radio"},
     {"set":{"local":"30West_QR"},"value":"no"},
     {"set":{"param":"hasambuchoice"},"value":false},
     {"set":{"param":"nationalambu"},"value":{"create_array":[]}},
@@ -49023,6 +49051,7 @@
     {"set":{"local":"OBJECT15"},"value":null},
     {"set":{"local":"queryfailed"},"value":null},
     {"set":{"local":"amb_cancel_said"},"value":0},
+    {"set":{"local":"amb_unreach_said"},"value":0},
     {"set":{"local":"prelocation"},"value":"yes"},
     {"set":{"local":"fence"},"value":null},
     {"set":{"local":"customLZ"},"value":"no"},
@@ -51900,9 +51929,60 @@
         {"wait_for":{"var":["L:SERVICE_CONNECTED","number"]},"ne":0},
         {"set":{"local":"newdispatch"},"value":"done"}
     ]},
+    {"#comment":"Stuck help page (user request of 2026-11-09, five reports of a second dispatch that never offers ACCEPT): the three waits below are the only things that can hold the offer once the clock wait is over. This read-only watcher names the one that holds it after 30 s (phase_stall_code SD_CONNECT, SD_PHASE or SD_EMERGENCY) for the Dispatch page and the help page. It changes no mission state and ends with the waits."},
+    {"set":{"local":"sd_watch"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"set":{"param":"sdw_t"},"value":0},
+        {"while": {"local":"sd_watch"}, "eq": 1,
+          "do": [
+            {"sleep":5},
+            {"set":{"param":"sdw_t"},"value":{"add":[{"param":"sdw_t"},5]}},
+            {"if": {"param":"sdw_t"}, "gte": 30,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"var":["L:CARLS_CONNECTED","number"]},"ne":1},
+                    {"require":{"local":"wificonnect"},"ne":"Connected"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"phase_stall_active"},"value":1},
+                    {"set":{"local":"phase_stall_code"},"value":"SD_CONNECT"},
+                    {"set":{"local":"phase_stall_title"},"value":"NEXT DISPATCH WAITS FOR THE LINK"},
+                    {"set":{"local":"phase_stall_reason"},"value":"the next dispatch waits for CARLS or the wifi link"}
+                  ],"else": [
+                    {"if": {
+                      "or": [
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"lte":4},
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":7}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"phase_stall_active"},"value":1},
+                        {"set":{"local":"phase_stall_code"},"value":"SD_PHASE"},
+                        {"set":{"local":"phase_stall_title"},"value":"NEXT DISPATCH WAITS FOR THE END OF THE LAST ONE"},
+                        {"set":{"local":"phase_stall_reason"},"value":{"text":"the next dispatch waits for the last dispatch to finish (dispatch phase {0})","params":[{"var":["L:DISPATCH_PHASE","number"]}]}}
+                      ],"else": [
+                        {"if": {"local":"CREW_EMERGENCY_ACTIVE"}, "eq": "yes",
+                          "then": [
+                            {"set":{"local":"phase_stall_active"},"value":1},
+                            {"set":{"local":"phase_stall_code"},"value":"SD_EMERGENCY"},
+                            {"set":{"local":"phase_stall_title"},"value":"NEXT DISPATCH WAITS FOR THE CREW EMERGENCY"},
+                            {"set":{"local":"phase_stall_reason"},"value":"the next dispatch waits for the crew emergency to be closed"}
+                        ]}
+                    ]}
+                ]},
+                {"set":{"local":"phase_stall_seconds"},"value":{"param":"sdw_t"}}
+            ]}
+        ]}
+    ]}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
     {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
+    {"set":{"local":"sd_watch"},"value":0},
+    {"if": {"local":"phase_stall_code"}, "ne": "RTB_STEP",
+      "then": [
+        {"set":{"local":"phase_stall_active"},"value":0}
+    ]},
     {"call_macro":"dispatch step row","params":{"stage":"before_ready_after_waits"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"ready_after_waits"}},
     {"call_macro":"dispatch step row","params":{"stage":"after_ready_after_waits"}},
@@ -80365,7 +80445,8 @@
     {"set":{"var":["L:OLD_HELOVICTIMS","number"]},"value":0},
     {"set":{"local":"STAT_CREW_CRITICAL"},"value":0},
     {"set":{"local":"STAT_CREW_DEAD"},"value":0},
-    {"set":{"local":"STAT_PATIENTS_DEAD"},"value":0}
+    {"set":{"local":"STAT_PATIENTS_DEAD"},"value":0},
+    {"set":{"local":"FUEL_HOSE_TORN"},"value":0}
   ],
   "mission failure statistics": [
     {"set":{"local":"rtb_step"},"value":"mission_failure_statistics:enter"},
@@ -87417,7 +87498,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:37>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:43>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice new shift": [
@@ -88914,13 +88995,35 @@
     ]},
     {"set":{"param":"distance_m"},"value":{"round":{"location":{"param":"vehicle"},"var":"distance:m","to":{"param":"patient_object"}},"to":1}},
     {"set":{"param":"reach"},"value":1},
+    {"set":{"local":"ambulance_unreach_reason"},"value":"none"},
     {"if": {"param":"distance_m"}, "gt": {"local":"ambulance_patient_reach_m"},
       "then": [
-        {"set":{"param":"reach"},"value":0}
+        {"set":{"param":"reach"},"value":0},
+        {"set":{"local":"ambulance_unreach_reason"},"value":"distance"}
+    ]},
+    {"#comment":"Slope from where the ambulance stopped to the patient (user rule 2026-11-09: the ambulance parks by the route rule at the point closest to the destination, so a road would already have been used). Altitudes are read from the objects (AALT, feet, same as hr terrain evaluate). Percent = height difference over the distance between the two; above ambulance_patient_max_slope_pct (35, set once here) the place is not accessible and the patient is left to HEMS. Under 5 m of distance no slope is judged."},
+    {"if": {"local":"ambulance_patient_max_slope_pct"}, "eq": null,
+      "then": [
+        {"set":{"local":"ambulance_patient_max_slope_pct"},"value":35}
+    ]},
+    {"set":{"param":"slope_pct"},"value":0},
+    {"if": {"param":"distance_m"}, "gte": 5,
+      "then": [
+        {"set":{"param":"dz_m"},"value":{"multiply":[{"subtract":[{"object":{"param":"vehicle"},"var":"AALT"},{"object":{"param":"patient_object"},"var":"AALT"}]},0.3048]}},
+        {"if": {"param":"dz_m"}, "lt": 0,
+          "then": [
+            {"set":{"param":"dz_m"},"value":{"multiply":[{"param":"dz_m"},-1]}}
+        ]},
+        {"set":{"param":"slope_pct"},"value":{"round":{"multiply":[{"divide":[{"param":"dz_m"},{"param":"distance_m"}]},100]},"to":1}}
+    ]},
+    {"if": {"param":"slope_pct"}, "gt": {"local":"ambulance_patient_max_slope_pct"},
+      "then": [
+        {"set":{"param":"reach"},"value":0},
+        {"set":{"local":"ambulance_unreach_reason"},"value":"slope"}
     ]},
     {"set": {"param":"state"},
       "value": {
-        "text": "patient {0} {1} distance_m {2} limit_m {3}",
+        "text": "patient {0} {1} distance_m {2} limit_m {3} slope_pct {4} limit_pct {5}",
         "params": [
           {"param":"patient"},
           {"if": {"param":"reach"},
@@ -88929,7 +89032,9 @@
             "else": "blocked"
           },
           {"param":"distance_m"},
-          {"local":"ambulance_patient_reach_m"}
+          {"local":"ambulance_patient_reach_m"},
+          {"param":"slope_pct"},
+          {"local":"ambulance_patient_max_slope_pct"}
       ]}
     },
     {"if": {"param":"vehicle"}, "eq": "ambulance1",
@@ -88946,6 +89051,14 @@
           "then": [
             {"set":{"local":"ambulance2_reach_last"},"value":{"param":"state"}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
+        ]}
+    ]},
+    {"if": {"param":"reach"}, "eq": 0,
+      "then": [
+        {"if": {"local":"amb_unreach_said"}, "ne": 1,
+          "then": [
+            {"set":{"local":"amb_unreach_said"},"value":1},
+            {"call_macro":"ambulance cannot reach notice"}
         ]}
     ]},
     {"return":{"param":"reach"}}
@@ -89583,7 +89696,7 @@
     ]}
   ],
   "voice tip": [
-    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
+    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, HLP the stuck help page, VCM voice commands, WIF tablet status bar, HOI hoist panel, BAR progress bars, PRT performance settings, RVO random voices of the Companion, TOF how to switch the tips off; EGG, the Easter eggs setting, only on 1 April and 31 October, once per session, outside the rotation) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
     {"set":{"param":"vtp_calm"},"value":0},
     {"if": {"global":"CREW_TIPS"}, "ne": 1,
       "then": [
@@ -89593,11 +89706,11 @@
       "then": [
         {"if": {"local":"vtp_next"}, "eq": null,
           "then": [
-            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,12]}}}
+            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,19]}}}
         ]},
         {"set":{"local":"vtp_t"},"value":{"local":"vtp_next"}},
         {"set":{"local":"vtp_next"},"value":{"add":[{"local":"vtp_next"},1]}},
-        {"if": {"local":"vtp_next"}, "gte": 12,
+        {"if": {"local":"vtp_next"}, "gte": 19,
           "then": [
             {"set":{"local":"vtp_next"},"value":0}
         ]},
@@ -89644,7 +89757,64 @@
         ]},
         {"if": {"local":"vtp_t"}, "eq": 11,
           "then": [
+            {"set":{"local":"vtp_code"},"value":"HLP"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 12,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"VCM"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 13,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"WIF"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 14,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"HOI"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 15,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"BAR"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 16,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"PRT"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 17,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"RVO"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 18,
+          "then": [
             {"set":{"local":"vtp_code"},"value":"TOF"}
+        ]},
+        {"set":{"local":"vtp_day_hit"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":4},
+            {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_day_hit"},"value":1}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":10},
+            {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":31}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_day_hit"},"value":1}
+        ]},
+        {"#comment":"Tip about the Easter eggs mode (user request of 2026-11-09): offered once per session on 1 April and 31 October, unless EASTER_EGGS is disabled; it does not use a slot of the rotation."},
+        {"if": {
+          "and": [
+            {"require":{"global":"EASTER_EGGS"},"ne":"disabled"},
+            {"require":{"local":"vtp_egg_done"},"ne":1},
+            {"require":{"local":"vtp_day_hit"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_egg_done"},"value":1},
+            {"set":{"local":"vtp_code"},"value":"EGG"},
+            {"set":{"local":"vtp_next"},"value":{"local":"vtp_t"}}
         ]},
         {"create_thread": {
           "commands": [
@@ -99184,12 +99354,41 @@
         {"if": {"local":"rtb_watch"}, "eq": 1,
           "then": [
             {"call_macro":"trace return to base","params":{"stage":"rtb_step_watch","detail":{"text":"not completed, last step {0}","params":[{"local":"rtb_step"}]}}},
+            {"#comment":"Stuck help page (user request of 2026-11-09): the step name that does not change for 60 s is a stalled return to base. Read-only detector: it only sets the phase_stall_* fields that the Dispatch page and the help page show; nothing waits for it and it changes no mission state."},
+            {"if": {"local":"rtb_step"}, "ne": {"local":"rtb_stall_step"},
+              "then": [
+                {"set":{"local":"rtb_stall_step"},"value":{"local":"rtb_step"}},
+                {"set":{"local":"rtb_stall_seconds"},"value":0},
+                {"if": {"local":"phase_stall_code"}, "eq": "RTB_STEP",
+                  "then": [
+                    {"set":{"local":"phase_stall_active"},"value":0}
+                ]}
+              ],"else": [
+                {"set":{"param":"rtb_inc"},"value":30},
+                {"if": {"param":"ticks"}, "lt": 20,
+                  "then": [
+                    {"set":{"param":"rtb_inc"},"value":3}
+                ]},
+                {"set":{"local":"rtb_stall_seconds"},"value":{"add":[{"local":"rtb_stall_seconds"},{"param":"rtb_inc"}]}},
+                {"if": {"local":"rtb_stall_seconds"}, "gte": 60,
+                  "then": [
+                    {"set":{"local":"phase_stall_active"},"value":1},
+                    {"set":{"local":"phase_stall_code"},"value":"RTB_STEP"},
+                    {"set":{"local":"phase_stall_title"},"value":"RETURN TO BASE STUCK"},
+                    {"set":{"local":"phase_stall_seconds"},"value":{"local":"rtb_stall_seconds"}},
+                    {"set":{"local":"phase_stall_reason"},"value":{"text":"return to base has not moved on for {0} s, last step {1}","params":[{"round":{"local":"rtb_stall_seconds"},"to":0},{"local":"rtb_step"}]}}
+                ]}
+            ]},
             {"set":{"param":"ticks"},"value":{"add":[{"param":"ticks"},1]}},
             {"if": {"param":"ticks"}, "gt": 80,
               "then": [
                 {"set":{"local":"rtb_watch"},"value":0}
             ]}
         ]}
+    ]},
+    {"if": {"local":"phase_stall_code"}, "eq": "RTB_STEP",
+      "then": [
+        {"set":{"local":"phase_stall_active"},"value":0}
     ]}
   ],
   "rtb watch start": [
@@ -100599,6 +100798,166 @@
     {"if": {"struct":{"local":"dispatch_handoff_log"},"path":"length"}, "gt": 150,
       "then": [
         {"modify_array":{"local":"dispatch_handoff_log"},"removeIndex":0}
+    ]}
+  ],
+  "stuck help page": [
+    {"set_dispatch": [
+        {"image":"sbar00","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":0},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar01","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":1},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar02","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":2},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar03","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":3},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar04","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":4},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar05","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":5},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar06","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":6},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar07","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":7},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar08","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":8},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar09","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":9},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar10","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":10},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar11","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":11},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar12","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":12},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar13","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":13},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar14","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":14},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar15","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":15},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar16","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":16},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar17","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":17},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar18","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":18},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar19","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":19},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"text":"{0}","params":[{"local":"TIP_LINE"}],"monospace":1,"color":"cyan","show_condition":{"require":{"local":"TIP_SHOW"},"eq":1}},
+        {"link":"Back to main screen","commands":[{"call_macro":"shared repeated block 029"}]},
+        {"text":"- - - - - - - - - - - - - MISSION STUCK? HELP - - - - - - - - - - - - -","align":"center"},
+        {"text":" "},
+        {"text":"WHAT IS HAPPENING","color":"green","align":"center","show_condition":{"require":{"local":"ops_progress_active"},"eq":1}},
+        {"text":"The on-site operations are waiting for the helicopter: {0}.","params":[{"local":"ground_ops_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_ARRIVAL"}],"eq":1}},
+        {"text":"1. Fly the helicopter inside the landing area and stay there.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_ARRIVAL"}],"eq":1}},
+        {"text":"2. The operations go on by themselves as soon as the helicopter is in the area.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_ARRIVAL"}],"eq":1}},
+        {"text":"The on-site operations are waiting for the helicopter: {0}.","params":[{"local":"ground_ops_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_GROUND"}],"eq":1}},
+        {"text":"1. Take off and hold a hover between 40 and 163 ft of radio height over the landing spot.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_GROUND"}],"eq":1}},
+        {"text":"2. To work on the ground instead, choose STAY HERE, GND OPS (HOISTING page) or say the voice command ground operations.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_GROUND"}],"eq":1}},
+        {"text":"The hoist is waiting for a steady hover: {0}.","params":[{"local":"ground_ops_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_HOVER"}],"eq":1}},
+        {"text":"1. Hold the hover inside the limits: radio height 40 to 163 ft, inside the hoist range of the landing spot, low speed and a small bank.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_HOVER"}],"eq":1}},
+        {"text":"2. Open the HOIST PANEL to see your values; the hoist goes on by itself when all of them are right.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"HELI_HOVER"}],"eq":1}},
+        {"text":"The crew is still on the move: {0}.","params":[{"local":"ground_ops_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"CREW_MOVING"}],"eq":1}},
+        {"text":"1. Wait: the crew is walking and the operations go on when it arrives.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"CREW_MOVING"}],"eq":1}},
+        {"text":"2. If after two minutes the distance does not shrink, or the crew walks away, press STOP ESCAPING CREW below.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"CREW_MOVING"}],"eq":1}},
+        {"text":"The operations are delayed and no single cause was found.","color":"yellow","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}},
+        {"text":"1. Check that the engines run, the rotor is at 100 percent and the helicopter is inside the landing area.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}},
+        {"text":"2. Wait one minute, then press STOP ESCAPING CREW below.","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason_code"},"eq":"UNKNOWN"}],"eq":1}},
+        {"text":"WHAT IS HAPPENING","color":"green","align":"center","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"ops_progress_active"},"ne":1}],"eq":1}},
+        {"text":"Return to base has not moved on: {0}.","params":[{"local":"phase_stall_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"RTB_STEP"}],"eq":1}},
+        {"text":"1. Close any window or question that is still open on the screen, then wait one minute.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"RTB_STEP"}],"eq":1}},
+        {"text":"2. If it still does not move on, press CAPTURE SNAPSHOT below and report it as described at the bottom of this page.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"RTB_STEP"}],"eq":1}},
+        {"text":"The next dispatch is waiting for the link: {0}.","params":[{"local":"phase_stall_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_CONNECT"}],"eq":1}},
+        {"text":"1. Switch on the CARLS (battery or GPCP switch) and connect it, or connect the wifi tablet.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_CONNECT"}],"eq":1}},
+        {"text":"2. The dispatch is offered by itself as soon as the link is up.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_CONNECT"}],"eq":1}},
+        {"text":"The next dispatch is waiting for the last one: {0}.","params":[{"local":"phase_stall_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_PHASE"}],"eq":1}},
+        {"text":"1. Finish the last dispatch: hand over the patient or return to base, then wait.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_PHASE"}],"eq":1}},
+        {"text":"2. If the last dispatch is already over and nothing happens, press CAPTURE SNAPSHOT below and report it as described at the bottom of this page.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_PHASE"}],"eq":1}},
+        {"text":"The next dispatch is waiting for the crew emergency: {0}.","params":[{"local":"phase_stall_reason"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_EMERGENCY"}],"eq":1}},
+        {"text":"1. Answer the crew emergency question (divert or continue) and finish the emergency.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_EMERGENCY"}],"eq":1}},
+        {"text":"2. The dispatch is offered by itself when the emergency is closed.","show_condition":{"and":[{"require":{"local":"phase_stall_active"},"eq":1},{"require":{"local":"phase_stall_code"},"eq":"SD_EMERGENCY"}],"eq":1}},
+        {"text":"No stalled operation was detected right now. The common blocks and their remedies are below.","show_condition":{"and":[{"require":{"local":"ops_progress_warning"},"ne":1},{"require":{"local":"phase_stall_active"},"ne":1}],"eq":1}},
+        {"text":" "},
+        {"text":"COMMON BLOCKS","color":"green","align":"center"},
+        {"text":"Waiting too long for the crew to board, the ambulance to travel or the paperwork: use the skip commands (voice or CARLS): skip boarding, skip travel, skip paperwork, skip loading paperwork."},
+        {"text":"The next dispatch never offers the ACCEPT button: press RESET SECOND DISPATCH below (it shows only when a second dispatch is pending), then ask for the next dispatch again.","show_condition":{"require":{"local":"SECOND_DISPATCH"},"ne":0}},
+        {"text":"The hoist does not come out or the patient stays outside: hold the hover (see HOIST PANEL), then use the hoist commands again."},
+        {"text":"The crew walks away from the helicopter or from the patient: press STOP ESCAPING CREW below."},
+        {"text":" "},
+        {"buttonbar":[{"title":"STOP ESCAPING CREW","commands":[{"if":{"has_object":"hoist_crew"},"eq":1,"then":[{"set":{"object":"hoist_crew","var":"WP INDEX"},"value":0},{"set":{"object":"hoist_crew","var":"VELOCITY Z"},"value":0}]},{"if":{"has_object":"hoist_creww"},"eq":1,"then":[{"set":{"object":"hoist_creww","var":"WP INDEX"},"value":0},{"set":{"object":"hoist_creww","var":"VELOCITY Z"},"value":0}]},{"if":{"has_object":"pax1"},"eq":1,"then":[{"set":{"object":"pax1","var":"WP INDEX"},"value":0},{"set":{"object":"pax1","var":"VELOCITY Z"},"value":0}]},{"if":{"has_object":"pax3"},"eq":1,"then":[{"set":{"object":"pax3","var":"WP INDEX"},"value":0},{"set":{"object":"pax3","var":"VELOCITY Z"},"value":0}]},{"if":{"has_object":"fire_guard"},"eq":1,"then":[{"set":{"object":"fire_guard","var":"WP INDEX"},"value":0},{"set":{"object":"fire_guard","var":"VELOCITY Z"},"value":0}]}]},{"title":"RESET SECOND DISPATCH","show_condition":{"require":{"local":"SECOND_DISPATCH"},"ne":0},"commands":[{"set":{"local":"SECOND_DISPATCH"},"value":0}]},{"title":"CAPTURE SNAPSHOT","commands":[{"call_macro":"capture diagnostic snapshot","params":{"snapshot_table":{"static":"Debug_Table"}}},{"set_message":{"text":"Diagnostic snapshot captured. Send the snapshot file of the Debug table when you report a problem."}}]}]},
+        {"link":"- HOIST PANEL","commands":[{"set":{"local":"prev_page"},"value":"Mission dispatch"},{"call_macro":"hoist panel"},{"set_dispatch_dialog":1}],"show_condition":{"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"eq":1}},
+        {"text":" "},
+        {"text":"IF YOU CANNOT SOLVE IT","color":"green","align":"center"},
+        {"text":"1. Press CAPTURE SNAPSHOT above: the snapshot is saved in the Debug table."},
+        {"text":"2. Open a ticket on the Random & Everywhere Discord server (channel tickets)."},
+        {"text":"3. Open the Mission Companion app and drag and drop all the logs onto the ticket you opened."},
+        {"text":" "},
+        {"image":"bar"},
+        {"text":"Basic debug information","color":"gray","align":"center"},
+        {"text":"Build: {0} {1} {2} | phase {3} | crew {4}","params":[{"local":"MISSION_VERSION"},{"local":"DEV_TYPE"},{"local":"DEV_VERSION"},{"local":"MISSION_PHASE"},{"local":"CREW"}],"color":"gray"},
+        {"text":"Phase stall: {0} | no progress for {1} s | {2}","params":[{"local":"phase_stall_code"},{"round":{"local":"phase_stall_seconds"},"to":0},{"local":"phase_stall_reason"}],"color":"gray","show_condition":{"require":{"local":"phase_stall_active"},"eq":1}},
+        {"text":"Step: {0} | no progress for {1} s | cause code: {2}","params":[{"local":"ops_progress_stage"},{"local":"ops_progress_stalled_seconds"},{"local":"ground_ops_reason_code"}],"color":"gray","show_condition":{"require":{"local":"ops_progress_active"},"eq":1}},
+        {"text":"Cause: {0}","params":[{"local":"ground_ops_reason"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_reason"},"ne":null}],"eq":1}},
+        {"text":"Still open: {0}","params":[{"local":"ground_ops_blockers"}],"color":"gray","show_condition":{"and":[{"require":{"local":"ops_progress_active"},"eq":1},{"require":{"local":"ground_ops_blockers"},"ne":null}],"eq":1}}
+    ]}
+  ],
+  "ambulance cannot reach notice": [
+    {"#comment":"User rule 2026-11-09: the ambulance stopped where it can park, but the patient is too far or on ground too steep (multipatient registry ambulance reach, reason in ambulance_unreach_reason). Once per mission it says it cannot intervene; the patient stays with HEMS, and the pilot may land near the ambulance and hand the patient over (Unload to ambulance). Tablet and RescueTrack line from the ambulance; with the Mission Companion the dispatcher relays it (pack EN AMB.UNR.DSP). Runtime PENDING."},
+    {"set_message":{"text":"Ambulance on site: the patient cannot be reached from here (too far or too steep). HEMS keeps the patient."}},
+    {"call_macro":"post dispatcher message","params":{"text":"We cannot reach the patient from here, too far or too steep. HEMS keeps the patient.","from":"ambulance"}},
+    {"call_macro":"voice say","params":{"key":"AMB.UNR.DSP"}}
+  ],
+  "ambulance unload radio": [
+    {"#comment":"User rule 2026-11-09: radio call of the helicopter when the pilot hands the patient over to the ambulance (Unload to ambulance, called by Ambulance5). Pack EN AMB.UNL.RAD, only with the Mission Companion. Runtime PENDING."},
+    {"call_macro":"voice say","params":{"key":"AMB.UNL.RAD"}}
+  ],
+  "multipatient registry ambulance all blocked": [
+    {"#comment":"1 when the vehicle has at least one patient object on the scene and none of them is within its reach (multipatient registry ambulance reach: distance and slope), 0 otherwise. The reach macro returns 1 for a missing patient, so the presence is tested here. A patient the ambulance could reach keeps the normal crew deployment."},
+    {"set":{"param":"present"},"value":0},
+    {"set":{"param":"open"},"value":0},
+    {"if": {"has_object":"injured_human"}, "eq": 1,
+      "then": [
+        {"set":{"param":"present"},"value":{"add":[{"param":"present"},1]}},
+        {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"vehicle"},"patient":1},"result":"r1"},
+        {"if": {"param":"r1"}, "eq": 1,
+          "then": [
+            {"set":{"param":"open"},"value":1}
+        ]}
+    ]},
+    {"if": {"has_object":"injured_human2"}, "eq": 1,
+      "then": [
+        {"set":{"param":"present"},"value":{"add":[{"param":"present"},1]}},
+        {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"vehicle"},"patient":2},"result":"r2"},
+        {"if": {"param":"r2"}, "eq": 1,
+          "then": [
+            {"set":{"param":"open"},"value":1}
+        ]}
+    ]},
+    {"if": {"has_object":"injured_human3"}, "eq": 1,
+      "then": [
+        {"set":{"param":"present"},"value":{"add":[{"param":"present"},1]}},
+        {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"vehicle"},"patient":3},"result":"r3"},
+        {"if": {"param":"r3"}, "eq": 1,
+          "then": [
+            {"set":{"param":"open"},"value":1}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"present"},"gt":0},
+        {"require":{"param":"open"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"return":0}
+  ],
+  "fuel hose watch": [
+    {"#comment":"User request of 2026-11-09 (todo-list post Fuel truck automatically disappear after taking off and going away): when the helicopter is at least 500 m from the truck, with the truck still there, the truck and the technician (if present) are removed, the refuelling ends, a red message appears and FUEL_HOSE_TORN 1 is kept for the failure line of the debriefing (no RescueTrack message). A single wait_for in one thread per refuelling (fuel_hose_watch_active). fuel_truck_forced_end 1 for 3 s makes the leaving threads of the three truck positions skip their walk. Runtime PENDING."},
+    {"if": {"local":"fuel_hose_watch_active"}, "ne": "yes",
+      "then": [
+        {"set":{"local":"fuel_hose_watch_active"},"value":"yes"},
+        {"create_thread": {
+          "commands": [
+            {"and": [
+              {"wait_for":{"has_object":"ftruck"},"eq":1},
+              {"wait_for":{"object":"ftruck","var":"distance:m"},"gt":500}
+            ]},
+            {"set":{"local":"fuel_truck_forced_end"},"value":1},
+            {"set":{"local":"FUEL_HOSE_TORN"},"value":1},
+            {"set":{"local":"refueling_active"},"value":"no"},
+            {"if": {"has_object":"truckerf"}, "eq": 1,
+              "then": [
+                {"destroy_object":"truckerf"}
+            ]},
+            {"destroy_object":"ftruck"},
+            {"set":{"local":"fuel truck arrived"},"value":null},
+            {"set":{"local":"fuel msg"},"value":"FUEL HOSE TORN OFF: you left with the hose connected. The fuel truck has been removed."},
+            {"sleep":3},
+            {"set":{"local":"fuel_truck_forced_end"},"value":0},
+            {"set":{"local":"fuel_hose_watch_active"},"value":"no"},
+            {"sleep":20},
+            {"set":{"local":"fuel msg"},"value":null}
+        ]}}
     ]}
   ]
 },

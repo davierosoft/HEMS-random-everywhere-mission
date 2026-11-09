@@ -178,7 +178,7 @@ function updatesBlock(artifactBytes, artifact) {
     const bytes = fs.readFileSync(trainFile);
     updates.train = { blobSha: gitBlobSha(bytes), size: bytes.length, version: trainVersion(bytes) };
   }
-  updates.languages = languagesBlock();
+  updates.languages = languagesBlock(missionBuild(artifact));
   updates.voicepacks = voicepacksBlock();
   updates.basepack = basepackBlock();
   return updates;
@@ -190,7 +190,7 @@ function textBytes(file) {
   return Buffer.from(text, 'utf8');
 }
 
-function languagesBlock() {
+function languagesBlock(build) {
   const dir = path.join(root, 'uitexts');
   const block = {};
   if (!fs.existsSync(dir)) return block;
@@ -199,7 +199,7 @@ function languagesBlock() {
     if (!code) continue;
     const bytes = textBytes(path.join(dir, name));
     const data = JSON.parse(bytes.toString('utf8'));
-    block[code[1]] = { file: `uitexts/${name}`, size: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), keys: Object.keys(data.texts || {}).length };
+    block[code[1]] = { file: `uitexts/${name}`, size: bytes.length, sha256: crypto.createHash('sha256').update(bytes).digest('hex'), keys: Object.keys(data.texts || {}).length, version: build };
   }
   return block;
 }

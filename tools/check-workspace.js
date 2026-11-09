@@ -61,6 +61,8 @@ const scripts = [
   'test-voice-texts.js',
   'ui-texts.js',
   'test-voice-tips.js',
+  'test-stuck-help-page.js',
+  'test-fuel-hose-watch.js',
   'test-condition-missions.js',
   'test-sar-flag.js',
   'test-heli-rescuer-gate.js',

@@ -3230,13 +3230,35 @@
     ]},
     {"set":{"param":"distance_m"},"value":{"round":{"location":{"param":"vehicle"},"var":"distance:m","to":{"param":"patient_object"}},"to":1}},
     {"set":{"param":"reach"},"value":1},
+    {"set":{"local":"ambulance_unreach_reason"},"value":"none"},
     {"if": {"param":"distance_m"}, "gt": {"local":"ambulance_patient_reach_m"},
       "then": [
-        {"set":{"param":"reach"},"value":0}
+        {"set":{"param":"reach"},"value":0},
+        {"set":{"local":"ambulance_unreach_reason"},"value":"distance"}
+    ]},
+    {"#comment":"Slope from where the ambulance stopped to the patient (user rule 2026-11-09: the ambulance parks by the route rule at the point closest to the destination, so a road would already have been used). Altitudes are read from the objects (AALT, feet, same as hr terrain evaluate). Percent = height difference over the distance between the two; above ambulance_patient_max_slope_pct (35, set once here) the place is not accessible and the patient is left to HEMS. Under 5 m of distance no slope is judged."},
+    {"if": {"local":"ambulance_patient_max_slope_pct"}, "eq": null,
+      "then": [
+        {"set":{"local":"ambulance_patient_max_slope_pct"},"value":35}
+    ]},
+    {"set":{"param":"slope_pct"},"value":0},
+    {"if": {"param":"distance_m"}, "gte": 5,
+      "then": [
+        {"set":{"param":"dz_m"},"value":{"multiply":[{"subtract":[{"object":{"param":"vehicle"},"var":"AALT"},{"object":{"param":"patient_object"},"var":"AALT"}]},0.3048]}},
+        {"if": {"param":"dz_m"}, "lt": 0,
+          "then": [
+            {"set":{"param":"dz_m"},"value":{"multiply":[{"param":"dz_m"},-1]}}
+        ]},
+        {"set":{"param":"slope_pct"},"value":{"round":{"multiply":[{"divide":[{"param":"dz_m"},{"param":"distance_m"}]},100]},"to":1}}
+    ]},
+    {"if": {"param":"slope_pct"}, "gt": {"local":"ambulance_patient_max_slope_pct"},
+      "then": [
+        {"set":{"param":"reach"},"value":0},
+        {"set":{"local":"ambulance_unreach_reason"},"value":"slope"}
     ]},
     {"set": {"param":"state"},
       "value": {
-        "text": "patient {0} {1} distance_m {2} limit_m {3}",
+        "text": "patient {0} {1} distance_m {2} limit_m {3} slope_pct {4} limit_pct {5}",
         "params": [
           {"param":"patient"},
           {"if": {"param":"reach"},
@@ -3245,7 +3267,9 @@
             "else": "blocked"
           },
           {"param":"distance_m"},
-          {"local":"ambulance_patient_reach_m"}
+          {"local":"ambulance_patient_reach_m"},
+          {"param":"slope_pct"},
+          {"local":"ambulance_patient_max_slope_pct"}
       ]}
     },
     {"if": {"param":"vehicle"}, "eq": "ambulance1",
@@ -3264,7 +3288,56 @@
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
         ]}
     ]},
+    {"if": {"param":"reach"}, "eq": 0,
+      "then": [
+        {"if": {"local":"amb_unreach_said"}, "ne": 1,
+          "then": [
+            {"set":{"local":"amb_unreach_said"},"value":1},
+            {"call_macro":"ambulance cannot reach notice"}
+        ]}
+    ]},
     {"return":{"param":"reach"}}
+  ],
+  "multipatient registry ambulance all blocked": [
+    {"#comment":"1 when the vehicle has at least one patient object on the scene and none of them is within its reach (multipatient registry ambulance reach: distance and slope), 0 otherwise. The reach macro returns 1 for a missing patient, so the presence is tested here. A patient the ambulance could reach keeps the normal crew deployment."},
+    {"set":{"param":"present"},"value":0},
+    {"set":{"param":"open"},"value":0},
+    {"if": {"has_object":"injured_human"}, "eq": 1,
+      "then": [
+        {"set":{"param":"present"},"value":{"add":[{"param":"present"},1]}},
+        {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"vehicle"},"patient":1},"result":"r1"},
+        {"if": {"param":"r1"}, "eq": 1,
+          "then": [
+            {"set":{"param":"open"},"value":1}
+        ]}
+    ]},
+    {"if": {"has_object":"injured_human2"}, "eq": 1,
+      "then": [
+        {"set":{"param":"present"},"value":{"add":[{"param":"present"},1]}},
+        {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"vehicle"},"patient":2},"result":"r2"},
+        {"if": {"param":"r2"}, "eq": 1,
+          "then": [
+            {"set":{"param":"open"},"value":1}
+        ]}
+    ]},
+    {"if": {"has_object":"injured_human3"}, "eq": 1,
+      "then": [
+        {"set":{"param":"present"},"value":{"add":[{"param":"present"},1]}},
+        {"call_macro":"multipatient registry ambulance reach","params":{"vehicle":{"param":"vehicle"},"patient":3},"result":"r3"},
+        {"if": {"param":"r3"}, "eq": 1,
+          "then": [
+            {"set":{"param":"open"},"value":1}
+        ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"present"},"gt":0},
+        {"require":{"param":"open"},"eq":0}
+      ]}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"return":0}
   ],
   "multipatient registry live reserve": [
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry live reserve","state":"call_multipatient_registry_live_sync"}},

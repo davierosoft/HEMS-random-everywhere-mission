@@ -1043,7 +1043,7 @@
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
-        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:37>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
+        {"connect_voice_server":{"on_connected":[{"set":{"local":"TTS"},"value":1},{"set":{"local":"voice_app_lost"},"value":"no"},{"speak":"<pack:EN:43>"},{"speak":"<mission:RE>"},{"speak":"<voices:all>"},{"call_macro":"voice dispatcher name start"},{"speak":"<defaultactor:11>"},{"speak":"<names:random>"}],"on_disconnected":[{"call_macro":"voice app lost"}]}}
     ]}
   ],
   "voice app lost": [
@@ -4652,7 +4652,7 @@
     ]}
   ],
   "voice tip": [
-    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, TOF how to switch the tips off) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
+    {"#comment":"A tip of the crew about a function of the mission that pilots may not know (user request of 2026-10-14): a conversation of four lines, pack EN TIP.<topic>.1 to 4 (futile, spoken by the copilot, the doctor and sometimes the pilot), one after a random 5 to 15 s. Only when the setting CREW TIPS is on (the global CREW_TIPS, 0 or empty = on, 1 = off; kept in the profiles, independent from CREW CHATTER) and voice calm says so (param patient and casualties as in voice banter, param tip 1 so that the chatter setting does not stop it); with CREW CHATTER REDUCED or MINIMAL the Companion chooses the lower options of the message (all of them tell the whole information). The topics follow each other in a fixed order (SAV saves, MSL mission list presets, PRF settings profiles, CRW crew health, KIT kit weights, QLK quick links, DBG debug snapshots, MED medical options, FLR failures, CHT crew chatter, CND the option On conditions missions, HLP the stuck help page, VCM voice commands, WIF tablet status bar, HOI hoist panel, BAR progress bars, PRT performance settings, RVO random voices of the Companion, TOF how to switch the tips off; EGG, the Easter eggs setting, only on 1 April and 31 October, once per session, outside the rotation) from a random start, so a tip is not repeated before all the others were told (the local vtp_next survives the reloads). The key is built from the topic code and the line number; a wav pack (no TTS) says nothing."},
     {"set":{"param":"vtp_calm"},"value":0},
     {"if": {"global":"CREW_TIPS"}, "ne": 1,
       "then": [
@@ -4662,11 +4662,11 @@
       "then": [
         {"if": {"local":"vtp_next"}, "eq": null,
           "then": [
-            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,12]}}}
+            {"set":{"local":"vtp_next"},"value":{"floor":{"rand":[0,19]}}}
         ]},
         {"set":{"local":"vtp_t"},"value":{"local":"vtp_next"}},
         {"set":{"local":"vtp_next"},"value":{"add":[{"local":"vtp_next"},1]}},
-        {"if": {"local":"vtp_next"}, "gte": 12,
+        {"if": {"local":"vtp_next"}, "gte": 19,
           "then": [
             {"set":{"local":"vtp_next"},"value":0}
         ]},
@@ -4713,7 +4713,64 @@
         ]},
         {"if": {"local":"vtp_t"}, "eq": 11,
           "then": [
+            {"set":{"local":"vtp_code"},"value":"HLP"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 12,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"VCM"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 13,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"WIF"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 14,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"HOI"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 15,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"BAR"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 16,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"PRT"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 17,
+          "then": [
+            {"set":{"local":"vtp_code"},"value":"RVO"}
+        ]},
+        {"if": {"local":"vtp_t"}, "eq": 18,
+          "then": [
             {"set":{"local":"vtp_code"},"value":"TOF"}
+        ]},
+        {"set":{"local":"vtp_day_hit"},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":4},
+            {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_day_hit"},"value":1}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"var":["E:LOCAL MONTH OF YEAR","number"]},"eq":10},
+            {"require":{"var":["E:LOCAL DAY OF MONTH","number"]},"eq":31}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_day_hit"},"value":1}
+        ]},
+        {"#comment":"Tip about the Easter eggs mode (user request of 2026-11-09): offered once per session on 1 April and 31 October, unless EASTER_EGGS is disabled; it does not use a slot of the rotation."},
+        {"if": {
+          "and": [
+            {"require":{"global":"EASTER_EGGS"},"ne":"disabled"},
+            {"require":{"local":"vtp_egg_done"},"ne":1},
+            {"require":{"local":"vtp_day_hit"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vtp_egg_done"},"value":1},
+            {"set":{"local":"vtp_code"},"value":"EGG"},
+            {"set":{"local":"vtp_next"},"value":{"local":"vtp_t"}}
         ]},
         {"create_thread": {
           "commands": [
@@ -5619,6 +5676,7 @@
           "then": [
             {"call_macro":"fuel truck"},
             {"wait_for":{"local":"fuel truck arrived"},"eq":"yes"},
+            {"call_macro":"fuel hose watch"},
             {"if": {"var":["FUEL TANK CENTER LEVEL","PERCENT"]}, "lt": {"local":"FUEL REQUEST"},
               "then": [
                 {"create_thread": {
@@ -5710,6 +5768,35 @@
     ]},
     {"return":{"param":"tech_title"}}
   ],
+  "fuel hose watch": [
+    {"#comment":"User request of 2026-11-09 (todo-list post Fuel truck automatically disappear after taking off and going away): when the helicopter is at least 500 m from the truck, with the truck still there, the truck and the technician (if present) are removed, the refuelling ends, a red message appears and FUEL_HOSE_TORN 1 is kept for the failure line of the debriefing (no RescueTrack message). A single wait_for in one thread per refuelling (fuel_hose_watch_active). fuel_truck_forced_end 1 for 3 s makes the leaving threads of the three truck positions skip their walk. Runtime PENDING."},
+    {"if": {"local":"fuel_hose_watch_active"}, "ne": "yes",
+      "then": [
+        {"set":{"local":"fuel_hose_watch_active"},"value":"yes"},
+        {"create_thread": {
+          "commands": [
+            {"and": [
+              {"wait_for":{"has_object":"ftruck"},"eq":1},
+              {"wait_for":{"object":"ftruck","var":"distance:m"},"gt":500}
+            ]},
+            {"set":{"local":"fuel_truck_forced_end"},"value":1},
+            {"set":{"local":"FUEL_HOSE_TORN"},"value":1},
+            {"set":{"local":"refueling_active"},"value":"no"},
+            {"if": {"has_object":"truckerf"}, "eq": 1,
+              "then": [
+                {"destroy_object":"truckerf"}
+            ]},
+            {"destroy_object":"ftruck"},
+            {"set":{"local":"fuel truck arrived"},"value":null},
+            {"set":{"local":"fuel msg"},"value":"FUEL HOSE TORN OFF: you left with the hose connected. The fuel truck has been removed."},
+            {"sleep":3},
+            {"set":{"local":"fuel_truck_forced_end"},"value":0},
+            {"set":{"local":"fuel_hose_watch_active"},"value":"no"},
+            {"sleep":20},
+            {"set":{"local":"fuel msg"},"value":null}
+        ]}}
+    ]}
+  ],
   "fuel truck": [
     {"set":{"local":"fuel msg"},"value":"Fuel truck requested and on the way"},
     {"if": {"global":"FUEL_TRUCK"}, "eq": "front",
@@ -5761,21 +5848,26 @@
                 {"if": {"has_object":"ftruck"}, "eq": 1,
                   "then": [
                     {"wait_for":{"local":"fuel truck arrived"},"eq":null},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":355,"dist":13},{"bearing":345,"dist":5},{"bearing":270,"dist":2.5}],"fallback":{"bearing":270,"dist":2.5},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"point_object":"truckerf","to":"$USER"},
-                    {"sleep":3},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":350,"dist":9}],"fallback":{"bearing":350,"dist":9},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"destroy_object":"truckerf"},
-                    {"sleep":4},
-                    {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":275,"dist":20},{"bearing":305,"dist":20},{"bearing":0,"dist":20},{"bearing":50,"dist":43}],"fallback":{"bearing":50,"dist":43},"speed":7,"var1":0,"timeout":180}},
-                    {"sleep":1},
-                    {"destroy_object":"ftruck"}
+                    {"if": {"local":"fuel_truck_forced_end"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"truckerf"}
+                      ],"else": [
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":355,"dist":13},{"bearing":345,"dist":5},{"bearing":270,"dist":2.5}],"fallback":{"bearing":270,"dist":2.5},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"point_object":"truckerf","to":"$USER"},
+                        {"sleep":3},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":350,"dist":9}],"fallback":{"bearing":350,"dist":9},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"destroy_object":"truckerf"},
+                        {"sleep":4},
+                        {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":275,"dist":20},{"bearing":305,"dist":20},{"bearing":0,"dist":20},{"bearing":50,"dist":43}],"fallback":{"bearing":50,"dist":43},"speed":7,"var1":0,"timeout":180}},
+                        {"sleep":1},
+                        {"destroy_object":"ftruck"}
+                    ]}
                 ]}
             ]}}
         ]}
@@ -5814,28 +5906,33 @@
                 {"if": {"has_object":"ftruck"}, "eq": 1,
                   "then": [
                     {"wait_for":{"local":"fuel truck arrived"},"eq":null},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":300,"dist":13.5},{"bearing":315,"dist":12},{"bearing":300,"dist":1.5}],"fallback":{"bearing":300,"dist":1.5},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"point_object":"truckerf","to":"$USER"},
-                    {"sleep":3},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":310,"dist":10}],"fallback":{"bearing":310,"dist":10},"speed":5,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
-                    {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
-                    {"sleep":2},
-                    {"destroy_object":"truckerf"},
-                    {"sleep":4},
-                    {"create_thread": {
-                      "commands": [
-                        {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":-4},
-                        {"sleep":15},
-                        {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":0}
-                    ]}},
-                    {"sleep":16.5},
-                    {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":300,"dist":16},{"bearing":290,"dist":30}],"fallback":{"bearing":290,"dist":30},"speed":7,"var1":0,"timeout":180}},
-                    {"sleep":1},
-                    {"destroy_object":"ftruck"}
+                    {"if": {"local":"fuel_truck_forced_end"}, "eq": 1,
+                      "then": [
+                        {"destroy_object":"truckerf"}
+                      ],"else": [
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":300,"dist":13.5},{"bearing":315,"dist":12},{"bearing":300,"dist":1.5}],"fallback":{"bearing":300,"dist":1.5},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"point_object":"truckerf","to":"$USER"},
+                        {"sleep":3},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing":310,"dist":10}],"fallback":{"bearing":310,"dist":10},"speed":5,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"call_macro":"drive truckerf safe","params":{"to":[{"bearing2":270,"dist":2,"object":"ftruck"}],"fallback":{"bearing2":270,"dist":2,"object":"ftruck"},"speed":4,"var1":1,"timeout":180}},
+                        {"set":{"object":"truckerf","var":"VAR 1"},"value":0},
+                        {"sleep":2},
+                        {"destroy_object":"truckerf"},
+                        {"sleep":4},
+                        {"create_thread": {
+                          "commands": [
+                            {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":-4},
+                            {"sleep":15},
+                            {"set":{"object":"ftruck","var":"VELOCITY Z"},"value":0}
+                        ]}},
+                        {"sleep":16.5},
+                        {"call_macro":"drive ftruck safe","params":{"to":[{"bearing":300,"dist":16},{"bearing":290,"dist":30}],"fallback":{"bearing":290,"dist":30},"speed":7,"var1":0,"timeout":180}},
+                        {"sleep":1},
+                        {"destroy_object":"ftruck"}
+                    ]}
                 ]}
             ]}}
         ]}
@@ -5874,7 +5971,8 @@
                 {"if": {
                   "and": [
                     {"require":{"object":"ftruck","var":"distance:m"},"lt":100},
-                    {"require":{"has_object":"ftruck"},"eq":1}
+                    {"require":{"has_object":"ftruck"},"eq":1},
+                    {"require":{"local":"fuel_truck_forced_end"},"ne":1}
                   ]}, "eq": 1,
                   "then": [
                     {"point_object":"truckerf","to":"$USER"},

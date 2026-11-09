@@ -26,8 +26,8 @@ const tipText = JSON.stringify(tip);
 assert.ok(tipText.includes('"global":"CREW_TIPS"') && tipText.includes('"ne":') && tipText.includes('"tip":1'), 'voice tip reads CREW_TIPS and asks voice calm with the param tip 1');
 assert.ok(tipText.includes('"text":"TIP.{0}.{1}"'), 'the key is built from the topic code and the line number');
 const codes = collect(tip, (node) => node.set && node.set.local === 'vtp_code' && typeof node.value === 'string').map((node) => node.value);
-assert.deepEqual(codes, ['SAV', 'MSL', 'PRF', 'CRW', 'KIT', 'QLK', 'DBG', 'MED', 'FLR', 'CHT', 'CND', 'TOF'], 'twelve topics in the documented order');
-assert.ok(tipText.includes('"rand":[0,12]') && tipText.includes('"gte":12'), 'the random start and the wrap follow the number of topics');
+assert.deepEqual(codes, ['SAV', 'MSL', 'PRF', 'CRW', 'KIT', 'QLK', 'DBG', 'MED', 'FLR', 'CHT', 'CND', 'HLP', 'VCM', 'WIF', 'HOI', 'BAR', 'PRT', 'RVO', 'TOF', 'EGG'], 'nineteen topics and the dated EGG in the documented order');
+assert.ok(tipText.includes('"rand":[0,19]') && tipText.includes('"gte":19'), 'the random start and the wrap follow the number of topics');
 assert.ok(tipText.includes('"lte":4') && tipText.includes('"vtp_n"'), 'four lines for each topic');
 assert.ok(!tipText.includes('"speak"'), 'no literal speak: the lines are pack messages through voice say');
 
@@ -76,9 +76,9 @@ if (fs.existsSync(packFile)) {
   assert.equal(Object.keys(messages).filter((k) => k && k.startsWith('TIP.')).length, codes.length * 4, 'no tip in the pack without a topic in the macro');
   const declared = Number((text('voice app connect').match(/<pack:EN:(\d+)>/) || [])[1]);
   const packVersion = Number((xml.match(/<voicepack\b[^>]*\bversion="(\d+)"/) || [])[1]);
-  assert.ok(declared >= 13, 'the mission declares at least pack EN 13, the first with the TIP messages: an older pack is reported by the Companion');
+  assert.ok(declared >= 42, 'the mission declares at least pack EN 42, the first with the nineteen topics: an older pack is reported by the Companion');
   assert.ok(packVersion >= declared, 'the base pack is not older than the version the mission declares');
 } else {
   console.log('voice tips: the Companion repository is not next to this one, the pack checks are skipped');
 }
-console.log('Voice tips PASS: twelve topics of four lines, the setting CREW TIPS (profiles, reset, buttons) independent from CREW CHATTER, a tip offered in every long leg. Simulator and Companion runtime PENDING.');
+console.log('Voice tips PASS: nineteen topics of four lines plus the dated Easter eggs tip, the setting CREW TIPS (profiles, reset, buttons) independent from CREW CHATTER, a tip offered in every long leg. Simulator and Companion runtime PENDING.');

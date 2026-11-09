@@ -29,7 +29,8 @@ for (const L of ['EN', 'DE', 'FR']) {
   if (L !== 'EN') assert.ok(Number((xml.match(/basever="(\d+)"/) || [])[1]) >= 37, L + ' translates the base pack 37 or later');
 }
 assert.ok(versions.EN >= 37, 'base pack 37 or later');
-assert.ok(txt('voice app connect').includes('<pack:EN:37>') || JSON.stringify(macros).includes('<pack:EN:37>'), 'the mission declares the pack EN 37');
+const declared = [...(JSON.stringify(macros).matchAll(/<pack:EN:(\d+)>/g))].map(m => Number(m[1]));
+assert.ok(declared.length > 0 && Math.max(...declared) >= 37, 'the mission declares the pack EN 37 or later');
 console.log('hoist cable calls ok');
 
 // Hoist panel (manual hoist) and the LINK line of the briefing (user request of 2026-11-04)

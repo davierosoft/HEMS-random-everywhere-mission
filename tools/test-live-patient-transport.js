@@ -22,6 +22,7 @@ class Live extends Scene {
   }
   query(q, p) {
     if (q?.if) return this.query(this.compare(this.query(q.if, p), q, p) ? q.then : q.else, p);
+    if (q?.object && q.var === 'AALT') return this.alt?.[this.text(q.object, p)] ?? 0;
     if (q?.table) return this.tables[this.query(q.table, p)]?.[this.query(q.key, p)] ?? null;
     return super.query(q, p);
   }
@@ -312,6 +313,31 @@ for (const slot of [1, 2, 3]) {
   Object.assign(h.locals, {patient_live_mode: 0, LIFESCORE: 10, BPM: 20, SPO2: 75, BP_SYS: 70, BP_DIA: 40, RR: 8, 'L:MISSION_HOIST': 0, 'L:CPR': 0, 'L:RESCUED': 0, crewvisiting1: 'yes', cpr_armed: 0, cpr_manual_stop: 0});
   h.call('CPR'); h.sleepHook = scene => {scene.locals['L:CPR'] = 5;}; h.runThread(h.threads[0]);
   assert.equal(h.locals['L:CPR'], 5); assert.equal(h.locals.cpr_manual_stop, 1, 'Non-registry missions retain legacy CPR controls');
+}
+// Slope gate (user rule 2026-11-09): from where the ambulance stopped to the patient, height difference over distance above 35 percent means no access, the
+// patient is left to HEMS and the ambulance says once that it cannot intervene. Altitudes are the AALT of the objects, in feet.
+for (const [meters, dzMeters, reaches] of [[60, 15, true], [60, 21, true], [60, 22, false], [60, 40, false], [2, 40, true], [100, 0, true]]) {
+  const h = new Live();
+  for (const other of [2, 3]) h.objects.delete(`injured_human${other}`);
+  h.locations.ambulance1 = [0, meters]; h.alt = {ambulance1: 0, injured_human: dzMeters / 0.3048};
+  assert.equal(h.call(prefix + 'ambulance reach', {vehicle: 'ambulance1', patient: 1}), reaches ? 1 : 0, `${meters} m, ${dzMeters} m of height: reach ${reaches}`);
+  assert.equal(h.locals.ambulance_unreach_reason, reaches ? 'none' : 'slope');
+  assert.equal(h.locals.ambulance_patient_max_slope_pct, 35);
+  h.call(prefix + 'ambulance reach', {vehicle: 'ambulance1', patient: 1});
+  assert.equal(h.locals.amb_unreach_said, reaches ? undefined : 1, 'the ambulance says once that it cannot reach the patient');
+}
+// The crew of a blocked ambulance does not appear (ambustretcher full asks ambulance all blocked): 1 only when a patient exists and none is reachable.
+{
+  const h = new Live();
+  for (const other of [2, 3]) h.objects.delete(`injured_human${other}`);
+  h.locations.ambulance1 = [0, 60]; h.alt = {ambulance1: 0, injured_human: 40 / 0.3048};
+  assert.equal(h.call(prefix + 'ambulance all blocked', {vehicle: 'ambulance1'}), 1, 'steep ground: the crew stays aboard');
+  h.alt.injured_human = 5 / 0.3048;
+  assert.equal(h.call(prefix + 'ambulance all blocked', {vehicle: 'ambulance1'}), 0, 'reachable patient: normal deployment');
+  h.alt.injured_human = 40 / 0.3048; h.objects.add('injured_human2'); h.locations.injured_human2 = [0, 60]; h.alt.injured_human2 = 0;
+  assert.equal(h.call(prefix + 'ambulance all blocked', {vehicle: 'ambulance1'}), 0, 'one reachable patient keeps the deployment');
+  h.objects.delete('injured_human'); h.objects.delete('injured_human2');
+  assert.equal(h.call(prefix + 'ambulance all blocked', {vehicle: 'ambulance1'}), 0, 'no patient: no decision');
 }
 // Ambulance out of reach (tester report 2026-10-11: off-road patient, ambulance stopped on a distant road, patient shown as "transported by ambulance" and left on
 // the mountain). The stretcher walks from the vehicle to the patient and back, so a parked ambulance farther than ambulance_patient_reach_m (150 m) cannot reserve him:

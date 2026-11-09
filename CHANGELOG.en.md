@@ -1,3 +1,8 @@
+## Release 0.997 170.22
+
+- Stuck help page, phase stall detectors, tips, ambulance reach by slope, fuel hose torn off
+- Stuck help page, phase stall detectors, tips, ambulance reach by slope, fuel hose torn off
+
 ## Release 0.997 170.21
 
 - Voice commands: 33 actions, readback and the VOICE COMMANDS BY PHASE page; speech tips line with its option; WIFI_AUTO option

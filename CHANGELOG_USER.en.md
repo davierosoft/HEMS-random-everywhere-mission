@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.21. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.22. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -973,6 +973,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.21.
 - **Test:** Fly a call with two patients and open the destination window after the first handover: it shows the current destination.
 
+### An ambulance that cannot reach the patient says so and its crew stays aboard
+
+- When the ambulance has stopped and every patient is too far or on ground too steep (more than 35 percent from where it parked), its crew no longer gets out and walks. The ambulance says once that it cannot intervene, the patient stays with the helicopter, and you can still choose Unload to ambulance to hand the patient over. The helicopter crew then tells the ambulance on the radio.
+- **Build history:** 0.997 170.22.
+- **Test:** Call an ambulance to a patient on a steep slope: its crew stays in the vehicle and the message appears once. On level ground the ambulance works as before.
+
+### The fuel truck leaves when you fly away with the hose connected
+
+- If you take off and fly 500 m or more from the fuel truck without ending the refuelling, the hose is torn off: the truck and its technician are removed, a red message appears and the end-of-mission page notes that the helicopter left with the hose connected.
+- **Build history:** 0.997 170.22.
+- **Test:** Start a refuelling, take off without pressing END REFUELLING OPERATIONS and fly more than 500 m away: the truck disappears and the message is shown.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1190,6 +1202,19 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The descriptions of the dispatches, the objectives, the diagnoses, the symptoms, the medical actions and the CARLS messages can now be shown in German, French and Italian when the screen language of the Mission Companion is set, together with the new texts of the options above.
 - **Build history:** 0.997 170.21.
 - **Test:** Choose German, French or Italian as screen language in the Mission Companion, update the mission and read a dispatch and the briefing.
+
+### Help page for a mission that looks stuck
+
+- The tablet no longer shows grey debug rows when an operation stalls. A yellow message says how long it has made no progress, with the link STUCK? OPEN THE HELP PAGE (also in the Quick links as MISSION STUCK? HELP PAGE). The page explains in plain words what the mission is waiting for and what to do, with buttons to stop an escaping crew, reset the second dispatch and capture a snapshot, and the steps for a Discord ticket with the logs of the Mission Companion.
+- It covers the on-site operations, the return to base and the next dispatch (waiting for the link, for the last dispatch or for a crew emergency).
+- **Build history:** 0.997 170.22.
+- **Test:** Hold the helicopter outside the landing area during the on-site operations and wait two minutes: the warning and the link appear, and the page names the cause.
+
+### Seven new crew tips and a tip for the first of April and the thirty first of October
+
+- The crew gives tips about the help page, where to find the voice commands and which are active now, the tablet status bar and wifi, the hoist panel and hover limits, the progress bars of the dispatch page, the performance options and the random voices of the Mission Companion. On the first of April and on the thirty first of October one tip is about the Easter eggs setting.
+- **Build history:** 0.997 170.22.
+- **Test:** Fly with the tips on and the crew chatter on: the new tips are heard in English, German and French with the voice packs EN 43, DE 28 and FR 29.
 
 ## NEW FUNCTIONS
 
@@ -1836,6 +1861,7 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.21.
 - **Test:** With the voice commands on, hold push-to-talk and say "show dispatch", "request ambulance" and "distance to destination"; listen to the answer of the crew.
 
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1895,7 +1921,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.21 (this release):** The accident location line waits for the location, no old destination window with more than one patient, the voice commands page and 33 voice commands, the speech tips and wifi options, the 20 pixel status bar and the dispatch texts in German, French and Italian (see 33 voice commands and the phrases of the crew).
+- **0.997 170.22 (this release):** The help page for stalled operations, ambulances that cannot reach the patient stay aboard, the fuel truck leaves when you fly away with the hose connected, and new crew tips (see the new sections above).
+- **0.997 170.21:** The accident location line waits for the location, no old destination window with more than one patient, the voice commands page and 33 voice commands, the speech tips and wifi options, the 20 pixel status bar and the dispatch texts in German, French and Italian (see 33 voice commands and the phrases of the crew).
 - **0.997 170.20:** The mission no longer freezes at start or in the preflight step, and the crew walks at once when the ambulance is not on the site (see The crew no longer waits for an ambulance that is far away).
 - **0.997 170.19:** The mission start and the custom mission at a custom location no longer freeze, plus diagnostic rows for the second dispatch wait (see The mission no longer freezes at start or in the preflight step).
 - **0.997 170.18:** The hoist calls follow your voice pack and the hoist keeps human pauses (see The hoist calls follow your voice pack and the hoist keeps human pauses).
