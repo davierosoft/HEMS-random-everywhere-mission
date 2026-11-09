@@ -1,5 +1,6 @@
 ## Release 0.997 170.24
 
+- Accident location line reads the accident location; version stamp macro
 - Accident location on the preflight, engine and quickstart messages reads the accident location, not rescue_location (0,0 on hunting scenes)
 
 ## Release 0.997 170.23
