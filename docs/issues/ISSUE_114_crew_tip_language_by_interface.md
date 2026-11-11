@@ -1,6 +1,6 @@
 114 - Crew tips: language follows the mission interface language (AUTO / SAME AS UI / SAME AS VOICE / ENGLISH), nothing is spoken when no voice exists
 
-Repository: KeKKERUUU/RandomEverywhereInstaller (posted)
+Repository: KeKKERUUU/RandomEverywhereInstaller
 
 Supersedes the approach of issue 109 for the tips (the `[lang:XX]` tag stays a supported feature for pack authors). Related: 101 (missing keys), 103 (EN base pack with translations), 74 and 95 (packs read from the mission repository).
 
