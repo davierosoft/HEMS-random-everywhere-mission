@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.24",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.25",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.24"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.25"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -2770,6 +2770,7 @@
           "then": [
             {"set":{"local":"VFX"},"value":100}
         ]},
+        {"call_macro":"fire by description"},
         {"set":{"local":"randomize_result"},"value":"ready"},
         {"set":{"local":"randomize_error"},"value":null},
         {"call_macro":"HELOVICTIMS refinement"},
@@ -2870,6 +2871,7 @@
       "then": [
         {"set":{"local":"VFX"},"value":100}
     ]},
+    {"call_macro":"fire by description"},
     {"call_macro":"HELOVICTIMS refinement"},
     {"call_macro":"SAR car dispatch text"},
     {"sleep":0.1},
@@ -3143,6 +3145,7 @@
       "then": [
         {"set":{"local":"VFX"},"value":100}
     ]},
+    {"call_macro":"fire by description"},
     {"call_macro":"HELOVICTIMS refinement"},
     {"call_macro":"SAR car dispatch text"},
     {"sleep":0.1},
@@ -3323,6 +3326,7 @@
       "then": [
         {"set":{"local":"VFX"},"value":100}
     ]},
+    {"call_macro":"fire by description"},
     {"call_macro":"HELOVICTIMS refinement"},
     {"call_macro":"SAR car dispatch text"},
     {"sleep":0.1},
@@ -6659,7 +6663,7 @@
         {"text":"Recorded operational impact: {0}","color":"gray","params":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"}]},
         {"text":"ON DUTY: waiting for the next dispatch. Keep CARLS, Wi-Fi, or Tablet 5G connected.","color":"green","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":null}],"eq":1}},
         {"text":"SHIFT TERMINATED: crew emergency report ready. Submit the report or end the shift.","color":"red","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
-        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"end_shift"},{"call_macro":"archive closing dispatch"},{"set_dispatch_dialog":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},{"set":{"local":"MISSION_END_WAITING"},"value":2}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"call_macro":"archive closing dispatch"},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}]},
+        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"end_shift"},{"create_thread":{"commands":[{"call_macro":"archive closing dispatch"}]}},{"set_dispatch_dialog":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},{"set":{"local":"MISSION_END_WAITING"},"value":2}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}]},
         {"image":"bar","show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}}
     ]}
   ],
@@ -19866,6 +19870,27 @@
     {"set":{"var":["L:{local:VCP}3","number"]},"value":{"add":[{"var":["L:{local:VCP}3","number"]},1]}},
     {"sleep":2},
     {"call_macro":"Return to base or continue menu"}
+  ],
+  "fire by description": [
+    {"#comment":"Owner request 2026-11-11: in the missions 1 and 69 (scene default rtc) the fire exists only when the description told by the dispatcher speaks of it: description 4 of mission 1 and description 3 of mission 69 (CRASH_VARIABLE is the number of the description). Every other description has no fire. Called right after the random fire of every dispatch is drawn, before the scene and the second fire engine read VFX."},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 1,
+      "then": [
+        {"if": {"local":"CRASH_VARIABLE"}, "eq": 4,
+          "then": [
+            {"set":{"local":"VFX"},"value":{"floor":{"rand":[5,13]}}}
+          ],"else": [
+            {"set":{"local":"VFX"},"value":100}
+        ]}
+    ]},
+    {"if": {"local":"VAR_MISSION_NUMBER"}, "eq": 69,
+      "then": [
+        {"if": {"local":"CRASH_VARIABLE"}, "eq": 3,
+          "then": [
+            {"set":{"local":"VFX"},"value":{"floor":{"rand":[5,13]}}}
+          ],"else": [
+            {"set":{"local":"VFX"},"value":100}
+        ]}
+    ]}
   ],
   "random VFX": [
     {"if": {"local":"30West2024_installed"}, "eq": "OK",
@@ -43891,10 +43916,11 @@
                       "then": [
                         {"create_thread": {
                           "commands": [
+                            {"#comment":"The second engine comes with every scene fire: the random fire (VFX 5 to 15) and the scenes that burn by themselves, whose scene macro decides (truck vs car: the burning tanker trailer; report of kingle 2026-11-11, VFX 16 gave no second engine)."},
                             {"if": {
-                              "and": [
-                                {"require":{"local":"VFX"},"gte":5},
-                                {"require":{"local":"VFX"},"lte":15}
+                              "or": [
+                                {"and":[{"require":{"local":"VFX"},"gte":5},{"require":{"local":"VFX"},"lte":15}],"eq":1},
+                                {"require":{"local":"scene_macro"},"eq":"truck vs car"}
                               ]}, "eq": 1,
                               "then": [
                                 {"call_macro":"Firetruck2"},
@@ -47914,6 +47940,12 @@
     {"if": {"global":"RESCUETRACK_ID"}, "eq": null,
       "then": [
         {"set":{"global":"RESCUETRACK_ID"},"value":0}
+    ]},
+    {"#comment":"Report of kingle 2026-11-11: the RescueTrack statuses stay English in the German mission. The Companion patches this language code (the mission screen language); in the German mission the status table is the German one (RESCUETRACK_ID 1). Other languages keep the table of the setting: French is the interface of the helicopter as sold."},
+    {"set":{"local":"ui_language"},"value":"EN"},
+    {"if": {"local":"ui_language"}, "eq": "DE",
+      "then": [
+        {"set":{"global":"RESCUETRACK_ID"},"value":1}
     ]},
     {"set":{"local":"RESCUETRACK_ID"},"value":{"global":"RESCUETRACK_ID"}},
     {"set":{"var":["L:LOADSTART","number"]},"value":0},
@@ -87791,6 +87823,38 @@
     {"#comment":"Context for the radio rule of the Mission Companion, published only in voice app mode (L:AUDIOINHIBIT not 0) and only when it changes: L:HMC_HELI_OFF 1 = battery master off and rotor stopped; L:HMC_CREW_PRESENT = bit 0 pilot, 1 copilot, 2 doctor, 3 HEMS1, 4 HEMS2 aboard (the seat tracker CREW_OUT_n flags); L:HMC_CTX_VALID 1 = both are published. The program decides how a line is heard (intercom, radio, external radio, voice, far voice, nothing: rules in the Companion, docs/architecture/VOICE_APP_MODE.md). L:HMC_CREW_EXIST = same bits as CREW_PRESENT for the crew members that exist (CREW_MEMBER_CAP), aboard or not; L:HMC_AT_BASE = 1 while the helicopter is in the wifi range of the start base (local wifiinrange = in), where the dispatcher reaches the crew radios even with the battery off; L:HMC_ZONE_TECH and L:HMC_ZONE_GROUND = zone of the nearest technician (engineera, engineer) and of the nearest ground unit or hospital staff (marshall, ambumedic, ambumedic3) from the helicopter: 1 up to 5 m, 2 up to 30 m, 3 up to 100 m, 4 beyond, 0 no such object (macros voice zone nearest, voice zone class). The battery master is not published: the Companion reads the aircraft variable L:H145_SDK_OH_BATTERY_MASTER. All of them are part of the change signature. L:HMC_CREW_MUTE (same bits) = crew members who must not speak: dead (CREW_DEAD_n 1) or hurt so badly (CREW_LIFESCORE_n below 15) that they are out of the conversation; the Companion keeps their lines silent. L:HMC_CHAT_MAX = the highest option number the Companion may choose for a message (the setting CREW CHATTER: FULL 6, REDUCED 3 = professional wording and the futile lines at their default, MINIMAL 1 = the default wording only, the futile lines silent); it is part of the change signature."},
     {"if": {"var":["L:AUDIOINHIBIT","number"]}, "ne": 0,
       "then": [
+        {"#comment":"Interface language of the mission for the Mission Companion (user request of 2026-11-11, issue 114): L:HMC_UI_LANG 0 unknown (old or custom file, the app treats it as EN), 1 EN, 2 DE, 3 FR, 4 IT, 5 ES, 6 NL, 7 PL. The code is a translatable field of the manifest (kind lang): the patcher of the screen language writes DE, FR or IT here like any other text. Written at every call, it does not depend on the signature below."},
+        {"set":{"local":"ui_language"},"value":"EN"},
+        {"set":{"local":"ui_language_n"},"value":0},
+        {"if": {"local":"ui_language"}, "eq": "EN",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":1}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "DE",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":2}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "FR",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":3}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "IT",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":4}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "ES",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":5}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "NL",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":6}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "PL",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":7}
+        ]},
+        {"set":{"var":["L:HMC_UI_LANG","number"]},"value":{"local":"ui_language_n"}},
         {"set":{"local":"vc_off"},"value":0},
         {"if": {
           "and": [

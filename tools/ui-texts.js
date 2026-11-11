@@ -76,6 +76,8 @@ function collect(artifact) {
       return;
     }
     if (!value || typeof value !== 'object') return;
+    // the interface language code of the mission (issue 114): {"set":{"local":"ui_language"},"value":"EN"}; the screen language files give DE, FR, IT
+    if (value.set && value.set.local === 'ui_language' && typeof value.value === 'string') add('lang', value.value, tokens.concat('value'));
     for (const [key, child] of Object.entries(value)) {
       if (key === '#comment') continue;
       const next = tokens.concat(key);

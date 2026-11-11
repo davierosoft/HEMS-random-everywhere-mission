@@ -28,10 +28,10 @@ const collect = (value, predicate, found = []) => {
   const [submit, endShift, reload] = buttons;
   assert.deepEqual(submit.commands, [{ call_macro: 'submit report' }]);
   const names = (b) => b.commands.map((c) => c.call_macro || Object.keys(c)[0]);
-  assert.deepEqual(endShift.commands.slice(0, 2), [{ set: { local: 'archive_event' }, value: 'end_shift' }, { call_macro: 'archive closing dispatch' }], 'END SHIFT saves the automatic snapshot first');
+  assert.deepEqual(endShift.commands.slice(0, 2), [{ set: { local: 'archive_event' }, value: 'end_shift' }, { create_thread: { commands: [{ call_macro: 'archive closing dispatch' }] } }], 'END SHIFT saves the automatic snapshot first, in its own thread so that a failure of the archive (call stack error, report of kingle 2026-11-11) cannot stop the button');
   assert.ok(names(endShift).indexOf('call_macro') >= 0 || endShift.commands.some((c) => c.set?.local === 'MISSION_END_WAITING' && c.value === 2));
-  assert.deepEqual(reload.commands.slice(0, 2), [{ set: { local: 'archive_event' }, value: 'reload_mission' }, { call_macro: 'archive closing dispatch' }], 'RELOAD saves the automatic snapshot first');
-  assert.ok(reload.commands.findIndex((c) => c.reload_mission) > reload.commands.findIndex((c) => c.call_macro === 'archive closing dispatch'), 'the snapshot is saved before the reload');
+  assert.deepEqual(reload.commands.slice(0, 2), [{ set: { local: 'archive_event' }, value: 'reload_mission' }, { try: [{ call_macro: 'archive closing dispatch' }], catch: [{ set: { local: 'archive_stage' }, value: 'failed in the button' }] }], 'RELOAD saves the automatic snapshot first, guarded by a try');
+  assert.ok(reload.commands.findIndex((c) => c.reload_mission) > reload.commands.findIndex((c) => Array.isArray(c.try)), 'the snapshot is saved before the reload');
   assert.ok(reload.commands.some((c) => c.set?.local === 'dispatch_diag_keep' && c.value === 1), 'a reload keeps the dispatch diagnostics file');
 
   // 2. At the base the end menu is offered at once and the deboarding runs in parallel; deboarding never overwrites END SHIFT.

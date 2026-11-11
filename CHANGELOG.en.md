@@ -1,3 +1,8 @@
+## Release 0.997 170.25
+
+- version stamp macro in scope
+- Second fire engine in truck vs car, fire of missions 1 and 69 only with the described fire, German RescueTrack statuses and language announcement for the Companion, END SHIFT archive isolated, button widths and tips translated
+
 ## Release 0.997 170.24
 
 - Accident location line reads the accident location; version stamp macro

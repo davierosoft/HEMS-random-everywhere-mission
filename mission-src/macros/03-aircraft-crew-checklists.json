@@ -4924,6 +4924,38 @@
     {"#comment":"Context for the radio rule of the Mission Companion, published only in voice app mode (L:AUDIOINHIBIT not 0) and only when it changes: L:HMC_HELI_OFF 1 = battery master off and rotor stopped; L:HMC_CREW_PRESENT = bit 0 pilot, 1 copilot, 2 doctor, 3 HEMS1, 4 HEMS2 aboard (the seat tracker CREW_OUT_n flags); L:HMC_CTX_VALID 1 = both are published. The program decides how a line is heard (intercom, radio, external radio, voice, far voice, nothing: rules in the Companion, docs/architecture/VOICE_APP_MODE.md). L:HMC_CREW_EXIST = same bits as CREW_PRESENT for the crew members that exist (CREW_MEMBER_CAP), aboard or not; L:HMC_AT_BASE = 1 while the helicopter is in the wifi range of the start base (local wifiinrange = in), where the dispatcher reaches the crew radios even with the battery off; L:HMC_ZONE_TECH and L:HMC_ZONE_GROUND = zone of the nearest technician (engineera, engineer) and of the nearest ground unit or hospital staff (marshall, ambumedic, ambumedic3) from the helicopter: 1 up to 5 m, 2 up to 30 m, 3 up to 100 m, 4 beyond, 0 no such object (macros voice zone nearest, voice zone class). The battery master is not published: the Companion reads the aircraft variable L:H145_SDK_OH_BATTERY_MASTER. All of them are part of the change signature. L:HMC_CREW_MUTE (same bits) = crew members who must not speak: dead (CREW_DEAD_n 1) or hurt so badly (CREW_LIFESCORE_n below 15) that they are out of the conversation; the Companion keeps their lines silent. L:HMC_CHAT_MAX = the highest option number the Companion may choose for a message (the setting CREW CHATTER: FULL 6, REDUCED 3 = professional wording and the futile lines at their default, MINIMAL 1 = the default wording only, the futile lines silent); it is part of the change signature."},
     {"if": {"var":["L:AUDIOINHIBIT","number"]}, "ne": 0,
       "then": [
+        {"#comment":"Interface language of the mission for the Mission Companion (user request of 2026-11-11, issue 114): L:HMC_UI_LANG 0 unknown (old or custom file, the app treats it as EN), 1 EN, 2 DE, 3 FR, 4 IT, 5 ES, 6 NL, 7 PL. The code is a translatable field of the manifest (kind lang): the patcher of the screen language writes DE, FR or IT here like any other text. Written at every call, it does not depend on the signature below."},
+        {"set":{"local":"ui_language"},"value":"EN"},
+        {"set":{"local":"ui_language_n"},"value":0},
+        {"if": {"local":"ui_language"}, "eq": "EN",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":1}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "DE",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":2}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "FR",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":3}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "IT",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":4}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "ES",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":5}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "NL",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":6}
+        ]},
+        {"if": {"local":"ui_language"}, "eq": "PL",
+          "then": [
+            {"set":{"local":"ui_language_n"},"value":7}
+        ]},
+        {"set":{"var":["L:HMC_UI_LANG","number"]},"value":{"local":"ui_language_n"}},
         {"set":{"local":"vc_off"},"value":0},
         {"if": {
           "and": [

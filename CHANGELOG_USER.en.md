@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.24. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.25. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -986,6 +986,28 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.22.
 - **Test:** Start a refuelling, take off without pressing END REFUELLING OPERATIONS and fly more than 500 m away: the truck disappears and the message is shown.
 
+### The second fire engine comes to a burning tanker
+
+- In the truck and car collision (tanker trailer on fire) the second fire engine with the hose crew now always comes, together with the first one. Before, it was missing in that scene (tester report, 2026-11-11).
+- In the missions 1 and 69 the fire of the scene is shown only when the dispatcher description speaks of a fire (description 4 of mission 1, description 3 of mission 69); with the other descriptions there is no fire and no fire engine.
+- **Build history:** 0.997 170.25.
+- **Test:** Fly the truck and car collision: two fire engines arrive. In mission 1 and 69 check that the fire appears only with the description that names it.
+
+### END SHIFT cannot be blocked by the archive of the dispatch
+
+- The END SHIFT button of the end menu saves the archive of the closing dispatch in a separate step, so a failure of the archive (call stack error shown on the tablet) no longer stops the end of the mission. RELOAD MISSION is protected in the same way (tester report, 2026-11-11).
+- **Build history:** 0.997 170.25.
+- **Test:** Return to the base, press END SHIFT: the mission ends and the tablet shows no Command Failed window.
+
+### German RescueTrack statuses and cut-off buttons
+
+- In the German mission the RescueTrack status table is the German one, and the mission tells the Mission Companion which language the tablet uses, so the crew tips follow it. French and the other languages keep the table of their setting.
+- Buttons that were cut off in German and Italian (the kit configuration of the technical page, the voice pack choice and the language rows of the settings) are shorter now, and a new check keeps every translated button bar within the width of the English one.
+- The German crew tips are written in German with the exact names of the menus and buttons, and the French tips use the names of the French screen.
+- **Build history:** 0.997 170.25.
+- **Test:** In the German mission open the technical page and the settings: no button is cut off; the RescueTrack statuses are German; the crew tips are in German.
+
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1922,7 +1944,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.24 (this release):** The accident location line in the engine start and quickstart steps no longer shows 0, 0 (see the accident location line above).
+- **0.997 170.25 (this release):** The second fire engine of the burning tanker scene, the fire of the missions 1 and 69 tied to the description, END SHIFT protected from the archive, German RescueTrack statuses, shorter buttons and German tips (see the sections above).
+- **0.997 170.24:** The accident location line in the engine start and quickstart steps no longer shows 0, 0 (see the accident location line above).
 - **0.997 170.23:** The second ambulance too keeps its crew aboard when no patient is within its reach (see the ambulance section above).
 - **0.997 170.22:** The help page for stalled operations, ambulances that cannot reach the patient stay aboard, the fuel truck leaves when you fly away with the hose connected, and new crew tips (see the new sections above).
 - **0.997 170.21:** The accident location line waits for the location, no old destination window with more than one patient, the voice commands page and 33 voice commands, the speech tips and wifi options, the 20 pixel status bar and the dispatch texts in German, French and Italian (see 33 voice commands and the phrases of the crew).
