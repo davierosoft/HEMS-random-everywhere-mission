@@ -1,3 +1,7 @@
+## Release 0.997 170.26
+
+- END SHIFT and RELOAD run in a fresh thread with a sleep, sleep before the archive of the next dispatch (call stack error)
+
 ## Release 0.997 170.25
 
 - version stamp macro in scope

@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.25. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.26. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -996,7 +996,8 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 ### END SHIFT cannot be blocked by the archive of the dispatch
 
 - The END SHIFT button of the end menu saves the archive of the closing dispatch in a separate step, so a failure of the archive (call stack error shown on the tablet) no longer stops the end of the mission. RELOAD MISSION is protected in the same way (tester report, 2026-11-11).
-- **Build history:** 0.997 170.25.
+- From 0.997 170.26 the whole END SHIFT and RELOAD MISSION sequences run in their own thread that starts with a short pause, and the archive of the next dispatch starts with one too: the call stack error came from the long chain of calls that led to the button, not from the archive itself.
+- **Build history:** 0.997 170.25, 170.26.
 - **Test:** Return to the base, press END SHIFT: the mission ends and the tablet shows no Command Failed window.
 
 ### German RescueTrack statuses and cut-off buttons
@@ -1944,7 +1945,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.25 (this release):** The second fire engine of the burning tanker scene, the fire of the missions 1 and 69 tied to the description, END SHIFT protected from the archive, German RescueTrack statuses, shorter buttons and German tips (see the sections above).
+- **0.997 170.26 (this release):** END SHIFT, RELOAD MISSION and the archive of the next dispatch start on a fresh call stack (see the END SHIFT section above).
+- **0.997 170.25:** The second fire engine of the burning tanker scene, the fire of the missions 1 and 69 tied to the description, END SHIFT protected from the archive, German RescueTrack statuses, shorter buttons and German tips (see the sections above).
 - **0.997 170.24:** The accident location line in the engine start and quickstart steps no longer shows 0, 0 (see the accident location line above).
 - **0.997 170.23:** The second ambulance too keeps its crew aboard when no patient is within its reach (see the ambulance section above).
 - **0.997 170.22:** The help page for stalled operations, ambulances that cannot reach the patient stay aboard, the fuel truck leaves when you fly away with the hose connected, and new crew tips (see the new sections above).

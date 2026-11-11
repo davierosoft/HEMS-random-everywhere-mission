@@ -28,11 +28,16 @@ const collect = (value, predicate, found = []) => {
   const [submit, endShift, reload] = buttons;
   assert.deepEqual(submit.commands, [{ call_macro: 'submit report' }]);
   const names = (b) => b.commands.map((c) => c.call_macro || Object.keys(c)[0]);
-  assert.deepEqual(endShift.commands.slice(0, 2), [{ set: { local: 'archive_event' }, value: 'end_shift' }, { create_thread: { commands: [{ call_macro: 'archive closing dispatch' }] } }], 'END SHIFT saves the automatic snapshot first, in its own thread so that a failure of the archive (call stack error, report of kingle 2026-11-11) cannot stop the button');
-  assert.ok(names(endShift).indexOf('call_macro') >= 0 || endShift.commands.some((c) => c.set?.local === 'MISSION_END_WAITING' && c.value === 2));
-  assert.deepEqual(reload.commands.slice(0, 2), [{ set: { local: 'archive_event' }, value: 'reload_mission' }, { try: [{ call_macro: 'archive closing dispatch' }], catch: [{ set: { local: 'archive_stage' }, value: 'failed in the button' }] }], 'RELOAD saves the automatic snapshot first, guarded by a try');
-  assert.ok(reload.commands.findIndex((c) => c.reload_mission) > reload.commands.findIndex((c) => Array.isArray(c.try)), 'the snapshot is saved before the reload');
-  assert.ok(reload.commands.some((c) => c.set?.local === 'dispatch_diag_keep' && c.value === 1), 'a reload keeps the dispatch diagnostics file');
+  const inner = (b) => b.commands.find((c) => c.create_thread).create_thread.commands;
+  assert.deepEqual(endShift.commands[0], { set: { local: 'archive_event' }, value: 'end_shift' });
+  // The whole sequence runs in its own thread that starts with a sleep: the stack of a thread only unwinds at a sleep (RangeError of the archive, kingle 2026-11-11).
+  assert.deepEqual(inner(endShift).slice(0, 2), [{ sleep: 0.02 }, { call_macro: 'archive closing dispatch' }], 'END SHIFT saves the automatic snapshot first, on a fresh stack');
+  assert.ok(inner(endShift).some((c) => c.set?.local === 'MISSION_END_WAITING' && c.value === 2));
+  assert.deepEqual(reload.commands[0], { set: { local: 'archive_event' }, value: 'reload_mission' });
+  const rl = inner(reload);
+  assert.deepEqual(rl.slice(0, 2), [{ sleep: 0.02 }, { try: [{ call_macro: 'archive closing dispatch' }], catch: [{ set: { local: 'archive_stage' }, value: 'failed in the button' }] }], 'RELOAD saves the automatic snapshot first, guarded by a try');
+  assert.ok(rl.findIndex((c) => c.reload_mission) > rl.findIndex((c) => Array.isArray(c.try)), 'the snapshot is saved before the reload');
+  assert.ok(rl.some((c) => c.set?.local === 'dispatch_diag_keep' && c.value === 1), 'a reload keeps the dispatch diagnostics file');
 
   // 2. At the base the end menu is offered at once and the deboarding runs in parallel; deboarding never overwrites END SHIFT.
   // the return to base diagnostics (trace return to base rows) are not part of the flow

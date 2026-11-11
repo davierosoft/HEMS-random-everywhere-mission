@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.25",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.26",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.25"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.26"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -3395,6 +3395,8 @@
             {"call_macro":"dispatch step row","params":{"stage":"before_next_dispatch_enter"}},
             {"call_macro":"trace dispatch handoff","params":{"stage":"next_dispatch_enter"}},
             {"call_macro":"dispatch step row","params":{"stage":"after_next_dispatch_enter"}},
+            {"#comment":"The stack of a thread only unwinds at a sleep (kingle 2026-11-11, RangeError in the archive): a short sleep before the archive starts it on a fresh stack."},
+            {"sleep":0.02},
             {"call_macro":"archive closing dispatch"},
             {"call_macro":"start location diagnostics"},
             {"set":{"local":"map_preview_generation"},"value":{"add":[{"local":"map_preview_generation"},1]}},
@@ -6663,7 +6665,7 @@
         {"text":"Recorded operational impact: {0}","color":"gray","params":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"}]},
         {"text":"ON DUTY: waiting for the next dispatch. Keep CARLS, Wi-Fi, or Tablet 5G connected.","color":"green","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":null}],"eq":1}},
         {"text":"SHIFT TERMINATED: crew emergency report ready. Submit the report or end the shift.","color":"red","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
-        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"end_shift"},{"create_thread":{"commands":[{"call_macro":"archive closing dispatch"}]}},{"set_dispatch_dialog":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},{"set":{"local":"MISSION_END_WAITING"},"value":2}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}]},
+        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"end_shift"},{"create_thread":{"commands":[{"sleep":0.02},{"call_macro":"archive closing dispatch"},{"set_dispatch_dialog":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},{"set":{"local":"MISSION_END_WAITING"},"value":2}]}}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"create_thread":{"commands":[{"sleep":0.02},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}}]}]},
         {"image":"bar","show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}}
     ]}
   ],
