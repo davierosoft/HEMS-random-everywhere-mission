@@ -168,3 +168,15 @@ References:
 - https://davux.com/docs/missionsys/REFERENCE-COMMAND.html
 - https://davux.com/docs/missionsys/REFERENCE-QUERY.html
 - https://davux.com/docs/missionsys/TOPIC-ANATOMY.html
+
+## Wait for the ambulance before the helicopter takes a patient (user rules 2026-11-12, sources, runtime pending)
+
+`select HEMS patient` used to wait 60 s (12 x 5 s) while the state was `awaiting_transport_resource` and then forced the reservation. Now `ambulance wait assess` decides the wait once, at the start:
+
+- `AMBU_AVAIL` 2 (an ambulance on the way) and `ambu1arrived` not yes: remaining ETA = `ambu_eta_mission_time` (stamped at the start of the ambulance drive, mission time + `ambu_adjusted_time`, in `Ambulance1` and `closest ambulance`) minus now; without it (legacy, no route) the live distance of `ambulance1` to the scene divided by 24.6 m/s (the legacy speed of the ambulance macros).
+- ETA at most 240 s (4 minutes): mode `eta`. The crew waits for the ambulance, 5 minutes at most (60 x 5 s, the fallback), and the wait ends as soon as the registry assigns the patient. Tablet message, RescueTrack line of the crew, crew voice `AMB.WAIT`, and the button Load patient on helicopter (`force_heli_load`, sets `AMB_WAIT_ABORT`), which aborts the wait: `ambulance forced load call` (`AMB.FRC`) and the forced reservation gives the patient to the helicopter.
+- ETA above 240 s: mode `late`, no wait. `ambulance late call`: tablet message, RescueTrack line of the ambulance and dispatcher voice `AMB.LATE.DSP` ("cannot arrive in time"); the forced reservation gives the patient to the helicopter. The same call is made when the 5 minutes end.
+- `AMBU_AVAIL` 1 (on scene from the start), no ambulance, or an ambulance already arrived: old wait of 60 s, the scene is never blocked.
+- The trace rows `ambulance_wait_assess mode eta_s ambu_avail arrived` and `wait_ended_forcing mode abort` of `select HEMS patient` give the values.
+
+The case of the forced reservation that finds no patient (`forced_reserve_failed_no_transport`) is unchanged; its cause (`P1_GROUND_TRANSPORTED` not cleared) is fixed in the sources (2026-11-06).

@@ -28,29 +28,127 @@
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
     {"call_macro":"hems patient decision after visits"},
+    {"#comment":"Wait for the ambulance (user rules 2026-11-12). Without an ambulance on the way (or AMBU_AVAIL 1, on scene since the start) the wait is the old one, 60 s. With AMBU_AVAIL 2 the ambulance wait assess macro reads the remaining ETA of the route (or distance / 24.6 m/s in legacy): up to 4 minutes the crew waits for the ambulance for 5 minutes at most (fallback), the button Load patient on helicopter aborts the wait; above 4 minutes the ambulance declares it cannot arrive in time and the helicopter takes the patient at once. The forced reservation below then gives the patient to the helicopter."},
     {"set":{"param":"waited"},"value":0},
-    {"while": {"param":"waited"}, "lt": 6,
+    {"set":{"param":"waited_max"},"value":12},
+    {"set":{"local":"AMB_WAIT_ABORT"},"value":0},
+    {"set":{"local":"amb_wait_mode"},"value":"default"},
+    {"if": {"local":"HEMS_DECISION_STATE"}, "eq": "awaiting_transport_resource",
+      "then": [
+        {"call_macro":"ambulance wait assess"},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":{"text":"ambulance_wait_assess mode={0} eta_s={1} ambu_avail={2} arrived={3}","params":[{"local":"amb_wait_mode"},{"round":{"local":"amb_wait_eta"},"to":0},{"local":"AMBU_AVAIL"},{"local":"ambu1arrived"}]}}},
+        {"if": {"local":"amb_wait_mode"}, "eq": "eta",
+          "then": [
+            {"set":{"param":"waited_max"},"value":60},
+            {"call_macro":"ambulance wait announce"}
+        ]},
+        {"if": {"local":"amb_wait_mode"}, "eq": "late",
+          "then": [
+            {"set":{"param":"waited"},"value":99},
+            {"call_macro":"ambulance late call"}
+        ]}
+    ]},
+    {"while": {"param":"waited"}, "lt": {"param":"waited_max"},
       "do": [
         {"if": {"local":"HEMS_DECISION_STATE"}, "ne": "awaiting_transport_resource",
           "then": [
             {"set":{"param":"waited"},"value":99}
           ],"else": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"sleep_10"}},
-            {"sleep":10},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
-            {"call_macro":"hems patient decision after visits"},
-            {"set":{"param":"waited"},"value":{"add":[{"param":"waited"},1]}}
+            {"if": {"local":"AMB_WAIT_ABORT"}, "eq": 1,
+              "then": [
+                {"set":{"param":"waited"},"value":99}
+              ],"else": [
+                {"sleep":5},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
+                {"call_macro":"hems patient decision after visits"},
+                {"set":{"param":"waited"},"value":{"add":[{"param":"waited"},1]}}
+            ]}
         ]}
+    ]},
+    {"if": {"has_user_action":"force_heli_load"}, "eq": 1,
+      "then": [
+        {"destroy_user_action":"force_heli_load"}
     ]},
     {"if": {"local":"HEMS_DECISION_STATE"}, "eq": "awaiting_transport_resource",
       "then": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":"wait_expired_forcing"}},
+        {"if": {"local":"AMB_WAIT_ABORT"}, "eq": 1,
+          "then": [
+            {"call_macro":"ambulance forced load call"}
+          ],"else": [
+            {"if": {"local":"amb_wait_mode"}, "eq": "eta",
+              "then": [
+                {"call_macro":"ambulance late call"}
+            ]}
+        ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"select HEMS patient","actor":"hems","target":"n/a","state":{"text":"wait_ended_forcing mode={0} abort={1}","params":[{"local":"amb_wait_mode"},{"local":"AMB_WAIT_ABORT"}]}}},
         {"set":{"local":"HEMS_DECISION_FORCE"},"value":1},
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"select HEMS patient","state":"call_hems_patient_decision_after_visits"}},
         {"call_macro":"hems patient decision after visits"},
         {"set":{"local":"HEMS_DECISION_FORCE"},"value":0}
     ]},
     {"return":{"local":"HEMS_PATIENT_NUMBER"}}
+  ],
+  "ambulance wait assess": [
+    {"#comment":"Sets amb_wait_mode (default, eta or late) and amb_wait_eta (seconds, -1 unknown). Only AMBU_AVAIL 2 (an ambulance on the way) and an ambulance not yet arrived can change the old 60 s wait: ETA from the route (ambu_eta_mission_time, stamped at the start of the drive) or, without it (legacy, no route), the live distance of ambulance1 / 24.6 m/s. 240 s or less: eta (wait up to 300 s). Above: late."},
+    {"set":{"local":"amb_wait_mode"},"value":"default"},
+    {"set":{"local":"amb_wait_eta"},"value":-1},
+    {"if": {
+      "and": [
+        {"require":{"local":"AMBU_AVAIL"},"eq":2},
+        {"require":{"local":"ambu1arrived"},"ne":"yes"}
+      ]}, "eq": 1,
+      "then": [
+        {"if": {"local":"ambu_eta_mission_time"}, "ne": null,
+          "then": [
+            {"set":{"local":"amb_wait_eta"},"value":{"subtract":[{"local":"ambu_eta_mission_time"},{"var":["L:MISSION_TIME","number"]}]}},
+            {"if": {"local":"amb_wait_eta"}, "lt": 0,
+              "then": [
+                {"set":{"local":"amb_wait_eta"},"value":0}
+            ]}
+          ],"else": [
+            {"if": {"has_object":"ambulance1"}, "eq": 1,
+              "then": [
+                {"set":{"local":"amb_wait_eta"},"value":{"divide":[{"object":"ambulance1","var":"distance:m","to":"accident_location"},24.6]}}
+            ]}
+        ]},
+        {"if": {"local":"amb_wait_eta"}, "gte": 0,
+          "then": [
+            {"if": {"local":"amb_wait_eta"}, "lte": 240,
+              "then": [
+                {"set":{"local":"amb_wait_mode"},"value":"eta"}
+              ],"else": [
+                {"set":{"local":"amb_wait_mode"},"value":"late"}
+            ]}
+        ]}
+    ]}
+  ],
+  "ambulance wait announce": [
+    {"#comment":"The crew waits for the ambulance: tablet message, RescueTrack line of the crew, crew voice (pack AMB.WAIT) and the button Load patient on helicopter, which aborts the wait."},
+    {"set_message":{"text":"Waiting for the ambulance to arrive. Press Load patient on helicopter to take the patient now."}},
+    {"call_macro":"post dispatcher message","params":{"text":"The ambulance is close: we wait for it. We load the patient ourselves if it does not arrive in time.","from":"crew"}},
+    {"call_macro":"voice say","params":{"key":"AMB.WAIT"}},
+    {"if": {"has_user_action":"force_heli_load"}, "eq": 0,
+      "then": [
+        {"create_user_action": {
+            "id": "force_heli_load",
+            "title": "Load patient on helicopter",
+            "click_commands": [
+              {"set":{"local":"AMB_WAIT_ABORT"},"value":1},
+              {"destroy_user_action":"force_heli_load"}
+          ]}
+        }
+    ]}
+  ],
+  "ambulance late call": [
+    {"#comment":"The ambulance cannot arrive in time (ETA above 4 minutes, or the 5 minutes of wait are over): tablet message, RescueTrack line of the ambulance and the voice of the dispatcher (pack AMB.LATE.DSP). The helicopter takes the patient."},
+    {"set_message":{"text":"The ambulance cannot arrive in time: the patient is loaded on the helicopter."}},
+    {"call_macro":"post dispatcher message","params":{"text":"We cannot arrive in time. HEMS takes the patient.","from":"ambulance"}},
+    {"call_macro":"voice say","params":{"key":"AMB.LATE.DSP"}}
+  ],
+  "ambulance forced load call": [
+    {"#comment":"The pilot pressed Load patient on helicopter: the wait is aborted (pack AMB.FRC)."},
+    {"call_macro":"post dispatcher message","params":{"text":"We do not wait for the ambulance: loading the patient on the helicopter now.","from":"crew"}},
+    {"call_macro":"voice say","params":{"key":"AMB.FRC"}}
   ],
   "hems patient decision after visits": [
     {"if": {"local":"HEMS_DECISION_LOCK"}, "eq": null,

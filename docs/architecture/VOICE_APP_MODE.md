@@ -254,3 +254,7 @@ The briefing no longer shows a connection line of its own. The status bar at the
 ## L:HMC_UI_LANG (2026-11-12)
 
 voice context publish writes the language of the interface of the mission: 1 EN, 2 DE, 3 FR, 4 IT, 5 ES, 6 NL, 7 PL. The value comes from the field of kind lang that the Companion patches in a translated mission (UI_TRANSLATION.md). It is published only while the audio is inhibited like the other HMC values.
+
+## L:HMC_TIPS_LANG (2026-11-12)
+
+Setting CREW TIPS LANGUAGE (global `TIPS_LANG`, `(P)` option of the audio tab of the settings, under CREW TIPS, saved in the profiles, cleared by resetdefault, default 0): 0 AUTO, 1 SAME AS VOICE, 2 SAME AS UI, 3 ENGLISH. `voice context publish` writes it as `L:HMC_TIPS_LANG` next to `L:HMC_UI_LANG`. The option lives in the mission, like CREW TIPS; the Companion only reads the value and resolves the language of every tip (issue 114).

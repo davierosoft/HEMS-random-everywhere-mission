@@ -12,6 +12,7 @@ Assumption: whoever uses a text pack uses it in the language of the voices, so t
 
 ## What the mission does (mission repository, already in the sources)
 
+- It has the option CREW TIPS LANGUAGE (AUTO / SAME AS VOICE / SAME AS UI / ENGLISH, persistent, in the profiles) and publishes it as `L:HMC_TIPS_LANG` (number, 0-3). The app needs no setting of its own for it.
 - It announces its interface language with `L:HMC_UI_LANG` (number): 0 unknown (old mission or custom file, treat as EN), 1 EN, 2 DE, 3 FR, 4 IT, 5 ES, 6 NL, 7 PL. The value comes from a translatable field `ui language` of the manifest `ui-texts.json` (kind `lang`, English `EN`; the screen language files give `DE`, `FR`, `IT`), so the patcher that translates the screen texts also sets the language, like any other text. The mission writes the LVAR with the other `L:HMC_*` values of the voice context (macro `voice context publish`).
 - The mission keeps sending the same keys `<say:TIP.<topic>.<n>>`; it does not choose the language.
 - The packs carry the tips fully translated, with the exact names of the menus, buttons and options of the translated interface (checked by a test of the mission repository).
@@ -19,11 +20,11 @@ Assumption: whoever uses a text pack uses it in the language of the voices, so t
 ## What the app must do
 
 1. Read `L:HMC_UI_LANG` (0 = EN) and keep the audio language (text pack + voices) as today.
-2. Resolve the language of a tip, setting "Crew tips language", persistent, default AUTO:
-   - AUTO: the interface language if a pack of that language is installed and a voice of that language is installed; else the audio language; else nothing.
-   - SAME AS UI: only the interface language (pack and voice must exist, else nothing).
-   - SAME AS VOICE: only the audio language, without matching the menus.
-   - ENGLISH: the English base pack with an English voice, else nothing.
+2. Resolve the language of a tip with the setting of the mission, `L:HMC_TIPS_LANG` (number, 0 AUTO, 1 SAME AS VOICE, 2 SAME AS UI, 3 ENGLISH; missing = 0). The setting is NOT in the app: it is an option of the mission (audio tab of the settings, under CREW TIPS, saved in the profiles, default AUTO), published by the mission next to `L:HMC_UI_LANG`:
+   - AUTO (0): the interface language if a pack of that language is installed and a voice of that language is installed; else the audio language; else nothing.
+   - SAME AS VOICE (1): only the audio language, without matching the menus.
+   - SAME AS UI (2): only the interface language (pack and voice must exist, else nothing).
+   - ENGLISH (3): the English base pack with an English voice, else nothing.
 3. The text of the tip is read from the pack of the resolved language (the EN base pack is always installed, see 103). One line per language in each pack, no duplicate lines: the app takes `TIP.*` from the pack of the language it resolved.
 4. Rule for everything the app speaks: if no voice exists for the language, nothing is spoken.
 5. The tag `[lang:XX]` on a segment stays an explicit override: it is spoken by a voice of that language, else nothing.
@@ -34,5 +35,5 @@ Assumption: whoever uses a text pack uses it in the language of the voices, so t
 - A German interface with the German pack and a German voice speaks German tips; the English tips of today are gone.
 - An English interface with a German audio language speaks English tips with an English voice, or nothing if no English voice is installed; the log says which.
 - A language without a pack (Italian) with the English or German audio follows the audio language.
-- The four values of the setting work and persist; AUTO is the default.
+- The four values of `L:HMC_TIPS_LANG` are honoured; the app has no setting of its own, it only reads the mission option.
 - The log lines above exist and name the reason of every choice.

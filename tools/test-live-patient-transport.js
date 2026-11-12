@@ -23,6 +23,7 @@ class Live extends Scene {
   query(q, p) {
     if (q?.if) return this.query(this.compare(this.query(q.if, p), q, p) ? q.then : q.else, p);
     if (q?.object && q.var === 'AALT') return this.alt?.[this.text(q.object, p)] ?? 0;
+    if (q?.has_user_action) return this.userActions?.has(q.has_user_action) ? 1 : 0;
     if (q?.table) return this.tables[this.query(q.table, p)]?.[this.query(q.key, p)] ?? null;
     return super.query(q, p);
   }
@@ -30,6 +31,10 @@ class Live extends Scene {
     for (const command of list) {
       if (command.create_thread) {
         this.threads.push({commands: command.create_thread.commands, params: {...p}});
+      } else if (command.create_user_action) {
+        (this.userActions ||= new Set()).add(command.create_user_action.id);
+      } else if (command.destroy_user_action) {
+        this.userActions?.delete(command.destroy_user_action);
       } else if (command.set_dispatch_dialog !== undefined) {
         this.events.push(['dialog']);
       } else if (command.set?.var) {
@@ -84,6 +89,7 @@ class Live extends Scene {
       this.events.push(['hospital', name]); return;
     }
     if (/^park_ambulance[12]$/.test(name)) return;
+    if (name === 'post dispatcher message' || name === 'voice say') {this.events.push([name, p.key ?? p.text]); return;}
     return super.call(name, p);
   }
   reserve(resource) {return this.call(prefix + 'submit', {operation: 'live_reserve', arguments: {resource}});}

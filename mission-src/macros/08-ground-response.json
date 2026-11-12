@@ -3141,6 +3141,7 @@
                 {"set":{"local":"ambu1started"},"value":"yes"},
                 {"set":{"local":"ambu1_dispatch_announced"},"value":"no"},
                 {"set":{"local":"ambu_adjusted_time"},"value":null},
+                {"set":{"local":"ambu_eta_mission_time"},"value":null},
                 {"create_thread": {
                   "commands": [
                     {"call_macro":"ambulance operations monitor","params":{"vehicle":"ambulance1"}}
@@ -3474,6 +3475,10 @@
                             {"call_macro":"park_ambulance1_scene","params":{"stop_only":1}}
                         ]}},
                         {"#comment":"The baseline stop monitor owns the road-route interruption at ambu1stopdistance."},
+                        {"if": {"local":"ambu_adjusted_time"}, "ne": null,
+                          "then": [
+                            {"set":{"local":"ambu_eta_mission_time"},"value":{"add":[{"var":["L:MISSION_TIME","number"]},{"local":"ambu_adjusted_time"}]}}
+                        ]},
                         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambulance1","target":"Ambulance1","state":"drive_start"}},
                         {"if": {"local":"ambu_direct_drive"}, "eq": "yes",
                           "then": [

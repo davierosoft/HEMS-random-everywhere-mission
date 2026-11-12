@@ -1,3 +1,7 @@
+## Release 0.997 170.28
+
+- Wait for the ambulance before the helicopter takes the patient (ETA/distance, 4 min, 5 min fallback, Load patient on helicopter button), crew tips language option
+
 ## Release 0.997 170.27
 
 - Medic walk speed 6 km/h to the custom hospital ambulance; shared-data hospital ambulance fields

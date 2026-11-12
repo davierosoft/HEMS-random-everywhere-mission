@@ -47,6 +47,11 @@ const save = text('save custom aircraft profile');
 const load = text('load custom aircraft profile');
 assert.ok(save.includes('"key":"CREW_TIPS"') && load.includes('"key":"CREW_TIPS"'), 'CREW_TIPS is saved in and loaded from the aircraft profiles');
 assert.ok(text('resetdefault').includes('"global":"CREW_TIPS"},"value":null'), 'Reset to default clears CREW_TIPS');
+// Setting CREW TIPS LANGUAGE (user request 2026-11-11, issue 114): global TIPS_LANG 0 AUTO, 1 SAME AS VOICE, 2 SAME AS UI, 3 ENGLISH, in the profiles, cleared by reset, published as L:HMC_TIPS_LANG.
+assert.ok(save.includes('"key":"TIPS_LANG"') && load.includes('"key":"TIPS_LANG"'), 'TIPS_LANG is saved in and loaded from the aircraft profiles');
+assert.ok(text('resetdefault').includes('"global":"TIPS_LANG"},"value":null'), 'Reset to default clears TIPS_LANG');
+assert.ok(text('voice context publish').includes('L:HMC_TIPS_LANG'), 'the voice context publishes L:HMC_TIPS_LANG');
+for (const title of ['AUTO', 'SAME AS VOICE', 'SAME AS UI', 'ENGLISH']) assert.ok(collect(macros.settings, (node) => node.title === title && JSON.stringify(node).includes('TIPS_LANG')).length >= 1, `button ${title} of CREW TIPS LANGUAGE`);
 const buttons = collect(macros.settings, (node) => typeof node.title === 'string' && /^TIPS (ON|OFF)$/.test(node.title));
 assert.equal(buttons.length, 2, 'the settings page has TIPS ON and TIPS OFF');
 assert.ok(buttons.every((b) => JSON.stringify(b.commands).includes('mark aircraft profile custom')), 'a change of the setting marks the profile CUSTOM');

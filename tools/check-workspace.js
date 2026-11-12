@@ -63,6 +63,7 @@ const scripts = [
   'test-ui-text-width.js',
   'test-tip-ui-names.js',
   'test-custom-hospital-ambulance.js',
+  'test-ambulance-wait-policy.js',
   'test-voice-tips.js',
   'test-stuck-help-page.js',
   'test-fuel-hose-watch.js',
