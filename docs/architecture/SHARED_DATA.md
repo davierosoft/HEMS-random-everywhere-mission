@@ -17,6 +17,7 @@ User request of 2026-10-18: the custom hangar waypoints (path from the hangar do
 - `shared wps load` (`05-navigation-queries.json`): reads `L:HMC_DATA_REV`; when the table was never loaded or the counter changed, it opens the table again, builds two arrays in params (the table records first, then the built-in records of `data hangar wps` / `hospitals wps` as a fallback) and assigns them to the locals at the end. No lock (a thread killed while holding it would block every later call); a damaged table is caught (`try`) and leaves only the built-in records. Without the app, or without the file, behaviour is the old one.
 - `user hospital WP`, `user hospital WP for transfer`, `user hangar WP` call the loader and walk the local list instead of the static list. They take the first record that matches (a hospital door within 560 m of the target, a hangar within `max_rng_m`), so a record of the table wins over a built-in record of the same place.
 - The 5 custom hospitals of the mission (`CUSHOS1..5` in the settings) are untouched; the offline databases are used by the tablet of HPG, not by the mission.
+- Hospital entries (`hospitals wps` and `hospitals_wps` of the external `Shared_Waypoints_Table`) may carry `ambulance_present` (`yes`/`no`, default `no`), `WPAmbLAT` and `WPAmbLON` (parking of the ambulance, required when yes): see `MISSION_END_FLOW.md`. A missing field means no.
 
 ## Contribution and checks
 

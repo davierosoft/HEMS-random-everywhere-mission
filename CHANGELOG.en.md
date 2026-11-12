@@ -1,3 +1,9 @@
+## Release 0.997 170.27
+
+- Medic walk speed 6 km/h to the custom hospital ambulance; shared-data hospital ambulance fields
+- Version label of the build
+- Optional ambulance at custom hospitals (issue 100): parked ambulance, side and rear boarding, route along the hospital waypoints and back
+
 ## Release 0.997 170.26
 
 - END SHIFT and RELOAD run in a fresh thread with a sleep, sleep before the archive of the next dispatch (call stack error)

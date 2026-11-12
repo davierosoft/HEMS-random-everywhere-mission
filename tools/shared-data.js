@@ -61,12 +61,18 @@ function checkPoints(where, rec, kind, errors) {
     if (!okLat(rec.WPspawnlat) || !okLon(rec.WPspawnlon)) e('WPspawnlat and WPspawnlon are required');
     if (!isNum(rec.max_rng_m) || rec.max_rng_m < 1 || rec.max_rng_m > 5000) e('max_rng_m must be a number between 1 and 5000');
     for (const key of ['technician_boarding', 'technician_deboarding']) if (!yesNo.includes(rec[key])) e(`${key} must be "yes" or "no"`);
-  } else if (!okLat(rec.WPdoorlat) || !okLon(rec.WPdoorlon)) e('WPdoorlat and WPdoorlon are required');
+  } else {
+    if (!okLat(rec.WPdoorlat) || !okLon(rec.WPdoorlon)) e('WPdoorlat and WPdoorlon are required');
+    // Optional ambulance of the hospital (app issue 100): missing fields mean no.
+    if (rec.ambulance_present !== undefined && !yesNo.includes(rec.ambulance_present)) e('ambulance_present must be "yes" or "no"');
+    if (rec.ambulance_present === 'yes' && (!okLat(rec.WPAmbLAT) || !okLon(rec.WPAmbLON))) e('ambulance_present is yes: WPAmbLAT and WPAmbLON are required');
+    if (rec.ambulance_present !== 'yes' && ((rec.WPAmbLAT ?? null) !== null || (rec.WPAmbLON ?? null) !== null)) e('ambulance_present is not yes: WPAmbLAT and WPAmbLON must be null');
+  }
 }
 
 const WAYPOINT_KEYS = {
   hangar: ['id', 'by', 'WPspawnlat', 'WPspawnlon', 'max_rng_m', 'WPtot', 'WP1lat', 'WP1lon', 'WP2lat', 'WP2lon', 'WP3lat', 'WP3lon', 'technician_boarding', 'technician_deboarding', 'marshal_present', 'WPMarshalLAT', 'WPMarshalLON'],
-  hospital: ['id', 'by', 'WPdoorlat', 'WPdoorlon', 'WPtot', 'WP1lat', 'WP1lon', 'WP2lat', 'WP2lon', 'WP3lat', 'WP3lon', 'marshal_present', 'WPMarshalLAT', 'WPMarshalLON'],
+  hospital: ['id', 'by', 'WPdoorlat', 'WPdoorlon', 'WPtot', 'WP1lat', 'WP1lon', 'WP2lat', 'WP2lon', 'WP3lat', 'WP3lon', 'marshal_present', 'WPMarshalLAT', 'WPMarshalLON', 'ambulance_present', 'WPAmbLAT', 'WPAmbLON'],
 };
 
 function checkWaypoints(data, errors) {
