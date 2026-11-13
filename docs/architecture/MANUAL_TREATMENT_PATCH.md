@@ -1,0 +1,28 @@
+# Manual treatment patch of Dr.DougRoss (FINAL 2026-11-13)
+
+Status: merged in the sources 2026-11-13 (data and macros); artifact NOT built, simulator runtime PENDING. `tools/apply-treatment-patch.js --write` merged `tools/pending-patches/HEMS_manual_treatment_patch_FINAL-2026-11-13.json` (664 pathologies of `health1`..`health107`, `healthsecondary`, `healthhalloween`) into `mission-src/data`; 306 rows changed `id` (264 spelling fixes, 42 rewrites), 69 changed `diagnosis`. The macros come from one template: `tools/lib/manual-treatment-template.js` (effects, wrong outcomes), `tools/lib/manual-treatment-families.js` (prepare, choice, finish, helpers), `tools/lib/manual-treatment-registry.js` (registry form of the effect) and the idempotent migration `tools/apply-manual-treatment-macros.js` (then `node tools/mission-formatter.js sources`, `git checkout mission-src/icons/01-interface-icons.json mission-src/root/03-briefing.json`, `node tools/mission-workspace.js reindex`). Test: `tools/test-manual-treatment.js` (in check-workspace; interpreter of the production command lists, no simulator).
+
+## Implemented contract (sources)
+
+- Macros per patient n: `prepare patientN manual treatment phase`, `manual patientN treatment choice` (params `slot`, `label`; role correct / plausible / absurd decided from the locals `manual_pN_correct_slot`, `manual_pN_plausible_slot`, snapshot into locals before the thread), `finish patientN manual phase` (new; the 0.1 s sleep breaks the prepare/finish cycle for the stack audit), `apply patientN medical action effect` (flag `medical_action_force_success`, 23 profile blocks, result text in `medical_action_result_text`).
+- Buttons of `patient health`: one bar, one static button per slot and label (132); visibility from `medical_display_manual_slotK_label` and `medical_display_manual_choose_visible` (computed in `sync medical patient display`; START CPR still waits for `medical_display_cpr_active`).
+- New per-patient locals `Pn_GLUCOSE`, `Pn_ECG_RHYTHM`, `Pn_CRIT_BLEED` (YES/NO), `Pn_PLAUSIBLE_POOL`, set by `initialize patient extra clinical state` (pathology engine for patient 1, `multipatient registry live clinical profile` for 1-3), kept in the snapshot and restored; `medical_display_arrest_rhythm` shows VF/pVT/PEA/ASYSTOLE from the start.
+- Effective mode: `refresh effective manual mode` writes `Pn_MANUAL_MODE_EFF` ("manual" only with the manual option and `Pn_MEDICAL_ACTION_COUNT` above 0); read by patient health, crew physical HEMS assessment, registry crew clinical completion, select patient1 transport, stabilize medical patient for transport; refreshed before use and by the AUTOMATIC/MANUAL buttons.
+- `multipatient registry physiology action` (no production caller, parity-tested) is generated from the same template.
+- Wrong buttons: absurd = life score -2/-5 and no vital change; plausible = its own outcome by profile; both count in `manual_pN_error_count`. Open draft values stay as the doctor wrote them (adrenaline 20 % ROSC, ACS therapy).
+- Still open: translations of the 358 texts (keys only after `ui-texts.js sync` on an authorized build), simulator test of the buttons (132 per bar, `struct` index on a local array for the pool), user changelog entry at publication.
+
+## What the macros had to do (`note.implementation` of the patch)
+
+1. Phase buttons: 4 per phase, 1 correct (next profile of `sequence_profiles`, random slot `manual_pN_correct_slot`), 1 plausible-wrong (random profile of the pathology's `plausible_wrong_pool`, its own wrong outcome), 2 absurd (labels of `wrong_button_sets[manual_pN_wrong_set]`, set = floor(rand(0,10)), life score -2/-5, no vital change). The 144 static buttons of `patient health` (176 KB, macros/07) carry profile-specific wrong labels and must be replaced.
+2. A correct choice always takes effect (flag `medical_action_force_success` in `apply patientN medical action effect`) and one effect block per profile (23, values in `profiles` of the patch). Renamed: `perfusion_support` to `iv_access`, `respiratory_support` to `oxygen_support`.
+3. New locals per patient: `glucose`, `ecg_rhythm`, critical bleeding YES/NO, set at initialisation and kept in the snapshot/restore and the save slots.
+4. Result texts of ecg, glucose_level, critical_bleeding and trauma_check in `PN_MANUAL_ACTION_RESULT_n`.
+5. Tourniquet step skipped when the check returned NO; defibrillation correct only for VF or pVT (success: SINUS); adrenaline correct for allergies, bradycardia below 46 and PEA/asystole (20 % ROSC, draft); give_glucose below 60 mg/dL sets GCS 14 and glucose 90-120; antidote_therapy as in the patch; GCS & PUPILS no longer changes vitals; arrest pathologies show their rhythm from the start.
+6. Transport missions without a patient (healthsecondary 17-23, `manual_treatment` automatic, count 0) always use the automatic mode: a helper returns "manual" only with `P1_MANUAL_MEDICAL_MODE` manual and `PN_MEDICAL_ACTION_COUNT` above 0, used wherever `P1_MANUAL_MEDICAL_MODE` is read today (patient health, request manual patient visit, crew physical HEMS assessment, multipatient registry crew clinical completion, select patient1 transport, stabilize medical patient for transport, P2/P3 copies).
+7. Unchanged: `PERSIST_MISSION_WAIT_TIME`, `manual_pN_error_count`, the random slot of the correct answer.
+8. Write one template and generate the three patients (11 macro families, about 93 KB).
+
+## Texts
+
+358 new English texts (`id`, `diagnosis`, `medical_symptoms`, `medical_action_N`) are translated in `tools/pending-translations/health-patch-2026-11-13.json`; they take their keys after `node tools/ui-texts.js sync` on an authorized build (UI_TRANSLATION.md). The old translations of rewritten texts become unused.

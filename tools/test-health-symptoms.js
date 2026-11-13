@@ -2,7 +2,7 @@
 
 'use strict';
 
-const primary = require('../mission-src/data/05-health-profiles.json');
+const primary = { ...require('../mission-src/data/05-health-profiles.json'), ...require('../mission-src/data/05b-health-profiles-continued.json') };
 const special = require('../mission-src/data/06-special-health-and-messages.json');
 
 const groups = { ...primary, ...special };

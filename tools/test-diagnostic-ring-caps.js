@@ -44,7 +44,8 @@ for (const [local, cap] of Object.entries(rings)) {
   assert.ok(iReset >= 0 && iReset < iAppend && iAppend < iCount, 'rebuild when 200 rows are held, then append, then count');
   const rebuild = then[iReset].then;
   assert.equal(rebuild[1].for_each.local, 'location_diagnostic_history');
-  assert.equal(rebuild[1].do[0].gte, 100, 'the newest 100 rows are kept');
+  assert.deepEqual(rebuild[1].do[0], { call_macro: 'loop yield' }, 'the rebuild loop yields (stack audit)');
+  assert.equal(rebuild[1].do[1].gte, 100, 'the newest 100 rows are kept');
   assert.deepEqual(rebuild[3], { set: { local: 'location_diagnostic_history_count' }, value: 100 });
   assert.ok(JSON.stringify(macros['start location diagnostics']).includes('"local":"location_diagnostic_history_count"},"value":0'), 'the count starts with the array');
   // the production commands, run on a scripted history

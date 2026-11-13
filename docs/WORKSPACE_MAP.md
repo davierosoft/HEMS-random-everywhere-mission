@@ -73,7 +73,8 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `02-waypoints-and-categories.json` | Hospital/hangar/accident waypoints and browse categories. |
 | `03-people-and-names.json` | Casualties, civilians, responders, and generated names. |
 | `04-vehicles-and-scene-assets.json` | Response vehicles, barriers, lights, transport, wrecks, scene pools. |
-| `05-health-profiles.json` | Numbered primary medical/pathology profiles. |
+| `05-health-profiles.json` | Numbered primary medical/pathology profiles health1-health15. |
+| `05b-health-profiles-continued.json` | Numbered primary medical/pathology profiles health16-health107 (split to stay below 1 MiB). |
 | `06-special-health-and-messages.json` | Secondary/Halloween profiles and status/CARLS messages. |
 
 ## Thread modules

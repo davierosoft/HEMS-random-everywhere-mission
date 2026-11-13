@@ -1975,5 +1975,33 @@
       "then": [
         {"set":{"local":"legacy_scene_routing"},"value":"yes"}
     ]}
+  ],
+  "loop yield": [
+    {"#comment":"Called as the first command of every for_each and while body that has no sleep of its own (tester reports 2026-11-11 and 2026-11-13, RangeError: Maximum call stack size exceeded at the end of the mission): the stack of a thread only unwinds at a sleep, so a loop over a long array (the ground crew trace holds up to 4000 rows, the archive of the closing dispatch walks all of them) or a long retry loop gives it back every 25 passes with a sleep of 0.01 s. loop_yield_n counts the passes since the last sleep. Changes no flow; node tools/audit-stack-depth.js --strict fails on a loop without a sleep or a call to this macro."},
+    {"if": {"local":"loop_yield_n"}, "eq": null,
+      "then": [
+        {"set":{"local":"loop_yield_n"},"value":0}
+    ]},
+    {"set":{"local":"loop_yield_n"},"value":{"add":[{"local":"loop_yield_n"},1]}},
+    {"if": {"local":"loop_yield_n"}, "gte": 25,
+      "then": [
+        {"set":{"local":"loop_yield_n"},"value":0},
+        {"sleep":0.01}
+    ]}
+  ],
+  "ground spot distances": [
+    {"#comment":"Effective distances of the stretcher/medic spots (LSTR/LMED at the pick-up, DSTR/DMED at the destination) from the landing reference (userA, hospital_user or the helicopter itself). The sliders HSTRCDISTANCE and HMEDDISTANCE go down to 3 m, but the helicopter lands within about 2 m of the reference and the fuselage and rotor cover 6-7 m around it: a spot closer than 10 m (medic 12 m) puts the crew under the helicopter and the walks towards the door side cross the fuselage (analysis 2026-11-13, MPR report). The slider values are never changed: the macros use hstrc_eff and hmed_eff."},
+    {"set":{"local":"hstrc_eff"},"value":{"var":["L:HSTRCDISTANCE","number"]}},
+    {"set":{"local":"hmed_eff"},"value":{"var":["L:HMEDDISTANCE","number"]}},
+    {"if": {"local":"hstrc_eff"}, "lt": 10,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ground spot distances","state":{"text":"stretcher spot distance {0} m raised to 10 m","params":[{"local":"hstrc_eff"}]}}},
+        {"set":{"local":"hstrc_eff"},"value":10}
+    ]},
+    {"if": {"local":"hmed_eff"}, "lt": 12,
+      "then": [
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ground spot distances","state":{"text":"medic spot distance {0} m raised to 12 m","params":[{"local":"hmed_eff"}]}}},
+        {"set":{"local":"hmed_eff"},"value":12}
+    ]}
   ]
 }

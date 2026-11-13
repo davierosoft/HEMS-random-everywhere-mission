@@ -20,6 +20,7 @@
                 {"set":{"local":"location_diagnostic_history_tail"},"value":{"create_array":0}},
                 {"for_each": {"local":"location_diagnostic_history"},
                   "do": [
+                    {"call_macro":"loop yield"},
                     {"if": {"param":"$index"}, "gte": 100,
                       "then": [
                         {"modify_array":{"local":"location_diagnostic_history_tail"},"append":{"param":"$item"}}
@@ -1275,6 +1276,7 @@
       "catch": [
         {"set":{"local":"dispatch_archive_error"},"value":{"text":"archive {0}: {1}","params":[{"local":"archive_stage"},{"param":"$ERROR"}]}}
     ]},
+    {"sleep":0.02},
     {"set":{"local":"archive_stage"},"value":"row"},
     {"try": [
         {"open_table":{"static":"Debug_Auto_Table"}},
@@ -1282,6 +1284,7 @@
         {"set":{"local":"dispatch_tail_start"},"value":{"subtract":[{"struct":{"local":"ground_crew_runtime_trace"},"path":"length"},400]}},
         {"for_each": {"local":"ground_crew_runtime_trace"},
           "do": [
+            {"call_macro":"loop yield"},
             {"if": {"param":"$index"}, "gte": {"local":"dispatch_tail_start"},
               "then": [
                 {"modify_array":{"local":"dispatch_archive_trace"},"append":{"param":"$item"}}

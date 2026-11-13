@@ -13,7 +13,7 @@ const path = require('node:path');
 const root = path.join(__dirname, '..');
 const read = (rel) => JSON.parse(fs.readFileSync(path.join(root, rel), 'utf8'));
 const data = read('mission-src/data/02-waypoints-and-categories.json');
-const health = read('mission-src/data/05-health-profiles.json');
+const health = { ...read('mission-src/data/05-health-profiles.json'), ...read('mission-src/data/05b-health-profiles-continued.json') };
 const accidents = data.accidents;
 const table = data['accident demographics'];
 assert.ok(Array.isArray(table) && table.length > 0, 'static accident demographics exists');

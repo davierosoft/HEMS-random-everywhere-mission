@@ -61,7 +61,7 @@ function makeRunner(state, rnd) {
       else if (c.while) { let guard = 0; while (cond(c)) { walk(c.do); if (++guard > 1000) throw new Error('loop'); } }
       else if (c.modify_array) state.locals[c.modify_array.local].push(ev(c.append));
       else if (c.call_macro) {
-        if (c.call_macro === 'ground crew runtime trace') continue;
+        if (c.call_macro === 'ground crew runtime trace' || c.call_macro === 'loop yield') continue;
         const body = medical[c.call_macro];
         if (!body) throw new Error('call ' + c.call_macro);
         const frame = {};

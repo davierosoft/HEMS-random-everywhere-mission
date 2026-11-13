@@ -135,6 +135,7 @@ class HpgRegistry {
     }
     if (name === 'Police1' && !this.macros[name]) { this.policeRequests = (this.policeRequests || 0) + 1; return; }
     if (name === 'ground ops checkpoint' && !this.macros[name]) { this.checkpoints = (this.checkpoints || []).concat(params.id); return; }   // the diagnostic ring of module 19
+    if (name === 'loop yield' && !this.macros[name]) return;   // the stack yield of the loops (module 14) has no effect on the scripted registry
     if ((name.startsWith('voice ') || name === 'patient death notice') && !this.macros[name]) { this.voiceCalls = (this.voiceCalls || []).concat(name); return; }   // the voice lines of the Mission Companion (module 03) are not part of the registry
     assert.ok(this.macros[name], `Unknown macro ${name}`);
     try { this.commands(this.macros[name], params); } catch (e) { if (e instanceof Returned) return e.value; throw e; }
@@ -342,7 +343,7 @@ for (let count = 1; count <= 5; count++) {
   assert.deepEqual(h.locals.patients.slice(0, 4), before, 'Treating P5 must not mutate P1-P4');
 }
 {
-  const profiles = JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/data/05-health-profiles.json'), 'utf8'));
+  const profiles = { ...JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/data/05-health-profiles.json'), 'utf8')), ...JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/data/05b-health-profiles-continued.json'), 'utf8')) };
   for (const [name, rows] of Object.entries(profiles)) for (const profile of rows) {
     const h = create();
     assert.equal(h.call('multipatient registry from profile', {slot: 5, object: 'injured_human5', location: 'patient5', profile, age: 35, sex: 'male', identity: 'Patient Five', consciousness: 'conscious'}), 1, `${name}: ${profile.id}`);

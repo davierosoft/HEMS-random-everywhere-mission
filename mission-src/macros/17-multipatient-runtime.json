@@ -691,169 +691,430 @@
   ],
   "multipatient registry physiology action": [
     {"set":{"param":"medical"},"value":{"param":"patient","path":"medical"}},
-    {"if": {"param":"patient","path":"transport_state"}, "ne": "died",
+    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"no effect - medic incapacitated"}}]}},
+    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":null}}]}},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient","path":"transport_state"},"ne":"died"}
+      ]}, "eq": 1,
       "then": [
         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"no immediate change"}}]}},
-        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "ne": "assessment",
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "tourniquet",
           "then": [
-            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_response_roll":{"floor":{"rand":[0,100]}}}}]}},
-            {"if": {"param":"patient","path":"lifescore"}, "lt": 20,
+            {"if": {"param":"medical","path":"CRIT_BLEED"}, "ne": "YES",
               "then": [
-                {"if": {"param":"medical","path":"medical_action_response_roll"}, "lt": 48,
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"not needed"}}]}}
+            ]}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_outcome"}, "eq": "no immediate change",
+          "then": [
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "ne": "assessment",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_response_roll":{"floor":{"rand":[0,100]}}}}]}},
+                {"if": {"param":"patient","path":"lifescore"}, "lt": 20,
                   "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"improved"}}]}}
-                ]},
-                {"if": {"param":"medical","path":"medical_action_response_roll"}, "gte": 85,
-                  "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"deteriorated"}}]}}
-                ]}
-              ],"else": [
-                {"if": {"param":"medical","path":"medical_action_response_roll"}, "lt": 68,
-                  "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"improved"}}]}}
-                ]},
-                {"if": {"param":"medical","path":"medical_action_response_roll"}, "gte": 91,
-                  "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"deteriorated"}}]}}
+                    {"if": {"param":"medical","path":"medical_action_response_roll"}, "lt": 48,
+                      "then": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"improved"}}]}}
+                    ]},
+                    {"if": {"param":"medical","path":"medical_action_response_roll"}, "gte": 85,
+                      "then": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"deteriorated"}}]}}
+                    ]}
+                  ],"else": [
+                    {"if": {"param":"medical","path":"medical_action_response_roll"}, "lt": 68,
+                      "then": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"improved"}}]}}
+                    ]},
+                    {"if": {"param":"medical","path":"medical_action_response_roll"}, "gte": 91,
+                      "then": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"deteriorated"}}]}}
+                    ]}
                 ]}
             ]},
-            {"if": {"param":"medical","path":"medical_action_effect_outcome"}, "eq": "improved",
+            {"if": {"param":"medical","path":"medical_action_force_success"}, "eq": 1,
               "then": [
-                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"add":[{"param":"patient","path":"lifescore"},{"rand":[1,3]}]},0,100]}}}]}},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"airway_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"respiratory_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"allergic_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"resuscitation"}
-                  ]}, "eq": 1,
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effect_outcome":"improved"}}]}}
+            ]}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_outcome"}, "eq": "improved",
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"ne":"assessment"},
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"ne":"trauma_check"},
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"ne":"ecg"},
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"ne":"glucose_level"},
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"ne":"critical_bleeding"},
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"ne":"neurological_support"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"add":[{"param":"patient","path":"lifescore"},{"rand":[1,3]}]},0,100]}}}]}}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "thermal_support",
+              "then": [
+                {"if": {"param":"medical","path":"TEMP"}, "lt": 36.5,
                   "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[1,5]}]},0,100]}}}]}},
-                    {"if": {"param":"medical","path":"RR"}, "gt": 20,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"subtract":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"RR"}, "lt": 10,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
-                    ]}
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"TEMP":{"clamp":[{"add":[{"param":"medical","path":"TEMP"},{"rand":[0.1,0.3]}]},34,42]}}}]}}
                 ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"hemorrhage_control"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"perfusion_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"allergic_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"resuscitation"}
-                  ]}, "eq": 1,
+                {"if": {"param":"medical","path":"TEMP"}, "gt": 38.5,
                   "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
-                    {"if": {"param":"medical","path":"BPM"}, "gt": 110,
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"TEMP":{"clamp":[{"subtract":[{"param":"medical","path":"TEMP"},{"rand":[0.1,0.3]}]},34,42]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "airway_support",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                {"if": {"param":"medical","path":"RR"}, "gt": 20,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"subtract":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"RR"}, "lt": 10,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "oxygen_support",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                {"if": {"param":"medical","path":"RR"}, "gt": 20,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"subtract":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"RR"}, "lt": 10,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "iv_access",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 110,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 50,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "hemorrhage_control",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 110,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 50,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "allergic_support",
+              "then": [
+                {"if": {"param":"medical","path":"ECG_RHYTHM"}, "eq": "BRADYCARDIA",
+                  "then": [
+                    {"if": {"param":"medical","path":"BPM"}, "lt": 46,
+                      "then": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"rand":[60,80]},0,180]}}}]}}
+                      ],"else": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                        {"if": {"param":"medical","path":"RR"}, "gt": 20,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"subtract":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                        ]},
+                        {"if": {"param":"medical","path":"RR"}, "lt": 10,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                        ]},
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                        {"if": {"param":"medical","path":"BPM"}, "gt": 110,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                        ]},
+                        {"if": {"param":"medical","path":"BPM"}, "lt": 50,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                        ]}
+                    ]}
+                  ],"else": [
+                    {"if": {"param":"medical","path":"ECG_RHYTHM"}, "eq": "PEA",
+                      "then": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"add":[{"param":"patient","path":"lifescore"},{"rand":[1,2]}]},0,100]}}}]}},
+                        {"if": {"floor":{"rand":[0,100]}}, "lt": 20,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"ECG_RHYTHM":"SINUS"}}]}},
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"rand":[60,90]},0,180]}}}]}}
+                        ]}
+                      ],"else": [
+                        {"if": {"param":"medical","path":"ECG_RHYTHM"}, "eq": "ASYSTOLE",
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"add":[{"param":"patient","path":"lifescore"},{"rand":[1,2]}]},0,100]}}}]}},
+                            {"if": {"floor":{"rand":[0,100]}}, "lt": 20,
+                              "then": [
+                                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"ECG_RHYTHM":"SINUS"}}]}},
+                                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"rand":[60,90]},0,180]}}}]}}
+                            ]}
+                          ],"else": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                            {"if": {"param":"medical","path":"RR"}, "gt": 20,
+                              "then": [
+                                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"subtract":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                            ]},
+                            {"if": {"param":"medical","path":"RR"}, "lt": 10,
+                              "then": [
+                                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                            ]},
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                            {"if": {"param":"medical","path":"BPM"}, "gt": 110,
+                              "then": [
+                                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                            ]},
+                            {"if": {"param":"medical","path":"BPM"}, "lt": 50,
+                              "then": [
+                                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                            ]}
+                        ]}
+                    ]}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "resuscitation",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                {"if": {"param":"medical","path":"RR"}, "gt": 20,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"subtract":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"RR"}, "lt": 10,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+                ]},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 110,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 50,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"add":[{"param":"patient","path":"lifescore"},{"rand":[1,2]}]},0,100]}}}]}}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "vasopressor",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[4,8]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 70,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "pain_relief",
+              "then": [
+                {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 70,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "immobilise",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[4,8]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[2,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 70,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "iv_fluids",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[4,8]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[2,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 70,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "intubation",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"rand":[90,100]},0,100]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":15}}]}}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "defibrillation",
+              "then": [
+                {"if": {"param":"medical","path":"ECG_RHYTHM"}, "eq": "VF",
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"ECG_RHYTHM":"SINUS"}}]}},
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[4,8]}]},0,220]}}}]}},
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[2,4]}]},0,140]}}}]}},
+                    {"if": {"param":"medical","path":"BPM"}, "gt": 100,
                       "then": [
                         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
                     ]},
-                    {"if": {"param":"medical","path":"BPM"}, "lt": 50,
+                    {"if": {"param":"medical","path":"BPM"}, "lt": 70,
                       "then": [
                         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
                     ]}
-                ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"thermal_support"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"if": {"param":"medical","path":"TEMP"}, "lt": 36.5,
+                  ],"else": [
+                    {"if": {"param":"medical","path":"ECG_RHYTHM"}, "eq": "pVT",
                       "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"TEMP":{"clamp":[{"add":[{"param":"medical","path":"TEMP"},{"rand":[0.1,0.3]}]},34,42]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"TEMP"}, "gt": 38.5,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"TEMP":{"clamp":[{"subtract":[{"param":"medical","path":"TEMP"},{"rand":[0.1,0.3]}]},34,42]}}}]}}
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"ECG_RHYTHM":"SINUS"}}]}},
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[4,8]}]},0,220]}}}]}},
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[2,4]}]},0,140]}}}]}},
+                        {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                        ]},
+                        {"if": {"param":"medical","path":"BPM"}, "lt": 70,
+                          "then": [
+                            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                        ]}
                     ]}
-                ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"neurological_support"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"if": {"param":"medical","path":"GCS_EYE"}, "ne": 0,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_EYE":{"clamp":[{"add":[{"param":"medical","path":"GCS_EYE"},1]},1,4]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"GCS_VERBAL"}, "ne": 0,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_VERBAL":{"clamp":[{"add":[{"param":"medical","path":"GCS_VERBAL"},1]},1,5]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"GCS_MOTOR"}, "ne": 0,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_MOTOR":{"clamp":[{"add":[{"param":"medical","path":"GCS_MOTOR"},1]},1,6]}}}]}}
-                    ]}
-                ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"resuscitation"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"add":[{"param":"patient","path":"lifescore"},{"rand":[1,2]}]},0,100]}}}]}}
                 ]}
             ]},
-            {"if": {"param":"medical","path":"medical_action_effect_outcome"}, "eq": "deteriorated",
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "give_glucose",
               "then": [
-                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"subtract":[{"param":"patient","path":"lifescore"},{"rand":[1,3]}]},0,100]}}}]}},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"airway_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"respiratory_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"allergic_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"resuscitation"}
-                  ]}, "eq": 1,
+                {"if": {"param":"medical","path":"GLUCOSE"}, "lt": 60,
                   "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"subtract":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
-                ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"hemorrhage_control"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"perfusion_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"allergic_support"},
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"resuscitation"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"rand":[2,5]}]},0,220]}}}]}},
-                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"subtract":[{"param":"medical","path":"BP_DIA"},{"rand":[1,3]}]},0,140]}}}]}},
-                    {"if": {"param":"medical","path":"BPM"}, "gt": 110,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,3]}]},0,180]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"BPM"}, "lt": 50,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,3]}]},0,180]}}}]}}
-                    ]}
-                ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"neurological_support"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"if": {"param":"medical","path":"GCS_EYE"}, "ne": 0,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_EYE":{"clamp":[{"subtract":[{"param":"medical","path":"GCS_EYE"},1]},1,4]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"GCS_VERBAL"}, "ne": 0,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_VERBAL":{"clamp":[{"subtract":[{"param":"medical","path":"GCS_VERBAL"},1]},1,5]}}}]}}
-                    ]},
-                    {"if": {"param":"medical","path":"GCS_MOTOR"}, "ne": 0,
-                      "then": [
-                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_MOTOR":{"clamp":[{"subtract":[{"param":"medical","path":"GCS_MOTOR"},1]},1,6]}}}]}}
-                    ]}
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_EYE":4}}]}},
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_VERBAL":4}}]}},
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_MOTOR":6}}]}},
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GLUCOSE":{"rand":[90,120]}}}]}}
                 ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "tourniquet",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"add":[{"param":"medical","path":"BP_SYS"},{"rand":[2,6]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"add":[{"param":"medical","path":"BP_DIA"},{"rand":[1,4]}]},0,140]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 130,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 80,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"CRIT_BLEED":"NO"}}]}}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "acs_therapy",
+              "then": [
+                {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 60,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BP_SYS"}, "gt": 160,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"rand":[4,8]}]},0,220]}}}]}},
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"subtract":[{"param":"medical","path":"BP_DIA"},{"rand":[2,4]}]},0,140]}}}]}}
+                ]}
+            ]},
+            {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "antidote_therapy",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"add":[{"param":"medical","path":"SPO2"},{"rand":[4,6]}]},0,100]}}}]}},
+                {"if": {"param":"medical","path":"BPM"}, "gt": 100,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"subtract":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"if": {"param":"medical","path":"BPM"}, "lt": 60,
+                  "then": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BPM":{"clamp":[{"add":[{"param":"medical","path":"BPM"},{"rand":[1,4]}]},0,180]}}}]}}
+                ]},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_EYE":4}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_VERBAL":4}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"GCS_MOTOR":5}}]}}
             ]}
         ]},
-        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effects_applied":{"add":[{"param":"medical","path":"medical_action_effects_applied"},1]}}}]}},
-        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_last_effect":{"text":"{0}: {1}","params":[{"param":"medical","path":"medical_action_effect_profile"},{"param":"medical","path":"medical_action_effect_outcome"}]}}}]}},
-        {"call_macro":"multipatient registry physiology update","params":{"patient":{"param":"patient"}}}
-    ]}
+        {"if": {"param":"medical","path":"medical_action_effect_outcome"}, "eq": "deteriorated",
+          "then": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"patient"},{"create_struct":{"lifescore":{"clamp":[{"subtract":[{"param":"patient","path":"lifescore"},{"rand":[1,3]}]},0,100]}}}]}},
+            {"if": {
+              "and": [
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"airway_support"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"subtract":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"oxygen_support"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"SPO2":{"clamp":[{"subtract":[{"param":"medical","path":"SPO2"},{"rand":[1,4]}]},0,100]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"RR":{"clamp":[{"add":[{"param":"medical","path":"RR"},{"rand":[1,3]}]},0,40]}}}]}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"iv_access"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"rand":[2,5]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"subtract":[{"param":"medical","path":"BP_DIA"},{"rand":[1,3]}]},0,140]}}}]}}
+            ]},
+            {"if": {
+              "and": [
+                {"require":{"param":"medical","path":"medical_action_effect_profile"},"eq":"hemorrhage_control"}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_SYS":{"clamp":[{"subtract":[{"param":"medical","path":"BP_SYS"},{"rand":[2,5]}]},0,220]}}}]}},
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"BP_DIA":{"clamp":[{"subtract":[{"param":"medical","path":"BP_DIA"},{"rand":[1,3]}]},0,140]}}}]}}
+            ]}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "ecg",
+          "then": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":{"text":"ECG: {0}","params":[{"param":"medical","path":"ECG_RHYTHM"}]}}}]}}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "glucose_level",
+          "then": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":{"text":"Glucose {0} mg/dL","params":[{"round":{"param":"medical","path":"GLUCOSE"},"to":0}]}}}]}}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "critical_bleeding",
+          "then": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":{"text":"Critical bleeding: {0}","params":[{"param":"medical","path":"CRIT_BLEED"}]}}}]}}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "trauma_check",
+          "then": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":"Trauma check done"}}]}}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "neurological_support",
+          "then": [
+            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":{"text":"GCS E{0} V{1} M{2} = {3}","params":[{"round":{"param":"medical","path":"GCS_EYE"},"to":0},{"round":{"param":"medical","path":"GCS_VERBAL"},"to":0},{"round":{"param":"medical","path":"GCS_MOTOR"},"to":0},{"round":{"add":[{"add":[{"param":"medical","path":"GCS_EYE"},{"param":"medical","path":"GCS_VERBAL"}]},{"param":"medical","path":"GCS_MOTOR"}]},"to":0}]}}}]}}
+        ]},
+        {"if": {"param":"medical","path":"medical_action_effect_profile"}, "eq": "tourniquet",
+          "then": [
+            {"if": {"param":"medical","path":"medical_action_effect_outcome"}, "eq": "not needed",
+              "then": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_result_text":"Tourniquet not needed"}}]}}
+            ]}
+        ]}
+    ]},
+    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_effects_applied":{"add":[{"param":"medical","path":"medical_action_effects_applied"},1]}}}]}},
+    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"medical"},{"create_struct":{"medical_action_last_effect":{"text":"{0}: {1}","params":[{"param":"medical","path":"medical_action_effect_profile"},{"param":"medical","path":"medical_action_effect_outcome"}]}}}]}},
+    {"call_macro":"multipatient registry physiology update","params":{"patient":{"param":"patient"}}}
   ],
   "multipatient registry path node": [
     {"for_each": {"param":"nodes"},
@@ -2054,6 +2315,7 @@
   "multipatient registry crew clinical completion": [
     {"if": {"param":"patient"}, "eq": 1,
       "then": [
+        {"call_macro":"refresh effective manual mode","params":{"patient":1}},
         {"if": {"local":"LIFESCORE"}, "lte": 0,
           "then": [
             {"return":0}
@@ -2061,7 +2323,7 @@
         {"if": {
           "and": [
             {"require":{"param":"resource"},"eq":"hems"},
-            {"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"}
+            {"require":{"local":"P1_MANUAL_MODE_EFF"},"eq":"manual"}
           ]}, "eq": 1,
           "then": [
             {"if": {"local":"manual_p1_visit_completed"}, "ne": "yes",
@@ -2331,6 +2593,7 @@
     ]},
     {"if": {"param":"patient"}, "eq": 2,
       "then": [
+        {"call_macro":"refresh effective manual mode","params":{"patient":2}},
         {"if": {"local":"LIFESCORE2"}, "lte": 0,
           "then": [
             {"return":0}
@@ -2338,7 +2601,7 @@
         {"if": {
           "and": [
             {"require":{"param":"resource"},"eq":"hems"},
-            {"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"}
+            {"require":{"local":"P2_MANUAL_MODE_EFF"},"eq":"manual"}
           ]}, "eq": 1,
           "then": [
             {"if": {"local":"manual_p2_visit_completed"}, "ne": "yes",
@@ -2586,6 +2849,7 @@
     ]},
     {"if": {"param":"patient"}, "eq": 3,
       "then": [
+        {"call_macro":"refresh effective manual mode","params":{"patient":3}},
         {"if": {"local":"LIFESCORE3"}, "lte": 0,
           "then": [
             {"return":0}
@@ -2593,7 +2857,7 @@
         {"if": {
           "and": [
             {"require":{"param":"resource"},"eq":"hems"},
-            {"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"}
+            {"require":{"local":"P3_MANUAL_MODE_EFF"},"eq":"manual"}
           ]}, "eq": 1,
           "then": [
             {"if": {"local":"manual_p3_visit_completed"}, "ne": "yes",
@@ -4011,7 +4275,7 @@
   ],
   "multipatient registry live snapshot": [
     {"call_macro":"multipatient registry live sync"},
-    {"return":{"create_struct":{"schema":1,"mission":{"local":"VAR_MISSION_NUMBER"},"patients":{"json:copy":{"local":"patients"}},"clinical":{"create_struct":{"LIFESCORE":{"local":"LIFESCORE"},"TIME1SHORT":{"local":"TIME1SHORT"},"TIME1MED":{"local":"TIME1MED"},"TIME1LONG":{"local":"TIME1LONG"},"AGE1":{"local":"AGE1"},"SEX1":{"local":"SEX1"},"generic_pathology1":{"local":"generic_pathology1"},"symptoms1":{"local":"symptoms1"},"patientid":{"local":"patientid"},"P1_PATIENT_SURNAME":{"local":"P1_PATIENT_SURNAME"},"P1_PATIENT_GIVEN_NAME":{"local":"P1_PATIENT_GIVEN_NAME"},"decr_rate":{"local":"decr_rate"},"BP_SYS":{"local":"BP_SYS"},"BP_DIA":{"local":"BP_DIA"},"RR":{"local":"RR"},"TEMP":{"local":"TEMP"},"SPO2":{"local":"SPO2"},"BPM":{"local":"BPM"},"GCS_EYE":{"local":"GCS_EYE"},"GCS_VERBAL":{"local":"GCS_VERBAL"},"GCS_MOTOR":{"local":"GCS_MOTOR"},"GCS_TOTAL":{"local":"GCS_TOTAL"},"SPO2_MIN":{"local":"SPO2_MIN"},"SPO2_MAX":{"local":"SPO2_MAX"},"BPM_MIN":{"local":"BPM_MIN"},"BPM_MAX":{"local":"BPM_MAX"},"BP_SYS_MIN":{"local":"BP_SYS_MIN"},"BP_SYS_MAX":{"local":"BP_SYS_MAX"},"BP_DIA_MIN":{"local":"BP_DIA_MIN"},"BP_DIA_MAX":{"local":"BP_DIA_MAX"},"RR_MIN":{"local":"RR_MIN"},"RR_MAX":{"local":"RR_MAX"},"TEMP_MIN":{"local":"TEMP_MIN"},"TEMP_MAX":{"local":"TEMP_MAX"},"GCS_EYE_MIN":{"local":"GCS_EYE_MIN"},"GCS_EYE_MAX":{"local":"GCS_EYE_MAX"},"GCS_VERBAL_MIN":{"local":"GCS_VERBAL_MIN"},"GCS_VERBAL_MAX":{"local":"GCS_VERBAL_MAX"},"GCS_MOTOR_MIN":{"local":"GCS_MOTOR_MIN"},"GCS_MOTOR_MAX":{"local":"GCS_MOTOR_MAX"},"P1_DECR_RATE":{"local":"P1_DECR_RATE"},"P1_AGE":{"local":"P1_AGE"},"P1_SEX":{"local":"P1_SEX"},"P1_PATIENT_NAME":{"local":"P1_PATIENT_NAME"},"P1_PATHOLOGY":{"local":"P1_PATHOLOGY"},"P1_SYMPTOMS":{"local":"P1_SYMPTOMS"},"P1_SPO2":{"local":"P1_SPO2"},"P1_BPM":{"local":"P1_BPM"},"P1_BP_SYS":{"local":"P1_BP_SYS"},"P1_BP_DIA":{"local":"P1_BP_DIA"},"P1_RR":{"local":"P1_RR"},"P1_TEMP":{"local":"P1_TEMP"},"P1_GCS_EYE":{"local":"P1_GCS_EYE"},"P1_GCS_VERBAL":{"local":"P1_GCS_VERBAL"},"P1_GCS_MOTOR":{"local":"P1_GCS_MOTOR"},"P1_GCS_TOTAL":{"local":"P1_GCS_TOTAL"},"P1_MEDICAL_ACTION_COUNT":{"local":"P1_MEDICAL_ACTION_COUNT"},"P1_MEDICAL_ASSESSMENT_COMPLETE":{"local":"P1_MEDICAL_ASSESSMENT_COMPLETE"},"P1_MEDICAL_ACTIONS_COMPLETED":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"P1_AMBULANCE_COMPLETED_ACTIONS":{"local":"P1_AMBULANCE_COMPLETED_ACTIONS"},"P1_AMBULANCE_REPORT":{"local":"P1_AMBULANCE_REPORT"},"P1_GROUND_HANDOVER_REPORT":{"local":"P1_GROUND_HANDOVER_REPORT"},"P1_SPO2_MIN":{"local":"P1_SPO2_MIN"},"P1_SPO2_MAX":{"local":"P1_SPO2_MAX"},"P1_BPM_MIN":{"local":"P1_BPM_MIN"},"P1_BPM_MAX":{"local":"P1_BPM_MAX"},"P1_BP_SYS_MIN":{"local":"P1_BP_SYS_MIN"},"P1_BP_SYS_MAX":{"local":"P1_BP_SYS_MAX"},"P1_BP_DIA_MIN":{"local":"P1_BP_DIA_MIN"},"P1_BP_DIA_MAX":{"local":"P1_BP_DIA_MAX"},"P1_RR_MIN":{"local":"P1_RR_MIN"},"P1_RR_MAX":{"local":"P1_RR_MAX"},"P1_TEMP_MIN":{"local":"P1_TEMP_MIN"},"P1_TEMP_MAX":{"local":"P1_TEMP_MAX"},"P1_GCS_EYE_MIN":{"local":"P1_GCS_EYE_MIN"},"P1_GCS_EYE_MAX":{"local":"P1_GCS_EYE_MAX"},"P1_GCS_VERBAL_MIN":{"local":"P1_GCS_VERBAL_MIN"},"P1_GCS_VERBAL_MAX":{"local":"P1_GCS_VERBAL_MAX"},"P1_GCS_MOTOR_MIN":{"local":"P1_GCS_MOTOR_MIN"},"P1_GCS_MOTOR_MAX":{"local":"P1_GCS_MOTOR_MAX"},"P1_MEDICAL_ACTION_1":{"local":"P1_MEDICAL_ACTION_1"},"P1_MEDICAL_ACTION_1_PROFILE":{"local":"P1_MEDICAL_ACTION_1_PROFILE"},"P1_MEDICAL_ACTION_2":{"local":"P1_MEDICAL_ACTION_2"},"P1_MEDICAL_ACTION_2_PROFILE":{"local":"P1_MEDICAL_ACTION_2_PROFILE"},"P1_MEDICAL_ACTION_3":{"local":"P1_MEDICAL_ACTION_3"},"P1_MEDICAL_ACTION_3_PROFILE":{"local":"P1_MEDICAL_ACTION_3_PROFILE"},"P1_MEDICAL_ACTION_4":{"local":"P1_MEDICAL_ACTION_4"},"P1_MEDICAL_ACTION_4_PROFILE":{"local":"P1_MEDICAL_ACTION_4_PROFILE"},"P1_MEDICAL_ACTION_5":{"local":"P1_MEDICAL_ACTION_5"},"P1_MEDICAL_ACTION_5_PROFILE":{"local":"P1_MEDICAL_ACTION_5_PROFILE"},"P1_MEDICAL_ACTION_6":{"local":"P1_MEDICAL_ACTION_6"},"P1_MEDICAL_ACTION_6_PROFILE":{"local":"P1_MEDICAL_ACTION_6_PROFILE"},"LIFESCORE2":{"local":"LIFESCORE2"},"TIME2SHORT":{"local":"TIME2SHORT"},"TIME2MED":{"local":"TIME2MED"},"TIME2LONG":{"local":"TIME2LONG"},"AGE2":{"local":"AGE2"},"SEX2":{"local":"SEX2"},"generic_pathology2":{"local":"generic_pathology2"},"symptoms2":{"local":"symptoms2"},"patientid2":{"local":"patientid2"},"P2_PATIENT_SURNAME":{"local":"P2_PATIENT_SURNAME"},"P2_PATIENT_GIVEN_NAME":{"local":"P2_PATIENT_GIVEN_NAME"},"P2_DECR_RATE":{"local":"P2_DECR_RATE"},"P2_AGE":{"local":"P2_AGE"},"P2_SEX":{"local":"P2_SEX"},"P2_PATIENT_NAME":{"local":"P2_PATIENT_NAME"},"P2_PATHOLOGY":{"local":"P2_PATHOLOGY"},"P2_SYMPTOMS":{"local":"P2_SYMPTOMS"},"P2_SPO2":{"local":"P2_SPO2"},"P2_BPM":{"local":"P2_BPM"},"P2_BP_SYS":{"local":"P2_BP_SYS"},"P2_BP_DIA":{"local":"P2_BP_DIA"},"P2_RR":{"local":"P2_RR"},"P2_TEMP":{"local":"P2_TEMP"},"P2_GCS_EYE":{"local":"P2_GCS_EYE"},"P2_GCS_VERBAL":{"local":"P2_GCS_VERBAL"},"P2_GCS_MOTOR":{"local":"P2_GCS_MOTOR"},"P2_GCS_TOTAL":{"local":"P2_GCS_TOTAL"},"P2_MEDICAL_ACTION_COUNT":{"local":"P2_MEDICAL_ACTION_COUNT"},"P2_MEDICAL_ASSESSMENT_COMPLETE":{"local":"P2_MEDICAL_ASSESSMENT_COMPLETE"},"P2_MEDICAL_ACTIONS_COMPLETED":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"P2_AMBULANCE_COMPLETED_ACTIONS":{"local":"P2_AMBULANCE_COMPLETED_ACTIONS"},"P2_AMBULANCE_REPORT":{"local":"P2_AMBULANCE_REPORT"},"P2_GROUND_HANDOVER_REPORT":{"local":"P2_GROUND_HANDOVER_REPORT"},"P2_SPO2_MIN":{"local":"P2_SPO2_MIN"},"P2_SPO2_MAX":{"local":"P2_SPO2_MAX"},"P2_BPM_MIN":{"local":"P2_BPM_MIN"},"P2_BPM_MAX":{"local":"P2_BPM_MAX"},"P2_BP_SYS_MIN":{"local":"P2_BP_SYS_MIN"},"P2_BP_SYS_MAX":{"local":"P2_BP_SYS_MAX"},"P2_BP_DIA_MIN":{"local":"P2_BP_DIA_MIN"},"P2_BP_DIA_MAX":{"local":"P2_BP_DIA_MAX"},"P2_RR_MIN":{"local":"P2_RR_MIN"},"P2_RR_MAX":{"local":"P2_RR_MAX"},"P2_TEMP_MIN":{"local":"P2_TEMP_MIN"},"P2_TEMP_MAX":{"local":"P2_TEMP_MAX"},"P2_GCS_EYE_MIN":{"local":"P2_GCS_EYE_MIN"},"P2_GCS_EYE_MAX":{"local":"P2_GCS_EYE_MAX"},"P2_GCS_VERBAL_MIN":{"local":"P2_GCS_VERBAL_MIN"},"P2_GCS_VERBAL_MAX":{"local":"P2_GCS_VERBAL_MAX"},"P2_GCS_MOTOR_MIN":{"local":"P2_GCS_MOTOR_MIN"},"P2_GCS_MOTOR_MAX":{"local":"P2_GCS_MOTOR_MAX"},"P2_MEDICAL_ACTION_1":{"local":"P2_MEDICAL_ACTION_1"},"P2_MEDICAL_ACTION_1_PROFILE":{"local":"P2_MEDICAL_ACTION_1_PROFILE"},"P2_MEDICAL_ACTION_2":{"local":"P2_MEDICAL_ACTION_2"},"P2_MEDICAL_ACTION_2_PROFILE":{"local":"P2_MEDICAL_ACTION_2_PROFILE"},"P2_MEDICAL_ACTION_3":{"local":"P2_MEDICAL_ACTION_3"},"P2_MEDICAL_ACTION_3_PROFILE":{"local":"P2_MEDICAL_ACTION_3_PROFILE"},"P2_MEDICAL_ACTION_4":{"local":"P2_MEDICAL_ACTION_4"},"P2_MEDICAL_ACTION_4_PROFILE":{"local":"P2_MEDICAL_ACTION_4_PROFILE"},"P2_MEDICAL_ACTION_5":{"local":"P2_MEDICAL_ACTION_5"},"P2_MEDICAL_ACTION_5_PROFILE":{"local":"P2_MEDICAL_ACTION_5_PROFILE"},"P2_MEDICAL_ACTION_6":{"local":"P2_MEDICAL_ACTION_6"},"P2_MEDICAL_ACTION_6_PROFILE":{"local":"P2_MEDICAL_ACTION_6_PROFILE"},"LIFESCORE3":{"local":"LIFESCORE3"},"TIME3SHORT":{"local":"TIME3SHORT"},"TIME3MED":{"local":"TIME3MED"},"TIME3LONG":{"local":"TIME3LONG"},"AGE3":{"local":"AGE3"},"SEX3":{"local":"SEX3"},"generic_pathology3":{"local":"generic_pathology3"},"symptoms3":{"local":"symptoms3"},"patientid3":{"local":"patientid3"},"P3_PATIENT_SURNAME":{"local":"P3_PATIENT_SURNAME"},"P3_PATIENT_GIVEN_NAME":{"local":"P3_PATIENT_GIVEN_NAME"},"P3_DECR_RATE":{"local":"P3_DECR_RATE"},"P3_AGE":{"local":"P3_AGE"},"P3_SEX":{"local":"P3_SEX"},"P3_PATIENT_NAME":{"local":"P3_PATIENT_NAME"},"P3_PATHOLOGY":{"local":"P3_PATHOLOGY"},"P3_SYMPTOMS":{"local":"P3_SYMPTOMS"},"P3_SPO2":{"local":"P3_SPO2"},"P3_BPM":{"local":"P3_BPM"},"P3_BP_SYS":{"local":"P3_BP_SYS"},"P3_BP_DIA":{"local":"P3_BP_DIA"},"P3_RR":{"local":"P3_RR"},"P3_TEMP":{"local":"P3_TEMP"},"P3_GCS_EYE":{"local":"P3_GCS_EYE"},"P3_GCS_VERBAL":{"local":"P3_GCS_VERBAL"},"P3_GCS_MOTOR":{"local":"P3_GCS_MOTOR"},"P3_GCS_TOTAL":{"local":"P3_GCS_TOTAL"},"P3_MEDICAL_ACTION_COUNT":{"local":"P3_MEDICAL_ACTION_COUNT"},"P3_MEDICAL_ASSESSMENT_COMPLETE":{"local":"P3_MEDICAL_ASSESSMENT_COMPLETE"},"P3_MEDICAL_ACTIONS_COMPLETED":{"local":"P3_MEDICAL_ACTIONS_COMPLETED"},"P3_AMBULANCE_COMPLETED_ACTIONS":{"local":"P3_AMBULANCE_COMPLETED_ACTIONS"},"P3_AMBULANCE_REPORT":{"local":"P3_AMBULANCE_REPORT"},"P3_GROUND_HANDOVER_REPORT":{"local":"P3_GROUND_HANDOVER_REPORT"},"P3_SPO2_MIN":{"local":"P3_SPO2_MIN"},"P3_SPO2_MAX":{"local":"P3_SPO2_MAX"},"P3_BPM_MIN":{"local":"P3_BPM_MIN"},"P3_BPM_MAX":{"local":"P3_BPM_MAX"},"P3_BP_SYS_MIN":{"local":"P3_BP_SYS_MIN"},"P3_BP_SYS_MAX":{"local":"P3_BP_SYS_MAX"},"P3_BP_DIA_MIN":{"local":"P3_BP_DIA_MIN"},"P3_BP_DIA_MAX":{"local":"P3_BP_DIA_MAX"},"P3_RR_MIN":{"local":"P3_RR_MIN"},"P3_RR_MAX":{"local":"P3_RR_MAX"},"P3_TEMP_MIN":{"local":"P3_TEMP_MIN"},"P3_TEMP_MAX":{"local":"P3_TEMP_MAX"},"P3_GCS_EYE_MIN":{"local":"P3_GCS_EYE_MIN"},"P3_GCS_EYE_MAX":{"local":"P3_GCS_EYE_MAX"},"P3_GCS_VERBAL_MIN":{"local":"P3_GCS_VERBAL_MIN"},"P3_GCS_VERBAL_MAX":{"local":"P3_GCS_VERBAL_MAX"},"P3_GCS_MOTOR_MIN":{"local":"P3_GCS_MOTOR_MIN"},"P3_GCS_MOTOR_MAX":{"local":"P3_GCS_MOTOR_MAX"},"P3_MEDICAL_ACTION_1":{"local":"P3_MEDICAL_ACTION_1"},"P3_MEDICAL_ACTION_1_PROFILE":{"local":"P3_MEDICAL_ACTION_1_PROFILE"},"P3_MEDICAL_ACTION_2":{"local":"P3_MEDICAL_ACTION_2"},"P3_MEDICAL_ACTION_2_PROFILE":{"local":"P3_MEDICAL_ACTION_2_PROFILE"},"P3_MEDICAL_ACTION_3":{"local":"P3_MEDICAL_ACTION_3"},"P3_MEDICAL_ACTION_3_PROFILE":{"local":"P3_MEDICAL_ACTION_3_PROFILE"},"P3_MEDICAL_ACTION_4":{"local":"P3_MEDICAL_ACTION_4"},"P3_MEDICAL_ACTION_4_PROFILE":{"local":"P3_MEDICAL_ACTION_4_PROFILE"},"P3_MEDICAL_ACTION_5":{"local":"P3_MEDICAL_ACTION_5"},"P3_MEDICAL_ACTION_5_PROFILE":{"local":"P3_MEDICAL_ACTION_5_PROFILE"},"P3_MEDICAL_ACTION_6":{"local":"P3_MEDICAL_ACTION_6"},"P3_MEDICAL_ACTION_6_PROFILE":{"local":"P3_MEDICAL_ACTION_6_PROFILE"}}},"latitude":{"var":["L:TEMPACCIDENT_LOCATION LAT","number"]},"longitude":{"var":["L:TEMPACCIDENT_LOCATION LON","number"]}}}}
+    {"return":{"create_struct":{"schema":1,"mission":{"local":"VAR_MISSION_NUMBER"},"patients":{"json:copy":{"local":"patients"}},"clinical":{"create_struct":{"LIFESCORE":{"local":"LIFESCORE"},"TIME1SHORT":{"local":"TIME1SHORT"},"TIME1MED":{"local":"TIME1MED"},"TIME1LONG":{"local":"TIME1LONG"},"AGE1":{"local":"AGE1"},"SEX1":{"local":"SEX1"},"generic_pathology1":{"local":"generic_pathology1"},"symptoms1":{"local":"symptoms1"},"patientid":{"local":"patientid"},"P1_PATIENT_SURNAME":{"local":"P1_PATIENT_SURNAME"},"P1_PATIENT_GIVEN_NAME":{"local":"P1_PATIENT_GIVEN_NAME"},"decr_rate":{"local":"decr_rate"},"BP_SYS":{"local":"BP_SYS"},"BP_DIA":{"local":"BP_DIA"},"RR":{"local":"RR"},"TEMP":{"local":"TEMP"},"SPO2":{"local":"SPO2"},"BPM":{"local":"BPM"},"GCS_EYE":{"local":"GCS_EYE"},"GCS_VERBAL":{"local":"GCS_VERBAL"},"GCS_MOTOR":{"local":"GCS_MOTOR"},"GCS_TOTAL":{"local":"GCS_TOTAL"},"SPO2_MIN":{"local":"SPO2_MIN"},"SPO2_MAX":{"local":"SPO2_MAX"},"BPM_MIN":{"local":"BPM_MIN"},"BPM_MAX":{"local":"BPM_MAX"},"BP_SYS_MIN":{"local":"BP_SYS_MIN"},"BP_SYS_MAX":{"local":"BP_SYS_MAX"},"BP_DIA_MIN":{"local":"BP_DIA_MIN"},"BP_DIA_MAX":{"local":"BP_DIA_MAX"},"RR_MIN":{"local":"RR_MIN"},"RR_MAX":{"local":"RR_MAX"},"TEMP_MIN":{"local":"TEMP_MIN"},"TEMP_MAX":{"local":"TEMP_MAX"},"GCS_EYE_MIN":{"local":"GCS_EYE_MIN"},"GCS_EYE_MAX":{"local":"GCS_EYE_MAX"},"GCS_VERBAL_MIN":{"local":"GCS_VERBAL_MIN"},"GCS_VERBAL_MAX":{"local":"GCS_VERBAL_MAX"},"GCS_MOTOR_MIN":{"local":"GCS_MOTOR_MIN"},"GCS_MOTOR_MAX":{"local":"GCS_MOTOR_MAX"},"P1_DECR_RATE":{"local":"P1_DECR_RATE"},"P1_AGE":{"local":"P1_AGE"},"P1_SEX":{"local":"P1_SEX"},"P1_PATIENT_NAME":{"local":"P1_PATIENT_NAME"},"P1_PATHOLOGY":{"local":"P1_PATHOLOGY"},"P1_SYMPTOMS":{"local":"P1_SYMPTOMS"},"P1_SPO2":{"local":"P1_SPO2"},"P1_BPM":{"local":"P1_BPM"},"P1_BP_SYS":{"local":"P1_BP_SYS"},"P1_BP_DIA":{"local":"P1_BP_DIA"},"P1_RR":{"local":"P1_RR"},"P1_TEMP":{"local":"P1_TEMP"},"P1_GCS_EYE":{"local":"P1_GCS_EYE"},"P1_GCS_VERBAL":{"local":"P1_GCS_VERBAL"},"P1_GCS_MOTOR":{"local":"P1_GCS_MOTOR"},"P1_GCS_TOTAL":{"local":"P1_GCS_TOTAL"},"P1_MEDICAL_ACTION_COUNT":{"local":"P1_MEDICAL_ACTION_COUNT"},"P1_MEDICAL_ASSESSMENT_COMPLETE":{"local":"P1_MEDICAL_ASSESSMENT_COMPLETE"},"P1_MEDICAL_ACTIONS_COMPLETED":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"},"P1_AMBULANCE_COMPLETED_ACTIONS":{"local":"P1_AMBULANCE_COMPLETED_ACTIONS"},"P1_AMBULANCE_REPORT":{"local":"P1_AMBULANCE_REPORT"},"P1_GROUND_HANDOVER_REPORT":{"local":"P1_GROUND_HANDOVER_REPORT"},"P1_SPO2_MIN":{"local":"P1_SPO2_MIN"},"P1_SPO2_MAX":{"local":"P1_SPO2_MAX"},"P1_BPM_MIN":{"local":"P1_BPM_MIN"},"P1_BPM_MAX":{"local":"P1_BPM_MAX"},"P1_BP_SYS_MIN":{"local":"P1_BP_SYS_MIN"},"P1_BP_SYS_MAX":{"local":"P1_BP_SYS_MAX"},"P1_BP_DIA_MIN":{"local":"P1_BP_DIA_MIN"},"P1_BP_DIA_MAX":{"local":"P1_BP_DIA_MAX"},"P1_RR_MIN":{"local":"P1_RR_MIN"},"P1_RR_MAX":{"local":"P1_RR_MAX"},"P1_TEMP_MIN":{"local":"P1_TEMP_MIN"},"P1_TEMP_MAX":{"local":"P1_TEMP_MAX"},"P1_GCS_EYE_MIN":{"local":"P1_GCS_EYE_MIN"},"P1_GCS_EYE_MAX":{"local":"P1_GCS_EYE_MAX"},"P1_GCS_VERBAL_MIN":{"local":"P1_GCS_VERBAL_MIN"},"P1_GCS_VERBAL_MAX":{"local":"P1_GCS_VERBAL_MAX"},"P1_GCS_MOTOR_MIN":{"local":"P1_GCS_MOTOR_MIN"},"P1_GCS_MOTOR_MAX":{"local":"P1_GCS_MOTOR_MAX"},"P1_MEDICAL_ACTION_1":{"local":"P1_MEDICAL_ACTION_1"},"P1_MEDICAL_ACTION_1_PROFILE":{"local":"P1_MEDICAL_ACTION_1_PROFILE"},"P1_MEDICAL_ACTION_2":{"local":"P1_MEDICAL_ACTION_2"},"P1_MEDICAL_ACTION_2_PROFILE":{"local":"P1_MEDICAL_ACTION_2_PROFILE"},"P1_MEDICAL_ACTION_3":{"local":"P1_MEDICAL_ACTION_3"},"P1_MEDICAL_ACTION_3_PROFILE":{"local":"P1_MEDICAL_ACTION_3_PROFILE"},"P1_MEDICAL_ACTION_4":{"local":"P1_MEDICAL_ACTION_4"},"P1_MEDICAL_ACTION_4_PROFILE":{"local":"P1_MEDICAL_ACTION_4_PROFILE"},"P1_MEDICAL_ACTION_5":{"local":"P1_MEDICAL_ACTION_5"},"P1_MEDICAL_ACTION_5_PROFILE":{"local":"P1_MEDICAL_ACTION_5_PROFILE"},"P1_MEDICAL_ACTION_6":{"local":"P1_MEDICAL_ACTION_6"},"P1_MEDICAL_ACTION_6_PROFILE":{"local":"P1_MEDICAL_ACTION_6_PROFILE"},"LIFESCORE2":{"local":"LIFESCORE2"},"TIME2SHORT":{"local":"TIME2SHORT"},"TIME2MED":{"local":"TIME2MED"},"TIME2LONG":{"local":"TIME2LONG"},"AGE2":{"local":"AGE2"},"SEX2":{"local":"SEX2"},"generic_pathology2":{"local":"generic_pathology2"},"symptoms2":{"local":"symptoms2"},"patientid2":{"local":"patientid2"},"P2_PATIENT_SURNAME":{"local":"P2_PATIENT_SURNAME"},"P2_PATIENT_GIVEN_NAME":{"local":"P2_PATIENT_GIVEN_NAME"},"P2_DECR_RATE":{"local":"P2_DECR_RATE"},"P2_AGE":{"local":"P2_AGE"},"P2_SEX":{"local":"P2_SEX"},"P2_PATIENT_NAME":{"local":"P2_PATIENT_NAME"},"P2_PATHOLOGY":{"local":"P2_PATHOLOGY"},"P2_SYMPTOMS":{"local":"P2_SYMPTOMS"},"P2_SPO2":{"local":"P2_SPO2"},"P2_BPM":{"local":"P2_BPM"},"P2_BP_SYS":{"local":"P2_BP_SYS"},"P2_BP_DIA":{"local":"P2_BP_DIA"},"P2_RR":{"local":"P2_RR"},"P2_TEMP":{"local":"P2_TEMP"},"P2_GCS_EYE":{"local":"P2_GCS_EYE"},"P2_GCS_VERBAL":{"local":"P2_GCS_VERBAL"},"P2_GCS_MOTOR":{"local":"P2_GCS_MOTOR"},"P2_GCS_TOTAL":{"local":"P2_GCS_TOTAL"},"P2_MEDICAL_ACTION_COUNT":{"local":"P2_MEDICAL_ACTION_COUNT"},"P2_MEDICAL_ASSESSMENT_COMPLETE":{"local":"P2_MEDICAL_ASSESSMENT_COMPLETE"},"P2_MEDICAL_ACTIONS_COMPLETED":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"},"P2_AMBULANCE_COMPLETED_ACTIONS":{"local":"P2_AMBULANCE_COMPLETED_ACTIONS"},"P2_AMBULANCE_REPORT":{"local":"P2_AMBULANCE_REPORT"},"P2_GROUND_HANDOVER_REPORT":{"local":"P2_GROUND_HANDOVER_REPORT"},"P2_SPO2_MIN":{"local":"P2_SPO2_MIN"},"P2_SPO2_MAX":{"local":"P2_SPO2_MAX"},"P2_BPM_MIN":{"local":"P2_BPM_MIN"},"P2_BPM_MAX":{"local":"P2_BPM_MAX"},"P2_BP_SYS_MIN":{"local":"P2_BP_SYS_MIN"},"P2_BP_SYS_MAX":{"local":"P2_BP_SYS_MAX"},"P2_BP_DIA_MIN":{"local":"P2_BP_DIA_MIN"},"P2_BP_DIA_MAX":{"local":"P2_BP_DIA_MAX"},"P2_RR_MIN":{"local":"P2_RR_MIN"},"P2_RR_MAX":{"local":"P2_RR_MAX"},"P2_TEMP_MIN":{"local":"P2_TEMP_MIN"},"P2_TEMP_MAX":{"local":"P2_TEMP_MAX"},"P2_GCS_EYE_MIN":{"local":"P2_GCS_EYE_MIN"},"P2_GCS_EYE_MAX":{"local":"P2_GCS_EYE_MAX"},"P2_GCS_VERBAL_MIN":{"local":"P2_GCS_VERBAL_MIN"},"P2_GCS_VERBAL_MAX":{"local":"P2_GCS_VERBAL_MAX"},"P2_GCS_MOTOR_MIN":{"local":"P2_GCS_MOTOR_MIN"},"P2_GCS_MOTOR_MAX":{"local":"P2_GCS_MOTOR_MAX"},"P2_MEDICAL_ACTION_1":{"local":"P2_MEDICAL_ACTION_1"},"P2_MEDICAL_ACTION_1_PROFILE":{"local":"P2_MEDICAL_ACTION_1_PROFILE"},"P2_MEDICAL_ACTION_2":{"local":"P2_MEDICAL_ACTION_2"},"P2_MEDICAL_ACTION_2_PROFILE":{"local":"P2_MEDICAL_ACTION_2_PROFILE"},"P2_MEDICAL_ACTION_3":{"local":"P2_MEDICAL_ACTION_3"},"P2_MEDICAL_ACTION_3_PROFILE":{"local":"P2_MEDICAL_ACTION_3_PROFILE"},"P2_MEDICAL_ACTION_4":{"local":"P2_MEDICAL_ACTION_4"},"P2_MEDICAL_ACTION_4_PROFILE":{"local":"P2_MEDICAL_ACTION_4_PROFILE"},"P2_MEDICAL_ACTION_5":{"local":"P2_MEDICAL_ACTION_5"},"P2_MEDICAL_ACTION_5_PROFILE":{"local":"P2_MEDICAL_ACTION_5_PROFILE"},"P2_MEDICAL_ACTION_6":{"local":"P2_MEDICAL_ACTION_6"},"P2_MEDICAL_ACTION_6_PROFILE":{"local":"P2_MEDICAL_ACTION_6_PROFILE"},"LIFESCORE3":{"local":"LIFESCORE3"},"TIME3SHORT":{"local":"TIME3SHORT"},"TIME3MED":{"local":"TIME3MED"},"TIME3LONG":{"local":"TIME3LONG"},"AGE3":{"local":"AGE3"},"SEX3":{"local":"SEX3"},"generic_pathology3":{"local":"generic_pathology3"},"symptoms3":{"local":"symptoms3"},"patientid3":{"local":"patientid3"},"P3_PATIENT_SURNAME":{"local":"P3_PATIENT_SURNAME"},"P3_PATIENT_GIVEN_NAME":{"local":"P3_PATIENT_GIVEN_NAME"},"P3_DECR_RATE":{"local":"P3_DECR_RATE"},"P3_AGE":{"local":"P3_AGE"},"P3_SEX":{"local":"P3_SEX"},"P3_PATIENT_NAME":{"local":"P3_PATIENT_NAME"},"P3_PATHOLOGY":{"local":"P3_PATHOLOGY"},"P3_SYMPTOMS":{"local":"P3_SYMPTOMS"},"P3_SPO2":{"local":"P3_SPO2"},"P3_BPM":{"local":"P3_BPM"},"P3_BP_SYS":{"local":"P3_BP_SYS"},"P3_BP_DIA":{"local":"P3_BP_DIA"},"P3_RR":{"local":"P3_RR"},"P3_TEMP":{"local":"P3_TEMP"},"P3_GCS_EYE":{"local":"P3_GCS_EYE"},"P3_GCS_VERBAL":{"local":"P3_GCS_VERBAL"},"P3_GCS_MOTOR":{"local":"P3_GCS_MOTOR"},"P3_GCS_TOTAL":{"local":"P3_GCS_TOTAL"},"P3_MEDICAL_ACTION_COUNT":{"local":"P3_MEDICAL_ACTION_COUNT"},"P3_MEDICAL_ASSESSMENT_COMPLETE":{"local":"P3_MEDICAL_ASSESSMENT_COMPLETE"},"P3_MEDICAL_ACTIONS_COMPLETED":{"local":"P3_MEDICAL_ACTIONS_COMPLETED"},"P3_AMBULANCE_COMPLETED_ACTIONS":{"local":"P3_AMBULANCE_COMPLETED_ACTIONS"},"P3_AMBULANCE_REPORT":{"local":"P3_AMBULANCE_REPORT"},"P3_GROUND_HANDOVER_REPORT":{"local":"P3_GROUND_HANDOVER_REPORT"},"P3_SPO2_MIN":{"local":"P3_SPO2_MIN"},"P3_SPO2_MAX":{"local":"P3_SPO2_MAX"},"P3_BPM_MIN":{"local":"P3_BPM_MIN"},"P3_BPM_MAX":{"local":"P3_BPM_MAX"},"P3_BP_SYS_MIN":{"local":"P3_BP_SYS_MIN"},"P3_BP_SYS_MAX":{"local":"P3_BP_SYS_MAX"},"P3_BP_DIA_MIN":{"local":"P3_BP_DIA_MIN"},"P3_BP_DIA_MAX":{"local":"P3_BP_DIA_MAX"},"P3_RR_MIN":{"local":"P3_RR_MIN"},"P3_RR_MAX":{"local":"P3_RR_MAX"},"P3_TEMP_MIN":{"local":"P3_TEMP_MIN"},"P3_TEMP_MAX":{"local":"P3_TEMP_MAX"},"P3_GCS_EYE_MIN":{"local":"P3_GCS_EYE_MIN"},"P3_GCS_EYE_MAX":{"local":"P3_GCS_EYE_MAX"},"P3_GCS_VERBAL_MIN":{"local":"P3_GCS_VERBAL_MIN"},"P3_GCS_VERBAL_MAX":{"local":"P3_GCS_VERBAL_MAX"},"P3_GCS_MOTOR_MIN":{"local":"P3_GCS_MOTOR_MIN"},"P3_GCS_MOTOR_MAX":{"local":"P3_GCS_MOTOR_MAX"},"P3_MEDICAL_ACTION_1":{"local":"P3_MEDICAL_ACTION_1"},"P3_MEDICAL_ACTION_1_PROFILE":{"local":"P3_MEDICAL_ACTION_1_PROFILE"},"P3_MEDICAL_ACTION_2":{"local":"P3_MEDICAL_ACTION_2"},"P3_MEDICAL_ACTION_2_PROFILE":{"local":"P3_MEDICAL_ACTION_2_PROFILE"},"P3_MEDICAL_ACTION_3":{"local":"P3_MEDICAL_ACTION_3"},"P3_MEDICAL_ACTION_3_PROFILE":{"local":"P3_MEDICAL_ACTION_3_PROFILE"},"P3_MEDICAL_ACTION_4":{"local":"P3_MEDICAL_ACTION_4"},"P3_MEDICAL_ACTION_4_PROFILE":{"local":"P3_MEDICAL_ACTION_4_PROFILE"},"P3_MEDICAL_ACTION_5":{"local":"P3_MEDICAL_ACTION_5"},"P3_MEDICAL_ACTION_5_PROFILE":{"local":"P3_MEDICAL_ACTION_5_PROFILE"},"P3_MEDICAL_ACTION_6":{"local":"P3_MEDICAL_ACTION_6"},"P3_MEDICAL_ACTION_6_PROFILE":{"local":"P3_MEDICAL_ACTION_6_PROFILE"},"P1_GLUCOSE":{"local":"P1_GLUCOSE"},"P1_ECG_RHYTHM":{"local":"P1_ECG_RHYTHM"},"P1_CRIT_BLEED":{"local":"P1_CRIT_BLEED"},"P1_PLAUSIBLE_POOL":{"local":"P1_PLAUSIBLE_POOL"},"P2_GLUCOSE":{"local":"P2_GLUCOSE"},"P2_ECG_RHYTHM":{"local":"P2_ECG_RHYTHM"},"P2_CRIT_BLEED":{"local":"P2_CRIT_BLEED"},"P2_PLAUSIBLE_POOL":{"local":"P2_PLAUSIBLE_POOL"},"P3_GLUCOSE":{"local":"P3_GLUCOSE"},"P3_ECG_RHYTHM":{"local":"P3_ECG_RHYTHM"},"P3_CRIT_BLEED":{"local":"P3_CRIT_BLEED"},"P3_PLAUSIBLE_POOL":{"local":"P3_PLAUSIBLE_POOL"}}},"latitude":{"var":["L:TEMPACCIDENT_LOCATION LAT","number"]},"longitude":{"var":["L:TEMPACCIDENT_LOCATION LON","number"]}}}}
   ],
   "multipatient registry live save": [
     {"if": {"local":"patient_live_mode"}, "ne": 1,
@@ -4434,6 +4698,23 @@
           "then": [
             {"set":{"local":"P1_MEDICAL_ACTION_1_PROFILE"},"value":{"param":"saved_clinical","path":"P1_MEDICAL_ACTION_1_PROFILE"}}
         ]},
+        {"if": {"param":"saved_clinical","path":"P1_GLUCOSE"}, "ne": null,
+          "then": [
+            {"set":{"local":"P1_GLUCOSE"},"value":{"param":"saved_clinical","path":"P1_GLUCOSE"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P1_ECG_RHYTHM"}, "ne": null,
+          "then": [
+            {"set":{"local":"P1_ECG_RHYTHM"},"value":{"param":"saved_clinical","path":"P1_ECG_RHYTHM"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P1_CRIT_BLEED"}, "ne": null,
+          "then": [
+            {"set":{"local":"P1_CRIT_BLEED"},"value":{"param":"saved_clinical","path":"P1_CRIT_BLEED"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P1_PLAUSIBLE_POOL"}, "ne": null,
+          "then": [
+            {"set":{"local":"P1_PLAUSIBLE_POOL"},"value":{"param":"saved_clinical","path":"P1_PLAUSIBLE_POOL"}}
+        ]},
+        {"call_macro":"refresh effective manual mode","params":{"patient":1}},
         {"if": {"param":"saved_clinical","path":"P1_MEDICAL_ACTION_2"}, "ne": null,
           "then": [
             {"set":{"local":"P1_MEDICAL_ACTION_2"},"value":{"param":"saved_clinical","path":"P1_MEDICAL_ACTION_2"}}
@@ -4700,6 +4981,23 @@
           "then": [
             {"set":{"local":"P2_MEDICAL_ACTION_1_PROFILE"},"value":{"param":"saved_clinical","path":"P2_MEDICAL_ACTION_1_PROFILE"}}
         ]},
+        {"if": {"param":"saved_clinical","path":"P2_GLUCOSE"}, "ne": null,
+          "then": [
+            {"set":{"local":"P2_GLUCOSE"},"value":{"param":"saved_clinical","path":"P2_GLUCOSE"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P2_ECG_RHYTHM"}, "ne": null,
+          "then": [
+            {"set":{"local":"P2_ECG_RHYTHM"},"value":{"param":"saved_clinical","path":"P2_ECG_RHYTHM"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P2_CRIT_BLEED"}, "ne": null,
+          "then": [
+            {"set":{"local":"P2_CRIT_BLEED"},"value":{"param":"saved_clinical","path":"P2_CRIT_BLEED"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P2_PLAUSIBLE_POOL"}, "ne": null,
+          "then": [
+            {"set":{"local":"P2_PLAUSIBLE_POOL"},"value":{"param":"saved_clinical","path":"P2_PLAUSIBLE_POOL"}}
+        ]},
+        {"call_macro":"refresh effective manual mode","params":{"patient":2}},
         {"if": {"param":"saved_clinical","path":"P2_MEDICAL_ACTION_2"}, "ne": null,
           "then": [
             {"set":{"local":"P2_MEDICAL_ACTION_2"},"value":{"param":"saved_clinical","path":"P2_MEDICAL_ACTION_2"}}
@@ -4966,6 +5264,23 @@
           "then": [
             {"set":{"local":"P3_MEDICAL_ACTION_1_PROFILE"},"value":{"param":"saved_clinical","path":"P3_MEDICAL_ACTION_1_PROFILE"}}
         ]},
+        {"if": {"param":"saved_clinical","path":"P3_GLUCOSE"}, "ne": null,
+          "then": [
+            {"set":{"local":"P3_GLUCOSE"},"value":{"param":"saved_clinical","path":"P3_GLUCOSE"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P3_ECG_RHYTHM"}, "ne": null,
+          "then": [
+            {"set":{"local":"P3_ECG_RHYTHM"},"value":{"param":"saved_clinical","path":"P3_ECG_RHYTHM"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P3_CRIT_BLEED"}, "ne": null,
+          "then": [
+            {"set":{"local":"P3_CRIT_BLEED"},"value":{"param":"saved_clinical","path":"P3_CRIT_BLEED"}}
+        ]},
+        {"if": {"param":"saved_clinical","path":"P3_PLAUSIBLE_POOL"}, "ne": null,
+          "then": [
+            {"set":{"local":"P3_PLAUSIBLE_POOL"},"value":{"param":"saved_clinical","path":"P3_PLAUSIBLE_POOL"}}
+        ]},
+        {"call_macro":"refresh effective manual mode","params":{"patient":3}},
         {"if": {"param":"saved_clinical","path":"P3_MEDICAL_ACTION_2"}, "ne": null,
           "then": [
             {"set":{"local":"P3_MEDICAL_ACTION_2"},"value":{"param":"saved_clinical","path":"P3_MEDICAL_ACTION_2"}}
@@ -5791,7 +6106,8 @@
           "then": [
             {"set":{"local":"GCS_MOTOR_MAX"},"value":{"param":"profile","path":"gcs_motor_max"}}
         ]},
-        {"call_macro":"initialize patient1 physiology"}
+        {"call_macro":"initialize patient1 physiology"},
+        {"call_macro":"initialize patient extra clinical state","params":{"patient":1,"profile":{"param":"profile"}}}
     ]},
     {"if": {"param":"patient"}, "eq": 2,
       "then": [
@@ -5919,7 +6235,8 @@
           "then": [
             {"set":{"local":"P2_GCS_MOTOR_MAX"},"value":{"param":"profile","path":"gcs_motor_max"}}
         ]},
-        {"call_macro":"initialize patient2 physiology"}
+        {"call_macro":"initialize patient2 physiology"},
+        {"call_macro":"initialize patient extra clinical state","params":{"patient":2,"profile":{"param":"profile"}}}
     ]},
     {"if": {"param":"patient"}, "eq": 3,
       "then": [
@@ -6047,7 +6364,8 @@
           "then": [
             {"set":{"local":"P3_GCS_MOTOR_MAX"},"value":{"param":"profile","path":"gcs_motor_max"}}
         ]},
-        {"call_macro":"initialize patient3 physiology"}
+        {"call_macro":"initialize patient3 physiology"},
+        {"call_macro":"initialize patient extra clinical state","params":{"patient":3,"profile":{"param":"profile"}}}
     ]}
   ],
   "multipatient registry live recover": [

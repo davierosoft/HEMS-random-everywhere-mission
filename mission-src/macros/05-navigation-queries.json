@@ -2841,6 +2841,7 @@
                   ],"else": [
                     {"for_each": {"param":"elements"},
                       "do": [
+                        {"call_macro":"loop yield"},
                         {"debug_write":{"text":"ID: {0}, type: {1}","params":[{"struct":{"param":"$item"},"path":"id"},{"struct":{"param":"$item"},"path":"type"}]}},
                         {"if": {"struct":{"param":"$item"},"path":"type"}, "eq": "node",
                           "then": [
@@ -2854,6 +2855,7 @@
               ],"else": [
                 {"for_each": {"param":"elements"},
                   "do": [
+                    {"call_macro":"loop yield"},
                     {"debug_write":{"text":"ID: {0}, type: {1}","params":[{"struct":{"param":"$item"},"path":"id"},{"struct":{"param":"$item"},"path":"type"}]}},
                     {"if": {"struct":{"param":"$item"},"path":"type"}, "eq": "node",
                       "then": [
@@ -2977,6 +2979,7 @@
                   ],"else": [
                     {"for_each": {"param":"elements"},
                       "do": [
+                        {"call_macro":"loop yield"},
                         {"debug_write":{"text":"ID: {0}, type: {1}","params":[{"struct":{"param":"$item"},"path":"id"},{"struct":{"param":"$item"},"path":"type"}]}},
                         {"if": {"struct":{"param":"$item"},"path":"type"}, "eq": "node",
                           "then": [
@@ -2990,6 +2993,7 @@
               ],"else": [
                 {"for_each": {"param":"elements"},
                   "do": [
+                    {"call_macro":"loop yield"},
                     {"debug_write":{"text":"ID: {0}, type: {1}","params":[{"struct":{"param":"$item"},"path":"id"},{"struct":{"param":"$item"},"path":"type"}]}},
                     {"if": {"struct":{"param":"$item"},"path":"type"}, "eq": "node",
                       "then": [
@@ -4011,6 +4015,7 @@
             {"osm_get_all_ways":{"param":"my_data1"},"result":"my_ways"},
             {"for_each": {"param":"my_ways"},
               "do": [
+                {"call_macro":"loop yield"},
                 {"set":{"param":"node_location_list"},"value":{"create_array":[]}}
             ]},
             {"osm_get_closest_nodes":"rescue_location","data":{"param":"my_data1"},"result":"my_closest_nodes"},
@@ -4655,6 +4660,7 @@
                     ]},
                     {"while": {"param":"hasambunamechoice"}, "eq": false,
                       "do": [
+                        {"call_macro":"loop yield"},
                         {"set":{"param":"ambuchoicename"},"value":{"struct":{"param":"nationalambuname"},"index":{"floor":{"rand":[0,{"struct":{"param":"nationalambuname"},"path":"length"}]}}}},
                         {"set":{"local":"ambuname"},"value":{"struct":{"param":"ambuchoicename"},"path":"id"}},
                         {"set":{"param":"hasambunamechoice"},"value":true}
@@ -4817,6 +4823,7 @@
                   "commands": [
                     {"while": {"param":"haspolinamechoice"}, "eq": false,
                       "do": [
+                        {"call_macro":"loop yield"},
                         {"set":{"param":"polichoicename"},"value":{"struct":{"param":"nationalpoliname"},"index":{"floor":{"rand":[0,{"struct":{"param":"nationalpoliname"},"path":"length"}]}}}},
                         {"set":{"local":"poliname"},"value":{"struct":{"param":"polichoicename"},"path":"id"}},
                         {"set":{"param":"haspolinamechoice"},"value":true}
@@ -7003,6 +7010,7 @@
     ]}
   ],
   "user destination scene predefined1": [
+    {"call_macro":"ground spot distances"},
     {"create_location": "DAMBWP",
       "zones": [
         {"zone":{"location":{"bearing":340,"dist":18,"object":"hospital_user"}}}
@@ -7020,11 +7028,11 @@
       "then": [
         {"create_location": "DSTR",
           "zones": [
-            {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"},"object":"hospital_user"}}}
         ]},
         {"create_location": "DMED",
           "zones": [
-            {"zone":{"location":{"bearing":10,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":10,"dist":{"local":"hmed_eff"},"object":"hospital_user"}}}
         ]}
       ],"else": [
         {"create_location": "DSTR",
@@ -7111,6 +7119,7 @@
     ]}}
   ],
   "User destination1": [
+    {"call_macro":"ground spot distances"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination1","state":"wait_var.distance_lt_2"}},
     {"wait_for":{"location":"hospital_user","var":"distance"},"lt":2},
     {"call_macro":"custom hospital ambulance check"},
@@ -7196,11 +7205,11 @@
                     "then": [
                       {"create_location": "DSTR",
                         "zones": [
-                          {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}
+                          {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"}}}}
                       ]},
                       {"create_location": "DMED",
                         "zones": [
-                          {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
+                          {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"}}}}
                       ]}
                   ]},
                   {"call_macro":"Ambulance5"},
@@ -7238,11 +7247,11 @@
               "then": [
                 {"create_location": "DSTR",
                   "zones": [
-                    {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}
+                    {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"}}}}
                 ]},
                 {"create_location": "DMED",
                   "zones": [
-                    {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
+                    {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"}}}}
                 ]}
             ]},
             {"if": {"local":"cha_active"}, "eq": "yes",
@@ -7296,11 +7305,11 @@
       "then": [
         {"create_location": "DSTR",
           "zones": [
-            {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}
+            {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"}}}}
         ]},
         {"create_location": "DMED",
           "zones": [
-            {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
+            {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"}}}}
         ]}
     ]},
     {"call_macro":"hospital pad trace","params":{"stage":"after_landing_locations","str":"ambustretcher","med":"ambumedic"}},
@@ -7707,6 +7716,7 @@
     {"call_macro":"Return to base or continue menu"}
   ],
   "user destination scene predefined2": [
+    {"call_macro":"ground spot distances"},
     {"create_location": "DAMBWP",
       "zones": [
         {"zone":{"location":{"bearing":340,"dist":18,"object":"hospital_user"}}}
@@ -7724,11 +7734,11 @@
       "then": [
         {"create_location": "DSTR",
           "zones": [
-            {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"},"object":"hospital_user"}}}
         ]},
         {"create_location": "DMED",
           "zones": [
-            {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"},"object":"hospital_user"}}}
         ]}
       ],"else": [
         {"create_location": "DSTR",
@@ -7812,6 +7822,7 @@
     {"point_object":"ambustretcher","to":"hospital_user"}
   ],
   "user destination hoist predefined": [
+    {"call_macro":"ground spot distances"},
     {"create_location": "DAMBWP",
       "zones": [
         {"zone":{"location":{"bearing":340,"dist":18,"object":"hospital_user"}}}
@@ -7829,11 +7840,11 @@
       "then": [
         {"create_location": "DSTR",
           "zones": [
-            {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"},"object":"hospital_user"}}}
         ]},
         {"create_location": "DMED",
           "zones": [
-            {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"},"object":"hospital_user"}}}
         ]}
       ],"else": [
         {"create_location": "DSTR",
@@ -7932,6 +7943,7 @@
     ]}}
   ],
   "User destination hoist": [
+    {"call_macro":"ground spot distances"},
     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"User destination hoist","state":"wait_var.distance_lt_2"}},
     {"wait_for":{"location":"hospital_user","var":"distance"},"lt":2},
     {"call_macro":"custom hospital ambulance check"},
@@ -8015,11 +8027,11 @@
                     "then": [
                       {"create_location": "DSTR",
                         "zones": [
-                          {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}
+                          {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"}}}}
                       ]},
                       {"create_location": "DMED",
                         "zones": [
-                          {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
+                          {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"}}}}
                       ]}
                   ]},
                   {"call_macro":"Ambulance5"},
@@ -8061,11 +8073,11 @@
           "then": [
             {"create_location": "DSTR",
               "zones": [
-                {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}
+                {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"}}}}
             ]},
             {"create_location": "DMED",
               "zones": [
-                {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
+                {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"}}}}
             ]}
         ]},
         {"if": {"local":"cha_active"}, "eq": "yes",
@@ -8118,11 +8130,11 @@
       "then": [
         {"create_location": "DSTR",
           "zones": [
-            {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]}}}}
+            {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"}}}}
         ]},
         {"create_location": "DMED",
           "zones": [
-            {"zone":{"location":{"bearing":15,"dist":{"var":["L:HMEDDISTANCE","number"]}}}}
+            {"zone":{"location":{"bearing":15,"dist":{"local":"hmed_eff"}}}}
         ]}
     ]},
     {"call_macro":"ground ops NR gate","params":{"source":"User destination hoist"}},
@@ -8404,6 +8416,7 @@
     {"call_macro":"Return to base or continue menu"}
   ],
   "Organ destination1": [
+    {"call_macro":"ground spot distances"},
     {"set":{"local":"ambustretcher_step"},"value":"no"},
     {"if": {
       "and": [
@@ -8481,11 +8494,11 @@
       "then": [
         {"create_location": "DSTR",
           "zones": [
-            {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"},"object":"hospital_user"}}}
         ]},
         {"create_location": "DMED",
           "zones": [
-            {"zone":{"location":{"bearing":10,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"hospital_user"}}}
+            {"zone":{"location":{"bearing":10,"dist":{"local":"hmed_eff"},"object":"hospital_user"}}}
         ]}
       ],"else": [
         {"create_location": "DSTR",
@@ -8496,6 +8509,27 @@
           "zones": [
             {"zone":{"location":{"bearing":10,"dist":1,"object":"hospital_wp1"}}}
         ]}
+    ]},
+    {"#comment":"Minimum distance of the second medic (DSTR, the object named ambustretcher: a medic, not a stretcher) and the medic (DMED) from hospital_user: the helicopter lands within about 2 m of it and the rotor/fuselage cover 6-7 m around it, so a spot closer than 10 m (HSTRCDISTANCE and HMEDDISTANCE go down to 3 m, the custom hospital variant places them 1 m from hospital_wp1) puts them under the helicopter and the medic route towards the door side crosses the fuselage. Analysis 2026-11-13, same rule as the organ pick-up."},
+    {"set":{"local":"org_dest_str_d"},"value":{"location":"DSTR","var":"distance:m","to":"hospital_user"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":{"text":"DSTR placed {0} m from hospital_user","params":[{"local":"org_dest_str_d"}]}}},
+    {"if": {"local":"org_dest_str_d"}, "lt": 10,
+      "then": [
+        {"create_location": "DSTR",
+          "zones": [
+            {"zone":{"location":{"bearing":0,"dist":10,"object":"hospital_user"}}}
+        ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":"DSTR moved to 10 m from hospital_user"}}
+    ]},
+    {"set":{"local":"org_dest_med_d"},"value":{"location":"DMED","var":"distance:m","to":"hospital_user"}},
+    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":{"text":"DMED placed {0} m from hospital_user","params":[{"local":"org_dest_med_d"}]}}},
+    {"if": {"local":"org_dest_med_d"}, "lt": 10,
+      "then": [
+        {"create_location": "DMED",
+          "zones": [
+            {"zone":{"location":{"bearing":10,"dist":12,"object":"hospital_user"}}}
+        ]},
+        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"Organ destination1","state":"DMED moved to 12 m from hospital_user"}}
     ]},
     {"sleep":0.2},
     {"if": {"global":"FORCE_AMBULANCE"}, "ne": "no",
@@ -8768,7 +8802,7 @@
                 {"create_thread": {
                   "commands": [
                     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"Organ destination1","state":"drive_start"}},
-                    {"drive_object":{"name":"ambustretcher","to":[{"closest":[{"bearing":90,"dist":9},{"bearing":20,"dist":8},{"bearing":165,"dist":9}],"to":"hospital_door"}],"VAR1":1,"speed":4}},
+                    {"drive_object":{"name":"ambustretcher","to":[{"closest":[{"bearing":90,"dist":9},{"bearing":20,"dist":8},{"bearing":165,"dist":9}],"to":"hospital_door"}],"VAR1":1,"speed":5}},
                     {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher","target":"Organ destination1","state":"drive_done"}},
                     {"set":{"object":"ambustretcher","var":"VAR 1"},"value":0}
                 ]}},

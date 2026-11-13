@@ -4074,6 +4074,7 @@
     {"call_macro":"return to base menu"}
   ],
   "crew hospital unload": [
+    {"call_macro":"ground spot distances"},
     {"#comment":"Hospital unload of the critical crew aboard (LifeScore at or below CREW_AMBULANCE_LIMIT, dead or alive), worst first. One stretcher per casualty (chs_str_k). The medic: when one exists (the medic of the patient, ambumedic) it is enough and nothing is created; when none exists (a crew alone, or the patient medic already gone) one medic (chs_med_1) is created at the hospital. He goes to the helicopter with the first stretcher and, with a single casualty, comes back with it; with several he waits there and follows the last stretcher (CHS_TOTAL). With the patient (CHS_PARALLEL yes) the stretchers are already on the scene (crew hospital scene stretchers); this runs in a thread while the patient is handed over and the stretchers leave after the patient. Alone, the stretchers are created here. They follow the hospital waypoints (also the custom ones) to hospital_door and are removed there: arrived, nobody goes anywhere else. Without the ambulance they walk (the next casualty is loaded while the previous one walks), with the ambulance (L:AMBULANCE 1 or 2) it shuttles between the helipad and the door one stretcher at a time. A dead crew member is carried like the others."},
     {"call_macro":"crew casualty plan"},
     {"if": {"local":"CCS_CASUALTY_COUNT"}, "lte": 0,
@@ -4090,11 +4091,11 @@
           "then": [
             {"create_location": "DSTR",
               "zones": [
-                {"zone":{"location":{"bearing":0,"dist":{"var":["L:HSTRCDISTANCE","number"]},"object":"hospital_user"}}}
+                {"zone":{"location":{"bearing":0,"dist":{"local":"hstrc_eff"},"object":"hospital_user"}}}
             ]},
             {"create_location": "DMED",
               "zones": [
-                {"zone":{"location":{"bearing":10,"dist":{"var":["L:HMEDDISTANCE","number"]},"object":"hospital_user"}}}
+                {"zone":{"location":{"bearing":10,"dist":{"local":"hmed_eff"},"object":"hospital_user"}}}
             ]}
           ],"else": [
             {"create_location": "DSTR",

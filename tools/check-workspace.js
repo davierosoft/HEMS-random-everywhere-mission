@@ -52,6 +52,8 @@ const scripts = [
   'test-tester-report-guards.js',
   'test-analyze-hospital-pad.js',
   'test-diagnostic-ring-caps.js',
+  'test-stack-audit.js',
+  'test-manual-treatment.js',
   'test-route-legacy-fallback.js',
   'test-ambulance-stretcher-returns.js',
   'test-hoist-patient-loading.js',

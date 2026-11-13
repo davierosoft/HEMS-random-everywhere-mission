@@ -1,3 +1,9 @@
+## Release 0.997 170.29
+
+- Button conditions require the active manual patient
+- Scope includes macros delivered in 170.28 that differ from the stale scope baseline
+- Manual treatment patch of Dr.DougRoss: 4 buttons per phase, 23 profiles, new clinical locals, effective manual mode; loop yield macro and stack audit
+
 ## Release 0.997 170.28
 
 - Wait for the ambulance before the helicopter takes the patient (ETA/distance, 4 min, 5 min fallback, Load patient on helicopter button), crew tips language option

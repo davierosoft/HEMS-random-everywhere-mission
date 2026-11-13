@@ -588,7 +588,7 @@
         {"slider":{"min":10,"max":3600,"global":"CREW_SLOTH","commands":[{"call_macro":"mark aircraft profile custom"}]},"show_condition":{"require":{"local":"tab12"},"ne":0}},
         {"text":"(P)Patient clinical treatment mode:","align":"left","show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":6},{"require":{"local":"tab12"},"ne":0}],"eq":1}},
         {"text":"MANUAL: choose one procedure per phase for every patient present; automatic visit timers are disabled.","color":"gray","show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":6},{"require":{"local":"tab12"},"ne":0},{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"}],"eq":1}},
-        {"buttonbar":[{"title":"AUTOMATIC","select_condition":{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"ne":"manual"},"commands":[{"set":{"global":"P1_MANUAL_MEDICAL_MODE"},"value":"automatic"},{"call_macro":"mark aircraft profile custom"}]},{"title":"MANUAL","select_condition":{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"},"commands":[{"set":{"global":"P1_MANUAL_MEDICAL_MODE"},"value":"manual"},{"call_macro":"mark aircraft profile custom"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":6},{"require":{"local":"tab12"},"ne":0}],"eq":1}},
+        {"buttonbar":[{"title":"AUTOMATIC","select_condition":{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"ne":"manual"},"commands":[{"set":{"global":"P1_MANUAL_MEDICAL_MODE"},"value":"automatic"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"refresh effective manual mode","params":{"patient":1}},{"call_macro":"refresh effective manual mode","params":{"patient":2}},{"call_macro":"refresh effective manual mode","params":{"patient":3}}]},{"title":"MANUAL","select_condition":{"require":{"global":"P1_MANUAL_MEDICAL_MODE"},"eq":"manual"},"commands":[{"set":{"global":"P1_MANUAL_MEDICAL_MODE"},"value":"manual"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"refresh effective manual mode","params":{"patient":1}},{"call_macro":"refresh effective manual mode","params":{"patient":2}},{"call_macro":"refresh effective manual mode","params":{"patient":3}}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":6},{"require":{"local":"tab12"},"ne":0}],"eq":1}},
         {"buttonbar":[{"text":"(P)Mechanical CPR system carried on board (allows CPR while airborne):"},{"title":"NOT INSTALLED (DEFAULT)","select_condition":{"require":{"global":"MCPR_ONBOARD"},"eq":"no"},"commands":[{"set":{"global":"MCPR_ONBOARD"},"value":"no"},{"call_macro":"mark aircraft profile custom"}]},{"title":"INSTALLED","select_condition":{"require":{"global":"MCPR_ONBOARD"},"eq":"yes"},"commands":[{"set":{"global":"MCPR_ONBOARD"},"value":"yes"},{"call_macro":"mark aircraft profile custom"}]}],"show_condition":{"and":[{"require":{"local":"MISSION_PHASE"},"lt":2},{"require":{"local":"tab12"},"ne":0}],"eq":1}},
         {"buttonbar":[{"text":"(P)Freeze the LIFESCORE of the patients until the helicopter is within 2 NM of the scene (OFF: default; the decay is already halved and never below 8 until the crew reaches the patient):"},{"title":"OFF (DEFAULT)","select_condition":{"require":{"global":"LIFE_FREEZE_NEAR"},"eq":"no"},"commands":[{"set":{"global":"LIFE_FREEZE_NEAR"},"value":"no"},{"call_macro":"mark aircraft profile custom"}]},{"title":"FREEZE UNTIL 2 NM","select_condition":{"require":{"global":"LIFE_FREEZE_NEAR"},"eq":"yes"},"commands":[{"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},{"call_macro":"mark aircraft profile custom"}]}],"show_condition":{"require":{"local":"tab12"},"ne":0}},
         {"text":"(P)LIFESCORE threshold for patient transportation. =<{0} By helicopter, >{1} by ambulance (default 40)","params":[{"tofixed":{"global":"LIFESCORE_THR_LO"},"digits":2},{"tofixed":{"global":"LIFESCORE_THR_LO"},"digits":2}],"show_condition":{"require":{"local":"tab12"},"ne":0}},
@@ -987,6 +987,7 @@
     {"set":{"local":"IOenabledtotal"},"value":0},
     {"for_each": {"static":"accidents"},
       "do": [
+        {"call_macro":"loop yield"},
         {"set":{"param":"scene"},"value":{"param":"$item"}},
         {"if": {"table":{"static":{"local":"MSN_CONFIG_PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}}, "eq": true,
           "then": [
@@ -1077,6 +1078,7 @@
     },
     {"for_each": {"static":"accidents"},
       "do": [
+        {"call_macro":"loop yield"},
         {"if": {
           "or": [
             {"require":{"struct":{"param":"$item"},"path":"browse_category1"},"eq":{"local":"CUSTOM_FILTER"}},
@@ -1264,6 +1266,7 @@
     },
     {"for_each": {"static":"accidents"},
       "do": [
+        {"call_macro":"loop yield"},
         {"if": {
           "or": [
             {"require":{"struct":{"param":"$item"},"path":"browse_category1"},"eq":{"local":"CUSTOM_FILTER"}},
@@ -1294,6 +1297,7 @@
               "then": [
                 {"for_each": {"struct":{"param":"$item"},"path":"requirements"},
                   "do": [
+                    {"call_macro":"loop yield"},
                     {"set":{"param":"name"},"value":{"struct":{"param":"$item"},"path":"name"}},
                     {"modify_array": {"param":"unselect_mission"},
                       "append": {
@@ -1786,6 +1790,28 @@
         {"set":{"local":"medical_display_manual_transport"},"value":{"local":"manual_p1_transport_choice"}},
         {"set":{"local":"medical_display_manual_correct_slot"},"value":{"local":"manual_p1_correct_slot"}},
         {"set":{"local":"medical_display_manual_wrong_set"},"value":{"local":"manual_p1_wrong_set"}},
+        {"set":{"local":"medical_display_manual_slot1_label"},"value":{"local":"manual_p1_slot1_label"}},
+        {"set":{"local":"medical_display_manual_slot2_label"},"value":{"local":"manual_p1_slot2_label"}},
+        {"set":{"local":"medical_display_manual_slot3_label"},"value":{"local":"manual_p1_slot3_label"}},
+        {"set":{"local":"medical_display_manual_slot4_label"},"value":{"local":"manual_p1_slot4_label"}},
+        {"set":{"local":"medical_display_manual_mode"},"value":{"local":"P1_MANUAL_MODE_EFF"}},
+        {"set":{"local":"medical_display_arrest_rhythm"},"value":null},
+        {"if": {"local":"P1_ECG_RHYTHM"}, "eq": "VF",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P1_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P1_ECG_RHYTHM"}, "eq": "pVT",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P1_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P1_ECG_RHYTHM"}, "eq": "PEA",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P1_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P1_ECG_RHYTHM"}, "eq": "ASYSTOLE",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P1_ECG_RHYTHM"}}
+        ]},
         {"set":{"local":"medical_display_ambulance_completed_actions"},"value":{"local":"ambulance_handover_completed_actions"}},
         {"set":{"local":"medical_display_hems_completed_actions"},"value":{"local":"P1_MEDICAL_ACTIONS_COMPLETED"}},
         {"set":{"local":"medical_display_hems_steps_done"},"value":{"if":{"local":"P1_HEMS_STEPS_DONE"},"ne":null,"then":{"local":"P1_HEMS_STEPS_DONE"},"else":0}},
@@ -1880,6 +1906,28 @@
         {"set":{"local":"medical_display_manual_transport"},"value":{"local":"manual_p2_transport_choice"}},
         {"set":{"local":"medical_display_manual_correct_slot"},"value":{"local":"manual_p2_correct_slot"}},
         {"set":{"local":"medical_display_manual_wrong_set"},"value":{"local":"manual_p2_wrong_set"}},
+        {"set":{"local":"medical_display_manual_slot1_label"},"value":{"local":"manual_p2_slot1_label"}},
+        {"set":{"local":"medical_display_manual_slot2_label"},"value":{"local":"manual_p2_slot2_label"}},
+        {"set":{"local":"medical_display_manual_slot3_label"},"value":{"local":"manual_p2_slot3_label"}},
+        {"set":{"local":"medical_display_manual_slot4_label"},"value":{"local":"manual_p2_slot4_label"}},
+        {"set":{"local":"medical_display_manual_mode"},"value":{"local":"P2_MANUAL_MODE_EFF"}},
+        {"set":{"local":"medical_display_arrest_rhythm"},"value":null},
+        {"if": {"local":"P2_ECG_RHYTHM"}, "eq": "VF",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P2_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P2_ECG_RHYTHM"}, "eq": "pVT",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P2_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P2_ECG_RHYTHM"}, "eq": "PEA",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P2_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P2_ECG_RHYTHM"}, "eq": "ASYSTOLE",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P2_ECG_RHYTHM"}}
+        ]},
         {"set":{"local":"medical_display_ambulance_completed_actions"},"value":{"local":"P2_AMBULANCE_COMPLETED_ACTIONS"}},
         {"set":{"local":"medical_display_hems_completed_actions"},"value":{"local":"P2_MEDICAL_ACTIONS_COMPLETED"}},
         {"set":{"local":"medical_display_hems_steps_done"},"value":{"if":{"local":"P2_HEMS_STEPS_DONE"},"ne":null,"then":{"local":"P2_HEMS_STEPS_DONE"},"else":0}},
@@ -1974,6 +2022,28 @@
         {"set":{"local":"medical_display_manual_transport"},"value":{"local":"manual_p3_transport_choice"}},
         {"set":{"local":"medical_display_manual_correct_slot"},"value":{"local":"manual_p3_correct_slot"}},
         {"set":{"local":"medical_display_manual_wrong_set"},"value":{"local":"manual_p3_wrong_set"}},
+        {"set":{"local":"medical_display_manual_slot1_label"},"value":{"local":"manual_p3_slot1_label"}},
+        {"set":{"local":"medical_display_manual_slot2_label"},"value":{"local":"manual_p3_slot2_label"}},
+        {"set":{"local":"medical_display_manual_slot3_label"},"value":{"local":"manual_p3_slot3_label"}},
+        {"set":{"local":"medical_display_manual_slot4_label"},"value":{"local":"manual_p3_slot4_label"}},
+        {"set":{"local":"medical_display_manual_mode"},"value":{"local":"P3_MANUAL_MODE_EFF"}},
+        {"set":{"local":"medical_display_arrest_rhythm"},"value":null},
+        {"if": {"local":"P3_ECG_RHYTHM"}, "eq": "VF",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P3_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P3_ECG_RHYTHM"}, "eq": "pVT",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P3_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P3_ECG_RHYTHM"}, "eq": "PEA",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P3_ECG_RHYTHM"}}
+        ]},
+        {"if": {"local":"P3_ECG_RHYTHM"}, "eq": "ASYSTOLE",
+          "then": [
+            {"set":{"local":"medical_display_arrest_rhythm"},"value":{"local":"P3_ECG_RHYTHM"}}
+        ]},
         {"set":{"local":"medical_display_ambulance_completed_actions"},"value":{"local":"P3_AMBULANCE_COMPLETED_ACTIONS"}},
         {"set":{"local":"medical_display_hems_completed_actions"},"value":{"local":"P3_MEDICAL_ACTIONS_COMPLETED"}},
         {"set":{"local":"medical_display_hems_steps_done"},"value":{"if":{"local":"P3_HEMS_STEPS_DONE"},"ne":null,"then":{"local":"P3_HEMS_STEPS_DONE"},"else":0}},
@@ -2050,6 +2120,28 @@
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"TEMP_CRITICAL"},"value":1}
+    ]},
+    {"set":{"local":"medical_display_manual_choose_visible"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_display_manual_mode"},"eq":"manual"},
+        {"require":{"local":"medical_display_manual_active"},"eq":"yes"},
+        {"require":{"local":"medical_display_manual_state"},"eq":"choose"},
+        {"require":{"local":"medical_display_visited"},"eq":"yes"},
+        {"require":{"local":"medical_display_patientlife"},"ne":"died"},
+        {"require":{"local":"medical_display_report_finalized"},"ne":"yes"},
+        {"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"medical_display_manual_choose_visible"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"medical_display_manual_profile"},"eq":"resuscitation"},
+        {"require":{"local":"medical_display_cpr_active"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"medical_display_manual_choose_visible"},"value":0}
     ]},
     {"#comment":"Every render of a patient page leaves the deceased-on-scene tab unselected."},
     {"set":{"local":"poordead_page_open"},"value":0}
