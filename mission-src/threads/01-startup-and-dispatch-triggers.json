@@ -260,13 +260,29 @@
                 {"if": {"local":"tip_n"}, "gt": 0,
                   "then": [
                     {"set":{"local":"tip_c"},"value":{"add":[{"local":"tip_c"},1]}},
+                    {"set":{"local":"TIP_SHOW"},"value":0},
                     {"if": {"local":"tip_c"}, "gt": 5,
                       "then": [
-                        {"set":{"local":"TIP_SHOW"},"value":1}
-                      ],"else": [
-                        {"set":{"local":"TIP_SHOW"},"value":0}
+                        {"set":{"local":"TIP_SHOW"},"value":1},
+                        {"set":{"local":"TIP_LINE"},"value":{"text":"{0}","params":[{"local":"TIP_A"}]}}
                     ]},
-                    {"if": {"local":"tip_c"}, "gte": 10,
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"tip_c"},"gt":10},
+                        {"require":{"local":"tip_n2"},"gt":0}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"TIP_LINE"},"value":{"text":"{0}","params":[{"local":"TIP_B"}]}}
+                    ]},
+                    {"if": {
+                      "and": [
+                        {"require":{"local":"tip_c"},"gte":10},
+                        {"require":{"local":"tip_n2"},"eq":0}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"tip_c"},"value":0}
+                    ]},
+                    {"if": {"local":"tip_c"}, "gte": 15,
                       "then": [
                         {"set":{"local":"tip_c"},"value":0}
                     ]}

@@ -22,10 +22,10 @@ const collect = (value, predicate, found = []) => {
 const rings = { ground_crew_runtime_trace: 4000, ambulance_monitor_log: 600, dispatch_handoff_log: 150, payload_weight_log: 300, base_return_log: 300, ground_ops_checkpoint_log: 600, ground_ops_watch_log: 300, dispatch_archive: 3 };
 for (const [local, cap] of Object.entries(rings)) {
   const trims = [];
-  for (const [name, commands] of Object.entries(macros)) for (const node of collect(commands, (c) => c.modify_array?.local === local && c.removeIndex === 0)) trims.push([name, node]);
+  for (const [name, commands] of Object.entries(macros)) for (const node of collect(commands, (c) => (c.modify_array?.local === local && c.removeIndex === 0) || (c.set?.local === 'ring_trim_src' && c.value?.local === local))) trims.push([name, node]);
   assert.ok(trims.length >= 1, `${local} is trimmed`);
   const guards = [];
-  for (const commands of Object.values(macros)) guards.push(...collect(commands, (c) => c.if?.struct?.local === local && c.if.path === 'length' && c.gt === cap && Array.isArray(c.then) && c.then.length === 1 && c.then[0].modify_array?.local === local));
+  for (const commands of Object.values(macros)) guards.push(...collect(commands, (c) => c.if?.struct?.local === local && c.if.path === 'length' && c.gt === cap && Array.isArray(c.then) && ((c.then.length === 1 && c.then[0].modify_array?.local === local) || c.then.some((x) => x.call_macro === 'ring trim'))));
   assert.ok(guards.length >= 1, `${local}: one removal guarded by length > ${cap}`);
   const loops = [];
   for (const commands of Object.values(macros)) loops.push(...collect(commands, (c) => c.while?.struct?.local === local));
@@ -85,6 +85,9 @@ const run = (list, p) => {
     if (Object.hasOwn(x, 'param')) return p[x.param] ?? null;
     if (Object.hasOwn(x, 'var')) return 0;
     if (x.add) return x.add.map(q).reduce((a, b) => a + b, 0);
+    if (x.subtract) return q(x.subtract[0]) - q(x.subtract[1]);
+    if (x.multiply) return x.multiply.map(q).reduce((a, b) => a * b, 1);
+    if (x.floor !== undefined) return Math.floor(q(x.floor));
     if (x.create_array !== undefined) return [];
     if (x.create_struct) return Object.fromEntries(Object.entries(x.create_struct).map(([k, v]) => [k, q(v)]));
     if (x.struct && x.path === 'length') return (locals[x.struct.local] ?? []).length;
@@ -97,6 +100,9 @@ const run = (list, p) => {
     if (c['#comment']) continue;
     if (c.set) { const v = q(c.value); if (c.set.local) locals[c.set.local] = v; else p[c.set.param] = v; }
     else if (c.if) run(cmp(q(c.if), c) ? c.then : (c.else || []), p);
+    else if (c.call_macro === 'loop yield') continue;
+    else if (c.call_macro === 'ring trim') run(macros['ring trim'], p);
+    else if (c.for_each) { const items = [...(locals[c.for_each.local] ?? [])]; items.forEach((item, index) => run(c.do, { ...p, $index: index, $item: item })); }
     else if (c.modify_array) { const arr = locals[c.modify_array.local]; if (c.append) arr.push(q(c.append)); else if (c.removeIndex !== undefined) arr.splice(c.removeIndex, 1); }
     else throw new Error(`Unsupported command ${JSON.stringify(c).slice(0, 100)}`);
   }
@@ -105,7 +111,7 @@ const trace = (macro, target, state = 'x', level) => run(macros['ground crew run
 for (let i = 0; i < 2000; i += 1) for (const target of ['multipatient registry live reserve', 'multipatient registry crew eligibility', 'multipatient registry crew barrier']) trace('hems_visit', target, 'call_x');
 assert.equal(locals.ground_crew_runtime_trace.length, 300, 'the three registry polling targets are recorded one in 20');
 for (let i = 0; i < 6000; i += 1) trace('crash_ops', 'crash', 'row ' + i);
-assert.equal(locals.ground_crew_runtime_trace.length, 4000, 'the ring never exceeds 4000 rows');
+assert.ok(locals.ground_crew_runtime_trace.length <= 4000 && locals.ground_crew_runtime_trace.length >= 3200, 'the ring never exceeds 4000 rows (rebuilt to 3200 when it passes the cap)');
 assert.equal(locals.ground_crew_runtime_trace.at(-1).state, 'row 5999', 'the newest row is kept');
 trace('hems_visit', 'multipatient registry crew tour', 'tour step');
 assert.equal(locals.ground_crew_runtime_trace.at(-1).state, 'tour step', 'other hems_visit rows are recorded in full');

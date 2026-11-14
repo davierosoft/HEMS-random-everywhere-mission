@@ -4013,6 +4013,33 @@
     {"set":{"var":["L:CPL{local:VCP}15","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}15","number"]},1]}},
     {"call_macro":"drop heli rescuer ground"}
   ],
+  "heli rescuer base return talk": [
+    {"#comment":"RETURN TO HOME BASE chosen while the heli rescuer(s) are still aboard (flight report 2026-11-13: no voice at all): the pilot tells the rescuers they come back to the base, a rescuer answers, and the pilot tells the heli rescue base, which answers (external radio). Mission Companion only (a wav pack says nothing), same condition as heli rescuer drop farewell. Runs in its own thread so the return is not delayed; the number is snapshot into a local before the thread (HRR.* keys, pack texts of the HRD family). Argument: the number of heli rescuers, 1 or 2."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"local":"TTS"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"hrr_n"},"value":{"local":"HELIRESCUER_BOARDED"}},
+        {"if": {"local":"hrr_n"}, "ne": 2,
+          "then": [
+            {"set":{"local":"hrr_n"},"value":1}
+        ]},
+        {"set":{"local":"hrr_arg"},"value":{"text":"{0}","params":[{"local":"hrr_n"}]}},
+        {"create_thread": {
+          "commands": [
+            {"sleep":1.5},
+            {"call_macro":"voice say","params":{"key":"HRR.PLT"}},
+            {"sleep":4.5},
+            {"call_macro":"voice say","params":{"key":"HRR.HRT"}},
+            {"sleep":4.5},
+            {"call_macro":"voice say","params":{"key":"HRR.BASE.Q","a":{"local":"hrr_arg"}}},
+            {"sleep":5},
+            {"call_macro":"voice say","params":{"key":"HRR.BASE.A","a":{"local":"hrr_arg"}}}
+        ]}}
+    ]}
+  ],
   "heli rescuer aboard gate": [
     {"#comment":"Heli rescuer aboard (tester report 2026-10-17: the patient was unloaded at the hospital with the heli rescuer still aboard and the mission offered END MISSION and NEW DISPATCH): while HELIRESCUER_BOARDED is not 0 the mission does not offer the end. Param where: hospital (called first by Return to base or continue menu, after the unloading of the patient) or base (called by return to base after the landing, before the end menu). The modal asks where to leave the heli rescuer(s): HERE (the ground deboarding of the original DROP HELIRESCUER HERE action, with the mode base, hospital or hospital_user by the place where the helicopter is; the helicopter must be on the ground), GO BACK TO THE LOADING POINT (the original GO BACK TO MEETING POINT action: the route to heli_rescuer_location, where the thread of drop heli rescuer drops them; afterwards the route goes on to the base: PREVIOUS_FPL 6) and, only at the hospital, RETURN TO HOME BASE (the heli rescuer(s) stay aboard and the gate runs again after the landing at the base). The macro returns when nobody is aboard any more, with the result base when the user chose to fly home with them (the caller then does not open its end modal). A drop that the user makes meanwhile with the action DROP HELIRESCUER HERE closes the modal and ends the wait. Runtime pending."},
     {"set":{"param":"hrg_ret"},"value":"clear"},
@@ -4063,6 +4090,7 @@
         {"if": {"local":"hrg_choice"}, "eq": "base",
           "then": [
             {"set":{"param":"hrg_ret"},"value":"base"},
+            {"call_macro":"heli rescuer base return talk"},
             {"call_macro":"shared repeated block 046"}
         ]},
         {"if": {"local":"hrg_choice"}, "eq": "meeting",
@@ -8764,8 +8792,8 @@
             {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
             {"wait_for":{"fn":"HOIST_REEL_UP","params":{"before_stow_commands":[]}},"ne":0},
             {"set_message":{"text":"Hoist is up, personnel are getting strapped"}},
-            {"sleep":[3,7]},
             {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
+            {"sleep":[3,7]},
             {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
             {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
             {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
@@ -8860,12 +8888,13 @@
         {"sleep":1},
         {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
         {"wait_for":{"fn":"HOIST_REEL_UP_AND_STOW","params":{"before_stow_commands":[]}},"ne":0},
+        {"#comment":"The hoist-up line is said when the hoist ends, not 3 to 10 s later (report 2026-11-13)."},
+        {"set_message":{"text":"Hoist is up, personnel are getting strapped"}},
+        {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
         {"sleep":[3,10]},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
-        {"set_message":{"text":"Hoist is up, personnel are getting strapped"}},
-        {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
         {"set":{"var":["H:{local:HXX}_SDK_PAX_1_ON","number"]},"value":0},
         {"call_macro":"set station weight","params":{"station":3,"occupied":1}},
         {"if": {"local":"HELIRESCUER_BOARDED"}, "eq": 0,
@@ -9407,9 +9436,9 @@
         {"set_message":{"text":"Hoist is running up"}},
         {"set":{"var":["L:{local:VCP}12","number"]},"value":{"add":[{"var":["L:{local:VCP}12","number"]},1]}},
         {"wait_for":{"fn":"HOIST_REEL_UP","params":{"before_stow_commands":[]}},"ne":0},
-        {"sleep":[3,7]},
         {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
         {"set_message":{"text":"Hoist is up, personnel are getting strapped"}},
+        {"sleep":[3,7]},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
@@ -9501,12 +9530,13 @@
             {"wait_for":{"fn":"HOIST_REEL_UP","params":{"before_stow_commands":[]}},"ne":0},
             {"set_message":{"text":"Personnel are up, wait for helirescuer boarding"}}
         ]},
+        {"#comment":"The hoist-up line is said when the hoist ends, not 3 to 10 s later (report 2026-11-13)."},
+        {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
         {"sleep":[3,10]},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_OFF","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_HUMAN_1_BAG_OFF","number"]},"value":0},
         {"set":{"var":["H:{local:HXX}_SDK_HOIST_OBJ_STRETCHER_OFF","number"]},"value":0},
         {"set_message":{"text":"Hoist is up, personnel are getting strapped"}},
-        {"set":{"var":["L:{local:VCP}14","number"]},"value":{"add":[{"var":["L:{local:VCP}14","number"]},1]}},
         {"trigger":["H:{local:HXX}_SDK_PAX_1_ON"]},
         {"call_macro":"set station weight","params":{"station":3,"occupied":1}},
         {"sleep":3},

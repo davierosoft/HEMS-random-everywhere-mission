@@ -1,3 +1,8 @@
+## Release 0.997 170.30
+
+- Version check carries the build number
+- Local test: ring trim and snapshot sleeps (call stack), ParamedicBox and medic minimum distances at every loading and destination, organ diagnostics, voice commands (patient pages, teleport with confirm, accept and next keywords), tips in two pages, show dispatch opens the briefing, heli rescuer base return talk
+
 ## Release 0.997 170.29
 
 - Button conditions require the active manual patient

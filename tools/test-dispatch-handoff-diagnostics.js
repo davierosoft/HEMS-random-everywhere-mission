@@ -12,7 +12,7 @@ const traceText = JSON.stringify(trace);
 for (const token of [
   '"append"', '"dispatch_handoff_log"', '"stage":{"param":"stage"}',
   'PRE_ACCIDENT_LOCATION LAT', 'PRE_RESCUE_LOCATION LAT', 'CUS_ACCIDENT LAT', 'CUS_RESCUE LAT',
-  'SECOND_DISPATCH_ACCEPTED', 'CUS_SEND_DISPATCH', 'gap_accident_rescue_m', 'gap_landing_accident_m', '"removeIndex":0'
+  'SECOND_DISPATCH_ACCEPTED', 'CUS_SEND_DISPATCH', 'gap_accident_rescue_m', 'gap_landing_accident_m', '"ring trim"'
 ]) {
   if (!traceText.includes(token)) throw new Error(`handoff trace is missing ${token}`);
 }

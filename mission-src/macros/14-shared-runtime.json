@@ -2003,5 +2003,19 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"n/a","target":"ground spot distances","state":{"text":"medic spot distance {0} m raised to 12 m","params":[{"local":"hmed_eff"}]}}},
         {"set":{"local":"hmed_eff"},"value":12}
     ]}
+  ],
+  "ring trim": [
+    {"#comment":"Trims a diagnostic ring that went over its cap (tester reports 2026-11-11 and 2026-11-13): the guarded removeIndex never trims in the simulator (the location history already moved to a counted rebuild for that reason: 1315 rows held against a cap of 200, dispatch_handoff_log 274 against 150), so the arrays only grew and every snapshot copied them whole. The callers set ring_trim_cap and ring_trim_src (the array), call this when the length is over the cap and copy ring_trim_src back: the array is rebuilt with its newest 80% of the cap. The registry history of the patients is not trimmed here (it is synchronous by design)."},
+    {"set":{"local":"ring_trim_from"},"value":{"subtract":[{"struct":{"local":"ring_trim_src"},"path":"length"},{"floor":{"multiply":[{"local":"ring_trim_cap"},0.8]}}]}},
+    {"set":{"local":"ring_trim_tail"},"value":{"create_array":0}},
+    {"for_each": {"local":"ring_trim_src"},
+      "do": [
+        {"call_macro":"loop yield"},
+        {"if": {"param":"$index"}, "gte": {"local":"ring_trim_from"},
+          "then": [
+            {"modify_array":{"local":"ring_trim_tail"},"append":{"param":"$item"}}
+        ]}
+    ]},
+    {"set":{"local":"ring_trim_src"},"value":{"local":"ring_trim_tail"}}
   ]
 }

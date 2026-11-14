@@ -87,7 +87,7 @@ assert.ok(traceCalls(guard).includes('modal_guard_reshow') && traceCalls(guard).
 const trace = macros['trace return to base'];
 const row = text(live(trace));
 for (const field of ['stage', 'detail', 'time', 'mission_timer', 'phase', 'dispatch_phase', 'dispatch_ended', 'fpl', 'rtb', 'end_waiting', 'selection_mode', 'bs_state', 'bs_shows', 'bs_gen', 'bs_ops_over', 'location_name', 'destination_confirmed', 'on_ground', 'ground_speed_kt', 'collective_ft', 'rotor_rpm', 'dist_start_m', 'dist_rtb_m', 'ready', 'step', 'hold', 'crew', 'copilot', 'hoist_crew', 'pax3', 'whobringpatient', 'second_dispatch']) assert.ok(row.includes(`"${field}":`), `the row carries ${field}`);
-assert.ok(trace.some((c) => c.if?.struct?.local === 'base_return_log' && c.if.path === 'length' && c.gt === 300 && c.then.length === 1 && c.then[0].modify_array?.local === 'base_return_log' && c.then[0].removeIndex === 0), 'ring of 300 rows, one guarded removal');
+assert.ok(trace.some((c) => c.if?.struct?.local === 'base_return_log' && c.if.path === 'length' && c.gt === 300 && c.then.some((x) => x.call_macro === 'ring trim')), 'ring of 300 rows, rebuilt by ring trim');
 assert.ok(/^[\x20-\x7e]*$/.test(text(macros['base selection modal']) + text(guard) + row), 'ASCII only');
 const stages = new Set(collect(macros, (c) => c.call_macro === 'trace return to base').map((c) => c.params.stage));
 const objectives = JSON.parse(fs.readFileSync(path.join(root, 'root', '02-objectives.json'), 'utf8'));

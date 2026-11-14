@@ -41,6 +41,12 @@ function REQUEST_WHEN(variable) {
     { require: { local: variable }, eq: 0 }
   ] };
 }
+// The medical page: the link of the dispatch page needs the link flag and no organ mission; Patient 2 and 3 need that many victims
+function MEDICAL_WHEN(n) {
+  return { and: [{ require: { local: 'medical_page_link_visible' }, eq: 'yes' }, { require: { local: 'MISSION_NUMBER' }, ne: 'organ' }, { require: { local: 'HELOVICTIMS' }, gte: n }] };
+}
+// The "Teleport close to destination" link of the dispatch page (04-dispatch-tablet-ui.json) without its page-expansion flag
+const TELEPORT_WHEN = { and: [{ require: { var: ['GPS GROUND SPEED', 'knots'] }, gt: 60 }, { require: { local: 'MISSION_PHASE' }, gt: 2 }, { require: { global: 'TELEPORT_ASSIST_ENABLED' }, eq: 'yes' }] };
 // code: command code sent by the Companion. userActions: the HPG user action ids the command clicks (the first existing one is clicked).
 // tagged: the action has definitions with different show conditions, every creation is followed by a set of the local sp_def_<id> (1-based).
 const ACTIONS = [
@@ -67,7 +73,13 @@ const ACTIONS = [
   { id: 'request_ambulance', code: 120, macro: true, when: REQUEST_WHEN('AMBU_AVAIL'), run: [{ set: { local: 'AMBU_AVAIL' }, value: 2 }, { call_macro: 'Ambulance1' }] },
   { id: 'request_fire_engine', code: 121, macro: true, when: REQUEST_WHEN('FIREENGINE_AVAIL'), run: [{ set: { local: 'FIREENGINE_AVAIL' }, value: 2 }, { call_macro: 'Firetruck1' }] },
   { id: 'request_police', code: 122, macro: true, when: REQUEST_WHEN('POLICE_AVAIL'), run: [{ set: { local: 'POLICE_AVAIL' }, value: 2 }, { call_macro: 'Police1' }] },
-  { id: 'show_dispatch', code: 123, macro: true, when: null, run: [{ set_dispatch_dialog: 1 }] },
+  { id: 'show_dispatch', code: 123, macro: true, when: null, run: [
+    { '#comment': 'show dispatch means the dispatch page: the page last loaded may be the homepage, the technical page or another one (report 2026-11-13: after SINGLE PLAYER the homepage stayed), so the dispatch page is built again before the dialog is shown. While a dispatch is still waiting to be accepted (the first one, or a second one offered and not accepted yet) the user may mean the dispatch shown on the briefing: the briefing is shown (user rule 2026-11-13).' },
+    { set: { local: 'sp_pending' }, value: 0 },
+    { if: { local: 'MISSION_PHASE' }, lt: 2, then: [{ set: { local: 'sp_pending' }, value: 1 }] },
+    { if: { and: [{ require: { local: 'MISSION_PHASE' }, gt: 8 }, { require: { local: 'second_dispatch_offered' }, eq: 1 }, { require: { local: 'SECOND_DISPATCH' }, ne: 1 }] }, eq: 1, then: [{ set: { local: 'sp_pending' }, value: 1 }] },
+    { if: { local: 'sp_pending' }, eq: 1, then: [{ set_dispatch_dialog: 0 }, { set_briefing_dialog: 1 }], else: [{ call_macro: 'Mission dispatch' }, { set_dispatch_dialog: 1 }] }
+  ] },
   { id: 'hide_dispatch', code: 124, macro: true, when: null, run: [{ set_dispatch_dialog: 0 }] },
   { id: 'show_briefing', code: 125, macro: true, when: null, run: [{ set_briefing_dialog: 1 }] },
   { id: 'hide_briefing', code: 126, macro: true, when: null, run: [{ set_briefing_dialog: 0 }] },
@@ -79,6 +91,11 @@ const ACTIONS = [
   { id: 'patient_status', code: 131, macro: true, noReadback: true, branches: [{ when: { and: [{ require: { struct: { local: 'patients' }, path: 'length' }, gt: 0 }], eq: 1 }, run: [{ call_macro: 'speech patient status' }] }] },
   { id: 'distance_destination', code: 132, macro: true, noReadback: true, selfResult: true, branches: [{ when: { and: [{ require: { local: 'MISSION_PHASE' }, gte: 2 }], eq: 1 }, run: [{ set: { local: 'sd_what' }, value: 'distance' }, { call_macro: 'speech destination say' }] }] },
   { id: 'time_destination', code: 133, macro: true, noReadback: true, selfResult: true, branches: [{ when: { and: [{ require: { local: 'MISSION_PHASE' }, gte: 2 }], eq: 1 }, run: [{ set: { local: 'sd_what' }, value: 'time' }, { call_macro: 'speech destination say' }] }] },
+  // the Patient 1/2/3 buttons of the medical page (07-patient-medical.json, "patient health"): they open the page of that patient, shown under the same conditions as the MEDICAL DIAGNOSTIC PAGE link and the button itself (user list 2026-11-01/08, keyword words, not exact phrases)
+  ...[1, 2, 3].map((n, i) => ({ id: 'patient_page_' + n, code: 134 + i, macro: true, noReadback: true, when: MEDICAL_WHEN(n), run: [{ set: { local: 'prev_page' }, value: 'Mission dispatch' }, { call_macro: 'select medical patient page', params: { patient: n } }, { call_macro: 'patient health' }, { set_dispatch_dialog: 1 }] })),
+  // teleport close to the destination with a double confirmation (user list 2026-11-01): "teleport" arms for 15 s (the copilot asks for the confirmation), "confirm" within that time teleports; same conditions as the tablet link
+  { id: 'teleport_arm', code: 137, macro: true, when: TELEPORT_WHEN, run: [{ set: { local: 'sp_teleport_armed' }, value: 1 }, { create_thread: { commands: [{ sleep: 15 }, { set: { local: 'sp_teleport_armed' }, value: 0 }] } }] },
+  { id: 'teleport_confirm', code: 138, macro: true, noReadback: true, when: { and: [...TELEPORT_WHEN.and, { require: { local: 'sp_teleport_armed' }, eq: 1 }] }, run: [{ set: { local: 'sp_teleport_armed' }, value: 0 }, { call_macro: 'teleport' }] },
   { id: 'next_dispatch', code: 128, macro: true, branches: DISPATCH_BRANCHES({ call_macro: 'next_dispatch' }, { call_macro: 'next_dispatch' }, { require: { local: 'nddisabled' }, eq: null }) }
 ];
 const TAGGED = ['ambuloadlock', 'ambulance_prime'];
@@ -250,24 +267,39 @@ function buildMacros(all) {
 // the tips line of the status bar (user request 2026-11-08): at most 49 monospace characters, "SAY: " and the main English phrase of every command available now,
 // in the order of ACTIONS; a phrase that does not fit is left out. Locals: TIP_LINE (text), tip_n (phrases), tip_len (characters used).
 const TIP_MAX = 49;
+// commands that are available in every phase (the show/hide dispatch and briefing pair): listed after the others, and the first to be left out when two pages are not enough (user rule 2026-11-13)
+const ALWAYS_ON = (a) => !!a.macro && a.when === null && !a.branches;
 function tipsLine() {
   const list = [
-    { '#comment': 'Generated by tools/speech-bridge.js (tipsLine). Composes the tips line from the availability variables of the speech bridge; the thread SPEECH TIPS shows it every other 5 s in place of the status bar.' },
-    { set: { local: 'TIP_LINE' }, value: ' ' }, { set: { local: 'tip_n' }, value: 0 }, { set: { local: 'tip_len' }, value: 0 }
+    { '#comment': 'Generated by tools/speech-bridge.js (tipsLine). Composes the tips from the availability variables of the speech bridge in at most two pages of 49 characters (TIP_A, TIP_B; tip_n phrases on A, tip_n2 on B). Commands available now come first, those always available (show/hide dispatch and briefing) last and only while they fit in the two pages. The thread SPEECH TIPS shows page A, then page B, in turn in place of the status bar.' },
+    { set: { local: 'TIP_A' }, value: ' ' }, { set: { local: 'TIP_B' }, value: ' ' },
+    { set: { local: 'tip_n' }, value: 0 }, { set: { local: 'tip_n2' }, value: 0 }, { set: { local: 'tip_len' }, value: 0 }, { set: { local: 'tip_len2' }, value: 0 }
   ];
-  for (const a of ACTIONS) {
+  const ordered = [...ACTIONS.filter((a) => !ALWAYS_ON(a)), ...ACTIONS.filter(ALWAYS_ON)];
+  for (const a of ordered) {
     const phrase = PHRASES[a.id].EN[0];
     const first = 'SAY: ' + phrase;
     if (first.length > TIP_MAX) throw new Error('tip phrase too long: ' + a.id);
     const next = ' | ' + phrase;
+    const addTo = (line, n, len) => ({ set: { local: line }, value: { text: '{0}' + next, params: [{ local: line }] } });
     list.push({ if: { var: [okVar(a.id), 'number'] }, eq: 1, then: [
       { if: { local: 'tip_n' }, eq: 0, then: [
-        { set: { local: 'TIP_LINE' }, value: { text: first } },
+        { set: { local: 'TIP_A' }, value: { text: first } },
         { set: { local: 'tip_len' }, value: first.length }, { set: { local: 'tip_n' }, value: 1 }
       ], else: [
         { if: { local: 'tip_len' }, lte: TIP_MAX - next.length, then: [
-          { set: { local: 'TIP_LINE' }, value: { text: '{0}' + next, params: [{ local: 'TIP_LINE' }] } },
+          addTo('TIP_A'),
           { set: { local: 'tip_len' }, value: { add: [{ local: 'tip_len' }, next.length] } }, { set: { local: 'tip_n' }, value: { add: [{ local: 'tip_n' }, 1] } }
+        ], else: [
+          { if: { local: 'tip_n2' }, eq: 0, then: [
+            { set: { local: 'TIP_B' }, value: { text: first } },
+            { set: { local: 'tip_len2' }, value: first.length }, { set: { local: 'tip_n2' }, value: 1 }
+          ], else: [
+            { if: { local: 'tip_len2' }, lte: TIP_MAX - next.length, then: [
+              addTo('TIP_B'),
+              { set: { local: 'tip_len2' }, value: { add: [{ local: 'tip_len2' }, next.length] } }, { set: { local: 'tip_n2' }, value: { add: [{ local: 'tip_n2' }, 1] } }
+            ] }
+          ] }
         ] }
       ] }
     ] });
