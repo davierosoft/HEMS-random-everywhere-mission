@@ -23,10 +23,11 @@ const release = option('--release');
 const from = Number(option('--from'));
 const to = Number(option('--to'));
 if (!release || !Number.isInteger(from) || !Number.isInteger(to) || from > to) {
-  console.error('usage: node tools/user-release-notes.js --release "0.997 169.46" --from 23 --to 46 [--include "text"]');
+  console.error('usage: node tools/user-release-notes.js --release "0.997 169.46" --from 23 --to 46 [--line 170] [--include "text"]');
   process.exit(2);
 }
 const includes = options('--include');
+const buildLine = option('--line') || '169'; // build line of the numbers: 169 (default) or 170
 
 const text = fs.readFileSync(path.join(__dirname, '..', 'CHANGELOG_USER.en.md'), 'utf8').replace(/\r\n/g, '\n');
 const ledger = text.indexOf('## Build coverage ledger');
@@ -51,7 +52,7 @@ for (const line of body.split('\n')) {
 }
 
 function reaches(history) {
-  for (const match of history.matchAll(/169\.(\d+)(?:\s*-\s*(?:169\.)?(\d+))?/g)) {
+  for (const match of history.matchAll(new RegExp(buildLine + '[.]([0-9]+)(?:[ ]*-[ ]*(?:' + buildLine + '[.])?([0-9]+))?', 'g'))) {
     const first = Number(match[1]);
     const last = match[2] === undefined ? first : Number(match[2]);
     if (first <= to && last >= from) return true;
@@ -68,7 +69,7 @@ for (const item of entries) {
 }
 
 const lines = [`# HEMS Random Everywhere Missions ${release}: what is new`, ''];
-lines.push(`Changes since the previous published release (builds 0.997 169.${from} to 169.${to}), as written for pilots. All of it still needs simulator confirmation.`, '');
+lines.push(`Changes since the previous published release (builds 0.997 ${buildLine}.${from} to ${buildLine}.${to}), as written for pilots. All of it still needs simulator confirmation.`, '');
 for (const name of sectionNames) {
   const list = result.get(name);
   if (list.length === 0) continue;
