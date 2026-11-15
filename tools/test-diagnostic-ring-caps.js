@@ -144,4 +144,18 @@ const crashLoop = JSON.stringify(macros['crash monitor loop']);
 assert.ok(crashLoop.includes('{"sleep":{"local":"cm_sleep"}}') && crashLoop.includes('"global":"PERF_SAMPLING"') && crashLoop.includes('"global":"PERF_ALTITUDE_GATE"'), 'the impact monitor tick follows PERF_SAMPLING and the altitude gate PERF_ALTITUDE_GATE');
 assert.ok(JSON.stringify(macros['location diagnostics monitor']).includes('"global":"PERF_LOG_LEVEL"') && JSON.stringify(macros['ground ops watch start']).includes('"global":"PERF_LOG_LEVEL"') && JSON.stringify(macros['ambulance operations monitor']).includes('"global":"PERF_LOG_LEVEL"'), 'the diagnostic monitors slow down in BASIC');
 
+// Tester report 2026-11-15 (170.31): "Error: table not found" on the first snapshot, because the slot 0 table is created only by the first save and the FLOW section reads it
+for (const name of ['debug page', 'capture diagnostic snapshot']) {
+  assert.ok(JSON.stringify(macros[name]).includes('"open_table":{"static":"Mission_Save_Slot0"}'), name + ' opens the slot 0 table before reading it');
+}
+
+// General rule (the same error came back twice): a macro that reads a save slot table, directly or through a debug row, must open that table in the same macro; the table exists only after the first save
+for (const [name, body] of Object.entries(macros)) {
+  const text = JSON.stringify(body);
+  for (const slot of new Set([...text.matchAll(/"table":{"static":"(Mission_Save_Slot[0-3])"}/g)].map((m) => m[1]))) {
+    if (name === 'capture diagnostic snapshot' || name === 'debug page') continue; // checked above
+    assert.ok(text.includes('"open_table":{"static":"' + slot + '"}'), name + ' reads ' + slot + ' without opening it first');
+  }
+}
+
 console.log('Diagnostic ring caps PASS: every diagnostic array is a ring (trimmed by one guarded removal, the location history a counted FIFO that keeps the newest 100 rows at 200), the runtime trace is capped at 4000 rows with the registry polling breadcrumbs thinned one in 20, the watcher unwinds between its stall snapshots. HPG/MSFS PENDING.');

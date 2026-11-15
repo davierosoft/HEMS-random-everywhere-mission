@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.31. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.32. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1022,6 +1022,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.27, 170.30.
 - **Test:** Land at a custom hospital and watch the medic walk to the ambulance and stop at a safe distance from the rotor.
 
+### The Debug page and the snapshot no longer fail before the first save
+
+- Opening the Debug page or capturing a snapshot on a fresh install (no game saved yet) showed a Command Failed window with the error "table not found". The saved-game table is now opened before it is read.
+- **Build history:** 0.997 170.31, 170.32.
+- **Test:** On a flight with no saved game, open the Debug page and press CAPTURE SNAPSHOT: no Command Failed window appears.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -2012,7 +2018,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.31 (this release):** The target call and the unsafe scene calls, the halfway up call, the first save slot, the waiting line of the accepted dispatch and the German and French lines of the ambulance wait (see the sections above).
+- **0.997 170.32 (this release):** The Debug page and the snapshot open the saved-game table before reading it (see the entry above).
+- **0.997 170.31:** The target call and the unsafe scene calls, the halfway up call, the first save slot, the waiting line of the accepted dispatch and the German and French lines of the ambulance wait (see the sections above).
 - **0.997 170.30:** More voice commands, the briefing opened by Show dispatch, tips in two pages and safe distances of the medics (see the sections above).
 - **0.997 170.29:** The manual treatment by the doctor and the pause that removes the call stack error (see the sections above).
 - **0.997 170.28:** The wait for a nearby ambulance and the Load patient on helicopter button (see the sections above).

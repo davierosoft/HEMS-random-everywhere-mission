@@ -1,3 +1,7 @@
+## Release 0.997 170.32
+
+- Release 170.32: open the slot 0 table before the debug snapshot reads it
+
 ## Release 0.997 170.31
 
 - Target call to the dispatcher (DSP.TGT non-committal, DSP.TGT.F with a visible hazard, DSP.TGT.A) and fire service go call (VVF.GO, heli rescuer voice) at the three fire-out sites; halfway up call (HCL.HALF)

@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.31",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.32",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.31"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.32"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -6770,6 +6770,8 @@
     {"set":{"local":"debug_snapshot_preset"},"value":{"table":{"static":"Debug_Table"},"key":"preset"}},
     {"set":{"local":"debug_snapshot_crew_spawn_log"},"value":{"table":{"static":"Debug_Table"},"key":"crew_spawn_log"}},
     {"set":{"local":"debug_snapshot_gndops_nr_gate_log"},"value":{"table":{"static":"Debug_Table"},"key":"gndops_nr_gate_log"}},
+    {"#comment":"The slot 0 table is read by the FLOW rows below: opening it first avoids Error: table not found before the first save (tester report 2026-11-15)."},
+    {"open_table":{"static":"Mission_Save_Slot0"}},
     {"if": {"local":"debug_page_section"}, "eq": null,
       "then": [
         {"set":{"local":"debug_page_section"},"value":"SUMMARY"}
@@ -74112,6 +74114,7 @@
   ],
   "capture diagnostic snapshot": [
     {"open_table":{"param":"snapshot_table"}},
+    {"open_table":{"static":"Mission_Save_Slot0"}},
     {"call_macro":"sample diagnostic locations","params":{}},
     {"set":{"table":{"param":"snapshot_table"},"key":"valid"},"value":"yes"},
     {"set":{"table":{"param":"snapshot_table"},"key":"time"},"value":{"fn":"get_time_string"}},
