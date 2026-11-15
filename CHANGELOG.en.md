@@ -1,3 +1,8 @@
+## Release 0.997 170.33
+
+- Voice commands page and tips line follow the language of the voice commands; stale scope baseline allowed
+- Voice commands page and tips line follow the language of the voice commands (L:HMC_SPEECH_LANG, data section speech_commands, five languages)
+
 ## Release 0.997 170.32
 
 - Release 170.32: open the slot 0 table before the debug snapshot reads it

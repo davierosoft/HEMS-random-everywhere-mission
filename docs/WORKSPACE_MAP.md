@@ -76,6 +76,7 @@ This repository ships an HPG mission for the H145. The simulator consumes `every
 | `05-health-profiles.json` | Numbered primary medical/pathology profiles health1-health15. |
 | `05b-health-profiles-continued.json` | Numbered primary medical/pathology profiles health16-health107 (split to stay below 1 MiB). |
 | `06-special-health-and-messages.json` | Secondary/Halloween profiles and status/CARLS messages. |
+| `07-speech-commands.json` | Generated voice command phrases in five languages (`speech_commands`). |
 
 ## Thread modules
 

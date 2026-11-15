@@ -14,6 +14,7 @@ const { formatSourceText } = require('./mission-formatter');
 const root = path.join(__dirname, '..');
 const macroDir = path.join(root, 'mission-src', 'macros');
 const moduleFile = path.join(macroDir, '24-speech-bridge.json');
+const dataFile = path.join(root, 'mission-src', 'data', '07-speech-commands.json');
 const docFile = path.join(root, 'docs', 'architecture', 'SPEECH_COMMANDS_BY_PHASE.md');
 const contractFile = path.join(root, 'docs', 'architecture', 'speech-contract.json');
 
@@ -276,28 +277,40 @@ function tipsLine() {
     { set: { local: 'tip_n' }, value: 0 }, { set: { local: 'tip_n2' }, value: 0 }, { set: { local: 'tip_len' }, value: 0 }, { set: { local: 'tip_len2' }, value: 0 }
   ];
   const ordered = [...ACTIONS.filter((a) => !ALWAYS_ON(a)), ...ACTIONS.filter(ALWAYS_ON)];
+  list.push(
+    { '#comment': 'The phrase and its length come from the data section speech_commands with the index L:HMC_SPEECH_LANG (0 English, 1 Italian, 2 German, 3 French, 4 Spanish; anything else English), so the tips follow the language of the voice commands.' },
+    { set: { local: 'sc_lang' }, value: { var: ['L:HMC_SPEECH_LANG', 'number'] } },
+    { if: { local: 'sc_lang' }, lt: 0, then: [{ set: { local: 'sc_lang' }, value: 0 }] },
+    { if: { local: 'sc_lang' }, gt: 4, then: [{ set: { local: 'sc_lang' }, value: 0 }] }
+  );
   for (const a of ordered) {
-    const phrase = PHRASES[a.id].EN[0];
-    const first = 'SAY: ' + phrase;
-    if (first.length > TIP_MAX) throw new Error('tip phrase too long: ' + a.id);
-    const next = ' | ' + phrase;
-    const addTo = (line, n, len) => ({ set: { local: line }, value: { text: '{0}' + next, params: [{ local: line }] } });
+    const idx = ACTIONS.indexOf(a);
+    const ph = { local: 'tp_phrase' }, ln = { local: 'tp_len' };
+    const first = (line) => ({ set: { local: line }, value: { text: 'SAY: {0}', params: [ph] } });
+    const addTo = (line) => ({ set: { local: line }, value: { text: '{0} | {1}', params: [{ local: line }, ph] } });
     list.push({ if: { var: [okVar(a.id), 'number'] }, eq: 1, then: [
+      { set: { local: 'tp_e' }, value: { struct: { static: 'speech_commands' }, index: idx } },
+      { set: { local: 'tp_t' }, value: { struct: { local: 'tp_e' }, path: 't' } },
+      { set: { local: 'tp_n' }, value: { struct: { local: 'tp_e' }, path: 'n' } },
+      { set: { local: 'tp_phrase' }, value: { struct: { local: 'tp_t' }, index: { local: 'sc_lang' } } },
+      { set: { local: 'tp_len' }, value: { struct: { local: 'tp_n' }, index: { local: 'sc_lang' } } },
       { if: { local: 'tip_n' }, eq: 0, then: [
-        { set: { local: 'TIP_A' }, value: { text: first } },
-        { set: { local: 'tip_len' }, value: first.length }, { set: { local: 'tip_n' }, value: 1 }
+        first('TIP_A'),
+        { set: { local: 'tip_len' }, value: { add: [5, ln] } }, { set: { local: 'tip_n' }, value: 1 }
       ], else: [
-        { if: { local: 'tip_len' }, lte: TIP_MAX - next.length, then: [
+        { set: { local: 'tip_need' }, value: { add: [{ local: 'tip_len' }, ln, 3] } },
+        { if: { local: 'tip_need' }, lte: TIP_MAX, then: [
           addTo('TIP_A'),
-          { set: { local: 'tip_len' }, value: { add: [{ local: 'tip_len' }, next.length] } }, { set: { local: 'tip_n' }, value: { add: [{ local: 'tip_n' }, 1] } }
+          { set: { local: 'tip_len' }, value: { local: 'tip_need' } }, { set: { local: 'tip_n' }, value: { add: [{ local: 'tip_n' }, 1] } }
         ], else: [
           { if: { local: 'tip_n2' }, eq: 0, then: [
-            { set: { local: 'TIP_B' }, value: { text: first } },
-            { set: { local: 'tip_len2' }, value: first.length }, { set: { local: 'tip_n2' }, value: 1 }
+            first('TIP_B'),
+            { set: { local: 'tip_len2' }, value: { add: [5, ln] } }, { set: { local: 'tip_n2' }, value: 1 }
           ], else: [
-            { if: { local: 'tip_len2' }, lte: TIP_MAX - next.length, then: [
+            { set: { local: 'tip_need' }, value: { add: [{ local: 'tip_len2' }, ln, 3] } },
+            { if: { local: 'tip_need' }, lte: TIP_MAX, then: [
               addTo('TIP_B'),
-              { set: { local: 'tip_len2' }, value: { add: [{ local: 'tip_len2' }, next.length] } }, { set: { local: 'tip_n2' }, value: { add: [{ local: 'tip_n2' }, 1] } }
+              { set: { local: 'tip_len2' }, value: { local: 'tip_need' } }, { set: { local: 'tip_n2' }, value: { add: [{ local: 'tip_n2' }, 1] } }
             ] }
           ] }
         ] }
@@ -383,10 +396,33 @@ function commandsPage() {
     const list = ACTIONS.filter((a) => INFO[a.id].phases.includes(phase));
     if (!list.length) continue;
     rows.push({ text: ' ' }, { text: title, color: 'yellow' });
-    for (const a of list) rows.push({ text: PHRASES[a.id].EN[0] + ' = ' + INFO[a.id].description, monospace: 0 });
+    for (const a of list) rows.push({ text: '{0} = ' + INFO[a.id].description, params: [{ local: 'sc_p' + ACTIONS.indexOf(a) }], monospace: 0 });
   }
   rows.push({ text: ' ' }, { buttonbar: [{ title: 'BACK', commands: [{ call_macro: 'description2' }, { set_dispatch_dialog: 1 }] }] });
-  return [{ '#comment': 'Generated by tools/speech-bridge.js from tools/speech-info.json and tools/speech-phrases.json; never edit by hand. The Mission Companion tab Voice commands shows the same list from docs/architecture/speech-contract.json.' }, { set_dispatch: rows }, { set_dispatch_dialog: 1 }];
+  const prelude = [
+    { '#comment': 'Generated by tools/speech-bridge.js from tools/speech-info.json and tools/speech-phrases.json; never edit by hand. The Mission Companion tab Voice commands shows the same list from docs/architecture/speech-contract.json. The main phrase of every command is read from the data section speech_commands (mission-src/data/07-speech-commands.json) with the index L:HMC_SPEECH_LANG published by the Companion (0 English, 1 Italian, 2 German, 3 French, 4 Spanish; anything else English), whatever the language of the interface.' },
+    { set: { local: 'sc_lang' }, value: { var: ['L:HMC_SPEECH_LANG', 'number'] } },
+    { if: { local: 'sc_lang' }, lt: 0, then: [{ set: { local: 'sc_lang' }, value: 0 }] },
+    { if: { local: 'sc_lang' }, gt: 4, then: [{ set: { local: 'sc_lang' }, value: 0 }] }
+  ];
+  ACTIONS.forEach((a, i) => prelude.push(
+    { set: { local: 'sc_e' }, value: { struct: { static: 'speech_commands' }, index: i } },
+    { set: { local: 'sc_t' }, value: { struct: { local: 'sc_e' }, path: 't' } },
+    { set: { local: 'sc_p' + i }, value: { struct: { local: 'sc_t' }, index: { local: 'sc_lang' } } }
+  ));
+  return [...prelude, { set_dispatch: rows }, { set_dispatch_dialog: 1 }];
+}
+// language order of the data section: the value of L:HMC_SPEECH_LANG
+const SPEECH_LANGS = ['EN', 'IT', 'DE', 'FR', 'ES'];
+function dataText() {
+  // user-facing strings are ASCII only (DEVELOPMENT_RELEASE_CHECKLIST.md): the accents are folded (giu, montee), n = length of each phrase for the tips line
+  const fold = (s) => s.replace(/ß/g, 'ss').replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/Ä/g, 'Ae').replace(/Ö/g, 'Oe').replace(/Ü/g, 'Ue').normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const entries = ACTIONS.map((a) => {
+    const t = SPEECH_LANGS.map((l) => fold((PHRASES[a.id][l] || PHRASES[a.id].EN)[0]));
+    t.forEach((p) => { if (/[^ -~]/.test(p) || ('SAY: ' + p).length > TIP_MAX) throw new Error('speech phrase not usable on the tablet: ' + a.id + ' ' + p); });
+    return { id: a.id, t, n: t.map((p) => p.length) };
+  });
+  return formatSourceText(JSON.stringify({ speech_commands: entries }), 'data');
 }
 function generatedText(all) { return formatSourceText(JSON.stringify(buildMacros(all)), 'commands'); }
 
@@ -412,6 +448,7 @@ function check() {
   for (const t of tagWork(all)) if (!t.present) problems.push(`${t.c.file} ${t.c.macro}: ${t.id} is not followed by its definition tag ${t.tag}`);
   for (const action of ACTIONS) for (const userAction of action.userActions || []) if (!all.some((c) => c.def.id === userAction)) problems.push(`no definition of ${userAction}`);
   if (!fs.existsSync(moduleFile)) problems.push('mission-src/macros/24-speech-bridge.json is missing');
+  else if (!fs.existsSync(dataFile) || fs.readFileSync(dataFile, 'utf8') !== dataText()) problems.push('mission-src/data/07-speech-commands.json differs from the generated data section (run: node tools/speech-bridge.js generate, then node tools/mission-workspace.js reindex)');
   else if (!problems.length && fs.readFileSync(moduleFile, 'utf8') !== generatedText(all)) problems.push('24-speech-bridge.json differs from the generated module (a button condition changed? run: node tools/speech-bridge.js generate)');
   if (fs.existsSync(contractFile) && !problems.length && fs.readFileSync(contractFile, 'utf8') !== contractText()) problems.push('docs/architecture/speech-contract.json differs from the generated contract (run: node tools/speech-bridge.js contract)');
   if (fs.existsSync(docFile) && !problems.length && fs.readFileSync(docFile, 'utf8') !== docText()) problems.push('docs/architecture/SPEECH_COMMANDS_BY_PHASE.md differs from the generated page (run: node tools/speech-bridge.js doc)');
@@ -472,6 +509,8 @@ function main() {
     const all = creations(loadModules());
     fs.writeFileSync(moduleFile, generatedText(all), 'utf8');
     console.log('wrote ' + path.relative(root, moduleFile));
+    fs.writeFileSync(dataFile, dataText(), 'utf8');
+    console.log('wrote ' + path.relative(root, dataFile));
   } else if (command === 'doc') {
     fs.writeFileSync(docFile, docText(), 'utf8');
     console.log('wrote ' + path.relative(root, docFile));
