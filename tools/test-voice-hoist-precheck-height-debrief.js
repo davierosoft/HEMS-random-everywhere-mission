@@ -149,4 +149,12 @@ function run(cmds, env) {
   assert.ok(prop.indexOf('<say:HOSP.FOUND>') < prop.indexOf('voice hospital destination') && prop.indexOf('voice hospital destination') < prop.indexOf('<say:HOSP.NONE>'), 'called after HOSP.FOUND, in the Companion branch');
   assert.ok(!/restaurant|trauma|burn|speciality/i.test(JSON.stringify(macros['voice hospital destination'].filter((c) => c['#comment'] === undefined))), 'nothing about the services of the hospital');
 }
+{
+  const halfMacro = JSON.stringify(macros['hoist up halfway call']);
+  assert.ok(halfMacro.includes('"stage":"HALF"') && halfMacro.includes('"lt":20'), 'halfway call exists and only for a cable of 20 m or more');
+  for (const name of ['hoist up 1 operator', 'hoist up operator+injured']) {
+    const text = JSON.stringify(macros[name]);
+    assert.ok(text.indexOf('hoist up halfway call') > text.indexOf('"gt":10') && text.indexOf('hoist up halfway call') < text.indexOf('"stage":"DOOR"'), name + ' calls the halfway call after the 10 m change and before DOOR');
+  }
+}
 console.log('hoist pre-check, hook height, debrief events and hospital destination ok');

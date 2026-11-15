@@ -86,28 +86,28 @@
             {"set":{"local":"SEX3"},"value":{"struct":{"param":"selsex3"},"path":"sex"}},
             {"set":{"local":"var_compatible3"},"value":{"struct":{"param":"selsex3"},"path":"variable_compatible"}}
           ],"else": [
-            {"set":{"local":"AGE1"},"value":{"global":"TEMPAGE1"}},
-            {"set":{"local":"AGE2"},"value":{"global":"TEMPAGE2"}},
-            {"set":{"local":"AGE3"},"value":{"global":"TEMPAGE3"}},
-            {"set":{"var":["L:DEBOARD","number"]},"value":{"global":"TEMPDEBOARD"}},
-            {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"global":"TEMPMISSION_SCENE_VARIANT"}},
-            {"set":{"var":["L:HELICOPTER_VARIABLE","number"]},"value":{"global":"TEMPHELICOPTER_VARIABLE"}},
-            {"set":{"var":["L:CAMPING_OBJECTS","number"]},"value":{"global":"TEMPCAMPING_OBJECTS"}},
-            {"set":{"local":"LIFESCORE2"},"value":{"global":"TEMPLIFESCORE2"}},
-            {"set":{"local":"LIFESCORE3"},"value":{"global":"TEMPLIFESCORE3"}},
-            {"set":{"local":"VFX"},"value":{"global":"TEMPVFX"}},
-            {"set":{"local":"CASUALTY_PERCENTAGE"},"value":{"global":"TEMPCASUALTY_PERCENTAGE"}},
-            {"set":{"local":"CIVILS"},"value":{"global":"TEMPCIVILS"}},
-            {"set":{"local":"CRASH_VARIABLE"},"value":{"global":"TEMPCRASH_VARIABLE"}},
-            {"set":{"local":"injured1"},"value":{"global":"TEMPinjured1"}},
-            {"set":{"local":"SEX1"},"value":{"global":"TEMPSEX1"}},
-            {"set":{"local":"var_compatible1"},"value":{"global":"TEMPvar_compatible1"}},
-            {"set":{"local":"injured2"},"value":{"global":"TEMPinjured2"}},
-            {"set":{"local":"SEX2"},"value":{"global":"TEMPSEX2"}},
-            {"set":{"local":"var_compatible2"},"value":{"global":"TEMPvar_compatible2"}},
-            {"set":{"local":"injured3"},"value":{"global":"TEMPinjured3"}},
-            {"set":{"local":"SEX3"},"value":{"global":"TEMPSEX3"}},
-            {"set":{"local":"var_compatible3"},"value":{"global":"TEMPvar_compatible3"}}
+            {"set":{"local":"AGE1"},"value":{"local":"TEMPAGE1"}},
+            {"set":{"local":"AGE2"},"value":{"local":"TEMPAGE2"}},
+            {"set":{"local":"AGE3"},"value":{"local":"TEMPAGE3"}},
+            {"set":{"var":["L:DEBOARD","number"]},"value":{"local":"TEMPDEBOARD"}},
+            {"set":{"local":"MISSION_SCENE_VARIANT"},"value":{"local":"TEMPMISSION_SCENE_VARIANT"}},
+            {"set":{"var":["L:HELICOPTER_VARIABLE","number"]},"value":{"local":"TEMPHELICOPTER_VARIABLE"}},
+            {"set":{"var":["L:CAMPING_OBJECTS","number"]},"value":{"local":"TEMPCAMPING_OBJECTS"}},
+            {"set":{"local":"LIFESCORE2"},"value":{"local":"TEMPLIFESCORE2"}},
+            {"set":{"local":"LIFESCORE3"},"value":{"local":"TEMPLIFESCORE3"}},
+            {"set":{"local":"VFX"},"value":{"local":"TEMPVFX"}},
+            {"set":{"local":"CASUALTY_PERCENTAGE"},"value":{"local":"TEMPCASUALTY_PERCENTAGE"}},
+            {"set":{"local":"CIVILS"},"value":{"local":"TEMPCIVILS"}},
+            {"set":{"local":"CRASH_VARIABLE"},"value":{"local":"TEMPCRASH_VARIABLE"}},
+            {"set":{"local":"injured1"},"value":{"local":"TEMPinjured1"}},
+            {"set":{"local":"SEX1"},"value":{"local":"TEMPSEX1"}},
+            {"set":{"local":"var_compatible1"},"value":{"local":"TEMPvar_compatible1"}},
+            {"set":{"local":"injured2"},"value":{"local":"TEMPinjured2"}},
+            {"set":{"local":"SEX2"},"value":{"local":"TEMPSEX2"}},
+            {"set":{"local":"var_compatible2"},"value":{"local":"TEMPvar_compatible2"}},
+            {"set":{"local":"injured3"},"value":{"local":"TEMPinjured3"}},
+            {"set":{"local":"SEX3"},"value":{"local":"TEMPSEX3"}},
+            {"set":{"local":"var_compatible3"},"value":{"local":"TEMPvar_compatible3"}}
         ]},
         {"sleep":0.2},
         {"sleep":0.1},
@@ -1025,7 +1025,10 @@
                     {"call_macro":"dispatch ringtone"},
                     {"set":{"local":"ringed"},"value":1}
                 ]},
+                {"#comment":"Report 2026-11-14 (Daikan, BRF.SAR.* and WXB.CD heard before ACCEPT): a dispatch of the random map or of the start-up is a new dispatch like the RescueTrack ones, so the crew first decides whether to accept (voice dispatch triage); the briefing chat and the weather follow the ACCEPT on the tablet. vda_pending is yes only while the description is read."},
+                {"set":{"local":"vda_pending"},"value":"yes"},
                 {"call_macro":"Mission description"},
+                {"set":{"local":"vda_pending"},"value":"no"},
                 {"sleep":0.5},
                 {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
                 {"sleep":0.1},
@@ -2618,7 +2621,7 @@
     {"set":{"var":["L:RELEASE_BUILD","number"]},"value":170},
     {"call_macro":"settings first run defaults"},
     {"#comment":"second_start_repair: the accept of a second dispatch left SECOND_RESTART_PENDING and the starting point in globals before reload_mission. If the LVAR flag or the LVARs of the starting point did not survive the restart they are written back here, before anything reads them (start location diagnostics and the two branches below decide by L:SECOND_DISPATCH_ACCEPTED). The mark is cleared at once: a later fresh start never inherits it."},
-    {"if": {"global":"SECOND_RESTART_PENDING"}, "eq": 1,
+    {"if": {"local":"SECOND_RESTART_PENDING"}, "eq": 1,
       "then": [
         {"if": {"var":["L:SECOND_DISPATCH_ACCEPTED","number"]}, "ne": 1,
           "then": [
@@ -2629,17 +2632,17 @@
         ]},
         {"if": {
           "or": [
-            {"require":{"var":["L:MISSION_START_LOCATION LAT","number"]},"ne":{"global":"SECOND_RESTART_LAT"}},
-            {"require":{"var":["L:MISSION_START_LOCATION LON","number"]},"ne":{"global":"SECOND_RESTART_LON"}}
+            {"require":{"var":["L:MISSION_START_LOCATION LAT","number"]},"ne":{"local":"SECOND_RESTART_LAT"}},
+            {"require":{"var":["L:MISSION_START_LOCATION LON","number"]},"ne":{"local":"SECOND_RESTART_LON"}}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"dispatch step row","params":{"stage":"before_second_start_repair"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":{"text":"the starting point was overwritten: LVAR {0},{1} written back from {2},{3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"global":"SECOND_RESTART_LAT"},{"global":"SECOND_RESTART_LON"}]}}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"second_start_repair","detail":{"text":"the starting point was overwritten: LVAR {0},{1} written back from {2},{3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"local":"SECOND_RESTART_LAT"},{"local":"SECOND_RESTART_LON"}]}}},
             {"call_macro":"dispatch step row","params":{"stage":"after_second_start_repair"}},
-            {"set":{"var":["L:MISSION_START_LOCATION LAT","number"]},"value":{"global":"SECOND_RESTART_LAT"}},
-            {"set":{"var":["L:MISSION_START_LOCATION LON","number"]},"value":{"global":"SECOND_RESTART_LON"}}
+            {"set":{"var":["L:MISSION_START_LOCATION LAT","number"]},"value":{"local":"SECOND_RESTART_LAT"}},
+            {"set":{"var":["L:MISSION_START_LOCATION LON","number"]},"value":{"local":"SECOND_RESTART_LON"}}
         ]},
-        {"set":{"global":"SECOND_RESTART_PENDING"},"value":0}
+        {"set":{"local":"SECOND_RESTART_PENDING"},"value":0}
     ]},
     {"call_macro":"start location diagnostics","params":{"init":1}},
     {"#comment":"The dispatch phase is a persistent LVAR: the value left by the previous mission survives a restart. Reset it before anything that can wait, otherwise NEW DISPATCH (phase 5 or 6) opens a dispatch before the initialization finishes and skips the steps."},
@@ -2661,11 +2664,11 @@
     {"set":{"local":"DEATH_TIME_2"},"value":null},
     {"set":{"local":"DEATH_TIME_3"},"value":null},
     {"#comment":"A crew member was critical or died in the previous mission (CREW_DEATH_REPAIR_PENDING, set when the member becomes critical or dies and kept until the next start, whether the mission is reloaded or restarted by hand): the helicopter and the crew are repaired before the new one starts, as no real operator would fly again with severe failures and a crew in that state. The RESET FAILURES button of the settings repairs the helicopter at any time."},
-    {"if": {"global":"CREW_DEATH_REPAIR_PENDING"}, "eq": "yes",
+    {"if": {"local":"CREW_DEATH_REPAIR_PENDING"}, "eq": "yes",
       "then": [
         {"call_macro":"reset aircraft failures"},
         {"set":{"local":"CREW_LIFESCORE_SHIFT_ACTIVE"},"value":"no"},
-        {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"no"},
+        {"set":{"local":"CREW_DEATH_REPAIR_PENDING"},"value":"no"},
         {"call_macro":"ground crew runtime trace","params":{"macro":"mission_start","actor":"crew","target":"repair","state":"failures_reset_after_crew_death"}}
     ]},
     {"set":{"local":"PUBLIC_USED_TITLES"},"value":[]},
@@ -2837,12 +2840,12 @@
             {"set":{"global":"STATION_6"},"value":90}
         ]},
         {"#comment":"A reloaded mission starts with nobody on the cable: the hoist flags are cleared and every payload station is recomputed from the seat LVARs, the kits and the options."},
-        {"set":{"global":"HOISTOCC_1"},"value":0},
-        {"set":{"global":"HOISTOCC_2"},"value":0},
-        {"set":{"global":"HOISTOCC_3"},"value":0},
-        {"set":{"global":"HOISTOCC_4"},"value":0},
-        {"set":{"global":"HOISTOCC_5"},"value":0},
-        {"set":{"global":"HOISTOCC_6"},"value":0},
+        {"set":{"local":"HOISTOCC_1"},"value":0},
+        {"set":{"local":"HOISTOCC_2"},"value":0},
+        {"set":{"local":"HOISTOCC_3"},"value":0},
+        {"set":{"local":"HOISTOCC_4"},"value":0},
+        {"set":{"local":"HOISTOCC_5"},"value":0},
+        {"set":{"local":"HOISTOCC_6"},"value":0},
         {"call_macro":"station weights recompute"},
         {"if": {"global":"CREW"}, "eq": null,
           "then": [
@@ -2856,22 +2859,6 @@
         ]},
         {"set":{"var":["L:LOADSTART","number"]},"value":5},
         {"sleep":0.1},
-        {"if": {"global":"SAVENAME"}, "eq": null,
-          "then": [
-            {"set":{"global":"SAVENAME"},"value":"EMPTY"}
-        ]},
-        {"if": {"global":"SAVENAME1"}, "eq": null,
-          "then": [
-            {"set":{"global":"SAVENAME1"},"value":"EMPTY"}
-        ]},
-        {"if": {"global":"SAVENAME2"}, "eq": null,
-          "then": [
-            {"set":{"global":"SAVENAME2"},"value":"EMPTY"}
-        ]},
-        {"if": {"global":"SAVENAME3"}, "eq": null,
-          "then": [
-            {"set":{"global":"SAVENAME3"},"value":"EMPTY"}
-        ]},
         {"if": {"global":"MOUNT_AUTO_RNG"}, "eq": null,
           "then": [
             {"set":{"global":"MOUNT_AUTO_RNG"},"value":"yes"}
@@ -2981,9 +2968,9 @@
           "then": [
             {"set":{"global":"PATIENTS_KILLED_TOTAL"},"value":0}
         ]},
-        {"if": {"global":"CREW_DEATH_REPAIR_PENDING"}, "eq": null,
+        {"if": {"local":"CREW_DEATH_REPAIR_PENDING"}, "eq": null,
           "then": [
-            {"set":{"global":"CREW_DEATH_REPAIR_PENDING"},"value":"no"}
+            {"set":{"local":"CREW_DEATH_REPAIR_PENDING"},"value":"no"}
         ]},
         {"if": {"global":"COMPLETED_MISSIONS"}, "eq": null,
           "then": [
@@ -4342,7 +4329,7 @@
             {"if": {
               "and": [
                 {"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},
-                {"require":{"global":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"ne":1}
+                {"require":{"local":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"ne":1}
               ]}, "eq": 1,
               "then": [
                 {"set":{"local":"CREW"},"value":{"var":["L:LIVERY_CREW","number"]}},
@@ -4376,7 +4363,7 @@
                 {"set":{"local":"BOARDING_HOLD"},"value":0}
             ]},
             {"call_macro":"crew voice profile apply"},
-            {"set":{"global":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"value":null},
+            {"set":{"local":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"value":null},
             {"set_map":{"remove":{"point":{"id":"BASE_inner"}}}},
             {"set_map":{"remove":{"point":{"id":"BASE_outer"}}}},
             {"set_map":{"add":{"point":{"location":{"global":"location_ref"},"id":"BASE_outer","stroke":{"width":1,"color":"green"},"fill":{"color":"rgba(0, 255, 0, 0.05)"},"range":{"global":"MISSION_ACCIDENT_MAX_RADIUS"}}}}},
@@ -4465,7 +4452,7 @@
     ]},
     {"if": {"var":["L:RELOADSAVED","number"]}, "eq": 1,
       "then": [
-        {"set":{"local":"HELOVICTIMS"},"value":{"global":"TEMPHELOVICTIMS"}}
+        {"set":{"local":"HELOVICTIMS"},"value":{"local":"TEMPHELOVICTIMS"}}
     ]},
     {"if": {"var":["L:CUSTOMSETUP_ACTIVATION","number"]}, "ne": 0,
       "then": [
@@ -4566,7 +4553,10 @@
             {"set":{"var":["L:Dispatch","number"]},"value":1},
             {"call_macro":"dispatch ringtone"},
             {"sleep":2.5},
-            {"call_macro":"Mission description"}
+            {"#comment":"Report 2026-11-14 (Daikan, BRF.SAR.* and WXB.CD heard before ACCEPT): a dispatch of the random map or of the start-up is a new dispatch like the RescueTrack ones, so the crew first decides whether to accept (voice dispatch triage); the briefing chat and the weather follow the ACCEPT on the tablet. vda_pending is yes only while the description is read."},
+            {"set":{"local":"vda_pending"},"value":"yes"},
+            {"call_macro":"Mission description"},
+            {"set":{"local":"vda_pending"},"value":"no"}
         ]}
     ]},
     {"if": {"global":"DEBUG_OBJMAN_TURN_SPEED"}, "eq": null,
@@ -4858,7 +4848,7 @@
     {"call_macro":"dispatch step row","params":{"stage":"before_scene_ready"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"scene_ready"}},
     {"call_macro":"dispatch step row","params":{"stage":"after_scene_ready"}},
-    {"set":{"global":"SAVETEMP_STATUS"},"value":"running"},
+    {"set":{"local":"SAVETEMP_STATUS"},"value":"running"},
     {"create_thread": {
       "commands": [
         {"call_macro":"savetemp async"}
@@ -6082,6 +6072,10 @@
     ]}},
     {"create_thread": {
       "commands": [
+        {"call_macro":"voice target call"}
+    ]}},
+    {"create_thread": {
+      "commands": [
         {"call_macro":"voice fuel watch"}
     ]}},
     {"create_thread": {
@@ -7159,6 +7153,9 @@
             {"call_macro":"dispatch step row","params":{"stage":"after_accept_second"}},
             {"set":{"local":"MISSION_PHASE"},"value":2},
             {"set_briefing_dialog":0},
+            {"#comment":"User rule 2026-11-14: the briefing closes at the acceptance of the second dispatch and a page says that the old dispatch details are being replaced, until the restart."},
+            {"set_dispatch":[{"text":"HOC is replacing old dispatch details with the accepted one. Please wait...","align":"center","size":"large","color":"white"}]},
+            {"set_dispatch_dialog":1},
             {"set":{"local":"SUBMITTED"},"value":0},
             {"sleep":0.5},
             {"set_briefing_dialog":0},
@@ -7176,11 +7173,11 @@
               "then": [
                 {"set":{"var":["L:MISSION_START_LOCATION","number"]},"value":{"location":"mission_start_location"}}
             ]},
-            {"set":{"global":"SECOND_RESTART_LAT"},"value":{"var":["L:MISSION_START_LOCATION LAT","number"]}},
-            {"set":{"global":"SECOND_RESTART_LON"},"value":{"var":["L:MISSION_START_LOCATION LON","number"]}},
-            {"set":{"global":"SECOND_RESTART_PENDING"},"value":1},
+            {"set":{"local":"SECOND_RESTART_LAT"},"value":{"var":["L:MISSION_START_LOCATION LAT","number"]}},
+            {"set":{"local":"SECOND_RESTART_LON"},"value":{"var":["L:MISSION_START_LOCATION LON","number"]}},
+            {"set":{"local":"SECOND_RESTART_PENDING"},"value":1},
             {"call_macro":"dispatch step row","params":{"stage":"before_accept_second_start"}},
-            {"call_macro":"trace dispatch handoff","params":{"stage":"accept_second_start","detail":{"text":"start lat={0} lon={1} flag={2} pending={3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},{"global":"SECOND_RESTART_PENDING"}]}}},
+            {"call_macro":"trace dispatch handoff","params":{"stage":"accept_second_start","detail":{"text":"start lat={0} lon={1} flag={2} pending={3}","params":[{"var":["L:MISSION_START_LOCATION LAT","number"]},{"var":["L:MISSION_START_LOCATION LON","number"]},{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},{"local":"SECOND_RESTART_PENDING"}]}}},
             {"call_macro":"dispatch step row","params":{"stage":"after_accept_second_start"}},
             {"call_macro":"trace location reference","params":{"stage":"accept_second_start"}},
             {"if": {"local":"reload_mission_count"}, "eq": null,

@@ -26,7 +26,6 @@ function hasSetTable(value, table, key, expectedValue) {
 }
 
 requireTrue(tables.Aircraft_Profile_Saved_Preset === 'R&E_saved_custom_settings', 'independent saved-preset table is missing');
-requireTrue(contains(lifecycle.objective1, (entry) => entry?.if?.global === 'SAVENAME' && entry.eq === null && entry.then?.some((command) => command.set?.global === 'SAVENAME')), 'mission startup must initialize saved-profile state through set: global');
 
 const marker = profiles['mark aircraft profile custom'];
 requireTrue(hasCall(marker, 'save custom aircraft profile'), 'settings changes do not persist immediately');
@@ -55,9 +54,7 @@ for (const [macro, slot] of [['savetemp', 0], ['save1', 1], ['save2', 2], ['save
   const serialized = JSON.stringify(commands);
   requireTrue(serialized.includes('toLocaleDateString') && serialized.includes('toLocaleTimeString'), `${macro} does not format a local date and time`);
   requireTrue(!serialized.match(/toLocaleTimeString[^}]*params[^\]]*,\s*\{/), `${macro} passes unsupported locale options to toLocaleTimeString`);
-  requireTrue(contains(commands, (entry) => entry && entry.set && entry.set.global === `SAVE_TIMESTAMP${slot}` && entry.value && entry.value.local === 'SAVE_LOCAL_TIMESTAMP'), `${macro} does not store its local timestamp`);
 }
-for (const slot of [1, 2, 3]) requireTrue(contains(presets[`delete${slot}`], (entry) => entry && entry.set && entry.set.global === `SAVE_TIMESTAMP${slot}` && entry.value === null), `delete${slot} does not clear its timestamp`);
 
 const renderer = profiles['aircraft profiles page'].find((entry) => Array.isArray(entry.set_dispatch));
 requireTrue(renderer, 'aircraft profile renderer is missing');

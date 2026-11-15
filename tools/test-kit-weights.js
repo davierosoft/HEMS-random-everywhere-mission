@@ -154,7 +154,7 @@ assert.ok(calls > 150 && calls < 260, `the hoist operations keep their station f
 
 // objective1 clears the hoist flags and recomputes after a mission reload
 const objective1 = text(macros.objective1 || []);
-assert.ok([1, 2, 3, 4, 5, 6].every((n) => objective1.includes(`"set":{"global":"HOISTOCC_${n}"},"value":0`)) && objective1.includes('"call_macro":"station weights recompute"'), 'objective1 clears the hoist flags and recomputes the stations');
+assert.ok([1, 2, 3, 4, 5, 6].every((n) => objective1.includes(`"set":{"local":"HOISTOCC_${n}"},"value":0`)) && objective1.includes('"call_macro":"station weights recompute"'), 'objective1 clears the hoist flags and recomputes the stations');
 assert.ok(!objective1.includes('"call_macro":"set station weight"'), 'objective1 no longer sets station weights one by one');
 
 // the thread wakes on every LVAR the recompute depends on

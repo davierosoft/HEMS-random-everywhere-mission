@@ -793,3 +793,15 @@ Status: runtime pending.
 - Hooking a seated person and the last check before lowering: 10 to 20 s everywhere (HOISTING main and second hoist, hoist heli rescuer down, drop heli rescuer hoist). Door to arm: 2 to 4 s everywhere. Empty hook lowered after the arm (Hoisting back up, pick heli rescuer hoist): 4 to 8 s. Lifting: 2 to 4 s between the last hook action and the cable going up.
 - New checkpoints: `hoist_arm_deploy` (every arm out, detail names the macro), `hoist_cable_down_start`, `hoist_cable_up_start`.
 - Test: run a crew-down hoist and a recovery; in the flight log the times between `hoist_arm_deploy` and `hoist_cable_down_start` must be about 10 to 40 s for a person on the cable and 4 to 12 s for an empty hook.
+
+## Local vs global scope test (2026-11-14)
+
+`standalone-tests/local-global-scope-test.json` (copy in the Desktop tests folder) is a self-contained mission. It answers: which of `local` and `global` values written in one context (objective, briefing button, thread, CARLS event handler) are visible in another context and after `reload_mission`. Each SET writes a marker into one local (`LS_x`) and one global (`GS_x`); each READ logs `L[OBJ BTN THR EVT]` and `G[OBJ BTN THR EVT]` as seen from the reading context (`-` = not visible). Procedure is in the briefing: set from button / thread / CARLS key 1, read from button / new thread / CARLS key 2, then RELOAD MISSION (the objective logs `OBJ-RELOAD`) and read again. Result decides whether TEMP*, SECOND_RESTART_*, CARLS DF editor state and HOISTOCC_* may be locals. Status: PENDING runtime.
+
+## Target call to the dispatcher (2026-11-15)
+
+With the radio working (power on and CARLS connected), accept an accident dispatch and fly to it: half a nautical mile from the accident the copilot says one `DSP.TGT` line to the dispatcher and the dispatcher answers with one `DSP.TGT.A` line; nothing is said twice for the same dispatch and the call is said again for the next dispatch. With the radio off (battery master off and GPCP switch off, or CARLS not connected) nothing is said and no late call comes after. With AUDIO_DECLUT 1 to 3 nothing is said. The crew discussion of a dispatch, if running, pauses during the exchange. Status: PENDING.
+
+## Unsafe scene voice (2026-11-15)
+
+With a fire or smoke accident and the radio working: at half a nautical mile the copilot says `DSP.TGT.F` (hold clear) and the dispatcher answers; on a safe scene `DSP.TGT` instead. When the fire service clears the area (message "cleared to go") the fire service calls once with the heli rescuer voice (`VVF.GO`). Status: PENDING.

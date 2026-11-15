@@ -1577,6 +1577,8 @@
             ]}
         ]}
     ]},
+    {"#comment":"Report 2026-11-14 (user rule): vda_talking is 1 while the crew discusses the dispatch, from the first line to the question to the pilot. ACCEPT of a second dispatch waits for it to end (accept dispatch second), so the mission is not reloaded in the middle of the discussion."},
+    {"set":{"local":"vda_talking"},"value":1},
     {"while": {"local":"vhg_busy"}, "eq": 1,
       "do": [
         {"sleep":1}
@@ -1638,6 +1640,7 @@
         {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.ASKP.B"}}
     ]},
+    {"set":{"local":"vda_talking"},"value":0},
     {"set":{"param":"tr_t"},"value":0},
     {"set":{"param":"tr_s"},"value":0},
     {"while": {"param":"tr_s"}, "eq": 0,
@@ -1689,18 +1692,33 @@
     ]}
   ],
   "voice dispatch accepted": [
-    {"#comment":"Called by accept_dispatch when the pilot accepts on the tablet: the answer to the dispatcher and the briefing (voice briefing chat) go on. A second dispatch reloads the mission, which ends every thread: L:VDA_RESP asks for the briefing to be said after the reload (loading macro, Cabin preparation completed). Without the triage (a wav pack, a custom mission) vda_open is not yes and nothing happens."},
-    {"if": {"local":"vda_open"}, "eq": "yes",
+    {"#comment":"Called by accept_dispatch when the pilot accepts on the tablet: the answer to the dispatcher and the briefing (voice briefing chat) go on. A second dispatch reloads the mission, which ends every thread: L:VDA_RESP asks for the briefing to be said after the reload (loading macro, Cabin preparation completed). Without the triage (a wav pack, a custom mission) vda_open is not yes and a first dispatch does nothing here. User rule 2026-11-14: an accepted second dispatch always restarts the mission and the dispatcher always speaks after the restart (L:VDA_RESP), whether the triage ran (vda_open yes) or not."},
+    {"set":{"local":"vda_was"},"value":{"local":"vda_open"}},
+    {"set":{"local":"vda_open"},"value":"no"},
+    {"set":{"local":"vda_second"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"SECOND_DISPATCH"},"eq":1},
+        {"require":{"local":"MISSION_PHASE"},"gt":4}
+      ]}, "eq": 1,
       "then": [
-        {"set":{"local":"vda_open"},"value":"no"},
-        {"if": {
-          "and": [
-            {"require":{"local":"SECOND_DISPATCH"},"eq":1},
-            {"require":{"local":"MISSION_PHASE"},"gt":4}
-          ]}, "eq": 1,
+        {"set":{"local":"vda_second"},"value":1}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"second_dispatch_offered"},"eq":1},
+        {"require":{"local":"SECOND_DISPATCH"},"ne":1},
+        {"require":{"local":"MISSION_PHASE"},"gt":4}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vda_second"},"value":1}
+    ]},
+    {"if": {"local":"vda_second"}, "eq": 1,
+      "then": [
+        {"set":{"var":["L:VDA_RESP","number"]},"value":1}
+      ],"else": [
+        {"if": {"local":"vda_was"}, "eq": "yes",
           "then": [
-            {"set":{"var":["L:VDA_RESP","number"]},"value":1}
-          ],"else": [
             {"call_macro":"voice briefing chat"}
         ]}
     ]}
@@ -2004,7 +2022,7 @@
     {"if": {
       "and": [
         {"require":{"var":["L:LIVERY_ACTIVATION","number"]},"eq":1},
-        {"require":{"global":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"ne":1},
+        {"require":{"local":"FORCE_SAVE_SETTINGS_OVER_LIVERY"},"ne":1},
         {"require":{"var":["L:LIVERY_CREWPROFILE","number"]},"gt":0},
         {"require":{"var":["L:LIVERY_CREWPROFILE","number"]},"lt":6}
       ]}, "eq": 1,
@@ -7690,6 +7708,58 @@
         {"set":{"local":"vhh_r"},"value":{"multiply":[{"round":{"divide":[{"local":"vhh_ft"},5]},"to":0},5]}},
         {"call_macro":"hoist operator actor","result":"hch_actor"},
         {"call_macro":"voice say","params":{"key":"HCL.H","declut":1,"a":{"text":"{0}","params":[{"local":"vhh_r"}]},"actor":{"param":"hch_actor"}}}
+    ]}
+  ],
+  "voice target call": [
+    {"#comment":"User request of 2026-11-15 (communication rules with the dispatcher, point 1; source: real HEMS cases where the crew confirms by radio that it has the target and is going in, EmSpedia Pisa case): half a nautical mile from the accident, between MISSION_PHASE 2 and 7, once for each dispatch, the copilot calls the dispatcher on the radio (DSP.TGT, target in sight) and the dispatcher confirms in a few words (DSP.TGT.A). Only with the radio working (voice radio ready: power and CARLS connected), otherwise the call of that dispatch is skipped, never said late. Mission Companion only (voice say), chatter (AUDIO_DECLUT levels 1 to 3 skip it). The crew talk about a dispatch waits around the exchange (vda_dsp, voice dsp gate). Started by delayed threads. The flag vtc_done is cleared when a new dispatch is shown (MISSION_PHASE below 2). The status report of the dispatch phase stays a data exchange, no voice."},
+    {"while": 1, "gt": 0,
+      "do": [
+        {"sleep":5},
+        {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+          "then": [
+            {"set":{"local":"vtc_done"},"value":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":2},
+            {"require":{"local":"MISSION_PHASE"},"lt":8},
+            {"require":{"local":"vtc_done"},"ne":1},
+            {"require":{"has_location":"accident_location"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"location":"accident_location","var":"distance"}, "lt": 0.5,
+              "then": [
+                {"set":{"local":"vtc_done"},"value":1},
+                {"call_macro":"voice radio ready","result":"vtc_r"},
+                {"if": {"local":"vtc_r"}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"vda_dsp"},"value":1},
+                    {"set":{"local":"vtc_key"},"value":"DSP.TGT"},
+                    {"#comment":"Hazard visible (user request of 2026-11-15, unsafe scene): a fire or smoke effect active (VFXA state 2 or more) or a burning trailer: the crew reports that it holds clear (DSP.TGT.F) instead of the plain target call; the dispatcher answers the same way."},
+                    {"if": {
+                      "and": [
+                        {"require":{"has_object":"VFXA"},"eq":1},
+                        {"require":{"object":"VFXA","var":"VAR 1"},"gte":2}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"vtc_key"},"value":"DSP.TGT.F"}
+                    ]},
+                    {"if": {
+                      "and": [
+                        {"require":{"has_object":"trailer"},"eq":1},
+                        {"require":{"object":"trailer","var":"VAR 1"},"gt":0}
+                      ]}, "eq": 1,
+                      "then": [
+                        {"set":{"local":"vtc_key"},"value":"DSP.TGT.F"}
+                    ]},
+                    {"call_macro":"voice say","params":{"key":{"local":"vtc_key"},"declut":1}},
+                    {"sleep":5},
+                    {"call_macro":"voice say","params":{"key":"DSP.TGT.A","declut":1}},
+                    {"sleep":4},
+                    {"set":{"local":"vda_dsp"},"value":0}
+                ]}
+            ]}
+        ]}
     ]}
   ],
   "voice site wind": [

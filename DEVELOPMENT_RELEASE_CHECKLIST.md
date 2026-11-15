@@ -113,7 +113,7 @@ This is a blocking checklist. Read it before changing `everywhere_all.json`, run
 
 - Missing HPG operators in `if`/logical groups, including the CARLS DF failures of releases 85, 88, 89, and 90.
 - Undefined renderer labels caused by LVAR/local lifetime mismatch.
-- DF entering ESC without an EDT row because the cursor/digits were task-local, and timeout never firing because its monitor read obsolete LVAR state.
+- DF entering ESC without an EDT row because the cursor/digits were task-local, and timeout never firing because its monitor read obsolete LVAR state. (Runtime test of 2026-11-14, `standalone-tests/local-global-scope-test.json`: locals written from the objective, a button, a thread and a CARLS key handler are visible from all of them and after `reload_mission`; the DF editor state is a local again.)
 - Soft-key labels rendered from unsupported dynamic objects.
 - DF frequency-grid errors, invalid band acceptance, and incorrect forced AM/FM behavior.
 - Checklist wrapping caused by non-monospace or overlong rows.

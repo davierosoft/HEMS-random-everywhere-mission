@@ -17,9 +17,9 @@ const text = (x) => JSON.stringify(x);
 const acc = life.accept_dispatch;
 const t = text(acc);
 const iFlag = t.indexOf('"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1');
-const iGlobLat = t.indexOf('"set":{"global":"SECOND_RESTART_LAT"}');
-const iGlobLon = t.indexOf('"set":{"global":"SECOND_RESTART_LON"}');
-const iPend = t.indexOf('"set":{"global":"SECOND_RESTART_PENDING"},"value":1');
+const iGlobLat = t.indexOf('"set":{"local":"SECOND_RESTART_LAT"}');
+const iGlobLon = t.indexOf('"set":{"local":"SECOND_RESTART_LON"}');
+const iPend = t.indexOf('"set":{"local":"SECOND_RESTART_PENDING"},"value":1');
 const iRow = t.indexOf('"stage":"accept_second_start"');
 const iReload = t.indexOf('"reload_mission":1');
 assert.ok(iFlag > 0 && iGlobLat > iFlag && iGlobLon > iGlobLat && iPend > iGlobLon && iRow > iPend && iReload > iRow, 'accept: flag, then the starting point and the mark in globals, then the row, then reload_mission');
@@ -28,14 +28,14 @@ assert.ok(t.includes('"set":{"var":["L:MISSION_START_LOCATION","number"]},"value
 // objective1: the repair is before start location diagnostics and before both branches, the mark is cleared at once
 const o = text(life.objective1);
 const iDefaults = o.indexOf('"call_macro":"settings first run defaults"');
-const iRepair = o.indexOf('"global":"SECOND_RESTART_PENDING"},"eq":1');
+const iRepair = o.indexOf('"local":"SECOND_RESTART_PENDING"},"eq":1');
 const iDiag = o.indexOf('"call_macro":"start location diagnostics"');
 const iNew = o.indexOf('"stage":"start_location_new"');
 const iRestored = o.indexOf('"stage":"start_location_restored"');
 assert.ok(iDefaults > 0 && iRepair > iDefaults && iDiag > iRepair && iNew > iDiag && iRestored > iDiag, 'objective1: repair before the diagnostics and the two branches');
 const repair = o.slice(iRepair, iDiag);
 assert.ok(repair.includes('"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"ne":1') && repair.includes('"set":{"var":["L:SECOND_DISPATCH_ACCEPTED","number"]},"value":1'), 'the lost flag is set again');
-assert.ok(repair.includes('"set":{"var":["L:MISSION_START_LOCATION LAT","number"]},"value":{"global":"SECOND_RESTART_LAT"}') && repair.includes('"set":{"var":["L:MISSION_START_LOCATION LON","number"]},"value":{"global":"SECOND_RESTART_LON"}'), 'the overwritten starting point is written back');
+assert.ok(repair.includes('"set":{"var":["L:MISSION_START_LOCATION LAT","number"]},"value":{"local":"SECOND_RESTART_LAT"}') && repair.includes('"set":{"var":["L:MISSION_START_LOCATION LON","number"]},"value":{"local":"SECOND_RESTART_LON"}'), 'the overwritten starting point is written back');
 assert.ok(repair.lastIndexOf('"SECOND_RESTART_PENDING"},"value":0') > repair.lastIndexOf('"set":{"var":["L:MISSION_START_LOCATION LON","number"]}'), 'the mark is cleared after the repairs');
 // the mark is only set in the accept
 const marks = Object.entries({ ...life, ...diag }).filter(([, b]) => text(b).includes('"SECOND_RESTART_PENDING"},"value":1')).map(([n]) => n);

@@ -86,6 +86,31 @@
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"ground"},
     {"call_macro":"voice hoist cable","params":{"stage":"GND","who":{"param":"person_type"}}}
   ],
+  "hoist up halfway call": [
+    {"#comment":"User request of 2026-11-14 (H4 replaced after a check of real hoist phraseology: recovery advisories are halfway up and entering the cabin, not numeric heights). Param start = cable out in metres when the hook started up. When the cable still out is half of it the hoist operator calls HCL.HALF; only for a cable of 20 m or more, so the call stays clear of the DOOR call at 8 m. Polls the reel distance, no dynamic comparator in wait_for; the loop ends after 60 s anyway."},
+    {"if": {"param":"start"}, "lt": 20,
+      "then": [
+        {"return":0}
+    ]},
+    {"set":{"local":"hup_half"},"value":{"divide":[{"param":"start"},2]}},
+    {"set":{"local":"hup_diff"},"value":{"subtract":[{"fn":"hoist_get_reel_distance:m"},{"local":"hup_half"}]}},
+    {"set":{"local":"hup_wait"},"value":0},
+    {"while": {"local":"hup_wait"}, "lt": 300,
+      "do": [
+        {"if": {"local":"hup_diff"}, "gt": 0,
+          "then": [
+            {"sleep":0.2},
+            {"set":{"local":"hup_wait"},"value":{"add":[{"local":"hup_wait"},1]}},
+            {"set":{"local":"hup_diff"},"value":{"subtract":[{"fn":"hoist_get_reel_distance:m"},{"local":"hup_half"}]}}
+          ],"else": [
+            {"set":{"local":"hup_wait"},"value":300}
+        ]}
+    ]},
+    {"if": {"local":"hup_diff"}, "lte": 0,
+      "then": [
+        {"call_macro":"voice hoist cable","params":{"stage":"HALF"}}
+    ]}
+  ],
   "hoist up empty": [
     {"call_macro":"ground ops checkpoint","params":{"id":"hoist_cable_up_start","detail":"hoist up empty"}},
     {"set":{"local":"HOIST_CABLE_PHASE"},"value":"empty"},
@@ -108,10 +133,12 @@
     {"set":{"local":"HOIST_CREW_ON_CABLE"},"value":1},
     {"call_macro":"start hoist attached risk monitor"},
     {"call_macro":"hoist drift monitor"},
+    {"set":{"local":"hup_start"},"value":{"fn":"hoist_get_reel_distance:m"}},
     {"call_macro":"voice hoist cable","params":{"stage":"UP"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.8]}},
     {"wait_for":{"fn":"hoist_get_distance_from_ground:m"},"gt":10},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.15,1.7]}},
+    {"call_macro":"hoist up halfway call","params":{"start":{"local":"hup_start"}}},
     {"wait_for":{"fn":"hoist_get_reel_distance:m"},"lt":8},
     {"call_macro":"voice hoist cable","params":{"stage":"DOOR"}},
     {"hoist_control":"reel_up","speed":{"scale":[{"global":"HOIST_SPEED"},0,100,0.01,0.7]}},

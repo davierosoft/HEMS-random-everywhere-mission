@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.26. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.31. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1009,6 +1009,19 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Test:** In the German mission open the technical page and the settings: no button is cut off; the RescueTrack statuses are German; the crew tips are in German.
 
 
+### The first slot of the saved games loads again
+
+- Loading the first save slot (the automatic one) now restores the saved mission data; before, it could read data that nobody had written. The save pages read the data of the slots directly.
+- Several long chains of steps (the ring around the scene, the snapshots for troubleshooting, the loops of the ground crew) now pause briefly, so the call stack error no longer appears on long missions.
+- **Build history:** 0.997 170.29, 170.30, 170.31.
+- **Test:** Save to a slot, restart the flight, load the first slot and check the mission continues with the right dispatch; fly a long mission with a second dispatch and check that no Command Failed window appears.
+
+### The medic walks at a normal speed and keeps a safe distance
+
+- The medic walks to the ambulance of a custom hospital at 6 km/h, and the medical box and the medics keep a minimum distance from the helicopter and from each other at every loading and destination.
+- **Build history:** 0.997 170.27, 170.30.
+- **Test:** Land at a custom hospital and watch the medic walk to the ambulance and stop at a safe distance from the rotor.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1239,6 +1252,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - The crew gives tips about the help page, where to find the voice commands and which are active now, the tablet status bar and wifi, the hoist panel and hover limits, the progress bars of the dispatch page, the performance options and the random voices of the Mission Companion. On the first of April and on the thirty first of October one tip is about the Easter eggs setting.
 - **Build history:** 0.997 170.22.
 - **Test:** Fly with the tips on and the crew chatter on: the new tips are heard in English, German and French with the voice packs EN 43, DE 28 and FR 29.
+
+### Show dispatch opens the briefing and the tips come in two pages
+
+- The Show dispatch voice command and button open the briefing page. The crew tips menu is split in two pages with a clear next page entry.
+- **Build history:** 0.997 170.30.
+- **Test:** Say Show dispatch with a dispatch pending and check that the briefing opens; open the tips menu and go to the second page.
+
+### Waiting page while the accepted dispatch replaces the old one
+
+- After ACCEPT DISPATCH the tablet shows the line "HOC is replacing old dispatch details with the accepted one. Please wait..." (translated in German, French and Italian) until the new details are ready, instead of showing the old incident.
+- **Build history:** 0.997 170.31.
+- **Test:** Accept a second dispatch and check that the waiting line appears and is replaced by the new incident.
 
 ## NEW FUNCTIONS
 
@@ -1886,6 +1911,48 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Test:** With the voice commands on, hold push-to-talk and say "show dispatch", "request ambulance" and "distance to destination"; listen to the answer of the crew.
 
 
+### The crew waits for a nearby ambulance and the pilot can force the loading
+
+- With an ambulance close to the scene the crew waits for it (by its distance and arrival time, up to four minutes, five if the time is unknown) before the helicopter takes the patient, and says so. The new button Load patient on helicopter ends the wait at any time; the dispatcher tells the crew when the ambulance cannot arrive in time. The lines are available in English, German and French.
+- **Build history:** 0.997 170.28, 170.31.
+- **Test:** Call an incident with an ambulance a few minutes away, land and listen to the crew; press Load patient on helicopter and check the crew loads the patient at once.
+
+### Optional ambulance at custom hospitals
+
+- A custom hospital can have its own parked ambulance: the crew boards it from the side or the rear, it drives along the hospital waypoints and returns.
+- **Build history:** 0.997 170.27.
+- **Test:** Choose a custom hospital with the ambulance option and check the transfer to the hospital ambulance and its return.
+
+### Manual treatment of the patient by the doctor
+
+- The doctor treats the patient in manual mode with four buttons for each phase (one correct, one plausible but wrong, two absurd) for 23 patient conditions; the correct choice always succeeds, the others worsen the patient. More vital signs (glucose, heart rhythm, severe bleeding) are tracked and saved.
+- **Build history:** 0.997 170.29.
+- **Test:** Choose manual treatment on a patient, answer a phase correctly and wrongly and check the patient status.
+
+### More voice commands and the heli rescuer returns to base
+
+- New voice commands open the patient pages, teleport with a confirmation, and accept or go to the next dispatch by keyword. The heli rescuer speaks when the base return begins.
+- **Build history:** 0.997 170.30.
+- **Test:** Use the new voice commands and ask for a teleport: the confirmation is requested before moving.
+
+### The copilot calls the dispatcher when the target is in sight
+
+- Half a nautical mile from the accident, with the radio working, the copilot calls the dispatcher that the target is in sight and the dispatcher confirms in a few words. If a fire or smoke hazard is visible the copilot reports that the crew holds clear until the scene is safe. Nothing else of the dispatch phases is spoken: they stay an automatic data exchange.
+- **Build history:** 0.997 170.31.
+- **Test:** Fly to a normal accident and to one with fire or smoke, with the radio on, and listen to the two exchanges; with the radio off nothing is said.
+
+### The fire service reports the scene safe
+
+- When the fire engine crew has put out the fire or cleared the smoke, the fire service calls the helicopter by radio that the scene is safe and you are cleared to go. It uses the voice of the heli rescuer.
+- **Build history:** 0.997 170.31.
+- **Test:** Fly to a burning accident with a fire engine on scene and wait for the call before landing.
+
+### The hoist operator calls halfway up
+
+- On the way up of the hoist the operator says "halfway up" when half of the cable is back, for cables of 20 meters or more.
+- **Build history:** 0.997 170.31.
+- **Test:** Hoist with a cable of at least 20 meters and listen for the halfway call.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -1945,7 +2012,12 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.01:** The destination window after a hospital chosen from the custom database, the custom visit time that sets the length of the visit, and the reliable archive of the next dispatch (see The destination window opens again after a hospital chosen from the custom database, The custom visit time sets the length of the visit and The next dispatch is archived reliably).
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
-- **0.997 170.26 (this release):** END SHIFT, RELOAD MISSION and the archive of the next dispatch start on a fresh call stack (see the END SHIFT section above).
+- **0.997 170.31 (this release):** The target call and the unsafe scene calls, the halfway up call, the first save slot, the waiting line of the accepted dispatch and the German and French lines of the ambulance wait (see the sections above).
+- **0.997 170.30:** More voice commands, the briefing opened by Show dispatch, tips in two pages and safe distances of the medics (see the sections above).
+- **0.997 170.29:** The manual treatment by the doctor and the pause that removes the call stack error (see the sections above).
+- **0.997 170.28:** The wait for a nearby ambulance and the Load patient on helicopter button (see the sections above).
+- **0.997 170.27:** The optional ambulance at custom hospitals and the medic walking speed (see the sections above).
+- **0.997 170.26:** END SHIFT, RELOAD MISSION and the archive of the next dispatch start on a fresh call stack (see the END SHIFT section above).
 - **0.997 170.25:** The second fire engine of the burning tanker scene, the fire of the missions 1 and 69 tied to the description, END SHIFT protected from the archive, German RescueTrack statuses, shorter buttons and German tips (see the sections above).
 - **0.997 170.24:** The accident location line in the engine start and quickstart steps no longer shows 0, 0 (see the accident location line above).
 - **0.997 170.23:** The second ambulance too keeps its crew aboard when no patient is within its reach (see the ambulance section above).

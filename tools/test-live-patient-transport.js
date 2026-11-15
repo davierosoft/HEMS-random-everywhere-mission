@@ -236,7 +236,7 @@ for (const slot of [1, 2, 3]) {
   h.commands(h.macros.reloadtemp.slice(0, 3), {});
   const restored = new Live(); restored.savedTables = structuredClone(h.savedTables);
   restored.locals['L:RELOADSAVED'] = 1;
-  Object.assign(restored.globals, {TEMPVAR_MISSION_NUMBER: 9, 'TEMPACCIDENT_LOCATION LAT': 45, 'TEMPACCIDENT_LOCATION LON': 8});
+  Object.assign(restored.locals, {TEMPVAR_MISSION_NUMBER: 9, 'TEMPACCIDENT_LOCATION LAT': 45, 'TEMPACCIDENT_LOCATION LON': 8});
   restored.call(prefix + 'live restore open'); restored.call(prefix + 'live sync');
   assert.equal(restored.locals[`LIFESCORE${slot === 1 ? '' : slot}`], 41 + slot);
   assert.equal(restored.locals[`P${slot}_PATIENT_GIVEN_NAME`], 'Preserved');
@@ -247,7 +247,7 @@ for (const slot of [1, 2, 3]) {
   assert.equal(restored.events.filter(event => event[0] === 'effect').length, 0, 'Restored completed ground actions must not execute again');
   const wrongScene = new Live(); wrongScene.savedTables = structuredClone(h.savedTables);
   wrongScene.locals['L:RELOADSAVED'] = 1;
-  Object.assign(wrongScene.globals, {TEMPVAR_MISSION_NUMBER: 9, 'TEMPACCIDENT_LOCATION LAT': 46, 'TEMPACCIDENT_LOCATION LON': 8});
+  Object.assign(wrongScene.locals, {TEMPVAR_MISSION_NUMBER: 9, 'TEMPACCIDENT_LOCATION LAT': 46, 'TEMPACCIDENT_LOCATION LON': 8});
   wrongScene.call(prefix + 'live restore open'); assert.equal(wrongScene.locals.patient_live_saved, null);
 }
 for (const slot of [1, 2, 3]) {

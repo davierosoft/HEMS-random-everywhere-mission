@@ -97,4 +97,34 @@ assert.deepStrictEqual(pass('voice fuel watch', e), [], 'limit 0 = off');
 e = base(); e.vars['FUEL TANK CENTER LEVEL'] = 30;
 pass('voice fuel watch', e); e.locals.MISSION_PHASE = 1; pass('voice fuel watch', e); e.locals.MISSION_PHASE = 5;
 assert.deepStrictEqual(pass('voice fuel watch', e), [['FUEL.LOW', '30']], 'flags cleared for the next dispatch');
+// User request of 2026-11-15: target call to the dispatcher (DSP.TGT by the copilot, DSP.TGT.A by the dispatcher), half a mile from the accident
+{
+  for (const L of ['EN', 'DE', 'FR']) {
+    const xml = fs.readFileSync(path.join(root, 'voicepacks', L + '.xml'), 'utf8');
+    for (const [key, actor] of [['DSP.TGT', '2'], ['DSP.TGT.A', '8']]) {
+      const m = xml.match(new RegExp('<message key="' + key.replace(/\./g, '\\.') + '" actor="' + actor + '" radio="ext"[^>]*>([\\s\\S]*?)</message>'));
+      assert.ok(m, L + ' has ' + key + ' on the radio with actor ' + actor);
+      assert.ok((m[1].match(/<o>/g) || []).length >= 3, L + ' ' + key + ' has variants');
+      assert.ok(m[1].includes('{@HEMS}'), L + ' ' + key + ' names the helicopter');
+    }
+  }
+  const macro = JSON.stringify(macros['voice target call']);
+  assert.ok(macro.includes('"lt":0.5') && macro.includes('"value":"DSP.TGT"') && macro.includes('"value":"DSP.TGT.F"') && macro.includes('"key":"DSP.TGT.A"'), 'target call at half a mile with plain, hazard and confirmation lines');
+  assert.ok(macro.indexOf('voice radio ready') < macro.indexOf('"key":{"local":"vtc_key"}'), 'only with the radio working');
+  assert.ok(macro.indexOf('"key":{"local":"vtc_key"}') < macro.indexOf('"key":"DSP.TGT.A"'), 'the call comes before the confirmation');
+  assert.ok(macro.includes('"VFXA"') && macro.includes('"trailer"'), 'hazard (fire or smoke effect, burning trailer) selects the hold-clear call');
+  const scene = fs.readFileSync(path.join(root, 'mission-src', 'macros', '06-scene-generation.json'), 'utf8');
+  assert.strictEqual((scene.match(/"key":"VVF.GO"/g) || []).length, 3, 'fire service go call at the three fire-out sites');
+  for (const L of ['EN', 'DE', 'FR']) {
+    const xml = fs.readFileSync(path.join(root, 'voicepacks', L + '.xml'), 'utf8');
+    for (const [key, actor] of [['DSP.TGT.F', '2'], ['VVF.GO', '12']]) {
+      const start = xml.indexOf('<message key="' + key + '" actor="' + actor + '"');
+      const m = start < 0 ? null : [0, xml.slice(start, xml.indexOf('</message>', start))];
+      assert.ok(m && (m[1].match(/<o>/g) || []).length >= 3, L + ' ' + key + ' exists with variants');
+    }
+  }
+  assert.ok(macro.includes('"vda_dsp"'), 'the crew discussion waits around the exchange');
+  assert.ok(!macro.includes('send dispatch phase') && !macro.includes('post dispatcher message'), 'no data exchange or RescueTrack message in the voice call');
+  assert.ok(JSON.stringify(macros['delayed threads']).includes('"call_macro":"voice target call"'), 'started by delayed threads');
+}
 console.log('voice site wind and fuel ok');

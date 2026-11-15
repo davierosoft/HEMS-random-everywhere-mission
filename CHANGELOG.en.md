@@ -1,3 +1,12 @@
+## Release 0.997 170.31
+
+- Target call to the dispatcher (DSP.TGT non-committal, DSP.TGT.F with a visible hazard, DSP.TGT.A) and fire service go call (VVF.GO, heli rescuer voice) at the three fire-out sites; halfway up call (HCL.HALF)
+- Locals audit: TEMP, SAVETEMP, SECOND_RESTART, CARLS DF editor state and hoist occupancy are mission locals (simulator proof of 2026-11-14); save mirrors deleted; slot 0 autosave load fixed (preload0)
+- Reset and options rules: global reset sync gate, exempt list, presets gate
+- DE/FR packs: ambulance wait lines; packs EN 51, DE 36, FR 37; waiting page text UI.3763 in DE/FR/IT
+- Validators: DF release gate updated to the local scope, snapshot FLOW keys of the slot 0 table
+- Release 170.31: unsafe scene voice calls, target call, halfway up call, dispatcher voice rules, locals audit
+
 ## Release 0.997 170.30
 
 - Version check carries the build number

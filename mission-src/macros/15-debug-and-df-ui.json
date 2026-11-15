@@ -335,7 +335,7 @@
         {"text":"LOCATION DIAGNOSTICS","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"LOCATIONS"}},
         {"text":"HAS ACCIDENT/RESCUE/LANDING {0}/{1}/{2} | CURRENT {3}","color":"white","params":[{"has_location":"accident_location"},{"has_location":"rescue_location"},{"has_location":"landing_spot"},{"local":"location_name"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"LOCATIONS"}},
         {"text":"ACCIDENT PRE {0}/{1} | RESCUE PRE {2}/{3}","color":"white","params":[{"var":["L:PRE_ACCIDENT_LOCATION LAT","number"]},{"var":["L:PRE_ACCIDENT_LOCATION LON","number"]},{"var":["L:PRE_RESCUE_LOCATION LAT","number"]},{"var":["L:PRE_RESCUE_LOCATION LON","number"]}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"LOCATIONS"}},
-        {"text":"SAVED ACCIDENT {0}/{1} | SAVED RESCUE {2}/{3}","color":"gray","params":[{"global":"TEMPACCIDENT_LOCATION LAT"},{"global":"TEMPACCIDENT_LOCATION LON"},{"global":"TEMPRESCUE_LOCATION LAT"},{"global":"TEMPRESCUE_LOCATION LON"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"LOCATIONS"}},
+        {"text":"SAVED ACCIDENT {0}/{1} | SAVED RESCUE {2}/{3}","color":"gray","params":[{"local":"TEMPACCIDENT_LOCATION LAT"},{"local":"TEMPACCIDENT_LOCATION LON"},{"local":"TEMPRESCUE_LOCATION LAT"},{"local":"TEMPRESCUE_LOCATION LON"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"LOCATIONS"}},
         {"text":"PATIENT OBJECTS","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
         {"text":"P1/P2/P3 OBJECTS {0}/{1}/{2} | VICTIMS {3}","color":"white","params":[{"has_object":"injured_human"},{"has_object":"injured_human2"},{"has_object":"injured_human3"},{"local":"HELOVICTIMS"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"PATIENTS"}},
         {"text":"CREW MONITOR: active {0}; current {1}; alert {2}; damage {3}","params":[{"local":"CREW_LIFESCORE_MONITOR_ACTIVE"},{"local":"CREW_LIFESCORE_CURRENT"},{"local":"CREW_LIFESCORE_ALERT_LEVEL"},{"local":"CREW_ACCELERATION_DAMAGE"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"MEDICAL"},"color":"orange"},
@@ -355,8 +355,8 @@
         {"text":"SCENE TYPE {0} | CAMPING OBJECTS {1} | VFX {2}/{3}","color":"white","params":[{"local":"scene_macro"},{"local":"CAMPING_OBJECTS"},{"local":"VFX"},{"local":"VFXA"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SCENE"}},
         {"text":"FIRE MARKER/AMBULANCE/FIRETRUCK {0}/{1}/{2}","color":"white","params":[{"has_object":"flare_accident"},{"has_object":"ambulance1"},{"has_object":"firetruck1"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SCENE"}},
         {"text":"FLOW PHASE {0} | READY {1} | MIDWAY {2} | PATHOLOGY READY {3}","color":"white","params":[{"local":"MISSION_PHASE"},{"var":["L:READY","number"]},{"var":["L:MIDWAY","number"]},{"local":"pathology_random_ready"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
-        {"text":"SAVETEMP {0} | START {1} | END {2}","color":"yellow","params":[{"global":"SAVETEMP_STATUS"},{"global":"SAVETEMP_START_TIMESTAMP"},{"global":"SAVETEMP_END_TIMESTAMP"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
-        {"text":"SAVETEMP KEY {0} -> {1} | VALID {2} | SAVE TIME {3}","color":"gray","params":[{"global":"SAVETEMP_START_MISSION_KEY"},{"global":"SAVETEMP_END_MISSION_KEY"},{"global":"SAVEVALID0"},{"global":"SAVE_TIMESTAMP0"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
+        {"text":"SAVETEMP {0} | START {1} | END {2}","color":"yellow","params":[{"local":"SAVETEMP_STATUS"},{"local":"SAVETEMP_START_TIMESTAMP"},{"local":"SAVETEMP_END_TIMESTAMP"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
+        {"text":"SAVETEMP KEY {0} -> {1} | VALID {2} | SAVE TIME {3}","color":"gray","params":[{"local":"SAVETEMP_START_MISSION_KEY"},{"local":"SAVETEMP_END_MISSION_KEY"},{"table":{"static":"Mission_Save_Slot0"},"key":"valid"},{"table":{"static":"Mission_Save_Slot0"},"key":"SAVE_TIMESTAMP"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"FLOW"}},
         {"text":"LIVE MISSION SUMMARY","color":"cyan","align":"center","show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"MISSION ID {0}-{1}-{2}","color":"white","params":[{"local":"VAR_MISSION_NUMBER"},{"local":"CRASH_VARIABLE"},{"local":"MISSION_SCENE_VARIANT"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
         {"text":"LOAD STATUS {0}% | FLIGHT PLAN {1}","color":"white","params":[{"var":["L:LOAD","number"]},{"local":"FPL_NMBR"}],"show_condition":{"require":{"local":"debug_page_section"},"eq":"SUMMARY"}},
@@ -1218,16 +1218,16 @@
     ]}
   ],
   "CARLS DF timeout": [
-    {"if": {"global":"CARLS_DF_INPUT_ERROR"}, "eq": 1,
+    {"if": {"local":"CARLS_DF_INPUT_ERROR"}, "eq": 1,
       "then": [
-        {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0},
-        {"set":{"global":"CARLS_DF_LAST_INPUT_TIME"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":0},
+        {"set":{"local":"CARLS_DF_LAST_INPUT_TIME"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"call_macro":"CARLS DF render"}
       ],"else": [
         {"if": {
           "and": [
-            {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
-            {"require":{"global":"CARLS_DF_VALID"},"eq":1}
+            {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
+            {"require":{"local":"CARLS_DF_VALID"},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"call_macro":"CARLS DF confirm"}
@@ -1240,11 +1240,11 @@
     {"set":{"local":"CARLS_DF_MODE_CONTEXT"},"value":{"var":["L:CARLS_DF_FREQUENCY","number"]}},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_VALID"},"eq":1}
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_VALID"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"CARLS_DF_MODE_CONTEXT"},"value":{"global":"CARLS_DF_ENTRY_FREQUENCY"}}
+        {"set":{"local":"CARLS_DF_MODE_CONTEXT"},"value":{"local":"CARLS_DF_ENTRY_FREQUENCY"}}
     ]},
     {"if": {
       "and": [
@@ -1692,305 +1692,305 @@
     }
   ],
   "CARLS DF validate": [
-    {"set":{"global":"CARLS_DF_VALID"},"value":0},
-    {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":1},
+    {"set":{"local":"CARLS_DF_VALID"},"value":0},
+    {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":1},
     {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":0},
     {"set":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"value":0},
     {"set":{"local":"CARLS_DF_GRID_VALID"},"value":0},
-    {"set":{"global":"CARLS_DF_ENTRY_BAND"},"value":"INVALID"},
+    {"set":{"local":"CARLS_DF_ENTRY_BAND"},"value":"INVALID"},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
-        {"require":{"global":"CARLS_DF_D1"},"eq":1}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_D1"},"eq":1}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
-        {"require":{"global":"CARLS_DF_D1"},"eq":2}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_D1"},"eq":2}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
-        {"require":{"global":"CARLS_DF_D1"},"eq":3}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_D1"},"eq":3}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":100000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":130000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":100000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":130000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":150000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":160000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":150000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":160000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":220000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":390000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":220000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":390000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":162000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":162000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":117900}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":117900}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":118000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136900}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":118000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136900}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":161900}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":161900}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399900}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399900}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"eq":162000}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"eq":162000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
-        {"require":{"global":"CARLS_DF_D5"},"eq":0}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_D5"},"eq":0}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
-        {"require":{"global":"CARLS_DF_D5"},"eq":2}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_D5"},"eq":2}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
-        {"require":{"global":"CARLS_DF_D5"},"eq":5}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_D5"},"eq":5}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
-        {"require":{"global":"CARLS_DF_D5"},"eq":7}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_D5"},"eq":7}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":117970}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":117970}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":118000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136970}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":118000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136970}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":161970}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":161970}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399990}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399990}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_GRID_PREFIX_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"eq":162000}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"eq":162000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
-        {"require":{"global":"CARLS_DF_D5"},"eq":0},
-        {"require":{"global":"CARLS_DF_D6"},"eq":0}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_D5"},"eq":0},
+        {"require":{"local":"CARLS_DF_D6"},"eq":0}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
-        {"require":{"global":"CARLS_DF_D5"},"eq":2},
-        {"require":{"global":"CARLS_DF_D6"},"eq":5}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_D5"},"eq":2},
+        {"require":{"local":"CARLS_DF_D6"},"eq":5}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
-        {"require":{"global":"CARLS_DF_D5"},"eq":5},
-        {"require":{"global":"CARLS_DF_D6"},"eq":0}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_D5"},"eq":5},
+        {"require":{"local":"CARLS_DF_D6"},"eq":0}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
-        {"require":{"global":"CARLS_DF_D5"},"eq":7},
-        {"require":{"global":"CARLS_DF_D6"},"eq":5}
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_D5"},"eq":7},
+        {"require":{"local":"CARLS_DF_D6"},"eq":5}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_GRID_VALID"},"value":1}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_GRID_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":117975}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":108000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":117975}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_ENTRY_BAND"},"value":"NAV"},
+        {"set":{"local":"CARLS_DF_VALID"},"value":1},
+        {"set":{"local":"CARLS_DF_ENTRY_BAND"},"value":"NAV"},
         {"set":{"global":"CARLS_DF_MODULATION"},"value":"AM"}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_GRID_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":118000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136975}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":118000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":136975}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_ENTRY_BAND"},"value":"ATC"},
+        {"set":{"local":"CARLS_DF_VALID"},"value":1},
+        {"set":{"local":"CARLS_DF_ENTRY_BAND"},"value":"ATC"},
         {"set":{"global":"CARLS_DF_MODULATION"},"value":"AM"}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_GRID_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":162000}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":156000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":162000}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_ENTRY_BAND"},"value":"MARITIME"},
+        {"set":{"local":"CARLS_DF_VALID"},"value":1},
+        {"set":{"local":"CARLS_DF_ENTRY_BAND"},"value":"MARITIME"},
         {"set":{"global":"CARLS_DF_MODULATION"},"value":"FM"}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_GRID_VALID"},"eq":1},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
-        {"require":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399975}
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"gte":225000},
+        {"require":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"lte":399975}
       ]}, "eq": 1,
       "then": [
         {"set":{"local":"CARLS_DF_PREFIX_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_VALID"},"value":1},
-        {"set":{"global":"CARLS_DF_ENTRY_BAND"},"value":"UHF"}
+        {"set":{"local":"CARLS_DF_VALID"},"value":1},
+        {"set":{"local":"CARLS_DF_ENTRY_BAND"},"value":"UHF"}
     ]},
     {"if": {"local":"CARLS_DF_PREFIX_VALID"}, "eq": 1,
       "then": [
-        {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0}
+        {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":0}
     ]}
   ],
   "CARLS DF render": [
@@ -2051,11 +2051,11 @@
     {"set":{"local":"CARLS_DF_RENDER_MODE_CONTEXT"},"value":{"var":["L:CARLS_DF_FREQUENCY","number"]}},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_VALID"},"eq":1}
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_VALID"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"local":"CARLS_DF_RENDER_MODE_CONTEXT"},"value":{"global":"CARLS_DF_ENTRY_FREQUENCY"}}
+        {"set":{"local":"CARLS_DF_RENDER_MODE_CONTEXT"},"value":{"local":"CARLS_DF_ENTRY_FREQUENCY"}}
     ]},
     {"set":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"value":0},
     {"if": {
@@ -2068,7 +2068,7 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":0},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":0},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
@@ -2077,7 +2077,7 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":0},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":0},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
@@ -2086,7 +2086,7 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":0},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":0},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
@@ -2095,7 +2095,7 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":0},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":0},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
@@ -2104,8 +2104,8 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
@@ -2114,8 +2114,8 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
@@ -2124,8 +2124,8 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
@@ -2134,8 +2134,8 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
@@ -2144,9 +2144,9 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
@@ -2155,9 +2155,9 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
@@ -2166,9 +2166,9 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
@@ -2177,9 +2177,9 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":1},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":1},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
@@ -2188,300 +2188,300 @@
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"global":"CARLS_DF_D1"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"local":"CARLS_DF_D1"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"global":"CARLS_DF_D1"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"local":"CARLS_DF_D1"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"global":"CARLS_DF_D1"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"local":"CARLS_DF_D1"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":2},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":2},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"global":"CARLS_DF_D1"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}_#.###","params":[{"local":"CARLS_DF_D1"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":3},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":3},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}_.###","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":4},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":4},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}._##","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":5},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":5},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}_#","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":6},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":6},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}_","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"},{"global":"CARLS_DF_D6"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","FM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"},{"local":"CARLS_DF_D6"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"AM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"},{"global":"CARLS_DF_D6"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"},{"local":"CARLS_DF_D6"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"},{"global":"CARLS_DF_D6"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","AM","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"},{"local":"CARLS_DF_D6"}]}]]}}
     ]},
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_ERROR"},"eq":0},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_ERROR"},"eq":0},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
         {"require":{"local":"CARLS_DF_RENDER_MODULATION"},"eq":"FM"},
         {"require":{"local":"CARLS_DF_RENDER_CAN_TOGGLE"},"eq":0}
       ]}, "eq": 1,
       "then": [
-        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"global":"CARLS_DF_D1"},{"global":"CARLS_DF_D2"},{"global":"CARLS_DF_D3"},{"global":"CARLS_DF_D4"},{"global":"CARLS_DF_D5"},{"global":"CARLS_DF_D6"}]}]]}}
+        {"set_carls_radio":{"LSK":["RTN","","IAD"],"RSK":["MAD","MAR","ESC"],"Items":[["","DIRECTION FINDER"],["",{"text":"{0} {1} MHz {2}","params":[{"local":"CARLS_DF_RENDER_SOURCE"},{"tofixed":{"divide":[{"local":"CARLS_DF_DISPLAY_FREQUENCY"},1000]},"digits":3},{"local":"CARLS_DF_RENDER_MODULATION"}]}],["",{"text":"EDT: {0}{1}{2}.{3}{4}{5}","params":[{"local":"CARLS_DF_D1"},{"local":"CARLS_DF_D2"},{"local":"CARLS_DF_D3"},{"local":"CARLS_DF_D4"},{"local":"CARLS_DF_D5"},{"local":"CARLS_DF_D6"}]}]]}}
     ]}
   ],
   "CARLS DF cancel": [
-    {"set":{"global":"CARLS_DF_EDITING"},"value":0},
-    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1},
-    {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":0},
-    {"set":{"global":"CARLS_DF_VALID"},"value":0},
-    {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0},
-    {"set":{"global":"CARLS_DF_D1"},"value":0},
-    {"set":{"global":"CARLS_DF_D2"},"value":0},
-    {"set":{"global":"CARLS_DF_D3"},"value":0},
-    {"set":{"global":"CARLS_DF_D4"},"value":0},
-    {"set":{"global":"CARLS_DF_D5"},"value":0},
-    {"set":{"global":"CARLS_DF_D6"},"value":0},
+    {"set":{"local":"CARLS_DF_EDITING"},"value":0},
+    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1},
+    {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":0},
+    {"set":{"local":"CARLS_DF_VALID"},"value":0},
+    {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":0},
+    {"set":{"local":"CARLS_DF_D1"},"value":0},
+    {"set":{"local":"CARLS_DF_D2"},"value":0},
+    {"set":{"local":"CARLS_DF_D3"},"value":0},
+    {"set":{"local":"CARLS_DF_D4"},"value":0},
+    {"set":{"local":"CARLS_DF_D5"},"value":0},
+    {"set":{"local":"CARLS_DF_D6"},"value":0},
     {"call_macro":"CARLS DF render"}
   ],
   "CARLS DF confirm": [
     {"if": {
       "and": [
-        {"require":{"global":"CARLS_DF_EDITING"},"eq":1},
-        {"require":{"global":"CARLS_DF_INPUT_INDEX"},"eq":7},
-        {"require":{"global":"CARLS_DF_VALID"},"eq":1}
+        {"require":{"local":"CARLS_DF_EDITING"},"eq":1},
+        {"require":{"local":"CARLS_DF_INPUT_INDEX"},"eq":7},
+        {"require":{"local":"CARLS_DF_VALID"},"eq":1}
       ]}, "eq": 1,
       "then": [
-        {"set":{"var":["L:CARLS_DF_FREQUENCY","number"]},"value":{"global":"CARLS_DF_ENTRY_FREQUENCY"}},
-        {"set":{"global":"CARLS_DF_FREQUENCY"},"value":{"global":"CARLS_DF_ENTRY_FREQUENCY"}},
+        {"set":{"var":["L:CARLS_DF_FREQUENCY","number"]},"value":{"local":"CARLS_DF_ENTRY_FREQUENCY"}},
+        {"set":{"global":"CARLS_DF_FREQUENCY"},"value":{"local":"CARLS_DF_ENTRY_FREQUENCY"}},
         {"set":{"var":["L:CARLS_DF_ACTIVE_VALID","number"]},"value":1},
         {"set":{"global":"CARLS_DF_SOURCE"},"value":"MAN"},
-        {"set":{"global":"CARLS_DF_EDITING"},"value":0},
-        {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1},
-        {"set":{"global":"CARLS_DF_VALID"},"value":0},
-        {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0},
-        {"call_macro":"CARLS DF assign mission bearing","params":{"frequency":{"global":"CARLS_DF_ENTRY_FREQUENCY"}}},
+        {"set":{"local":"CARLS_DF_EDITING"},"value":0},
+        {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1},
+        {"set":{"local":"CARLS_DF_VALID"},"value":0},
+        {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":0},
+        {"call_macro":"CARLS DF assign mission bearing","params":{"frequency":{"local":"CARLS_DF_ENTRY_FREQUENCY"}}},
         {"call_macro":"CARLS DF tune message"},
         {"call_macro":"CARLS DF render"}
       ],"else": [
@@ -2489,95 +2489,95 @@
     ]}
   ],
   "CARLS DF digit": [
-    {"if": {"global":"CARLS_DF_EDITING"}, "ne": 1,
+    {"if": {"local":"CARLS_DF_EDITING"}, "ne": 1,
       "then": [
-        {"set":{"global":"CARLS_DF_EDITING"},"value":1},
-        {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1},
-        {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":0},
-        {"set":{"global":"CARLS_DF_VALID"},"value":0},
-        {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0},
-        {"set":{"global":"CARLS_DF_D1"},"value":0},
-        {"set":{"global":"CARLS_DF_D2"},"value":0},
-        {"set":{"global":"CARLS_DF_D3"},"value":0},
-        {"set":{"global":"CARLS_DF_D4"},"value":0},
-        {"set":{"global":"CARLS_DF_D5"},"value":0},
-        {"set":{"global":"CARLS_DF_D6"},"value":0},
-        {"set":{"global":"CARLS_DF_D1"},"value":{"param":"digit"}},
-        {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"global":"CARLS_DF_D1"},100000]},{"multiply":[{"global":"CARLS_DF_D2"},10000]},{"multiply":[{"global":"CARLS_DF_D3"},1000]},{"multiply":[{"global":"CARLS_DF_D4"},100]},{"multiply":[{"global":"CARLS_DF_D5"},10]},{"global":"CARLS_DF_D6"}]}},
-        {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":2},
-        {"set":{"global":"CARLS_DF_LAST_INPUT_TIME"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"set":{"local":"CARLS_DF_EDITING"},"value":1},
+        {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1},
+        {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":0},
+        {"set":{"local":"CARLS_DF_VALID"},"value":0},
+        {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":0},
+        {"set":{"local":"CARLS_DF_D1"},"value":0},
+        {"set":{"local":"CARLS_DF_D2"},"value":0},
+        {"set":{"local":"CARLS_DF_D3"},"value":0},
+        {"set":{"local":"CARLS_DF_D4"},"value":0},
+        {"set":{"local":"CARLS_DF_D5"},"value":0},
+        {"set":{"local":"CARLS_DF_D6"},"value":0},
+        {"set":{"local":"CARLS_DF_D1"},"value":{"param":"digit"}},
+        {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"local":"CARLS_DF_D1"},100000]},{"multiply":[{"local":"CARLS_DF_D2"},10000]},{"multiply":[{"local":"CARLS_DF_D3"},1000]},{"multiply":[{"local":"CARLS_DF_D4"},100]},{"multiply":[{"local":"CARLS_DF_D5"},10]},{"local":"CARLS_DF_D6"}]}},
+        {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":2},
+        {"set":{"local":"CARLS_DF_LAST_INPUT_TIME"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"call_macro":"CARLS DF validate"},
-        {"if": {"global":"CARLS_DF_INPUT_ERROR"}, "eq": 1,
+        {"if": {"local":"CARLS_DF_INPUT_ERROR"}, "eq": 1,
           "then": [
-            {"set":{"global":"CARLS_DF_D1"},"value":0},
-            {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1},
-            {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"global":"CARLS_DF_D1"},100000]},{"multiply":[{"global":"CARLS_DF_D2"},10000]},{"multiply":[{"global":"CARLS_DF_D3"},1000]},{"multiply":[{"global":"CARLS_DF_D4"},100]},{"multiply":[{"global":"CARLS_DF_D5"},10]},{"global":"CARLS_DF_D6"}]}}
+            {"set":{"local":"CARLS_DF_D1"},"value":0},
+            {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1},
+            {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"local":"CARLS_DF_D1"},100000]},{"multiply":[{"local":"CARLS_DF_D2"},10000]},{"multiply":[{"local":"CARLS_DF_D3"},1000]},{"multiply":[{"local":"CARLS_DF_D4"},100]},{"multiply":[{"local":"CARLS_DF_D5"},10]},{"local":"CARLS_DF_D6"}]}}
         ]},
         {"call_macro":"CARLS DF render"}
       ],"else": [
-        {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "lte": 6,
+        {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "lte": 6,
           "then": [
-            {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 1,
+            {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 1,
               "then": [
-                {"set":{"global":"CARLS_DF_D1"},"value":{"param":"digit"}}
+                {"set":{"local":"CARLS_DF_D1"},"value":{"param":"digit"}}
             ]},
-            {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 2,
+            {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 2,
               "then": [
-                {"set":{"global":"CARLS_DF_D2"},"value":{"param":"digit"}}
+                {"set":{"local":"CARLS_DF_D2"},"value":{"param":"digit"}}
             ]},
-            {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 3,
+            {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 3,
               "then": [
-                {"set":{"global":"CARLS_DF_D3"},"value":{"param":"digit"}}
+                {"set":{"local":"CARLS_DF_D3"},"value":{"param":"digit"}}
             ]},
-            {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 4,
+            {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 4,
               "then": [
-                {"set":{"global":"CARLS_DF_D4"},"value":{"param":"digit"}}
+                {"set":{"local":"CARLS_DF_D4"},"value":{"param":"digit"}}
             ]},
-            {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 5,
+            {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 5,
               "then": [
-                {"set":{"global":"CARLS_DF_D5"},"value":{"param":"digit"}}
+                {"set":{"local":"CARLS_DF_D5"},"value":{"param":"digit"}}
             ]},
-            {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 6,
+            {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 6,
               "then": [
-                {"set":{"global":"CARLS_DF_D6"},"value":{"param":"digit"}}
+                {"set":{"local":"CARLS_DF_D6"},"value":{"param":"digit"}}
             ]},
-            {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"global":"CARLS_DF_D1"},100000]},{"multiply":[{"global":"CARLS_DF_D2"},10000]},{"multiply":[{"global":"CARLS_DF_D3"},1000]},{"multiply":[{"global":"CARLS_DF_D4"},100]},{"multiply":[{"global":"CARLS_DF_D5"},10]},{"global":"CARLS_DF_D6"}]}},
-            {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":{"add":[{"global":"CARLS_DF_INPUT_INDEX"},1]}},
-            {"set":{"global":"CARLS_DF_LAST_INPUT_TIME"},"value":{"var":["L:MISSION_TIME","number"]}},
+            {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"local":"CARLS_DF_D1"},100000]},{"multiply":[{"local":"CARLS_DF_D2"},10000]},{"multiply":[{"local":"CARLS_DF_D3"},1000]},{"multiply":[{"local":"CARLS_DF_D4"},100]},{"multiply":[{"local":"CARLS_DF_D5"},10]},{"local":"CARLS_DF_D6"}]}},
+            {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":{"add":[{"local":"CARLS_DF_INPUT_INDEX"},1]}},
+            {"set":{"local":"CARLS_DF_LAST_INPUT_TIME"},"value":{"var":["L:MISSION_TIME","number"]}},
             {"call_macro":"CARLS DF validate"},
-            {"if": {"global":"CARLS_DF_INPUT_ERROR"}, "eq": 1,
+            {"if": {"local":"CARLS_DF_INPUT_ERROR"}, "eq": 1,
               "then": [
-                {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 2,
+                {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 2,
                   "then": [
-                    {"set":{"global":"CARLS_DF_D1"},"value":0},
-                    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1}
+                    {"set":{"local":"CARLS_DF_D1"},"value":0},
+                    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1}
                 ]},
-                {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 3,
+                {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 3,
                   "then": [
-                    {"set":{"global":"CARLS_DF_D2"},"value":0},
-                    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":2}
+                    {"set":{"local":"CARLS_DF_D2"},"value":0},
+                    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":2}
                 ]},
-                {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 4,
+                {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 4,
                   "then": [
-                    {"set":{"global":"CARLS_DF_D3"},"value":0},
-                    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":3}
+                    {"set":{"local":"CARLS_DF_D3"},"value":0},
+                    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":3}
                 ]},
-                {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 5,
+                {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 5,
                   "then": [
-                    {"set":{"global":"CARLS_DF_D4"},"value":0},
-                    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":4}
+                    {"set":{"local":"CARLS_DF_D4"},"value":0},
+                    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":4}
                 ]},
-                {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 6,
+                {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 6,
                   "then": [
-                    {"set":{"global":"CARLS_DF_D5"},"value":0},
-                    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":5}
+                    {"set":{"local":"CARLS_DF_D5"},"value":0},
+                    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":5}
                 ]},
-                {"if": {"global":"CARLS_DF_INPUT_INDEX"}, "eq": 7,
+                {"if": {"local":"CARLS_DF_INPUT_INDEX"}, "eq": 7,
                   "then": [
-                    {"set":{"global":"CARLS_DF_D6"},"value":0},
-                    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":6}
+                    {"set":{"local":"CARLS_DF_D6"},"value":0},
+                    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":6}
                 ]},
-                {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"global":"CARLS_DF_D1"},100000]},{"multiply":[{"global":"CARLS_DF_D2"},10000]},{"multiply":[{"global":"CARLS_DF_D3"},1000]},{"multiply":[{"global":"CARLS_DF_D4"},100]},{"multiply":[{"global":"CARLS_DF_D5"},10]},{"global":"CARLS_DF_D6"}]}}
+                {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":{"add":[{"multiply":[{"local":"CARLS_DF_D1"},100000]},{"multiply":[{"local":"CARLS_DF_D2"},10000]},{"multiply":[{"local":"CARLS_DF_D3"},1000]},{"multiply":[{"local":"CARLS_DF_D4"},100]},{"multiply":[{"local":"CARLS_DF_D5"},10]},{"local":"CARLS_DF_D6"}]}}
             ]},
             {"call_macro":"CARLS DF render"}
         ]}
@@ -2621,29 +2621,29 @@
       "then": [
         {"set":{"global":"CARLS_DF_MODULATION"},"value":"AM"}
     ]},
-    {"set":{"global":"CARLS_DF_ENTRY_BAND"},"value":"INVALID"},
-    {"set":{"global":"CARLS_DF_LAST_INPUT_TIME"},"value":0},
+    {"set":{"local":"CARLS_DF_ENTRY_BAND"},"value":"INVALID"},
+    {"set":{"local":"CARLS_DF_LAST_INPUT_TIME"},"value":0},
     {"set":{"var":["L:CARLS_DF_ACTIVE_VALID","number"]},"value":1},
-    {"set":{"global":"CARLS_DF_EDITING"},"value":0},
-    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1},
-    {"set":{"global":"CARLS_DF_ENTRY_FREQUENCY"},"value":0},
-    {"set":{"global":"CARLS_DF_VALID"},"value":0},
-    {"set":{"global":"CARLS_DF_INPUT_ERROR"},"value":0},
-    {"set":{"global":"CARLS_DF_D1"},"value":0},
-    {"set":{"global":"CARLS_DF_D2"},"value":0},
-    {"set":{"global":"CARLS_DF_D3"},"value":0},
-    {"set":{"global":"CARLS_DF_D4"},"value":0},
-    {"set":{"global":"CARLS_DF_D5"},"value":0},
-    {"set":{"global":"CARLS_DF_D6"},"value":0},
+    {"set":{"local":"CARLS_DF_EDITING"},"value":0},
+    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1},
+    {"set":{"local":"CARLS_DF_ENTRY_FREQUENCY"},"value":0},
+    {"set":{"local":"CARLS_DF_VALID"},"value":0},
+    {"set":{"local":"CARLS_DF_INPUT_ERROR"},"value":0},
+    {"set":{"local":"CARLS_DF_D1"},"value":0},
+    {"set":{"local":"CARLS_DF_D2"},"value":0},
+    {"set":{"local":"CARLS_DF_D3"},"value":0},
+    {"set":{"local":"CARLS_DF_D4"},"value":0},
+    {"set":{"local":"CARLS_DF_D5"},"value":0},
+    {"set":{"local":"CARLS_DF_D6"},"value":0},
     {"set":{"var":["L:CARLS_PAGE","number"]},"value":13},
     {"call_macro":"CARLS DF assign mission bearing","params":{"frequency":{"var":["L:CARLS_DF_FREQUENCY","number"]}}},
     {"call_macro":"CARLS buttons"},
     {"call_macro":"CARLS DF render"}
   ],
   "CARLS DF leave": [
-    {"set":{"global":"CARLS_DF_EDITING"},"value":0},
-    {"set":{"global":"CARLS_DF_INPUT_INDEX"},"value":1},
-    {"set":{"global":"CARLS_DF_VALID"},"value":0},
+    {"set":{"local":"CARLS_DF_EDITING"},"value":0},
+    {"set":{"local":"CARLS_DF_INPUT_INDEX"},"value":1},
+    {"set":{"local":"CARLS_DF_VALID"},"value":0},
     {"set":{"var":["L:CARLS_PAGE","number"]},"value":0}
   ],
   "DF stations debug state": [

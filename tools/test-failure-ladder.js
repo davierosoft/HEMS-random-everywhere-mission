@@ -253,6 +253,6 @@ assert.deepEqual(draws(7, 11), [7, 8, 9, 10, 11], 'the two highest tiers: from t
   assert.ok(engineLoop.includes('{"call_macro":"apply aircraft failure","params":{"code":{"var":["L:FAILURE","number"]}}},{"call_macro":"failure crew announce","params":{"code":{"var":["L:FAILURE","number"]}}},{"set":{"var":["L:FAILURE","number"]},"value":{"floor":{"rand":[1,300]}}}'), 'the failure engine draws a new L:FAILURE after every applied failure');
   // a critical or dead crew member marks the repair at the next mission start (reload or manual restart: the flag is a global)
   const event = JSON.stringify(macros['crew member state event']);
-  assert.equal(event.split('"global":"CREW_DEATH_REPAIR_PENDING"').length - 1, 10, 'five deaths and five critical members set the repair flag');
+  assert.equal(event.split('"local":"CREW_DEATH_REPAIR_PENDING"').length - 1, 10, 'five deaths and five critical members set the repair flag');
 }
 console.log('Failure ladder PASS: light to heavy order of the avarie, tier ranges, original codes and failure engine untouched, constant fuel leakage within 10 kg a minute, RESET FAILURES button state. HPG/MSFS PENDING.');

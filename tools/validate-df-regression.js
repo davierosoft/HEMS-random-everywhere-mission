@@ -68,15 +68,15 @@ expect(debugPage.includes('DF STATIONS: {0}/15 | ACTIVE: {1} {2} MHz'), 'DF Debu
 
 const digit = macros['CARLS DF digit'] || [];
 const initial = digit[0];
-const continued = initial?.else?.find((command) => command.if?.global === 'CARLS_DF_INPUT_INDEX' && command.lte === 6);
-expect(initial?.if?.global === 'CARLS_DF_EDITING' && initial?.ne === 1, 'first numeric event must branch on shared editing state');
-expect(initial?.then?.some((command) => command.set?.global === 'CARLS_DF_EDITING' && command.value === 1), 'first numeric event must enter edit mode immediately');
-expect(initial?.then?.some((command) => command.set?.global === 'CARLS_DF_D1' && command.value?.param === 'digit'), 'digit 1 must be captured from the same-event param');
-expect(initial?.then?.some((command) => command.set?.global === 'CARLS_DF_INPUT_INDEX' && command.value === 2), 'first numeric event must advance directly to EDT: 1_#.###');
+const continued = initial?.else?.find((command) => command.if?.local === 'CARLS_DF_INPUT_INDEX' && command.lte === 6);
+expect(initial?.if?.local === 'CARLS_DF_EDITING' && initial?.ne === 1, 'first numeric event must branch on shared editing state');
+expect(initial?.then?.some((command) => command.set?.local === 'CARLS_DF_EDITING' && command.value === 1), 'first numeric event must enter edit mode immediately');
+expect(initial?.then?.some((command) => command.set?.local === 'CARLS_DF_D1' && command.value?.param === 'digit'), 'digit 1 must be captured from the same-event param');
+expect(initial?.then?.some((command) => command.set?.local === 'CARLS_DF_INPUT_INDEX' && command.value === 2), 'first numeric event must advance directly to EDT: 1_#.###');
 expect(Boolean(continued), 'subsequent digits must use the shared linear cursor guard');
 for (let position = 2; position <= 6; position += 1) {
-  const capture = continued?.then?.find((command) => command.if?.global === 'CARLS_DF_INPUT_INDEX' && command.eq === position);
-  expect(capture?.then?.[0]?.set?.global === 'CARLS_DF_D' + position && capture.then[0].value?.param === 'digit', 'digit ' + position + ' must be captured from the same-event param');
+  const capture = continued?.then?.find((command) => command.if?.local === 'CARLS_DF_INPUT_INDEX' && command.eq === position);
+  expect(capture?.then?.[0]?.set?.local === 'CARLS_DF_D' + position && capture.then[0].value?.param === 'digit', 'digit ' + position + ' must be captured from the same-event param');
 }
 
 if (errors.length) {

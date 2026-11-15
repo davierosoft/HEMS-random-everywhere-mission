@@ -876,7 +876,10 @@
     {"set_message":{"text":"RECEIVING 1 NEW DISPATCH..."}},
     {"set":{"var":["L:Dispatch","number"]},"value":1},
     {"call_macro":"dispatch ringtone"},
+    {"#comment":"Report 2026-11-14 (user rule): a custom menu mission also starts with the proposal of the dispatch, which the pilot accepts or refuses on the briefing: the crew triage comes first (vda_pending yes while the description is read), the briefing chat after the ACCEPT."},
+    {"set":{"local":"vda_pending"},"value":"yes"},
     {"call_macro":"Mission description"},
+    {"set":{"local":"vda_pending"},"value":"no"},
     {"set":{"local":"Dispatcher_text"},"value":{"text":"Dispatch {0}{1}{2}{3}{4}: {5}. See tablet.","params":[{"local":"MISSION_NUMBER"},{"local":"MISSION_SCENE_VARIANT"},{"local":"MISSION_SCENE_TYPE"},{"local":"CRASH_VARIABLE"},{"local":"CAMPING_VARIABLE"},{"local":"accident_name"}]}},
     {"sleep":0.1},
     {"if": {"local":"prelocation"}, "eq": "yes",
@@ -2280,12 +2283,32 @@
   ],
   "accept dispatch second": [
     {"#comment":"ACCEPT DISPATCH of the briefing (second dispatch, after the mission): one macro for the six buttons of the briefing and for the voice command accept_dispatch (user request 2026-11-08), so the two never differ."},
-    {"set":{"local":"lock_random_dispatch"},"value":1},
-    {"set":{"local":"BOARDING_HOLD"},"value":0},
-    {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},
-    {"call_macro":"Update_raw from dispatchphase"},
-    {"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},
-    {"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},
-    {"set":{"local":"ringed"},"value":0}
+    {"if": {"local":"asd_pending"}, "eq": 1,
+      "then": [
+        {"return":0}
+    ]},
+    {"#comment":"User rule 2026-11-14: the analysis of the second dispatch (voice dispatch triage run) must be complete before the mission is reloaded by the acceptance. The commands run in a thread that waits for vda_talking (at most 120 s, in case the discussion thread died) so the button and the voice command return at once; asd_pending keeps a second click from starting it twice."},
+    {"set":{"local":"asd_pending"},"value":1},
+    {"create_thread": {
+      "commands": [
+        {"set":{"local":"asd_wait"},"value":0},
+        {"while": {"local":"vda_talking"}, "eq": 1,
+          "do": [
+            {"sleep":1},
+            {"set":{"local":"asd_wait"},"value":{"add":[{"local":"asd_wait"},1]}},
+            {"if": {"local":"asd_wait"}, "gte": 120,
+              "then": [
+                {"set":{"local":"vda_talking"},"value":0}
+            ]}
+        ]},
+        {"set":{"local":"asd_pending"},"value":0},
+        {"set":{"local":"lock_random_dispatch"},"value":1},
+        {"set":{"local":"BOARDING_HOLD"},"value":0},
+        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},
+        {"call_macro":"Update_raw from dispatchphase"},
+        {"set":{"global":"MISSION_COUNT_START"},"value":{"add":[{"global":"MISSION_COUNT_START"},1]}},
+        {"set":{"local":"STARTED_TEMP_MISSIONS"},"value":{"add":[{"local":"STARTED_TEMP_MISSIONS"},1]}},
+        {"set":{"local":"ringed"},"value":0}
+    ]}}
   ]
 }
