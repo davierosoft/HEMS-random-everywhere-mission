@@ -125,7 +125,7 @@ const walk = (node, fn) => {
   assert.ok(ho.includes('HOS.Q') && ho.includes('HOS.A') && ho.includes('HOS.ORG.LT') && ho.includes('ORG.DEL.OK') && ho.includes('ORG.DEL.LT') && ho.includes('"local":"organcountdown"},"lt":0'), 'the handover: question and answer, the organ on time or late with the comment of the crew');
   const pa = text(macros['voice pickup approach']);
   assert.ok(pa.includes('PCK.CALL.') && pa.includes('PCK.REPLY.') && pa.includes('"param":"vpa_cls"},"eq":"TRF"') && pa.includes('"param":"vpa_cls"},"eq":"ORG"'), 'transfers and organ transports call the pick-up place');
-  const brief = text(macros['voice briefing chat']);
+  const brief = text(macros['voice briefing chat']) + text(macros['voice briefing lines']);
   assert.ok(brief.includes('voice organ briefing') && brief.includes('TRF.INF'), 'the briefing tells the organ and the transfer destination');
   const ob = text(macros['voice organ briefing']);
   for (const k of ['ORG.INF', 'ORG.TIM.', 'ORG.RCT.', 'voice organ watch', 'organ_type', 'organ_rcp', 'organ_age']) assert.ok(ob.includes(k), 'organ briefing: ' + k);

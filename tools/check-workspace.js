@@ -83,6 +83,7 @@ const scripts = [
   'test-voice-app-fallback.js',
   'test-wav-extension.js',
   'test-comms-uniformity.js',
+  'test-session-2026-11-19.js',
   'test-crew-ops-abort.js',
   'test-update-notice.js',
   'test-hoist-return.js',

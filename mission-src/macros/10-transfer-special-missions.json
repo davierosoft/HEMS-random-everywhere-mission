@@ -928,13 +928,384 @@
         ]}
     ]}}
   ],
-  "destination modal text": [
-    {"#comment":"Text of the destination modals: the base text in the local destination_modal_base plus the proposed hospital and its distance, so later set_message calls cannot hide what is selected. set_modal params are not read (runtime test 2026-10-30), only a text built into a local is: standalone-tests/modal-params-test.json."},
-    {"if": {"has_location":"hospital_user"}, "eq": 1,
+  "destination page": [
+    {"#comment":"Destination edit/confirm page (user decisions 2026-11-15 and 2026-11-16). A dispatch page re-evaluates its rows with the current locals, a modal keeps the content of its first execution (simulator tests modal-refresh-test), so there is no modal any more: text, buttons, coordinates, clinical data and the way back are all in the page. Kinds (destination_page_kind): patient, patient_cambu (closest ambulance offered), ambudoc, organ, crew (crew emergency). The page leaves the dispatch page reachable (Back to main screen) and comes back from the briefing (DESTINATION CONFIRMATION MENU, visible while destination_pending is 1: raised here, cleared by every confirming button). Locals computed at build: destination_flag_clinical (patient flown by us: diagnosis and vitals), destination_flag_unload, destination_far_ambu, destination_cambu_ask."},
+    {"set":{"local":"destination_pending"},"value":1},
+    {"set":{"local":"destination_cambu_ask"},"value":0},
+    {"set":{"local":"destination_flag_clinical"},"value":0},
+    {"if": {"local":"destination_page_kind"}, "eq": "patient",
       "then": [
-        {"set":{"local":"destination_modal_text"},"value":{"text":"{2}. Selected: {1} (distance {0} Km)","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"},{"local":"destination_modal_base"}]}}
+        {"set":{"local":"destination_flag_clinical"},"value":1}
+    ]},
+    {"if": {"local":"destination_page_kind"}, "eq": "patient_cambu",
+      "then": [
+        {"set":{"local":"destination_flag_clinical"},"value":1}
+    ]},
+    {"#comment":"Clinical block (user rule 2026-11-18): only the patient that will be transported (HEMS_PATIENT_NUMBER) and only when its data exist, otherwise NO INFO. The diagnosis is always shown for a patient on board: the diagnosis, else the pathology, else NO INFO. Status and rescue-team info lines are gone."},
+    {"set":{"local":"destination_flag_noinfo"},"value":0},
+    {"set":{"local":"destination_diag_text"},"value":"- NO INFO -"},
+    {"if": {"local":"destination_flag_clinical"}, "eq": 1,
+      "then": [
+        {"if": {"local":"HEMS_PATIENT_NUMBER"}, "gt": 0,
+          "then": [
+            {"set":{"local":"medical_display_patient"},"value":{"local":"HEMS_PATIENT_NUMBER"}},
+            {"call_macro":"sync medical patient display"},
+            {"if": {"local":"medical_display_pathology"}, "ne": null,
+              "then": [
+                {"set":{"local":"destination_diag_text"},"value":{"local":"medical_display_pathology"}}
+            ]},
+            {"if": {"local":"medical_display_diagnosis"}, "ne": null,
+              "then": [
+                {"set":{"local":"destination_diag_text"},"value":{"local":"medical_display_diagnosis"}}
+            ]}
+          ],"else": [
+            {"set":{"local":"destination_flag_clinical"},"value":0},
+            {"set":{"local":"destination_flag_noinfo"},"value":1}
+        ]}
+    ]},
+    {"set":{"local":"destination_flag_unload"},"value":0},
+    {"if": {"local":"destination_page_kind"}, "eq": "patient",
+      "then": [
+        {"set":{"local":"destination_flag_unload"},"value":1}
+    ]},
+    {"if": {"local":"destination_page_kind"}, "eq": "patient_cambu",
+      "then": [
+        {"set":{"local":"destination_flag_unload"},"value":1}
+    ]},
+    {"set":{"local":"destination_far_ambu"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"destination_flag_unload"},"eq":1},
+        {"require":{"local":"whobringpatient"},"eq":"us"},
+        {"require":{"local":"ambulance_previsit_distance_ok"},"eq":0},
+        {"require":{"local":"ambulance_previsit_distance_m"},"gt":600},
+        {"require":{"local":"ambu1arrived"},"eq":"yes"},
+        {"require":{"has_object":"ambulance1"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"destination_far_ambu"},"value":1}
+    ]},
+    {"if": {"local":"prev_page"}, "eq": "none",
+      "then": [
+        {"set":{"local":"prev_page"},"value":"Mission dispatch"}
+    ]},
+    {"set_dispatch": [
+        {"text":"TOP","color":"black","show_condition":{"require":{"var":["L:TOPVIEW","number"]},"eq":1}},
+        {"image":"sbar00","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":0},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar01","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":1},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar02","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":2},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar03","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":3},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar04","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":4},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar05","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":5},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar06","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":6},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar07","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":7},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar08","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":8},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar09","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":9},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar10","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":10},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar11","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":11},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar12","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":12},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar13","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":13},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar14","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":14},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar15","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":15},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar16","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":16},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar17","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":17},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar18","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":18},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"image":"sbar19","show_condition":{"and":[{"require":{"local":"STATUS_BAR_ID"},"eq":19},{"require":{"local":"TIP_SHOW"},"ne":1}],"eq":1}},
+        {"text":"{0}","params":[{"local":"TIP_LINE"}],"monospace":1,"color":"cyan","show_condition":{"require":{"local":"TIP_SHOW"},"eq":1}},
+        {"link":"Back to main screen","commands":[{"call_macro":"shared repeated block 029"}]},
+        {"text":"DESTINATION EDIT/CONFIRM PAGE","size":"large","align":"center"},
+        {"text":"The helicopter takes the patient to the destination below. Confirm it or edit it.","show_condition":{"require":{"local":"destination_page_kind"},"eq":"patient"}},
+        {"text":"The helicopter takes the patient to the destination below, or the patient is handed over to the closest ambulance.","show_condition":{"require":{"local":"destination_page_kind"},"eq":"patient_cambu"}},
+        {"text":"The ambulance carries the patient and our doctor. Choose the helipad where the doctor is picked up.","show_condition":{"require":{"local":"destination_page_kind"},"eq":"ambudoc"}},
+        {"text":"Organ transport: confirm the helipad where the organ box is delivered.","show_condition":{"require":{"local":"destination_page_kind"},"eq":"organ"}},
+        {"text":"Crew emergency: choose the hospital for the injured crew member.","show_condition":{"require":{"local":"destination_page_kind"},"eq":"crew"}},
+        {"text":"The ambulance is far from the accident ({0} m): the patient can be handed over to it.","params":[{"round":{"local":"ambulance_previsit_distance_m"},"to":0}],"color":"orange","show_condition":{"require":{"local":"destination_far_ambu"},"eq":1}},
+        {"image":"bar"},
+        {"text":"Actual destination: {1} (distance {0} Km)","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}],"color":"green","show_condition":{"require":{"has_location":"hospital_user"},"eq":1}},
+        {"text":"NO ACTUAL DESTINATION SELECTED","color":"yellow","show_condition":{"require":{"has_location":"hospital_user"},"eq":0}},
+        {"text":"Coordinates: {0:LOCATION}","params":["hospital_user"],"show_condition":{"require":{"has_location":"hospital_user"},"eq":1}},
+        {"buttonbar":[{"title":"CONFIRM SELECTION","color":"green","commands":[{"call_macro":"destination confirm"}],"show_condition":{"and":[{"require":{"has_location":"hospital_user"},"eq":1},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}},{"title":"SHOW ON MAP","commands":[{"set_user_poi":"hospital_user"},{"set_dispatch_dialog":0}],"show_condition":{"require":{"has_location":"hospital_user"},"eq":1}}]},
+        {"image":"bar"},
+        {"text":"A DESTINATION SELECTION IS IN PROGRESS.","color":"orange","show_condition":{"require":{"local":"destination_busy"},"eq":1}},
+        {"text":"Select the hospital on the map, or on the custom hospitals page (the Back link there discards the selection and keeps the current destination).","show_condition":{"require":{"local":"destination_busy"},"eq":1}},
+        {"text":"EDIT DESTINATION:","color":"yellow","show_condition":{"require":{"local":"destination_busy"},"ne":1}},
+        {"buttonbar":[{"title":"MANUALLY SELECT FROM MAP","commands":[{"create_thread":{"commands":[{"call_macro":"destination select map list"}]}}],"show_condition":{"and":[{"require":{"global":"DESTINATION_SELECTION_MODE"},"eq":1},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}},{"title":"MANUALLY SELECT FROM LIST","commands":[{"create_thread":{"commands":[{"call_macro":"destination select map list"}]}}],"show_condition":{"and":[{"require":{"global":"DESTINATION_SELECTION_MODE"},"eq":0},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}},{"title":"SELECT FROM CUSTOM DB","commands":[{"create_thread":{"commands":[{"call_macro":"destination select custom db"}]}}],"show_condition":{"require":{"local":"destination_busy"},"ne":1}}]},
+        {"buttonbar":[{"title":"UNLOAD PATIENT HERE","commands":[{"call_macro":"destination unload here"}],"show_condition":{"and":[{"require":{"local":"destination_flag_unload"},"eq":1},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}}]},
+        {"buttonbar":[{"title":"UNLOAD TO CLOSEST AMBULANCE","commands":[{"call_macro":"destination cambu ask"}],"show_condition":{"and":[{"require":{"local":"destination_page_kind"},"eq":"patient_cambu"},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}}]},
+        {"buttonbar":[{"title":"UNLOAD TO AMBULANCE (FAR)","commands":[{"call_macro":"destination unload far ambulance"}],"show_condition":{"and":[{"require":{"local":"destination_far_ambu"},"eq":1},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}}]},
+        {"buttonbar":[{"title":"PICK UP DOCTOR HERE","commands":[{"call_macro":"destination unload here"}],"show_condition":{"and":[{"require":{"local":"destination_page_kind"},"eq":"ambudoc"},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}}]},
+        {"buttonbar":[{"title":"DROP ORGAN BOX HERE","commands":[{"call_macro":"destination unload here"}],"show_condition":{"and":[{"require":{"local":"destination_page_kind"},"eq":"organ"},{"require":{"local":"destination_busy"},"ne":1}],"eq":1}}]},
+        {"text":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","color":"orange","show_condition":{"require":{"local":"destination_cambu_ask"},"eq":1}},
+        {"text":"DO YOU REALLY WANT TO MEET AMBULANCE?","color":"orange","show_condition":{"require":{"local":"destination_cambu_ask"},"eq":1}},
+        {"buttonbar":[{"title":"YES","color":"green","commands":[{"call_macro":"destination cambu go"}]},{"title":"NO (BACK TO MENU)","commands":[{"set":{"local":"destination_cambu_ask"},"value":0}]}],"show_condition":{"require":{"local":"destination_cambu_ask"},"eq":1}},
+        {"text":"PATIENT DATA: - NO INFO -","color":"yellow","align":"center","show_condition":{"require":{"local":"destination_flag_noinfo"},"eq":1}},
+        {"image":"bar","show_condition":{"require":{"local":"destination_flag_clinical"},"eq":1}},
+        {"text":"PATIENT {0} CLINICAL DATA","color":"yellow","align":"center","params":[{"local":"medical_display_patient"}],"show_condition":{"require":{"local":"destination_flag_clinical"},"eq":1}},
+        {"text":"Patient: {0}, {1}yrs, {2}","params":[{"local":"medical_display_name"},{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"eq":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"text":"Patient: UNKNOWN, {0}yrs, {1}","params":[{"local":"medical_display_age"},{"local":"medical_display_sex"}],"show_condition":{"and":[{"require":{"local":"medical_display_visited"},"ne":"yes"},{"require":{"local":"medical_display_age"},"ne":null},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"text":"Patient: UNKNOWN","show_condition":{"and":[{"require":{"local":"medical_display_visited"},"ne":"yes"},{"require":{"local":"medical_display_age"},"eq":null},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"text":"Diagnosis: {0}","params":[{"local":"destination_diag_text"}],"color":"orange","show_condition":{"require":{"local":"destination_flag_clinical"},"eq":1}},
+        {"describe_icon":"bpm","color":"yellow","description":"HEART RATE: {0}BPM","params":[{"round":{"local":"medical_display_cpbpm"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_cpbpm"},"ne":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"bpm","color":"red","description":"HEART RATE: {0}BPM - TACHY","params":[{"round":{"local":"medical_display_bpm"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_bpm"},"gt":120},{"require":{"local":"medical_display_cpbpm"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"bpm","description":"HEART RATE: {0}BPM","params":[{"round":{"local":"medical_display_bpm"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_bpm"},"gt":50},{"require":{"local":"medical_display_bpm"},"lte":120},{"require":{"local":"medical_display_cpbpm"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"bpm","description":"HEART RATE: {0}BPM - BRADY","color":"red","params":[{"round":{"local":"medical_display_bpm"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_bpm"},"gt":17},{"require":{"local":"medical_display_bpm"},"lte":50},{"require":{"local":"medical_display_cpbpm"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"bpm","description":"HEART RATE: LOW","color":"red","params":[{"multiply":[{"local":"medical_display_bpm"},2]}],"show_condition":{"and":[{"require":{"local":"medical_display_bpm"},"lte":17},{"require":{"local":"medical_display_cpbpm"},"eq":0},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"spo2","description":"SpO2: {0}%","params":[{"tofixed":{"local":"medical_display_spo2"},"digits":1}],"show_condition":{"and":[{"require":{"local":"medical_display_spo2"},"gte":90},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"spo2","description":"SpO2: {0}%","color":"red","params":[{"tofixed":{"local":"medical_display_spo2"},"digits":1}],"show_condition":{"and":[{"require":{"local":"medical_display_spo2"},"lt":90},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"blood_pressure","description":"BLOOD PRESSURE: {0}/{1} mmHg","params":[{"round":{"local":"medical_display_bp_sys"},"to":0},{"round":{"local":"medical_display_bp_dia"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_bp_sys"},"gte":90},{"require":{"local":"medical_display_bp_sys"},"lte":160},{"require":{"local":"medical_display_bp_dia"},"gte":50},{"require":{"local":"medical_display_bp_dia"},"lte":100},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"blood_pressure","description":"BLOOD PRESSURE: {0}/{1} mmHg","params":[{"round":{"local":"medical_display_bp_sys"},"to":0},{"round":{"local":"medical_display_bp_dia"},"to":0}],"show_condition":{"and":[{"require":{"local":"BP_CRITICAL"},"eq":1},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1},"color":"red"},
+        {"describe_icon":"respiratory_rate","description":"RESPIRATORY RATE: {0}/min","params":[{"round":{"local":"medical_display_rr"},"to":0}],"show_condition":{"and":[{"require":{"local":"medical_display_rr"},"gte":10},{"require":{"local":"medical_display_rr"},"lte":24},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"respiratory_rate","description":"RESPIRATORY RATE: {0}/min","params":[{"round":{"local":"medical_display_rr"},"to":0}],"show_condition":{"and":[{"require":{"local":"RR_CRITICAL"},"eq":1},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1},"color":"red"},
+        {"describe_icon":"body_temperature","description":"BODY TEMPERATURE: {0}C","params":[{"tofixed":{"local":"medical_display_temp"},"digits":1}],"show_condition":{"and":[{"require":{"local":"medical_display_temp"},"gte":35},{"require":{"local":"medical_display_temp"},"lte":38.5},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1}},
+        {"describe_icon":"body_temperature","description":"BODY TEMPERATURE: {0}C","params":[{"tofixed":{"local":"medical_display_temp"},"digits":1}],"show_condition":{"and":[{"require":{"local":"TEMP_CRITICAL"},"eq":1},{"require":{"local":"medical_display_assessment_complete"},"eq":"yes"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"destination_flag_clinical"},"eq":1}],"eq":1},"color":"red"}
+    ]},
+    {"set_dispatch_dialog":1}
+  ],
+  "destination confirm": [
+    {"#comment":"CONFIRM SELECTION of the destination page (user request of 2026-11-16): one button, the commands of the kind of the page (destination_page_kind): patient, patient_cambu, ambudoc, organ, crew. The page closes first and the pending flag (the DESTINATION CONFIRMATION MENU button of the briefing) is cleared; when the selection is not valid the user destination menu builds the page again and the flag is set again."},
+    {"set":{"local":"destination_pending"},"value":0},
+    {"if": {"local":"destination_page_kind"}, "eq": "patient",
+      "then": [
+        {"set_dispatch_dialog":0},
+        {"call_macro":"trace button","params":{"kind":"modal","name":"Confirm selection"}},
+        {"if": {"has_location":"hospital_user"}, "eq": 0,
+          "then": [
+            {"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},
+            {"sleep":3},
+            {"call_macro":"user destination menu"}
+          ],"else": [
+            {"if": {"object":"hospital_user","var":"distance:m"}, "lt": 500,
+              "then": [
+                {"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},
+                {"sleep":3},
+                {"call_macro":"user destination menu"}
+              ],"else": [
+                {"call_macro":"manual_hospital_destination_setup"}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"destination_page_kind"}, "eq": "patient_cambu",
+      "then": [
+        {"set_dispatch_dialog":0},
+        {"call_macro":"trace button","params":{"kind":"modal","name":"Confirm selection"}},
+        {"if": {"has_location":"hospital_user"}, "eq": 0,
+          "then": [
+            {"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},
+            {"sleep":1},
+            {"call_macro":"user destination menu"}
+          ],"else": [
+            {"sleep":1},
+            {"create_thread": {
+              "commands": [
+                {"call_macro":"shared repeated block 050"}
+            ]}},
+            {"call_macro":"User predestination"}
+        ]}
+    ]},
+    {"if": {"local":"destination_page_kind"}, "eq": "ambudoc",
+      "then": [
+        {"set_dispatch_dialog":0},
+        {"call_macro":"trace button","params":{"kind":"modal","name":"Confirm selection"}},
+        {"if": {"has_location":"hospital_user"}, "eq": 0,
+          "then": [
+            {"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},
+            {"sleep":1},
+            {"call_macro":"user destination menu"}
+          ],"else": [
+            {"sleep":1},
+            {"set_message":{"text":"Waiting for crew to be aboard before proceeding"}},
+            {"wait_for":{"var":["L:HOISTED","number"]},"eq":1},
+            {"set":{"local":"location_name"},"value":"hospital_user"},
+            {"sleep":0.1},
+            {"call_macro":"nation query wait","params":{"which":"hospital"}},
+            {"set_message":{"text":"Route set to: {1} ({2}). Location: {0:LOCATION}","params":["hospital_user",{"local":"hospital_name"},{"local":"hospital_nation"}]}},
+            {"set":{"local":"FPL_NMBR"},"value":8},
+            {"call_macro":"routeupdate"},
+            {"set":{"local":"MISSION_PHASE"},"value":8},
+            {"call_macro":"pick doctor"}
+        ]}
+    ]},
+    {"if": {"local":"destination_page_kind"}, "eq": "organ",
+      "then": [
+        {"set_dispatch_dialog":0},
+        {"call_macro":"trace button","params":{"kind":"modal","name":"Confirm selection"}},
+        {"if": {"has_location":"hospital_user"}, "eq": 0,
+          "then": [
+            {"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},
+            {"sleep":3},
+            {"call_macro":"user destination menu"}
+          ],"else": [
+            {"if": {"object":"hospital_user","var":"distance:m"}, "lt": 500,
+              "then": [
+                {"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},
+                {"sleep":3},
+                {"call_macro":"user destination menu"}
+              ],"else": [
+                {"call_macro":"manual_hospital_destination_setup"}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"destination_page_kind"}, "eq": "crew",
+      "then": [
+        {"set_dispatch_dialog":0},
+        {"call_macro":"trace button","params":{"kind":"modal","name":"Confirm selection"}},
+        {"if": {"has_location":"hospital_user"}, "eq": 0,
+          "then": [
+            {"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},
+            {"sleep":3},
+            {"call_macro":"crew emergency destination menu"}
+          ],"else": [
+            {"set":{"local":"CREW_DEST_CONFIRMED"},"value":"yes"}
+        ]}
+    ]}
+  ],
+  "destination unload here": [
+    {"set":{"local":"destination_pending"},"value":0},
+    {"set_dispatch_dialog":0},
+    {"call_macro":"trace button","params":{"kind":"page","name":"Unload here"}},
+    {"call_macro":"user_prelocation_prerequisites"}
+  ],
+  "destination select map list": [
+    {"#comment":"MANUALLY SELECT FROM MAP / LIST (the first option of the former modal Choose manual type modal, removed: a page has room for every button, a modal blocks the world). Runs in a thread (it waits for the user on the map). destination_map_waiting keeps a second press (the page can be opened again from the briefing while the selection runs) from creating the map actions twice; destination_busy hides the other buttons of the page. When the hospital is accepted or rejected destination selection done opens the destination page again (user rule 2026-11-18)."},
+    {"if": {"local":"destination_map_waiting"}, "eq": 1,
+      "then": [
+        {"set_message":{"text":"Select a hospital on the map and click 'Accept Destination', or cancel the selection from the destination page."}},
+        {"set_dispatch_dialog":0},
+        {"return":0}
+    ]},
+    {"set":{"local":"destination_map_waiting"},"value":1},
+    {"set":{"local":"destination_busy"},"value":1},
+    {"set_dispatch_dialog":0},
+    {"call_macro":"trace button","params":{"kind":"page","name":"Manually select from map or list"}},
+    {"set_message":{"text":""}},
+    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
+    {"call_macro":"destination_selection_and_confirmationmsg"}
+  ],
+  "destination select custom db": [
+    {"#comment":"SELECT FROM CUSTOM DB (second option of the former modal): the custom hospitals page with SET AS DESTINATION, then the route is set as for the map selection. prev_page2 modal makes the Back link of that page return to the destination page while the destination is pending. destination_db_waiting keeps a second press from starting a second waiting thread;  The Back link of the custom page ends the wait with modalwait cancel (selection discarded, previous destination kept). The destination page is opened again by destination selection done (user rule 2026-11-18)."},
+    {"set_dispatch_dialog":0},
+    {"call_macro":"trace button","params":{"kind":"page","name":"Select from custom DB"}},
+    {"set":{"local":"prev_page2"},"value":"modal"},
+    {"if": {"local":"destination_db_waiting"}, "eq": 1,
+      "then": [
+        {"call_macro":"additional hospitals page"},
+        {"set_dispatch_dialog":1},
+        {"return":0}
+    ]},
+    {"set":{"local":"destination_db_waiting"},"value":1},
+    {"set":{"local":"destination_busy"},"value":1},
+    {"set":{"local":"modalwait"},"value":"wait"},
+    {"call_macro":"additional hospitals page"},
+    {"set_dispatch_dialog":1},
+    {"or": [
+      {"wait_for":{"local":"modalwait"},"eq":"go"},
+      {"wait_for":{"local":"modalwait"},"eq":"cancel"}
+    ]},
+    {"if": {"local":"modalwait"}, "eq": "go",
+      "then": [
+        {"set":{"local":"location_name"},"value":"hospital_user"},
+        {"sleep":0.1},
+        {"set":{"local":"FPL_NMBR"},"value":8},
+        {"call_macro":"routeupdate"},
+        {"sleep":1},
+        {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}}
+    ]},
+    {"call_macro":"destination selection done"}
+  ],
+  "destination cancel selection": [
+    {"#comment":"CANCEL SELECTION: ends a map or custom DB selection that is waiting (the page was opened again from the briefing while it runs). The map actions are removed and accept is set to reject, so the waiting macro continues as it does for the Cancel of the map; the custom DB wait ends with modalwait cancel. The selection macros end in destination selection done, which clears the busy flag."},
+    {"call_macro":"trace button","params":{"kind":"page","name":"Cancel selection"}},
+    {"set":{"local":"accept"},"value":"reject"},
+    {"if": {"has_user_action":"accept_hospital"}, "eq": 1,
+      "then": [
+        {"set_map":{"remove":{"point":{"id":"hospital_user_icon"}}}},
+        {"destroy_user_action":"accept_hospital"}
+    ]},
+    {"if": {"has_user_action":"reject_hospital"}, "eq": 1,
+      "then": [
+        {"destroy_user_action":"reject_hospital"}
+    ]},
+    {"if": {"local":"destination_db_waiting"}, "eq": 1,
+      "then": [
+        {"set":{"local":"modalwait"},"value":"cancel"}
+    ]}
+  ],
+  "destination selection done": [
+    {"#comment":"A hospital was selected from the map, the list or the custom DB, or the selection was cancelled or discarded (Back link of the custom DB page, reject on the map): the busy and waiting flags go down and the destination page opens again with the current destination, to confirm or edit it (user rule 2026-11-18, replaces the rule of 2026-11-16)."},
+    {"set":{"local":"destination_map_waiting"},"value":0},
+    {"set":{"local":"destination_db_waiting"},"value":0},
+    {"set":{"local":"destination_busy"},"value":0},
+    {"set":{"local":"destination_pending"},"value":1},
+    {"call_macro":"destination page"}
+  ],
+  "destination cambu ask": [
+    {"#comment":"UNLOAD TO CLOSEST AMBULANCE: with the ambulance already at the meeting point it goes ahead, otherwise the page asks for confirmation in the page itself (destination_cambu_ask, rows of the page)."},
+    {"if": {"local":"ambu1arrived"}, "ne": "yes",
+      "then": [
+        {"set":{"local":"destination_cambu_ask"},"value":1},
+        {"#comment":"The copilot asks the question aloud (pack message PAX3.45), the answer is the YES / NO buttons or the voice commands destination_cambu_yes / destination_cambu_no."},
+        {"set":{"var":["L:PAX3{local:VCP}45","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}45","number"]},1]}}
       ],"else": [
-        {"set":{"local":"destination_modal_text"},"value":{"local":"destination_modal_base"}}
+        {"call_macro":"destination cambu go"}
+    ]}
+  ],
+  "destination cambu go": [
+    {"#comment":"The patient is handed over at the closest ambulance meeting point (former option of the modal after the confirmation)."},
+    {"set":{"local":"destination_pending"},"value":0},
+    {"set_dispatch_dialog":0},
+    {"call_macro":"trace button","params":{"kind":"page","name":"Unload to closest ambulance"}},
+    {"set":{"local":"cambuwait"},"value":"yes"},
+    {"set":{"local":"destination_cambu_ask"},"value":0},
+    {"create_location": "hospital_user",
+      "zones": [
+        {"zone":{"location":"closest_ambupolice_meetpnt"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"hospital_user"},
+    {"sleep":0.1},
+    {"set":{"local":"FPL_NMBR"},"value":8},
+    {"call_macro":"routeupdate"},
+    {"if": {"local":"HOIST_OUT"}, "eq": 0,
+      "then": [
+        {"if": {"var":["L:DEBOARD","number"]}, "lt": 6,
+          "then": [
+            {"set":{"local":"cambuchoice"},"value":"yes"},
+            {"call_macro":"Ambulance destination1"}
+        ]},
+        {"if": {"var":["L:DEBOARD","number"]}, "gt": 5,
+          "then": [
+            {"set":{"local":"cambuchoice"},"value":"yes"},
+            {"call_macro":"Ambulance destination2"}
+        ]}
+      ],"else": [
+        {"set":{"local":"cambuchoice"},"value":"yes"},
+        {"call_macro":"Ambulance destination hoist"}
+    ]}
+  ],
+  "destination unload far ambulance": [
+    {"#comment":"UNLOAD TO AMBULANCE (FAR): the ambulance is far from the accident, the patient is handed over to it (option of the former modal)."},
+    {"set":{"local":"destination_pending"},"value":0},
+    {"set_dispatch_dialog":0},
+    {"call_macro":"trace button","params":{"kind":"modal","name":"Unload to ambulance"}},
+    {"create_location": "hospital_user",
+      "zones": [
+        {"zone":{"location":"ambulance1"}}
+    ]},
+    {"set":{"local":"location_name"},"value":"hospital_user"},
+    {"set":{"local":"cambuchoice"},"value":"yes"},
+    {"set":{"local":"FPL_NMBR"},"value":8},
+    {"call_macro":"routeupdate"},
+    {"if": {"local":"HOIST_OUT"}, "eq": 0,
+      "then": [
+        {"if": {"var":["L:DEBOARD","number"]}, "lt": 6,
+          "then": [
+            {"call_macro":"Ambulance destination1"}
+        ]},
+        {"if": {"var":["L:DEBOARD","number"]}, "gt": 5,
+          "then": [
+            {"call_macro":"Ambulance destination2"}
+        ]}
+      ],"else": [
+        {"call_macro":"Ambulance destination hoist"}
     ]}
   ],
   "user destination menu": [
@@ -943,12 +1314,8 @@
         {"call_macro":"crew emergency destination menu"},
         {"return":0}
     ]},
-    {"#comment":"Tester report 2026-11-08 (MPR): after a new hospital was chosen the modal still showed the old one (name and distance) for up to 5 s while the message already showed the new one, because this random pause came before the new modal. A menu that follows a selection (destination_modal_fast = 1) is built at once."},
-    {"if": {"local":"destination_modal_fast"}, "ne": 1,
-      "then": [
-        {"sleep":[1,5]}
-    ]},
-    {"set":{"local":"destination_modal_fast"},"value":0},
+    {"#comment":"The destination page is built once when the menu opens (random pause of the dispatch processing). A hospital selected from the map, the list or the custom DB does not open it again: the briefing button DESTINATION CONFIRMATION MENU does (user rule of 2026-11-16)."},
+    {"sleep":[1,5]},
     {"set":{"local":"cambuchoice"},"value":"no"},
     {"set_dispatch_dialog":0},
     {"set":{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},"value":{"add":[{"var":["L:{local:HXX}_34318C120F1A4CE4AD82563023587395","number"]},1]}},
@@ -961,23 +1328,6 @@
             {"set_hover_display":{"range":0}}
         ]}},
         {"set":{"var":["L:READY","number"]},"value":0},
-        {"if": {
-          "and": [
-            {"require":{"local":"ambulance_previsit_distance_ok"},"eq":0},
-            {"require":{"local":"ambulance_previsit_distance_m"},"gt":600},
-            {"require":{"local":"ambu1arrived"},"eq":"yes"},
-            {"require":{"has_object":"ambulance1"},"eq":1}
-          ]}, "eq": 1,
-          "then": [
-            {"set_modal": {
-                "title": "CHOOSE DESTINATION",
-                "text": "Ambulance is far from the accident. Select whether to unload the patient at the ambulance.",
-                "options": [
-                  {"text":"Unload to ambulance","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Unload to ambulance"}},{"create_location":"hospital_user","zones":[{"zone":{"location":"ambulance1"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"set":{"local":"cambuchoice"},"value":"yes"},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"call_macro":"Ambulance destination2"}]}],"else":[{"call_macro":"Ambulance destination hoist"}]}]},
-                  {"text":"Back to destination menu","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Back to destination menu"}},{"call_macro":"user destination menu"}]}
-              ]}
-            }
-        ]},
         {"#comment":"Tester report 2026-10-31 (Steph): after a hospital chosen from the custom DB nothing appeared and the menu stayed blocked. The two branches below are exact complements: this one is the plain menu when there is no ambulance OR the ambulance has no meeting point (before, an ambulance without a meeting point matched neither branch and no modal was opened)."},
         {"if": {
           "or": [
@@ -986,17 +1336,8 @@
           ]}, "eq": 1,
           "then": [
             {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
-            {"set":{"local":"destination_modal_base"},"value":"Select destination helipad for patient transport"},
-            {"call_macro":"destination modal text"},
-            {"set_modal": {
-                "title": "CHOOSE DESTINATION",
-                "text": {"local":"destination_modal_text"},
-                "options": [
-                  {"text":"Manually select destination","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Manually select destination"}},{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
-                  {"text":"Unload patient here","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Unload patient here"}},{"call_macro":"user_prelocation_prerequisites"}]},
-                  {"text":"Accept selection","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Accept selection"}},{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}
-              ]}
-            }
+            {"set":{"local":"destination_page_kind"},"value":"patient"},
+            {"call_macro":"destination page"}
         ]},
         {"if": {
           "and": [
@@ -1005,18 +1346,8 @@
           ]}, "eq": 1,
           "then": [
             {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
-            {"set":{"local":"destination_modal_base"},"value":"Select destination helipad for patient transport"},
-            {"call_macro":"destination modal text"},
-            {"set_modal": {
-                "title": "CHOOSE DESTINATION",
-                "text": {"local":"destination_modal_text"},
-                "options": [
-                  {"text":"Manually select destination","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Manually select destination"}},{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
-                  {"text":"Unload to closest ambulance","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Unload to closest ambulance"}},{"set":{"local":"cambuwait"},"value":null},{"if":{"local":"ambu1arrived"},"ne":"yes","then":[{"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},{"wait_modal":{"title":"AMBULANCE IS STILL ON THE WAY TO THE MEETING POINT.","text":"DO YOU REALLY WANT TO MEET AMBULANCE?","options":[{"text":"YES","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"YES"}},{"set":{"local":"cambuwait"},"value":"yes"}]},{"text":"NO (BACK TO MENU)","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"NO (BACK TO MENU)"}},{"set":{"local":"cambuwait"},"value":"no"}]}]}}],"else":[{"set":{"local":"cambuwait"},"value":"yes"}]},{"wait_for":{"local":"cambuwait"},"ne":null},{"if":{"local":"cambuwait"},"eq":"yes","then":[{"create_location":"hospital_user","zones":[{"zone":{"location":"closest_ambupolice_meetpnt"}}]},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"if":{"local":"HOIST_OUT"},"eq":0,"then":[{"if":{"var":["L:DEBOARD","number"]},"lt":6,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination1"}]},{"if":{"var":["L:DEBOARD","number"]},"gt":5,"then":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination2"}]}],"else":[{"set":{"local":"cambuchoice"},"value":"yes"},{"call_macro":"Ambulance destination hoist"}]}],"else":[{"call_macro":"user destination menu"}]}]},
-                  {"text":"Unload patient here","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Unload patient here"}},{"call_macro":"user_prelocation_prerequisites"}]},
-                  {"text":"Accept selection","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Accept selection"}},{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"create_thread":{"commands":[{"call_macro":"shared repeated block 050"}]}},{"call_macro":"User predestination"}]}]}
-              ]}
-            }
+            {"set":{"local":"destination_page_kind"},"value":"patient_cambu"},
+            {"call_macro":"destination page"}
         ]}
     ]},
     {"if": {"local":"whobringpatient"}, "eq": "ambulance",
@@ -1038,17 +1369,8 @@
         {"set_hover_display":{"range":0}},
         {"set":{"var":["L:READY","number"]},"value":0},
         {"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
-        {"set":{"local":"destination_modal_base"},"value":"Select helipad for doctor pickup"},
-        {"call_macro":"destination modal text"},
-        {"set_modal": {
-            "title": "CHOOSE AMBULANCE DESTINATION",
-            "text": {"local":"destination_modal_text"},
-            "options": [
-              {"text":"Manually select destination","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Manually select destination"}},{"create_thread":{"commands":[{"call_macro":"Choose manual type modal"}]}}]},
-              {"text":"Unload patient here","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Unload patient here"}},{"call_macro":"user_prelocation_prerequisites"}]},
-              {"text":"Accept selection","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Accept selection"}},{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":1},{"call_macro":"user destination menu"}],"else":[{"sleep":1},{"set_message":{"text":"Waiting for crew to be aboard before proceeding"}},{"wait_for":{"var":["L:HOISTED","number"]},"eq":1},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"call_macro":"nation query wait","params":{"which":"hospital"}},{"set_message":{"text":"Route set to: {1} ({2}). Location: {0:LOCATION}","params":["hospital_user",{"local":"hospital_name"},{"local":"hospital_nation"}]}},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"set":{"local":"MISSION_PHASE"},"value":8},{"call_macro":"pick doctor"}]}]}
-          ]}
-        }
+        {"set":{"local":"destination_page_kind"},"value":"ambudoc"},
+        {"call_macro":"destination page"}
     ]},
     {"if": {"local":"whobringpatient"}, "eq": "organ",
       "then": [
@@ -1059,17 +1381,8 @@
         ]}},
         {"set":{"var":["L:READY","number"]},"value":0},
         {"set_message":{"text":"Predefined destination: {1} (distance {0}Km) Do you confirm?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},
-        {"set":{"local":"destination_modal_base"},"value":"Confirm organ transport destination helipad"},
-        {"call_macro":"destination modal text"},
-        {"set_modal": {
-            "title": "CONFIRM DESTINATION",
-            "text": {"local":"destination_modal_text"},
-            "options": [
-              {"text":"Change destination","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Change destination"}},{"create_thread":{"commands":[{"call_macro":"destination_selection_and_confirmationmsg"}]}}]},
-              {"text":"Drop organ box here","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Drop organ box here"}},{"call_macro":"user_prelocation_prerequisites"}]},
-              {"text":"Confirm selection","style":"primary","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Confirm selection"}},{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"set_message":{"text":"No destination selected, first select a destination, and then confirm"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"if":{"object":"hospital_user","var":"distance:m"},"lt":500,"then":[{"set_message":{"text":"Query resulted with same hospital as destination. Please use the map to select another hospital!"}},{"sleep":3},{"call_macro":"user destination menu"}],"else":[{"call_macro":"manual_hospital_destination_setup"}]}]}]}
-          ]}
-        }
+        {"set":{"local":"destination_page_kind"},"value":"organ"},
+        {"call_macro":"destination page"}
     ]}
   ],
   "shared user destination arrival scene": [
@@ -3788,8 +4101,29 @@
   ],
   "DF emergency beacon update": [
     {"set":{"local":"DF_EMERGENCY_RX_RANGE_M"},"value":{"floor":{"divide":[{"multiply":[{"param":"range_m"},{"rand":[75,125]}]},100]}}},
+    {"#comment":"Diagnostics (report 2026-11-19: the DF on 121.5 pointed nowhere above the SAR target of mission 17): the state of every condition of this update is kept in locals that any snapshot dumps. DF_DBG_OBJ 1 when the beacon object exists, DF_DBG_DIST its distance in meters (-1 unknown), DF_DBG_MODE the tuning mode, DF_DBG_VALID and DF_DBG_FREQ the CARLS DF channel (variables), DF_DBG_GFREQ the global frequency, DF_DBG_FREQ_ASK the frequency this beacon needs (-2 when the distance could not be read)."},
+    {"set":{"local":"DF_DBG_OBJ"},"value":0},
+    {"set":{"local":"DF_DBG_DIST"},"value":-1},
+    {"if": {"has_object":"{param:object}"}, "eq": 1,
+      "then": [
+        {"set":{"local":"DF_DBG_OBJ"},"value":1},
+        {"try": [
+            {"set":{"local":"DF_DBG_DIST"},"value":{"floor":{"object":"{param:object}","var":"distance:m"}}}
+          ],
+          "catch": [
+            {"set":{"local":"DF_DBG_DIST"},"value":-2}
+        ]}
+    ]},
+    {"set":{"local":"DF_DBG_MODE"},"value":{"global":"CARLS_DF_TUNING_MODE"}},
+    {"set":{"local":"DF_DBG_VALID"},"value":{"var":["L:CARLS_DF_ACTIVE_VALID","number"]}},
+    {"set":{"local":"DF_DBG_FREQ"},"value":{"var":["L:CARLS_DF_FREQUENCY","number"]}},
+    {"set":{"local":"DF_DBG_GFREQ"},"value":{"global":"CARLS_DF_FREQUENCY"}},
+    {"set":{"local":"DF_DBG_FREQ_ASK"},"value":{"param":"frequency"}},
+    {"#comment":"User rule 2026-11-19: the DF depends only on the CARLS being switched on (L:CARLS_State not 0), never on the CARLS connection to the dispatcher (L:CARLS_CONNECTED). Once the CARLS is on the DF receives on the active frequency; with the CARLS off it receives nothing (beacon cleared). DF_DBG_STATE keeps the value for the snapshots."},
+    {"set":{"local":"DF_DBG_STATE"},"value":{"var":["L:CARLS_State","number"]}},
     {"if": {
       "and": [
+        {"require":{"var":["L:CARLS_State","number"]},"ne":0},
         {"require":{"has_object":"{param:object}"},"eq":1},
         {"require":{"object":"{param:object}","var":"distance:m"},"lte":{"local":"DF_EMERGENCY_RX_RANGE_M"}}
       ]}, "eq": 1,

@@ -1,3 +1,49 @@
+## Release 0.997 170.40
+
+- Scope reconciliation against the delivered 170.39 baseline
+- Tips line on the tablet accepts the Companion heartbeat 1 or 2
+- Mountain accidents: the heli rescuer pickup prompt follows L:MOUNTAIN, no longer the mission number
+- Voice command hoist on (code 201) sets the hoist switch when the crew asks for it
+- Voice: crew aboard is on the intercom while airborne, polycon not carried between helicopter and outside in flight; CARLS reminders in phases 4-7 and before radio calls (RAD.NEED)
+- Teleport by voice: the armed state is the simulator variable L:HMC_TELEPORT_ARMED
+- DF receives on the active frequency whenever the CARLS is on (L:CARLS_State), independent of the connection; diagnostics DF_DBG_* and VRD_DBG_*
+- Manual visit transport check registered in the manifest, error counters initialised
+
+## Release 0.997 170.39
+
+- Scope reconciliation against the delivered 170.38 baseline
+- Speech bridge heartbeat in its own thread so the Companion detects a lost mission
+
+## Release 0.997 170.38
+
+- Scope reconciliation against the delivered 170.37 baseline
+- Speech bridge heartbeat on the ready flag: the mission refreshes it every 5 s so the Companion detects a lost mission
+
+## Release 0.997 170.37
+
+- Scope reconciliation
+- Destination page: degrees coordinates, page reopens after every selection, Back from custom hospitals discards, only the transported patient with diagnosis or NO INFO
+
+## Release 0.997 170.36
+
+- Fix comparator placement in msn preset loading
+- Scope fix
+- Scope reconciliation against the delivered 170.35 baseline
+- Preset categories data-driven and save lock/fallback notice, train.json dispatch language line, destination confirmation menu in dispatch with voice commands and ambulance yes/no question, snapshot ground guards
+
+## Release 0.997 170.35
+
+- Destination page: dispatch page, status bars on pages, prev_page2 fallback, translations DE FR IT
+- Destination confirmation menu as a dispatch page without modals, voice commands 140-149 and spoken ambulance question, autosave accident stamp, non blocking speech bridge
+
+## Release 0.997 170.34
+
+- Scope: other session voice macros
+- Rebuild after restoring voice briefing lines macro
+- Removed the live save macro that reopened the slot table
+- Scope of the stale baseline since 170.31: locals audit, speech bridge and voice commands, save and destination fixes
+- Autosave writes the whole mission again (live save no longer reopens the slot table), destination confirmation is a dispatch page (set_modal keeps its first content), voice commands page follows the command language
+
 ## Release 0.997 170.33
 
 - Voice commands page and tips line follow the language of the voice commands; stale scope baseline allowed

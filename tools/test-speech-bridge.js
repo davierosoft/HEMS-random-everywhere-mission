@@ -31,7 +31,7 @@ assert.equal(result.count, bridge.ACTIONS.length);
   assert.ok(loop.indexOf('"L:HMC_SPEECH_SESSION"') < ready1 && loop.indexOf('"L:HMC_SPEECH_CONTRACT"') < ready1, 'contract and a fresh session come before ready 1');
   assert.ok(loop.includes('"floor":{"rand":[1,999999999]}'), 'a random session between 1 and 999999998');
   assert.ok(loop.includes('"L:HMC_SPEECH_REQ_SEQ","number"]},"value":0') && loop.includes('"L:HMC_SPEECH_ACK_SEQ","number"]},"value":0'), 'request and acknowledgement start equal (the Companion handshake needs request == ack)');
-  assert.ok(loop.includes('{"if":{"local":"sp_ses"},"eq":{"local":"sp_session"},"then":[{"call_macro":"speech action run"'), 'a wrong session is answered with the default result 2 and never clicks');
+  assert.ok(loop.includes('{"if":{"local":"sp_ses"},"eq":{"local":"sp_session"},"then":[{"try":[{"call_macro":"speech action run"'), 'a wrong session is answered with the default result 2 and never clicks');
   assert.ok(loop.includes('"while":{"global":"SPEECH_COMMANDS"},"eq":"yes"'), 'the loop ends when the setting goes off');
   const end = loop.slice(loop.lastIndexOf('"while"'));
   assert.ok(end.includes('"L:HMC_SPEECH_READY","number"]},"value":0') && end.includes('speech availability clear'), 'ready 0 and every availability cleared at the end');
@@ -46,7 +46,7 @@ assert.equal(result.count, bridge.ACTIONS.length);
   assert.ok(triggers >= bridge.ACTIONS.filter((a) => !a.macro).length, 'every user action has a click');
   for (const need of ['"call_macro":"Ambulance1"', '"call_macro":"Firetruck1"', '"call_macro":"Police1"', '"set_dispatch_dialog":1', '"set_briefing_dialog":0']) assert.ok(t.includes(need), 'macro action runs ' + need);
   for (const action of bridge.ACTIONS) assert.ok(t.includes(`"param":"code"},"eq":${action.code},"then":[{"try":`), 'code ' + action.code + ' is a guarded branch');
-  for (const userAction of bridge.ACTIONS.flatMap((a) => a.userActions || [])) assert.ok(t.includes(`{"trigger_user_action":"${userAction}"},{"set":{"local":"sp_result"},"value":1}`), userAction + ' sets result 1 right after the click');
+  for (const userAction of bridge.ACTIONS.flatMap((a) => a.userActions || [])) assert.ok(t.includes(`{"set":{"local":"sp_result"},"value":1},{"create_thread":{"commands":[{"try":[{"trigger_user_action":"${userAction}"}]`), userAction + ' sets result 1 and clicks in a thread of its own (the loop never waits for an action)');
   assert.ok(!/trigger_user_action":"(accept|reject)_/.test(t), 'the map dialogs (accept/reject) have no voice control');
   assert.ok(!/trigger_user_action":"history/.test(t), 'the SAR track history has no voice control (the skips and reposition_sarah were added by the user on 2026-11-08)');
 }
@@ -113,3 +113,18 @@ assert.equal(result.count, bridge.ACTIONS.length);
   assert.ok(text(macros['speech patient status']).includes('"local":"ops_progress_active"},"eq":1') && text(macros['speech read dispatch']).includes('"vrd_last"'), 'patient status splits flight and ground, repeat dispatch clears the memory of the read');
 }
 console.log(`Speech bridge PASS: ${bridge.ACTIONS.length} actions generated from the live button conditions, mailbox order, setting in every layer, declaration for the Companion. HPG/MSFS and Companion runtime PENDING.`);
+
+// 3b. the loop never waits for an action (user rule 2026-11-16): after the availability test every action sets result 1 and runs in a thread of its own, wrapped in a try that records sp_error; the acknowledgement therefore never depends on how long a macro lasts
+{
+  const runMacro = JSON.stringify(macros['speech action run']);
+  const sync = JSON.stringify(macros['speech action run']).split('"call_macro"').length - 1;
+  for (const a of bridge.ACTIONS.filter((x) => x.macro && !x.selfResult)) {
+    for (const b of a.branches || [{ run: a.run }]) {
+      const rest = b.run.filter((c) => !(c && typeof c === 'object' && (c['#comment'] !== undefined || (c.set && Object.keys(c).length === 2))));
+      if (!rest.length) continue;
+      assert.ok(runMacro.includes('{"create_thread":{"commands":[{"try":' + JSON.stringify(rest)), a.id + ' runs in a thread of its own');
+    }
+  }
+  assert.ok(runMacro.includes('"sp_error_cmd"') && runMacro.includes('"value":{"local":"sp_cmd"}'), 'a failed action is recorded with the command in a local (params are thread scoped)');
+  assert.ok(sync > 0);
+}

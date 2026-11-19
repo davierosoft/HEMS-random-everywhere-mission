@@ -1222,10 +1222,54 @@
     ]},
     {"return":0}
   ],
+  "voice radio remind now": [
+    {"#comment":"User rule 2026-11-19: with the CARLS off the crew keeps reminding the pilot, especially before the operations. One reminder now (pack RAD.REM, no new text), by a crew member aboard chosen at random, only when the helicopter is powered (battery master or GPCP switch) and the CARLS is not connected (voice radio ready 0). Called by voice cruise chat every 2.5 minutes while the helicopter approaches the scene and during the operations at the scene."},
+    {"call_macro":"voice radio ready","result":"rn_ready"},
+    {"if": {"param":"rn_ready"}, "eq": 1,
+      "then": [
+        {"return":1}
+    ]},
+    {"if": {
+      "or": [
+        {"require":{"var":["L:{local:HXX}_SDK_OH_BATTERY_MASTER","number"]},"ne":0},
+        {"require":{"var":["L:{local:HXX}_SDK_GPCP_PWR_SWITCH","number"]},"gt":0.5}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"param":"rn_who"},"value":0},
+        {"set":{"param":"rn_try"},"value":0},
+        {"while": {"param":"rn_who"}, "eq": 0,
+          "do": [
+            {"call_macro":"loop yield"},
+            {"set":{"param":"rn_m"},"value":{"add":[2,{"floor":{"rand":[0,4]}}]}},
+            {"call_macro":"voice crew member ok","params":{"member":{"param":"rn_m"},"aboard":1,"skip":0},"result":"rn_ok"},
+            {"if": {"param":"rn_ok"}, "eq": 1,
+              "then": [
+                {"set":{"param":"rn_who"},"value":{"param":"rn_m"}},
+                {"if": {"param":"rn_m"}, "eq": 2,
+                  "then": [
+                    {"set":{"param":"rn_who"},"value":3}
+                ]},
+                {"if": {"param":"rn_m"}, "eq": 3,
+                  "then": [
+                    {"set":{"param":"rn_who"},"value":2}
+                ]}
+            ]},
+            {"set":{"param":"rn_try"},"value":{"add":[{"param":"rn_try"},1]}},
+            {"if": {"param":"rn_try"}, "gte": 8,
+              "then": [
+                {"set":{"param":"rn_who"},"value":-1}
+            ]}
+        ]},
+        {"if": {"param":"rn_who"}, "gt": 0,
+          "then": [
+            {"speak":{"text":"<actor{0}><say:RAD.REM>","params":[{"param":"rn_who"}]}}
+        ]}
+    ]}
+  ],
   "voice radio reminder": [
-    {"#comment":"User request of 2026-10-20: after a dispatch is accepted, if the helicopter is on (the battery master or the GPCP power switch) and the CARLS is still not connected after a few minutes, a crew member aboard, chosen at random, reminds the pilot to switch the radio on to talk to the dispatcher (pack RAD.REM). First reminder 3 to 5 minutes after the briefing started, then every 4 to 6 minutes, at most three. It stops when the radio works (voice radio ready), with a newer dispatch (voice_dispatch_seq) or when the mission is over (MISSION_PHASE 10 or more). With the helicopter off it only waits. Mission Companion only (a wav pack has no such line). param seq = the number of the dispatch."},
+    {"#comment":"User request of 2026-10-20: after a dispatch is accepted, if the helicopter is on (the battery master or the GPCP power switch) and the CARLS is still not connected after a few minutes, a crew member aboard, chosen at random, reminds the pilot to switch the radio on to talk to the dispatcher (pack RAD.REM). First reminder 1 to 3 minutes after the briefing started (user, 2026-11-15: reduced from 3 to 5), then every 4 to 6 minutes, at most three. It stops when the radio works (voice radio ready), with a newer dispatch (voice_dispatch_seq) or when the mission is over (MISSION_PHASE 10 or more). With the helicopter off it only waits. Mission Companion only (a wav pack has no such line). param seq = the number of the dispatch."},
     {"set":{"param":"rr_n"},"value":0},
-    {"sleep":{"rand":[180,300]}},
+    {"sleep":{"rand":[60,180]}},
     {"while": {"param":"rr_n"}, "lt": 3,
       "do": [
         {"if": {"param":"seq"}, "ne": {"local":"voice_dispatch_seq"},
@@ -1404,6 +1448,18 @@
     {"return":{"param":"vdl_t"}}
   ],
   "voice read dispatch": [
+    {"#comment":"Diagnostics (report 2026-11-19: no crew question at the second dispatch): VRD_DBG_CALLS counts the calls, VRD_DBG_SAME is 1 when the description equals the last one read (vrd_last), so nothing is read, VRD_DBG_PEND keeps vda_pending."},
+    {"if": {"local":"VRD_DBG_CALLS"}, "eq": null,
+      "then": [
+        {"set":{"local":"VRD_DBG_CALLS"},"value":0}
+    ]},
+    {"set":{"local":"VRD_DBG_CALLS"},"value":{"add":[{"local":"VRD_DBG_CALLS"},1]}},
+    {"set":{"local":"VRD_DBG_SAME"},"value":0},
+    {"if": {"local":"accident_description"}, "eq": {"local":"vrd_last"},
+      "then": [
+        {"set":{"local":"VRD_DBG_SAME"},"value":1}
+    ]},
+    {"set":{"local":"VRD_DBG_PEND"},"value":{"local":"vda_pending"}},
     {"#comment":"The dispatcher (actor 8, external radio) reads the dispatch description and objective shown on the tablet. The description is a text with a key, DSC.<incident ID_CARD>.<variant 1-4>, so a translated pack of the Mission Companion speaks its own text; the shown English follows the key and is spoken when the pack has no such text or it does not match. The vehicle of the missions 65-67 is read apart (DSC.VEH). Then the crew briefing. Only with the Mission Companion (voice code APP). Mission description runs for every dispatch received (first, next, custom menu); vrd_last stops a second reading of the same text."},
     {"if": {
       "and": [
@@ -1439,13 +1495,17 @@
                 {"call_macro":"voice dispatch readback"}
             ]}
         ]},
-        {"sleep":1},
-        {"if": {"local":"vda_pending"}, "eq": "yes",
+        {"#comment":"User request of 2026-11-15: the voice command repeat dispatch (vrd_quiet 1) only has the dispatcher read the dispatch and the objective again; the crew triage and the briefing chat that follow a new dispatch are not repeated (the voice command repeat briefing speaks the crew briefing)."},
+        {"if": {"local":"vrd_quiet"}, "ne": 1,
           "then": [
-            {"set":{"local":"vda_pending"},"value":"no"},
-            {"call_macro":"voice dispatch triage"}
-          ],"else": [
-            {"call_macro":"voice briefing chat"}
+            {"sleep":1},
+            {"if": {"local":"vda_pending"}, "eq": "yes",
+              "then": [
+                {"set":{"local":"vda_pending"},"value":"no"},
+                {"call_macro":"voice dispatch triage"}
+              ],"else": [
+                {"call_macro":"voice briefing chat"}
+            ]}
         ]}
     ]}
   ],
@@ -1539,6 +1599,7 @@
     ]},
     {"#comment":"Flight log of 2026-10-19: the dispatch arrived with nobody aboard (the program drops the lines of the crew then), the crew boarded a minute later and nobody said a word. The triage now waits until a crew member is aboard (it gives up after 30 minutes, with a newer dispatch or when the dispatch is accepted), then reads a dispatch heard with the radio off back to the crew (voice dispatch readback), then the questions follow."},
     {"#comment":"User rule 2026-10-24 (flight log: the dispatch arrived while the technician was still chatting with only the copilot aboard, and the readback was dropped by the voice queue): the hangar greetings stay, they come before the boarding and nobody reads the tablet yet. The discussion of the crew starts when all of them are aboard and the greetings are over; if somebody is still missing two minutes after the first one boarded it starts anyway."},
+    {"set":{"local":"VRD_DBG_TRI"},"value":"started"},
     {"set":{"param":"tr_who"},"value":0},
     {"set":{"param":"tr_w"},"value":0},
     {"set":{"param":"tr_g"},"value":0},
@@ -1578,6 +1639,7 @@
         ]}
     ]},
     {"#comment":"Report 2026-11-14 (user rule): vda_talking is 1 while the crew discusses the dispatch, from the first line to the question to the pilot. ACCEPT of a second dispatch waits for it to end (accept dispatch second), so the mission is not reloaded in the middle of the discussion."},
+    {"set":{"local":"VRD_DBG_TRI"},"value":"crew ready"},
     {"set":{"local":"vda_talking"},"value":1},
     {"while": {"local":"vhg_busy"}, "eq": 1,
       "do": [
@@ -1640,6 +1702,7 @@
         {"call_macro":"voice dsp gate"},
         {"call_macro":"voice say","params":{"key":"DSA.ASKP.B"}}
     ]},
+    {"set":{"local":"VRD_DBG_TRI"},"value":"question asked"},
     {"set":{"local":"vda_talking"},"value":0},
     {"set":{"param":"tr_t"},"value":0},
     {"set":{"param":"tr_s"},"value":0},
@@ -2615,69 +2678,73 @@
                         ]}
                     ]}}
                 ]},
-                {"set":{"local":"vb_k"},"value":""},
-                {"if": {"param":"vb_cls"}, "eq": "TRF",
-                  "then": [
-                    {"set":{"local":"vb_k"},"value":"TRF"}
-                ]},
-                {"if": {"param":"vb_cls"}, "eq": "ORG",
-                  "then": [
-                    {"set":{"local":"vb_k"},"value":"ORG"}
-                ]},
-                {"if": {
-                  "or": [
-                    {"require":{"param":"vb_cls"},"eq":"SAR"},
-                    {"require":{"param":"vb_cls"},"eq":"SARV"},
-                    {"require":{"param":"vb_cls"},"eq":"SARC"},
-                    {"require":{"param":"vb_cls"},"eq":"SARH"}
-                  ]}, "eq": 1,
-                  "then": [
-                    {"set":{"local":"vb_k"},"value":"SAR"}
-                ]},
-                {"if": {"local":"vb_k"}, "ne": "",
-                  "then": [
-                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.PLT{1}","params":[{"local":"vb_k"},{"local":"voice_sfx"}]}}},
-                    {"sleep":0.4},
-                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.CPL","params":[{"local":"vb_k"}]}}},
-                    {"sleep":0.4},
-                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.DOC","params":[{"local":"vb_k"}]}}},
-                    {"sleep":0.4},
-                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.CHF","params":[{"local":"vb_k"}]}}},
-                    {"sleep":0.4},
-                    {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.END","params":[{"local":"vb_k"}]}}},
-                    {"sleep":0.4},
-                    {"if": {"local":"vb_k"}, "eq": "ORG",
-                      "then": [
-                        {"sleep":4},
-                        {"call_macro":"voice organ briefing"}
-                    ]},
-                    {"if": {"local":"vb_k"}, "eq": "TRF",
-                      "then": [
-                        {"sleep":4},
-                        {"call_macro":"voice say","params":{"key":"TRF.INF","a":{"local":"hospital_name"}}}
-                    ]}
-                  ],"else": [
-                    {"set":{"var":["L:PLT{local:VCP}49","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}49","number"]},1]}},
-                    {"sleep":0.4},
-                    {"set":{"var":["L:CPL{local:VCP}66","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}66","number"]},1]}},
-                    {"sleep":0.4},
-                    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}, "eq": 1,
-                      "then": [
-                        {"set":{"var":["L:PAX3{local:VCP}39","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}39","number"]},1]}}
-                    ]},
-                    {"sleep":0.4},
-                    {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}, "eq": 1,
-                      "then": [
-                        {"set":{"var":["L:{local:VCP}91","number"]},"value":{"add":[{"var":["L:{local:VCP}91","number"]},1]}}
-                    ]},
-                    {"sleep":0.4},
-                    {"set":{"var":["L:PLT{local:VCP}50","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}50","number"]},1]}},
-                    {"sleep":0.4}
-                ]},
+                {"call_macro":"voice briefing lines","params":{"cls":{"param":"vb_cls"}}},
                 {"sleep":2.5},
                 {"call_macro":"voice weather brief"}
             ]}}
         ]}
+    ]}
+  ],
+  "voice briefing lines": [
+    {"#comment":"The crew lines of the briefing of a dispatch, taken out of voice briefing chat so that the voice command repeat briefing speaks only them (user request 2026-11-15: repeating must not start the radio reminder, the dispatcher exchange and the weather again). Param cls = the mission class of voice mission class. TRF, ORG and SAR missions have their own BRF.* lines (organ: then the organ briefing; transfer: then the hospital), any other mission the numbered crew lines. Mission Companion only."},
+    {"set":{"local":"vb_k"},"value":""},
+    {"if": {"param":"cls"}, "eq": "TRF",
+      "then": [
+        {"set":{"local":"vb_k"},"value":"TRF"}
+    ]},
+    {"if": {"param":"cls"}, "eq": "ORG",
+      "then": [
+        {"set":{"local":"vb_k"},"value":"ORG"}
+    ]},
+    {"if": {
+      "or": [
+        {"require":{"param":"cls"},"eq":"SAR"},
+        {"require":{"param":"cls"},"eq":"SARV"},
+        {"require":{"param":"cls"},"eq":"SARC"},
+        {"require":{"param":"cls"},"eq":"SARH"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vb_k"},"value":"SAR"}
+    ]},
+    {"if": {"local":"vb_k"}, "ne": "",
+      "then": [
+        {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.PLT{1}","params":[{"local":"vb_k"},{"local":"voice_sfx"}]}}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.CPL","params":[{"local":"vb_k"}]}}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.DOC","params":[{"local":"vb_k"}]}}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.CHF","params":[{"local":"vb_k"}]}}},
+        {"sleep":0.4},
+        {"call_macro":"voice say","params":{"key":{"text":"BRF.{0}.END","params":[{"local":"vb_k"}]}}},
+        {"sleep":0.4},
+        {"if": {"local":"vb_k"}, "eq": "ORG",
+          "then": [
+            {"sleep":4},
+            {"call_macro":"voice organ briefing"}
+        ]},
+        {"if": {"local":"vb_k"}, "eq": "TRF",
+          "then": [
+            {"sleep":4},
+            {"call_macro":"voice say","params":{"key":"TRF.INF","a":{"local":"hospital_name"}}}
+        ]}
+      ],"else": [
+        {"set":{"var":["L:PLT{local:VCP}49","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}49","number"]},1]}},
+        {"sleep":0.4},
+        {"set":{"var":["L:CPL{local:VCP}66","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}66","number"]},1]}},
+        {"sleep":0.4},
+        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_3","number"]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:PAX3{local:VCP}39","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}39","number"]},1]}}
+        ]},
+        {"sleep":0.4},
+        {"if": {"var":["L:{local:HXX}_SDK_CABIN_PAX_1","number"]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:{local:VCP}91","number"]},"value":{"add":[{"var":["L:{local:VCP}91","number"]},1]}}
+        ]},
+        {"sleep":0.4},
+        {"set":{"var":["L:PLT{local:VCP}50","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}50","number"]},1]}},
+        {"sleep":0.4}
     ]}
   ],
   "voice debrief events": [
@@ -4806,9 +4873,31 @@
   ],
   "voice cruise chat": [
     {"#comment":"Small talk during the long legs of the flight, once each: to the scene (phases 4 to 6, more than 7 km from accident_location, above 300 ft), to the hospital (phase 8 or 9, more than 7 km from hospital_user) and back to the base (route 6, more than 7 km from RTB_location). Only when voice calm allows it (never with a dying patient, an injured crew member, or after a death); a short chat of the pack (CRZ.*, futile) and then, by a roll of 0 to 9, a conversation of voice banter (0 to 3), a tip of voice tip (4 to 6) or nothing; on the way back to the base a banter (roll 0 to 4) or a tip. When voice calm refuses the chat (CREW CHATTER REDUCED or MINIMAL, or the mood) the leg still offers a tip, 4 times in 10 (5 in 10 back to the base), because the tips have their own setting CREW TIPS and voice tip decides by itself. Chatter (AUDIO_DECLUT)."},
+    {"set":{"local":"vcc_rt"},"value":0},
     {"while": 1, "gt": 0,
       "do": [
         {"sleep":10},
+        {"#comment":"CARLS reminders (user 2026-11-19): in phases 4 to 7 (to the scene and the operations at the scene), within 10 km of the accident or at the scene, voice radio remind now every 15 loops (2.5 minutes), the first time at once."},
+        {"if": {
+          "and": [
+            {"require":{"local":"MISSION_PHASE"},"gte":4},
+            {"require":{"local":"MISSION_PHASE"},"lte":7},
+            {"require":{"has_location":"accident_location"},"eq":1},
+            {"require":{"location":"accident_location","var":"distance:m","to":"$USER"},"lt":10000}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"vcc_rt"},"value":{"add":[{"local":"vcc_rt"},1]}},
+            {"if": {"local":"vcc_rt"}, "gt": 15,
+              "then": [
+                {"set":{"local":"vcc_rt"},"value":1}
+            ]},
+            {"if": {"local":"vcc_rt"}, "eq": 1,
+              "then": [
+                {"call_macro":"voice radio remind now"}
+            ]}
+          ],"else": [
+            {"set":{"local":"vcc_rt"},"value":0}
+        ]},
         {"if": {"local":"MISSION_PHASE"}, "lte": 2,
           "then": [
             {"set":{"local":"vcc_out"},"value":"no"},
@@ -5094,6 +5183,12 @@
           "then": [
             {"set":{"local":"vc_base"},"value":1}
         ]},
+        {"#comment":"Airborne (user rule 2026-11-19): 1 when the helicopter is not on the ground, a hover for the hoist counts as flight. The Companion hears no polycon between the helicopter and the outside while airborne and keeps the intercom for the people aboard."},
+        {"set":{"local":"vc_air"},"value":0},
+        {"if": {"var":["SIM ON GROUND","bool"]}, "eq": 0,
+          "then": [
+            {"set":{"local":"vc_air"},"value":1}
+        ]},
         {"set":{"local":"vz_best"},"value":9999},
         {"call_macro":"voice zone nearest","params":{"object":"engineera"}},
         {"call_macro":"voice zone nearest","params":{"object":"engineer"}},
@@ -5122,7 +5217,7 @@
           "then": [
             {"set":{"local":"vc_chat"},"value":1}
         ]},
-        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"},{"local":"vc_zc"}]}},
+        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"},{"local":"vc_zc"},{"local":"vc_air"}]}},
         {"if": {"local":"vc_sig"}, "ne": {"local":"vc_last_sig"},
           "then": [
             {"set":{"local":"vc_last_sig"},"value":{"local":"vc_sig"}},
@@ -5132,6 +5227,7 @@
             {"set":{"var":["L:HMC_CHAT_MAX","number"]},"value":{"local":"vc_chat"}},
             {"set":{"var":["L:HMC_CREW_EXIST","number"]},"value":{"local":"vc_exist"}},
             {"set":{"var":["L:HMC_AT_BASE","number"]},"value":{"local":"vc_base"}},
+            {"set":{"var":["L:HMC_AIRBORNE","number"]},"value":{"local":"vc_air"}},
             {"set":{"var":["L:HMC_ZONE_TECH","number"]},"value":{"local":"vc_zt"}},
             {"set":{"var":["L:HMC_ZONE_GROUND","number"]},"value":{"local":"vc_zg"}},
             {"set":{"var":["L:HMC_ZONE_CREW","number"]},"value":{"local":"vc_zc"}},

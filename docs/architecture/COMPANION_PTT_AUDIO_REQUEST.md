@@ -8,6 +8,7 @@ Date: 2026-10-24. Sender: mission side (release 0.997 169.76). To be pasted into
 - After an accepted spoken command the copilot reads it back with the pack message `CMD.101` to `CMD.114` (six options each, actor 2, `radio="auto"`).
 - The mailbox of the speech bridge: `L:HMC_SPEECH_ACK_SEQ` follows the request sequence, `L:HMC_SPEECH_ACK_RESULT` is 1 (button clicked) or 2 (not available now).
 - Power rule for every radio sound: battery master on or the GPCP switch on, and the CARLS connected (see the radio rules already implemented in the engine).
+  - Correction 2026-11-15 (simulator test, Companion issue 118): the PTT press/release sounds and the acknowledgement tones of the voice commands need power only (battery master or GPCP switch). The CARLS link to the dispatcher group is for the radio messages and does not silence them; with CARLS 0 the sounds must still play.
 
 ## Requests
 

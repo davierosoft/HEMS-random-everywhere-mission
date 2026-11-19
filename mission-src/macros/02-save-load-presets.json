@@ -11,6 +11,7 @@
         ]}
     ]},
     {"call_macro":"ensure pathology1 fallback"},
+    {"call_macro":"multipatient registry live capture"},
     {"open_table":{"static":"Mission_Save_Slot0"}},
     {"clear_table":{"static":"Mission_Save_Slot0"}},
     {"set":{"table":{"static":"Mission_Save_Slot0"},"key":"valid"},"value":"no"},
@@ -75,7 +76,10 @@
     {"set":{"local":"SAVE_LOCAL_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
     {"set":{"local":"SAVE_LOCAL_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVE_LOCAL_DATE"},{"local":"SAVE_LOCAL_TIME"}]}},
     {"set":{"table":{"static":"Mission_Save_Slot0"},"key":"SAVE_TIMESTAMP"},"value":{"local":"SAVE_LOCAL_TIMESTAMP"}},
-    {"call_macro":"multipatient registry live save","params":{"slot":0}},
+    {"if": {"local":"live_save_snapshot"}, "ne": null,
+      "then": [
+        {"set":{"table":{"static":"Mission_Save_Slot0"},"key":"crew_transport"},"value":{"local":"live_save_snapshot"}}
+    ]},
     {"set":{"table":{"static":"Mission_Save_Slot0"},"key":"valid"},"value":"yes"},
     {"save_table":{"static":"Mission_Save_Slot0"}}
   ],
@@ -84,6 +88,7 @@
       "then": [
         {"return":0}
     ]},
+    {"call_macro":"multipatient registry live capture"},
     {"open_table":{"static":"Mission_Save_Slot1"}},
     {"clear_table":{"static":"Mission_Save_Slot1"}},
     {"set":{"table":{"static":"Mission_Save_Slot1"},"key":"valid"},"value":"no"},
@@ -148,7 +153,10 @@
     {"set":{"local":"SAVE_LOCAL_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
     {"set":{"local":"SAVE_LOCAL_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVE_LOCAL_DATE"},{"local":"SAVE_LOCAL_TIME"}]}},
     {"set":{"table":{"static":"Mission_Save_Slot1"},"key":"SAVE_TIMESTAMP"},"value":{"local":"SAVE_LOCAL_TIMESTAMP"}},
-    {"call_macro":"multipatient registry live save","params":{"slot":1}},
+    {"if": {"local":"live_save_snapshot"}, "ne": null,
+      "then": [
+        {"set":{"table":{"static":"Mission_Save_Slot1"},"key":"crew_transport"},"value":{"local":"live_save_snapshot"}}
+    ]},
     {"set":{"table":{"static":"Mission_Save_Slot1"},"key":"valid"},"value":"yes"},
     {"save_table":{"static":"Mission_Save_Slot1"}}
   ],
@@ -157,6 +165,7 @@
       "then": [
         {"return":0}
     ]},
+    {"call_macro":"multipatient registry live capture"},
     {"open_table":{"static":"Mission_Save_Slot2"}},
     {"clear_table":{"static":"Mission_Save_Slot2"}},
     {"set":{"table":{"static":"Mission_Save_Slot2"},"key":"valid"},"value":"no"},
@@ -221,7 +230,10 @@
     {"set":{"local":"SAVE_LOCAL_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
     {"set":{"local":"SAVE_LOCAL_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVE_LOCAL_DATE"},{"local":"SAVE_LOCAL_TIME"}]}},
     {"set":{"table":{"static":"Mission_Save_Slot2"},"key":"SAVE_TIMESTAMP"},"value":{"local":"SAVE_LOCAL_TIMESTAMP"}},
-    {"call_macro":"multipatient registry live save","params":{"slot":2}},
+    {"if": {"local":"live_save_snapshot"}, "ne": null,
+      "then": [
+        {"set":{"table":{"static":"Mission_Save_Slot2"},"key":"crew_transport"},"value":{"local":"live_save_snapshot"}}
+    ]},
     {"set":{"table":{"static":"Mission_Save_Slot2"},"key":"valid"},"value":"yes"},
     {"save_table":{"static":"Mission_Save_Slot2"}}
   ],
@@ -230,6 +242,7 @@
       "then": [
         {"return":0}
     ]},
+    {"call_macro":"multipatient registry live capture"},
     {"open_table":{"static":"Mission_Save_Slot3"}},
     {"clear_table":{"static":"Mission_Save_Slot3"}},
     {"set":{"table":{"static":"Mission_Save_Slot3"},"key":"valid"},"value":"no"},
@@ -294,7 +307,10 @@
     {"set":{"local":"SAVE_LOCAL_TIME"},"value":{"struct":{"fn":"create_date"},"function":"toLocaleTimeString","params":["en-GB"]}},
     {"set":{"local":"SAVE_LOCAL_TIMESTAMP"},"value":{"text":"{0} {1}","params":[{"local":"SAVE_LOCAL_DATE"},{"local":"SAVE_LOCAL_TIME"}]}},
     {"set":{"table":{"static":"Mission_Save_Slot3"},"key":"SAVE_TIMESTAMP"},"value":{"local":"SAVE_LOCAL_TIMESTAMP"}},
-    {"call_macro":"multipatient registry live save","params":{"slot":3}},
+    {"if": {"local":"live_save_snapshot"}, "ne": null,
+      "then": [
+        {"set":{"table":{"static":"Mission_Save_Slot3"},"key":"crew_transport"},"value":{"local":"live_save_snapshot"}}
+    ]},
     {"set":{"table":{"static":"Mission_Save_Slot3"},"key":"valid"},"value":"yes"},
     {"save_table":{"static":"Mission_Save_Slot3"}}
   ],
@@ -1591,14 +1607,36 @@
       "then": [
         {"set":{"local":"preset_dirty"},"value":"no"}
     ]},
+    {"#comment":"Fallback (issue 16): a missing, empty or unreadable preset table is rebuilt from the embedded mission list (every mission enabled) and the page says so (preset_load_notice 2 = no readable data, 1 = invalid entries reset). Entries that are neither true nor false are reset to enabled. New missions of an update are added silently."},
+    {"set":{"local":"preset_load_notice"},"value":0},
+    {"set":{"local":"preset_fix_total"},"value":0},
+    {"set":{"local":"preset_fix_missing"},"value":0},
+    {"set":{"local":"preset_fix_bad"},"value":0},
+    {"if": {"local":"preset_save_in_progress"}, "eq": null,
+      "then": [
+        {"set":{"local":"preset_save_in_progress"},"value":0}
+    ]},
     {"for_each": {"static":"accidents"},
       "do": [
         {"call_macro":"loop yield"},
         {"set":{"param":"scene"},"value":{"param":"$item"}},
+        {"set":{"local":"preset_fix_total"},"value":{"add":[{"local":"preset_fix_total"},1]}},
         {"if": {"table":{"static":{"param":"PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}}, "eq": null,
           "then": [
             {"set":{"table":{"static":{"param":"PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}},"value":true},
-            {"set":{"local":"preset_dirty"},"value":"yes"}
+            {"set":{"local":"preset_dirty"},"value":"yes"},
+            {"set":{"local":"preset_fix_missing"},"value":{"add":[{"local":"preset_fix_missing"},1]}}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"table":{"static":{"param":"PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}},"ne":null},
+            {"require":{"table":{"static":{"param":"PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}},"ne":true},
+            {"require":{"table":{"static":{"param":"PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}},"ne":false}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"table":{"static":{"param":"PRESET"}},"key":{"struct":{"param":"scene"},"path":"id"}},"value":true},
+            {"set":{"local":"preset_dirty"},"value":"yes"},
+            {"set":{"local":"preset_fix_bad"},"value":{"add":[{"local":"preset_fix_bad"},1]}}
         ]},
         {"set":{"param":"scene","path":"isRequirementsMet"},"value":true},
         {"if": {"struct":{"param":"$item"},"path":"requirements"}, "ne": null,
@@ -1611,6 +1649,22 @@
                 {"set":{"param":"scene","path":"isRequirementsMet"},"value":{"if":{"param":"$FETCH_STATUS"},"eq":200,"then":{"struct":{"param":"scene"},"path":"isRequirementsMet"},"else":false}}
             ]}
         ]}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"preset_fix_total"},"gt":0},
+        {"require":{"local":"preset_fix_missing"},"eq":{"local":"preset_fix_total"}}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"preset_load_notice"},"value":2}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"local":"preset_fix_bad"},"gt":0},
+        {"require":{"local":"preset_load_notice"},"ne":2}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"preset_load_notice"},"value":1}
     ]}
   ],
   "CARLS DF preset": [
@@ -1625,40 +1679,24 @@
     {"call_macro":"CARLS DF render"}
   ],
   "flush mission preset": [
+    {"#comment":"Controlled preset save (issue 16): toggles and category buttons only edit the table in memory and raise preset_dirty; this macro is the only writer (switch preset, leaving the preset pages). One save at a time: while preset_save_in_progress is 1 a second call leaves preset_dirty yes and the next flush writes it. preset_dirty is cleared BEFORE the write, so a change made during the write marks it again; the table stays valid in memory whatever the write does."},
     {"if": {
       "and": [
         {"require":{"local":"preset_dirty"},"eq":"yes"},
-        {"require":{"local":"preset_loaded"},"ne":null}
+        {"require":{"local":"preset_loaded"},"ne":null},
+        {"require":{"local":"preset_save_in_progress"},"ne":1}
       ]}, "eq": 1,
       "then": [
+        {"set":{"local":"preset_save_in_progress"},"value":1},
+        {"set":{"local":"preset_dirty"},"value":"no"},
         {"save_table":{"static":{"local":"preset_loaded"}}},
-        {"set":{"local":"preset_dirty"},"value":"no"}
+        {"set":{"local":"preset_save_in_progress"},"value":0}
     ]}
   ],
   "load current mission preset": [
-    {"if": {"local":"MSN_CONFIG_PRESET"}, "eq": "Config_Table0",
+    {"if": {"local":"MSN_CONFIG_PRESET"}, "ne": null,
       "then": [
-        {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table0"}}
-    ]},
-    {"if": {"local":"MSN_CONFIG_PRESET"}, "eq": "Config_Table1",
-      "then": [
-        {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table1"}}
-    ]},
-    {"if": {"local":"MSN_CONFIG_PRESET"}, "eq": "Config_Table2",
-      "then": [
-        {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table2"}}
-    ]},
-    {"if": {"local":"MSN_CONFIG_PRESET"}, "eq": "Config_Table3",
-      "then": [
-        {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table3"}}
-    ]},
-    {"if": {"local":"MSN_CONFIG_PRESET"}, "eq": "Config_Table4",
-      "then": [
-        {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table4"}}
-    ]},
-    {"if": {"local":"MSN_CONFIG_PRESET"}, "eq": "Config_Table5",
-      "then": [
-        {"call_macro":"msn preset loading","params":{"PRESET":"Config_Table5"}}
+        {"call_macro":"msn preset loading","params":{"PRESET":{"local":"MSN_CONFIG_PRESET"}}}
     ]},
     {"call_macro":"apply linked aircraft profile"}
   ],
@@ -1892,51 +1930,10 @@
             {"set":{"local":"preset_target_all_enabled"},"value":1}
         ]}
     ]},
-    {"if": {"param":"category"}, "eq": "RTC",
+    {"if": {"param":"category"}, "ne": "ALL",
       "then": [
-        {"if": {"local":"preset_category_RTC"}, "eq": true,
-          "then": [
-            {"set":{"local":"preset_target_all_enabled"},"value":1}
-        ]}
-    ]},
-    {"if": {"param":"category"}, "eq": "MEB",
-      "then": [
-        {"if": {"local":"preset_category_MEB"}, "eq": true,
-          "then": [
-            {"set":{"local":"preset_target_all_enabled"},"value":1}
-        ]}
-    ]},
-    {"if": {"param":"category"}, "eq": "MEO",
-      "then": [
-        {"if": {"local":"preset_category_MEO"}, "eq": true,
-          "then": [
-            {"set":{"local":"preset_target_all_enabled"},"value":1}
-        ]}
-    ]},
-    {"if": {"param":"category"}, "eq": "JOB",
-      "then": [
-        {"if": {"local":"preset_category_JOB"}, "eq": true,
-          "then": [
-            {"set":{"local":"preset_target_all_enabled"},"value":1}
-        ]}
-    ]},
-    {"if": {"param":"category"}, "eq": "SAR",
-      "then": [
-        {"if": {"local":"preset_category_SAR"}, "eq": true,
-          "then": [
-            {"set":{"local":"preset_target_all_enabled"},"value":1}
-        ]}
-    ]},
-    {"if": {"param":"category"}, "eq": "SPORT",
-      "then": [
-        {"if": {"local":"preset_category_SPORT"}, "eq": true,
-          "then": [
-            {"set":{"local":"preset_target_all_enabled"},"value":1}
-        ]}
-    ]},
-    {"if": {"param":"category"}, "eq": "SECONDARY",
-      "then": [
-        {"if": {"local":"preset_category_SECONDARY"}, "eq": true,
+        {"set":{"param":"category_local"},"value":{"text":"preset_category_{0}","params":[{"param":"category"}]}},
+        {"if": {"local":{"param":"category_local"}}, "eq": true,
           "then": [
             {"set":{"local":"preset_target_all_enabled"},"value":1}
         ]}

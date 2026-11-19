@@ -48,6 +48,7 @@ function MEDICAL_WHEN(n) {
 }
 // The "Teleport close to destination" link of the dispatch page (04-dispatch-tablet-ui.json) without its page-expansion flag
 const TELEPORT_WHEN = { and: [{ require: { var: ['GPS GROUND SPEED', 'knots'] }, gt: 60 }, { require: { local: 'MISSION_PHASE' }, gt: 2 }, { require: { global: 'TELEPORT_ASSIST_ENABLED' }, eq: 'yes' }] };
+const DEST_WHEN = (...extra) => ({ and: [{ require: { local: 'destination_pending' }, eq: 1 }, { require: { local: 'destination_busy' }, ne: 1 }, ...extra], eq: 1 });
 // code: command code sent by the Companion. userActions: the HPG user action ids the command clicks (the first existing one is clicked).
 // tagged: the action has definitions with different show conditions, every creation is followed by a set of the local sp_def_<id> (1-based).
 const ACTIONS = [
@@ -94,10 +95,25 @@ const ACTIONS = [
   { id: 'time_destination', code: 133, macro: true, noReadback: true, selfResult: true, branches: [{ when: { and: [{ require: { local: 'MISSION_PHASE' }, gte: 2 }], eq: 1 }, run: [{ set: { local: 'sd_what' }, value: 'time' }, { call_macro: 'speech destination say' }] }] },
   // the Patient 1/2/3 buttons of the medical page (07-patient-medical.json, "patient health"): they open the page of that patient, shown under the same conditions as the MEDICAL DIAGNOSTIC PAGE link and the button itself (user list 2026-11-01/08, keyword words, not exact phrases)
   ...[1, 2, 3].map((n, i) => ({ id: 'patient_page_' + n, code: 134 + i, macro: true, noReadback: true, when: MEDICAL_WHEN(n), run: [{ set: { local: 'prev_page' }, value: 'Mission dispatch' }, { call_macro: 'select medical patient page', params: { patient: n } }, { call_macro: 'patient health' }, { set_dispatch_dialog: 1 }] })),
-  // teleport close to the destination with a double confirmation (user list 2026-11-01): "teleport" arms for 15 s (the copilot asks for the confirmation), "confirm" within that time teleports; same conditions as the tablet link
-  { id: 'teleport_arm', code: 137, macro: true, when: TELEPORT_WHEN, run: [{ set: { local: 'sp_teleport_armed' }, value: 1 }, { create_thread: { commands: [{ sleep: 15 }, { set: { local: 'sp_teleport_armed' }, value: 0 }] } }] },
-  { id: 'teleport_confirm', code: 138, macro: true, noReadback: true, when: { and: [...TELEPORT_WHEN.and, { require: { local: 'sp_teleport_armed' }, eq: 1 }] }, run: [{ set: { local: 'sp_teleport_armed' }, value: 0 }, { call_macro: 'teleport' }] },
-  { id: 'next_dispatch', code: 128, macro: true, branches: DISPATCH_BRANCHES({ call_macro: 'next_dispatch' }, { call_macro: 'next_dispatch' }, { require: { local: 'nddisabled' }, eq: null }) }
+  // teleport close to the destination with a double confirmation (user list 2026-11-01; the armed state is the simulator variable L:HMC_TELEPORT_ARMED since 2026-11-19: the local was never seen by the availability evaluation in the flight of that evening, the confirm was refused 7 seconds after the arm): "teleport" arms for 15 s (the copilot asks for the confirmation), "confirm" within that time teleports; same conditions as the tablet link
+  { id: 'teleport_arm', code: 137, macro: true, when: TELEPORT_WHEN, run: [{ set: { var: ['L:HMC_TELEPORT_ARMED', 'number'] }, value: 1 }, { create_thread: { commands: [{ sleep: 15 }, { set: { var: ['L:HMC_TELEPORT_ARMED', 'number'] }, value: 0 }] } }] },
+  { id: 'teleport_confirm', code: 138, macro: true, noReadback: true, when: { and: [...TELEPORT_WHEN.and, { require: { var: ['L:HMC_TELEPORT_ARMED', 'number'] }, eq: 1 }] }, run: [{ set: { var: ['L:HMC_TELEPORT_ARMED', 'number'] }, value: 0 }, { call_macro: 'teleport' }] },
+  { id: 'next_dispatch', code: 128, macro: true, branches: DISPATCH_BRANCHES({ call_macro: 'next_dispatch' }, { call_macro: 'next_dispatch' }, { require: { local: 'nddisabled' }, eq: null }) },
+  // repeat briefing (user 2026-11-15): the crew briefing of the phase again, without the dispatch read-out; read_briefing only reads the description
+  { id: 'repeat_briefing', code: 139, macro: true, noReadback: true, branches: [{ when: { and: [{ require: { local: 'accident_description' }, ne: null }, { require: { local: 'accident_description' }, ne: '' }], eq: 1 }, run: [{ call_macro: 'speech repeat briefing' }] }] },
+  // destination confirmation menu (user 2026-11-16): the buttons that need no map or list, under the same condition as the button of the destination page (macro destination page)
+  { id: 'destination_menu', code: 140, macro: true, noReadback: true, when: { and: [{ require: { local: 'destination_pending' }, eq: 1 }, { require: { local: 'destination_busy' }, ne: 1 }], eq: 1 }, run: [{ call_macro: 'destination page' }] },
+  { id: 'destination_confirm', code: 141, macro: true, when: DEST_WHEN({ require: { has_location: 'hospital_user' }, eq: 1 }), run: [{ call_macro: 'destination confirm' }] },
+  { id: 'destination_unload', code: 142, macro: true, when: DEST_WHEN({ require: { local: 'destination_flag_unload' }, eq: 1 }), run: [{ call_macro: 'destination unload here' }] },
+  { id: 'destination_unload_ambulance', code: 143, macro: true, when: DEST_WHEN({ require: { local: 'destination_page_kind' }, eq: 'patient_cambu' }), run: [{ call_macro: 'destination cambu ask' }] },
+  { id: 'destination_unload_far_ambulance', code: 144, macro: true, when: DEST_WHEN({ require: { local: 'destination_far_ambu' }, eq: 1 }), run: [{ call_macro: 'destination unload far ambulance' }] },
+  { id: 'destination_pickup_doctor', code: 145, macro: true, when: DEST_WHEN({ require: { local: 'destination_page_kind' }, eq: 'ambudoc' }), run: [{ call_macro: 'destination unload here' }] },
+  { id: 'destination_drop_organ', code: 146, macro: true, when: DEST_WHEN({ require: { local: 'destination_page_kind' }, eq: 'organ' }), run: [{ call_macro: 'destination unload here' }] },
+  { id: 'destination_cambu_yes', code: 148, macro: true, when: { and: [{ require: { local: 'destination_pending' }, eq: 1 }, { require: { local: 'destination_cambu_ask' }, eq: 1 }], eq: 1 }, run: [{ call_macro: 'destination cambu go' }] },
+  { id: 'destination_cambu_no', code: 149, macro: true, noReadback: true, when: { and: [{ require: { local: 'destination_pending' }, eq: 1 }, { require: { local: 'destination_cambu_ask' }, eq: 1 }], eq: 1 }, run: [{ set: { local: 'destination_cambu_ask' }, value: 0 }] },
+  // hoist switch by voice (user 2026-11-19): the crew waits for the HOIST switch in manual arming (macro set hoist switch to on sets hoist_switch_wait); the voice does what the switch does, the arm deploy event the mission already uses; no readback of its own (the crew answers by the boom out and height lines)
+  { id: 'hoist_power', code: 201, macro: true, noReadback: true, when: { and: [{ require: { local: 'hoist_switch_wait' }, eq: 1 }, { require: { var: ['L:H145_SDK_OH_HOIST', 'number'] }, ne: 1 }], eq: 1 }, run: [{ trigger: ['H:{local:HXX}_SDK_HOIST_ARM_DEPLOY'] }] },
+  { id: 'destination_cancel', code: 147, macro: true, noReadback: true, when: { and: [{ require: { local: 'destination_pending' }, eq: 1 }, { require: { local: 'destination_busy' }, eq: 1 }], eq: 1 }, run: [{ call_macro: 'destination cancel selection' }] },
 ];
 const TAGGED = ['ambuloadlock', 'ambulance_prime'];
 
@@ -189,10 +205,12 @@ function buildMacros(all) {
     setVar(VARS.contract, 1),
     setVar(VARS.reqSession, 0), setVar(VARS.reqCmd, 0), setVar(VARS.reqSeq, 0),
     setVar(VARS.ackResult, 0), setVar(VARS.ackSeq, 0),
+    { set: { var: ['L:HMC_TELEPORT_ARMED', 'number'] }, value: 0 },
     { set: { local: 'sp_session' }, value: { floor: { rand: [1, 999999999] } } },
     setVar(VARS.session, { local: 'sp_session' }),
     { call_macro: 'speech availability' },
     { set: { local: 'sp_last' }, value: 0 },
+    { create_thread: { commands: [{ call_macro: 'speech bridge beat' }] } },
     setVar(VARS.ready, 1),
     { while: { global: 'SPEECH_COMMANDS' }, eq: 'yes', do: [
       { call_macro: 'speech availability' },
@@ -203,7 +221,13 @@ function buildMacros(all) {
         { set: { local: 'sp_cmd' }, value: { var: [VARS.reqCmd, 'number'] } },
         { set: { local: 'sp_result' }, value: 2 },
         { if: { local: 'sp_ses' }, eq: { local: 'sp_session' }, then: [
-          { call_macro: 'speech action run', params: { code: { local: 'sp_cmd' } } }
+          { try: [
+            { call_macro: 'speech action run', params: { code: { local: 'sp_cmd' } } }
+          ], catch: [
+            { set: { local: 'sp_error' }, value: { param: '$ERROR' } },
+            { set: { local: 'sp_error_cmd' }, value: { local: 'sp_cmd' } },
+            { set: { local: 'sp_result' }, value: 2 }
+          ] }
         ] },
         setVar(VARS.ackResult, { local: 'sp_result' }),
         setVar(VARS.ackSeq, { local: 'sp_req' }),
@@ -218,6 +242,15 @@ function buildMacros(all) {
     { set: { local: 'speech_bridge_running' }, value: 0 }
   ];
   macros['speech bridge loop'] = loop;
+  macros['speech bridge beat'] = [
+    { '#comment': 'Heartbeat (user rule 2026-11-18), own thread so a slow loop pass cannot delay it: the Companion answers the ready flag with 2, every 5 s the mission sets it back to 1. A flag that is not refreshed tells the Companion the mission is gone (crash, simulator closed). Stops with the bridge loop.' },
+    { while: { global: 'SPEECH_COMMANDS' }, eq: 'yes', do: [
+      { sleep: 5 },
+      { if: { global: 'SPEECH_COMMANDS' }, eq: 'yes', then: [
+        { if: { local: 'speech_bridge_running' }, eq: 1, then: [setVar(VARS.ready, 1)] }
+      ] }
+    ] }
+  ];
   macros['speech readback'] = [
     { '#comment': 'Feedback of an accepted spoken command (user request 2026-10-24): after the click (result 1) the copilot reads the command back by voice, pack message CMD.<code> (six options, intercom or voice by the Mission Companion rules). A refused command (result 2) is not read back. Param code.' },
     ...ACTIONS.filter((a) => a.noReadback).map((a) => ({ if: { param: 'code' }, eq: a.code, then: [{ return: 0 }] })),
@@ -225,6 +258,19 @@ function buildMacros(all) {
     { call_macro: 'voice say', params: { key: { text: 'CMD.{0}', params: [{ param: 'code' }] } } }
   ];
 
+
+// Never wait for an action (user rule 2026-11-16): the loop of the bridge is one thread and the Companion gives up after 2.5 s without an acknowledgement, so
+// the availability test stays in the loop and what the action does runs in a thread of its own. Leading plain sets stay in the loop (the state a second
+// request would test, as the armed flag of the teleport); a failing action is recorded in sp_error / sp_error_cmd and never stops the bridge.
+const isSet = (c) => c && typeof c === 'object' && Object.keys(c).length === 2 && c.set && Object.prototype.hasOwnProperty.call(c, 'value');
+function launch(list) {
+  const lead = [];
+  let i = 0;
+  while (i < list.length && (isSet(list[i]) || (list[i] && list[i]['#comment'] !== undefined))) { lead.push(list[i]); i++; }
+  const rest = list.slice(i);
+  if (!rest.length) return [...lead, { set: { local: 'sp_result' }, value: 1 }];
+  return [...lead, { set: { local: 'sp_result' }, value: 1 }, { create_thread: { commands: [{ try: rest, catch: [{ set: { local: 'sp_error' }, value: { param: '$ERROR' } }, { set: { local: 'sp_error_cmd' }, value: { local: 'sp_cmd' } }] }] } }];
+}
   const avail = [{ '#comment': 'Availability of every declared action = its button exists and its show_condition holds now (copied from the definition by tools/speech-bridge.js; tools/test-speech-bridge.js fails when they diverge). A failing read counts as not available.' }];
   const run = [
     { '#comment': 'Clicks the user action of the code (trigger_user_action = the click of the button, same limits) only while the button exists and its condition holds now; sp_result 1 = clicked, 2 = not available. Param code.' },
@@ -240,7 +286,7 @@ function buildMacros(all) {
       const cond = (b, list) => (b.when ? { if: b.when.and ? { and: b.when.and } : b.when, eq: 1, then: list } : { if: { global: 'SPEECH_COMMANDS' }, eq: 'yes', then: list });
       avail.push(guard([setVar(name, 0), ...branches.map((b) => cond(b, [setVar(name, 1)]))]));
       // the first branch whose condition holds runs, once: a flag keeps the later branches from running too
-      run.push({ if: { param: 'code' }, eq: action.code, then: [guard([...branches.map((b) => ({ if: { local: 'sp_result' }, ne: 1, then: [cond(b, action.selfResult ? b.run : [...b.run, { set: { local: 'sp_result' }, value: 1 }])] }))])] });
+      run.push({ if: { param: 'code' }, eq: action.code, then: [guard([...branches.map((b) => ({ if: { local: 'sp_result' }, ne: 1, then: [cond(b, action.selfResult ? b.run : launch(b.run))] }))])] });
       continue;
     }
     // availability: the first user action of the list that exists decides
@@ -252,7 +298,7 @@ function buildMacros(all) {
     // click: the same gate, then trigger
     let click = [];
     for (const userAction of [...action.userActions].reverse()) {
-      click = [gate(all, userAction, [{ trigger_user_action: userAction }, { set: { local: 'sp_result' }, value: 1 }], click.length ? click : null)];
+      click = [gate(all, userAction, launch([{ trigger_user_action: userAction }]), click.length ? click : null)];
     }
     run.push({ if: { param: 'code' }, eq: action.code, then: [guard(click)] });
   }
@@ -325,7 +371,26 @@ function readOnlyMacros() {
   m['speech read dispatch'] = [
     { '#comment': 'Voice command "repeat dispatch": the dispatcher reads the dispatch and the objective again (the macro "voice read dispatch" skips a description it already read, so its memory is cleared first). Generated by tools/speech-bridge.js.' },
     { set: { local: 'vrd_last' }, value: null },
-    { call_macro: 'voice read dispatch' }
+    { set: { local: 'vrd_quiet' }, value: 1 },
+    { call_macro: 'voice read dispatch' },
+    { set: { local: 'vrd_quiet' }, value: 0 }
+  ];
+  m['speech repeat briefing'] = [
+    { '#comment': 'Voice command "repeat briefing" (user, 2026-11-15): the crew briefing of the phase again, only the crew lines: before the flight (phase under 2) the lines of the dispatch briefing (voice briefing lines: the class briefing or the numbered crew lines, no dispatcher exchange, radio reminder or weather); in flight the briefing of the kind of flight: search and rescue, the midway meeting, or the approach to the scene. Generated by tools/speech-bridge.js.' },
+    { if: { local: 'MISSION_PHASE' }, lt: 2, then: [
+      { call_macro: 'voice mission class', result: 'rb_cls' },
+      { call_macro: 'voice briefing lines', params: { cls: { param: 'rb_cls' } } },
+      { return: 1 }
+    ] },
+    { if: { local: 'SAR' }, eq: 'yes', then: [
+      { call_macro: 'voice sar briefing' },
+      { return: 1 }
+    ] },
+    { if: { var: ['L:MIDWAY', 'number'] }, eq: 1, then: [
+      { call_macro: 'voice midway briefing' },
+      { return: 1 }
+    ] },
+    { call_macro: 'voice approach briefing' }
   ];
   m['speech read briefing'] = [
     { '#comment': 'Voice command "read briefing": the copilot or the doctor (chosen at random) reads the description of the dispatch from the briefing, the same text with a key as the dispatcher (DSC.<ID_CARD>.<variant>), on the intercom.' },

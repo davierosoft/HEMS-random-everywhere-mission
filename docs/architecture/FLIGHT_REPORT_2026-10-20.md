@@ -35,7 +35,7 @@ No `move_object`. The bookkeeping (`crewpatientonstretcher`, `HEMS_LOADING_*`, `
 
 | Item | Macro | Pack keys |
 | --- | --- | --- |
-| Reminder to switch the radio on (3 to 5 minutes after the briefing, helicopter on and CARLS not connected, at most three) | `voice radio reminder` | `RAD.REM` |
+| Reminder to switch the radio on (1 to 3 minutes after the briefing since 2026-11-15, was 3 to 5, helicopter on and CARLS not connected, at most three) | `voice radio reminder` | `RAD.REM` |
 | Rendezvous at the pick-up place of the heli rescuers, the station called by its name and kind (alpine rescue station, fire station, sports field, meeting point), the approach call with the wind | `heli rescuer place`, `heli rescuer pickup request`, `heli rescuer pickup approach`, `heli rescuer pickup arrival` | `HRQ.DSP`, `HRQ.APR.PLT`, `HRQ.APR.A` and the `{hrs:1}` / `{hrp:1}` placeholders in the others |
 | The find of the SAR target told to the dispatcher with the position | `voice sar found` | `SAR.FND.PLT`, `SAR.FND.A`, `{comp:N}` |
 | Hospital: marshal request, final approach, on the pad, handover question and answer, departure, organ after the deadline | `voice hospital approach`, `voice hospital final`, `voice hospital handover`, `voice hospital marshal expected` | `HOS.MAR.*`, `HOS.FIN.*`, `HOS.PAD.*`, `HOS.Q`, `HOS.A`, `HOS.DEP.*`, `HOS.ORG.LT` |

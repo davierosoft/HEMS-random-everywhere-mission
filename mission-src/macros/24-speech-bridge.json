@@ -21,10 +21,15 @@
     {"set":{"var":["L:HMC_SPEECH_REQ_SEQ","number"]},"value":0},
     {"set":{"var":["L:HMC_SPEECH_ACK_RESULT","number"]},"value":0},
     {"set":{"var":["L:HMC_SPEECH_ACK_SEQ","number"]},"value":0},
+    {"set":{"var":["L:HMC_TELEPORT_ARMED","number"]},"value":0},
     {"set":{"local":"sp_session"},"value":{"floor":{"rand":[1,999999999]}}},
     {"set":{"var":["L:HMC_SPEECH_SESSION","number"]},"value":{"local":"sp_session"}},
     {"call_macro":"speech availability"},
     {"set":{"local":"sp_last"},"value":0},
+    {"create_thread": {
+      "commands": [
+        {"call_macro":"speech bridge beat"}
+    ]}},
     {"set":{"var":["L:HMC_SPEECH_READY","number"]},"value":1},
     {"while": {"global":"SPEECH_COMMANDS"}, "eq": "yes",
       "do": [
@@ -38,7 +43,14 @@
             {"set":{"local":"sp_result"},"value":2},
             {"if": {"local":"sp_ses"}, "eq": {"local":"sp_session"},
               "then": [
-                {"call_macro":"speech action run","params":{"code":{"local":"sp_cmd"}}}
+                {"try": [
+                    {"call_macro":"speech action run","params":{"code":{"local":"sp_cmd"}}}
+                  ],
+                  "catch": [
+                    {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                    {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}},
+                    {"set":{"local":"sp_result"},"value":2}
+                ]}
             ]},
             {"set":{"var":["L:HMC_SPEECH_ACK_RESULT","number"]},"value":{"local":"sp_result"}},
             {"set":{"var":["L:HMC_SPEECH_ACK_SEQ","number"]},"value":{"local":"sp_req"}},
@@ -55,6 +67,20 @@
     {"set":{"var":["L:HMC_SPEECH_READY","number"]},"value":0},
     {"call_macro":"speech availability clear"},
     {"set":{"local":"speech_bridge_running"},"value":0}
+  ],
+  "speech bridge beat": [
+    {"#comment":"Heartbeat (user rule 2026-11-18), own thread so a slow loop pass cannot delay it: the Companion answers the ready flag with 2, every 5 s the mission sets it back to 1. A flag that is not refreshed tells the Companion the mission is gone (crash, simulator closed). Stops with the bridge loop."},
+    {"while": {"global":"SPEECH_COMMANDS"}, "eq": "yes",
+      "do": [
+        {"sleep":5},
+        {"if": {"global":"SPEECH_COMMANDS"}, "eq": "yes",
+          "then": [
+            {"if": {"local":"speech_bridge_running"}, "eq": 1,
+              "then": [
+                {"set":{"var":["L:HMC_SPEECH_READY","number"]},"value":1}
+            ]}
+        ]}
+    ]}
   ],
   "speech readback": [
     {"#comment":"Feedback of an accepted spoken command (user request 2026-10-24): after the click (result 1) the copilot reads the command back by voice, pack message CMD.<code> (six options, intercom or voice by the Mission Companion rules). A refused command (result 2) is not read back. Param code."},
@@ -91,6 +117,26 @@
         {"return":0}
     ]},
     {"if": {"param":"code"}, "eq": 138,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"param":"code"}, "eq": 139,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"param":"code"}, "eq": 140,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"param":"code"}, "eq": 149,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"param":"code"}, "eq": 201,
+      "then": [
+        {"return":0}
+    ]},
+    {"if": {"param":"code"}, "eq": 147,
       "then": [
         {"return":0}
     ]},
@@ -222,6 +268,42 @@
     {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":37}},
     {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
     {"set":{"local":"sc_p37"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":38}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p38"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":39}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p39"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":40}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p40"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":41}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p41"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":42}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p42"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":43}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p43"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":44}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p44"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":45}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p45"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":46}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p46"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":47}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p47"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":48}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p48"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
+    {"set":{"local":"sc_e"},"value":{"struct":{"static":"speech_commands"},"index":49}},
+    {"set":{"local":"sc_t"},"value":{"struct":{"local":"sc_e"},"path":"t"}},
+    {"set":{"local":"sc_p49"},"value":{"struct":{"local":"sc_t"},"index":{"local":"sc_lang"}}},
     {"set_dispatch": [
         {"text":"TOP","color":"black","show_condition":{"require":{"var":["L:TOPVIEW","number"]},"eq":1}},
         {"image":"sbar00","show_condition":{"require":{"local":"STATUS_BAR_ID"},"eq":0}},
@@ -256,6 +338,17 @@
         {"text":"{0} = The dispatcher reads the dispatch again","params":[{"local":"sc_p27"}],"monospace":0},
         {"text":"{0} = The copilot or the doctor reads the briefing","params":[{"local":"sc_p28"}],"monospace":0},
         {"text":"{0} = Ask for the next dispatch","params":[{"local":"sc_p37"}],"monospace":0},
+        {"text":"{0} = The crew repeats the briefing of the phase","params":[{"local":"sc_p38"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"text":"FLIGHT TO THE SCENE","color":"yellow"},
         {"text":"{0} = Request an ambulance (the dispatcher accepts)","params":[{"local":"sc_p19"}],"monospace":0},
@@ -271,6 +364,17 @@
         {"text":"{0} = Time to the destination of the phase","params":[{"local":"sc_p31"}],"monospace":0},
         {"text":"{0} = Teleport close to the destination (arms it, then say confirm)","params":[{"local":"sc_p35"}],"monospace":0},
         {"text":"{0} = Confirm the teleport armed in the last 15 seconds","params":[{"local":"sc_p36"}],"monospace":0},
+        {"text":"{0} = The crew repeats the briefing of the phase","params":[{"local":"sc_p38"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"text":"APPROACH AND LANDING","color":"yellow"},
         {"text":"{0} = Start the hoist operations at the scene","params":[{"local":"sc_p0"}],"monospace":0},
@@ -288,6 +392,18 @@
         {"text":"{0} = Hide the briefing page of the tablet","params":[{"local":"sc_p25"}],"monospace":0},
         {"text":"{0} = The copilot or the doctor reads the briefing","params":[{"local":"sc_p28"}],"monospace":0},
         {"text":"{0} = Patient status: the doctor in flight, the ground team on the polycon during ground operations","params":[{"local":"sc_p29"}],"monospace":0},
+        {"text":"{0} = The crew repeats the briefing of the phase","params":[{"local":"sc_p38"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Set the hoist switch on when the crew asks for it","params":[{"local":"sc_p48"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"text":"GROUND OPERATIONS","color":"yellow"},
         {"text":"{0} = Start the ground loading of the patient","params":[{"local":"sc_p3"}],"monospace":0},
@@ -311,6 +427,16 @@
         {"text":"{0} = Open the medical page of patient 1","params":[{"local":"sc_p32"}],"monospace":0},
         {"text":"{0} = Open the medical page of patient 2","params":[{"local":"sc_p33"}],"monospace":0},
         {"text":"{0} = Open the medical page of patient 3","params":[{"local":"sc_p34"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"text":"HOIST","color":"yellow"},
         {"text":"{0} = Start the hoist operations at the scene","params":[{"local":"sc_p0"}],"monospace":0},
@@ -327,6 +453,7 @@
         {"text":"{0} = Open the medical page of patient 1","params":[{"local":"sc_p32"}],"monospace":0},
         {"text":"{0} = Open the medical page of patient 2","params":[{"local":"sc_p33"}],"monospace":0},
         {"text":"{0} = Open the medical page of patient 3","params":[{"local":"sc_p34"}],"monospace":0},
+        {"text":"{0} = Set the hoist switch on when the crew asks for it","params":[{"local":"sc_p48"}],"monospace":0},
         {"text":" "},
         {"text":"TRANSPORT","color":"yellow"},
         {"text":"{0} = Hand over the patient to the ambulance","params":[{"local":"sc_p13"}],"monospace":0},
@@ -342,6 +469,16 @@
         {"text":"{0} = Open the medical page of patient 3","params":[{"local":"sc_p34"}],"monospace":0},
         {"text":"{0} = Teleport close to the destination (arms it, then say confirm)","params":[{"local":"sc_p35"}],"monospace":0},
         {"text":"{0} = Confirm the teleport armed in the last 15 seconds","params":[{"local":"sc_p36"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"text":"HOSPITAL","color":"yellow"},
         {"text":"{0} = Show the dispatch page of the tablet","params":[{"local":"sc_p22"}],"monospace":0},
@@ -351,6 +488,16 @@
         {"text":"{0} = Open the medical page of patient 1","params":[{"local":"sc_p32"}],"monospace":0},
         {"text":"{0} = Open the medical page of patient 2","params":[{"local":"sc_p33"}],"monospace":0},
         {"text":"{0} = Open the medical page of patient 3","params":[{"local":"sc_p34"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"text":"RETURN","color":"yellow"},
         {"text":"{0} = Show the dispatch page of the tablet","params":[{"local":"sc_p22"}],"monospace":0},
@@ -364,6 +511,16 @@
         {"text":"{0} = Teleport close to the destination (arms it, then say confirm)","params":[{"local":"sc_p35"}],"monospace":0},
         {"text":"{0} = Confirm the teleport armed in the last 15 seconds","params":[{"local":"sc_p36"}],"monospace":0},
         {"text":"{0} = Ask for the next dispatch","params":[{"local":"sc_p37"}],"monospace":0},
+        {"text":"{0} = Open the destination confirmation menu","params":[{"local":"sc_p39"}],"monospace":0},
+        {"text":"{0} = Confirm the selected destination","params":[{"local":"sc_p40"}],"monospace":0},
+        {"text":"{0} = Unload the patient here","params":[{"local":"sc_p41"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the closest ambulance","params":[{"local":"sc_p42"}],"monospace":0},
+        {"text":"{0} = Unload the patient to the far ambulance","params":[{"local":"sc_p43"}],"monospace":0},
+        {"text":"{0} = Pick up the doctor here","params":[{"local":"sc_p44"}],"monospace":0},
+        {"text":"{0} = Drop the organ box here","params":[{"local":"sc_p45"}],"monospace":0},
+        {"text":"{0} = Answer yes: meet the ambulance that is still on the way","params":[{"local":"sc_p46"}],"monospace":0},
+        {"text":"{0} = Answer no: back to the destination menu","params":[{"local":"sc_p47"}],"monospace":0},
+        {"text":"{0} = Cancel the destination selection in progress","params":[{"local":"sc_p49"}],"monospace":0},
         {"text":" "},
         {"buttonbar":[{"title":"BACK","commands":[{"call_macro":"description2"},{"set_dispatch_dialog":1}]}]}
     ]},
@@ -1645,6 +1802,450 @@
             ]}
         ]}
     ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_REPEAT_BRIEFING","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":38}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_MENU","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":39}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_CONFIRM","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":40}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":41}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_AMBULANCE","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":42}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_FAR_AMBULANCE","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":43}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_PICKUP_DOCTOR","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":44}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_DROP_ORGAN","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":45}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_YES","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":46}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_NO","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":47}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_HOIST_POWER","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":48}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"var":["L:HMC_SPEECH_OK_DESTINATION_CANCEL","number"]}, "eq": 1,
+      "then": [
+        {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":49}},
+        {"set":{"local":"tp_t"},"value":{"struct":{"local":"tp_e"},"path":"t"}},
+        {"set":{"local":"tp_n"},"value":{"struct":{"local":"tp_e"},"path":"n"}},
+        {"set":{"local":"tp_phrase"},"value":{"struct":{"local":"tp_t"},"index":{"local":"sc_lang"}}},
+        {"set":{"local":"tp_len"},"value":{"struct":{"local":"tp_n"},"index":{"local":"sc_lang"}}},
+        {"if": {"local":"tip_n"}, "eq": 0,
+          "then": [
+            {"set":{"local":"TIP_A"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+            {"set":{"local":"tip_len"},"value":{"add":[5,{"local":"tp_len"}]}},
+            {"set":{"local":"tip_n"},"value":1}
+          ],"else": [
+            {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len"},{"local":"tp_len"},3]}},
+            {"if": {"local":"tip_need"}, "lte": 49,
+              "then": [
+                {"set":{"local":"TIP_A"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_A"},{"local":"tp_phrase"}]}},
+                {"set":{"local":"tip_len"},"value":{"local":"tip_need"}},
+                {"set":{"local":"tip_n"},"value":{"add":[{"local":"tip_n"},1]}}
+              ],"else": [
+                {"if": {"local":"tip_n2"}, "eq": 0,
+                  "then": [
+                    {"set":{"local":"TIP_B"},"value":{"text":"SAY: {0}","params":[{"local":"tp_phrase"}]}},
+                    {"set":{"local":"tip_len2"},"value":{"add":[5,{"local":"tp_len"}]}},
+                    {"set":{"local":"tip_n2"},"value":1}
+                  ],"else": [
+                    {"set":{"local":"tip_need"},"value":{"add":[{"local":"tip_len2"},{"local":"tp_len"},3]}},
+                    {"if": {"local":"tip_need"}, "lte": 49,
+                      "then": [
+                        {"set":{"local":"TIP_B"},"value":{"text":"{0} | {1}","params":[{"local":"TIP_B"},{"local":"tp_phrase"}]}},
+                        {"set":{"local":"tip_len2"},"value":{"local":"tip_need"}},
+                        {"set":{"local":"tip_n2"},"value":{"add":[{"local":"tip_n2"},1]}}
+                    ]}
+                ]}
+            ]}
+        ]}
+    ]},
     {"if": {"var":["L:HMC_SPEECH_OK_SHOW_DISPATCH","number"]}, "eq": 1,
       "then": [
         {"set":{"local":"tp_e"},"value":{"struct":{"static":"speech_commands"},"index":22}},
@@ -1797,7 +2398,29 @@
   "speech read dispatch": [
     {"#comment":"Voice command \"repeat dispatch\": the dispatcher reads the dispatch and the objective again (the macro \"voice read dispatch\" skips a description it already read, so its memory is cleared first). Generated by tools/speech-bridge.js."},
     {"set":{"local":"vrd_last"},"value":null},
-    {"call_macro":"voice read dispatch"}
+    {"set":{"local":"vrd_quiet"},"value":1},
+    {"call_macro":"voice read dispatch"},
+    {"set":{"local":"vrd_quiet"},"value":0}
+  ],
+  "speech repeat briefing": [
+    {"#comment":"Voice command \"repeat briefing\" (user, 2026-11-15): the crew briefing of the phase again, only the crew lines: before the flight (phase under 2) the lines of the dispatch briefing (voice briefing lines: the class briefing or the numbered crew lines, no dispatcher exchange, radio reminder or weather); in flight the briefing of the kind of flight: search and rescue, the midway meeting, or the approach to the scene. Generated by tools/speech-bridge.js."},
+    {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+      "then": [
+        {"call_macro":"voice mission class","result":"rb_cls"},
+        {"call_macro":"voice briefing lines","params":{"cls":{"param":"rb_cls"}}},
+        {"return":1}
+    ]},
+    {"if": {"local":"SAR"}, "eq": "yes",
+      "then": [
+        {"call_macro":"voice sar briefing"},
+        {"return":1}
+    ]},
+    {"if": {"var":["L:MIDWAY","number"]}, "eq": 1,
+      "then": [
+        {"call_macro":"voice midway briefing"},
+        {"return":1}
+    ]},
+    {"call_macro":"voice approach briefing"}
   ],
   "speech read briefing": [
     {"#comment":"Voice command \"read briefing\": the copilot or the doctor (chosen at random) reads the description of the dispatch from the briefing, the same text with a key as the dispatcher (DSC.<ID_CARD>.<variant>), on the intercom."},
@@ -2676,7 +3299,7 @@
             {"require":{"var":["GPS GROUND SPEED","knots"]},"gt":60},
             {"require":{"local":"MISSION_PHASE"},"gt":2},
             {"require":{"global":"TELEPORT_ASSIST_ENABLED"},"eq":"yes"},
-            {"require":{"local":"sp_teleport_armed"},"eq":1}
+            {"require":{"var":["L:HMC_TELEPORT_ARMED","number"]},"eq":1}
           ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:HMC_SPEECH_OK_TELEPORT_CONFIRM","number"]},"value":1}
@@ -2753,6 +3376,180 @@
       ],
       "catch": [
         {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_REPEAT_BRIEFING","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"accident_description"},"ne":null},
+            {"require":{"local":"accident_description"},"ne":""}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_REPEAT_BRIEFING","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_MENU","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_MENU","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CONFIRM","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1},
+            {"require":{"has_location":"hospital_user"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CONFIRM","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1},
+            {"require":{"local":"destination_flag_unload"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_AMBULANCE","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1},
+            {"require":{"local":"destination_page_kind"},"eq":"patient_cambu"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_AMBULANCE","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_FAR_AMBULANCE","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1},
+            {"require":{"local":"destination_far_ambu"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_FAR_AMBULANCE","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_PICKUP_DOCTOR","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1},
+            {"require":{"local":"destination_page_kind"},"eq":"ambudoc"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_PICKUP_DOCTOR","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_DROP_ORGAN","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"ne":1},
+            {"require":{"local":"destination_page_kind"},"eq":"organ"}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_DROP_ORGAN","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_YES","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_cambu_ask"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_YES","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_NO","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_cambu_ask"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_NO","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_HOIST_POWER","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"hoist_switch_wait"},"eq":1},
+            {"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_HOIST_POWER","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
+    ]},
+    {"try": [
+        {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CANCEL","number"]},"value":0},
+        {"if": {
+          "and": [
+            {"require":{"local":"destination_pending"},"eq":1},
+            {"require":{"local":"destination_busy"},"eq":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CANCEL","number"]},"value":1}
+        ]}
+      ],
+      "catch": [
+        {"set":{"local":"sp_error"},"value":1}
     ]}
   ],
   "speech action run": [
@@ -2775,8 +3572,17 @@
                     {"require":{"local":"hr_scene_block"},"ne":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"begin_hoisting"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"begin_hoisting"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2798,8 +3604,17 @@
                     {"require":{"location":"heli_rescuer_location","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"begin_hoist_up"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"begin_hoist_up"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2821,8 +3636,17 @@
                     {"require":{"location":"heli_rescuer_location","var":"distance:m"},"lt":{"local":"ldg_spot_area_size"}}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"begin_hoist_dwn"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"begin_hoist_dwn"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2843,8 +3667,17 @@
                     {"require":{"var":["L:BYPASS_NEOFLY","number"]},"eq":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"begin_gnd_loading"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"begin_gnd_loading"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2868,8 +3701,17 @@
                     {"require":{"local":"hr_scene_block"},"ne":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"skid_landing"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"skid_landing"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2888,8 +3730,17 @@
                     {"require":{"var":["SIM ON GROUND","bool"]},"eq":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"deciditi"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"deciditi"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2908,8 +3759,17 @@
                     {"require":{"var":["SIM ON GROUND","bool"]},"eq":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"deciditi2"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"deciditi2"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2933,8 +3793,17 @@
                         {"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":{"local":"gndopsNR"}}
                       ]}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"ambuloadlock"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"ambuloadlock"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                     ]}
                 ]},
                 {"if": {"local":"sp_def_ambuloadlock"}, "eq": 2,
@@ -2947,8 +3816,17 @@
                         {"require":{"local":"whobringpatient"},"ne":"us"}
                       ]}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"ambuloadlock"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"ambuloadlock"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                     ]}
                 ]},
                 {"if": {"local":"sp_def_ambuloadlock"}, "eq": 3,
@@ -2961,8 +3839,17 @@
                         {"require":{"local":"whobringpatient"},"ne":"us"}
                       ]}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"ambuloadlock"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"ambuloadlock"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                     ]}
                 ]}
             ]}
@@ -2978,8 +3865,17 @@
               "then": [
                 {"if": {"local":"whobringpatient"}, "eq": "us",
                   "then": [
-                    {"trigger_user_action":"hoist_out"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"hoist_out"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -2999,8 +3895,17 @@
                     {"require":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":93}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"hoist_in"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"hoist_in"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3015,8 +3920,17 @@
               "then": [
                 {"if": {"local":"helirescuers_drop_here_ready"}, "eq": "yes",
                   "then": [
-                    {"trigger_user_action":"heli_rescue_here"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"heli_rescue_here"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3035,8 +3949,17 @@
                     {"require":{"local":"helirescuers_drop_here_selected"},"ne":"yes"}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"heli_rescue_back"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"heli_rescue_back"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3049,8 +3972,17 @@
         {"try": [
             {"if": {"has_user_action":"ambulance_second"}, "eq": 1,
               "then": [
-                {"trigger_user_action":"ambulance_second"},
-                {"set":{"local":"sp_result"},"value":1}
+                {"set":{"local":"sp_result"},"value":1},
+                {"create_thread": {
+                  "commands": [
+                    {"try": [
+                        {"trigger_user_action":"ambulance_second"}
+                      ],
+                      "catch": [
+                        {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                        {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                    ]}
+                ]}}
             ]}
           ],
           "catch": [
@@ -3064,8 +3996,17 @@
               "then": [
                 {"if": {"local":"sp_def_ambulance_prime"}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"ambulance_prime"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"ambulance_prime"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]},
                 {"if": {"local":"sp_def_ambulance_prime"}, "eq": 2,
                   "then": [
@@ -3076,13 +4017,31 @@
                         {"require":{"local":"MISSION_PHASE"},"eq":9}
                       ]}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"ambulance_prime"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"ambulance_prime"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                       ],"else": [
                         {"if": {"has_user_action":"crew_ambulance_prime"}, "eq": 1,
                           "then": [
-                            {"trigger_user_action":"crew_ambulance_prime"},
-                            {"set":{"local":"sp_result"},"value":1}
+                            {"set":{"local":"sp_result"},"value":1},
+                            {"create_thread": {
+                              "commands": [
+                                {"try": [
+                                    {"trigger_user_action":"crew_ambulance_prime"}
+                                  ],
+                                  "catch": [
+                                    {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                    {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                                ]}
+                            ]}}
                         ]}
                     ]}
                 ]},
@@ -3094,13 +4053,31 @@
                         {"require":{"var":["L:AMBULANCE","number"]},"eq":0}
                       ]}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"ambulance_prime"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"ambulance_prime"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                       ],"else": [
                         {"if": {"has_user_action":"crew_ambulance_prime"}, "eq": 1,
                           "then": [
-                            {"trigger_user_action":"crew_ambulance_prime"},
-                            {"set":{"local":"sp_result"},"value":1}
+                            {"set":{"local":"sp_result"},"value":1},
+                            {"create_thread": {
+                              "commands": [
+                                {"try": [
+                                    {"trigger_user_action":"crew_ambulance_prime"}
+                                  ],
+                                  "catch": [
+                                    {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                    {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                                ]}
+                            ]}}
                         ]}
                     ]}
                 ]},
@@ -3112,13 +4089,31 @@
                         {"require":{"var":["L:AMBULANCE","number"]},"eq":0}
                       ]}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"ambulance_prime"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"ambulance_prime"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                       ],"else": [
                         {"if": {"has_user_action":"crew_ambulance_prime"}, "eq": 1,
                           "then": [
-                            {"trigger_user_action":"crew_ambulance_prime"},
-                            {"set":{"local":"sp_result"},"value":1}
+                            {"set":{"local":"sp_result"},"value":1},
+                            {"create_thread": {
+                              "commands": [
+                                {"try": [
+                                    {"trigger_user_action":"crew_ambulance_prime"}
+                                  ],
+                                  "catch": [
+                                    {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                    {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                                ]}
+                            ]}}
                         ]}
                     ]}
                 ]},
@@ -3126,15 +4121,33 @@
                   "then": [
                     {"if": {"has_user_action":"crew_ambulance_prime"}, "eq": 1,
                       "then": [
-                        {"trigger_user_action":"crew_ambulance_prime"},
-                        {"set":{"local":"sp_result"},"value":1}
+                        {"set":{"local":"sp_result"},"value":1},
+                        {"create_thread": {
+                          "commands": [
+                            {"try": [
+                                {"trigger_user_action":"crew_ambulance_prime"}
+                              ],
+                              "catch": [
+                                {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                                {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                            ]}
+                        ]}}
                     ]}
                 ]}
               ],"else": [
                 {"if": {"has_user_action":"crew_ambulance_prime"}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"crew_ambulance_prime"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"crew_ambulance_prime"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3147,8 +4160,17 @@
         {"try": [
             {"if": {"has_user_action":"skip"}, "eq": 1,
               "then": [
-                {"trigger_user_action":"skip"},
-                {"set":{"local":"sp_result"},"value":1}
+                {"set":{"local":"sp_result"},"value":1},
+                {"create_thread": {
+                  "commands": [
+                    {"try": [
+                        {"trigger_user_action":"skip"}
+                      ],
+                      "catch": [
+                        {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                        {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                    ]}
+                ]}}
             ]}
           ],
           "catch": [
@@ -3160,8 +4182,17 @@
         {"try": [
             {"if": {"has_user_action":"skippa"}, "eq": 1,
               "then": [
-                {"trigger_user_action":"skippa"},
-                {"set":{"local":"sp_result"},"value":1}
+                {"set":{"local":"sp_result"},"value":1},
+                {"create_thread": {
+                  "commands": [
+                    {"try": [
+                        {"trigger_user_action":"skippa"}
+                      ],
+                      "catch": [
+                        {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                        {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                    ]}
+                ]}}
             ]}
           ],
           "catch": [
@@ -3173,8 +4204,17 @@
         {"try": [
             {"if": {"has_user_action":"skippb"}, "eq": 1,
               "then": [
-                {"trigger_user_action":"skippb"},
-                {"set":{"local":"sp_result"},"value":1}
+                {"set":{"local":"sp_result"},"value":1},
+                {"create_thread": {
+                  "commands": [
+                    {"try": [
+                        {"trigger_user_action":"skippb"}
+                      ],
+                      "catch": [
+                        {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                        {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                    ]}
+                ]}}
             ]}
           ],
           "catch": [
@@ -3186,8 +4226,17 @@
         {"try": [
             {"if": {"has_user_action":"skippc"}, "eq": 1,
               "then": [
-                {"trigger_user_action":"skippc"},
-                {"set":{"local":"sp_result"},"value":1}
+                {"set":{"local":"sp_result"},"value":1},
+                {"create_thread": {
+                  "commands": [
+                    {"try": [
+                        {"trigger_user_action":"skippc"}
+                      ],
+                      "catch": [
+                        {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                        {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                    ]}
+                ]}}
             ]}
           ],
           "catch": [
@@ -3207,8 +4256,17 @@
                     {"require":{"has_object":"GPU"},"eq":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"trigger_user_action":"reposition_sarah"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger_user_action":"reposition_sarah"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3231,8 +4289,17 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"AMBU_AVAIL"},"value":2},
-                    {"call_macro":"Ambulance1"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"Ambulance1"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3255,8 +4322,17 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"FIREENGINE_AVAIL"},"value":2},
-                    {"call_macro":"Firetruck1"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"Firetruck1"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3279,8 +4355,17 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"POLICE_AVAIL"},"value":2},
-                    {"call_macro":"Police1"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"Police1"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3297,28 +4382,37 @@
                   "then": [
                     {"#comment":"show dispatch means the dispatch page: the page last loaded may be the homepage, the technical page or another one (report 2026-11-13: after SINGLE PLAYER the homepage stayed), so the dispatch page is built again before the dialog is shown. While a dispatch is still waiting to be accepted (the first one, or a second one offered and not accepted yet) the user may mean the dispatch shown on the briefing: the briefing is shown (user rule 2026-11-13)."},
                     {"set":{"local":"sp_pending"},"value":0},
-                    {"if": {"local":"MISSION_PHASE"}, "lt": 2,
-                      "then": [
-                        {"set":{"local":"sp_pending"},"value":1}
-                    ]},
-                    {"if": {
-                      "and": [
-                        {"require":{"local":"MISSION_PHASE"},"gt":8},
-                        {"require":{"local":"second_dispatch_offered"},"eq":1},
-                        {"require":{"local":"SECOND_DISPATCH"},"ne":1}
-                      ]}, "eq": 1,
-                      "then": [
-                        {"set":{"local":"sp_pending"},"value":1}
-                    ]},
-                    {"if": {"local":"sp_pending"}, "eq": 1,
-                      "then": [
-                        {"set_dispatch_dialog":0},
-                        {"set_briefing_dialog":1}
-                      ],"else": [
-                        {"call_macro":"Mission dispatch"},
-                        {"set_dispatch_dialog":1}
-                    ]},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"if": {"local":"MISSION_PHASE"}, "lt": 2,
+                              "then": [
+                                {"set":{"local":"sp_pending"},"value":1}
+                            ]},
+                            {"if": {
+                              "and": [
+                                {"require":{"local":"MISSION_PHASE"},"gt":8},
+                                {"require":{"local":"second_dispatch_offered"},"eq":1},
+                                {"require":{"local":"SECOND_DISPATCH"},"ne":1}
+                              ]}, "eq": 1,
+                              "then": [
+                                {"set":{"local":"sp_pending"},"value":1}
+                            ]},
+                            {"if": {"local":"sp_pending"}, "eq": 1,
+                              "then": [
+                                {"set_dispatch_dialog":0},
+                                {"set_briefing_dialog":1}
+                              ],"else": [
+                                {"call_macro":"Mission dispatch"},
+                                {"set_dispatch_dialog":1}
+                            ]}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3333,8 +4427,17 @@
               "then": [
                 {"if": {"global":"SPEECH_COMMANDS"}, "eq": "yes",
                   "then": [
-                    {"set_dispatch_dialog":0},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"set_dispatch_dialog":0}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3349,8 +4452,17 @@
               "then": [
                 {"if": {"global":"SPEECH_COMMANDS"}, "eq": "yes",
                   "then": [
-                    {"set_briefing_dialog":1},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"set_briefing_dialog":1}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3365,8 +4477,17 @@
               "then": [
                 {"if": {"global":"SPEECH_COMMANDS"}, "eq": "yes",
                   "then": [
-                    {"set_briefing_dialog":0},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"set_briefing_dialog":0}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3386,8 +4507,17 @@
                     {"require":{"local":"has_location"},"ne":"no"}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"accept dispatch first"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"accept dispatch first"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3400,8 +4530,17 @@
                     {"require":{"local":"has_location"},"ne":"no"}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"accept dispatch first"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"accept dispatch first"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3414,8 +4553,17 @@
                     {"require":{"local":"has_location"},"ne":"no"}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"accept dispatch second"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"accept dispatch second"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3429,8 +4577,17 @@
                     {"require":{"local":"has_location"},"ne":"no"}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"accept dispatch second"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"accept dispatch second"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3444,8 +4601,17 @@
                     {"require":{"local":"has_location"},"ne":"no"}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"accept dispatch second"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"accept dispatch second"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3460,8 +4626,17 @@
                     {"require":{"local":"has_location"},"ne":"no"}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"accept dispatch second"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"accept dispatch second"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3480,8 +4655,17 @@
                     {"require":{"local":"accident_description"},"ne":""}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"speech read dispatch"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"speech read dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3500,8 +4684,17 @@
                     {"require":{"local":"accident_description"},"ne":""}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"speech read briefing"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"speech read briefing"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3519,8 +4712,17 @@
                     {"require":{"struct":{"local":"patients"},"path":"length"},"gt":0}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"speech patient status"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"speech patient status"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3579,10 +4781,19 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"prev_page"},"value":"Mission dispatch"},
-                    {"call_macro":"select medical patient page","params":{"patient":1}},
-                    {"call_macro":"patient health"},
-                    {"set_dispatch_dialog":1},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"select medical patient page","params":{"patient":1}},
+                            {"call_macro":"patient health"},
+                            {"set_dispatch_dialog":1}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3603,10 +4814,19 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"prev_page"},"value":"Mission dispatch"},
-                    {"call_macro":"select medical patient page","params":{"patient":2}},
-                    {"call_macro":"patient health"},
-                    {"set_dispatch_dialog":1},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"select medical patient page","params":{"patient":2}},
+                            {"call_macro":"patient health"},
+                            {"set_dispatch_dialog":1}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3627,10 +4847,19 @@
                   ]}, "eq": 1,
                   "then": [
                     {"set":{"local":"prev_page"},"value":"Mission dispatch"},
-                    {"call_macro":"select medical patient page","params":{"patient":3}},
-                    {"call_macro":"patient health"},
-                    {"set_dispatch_dialog":1},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"select medical patient page","params":{"patient":3}},
+                            {"call_macro":"patient health"},
+                            {"set_dispatch_dialog":1}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3650,13 +4879,22 @@
                     {"require":{"global":"TELEPORT_ASSIST_ENABLED"},"eq":"yes"}
                   ]}, "eq": 1,
                   "then": [
-                    {"set":{"local":"sp_teleport_armed"},"value":1},
+                    {"set":{"var":["L:HMC_TELEPORT_ARMED","number"]},"value":1},
+                    {"set":{"local":"sp_result"},"value":1},
                     {"create_thread": {
                       "commands": [
-                        {"sleep":15},
-                        {"set":{"local":"sp_teleport_armed"},"value":0}
-                    ]}},
-                    {"set":{"local":"sp_result"},"value":1}
+                        {"try": [
+                            {"create_thread": {
+                              "commands": [
+                                {"sleep":15},
+                                {"set":{"var":["L:HMC_TELEPORT_ARMED","number"]},"value":0}
+                            ]}}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3674,12 +4912,21 @@
                     {"require":{"var":["GPS GROUND SPEED","knots"]},"gt":60},
                     {"require":{"local":"MISSION_PHASE"},"gt":2},
                     {"require":{"global":"TELEPORT_ASSIST_ENABLED"},"eq":"yes"},
-                    {"require":{"local":"sp_teleport_armed"},"eq":1}
+                    {"require":{"var":["L:HMC_TELEPORT_ARMED","number"]},"eq":1}
                   ]}, "eq": 1,
                   "then": [
-                    {"set":{"local":"sp_teleport_armed"},"value":0},
-                    {"call_macro":"teleport"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"var":["L:HMC_TELEPORT_ARMED","number"]},"value":0},
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"teleport"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3699,8 +4946,17 @@
                     {"require":{"local":"nddisabled"},"eq":null}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"next_dispatch"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"next_dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3713,8 +4969,17 @@
                     {"require":{"local":"nddisabled"},"eq":null}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"next_dispatch"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"next_dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3727,8 +4992,17 @@
                     {"require":{"local":"nddisabled"},"eq":null}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"next_dispatch"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"next_dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3742,8 +5016,17 @@
                     {"require":{"local":"nddisabled"},"eq":null}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"next_dispatch"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"next_dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3757,8 +5040,17 @@
                     {"require":{"local":"nddisabled"},"eq":null}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"next_dispatch"},
-                    {"set":{"local":"sp_result"},"value":1}
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"next_dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]},
             {"if": {"local":"sp_result"}, "ne": 1,
@@ -3773,8 +5065,362 @@
                     {"require":{"local":"nddisabled"},"eq":null}
                   ]}, "eq": 1,
                   "then": [
-                    {"call_macro":"next_dispatch"},
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"next_dispatch"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 139,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"accident_description"},"ne":null},
+                    {"require":{"local":"accident_description"},"ne":""}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"speech repeat briefing"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 140,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination page"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 141,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1},
+                    {"require":{"has_location":"hospital_user"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination confirm"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 142,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1},
+                    {"require":{"local":"destination_flag_unload"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination unload here"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 143,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1},
+                    {"require":{"local":"destination_page_kind"},"eq":"patient_cambu"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination cambu ask"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 144,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1},
+                    {"require":{"local":"destination_far_ambu"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination unload far ambulance"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 145,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1},
+                    {"require":{"local":"destination_page_kind"},"eq":"ambudoc"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination unload here"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 146,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"ne":1},
+                    {"require":{"local":"destination_page_kind"},"eq":"organ"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination unload here"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 148,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_cambu_ask"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination cambu go"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 149,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_cambu_ask"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"destination_cambu_ask"},"value":0},
                     {"set":{"local":"sp_result"},"value":1}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 201,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"hoist_switch_wait"},"eq":1},
+                    {"require":{"var":["L:H145_SDK_OH_HOIST","number"]},"ne":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"trigger":["H:{local:HXX}_SDK_HOIST_ARM_DEPLOY"]}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
+                ]}
+            ]}
+          ],
+          "catch": [
+            {"set":{"local":"sp_error"},"value":1}
+        ]}
+    ]},
+    {"if": {"param":"code"}, "eq": 147,
+      "then": [
+        {"try": [
+            {"if": {"local":"sp_result"}, "ne": 1,
+              "then": [
+                {"if": {
+                  "and": [
+                    {"require":{"local":"destination_pending"},"eq":1},
+                    {"require":{"local":"destination_busy"},"eq":1}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"local":"sp_result"},"value":1},
+                    {"create_thread": {
+                      "commands": [
+                        {"try": [
+                            {"call_macro":"destination cancel selection"}
+                          ],
+                          "catch": [
+                            {"set":{"local":"sp_error"},"value":{"param":"$ERROR"}},
+                            {"set":{"local":"sp_error_cmd"},"value":{"local":"sp_cmd"}}
+                        ]}
+                    ]}}
                 ]}
             ]}
           ],
@@ -3822,6 +5468,18 @@
     {"set":{"var":["L:HMC_SPEECH_OK_PATIENT_PAGE_3","number"]},"value":0},
     {"set":{"var":["L:HMC_SPEECH_OK_TELEPORT_ARM","number"]},"value":0},
     {"set":{"var":["L:HMC_SPEECH_OK_TELEPORT_CONFIRM","number"]},"value":0},
-    {"set":{"var":["L:HMC_SPEECH_OK_NEXT_DISPATCH","number"]},"value":0}
+    {"set":{"var":["L:HMC_SPEECH_OK_NEXT_DISPATCH","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_REPEAT_BRIEFING","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_MENU","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CONFIRM","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_AMBULANCE","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_UNLOAD_FAR_AMBULANCE","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_PICKUP_DOCTOR","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_DROP_ORGAN","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_YES","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CAMBU_NO","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_HOIST_POWER","number"]},"value":0},
+    {"set":{"var":["L:HMC_SPEECH_OK_DESTINATION_CANCEL","number"]},"value":0}
   ]
 }

@@ -12,7 +12,7 @@
 | `L:VARAMBUAVAIL`, `L:VARFIREAVAIL`, `L:VARPOLICEAVAIL` | ground response macros (0 absent, 1 on scene, 2 on the road) |
 | `L:CUS_CARLS_AUTOCONNECT`, `L:SKIPIFCLOSE`, `L:CUS_SEND_DISPATCH` | CARLS thread, dispatch hand-over |
 | locals `OBJECT1..15`, `L:OBJECTn LAT/LON`, `L:CUSVFXA LAT/LON` | thread created in `accident location pregenerator CUSTOM` |
-| local `CUS_DISPATCH_LANGUAGE` (string: IT, DE, FR, EN or another language code of the Companion; empty or unset = the language of the voice pack) | `voice dispatch language tag` (sources, not built) |
+| local `CUS_DISPATCH_LANGUAGE` (string: IT, DE, FR, EN or another language code of the Companion; empty or unset = the language of the voice pack; `train.json` sets it empty since SCRIPT_BUILD 170013, instruction line 9) | `voice dispatch language tag` (sources, not built) |
 | local `CUS_INJURED` (array of `{title}`, empty or absent = the mission chooses) | `custom injured assets prepare`, `custom injured asset`, `custom injured fallback` (module 07, called by `random injured`, `random injured2`, `random injured3`) |
 | globals of the loop over `data.accidents` (briefing text, and for ID 999 the whole definition) | `missionupdate CUSTOM` |
 

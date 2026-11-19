@@ -296,7 +296,7 @@ function languageProblems(fields) {
       if (typeof t !== 'string') { found.missing++; continue; }
       if (f.max && t.length > f.max) found.over++;
       if (/[^\x00-\xff]/.test(t)) found.wide++;
-      const holders = (x) => (x.match(/{d+}/g) || []).sort().join(',');
+      const holders = (x) => (x.match(/\{\d+(?::[^}]*)?\}/g) || []).sort().join(',');
       if (holders(t) !== holders(f.en)) found.holders++;
     }
     for (const [what, n] of Object.entries(found)) if (n) problems.push(`${name}: ${n} keys ${what === 'missing' ? 'missing' : what === 'over' ? 'over max' : what === 'wide' ? 'with a character above U+00FF' : 'with changed {n} placeholders'}`);

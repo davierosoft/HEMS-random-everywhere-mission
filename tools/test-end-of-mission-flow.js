@@ -104,7 +104,8 @@ const collect = (value, predicate, found = []) => {
   assert.ok(emergencyRoute.includes('{"if":{"has_location":"hospital_user"},"eq":0,"then":[{"call_macro":"Query closest hospital"}]}'), 'the crew emergency reuses the hospital of the dispatch and queries one only when there is none');
   assert.ok(emergencyRoute.includes('"object":"hospital_user"') && emergencyRoute.includes('crew hospital arrival') && emergencyRoute.includes('manual_hospital_destination_setup'), 'a patient aboard uses the normal destination flow, otherwise the crew arrival flow');
   const menuMacro = text('crew emergency destination menu');
-  assert.ok(menuMacro.includes('"title":"CHOOSE DESTINATION"') && menuMacro.includes('Choose manual type modal') && menuMacro.includes('"local":"CREW_DEST_CONFIRMED"},"value":"yes"'), 'the crew emergency offers manual selection and confirmation of the hospital');
+  const pageMacro = text('destination page');
+  assert.ok(menuMacro.includes('"value":"crew"},{"call_macro":"destination page"}') && pageMacro.includes('destination select map list') && pageMacro.includes('destination select custom db') && text('destination confirm').includes('"local":"CREW_DEST_CONFIRMED"},"value":"yes"'), 'the crew emergency offers manual selection and confirmation of the hospital');
   assert.ok(menuMacro.includes('No hospital found. Select the hospital destination manually.') && !menuMacro.includes('return to base'), 'without a hospital the user selects it, no automatic return to base');
   assert.ok(!emergencyRoute.includes('"call_macro":"return to base"') && !emergencyRoute.includes('BACK_TO_HOSPITAL'), 'the care route never falls back to the base on its own');
   assert.ok(emergencyRoute.indexOf('CREW_EMERGENCY_BOARDING_DONE') < emergencyRoute.indexOf('crew emergency destination menu') && emergencyRoute.indexOf('crew emergency destination menu') < emergencyRoute.indexOf('"CREW_DEST_CONFIRMED"') + 1000 && emergencyRoute.indexOf('"local":"CREW_DEST_CONFIRMED"},"eq":"yes"') < emergencyRoute.indexOf('routeupdate'), 'crew boarded, then menu, then confirmation, then the route is set');
@@ -326,6 +327,7 @@ class Sim {
       } else if (c.open_door || c.close_door || c.trigger || c.point_object || c.set_message || c.set_dispatch_dialog !== undefined) {
         const key = Object.keys(c)[0];
         this.log.push([key, c[key]?.text ?? c[key], c.to]);
+      } else if (c.set_dispatch) { this.pages = this.pages || []; this.pages.push(c.set_dispatch);
       } else if (c.set_modal) { this.modals.push(c.set_modal); this.log.push(['modal', c.set_modal.title]); }
       else if (c.create_user_action) { this.actions[c.create_user_action.id] = c.create_user_action; this.log.push(['action', c.create_user_action.id, c.create_user_action.title]); }
       else if (c.destroy_user_action) { delete this.actions[c.destroy_user_action]; this.log.push(['destroy_action', c.destroy_user_action]); }
@@ -642,14 +644,15 @@ const emergencyBase = () => {
 {
   // Confirmation menu of the hospital.
   const s = new Sim();
-  s.stubs['Choose manual type modal'] = () => {};
   s.call('crew emergency destination menu');
-  assert.equal(s.modals.length, 1);
+  const crewButton = (title) => s.pages.at(-1).flatMap((r) => r.buttonbar || []).find((x) => x.title === title);
+  assert.equal(s.locals.destination_page_kind, 'crew');
+  assert.equal(s.pages.length, 1);
   assert.ok(s.log.some((e) => e[0] === 'set_message' && /No hospital found/.test(e[1])));
-  s.run(s.modals[0].options[1].commands);
+  s.run(crewButton('CONFIRM SELECTION').commands);
   assert.notEqual(s.locals.CREW_DEST_CONFIRMED, 'yes', 'accept without a hospital does not confirm');
   s.pos.hospital_user = [0, 0]; s.locals.hospital_name = 'Test hospital';
-  s.run(s.modals[0].options[1].commands);
+  s.run(crewButton('CONFIRM SELECTION').commands);
   assert.equal(s.locals.CREW_DEST_CONFIRMED, 'yes');
 }
 

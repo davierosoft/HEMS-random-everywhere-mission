@@ -232,7 +232,7 @@ for (const slot of [1, 2, 3]) {
   const h = new Live(); h.locals[`LIFESCORE${slot === 1 ? '' : slot}`] = 41 + slot;
   h.locals[`P${slot}_PATIENT_GIVEN_NAME`] = 'Preserved'; h.tour('ambulance1');
   const ticket = h.reserve('ambulance1');
-  h.call(prefix + 'live save', {slot}); h.call(prefix + 'live preload', {slot});
+  h.call(prefix + 'live capture'); h.commands([{ open_table: { static: `Mission_Save_Slot${slot}` } }, { set: { table: { static: `Mission_Save_Slot${slot}` }, key: 'crew_transport' }, value: { local: 'live_save_snapshot' } }, { save_table: { static: `Mission_Save_Slot${slot}` } }], {}); h.call(prefix + 'live preload', {slot});
   h.commands(h.macros.reloadtemp.slice(0, 3), {});
   const restored = new Live(); restored.savedTables = structuredClone(h.savedTables);
   restored.locals['L:RELOADSAVED'] = 1;
@@ -413,3 +413,20 @@ for (const resource of ['ambulance1', 'ambulance2']) {
   for (const patient of [1, 2, 3]) assert.ok(text.includes(`{"set":{"local":"P${patient}_GROUND_TRANSPORTED"},"value":"no"}`), `the clinical reset clears P${patient}_GROUND_TRANSPORTED`);
 }
 console.log('Live patient transport PASS: visit barrier, queue ownership, nine slot/resource combinations, clinical priority, recovery, independent physiology, real CPR/manual workers and three save slots. HPG/MSFS PENDING.');
+
+// Autosave bug of 2026-11-15: the saved_game_0 file held only crew_transport and valid, because live save opened the slot table
+// (open_table reloads it from disk) after savetemp/save1-3 had written their unsaved keys. The snapshot is taken before the table
+// is opened and written into the open table; no macro called between open_table and save_table may open the same table again.
+{
+  const fsSave = require('fs'), pathSave = require('path');
+  const savePresets = JSON.parse(fsSave.readFileSync(pathSave.join(__dirname, '..', 'mission-src', 'macros', '02-save-load-presets.json'), 'utf8'));
+  for (const [name, slot] of [['savetemp', 0], ['save1', 1], ['save2', 2], ['save3', 3]]) {
+    const body = JSON.stringify(savePresets[name]);
+    const open = body.indexOf('"open_table":{"static":"Mission_Save_Slot' + slot + '"}');
+    assert.ok(body.indexOf('multipatient registry live capture') >= 0 && body.indexOf('multipatient registry live capture') < open, name + ' takes the live snapshot before opening the table');
+    assert.ok(!body.includes('multipatient registry live save'), name + ' does not call the removed live save (it reopened the table)');
+    assert.ok(body.includes('"key":"crew_transport"},"value":{"local":"live_save_snapshot"}'), name + ' writes the snapshot into its open table');
+  }
+  const cap = JSON.stringify(JSON.parse(fsSave.readFileSync(pathSave.join(__dirname, '..', 'mission-src', 'macros', '17-multipatient-runtime.json'), 'utf8'))['multipatient registry live capture']);
+  assert.ok(cap.indexOf('"var":["L:TEMPACCIDENT_LOCATION","number"]},"value":{"location":"accident_location"}') > 0 && cap.indexOf('"var":["L:TEMPACCIDENT_LOCATION","number"]') < cap.indexOf('live_snapshot'), 'the capture sets the accident stamp (L:TEMPACCIDENT_LOCATION) before taking the snapshot, so the reload check of latitude/longitude passes at the first save too');
+}

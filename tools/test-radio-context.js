@@ -21,7 +21,7 @@ const text = (macro) => JSON.stringify(macros[macro]);
 const publish = macros['voice context publish'];
 assert.ok(publish, 'voice context publish exists');
 const published = collect(publish, (node) => node.set && Array.isArray(node.set.var)).map((node) => node.set.var[0]);
-for (const name of ['L:HMC_HELI_OFF', 'L:HMC_CREW_PRESENT', 'L:HMC_CREW_MUTE', 'L:HMC_CHAT_MAX', 'L:HMC_CREW_EXIST', 'L:HMC_AT_BASE', 'L:HMC_ZONE_TECH', 'L:HMC_ZONE_GROUND', 'L:HMC_ZONE_CREW', 'L:HMC_CTX_VALID']) {
+for (const name of ['L:HMC_HELI_OFF', 'L:HMC_CREW_PRESENT', 'L:HMC_CREW_MUTE', 'L:HMC_CHAT_MAX', 'L:HMC_CREW_EXIST', 'L:HMC_AT_BASE', 'L:HMC_AIRBORNE', 'L:HMC_ZONE_TECH', 'L:HMC_ZONE_GROUND', 'L:HMC_ZONE_CREW', 'L:HMC_CTX_VALID']) {
   assert.ok(published.includes(name), `${name} is published`);
 }
 assert.ok(!published.includes('L:HMC_RADIO_ON'), 'the battery is read by the Companion from the aircraft variable, not published');

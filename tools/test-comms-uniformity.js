@@ -92,7 +92,7 @@ assert.ok(text(macros['organ pick up scene1']).includes('"key":{"text":"ORG.PCK{
 const mid = text(macros['voice midway briefing']);
 for (const key of ['APR.MID.PLT', 'APR.MID.DOC', 'APR.MID.CHF', 'APR.MID.END']) assert.ok(mid.includes(`"${key}"`), `voice midway briefing: ${key}`);
 assert.ok(mid.includes('"local":"VCP"},"eq":"APP"') && mid.includes('"declut":1'), 'the midway briefing is for the app and is chatter');
-assert.equal(count(all, '"call_macro":"voice midway briefing"'), 1, 'the midway briefing is called once, from the 2 NM thread of the loading point when L:MIDWAY is 1');
+assert.equal(count(all, '"call_macro":"voice midway briefing"'), 2, 'the midway briefing is called from the 2 NM thread of the loading point when L:MIDWAY is 1 and from the voice command repeat briefing');
 assert.ok(all.includes('"var":["L:MIDWAY","number"]},"eq":1,"then":[{"sleep":4},{"call_macro":"voice midway briefing"}]'), 'the midway briefing only with L:MIDWAY 1');
 
 // 6. the approach briefing carries information of the mission: more than one patient, fire on scene

@@ -1080,18 +1080,6 @@
         {"call_macro":"random scene 3"}
     ]}
   ],
-  "Choose manual type modal": [
-    {"set_message":{"text":""}},
-    {"set":{"var":["L:{local:VCP}DISPATCH2","number"]},"value":{"add":[{"var":["L:{local:VCP}DISPATCH2","number"]},1]}},
-    {"wait_modal": {
-        "title": "CHOOSE MANUAL TYPE",
-        "text": "Select which type of manual destination",
-        "options": [
-          {"text":"Manually from map/list","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Manually from map/list"}},{"call_macro":"destination_selection_and_confirmationmsg"}]},
-          {"text":"Manually from custom DB","style":"","commands":[{"call_macro":"trace button","params":{"kind":"modal","name":"Manually from custom DB"}},{"set":{"local":"modalwait"},"value":"wait"},{"call_macro":"additional hospitals page"},{"set_dispatch_dialog":1},{"wait_for":{"local":"modalwait"},"eq":"go"},{"set":{"local":"location_name"},"value":"hospital_user"},{"sleep":0.1},{"set":{"local":"FPL_NMBR"},"value":8},{"call_macro":"routeupdate"},{"sleep":1},{"set_message":{"text":"Do you confirm location {1} (distance {0}Km) as hospital destination?","params":[{"tofixed":{"object":"hospital_user","var":"distance:km"},"digits":1},{"local":"hospital_name"}]}},{"call_macro":"user destination menu"},{"set_dispatch_dialog":0}]}
-      ]}
-    }
-  ],
   "hospital_creation_from_unhospital": [
     {"call_macro":"Query closest hospital unrelated for stretcher"},
     {"sleep":1},
@@ -1153,7 +1141,18 @@
     {"trigger":["H:{local:HXX}_SDK_EQUIP_SAFETY_PATCHES_OFF","H:{local:HXX}_SDK_PAX_1_ON","H:{local:HXX}_SDK_PAX_2_ON","H:{local:HXX}_SDK_PAX_3_ON","H:{local:HXX}_SDK_PAX_4_OFF","H:{local:HXX}_SDK_PAX_5_OFF","H:{local:HXX}_SDK_PILOT_FO_ON","H:{local:HXX}_SDK_HEMS_STRETCHER_NOPATIENT"]}
   ],
   "shared repeated block 025": [
-    {"call_macro":{"local":"prev_page2"}},
+    {"#comment":"Back to the page named by prev_page2. prev_page2 empty (null or none) falls back to the page of prev_page (briefing, homepage, dispatch): calling a macro with an empty name raised 'macro name not found' (user report 2026-11-16)."},
+    {"if": {"local":"prev_page2"}, "ne": null,
+      "then": [
+        {"if": {"local":"prev_page2"}, "ne": "none",
+          "then": [
+            {"call_macro":{"local":"prev_page2"}}
+          ],"else": [
+            {"call_macro":"shared repeated block 029"}
+        ]}
+      ],"else": [
+        {"call_macro":"shared repeated block 029"}
+    ]},
     {"set_dispatch_dialog":1},
     {"set":{"local":"prev_page2"},"value":"none"}
   ],
