@@ -263,8 +263,8 @@ assert(!/"local":"crash_peak2"\},"gte":(62500|108900|160000)/.test(crashMonitorJ
 assert(crashMonitorJson.includes('"try":[') && crashMonitorJson.includes('monitor_error') && ['first_tier_applied', 'minor_applied', 'impact_applied'].every((stageName) => crashMonitorJson.includes(stageName)), 'the impact loop must catch an error of a tick, trace it and go on, and trace its stages');
 const terminatedJson = JSON.stringify(mission.macros['crew mission terminated']);
 const abortJson = JSON.stringify(mission.macros['crew emergency divert']);
-const unavailableGate = '{"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"var":["L:DISPATCH_PHASE","number"]},"ne":7,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"}]}]}';
-assert(terminatedJson.includes(unavailableGate) && abortJson.includes(unavailableGate), 'a crew abort or termination must set the status to unavailable (7) with Update_raw from dispatchphase, only when status reports are automatic and not over an existing 7');
+const unavailableGate = '{"if":{"local":"DISPATCHER_AUTO"},"eq":0,"then":[{"if":{"and":[{"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},{"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}]},"eq":1,"then":[{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"}]}]}';
+assert(terminatedJson.includes(unavailableGate) && abortJson.includes(unavailableGate), 'a crew abort or termination must set the status to unavailable (7) with Update_raw from dispatchphase, only when status reports are automatic and not over an existing 7 or a log-off (8)');
 assert(!/"L:DISPATCH_PHASE","number"\]\},"value":[56]/.test(terminatedJson + abortJson), 'a crew abort or termination must never mark the helicopter available (5 or 6): the NEW DISPATCH thread would reopen the briefing and the crew cannot take a dispatch');
 const stateEventJson = JSON.stringify(mission.macros['crew member state event']);
 const endMenuJson = JSON.stringify(mission.macros['end menu']);

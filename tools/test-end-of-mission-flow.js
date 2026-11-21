@@ -22,14 +22,17 @@ const collect = (value, predicate, found = []) => {
 {
   // 1. Only END SHIFT ends the mission (MISSION_END_WAITING 2); nothing in the flow completes it by itself.
   const writers = Object.entries(macros).flatMap(([name, commands]) => collect(commands, (c) => c.set?.local === 'MISSION_END_WAITING' && c.value === 2).map(() => name));
-  assert.deepEqual(writers, ['end menu'], `MISSION_END_WAITING 2 may only be written by the end menu END SHIFT button: ${writers}`);
+  assert.deepEqual(writers, ['end shift'], `MISSION_END_WAITING 2 may only be written by the macro end shift (END SHIFT button or log-off status 8): ${writers}`);
   const buttons = collect(macros['end menu'], (c) => Array.isArray(c.buttonbar))[0].buttonbar;
   assert.deepEqual(buttons.map((b) => b.title), ['SUBMIT REPORT', 'END SHIFT', 'RELOAD MISSION']);
   const [submit, endShift, reload] = buttons;
   assert.deepEqual(submit.commands, [{ call_macro: 'submit report' }]);
   const names = (b) => b.commands.map((c) => c.call_macro || Object.keys(c)[0]);
-  const inner = (b) => b.commands.find((c) => c.create_thread).create_thread.commands;
-  assert.deepEqual(endShift.commands[0], { set: { local: 'archive_event' }, value: 'end_shift' });
+  const inner = (b) => (b.commands.find((c) => c.create_thread) || { create_thread: { commands: shiftCmds.find((c) => c.create_thread).create_thread.commands } }).create_thread.commands;
+  // The button only calls the macro end shift (status patch of Dr.DougRoss: the log-off status 8 of the keypads calls it too); the sequence lives there.
+  assert.deepEqual(endShift.commands, [{ call_macro: 'end shift' }]);
+  const shiftCmds = macros['end shift'];
+  assert.deepEqual(shiftCmds.find((c) => c.set?.local === 'archive_event'), { set: { local: 'archive_event' }, value: 'end_shift' });
   // The whole sequence runs in its own thread that starts with a sleep: the stack of a thread only unwinds at a sleep (RangeError of the archive, kingle 2026-11-11).
   assert.deepEqual(inner(endShift).slice(0, 2), [{ sleep: 0.02 }, { call_macro: 'archive closing dispatch' }], 'END SHIFT saves the automatic snapshot first, on a fresh stack');
   assert.ok(inner(endShift).some((c) => c.set?.local === 'MISSION_END_WAITING' && c.value === 2));

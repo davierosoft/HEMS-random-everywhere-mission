@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.50",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.51",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.50"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.51"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -6818,7 +6818,7 @@
         {"text":"Recorded operational impact: {0}","color":"gray","params":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"}]},
         {"text":"ON DUTY: waiting for the next dispatch. Keep CARLS, Wi-Fi, or Tablet 5G connected.","color":"green","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":null}],"eq":1}},
         {"text":"SHIFT TERMINATED: crew emergency report ready. Submit the report or end the shift.","color":"red","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
-        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"end_shift"},{"create_thread":{"commands":[{"sleep":0.02},{"call_macro":"archive closing dispatch"},{"set_dispatch_dialog":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},{"set":{"local":"MISSION_END_WAITING"},"value":2}]}}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"create_thread":{"commands":[{"sleep":0.02},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}}]}]},
+        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"call_macro":"end shift"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"create_thread":{"commands":[{"sleep":0.02},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}}]}]},
         {"image":"bar","show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}}
     ]}
   ],
@@ -7642,41 +7642,31 @@
         {"link":"Back to main screen","commands":[{"call_macro":"shared repeated block 029"}]},
         {"text":"- - - - - - - - - - - - - DISPATCH CONTROL WINDOW - - - - - - - - - - - - -","align":"center"},
         {"text":" "},
-        {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":100}},
+        {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":0}},
         {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":0}},
-        {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"gray","show_condition":{"and":[{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":0},{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100}],"eq":1}},
-        {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1}},
+        {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":1}},
         {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":1}},
-        {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":1}},
-        {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":2}},
+        {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":2}},
         {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":2}},
-        {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":2}},
-        {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":3}},
+        {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":3}},
         {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":3}},
-        {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":3}},
-        {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":4}},
+        {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":4}},
         {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":4}},
-        {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":4}},
-        {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":5}},
+        {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":5}},
         {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":5}},
-        {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":5}},
-        {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":6}},
+        {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":6}},
         {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":6}},
-        {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":6}},
-        {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":7}},
+        {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":7}},
         {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":7}},
-        {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":7}},
-        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":8}},
+        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":8}},
         {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":8}},
-        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":8}},
-        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":9}},
+        {"text":"{0}","params":[{"local":"rescuetrack_9"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":9}},
         {"text":"{0}","params":[{"local":"rescuetrack_9"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":9}},
-        {"text":"{0}","params":[{"local":"rescuetrack_9"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":9}},
         {"text":"- - - - - - - - - - - - REPORT STATUS TO DISPATCHER - - - - - - - - - - - -","align":"center"},
-        {"buttonbar":[{"title":" 7 ","select_condition":{"and":[{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":7},{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100}],"eq":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":7}}]}]},{"title":" 8 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":8},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":8}}]}]},{"title":" 9 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":9},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":9}}]}]}]},
-        {"buttonbar":[{"title":" 4 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":4},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":4}}]}]},{"title":" 5 ","select_condition":{"and":[{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":5},{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100}],"eq":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":5}}]}]},{"title":" 6 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":6},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":6}}]}]}]},
-        {"buttonbar":[{"title":" 1 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":1}}]}]},{"title":" 2 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":2},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":2}}]}]},{"title":" 3 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":3},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":3}}]}]}]},
-        {"buttonbar":[{"title":" * ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]},{"title":" 0 ","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":100},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":0}}]}]},{"title":" # ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]}]},
+        {"buttonbar":[{"title":" 7 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":7},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":7}}]}]},{"title":" 8 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":8},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":8}}]}]},{"title":" 9 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":9},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":9}}]}]}]},
+        {"buttonbar":[{"title":" 4 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":4},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":4}}]}]},{"title":" 5 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":5},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":5}}]}]},{"title":" 6 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":6},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":6}}]}]}]},
+        {"buttonbar":[{"title":" 1 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":1}}]}]},{"title":" 2 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":2},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":2}}]}]},{"title":" 3 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":3},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":3}}]}]}]},
+        {"buttonbar":[{"title":" * ","commands":[{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]},{"title":" 0 ","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":0},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":0}}]}]},{"title":" # ","commands":[{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]}]},
         {"text":"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -","align":"center"},
         {"text":" ","align":"center"},
         {"text":"Status reports to dispatcher are sent:","align":"center"},
@@ -31015,7 +31005,11 @@
     {"call_macro":"ground ops checkpoint","params":{"id":"go_or_wait_ok","detail":"[('wait_for':('var':['L:(local:HXX)_SDK_ROTOR_RPM','number']),'lt':90),('wait_for':('var':"}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -34466,7 +34460,11 @@
     {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":0.5},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -35126,7 +35124,11 @@
     {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":0.5},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -35758,7 +35760,11 @@
     {"wait_for":{"var":["GPS GROUND SPEED","knots"]},"lte":0.5},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -36755,12 +36761,29 @@
     ]}
   ],
   "User predestination": [
+    {"#comment":"Status 3 (on the way to the hospital) is no longer sent when the hospital destination is accepted but when the helicopter flies: collective above 32 percent and ground speed above 20 kt (Dr.DougRoss 2026-11-21). One waiting thread at a time."},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {"local":"status3_waiting"}, "ne": 1,
           "then": [
-            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":3},
-            {"call_macro":"Update_raw from dispatchphase"}
+            {"set":{"local":"status3_waiting"},"value":1},
+            {"create_thread": {
+              "commands": [
+                {"wait_for":{"var":["GROUND VELOCITY","knots"]},"gt":20},
+                {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"DISPATCHER_AUTO"},"eq":0},
+                    {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                    {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8},
+                    {"require":{"var":["L:DISPATCH_PHASE","number"]},"lt":3}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":3},
+                    {"call_macro":"Update_raw from dispatchphase"}
+                ]},
+                {"set":{"local":"status3_waiting"},"value":0}
+            ]}}
         ]}
     ]},
     {"call_macro":"user hospital WP"},
@@ -36882,7 +36905,11 @@
   "pick doctor": [
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":3},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -37101,7 +37128,11 @@
     {"set_hover_display":{"range":0}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -37697,7 +37728,11 @@
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":80},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -38433,7 +38468,11 @@
     {"call_macro":"ground ops NR gate","params":{"source":"User destination2"}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -39000,7 +39039,11 @@
     {"set_hover_display":{"range":0}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -39583,7 +39626,11 @@
     {"set_objective_title":"DESTINATION PROCEDURES IN PROGRESS","color":"yellow"},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -45222,7 +45269,11 @@
         {"call_macro":"UpdateRescueTrack"},
         {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
           "then": [
-            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+              ]}, "eq": 1,
               "then": [
                 {"set":{"local":"dispatch_phase_writer"},"value":"11 lifecycle line 1778 (DISPATCHER_AUTO 0)"},
                 {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
@@ -45296,7 +45347,11 @@
     {"call_macro":"rtb step","params":{"name":"dispatch_phase_check"}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"call_macro":"rtb step","params":{"name":"dispatch_phase_set"}},
             {"set":{"local":"dispatch_phase_writer"},"value":"11 return to base"},
@@ -45513,7 +45568,11 @@
     {"set":{"var":["L:HOLD","number"]},"value":0},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"local":"dispatch_phase_writer"},"value":"03 checklists phase 6"},
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":6},
@@ -46437,7 +46496,11 @@
     {"call_macro":"ground ops NR gate","params":{"source":"midway"}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -47489,7 +47552,11 @@
     {"call_macro":"ops progress timed","params":{"stage":"PATIENT BOARDING","seconds":150}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -47964,7 +48031,11 @@
     {"call_macro":"ops progress timed","params":{"stage":"PATIENT BOARDING","seconds":150}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -48280,7 +48351,11 @@
     {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":2},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -50953,13 +51028,25 @@
             {"set":{"var":["L:PLT{local:VCP}37","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}37","number"]},1]}}
         ]}
     ]}},
+    {"#comment":"Status patch of Dr.DougRoss: status 1 (on the way to the scene) is reported at lift-off (rotor above 50 percent and collective above 32), not when the cabin is ready; only in automatic mode, never over a later status or a log-off."},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
-          "then": [
-            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":1},
-            {"call_macro":"Update_raw from dispatchphase"}
-        ]}
+        {"create_thread": {
+          "commands": [
+            {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":50},
+            {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+            {"if": {
+              "and": [
+                {"require":{"local":"DISPATCHER_AUTO"},"eq":0},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8},
+                {"require":{"or":[{"require":{"var":["L:DISPATCH_PHASE","number"]},"lt":2},{"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":100}]},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":1},
+                {"call_macro":"Update_raw from dispatchphase"}
+            ]}
+        ]}}
     ]},
     {"if": {"local":"SECOND_DISPATCH"}, "eq": 1,
       "then": [
@@ -52843,7 +52930,8 @@
                     {"if": {
                       "or": [
                         {"require":{"var":["L:DISPATCH_PHASE","number"]},"lte":4},
-                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":7}
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":7},
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":8}
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"phase_stall_active"},"value":1},
@@ -52865,7 +52953,7 @@
         ]}
     ]}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
-    {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
+    {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
     {"set":{"local":"sd_watch"},"value":0},
     {"if": {"local":"phase_stall_code"}, "ne": "RTB_STEP",
@@ -53364,8 +53452,6 @@
           "then": [
             {"call_macro":"CARLS DF cancel"}
           ],"else": [
-            {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},
-            {"call_macro":"Update_dispatchphase from raw"},
             {"set_message":{"text":"NO ASSIGNED FUNCTION"}},
             {"sleep":5},
             {"set_message":{"text":" "}}
@@ -53376,8 +53462,6 @@
         {"if": {"var":["L:CARLS_PAGE","number"]}, "eq": 13,
           "then": [
           ],"else": [
-            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":0},
-            {"call_macro":"Update_dispatchphase from raw"},
             {"set_message":{"text":"NO ASSIGNED FUNCTION"}},
             {"sleep":5},
             {"set_message":{"text":" "}}
@@ -55306,6 +55390,7 @@
     ]},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+    {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":8},
     {"#comment":"Tester report of 2026-11-01 (170.02, Daikan, snapshot): this thread sleeps up to DISPATCH_TIME from the start of the mission. When the first dispatch was replaced meanwhile (NEXT DISPATCH, a dispatch of the menu), the thread woke up long after, found lock_random_dispatch reset to 0 by ready dispatch and DISPLAY_DISPATCH 0, and offered the old mission type at a new place with a ringtone and a map marker, while ready dispatch was still waiting for the real second dispatch: no SECOND_DISPATCH, no ACCEPT. first_dispatch_pending is raised by objective1 and lowered by every other dispatch (randomize, ready dispatch, next_dispatch, accept, menu): a first dispatch that is no longer the pending one is never offered."},
     {"call_macro":"dispatch step row","params":{"stage":"before_first_dispatch_after_waits"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_after_waits"}},
@@ -77822,7 +77907,11 @@
         {"set":{"local":"HOIST_OUT"},"value":0},
         {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
           "then": [
-            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+              ]}, "eq": 1,
               "then": [
                 {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
                 {"call_macro":"Update_raw from dispatchphase"}
@@ -80773,7 +80862,11 @@
     {"set":{"local":"HOIST_OUT"},"value":0},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -90434,23 +90527,74 @@
     {"call_macro":"chk vol"}
   ],
   "send dispatch phase": [
-    {"#comment":"Sends the status report (dispatch phase 0-9, param phase) to the dispatcher; called by the tablet keypad and by the CARLS radio keypad. Only a phase different from the current one is sent. Phases 0, 5, 6 and 7 are followed by their own threads (Acceptdispatch 0, Ready dispatch 5 and 6, Stop dispatch 7), which raise the CARLS popup (L:CARLS_TEMP 1: Sending request, then Request sent); the other phases raise it here. The report is logged in the RescueTrack list (MSG page). No tablet confirmation."},
+    {"#comment":"Sends the status report (key 0-9 of the keypad, param phase) to the dispatcher; called by the tablet keypad and by the CARLS radio keypad. Only a key different from the current one is sent. The key is translated to the internal phase (sdp_lvar) through the status table of the language (Dr.DougRoss status patch): phase 8 (log off) only after the end of the mission, phase 0 (accept) not while a dispatch is running (phase 1-4), the CARLS popup only for the phases whose own threads do not raise it (not 0, 5, 6, 7)."},
     {"if": {"var":["L:DISPATCH_PHASE_RAW","number"]}, "ne": {"param":"phase"},
       "then": [
+        {"call_macro":"rescuetrack id guard"},
+        {"set":{"local":"sdp_lvar"},"value":{"param":"phase"}},
+        {"for_each": {"static":"statusMessages{local:RESCUETRACK_ID}translation"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"param":"phase"},
+              "then": [
+                {"set":{"local":"sdp_lvar"},"value":{"struct":{"param":"$item"},"path":"LVAR"}}
+            ]},
+            {"sleep":0.01}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"sdp_lvar"},"eq":8},
+            {"require":{"local":"MISSION_END_WAITING"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set_message": {
+                "text": "{0}",
+                "params": [
+                  {"if": {"local":"RESCUETRACK_ID"},
+                    "eq": 1,
+                    "then": "ABMELDEN NUR NACH EINSATZENDE MOEGLICH",
+                    "else": "LOG OFF IS ONLY POSSIBLE AFTER THE END OF THE MISSION"
+                  }
+              ]}
+            },
+            {"return":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"sdp_lvar"},"eq":0},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"gte":1},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"lte":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set_message": {
+                "text": "{0}",
+                "params": [
+                  {"if": {"local":"RESCUETRACK_ID"},
+                    "eq": 1,
+                    "then": "EINSATZ BEREITS UEBERNOMMEN",
+                    "else": "DISPATCH ALREADY ACCEPTED"
+                  }
+              ]}
+            },
+            {"return":0}
+        ]},
         {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":{"param":"phase"}},
         {"call_macro":"Update_dispatchphase from raw"},
         {"if": {
           "and": [
-            {"require":{"param":"phase"},"ne":0},
-            {"require":{"param":"phase"},"ne":5},
-            {"require":{"param":"phase"},"ne":6},
-            {"require":{"param":"phase"},"ne":7}
+            {"require":{"local":"sdp_lvar"},"ne":0},
+            {"require":{"local":"sdp_lvar"},"ne":5},
+            {"require":{"local":"sdp_lvar"},"ne":6},
+            {"require":{"local":"sdp_lvar"},"ne":7}
           ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:CARLS_TEMP","number"]},"value":1}
         ]},
         {"set":{"local":"dispatch_phase_log"},"value":{"text":"Status sent: {0}","params":[{"local":"rescuetrack_name"}]}},
-        {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"local":"dispatch_phase_log"}}}
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"local":"dispatch_phase_log"}}},
+        {"if": {"local":"sdp_lvar"}, "eq": 8,
+          "then": [
+            {"call_macro":"end shift"}
+        ]}
     ]}
   ],
   "set station weight": [
@@ -95317,7 +95461,11 @@
     {"set":{"local":"HOIST_OUT"},"value":0},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -109804,6 +109952,20 @@
       "then": [
         {"set":{"var":["L:PAX3{local:VCP}2","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}2","number"]},1]}}
     ]}
+  ],
+  "end shift": [
+    {"#comment":"END SHIFT (button of the end menu, or the log-off status 8 of the keypads): archives the closing dispatch, closes the dispatch window, sets the internal phase 8 (resource logged off, Dr.DougRoss status patch) and MISSION_END_WAITING = 2."},
+    {"set":{"local":"archive_event"},"value":"end_shift"},
+    {"create_thread": {
+      "commands": [
+        {"sleep":0.02},
+        {"call_macro":"archive closing dispatch"},
+        {"set_dispatch_dialog":0},
+        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":8},
+        {"call_macro":"Update_raw from dispatchphase"},
+        {"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},
+        {"set":{"local":"MISSION_END_WAITING"},"value":2}
+    ]}}
   ]
 },
 
@@ -160552,7 +160714,9 @@
 
     "6. At Home base (Available)",
 
-    "7. Unavailable for dispatch"
+    "7. Unavailable for dispatch",
+
+    "8. Resource logged off"
   ],
 
   "statusMessages0translation": [
@@ -160606,7 +160770,7 @@
 
     {
       "id": 8,
-      "name": "8. Function not assigned",
+      "name": "8. Resource logged off",
       "LVAR": 8
     },
 
@@ -160618,86 +160782,86 @@
   ],
 
   "statusMessages1": [
-    "0 Notruf",
+    "0 Abgemeldet",
 
-    "1 Frei ueber Funk",
+    "1 Frei Wache",
 
-    "2 Frei auf Wache",
+    "2 Zum Berufungsort",
 
-    "3 Einsatz uebernommen",
+    "3 Am Berufungsort",
 
-    "4 Einsatzort erreicht",
+    "4 Zum Abgabeort",
 
-    "5 Sprechwunsch",
+    "5 Am Abgabeort",
 
-    "6 Ausser Dienst",
+    "6 Frei ueber Funk",
 
-    "7 Patient aufgenommen",
+    "7 Nicht Einsatzbereit",
 
-    "8 Zielklinik erreicht",
+    "8 Funktion nicht belegt",
 
-    "9 Werkstattflug Ueberfuehrung"
+    "9 Alarmiert und Quittiert"
   ],
 
   "statusMessages1translation": [
     {
       "id": 0,
-      "name": "0 Notruf",
-      "LVAR": 10
-    },
-
-    {
-      "id": 1,
-      "name": "1 Frei ueber Funk",
-      "LVAR": 5
-    },
-
-    {
-      "id": 2,
-      "name": "2 Frei auf Wache",
-      "LVAR": 6
-    },
-
-    {
-      "id": 3,
-      "name": "3 Einsatz uebernommen",
-      "LVAR": 0
-    },
-
-    {
-      "id": 4,
-      "name": "4 Einsatzort erreicht",
-      "LVAR": 2
-    },
-
-    {
-      "id": 5,
-      "name": "5 Sprechwunsch",
+      "name": "0 Abgemeldet",
       "LVAR": 8
     },
 
     {
-      "id": 6,
-      "name": "6 Ausser Dienst",
-      "LVAR": 7
+      "id": 1,
+      "name": "1 Frei Wache",
+      "LVAR": 6
     },
 
     {
-      "id": 7,
-      "name": "7 Patient aufgenommen",
+      "id": 2,
+      "name": "2 Zum Berufungsort",
+      "LVAR": 1
+    },
+
+    {
+      "id": 3,
+      "name": "3 Am Berufungsort",
+      "LVAR": 2
+    },
+
+    {
+      "id": 4,
+      "name": "4 Zum Abgabeort",
       "LVAR": 3
     },
 
     {
-      "id": 8,
-      "name": "8 Zielklinik erreicht",
+      "id": 5,
+      "name": "5 Am Abgabeort",
       "LVAR": 4
     },
 
     {
-      "id": 9,
-      "name": "9 Werkstattflug Ueberfuehrung",
+      "id": 6,
+      "name": "6 Frei ueber Funk",
+      "LVAR": 5
+    },
+
+    {
+      "id": 7,
+      "name": "7 Nicht Einsatzbereit",
+      "LVAR": 7
+    },
+
+    {
+      "id": 8,
+      "name": "8 Funktion nicht belegt",
       "LVAR": 9
+    },
+
+    {
+      "id": 9,
+      "name": "9 Alarmiert und Quittiert",
+      "LVAR": 0
     }
   ],
 
@@ -162333,39 +162497,192 @@
             {"call_macro":"CARLS buttons"},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 0,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 0"],["PREDEF MSG:","Accepted dsptc"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Alarm quitt.","else":"Accepted dsptc"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 1,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 1"],["PREDEF MSG:","OTW to scene"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Zum Ber.ort","else":"OTW to scene"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 2,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 2"],["PREDEF MSG:","At scene"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Am Ber.ort","else":"At scene"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 3,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 3"],["PREDEF MSG:","OTW to hospt"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Zum Abg.ort","else":"OTW to hospt"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 4,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 4"],["PREDEF MSG:","At hospital"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Am Abg.ort","else":"At hospital"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 5,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 5"],["PREDEF MSG:","Available"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Frei Funk","else":"Available"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 6,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 6"],["PREDEF MSG:","At home b."],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Frei Wache","else":"At home b."}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 7,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","Key 7"],["PREDEF MSG:","Not Availb"],["TX: Sent","RX: Ackwn."]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Nicht EB","else":"Not Availb"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 8,
               "then": [
-                {"set_carls_radio":{"LSK":["RTN","",""],"RSK":["","",""],"Items":[["ACTION:","No prst"],["PREDEF MSG:","None"],["TX: Sent","RX: No answer"]]}}
+                {
+                  "set_carls_radio": {
+                    "LSK": [
+                      "RTN",
+                      "",
+                      ""
+                    ],
+                    "RSK": [
+                      "",
+                      "",
+                      ""
+                    ],
+                    "Items": [
+                      ["ACTION:",{"text":"Key {0}","params":[{"var":["L:DISPATCH_PHASE_RAW","number"]}]}],
+                      ["PREDEF MSG:",{"if":{"local":"RESCUETRACK_ID"},"eq":1,"then":"Abgemeldet","else":"Logged off"}],
+                      ["TX: Sent","RX: Ackwn."]
+                  ]}
+                }
             ]},
             {"if": {"var":["L:DISPATCH_PHASE","number"]}, "eq": 9,
               "then": [

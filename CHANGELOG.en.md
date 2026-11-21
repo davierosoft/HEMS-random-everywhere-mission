@@ -1,3 +1,8 @@
+## Release 0.997 170.51
+
+- Scope: threads root and version check
+- Dispatch status reports of Dr.DougRoss: keys and phases, lift-off status 1, status 3 by collective and speed, log-off phase 8, CARLS and tablet status display
+
 ## Release 0.997 170.50
 
 - VOX pick crew without a loop (stack audit)

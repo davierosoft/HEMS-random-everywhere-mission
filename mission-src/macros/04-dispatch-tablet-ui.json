@@ -1448,6 +1448,20 @@
     {"set_dispatch_dialog":1},
     {"call_macro":"missioncount"}
   ],
+  "end shift": [
+    {"#comment":"END SHIFT (button of the end menu, or the log-off status 8 of the keypads): archives the closing dispatch, closes the dispatch window, sets the internal phase 8 (resource logged off, Dr.DougRoss status patch) and MISSION_END_WAITING = 2."},
+    {"set":{"local":"archive_event"},"value":"end_shift"},
+    {"create_thread": {
+      "commands": [
+        {"sleep":0.02},
+        {"call_macro":"archive closing dispatch"},
+        {"set_dispatch_dialog":0},
+        {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":8},
+        {"call_macro":"Update_raw from dispatchphase"},
+        {"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},
+        {"set":{"local":"MISSION_END_WAITING"},"value":2}
+    ]}}
+  ],
   "end menu": [
     {"call_macro":"refresh crew lifescore report"},
     {"call_macro":"crew members cap"},
@@ -1530,7 +1544,7 @@
         {"text":"Recorded operational impact: {0}","color":"gray","params":[{"local":"CREW_LIFESCORE_TOTAL_IMPACT"}]},
         {"text":"ON DUTY: waiting for the next dispatch. Keep CARLS, Wi-Fi, or Tablet 5G connected.","color":"green","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"eq":null}],"eq":1}},
         {"text":"SHIFT TERMINATED: crew emergency report ready. Submit the report or end the shift.","color":"red","show_condition":{"and":[{"require":{"local":"MISSION_END_WAITING"},"eq":1},{"require":{"local":"MISSION_FAILED"},"ne":null}],"eq":1}},
-        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"end_shift"},{"create_thread":{"commands":[{"sleep":0.02},{"call_macro":"archive closing dispatch"},{"set_dispatch_dialog":0},{"set":{"var":["L:DISPATCH_PHASE","number"]},"value":7},{"call_macro":"Update_raw from dispatchphase"},{"call_macro":"trace return to base","params":{"stage":"end_waiting_write","detail":"END SHIFT to=2"}},{"set":{"local":"MISSION_END_WAITING"},"value":2}]}}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"create_thread":{"commands":[{"sleep":0.02},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}}]}]},
+        {"buttonbar":[{"title":"SUBMIT REPORT","size":"large","select_condition":{"require":{"local":"SUBMITTED"},"ne":1},"commands":[{"call_macro":"submit report"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"END SHIFT","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"call_macro":"end shift"}],"show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}},{"title":"RELOAD MISSION","size":"large","select_condition":{"require":{"local":"MISSION_END_WAITING"},"eq":1},"commands":[{"set":{"local":"archive_event"},"value":"reload_mission"},{"create_thread":{"commands":[{"sleep":0.02},{"try":[{"call_macro":"archive closing dispatch"}],"catch":[{"set":{"local":"archive_stage"},"value":"failed in the button"}]},{"set":{"local":"dispatch_diag_keep"},"value":1},{"set_dispatch_dialog":0},{"set_briefing_dialog":0},{"reload_mission":1}]}}]}]},
         {"image":"bar","show_condition":{"require":{"local":"MISSION_VERSION"},"ne":null}}
     ]}
   ],
@@ -1560,41 +1574,31 @@
         {"link":"Back to main screen","commands":[{"call_macro":"shared repeated block 029"}]},
         {"text":"- - - - - - - - - - - - - DISPATCH CONTROL WINDOW - - - - - - - - - - - - -","align":"center"},
         {"text":" "},
-        {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":100}},
+        {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":0}},
         {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":0}},
-        {"text":"{0}","params":[{"local":"rescuetrack_0"}],"color":"gray","show_condition":{"and":[{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":0},{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100}],"eq":1}},
-        {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1}},
+        {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":1}},
         {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":1}},
-        {"text":"{0}","params":[{"local":"rescuetrack_1"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":1}},
-        {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":2}},
+        {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":2}},
         {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":2}},
-        {"text":"{0}","params":[{"local":"rescuetrack_2"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":2}},
-        {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":3}},
+        {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":3}},
         {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":3}},
-        {"text":"{0}","params":[{"local":"rescuetrack_3"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":3}},
-        {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":4}},
+        {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":4}},
         {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":4}},
-        {"text":"{0}","params":[{"local":"rescuetrack_4"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":4}},
-        {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":5}},
+        {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":5}},
         {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":5}},
-        {"text":"{0}","params":[{"local":"rescuetrack_5"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":5}},
-        {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":6}},
+        {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":6}},
         {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":6}},
-        {"text":"{0}","params":[{"local":"rescuetrack_6"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":6}},
-        {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":7}},
+        {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":7}},
         {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":7}},
-        {"text":"{0}","params":[{"local":"rescuetrack_7"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":7}},
-        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":8}},
+        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":8}},
         {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":8}},
-        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":8}},
-        {"text":"{0}","params":[{"local":"rescuetrack_8"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":9}},
+        {"text":"{0}","params":[{"local":"rescuetrack_9"}],"color":"white","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":9}},
         {"text":"{0}","params":[{"local":"rescuetrack_9"}],"color":"green","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":9}},
-        {"text":"{0}","params":[{"local":"rescuetrack_9"}],"color":"gray","show_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"gt":9}},
         {"text":"- - - - - - - - - - - - REPORT STATUS TO DISPATCHER - - - - - - - - - - - -","align":"center"},
-        {"buttonbar":[{"title":" 7 ","select_condition":{"and":[{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":7},{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100}],"eq":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":7}}]}]},{"title":" 8 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":8},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":8}}]}]},{"title":" 9 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":9},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":9}}]}]}]},
-        {"buttonbar":[{"title":" 4 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":4},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":4}}]}]},{"title":" 5 ","select_condition":{"and":[{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":5},{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":100}],"eq":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":5}}]}]},{"title":" 6 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":6},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":6}}]}]}]},
-        {"buttonbar":[{"title":" 1 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":1}}]}]},{"title":" 2 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":2},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":2}}]}]},{"title":" 3 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":3},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":3}}]}]}]},
-        {"buttonbar":[{"title":" * ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]},{"title":" 0 ","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"eq":100},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":0}}]}]},{"title":" # ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"lt":1},"commands":[{"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":0},{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]}]},
+        {"buttonbar":[{"title":" 7 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":7},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":7}}]}]},{"title":" 8 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":8},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":8}}]}]},{"title":" 9 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":9},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":9}}]}]}]},
+        {"buttonbar":[{"title":" 4 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":4},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":4}}]}]},{"title":" 5 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":5},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":5}}]}]},{"title":" 6 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":6},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":6}}]}]}]},
+        {"buttonbar":[{"title":" 1 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":1},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":1}}]}]},{"title":" 2 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":2},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":2}}]}]},{"title":" 3 ","select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":3},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":3}}]}]}]},
+        {"buttonbar":[{"title":" * ","commands":[{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]},{"title":" 0 ","disabled_condition":{"require":{"local":"has_location"},"eq":"no"},"select_condition":{"require":{"var":["L:DISPATCH_PHASE_RAW","number"]},"ne":0},"commands":[{"if":{"or":[{"require":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"require":{"local":"wificonnect"},"eq":"Connected"}]},"eq":1,"then":[{"call_macro":"send dispatch phase","params":{"phase":0}}]}]},{"title":" # ","commands":[{"set_message":{"text":"NO ASSIGNED FUNCTION"}},{"sleep":[1,5]},{"set_message":{"text":" "}}]}]},
         {"text":"- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -","align":"center"},
         {"text":" ","align":"center"},
         {"text":"Status reports to dispatcher are sent:","align":"center"},
@@ -1668,23 +1672,74 @@
     ]}
   ],
   "send dispatch phase": [
-    {"#comment":"Sends the status report (dispatch phase 0-9, param phase) to the dispatcher; called by the tablet keypad and by the CARLS radio keypad. Only a phase different from the current one is sent. Phases 0, 5, 6 and 7 are followed by their own threads (Acceptdispatch 0, Ready dispatch 5 and 6, Stop dispatch 7), which raise the CARLS popup (L:CARLS_TEMP 1: Sending request, then Request sent); the other phases raise it here. The report is logged in the RescueTrack list (MSG page). No tablet confirmation."},
+    {"#comment":"Sends the status report (key 0-9 of the keypad, param phase) to the dispatcher; called by the tablet keypad and by the CARLS radio keypad. Only a key different from the current one is sent. The key is translated to the internal phase (sdp_lvar) through the status table of the language (Dr.DougRoss status patch): phase 8 (log off) only after the end of the mission, phase 0 (accept) not while a dispatch is running (phase 1-4), the CARLS popup only for the phases whose own threads do not raise it (not 0, 5, 6, 7)."},
     {"if": {"var":["L:DISPATCH_PHASE_RAW","number"]}, "ne": {"param":"phase"},
       "then": [
+        {"call_macro":"rescuetrack id guard"},
+        {"set":{"local":"sdp_lvar"},"value":{"param":"phase"}},
+        {"for_each": {"static":"statusMessages{local:RESCUETRACK_ID}translation"},
+          "do": [
+            {"if": {"struct":{"param":"$item"},"path":"id"}, "eq": {"param":"phase"},
+              "then": [
+                {"set":{"local":"sdp_lvar"},"value":{"struct":{"param":"$item"},"path":"LVAR"}}
+            ]},
+            {"sleep":0.01}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"sdp_lvar"},"eq":8},
+            {"require":{"local":"MISSION_END_WAITING"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set_message": {
+                "text": "{0}",
+                "params": [
+                  {"if": {"local":"RESCUETRACK_ID"},
+                    "eq": 1,
+                    "then": "ABMELDEN NUR NACH EINSATZENDE MOEGLICH",
+                    "else": "LOG OFF IS ONLY POSSIBLE AFTER THE END OF THE MISSION"
+                  }
+              ]}
+            },
+            {"return":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"local":"sdp_lvar"},"eq":0},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"gte":1},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"lte":4}
+          ]}, "eq": 1,
+          "then": [
+            {"set_message": {
+                "text": "{0}",
+                "params": [
+                  {"if": {"local":"RESCUETRACK_ID"},
+                    "eq": 1,
+                    "then": "EINSATZ BEREITS UEBERNOMMEN",
+                    "else": "DISPATCH ALREADY ACCEPTED"
+                  }
+              ]}
+            },
+            {"return":0}
+        ]},
         {"set":{"var":["L:DISPATCH_PHASE_RAW","number"]},"value":{"param":"phase"}},
         {"call_macro":"Update_dispatchphase from raw"},
         {"if": {
           "and": [
-            {"require":{"param":"phase"},"ne":0},
-            {"require":{"param":"phase"},"ne":5},
-            {"require":{"param":"phase"},"ne":6},
-            {"require":{"param":"phase"},"ne":7}
+            {"require":{"local":"sdp_lvar"},"ne":0},
+            {"require":{"local":"sdp_lvar"},"ne":5},
+            {"require":{"local":"sdp_lvar"},"ne":6},
+            {"require":{"local":"sdp_lvar"},"ne":7}
           ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:CARLS_TEMP","number"]},"value":1}
         ]},
         {"set":{"local":"dispatch_phase_log"},"value":{"text":"Status sent: {0}","params":[{"local":"rescuetrack_name"}]}},
-        {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"local":"dispatch_phase_log"}}}
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":{"local":"dispatch_phase_log"}}},
+        {"if": {"local":"sdp_lvar"}, "eq": 8,
+          "then": [
+            {"call_macro":"end shift"}
+        ]}
     ]}
   ],
   "events creator": [

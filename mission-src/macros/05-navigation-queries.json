@@ -6291,12 +6291,29 @@
     ]}
   ],
   "User predestination": [
+    {"#comment":"Status 3 (on the way to the hospital) is no longer sent when the hospital destination is accepted but when the helicopter flies: collective above 32 percent and ground speed above 20 kt (Dr.DougRoss 2026-11-21). One waiting thread at a time."},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {"local":"status3_waiting"}, "ne": 1,
           "then": [
-            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":3},
-            {"call_macro":"Update_raw from dispatchphase"}
+            {"set":{"local":"status3_waiting"},"value":1},
+            {"create_thread": {
+              "commands": [
+                {"wait_for":{"var":["GROUND VELOCITY","knots"]},"gt":20},
+                {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+                {"if": {
+                  "and": [
+                    {"require":{"local":"DISPATCHER_AUTO"},"eq":0},
+                    {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                    {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8},
+                    {"require":{"var":["L:DISPATCH_PHASE","number"]},"lt":3}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":3},
+                    {"call_macro":"Update_raw from dispatchphase"}
+                ]},
+                {"set":{"local":"status3_waiting"},"value":0}
+            ]}}
         ]}
     ]},
     {"call_macro":"user hospital WP"},
@@ -6418,7 +6435,11 @@
   "pick doctor": [
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":3},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -6637,7 +6658,11 @@
     {"set_hover_display":{"range":0}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -7336,7 +7361,11 @@
     {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"lt":80},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -8201,7 +8230,11 @@
     {"set_hover_display":{"range":0}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}
@@ -8784,7 +8817,11 @@
     {"set_objective_title":"DESTINATION PROCEDURES IN PROGRESS","color":"yellow"},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":4},
             {"call_macro":"Update_raw from dispatchphase"}

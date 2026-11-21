@@ -1791,7 +1791,11 @@
         {"call_macro":"UpdateRescueTrack"},
         {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
           "then": [
-            {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+            {"if": {
+              "and": [
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+              ]}, "eq": 1,
               "then": [
                 {"set":{"local":"dispatch_phase_writer"},"value":"11 lifecycle line 1778 (DISPATCHER_AUTO 0)"},
                 {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":5},
@@ -2406,7 +2410,11 @@
     {"call_macro":"rtb step","params":{"name":"dispatch_phase_check"}},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
+        {"if": {
+          "and": [
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+            {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}
+          ]}, "eq": 1,
           "then": [
             {"call_macro":"rtb step","params":{"name":"dispatch_phase_set"}},
             {"set":{"local":"dispatch_phase_writer"},"value":"11 return to base"},
@@ -4876,13 +4884,25 @@
             {"set":{"var":["L:PLT{local:VCP}37","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}37","number"]},1]}}
         ]}
     ]}},
+    {"#comment":"Status patch of Dr.DougRoss: status 1 (on the way to the scene) is reported at lift-off (rotor above 50 percent and collective above 32), not when the cabin is ready; only in automatic mode, never over a later status or a log-off."},
     {"if": {"local":"DISPATCHER_AUTO"}, "eq": 0,
       "then": [
-        {"if": {"var":["L:DISPATCH_PHASE","number"]}, "ne": 7,
-          "then": [
-            {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":1},
-            {"call_macro":"Update_raw from dispatchphase"}
-        ]}
+        {"create_thread": {
+          "commands": [
+            {"wait_for":{"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]},"gt":50},
+            {"wait_for":{"var":["L:Collective","number"]},"gt":32},
+            {"if": {
+              "and": [
+                {"require":{"local":"DISPATCHER_AUTO"},"eq":0},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+                {"require":{"var":["L:DISPATCH_PHASE","number"]},"ne":8},
+                {"require":{"or":[{"require":{"var":["L:DISPATCH_PHASE","number"]},"lt":2},{"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":100}]},"eq":1}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"var":["L:DISPATCH_PHASE","number"]},"value":1},
+                {"call_macro":"Update_raw from dispatchphase"}
+            ]}
+        ]}}
     ]},
     {"if": {"local":"SECOND_DISPATCH"}, "eq": 1,
       "then": [
@@ -6766,7 +6786,8 @@
                     {"if": {
                       "or": [
                         {"require":{"var":["L:DISPATCH_PHASE","number"]},"lte":4},
-                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":7}
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":7},
+                        {"require":{"var":["L:DISPATCH_PHASE","number"]},"eq":8}
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"phase_stall_active"},"value":1},
@@ -6788,7 +6809,7 @@
         ]}
     ]}},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"eq":1},{"wait_for":{"local":"wificonnect"},"eq":"Connected"}],"eq":1},
-    {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7}],"eq":1},
+    {"and":[{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"gt":4},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},{"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":8}],"eq":1},
     {"wait_for":{"local":"CREW_EMERGENCY_ACTIVE"},"ne":"yes"},
     {"set":{"local":"sd_watch"},"value":0},
     {"if": {"local":"phase_stall_code"}, "ne": "RTB_STEP",
@@ -7234,6 +7255,7 @@
     ]},
     {"or":[{"wait_for":{"var":["L:CARLS_CONNECTED","number"]},"ne":0},{"wait_for":{"local":"wificonnect"},"ne":"Disconnected"}],"eq":1},
     {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":7},
+    {"wait_for":{"var":["L:DISPATCH_PHASE","number"]},"ne":8},
     {"#comment":"Tester report of 2026-11-01 (170.02, Daikan, snapshot): this thread sleeps up to DISPATCH_TIME from the start of the mission. When the first dispatch was replaced meanwhile (NEXT DISPATCH, a dispatch of the menu), the thread woke up long after, found lock_random_dispatch reset to 0 by ready dispatch and DISPLAY_DISPATCH 0, and offered the old mission type at a new place with a ringtone and a map marker, while ready dispatch was still waiting for the real second dispatch: no SECOND_DISPATCH, no ACCEPT. first_dispatch_pending is raised by objective1 and lowered by every other dispatch (randomize, ready dispatch, next_dispatch, accept, menu): a first dispatch that is no longer the pending one is never offered."},
     {"call_macro":"dispatch step row","params":{"stage":"before_first_dispatch_after_waits"}},
     {"call_macro":"trace dispatch handoff","params":{"stage":"first_dispatch_after_waits"}},
