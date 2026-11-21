@@ -1039,7 +1039,12 @@
   ],
   "voice app connect": [
     {"#comment":"Voice app mode (L:AUDIOINHIBIT 1, voice code APP): connects to the voice server of the HPG Mission Companion at once, declares the voice pack EN (version 2 at least), makes the checklist voice (actor 11) the voice of every text without an actor tag and asks for new crew names. The pack texts are chosen by the program when the mission increments the LVARs L:xxxAPPnn; free texts (dispatch) are spoken with speak."},
-    {"if": {"local":"VCP"}, "eq": "APP",
+    {"#comment":"Recorded voices (Companion mode recorded, L:HMC_APP_RECORDED 1): the Companion has no voice server, it plays the recorded wav of the variables L:xxxAPPnn. No connection is attempted: the refused connection used to call voice app lost, which wrote L:AUDIOINHIBIT 0, the Companion wrote 1 again and VCP flipped between APP and the wav pack about every 3 s (Dr.DougRoss log 2026-11-20, 1555 resets)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"var":["L:HMC_APP_RECORDED","number"]},"ne":1}
+      ]}, "eq": 1,
       "then": [
         {"set":{"local":"VOICE_APP_T0"},"value":{"var":["L:MISSION_TIME","number"]}},
         {"set":{"local":"voice_app_lost"},"value":"no"},
@@ -5208,6 +5213,13 @@
         {"call_macro":"voice zone nearest","params":{"object":"pax3"}},
         {"call_macro":"voice zone class"},
         {"set":{"local":"vc_zc"},"value":{"local":"vz_zone"}},
+        {"#comment":"Wind and rotor noise of the Mission Companion (user rules 2026-11-21): the distance in metres of the nearest crew member outside (0 = nobody outside; the same objects as the zone above, read continuously) and the ground speed in knots in steps of 5. The Companion reads the doors, the seats, the collective and the rotor itself from the aircraft variables."},
+        {"set":{"local":"vc_dist"},"value":0},
+        {"if": {"local":"vz_best"}, "lt": 9999,
+          "then": [
+            {"set":{"local":"vc_dist"},"value":{"floor":{"add":[{"local":"vz_best"},0.5]}}}
+        ]},
+        {"set":{"local":"vc_gs"},"value":{"multiply":[{"floor":{"add":[{"divide":[{"var":["GPS GROUND SPEED","knots"]},5]},0.5]}},5]}},
         {"set":{"local":"vc_chat"},"value":6},
         {"if": {"global":"CREW_CHATTER"}, "eq": 1,
           "then": [
@@ -5217,7 +5229,7 @@
           "then": [
             {"set":{"local":"vc_chat"},"value":1}
         ]},
-        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"},{"local":"vc_zc"},{"local":"vc_air"}]}},
+        {"set":{"local":"vc_sig"},"value":{"text":"{0}/{1}/{2}/{3}/{4}/{5}/{6}/{7}/{8}/{9}/{10}/{11}","params":[{"local":"vc_chat"},{"local":"vc_off"},{"local":"vc_mute"},{"local":"vc_mask"},{"local":"vc_exist"},{"local":"vc_base"},{"local":"vc_zt"},{"local":"vc_zg"},{"local":"vc_zc"},{"local":"vc_air"},{"local":"vc_dist"},{"local":"vc_gs"}]}},
         {"if": {"local":"vc_sig"}, "ne": {"local":"vc_last_sig"},
           "then": [
             {"set":{"local":"vc_last_sig"},"value":{"local":"vc_sig"}},
@@ -5231,6 +5243,8 @@
             {"set":{"var":["L:HMC_ZONE_TECH","number"]},"value":{"local":"vc_zt"}},
             {"set":{"var":["L:HMC_ZONE_GROUND","number"]},"value":{"local":"vc_zg"}},
             {"set":{"var":["L:HMC_ZONE_CREW","number"]},"value":{"local":"vc_zc"}},
+            {"set":{"var":["L:HMC_CREW_DIST","number"]},"value":{"local":"vc_dist"}},
+            {"set":{"var":["L:HMC_GS_KT","number"]},"value":{"local":"vc_gs"}},
             {"set":{"var":["L:HMC_CTX_VALID","number"]},"value":1}
         ]}
     ]}
@@ -6522,6 +6536,7 @@
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"no"},
     {"set":{"global":"COND_MISSIONS"},"value":"no"},
     {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
+    {"set":{"global":"FLIGHT_CONSTRAINTS"},"value":"no"},
     {"set":{"global":"SPEECH_TIPS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
@@ -6615,6 +6630,7 @@
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"no"},
     {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
+    {"set":{"global":"FLIGHT_CONSTRAINTS"},"value":"no"},
     {"set":{"global":"SPEECH_TIPS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":1},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
@@ -6708,6 +6724,7 @@
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"yes"},
     {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
+    {"set":{"global":"FLIGHT_CONSTRAINTS"},"value":"no"},
     {"set":{"global":"SPEECH_TIPS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":0},
     {"set":{"global":"ULTRASHORT"},"value":"no"},
@@ -6801,6 +6818,7 @@
     {"set":{"global":"LIFE_FREEZE_NEAR"},"value":"yes"},
     {"set":{"global":"COND_MISSIONS"},"value":"yes"},
     {"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},
+    {"set":{"global":"FLIGHT_CONSTRAINTS"},"value":"no"},
     {"set":{"global":"SPEECH_TIPS"},"value":"yes"},
     {"set":{"var":["L:{local:HXX}_PERSIST_MISSION_WAIT_TIME","number"]},"value":2},
     {"set":{"global":"ULTRASHORT"},"value":"no"},

@@ -9,16 +9,20 @@ const path = require('node:path');
 const rd = (f) => JSON.parse(fs.readFileSync(path.join(__dirname, '../mission-src/macros', f), 'utf8'));
 const m07 = rd('07-patient-medical.json'), m04 = rd('04-dispatch-tablet-ui.json');
 const J = JSON.stringify;
-// N2: GROUND only with an ambulance and a ground-suitable patient, reason shown, checked again at the click
+// N2, rules of the owner 2026-11-20: GROUND needs a free ambulance, HEMS one patient only; the mistake is allowed and has consequences
 const check = J(m07['manual transport check']);
-for (const frag of ['"has_object":"ambulance1"', '"has_object":"ambulance2"', '"gte":90', '"gte":50', '"lte":120', '"gte":8', '"L:HEALTH"', '"L:HEALTH2"', '"L:HEALTH3"', 'GROUND not available: no ambulance on scene', 'GROUND not available: patient not stable for ground transport']) assert.ok(check.includes(frag), `manual transport check: ${frag}`);
+for (const frag of ['"has_object":"ambulance1"', '"has_object":"ambulance2"', 'GROUND not available: no ambulance on scene', 'GROUND not available: every ambulance on scene already takes a patient', 'Only one patient can go by helicopter', '"mtc_other_ground"', '"mtc_other_hems"', '"medical_display_hems_ok"', '"medical_display_ground_ok"', '"gte":90', '"L:HEALTH2"', '"L:HEALTH3"']) assert.ok(check.includes(frag), `manual transport check: ${frag}`);
 assert.ok(!check.includes('AMBULOCK'), 'the manual choice stays above the heli-only setting (live suitability rule)');
 const complete = J(m07['complete manual patient visit']);
-assert.ok(complete.includes('"manual transport check"') && complete.includes('"medical_display_ground_ok"'), 'GROUND is checked again at the click');
+assert.ok(complete.includes('"manual transport check"') && complete.includes('"medical_display_ground_ok"') && complete.includes('"medical_display_hems_ok"'), 'both choices are checked again at the click');
+for (const n of [1, 2, 3]) assert.ok(complete.includes(`"manual_p${n}_transport_recommend"},"eq":"helicopter"`) && complete.includes('Unstable patient: ground transport is risky'), `patient ${n}: GROUND for an unstable patient counts an error`);
 const health = J(m07['patient health']);
-assert.ok(health.includes('"disabled_condition":{"require":{"local":"medical_display_ground_ok"},"ne":1}'), 'GROUND button follows ground_ok');
-assert.ok(health.includes('"params":[{"local":"medical_display_ground_reason"}],"color":"orange"'), 'reason line');
+assert.ok(health.includes('"disabled_condition":{"require":{"local":"medical_display_ground_ok"},"ne":1}') && health.includes('"disabled_condition":{"require":{"local":"medical_display_hems_ok"},"ne":1}'), 'both buttons follow their flags');
+assert.ok(health.includes('"params":[{"local":"medical_display_ground_reason"}],"color":"orange"') && health.includes('"params":[{"local":"medical_display_hems_reason"}],"color":"orange"'), 'reason lines');
 assert.ok(J(m04['sync medical patient display']).includes('"manual transport check"'), 'refresh hook');
+// the live suitability follows the manual GROUND choice above the vital signs
+const suit = J(rd('17-multipatient-runtime.json')['multipatient registry live ground suitability']);
+for (const n of [1, 2, 3]) assert.ok(suit.includes(`{"require":{"or":[{"require":{"local":"manual_p${n}_transport_choice"},"eq":"ambulance"},{"require":{"and":[`), `patient ${n}: manual GROUND above the vital-sign gate`);
 // N3: transport evaluation
 for (const n of [1, 2, 3]) {
   const c = J(m07['complete manual patient visit']);

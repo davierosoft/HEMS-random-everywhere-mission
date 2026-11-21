@@ -1,3 +1,49 @@
+## Release 0.997 170.49
+
+- Scene 76 gets its own scene type 34 (unique among the vehicle scenes)
+- Carried scope of 170.42-170.48 (DF beacon and ELT threads, savegame pages, voice context, speech commands page, snapshot diagnostics)
+- Ambulance 2 clearance on every route, scenes 75-79 with pathology tables 108-112, flight constraint profiles and minimal flight constraints (option off by default), DE/FR/IT texts
+
+## Release 0.997 170.48
+
+- FND tuned to the saved DF frequency as the first action of objective1 (255.000 during load), carried scope of 170.42-170.47
+
+## Release 0.997 170.47
+
+- Carried scope of 170.42-170.46 (DF, ELT, savegame, speech commands page, tablet pages)
+- Wind and rotor noise context for the Mission Companion: `voice context publish` publishes `L:HMC_CREW_DIST` (metres to the nearest crew member outside) and `L:HMC_GS_KT` (ground speed, steps of 5 kt); the Companion adds the noise under intercom and crew radio lines (issue 166)
+
+## Release 0.997 170.47
+
+- Wind and rotor noise context: crew distance in metres and ground speed published for the Companion
+
+## Release 0.997 170.46
+
+- DF set_df waits for end of load (ELT threads), autosave slot 0 details read from the table, DF beacon lookup fix and set_df diagnostics, tablet pages 170.43
+
+## Release 0.997 170.45
+
+- DF beacon object lookup fixed (param object instead of interpolated text), set_df diagnostics in the snapshot, DF tuning logic and 170.43 tablet pages
+
+## Release 0.997 170.44
+
+- DF tuning logic and the 170.43 tablet pages (BACK of the voice commands page, SAY tips line on every page with the status bar)
+- DF tuning logic: CARLS and FND get the same value, FND follows the saved DF page frequency without a beacon, DF diagnostics in the snapshot
+
+## Release 0.997 170.43
+
+- Voice commands page BACK returns to Settings, SAY tips line on every page with the status bar
+
+## Release 0.997 170.42
+
+- version string 170.42
+- Recorded voices: no voice server connection when the Companion publishes L:HMC_APP_RECORDED (AUDIOINHIBIT reset loop)
+
+## Release 0.997 170.41
+
+- Scope reconciliation
+- Manual transport choices: free GROUND with consequences, one patient by helicopter, N2-N8 of the next patch, GROUND hand-over fix
+
 ## Release 0.997 170.40
 
 - Scope reconciliation against the delivered 170.39 baseline

@@ -20,10 +20,10 @@ const collect = (value, predicate, found = []) => {
   return found;
 };
 
-// 1. the data: the 32 accidents with a cond field (the paraglider 17 and the glacier 42 are search and rescue calls that follow the conditions; the calls for missing people never do), only known codes
+// 1. the data: the 34 accidents with a cond field (the paraglider 17 and the glacier 42 are search and rescue calls that follow the conditions; the calls for missing people never do), only known codes
 const restricted = data.accidents.filter((a) => a.cond === 1);
 assert.deepEqual(restricted.map((a) => a.ID_CARD).sort((a, b) => a - b),
-  [1, 4, 6, 7, 8, 11, 13, 14, 15, 17, 22, 23, 33, 34, 37, 38, 39, 41, 42, 43, 45, 47, 49, 50, 60, 61, 63, 64, 70, 71, 72, 74], 'the 32 missions that depend on the conditions');
+  [1, 4, 6, 7, 8, 11, 13, 14, 15, 17, 22, 23, 33, 34, 37, 38, 39, 41, 42, 43, 45, 47, 49, 50, 60, 61, 63, 64, 70, 71, 72, 74, 75, 77], 'the 34 missions that depend on the conditions');
 for (const a of data.accidents) {
   if (a.SAR === 'yes' && ![17, 42].includes(a.ID_CARD)) assert.ok(!('cond' in a), `${a.ID_CARD}: a call for a missing person is never restricted`);
   if (!('cond' in a)) for (const k of Object.keys(a)) assert.ok(!k.startsWith('cond_'), `${a.ID_CARD}: cond_* fields only with cond 1`);
@@ -121,9 +121,9 @@ assert.equal(fit(byId(63), { ...base, mn: 6 }), 0, 'hunting in June: no');
 assert.equal(fit(byId(42), { ...base, mn: 3, temp: 0, t1300: t1300(0, 1000) }), 1, 'avalanche in March, freezing: yes');
 assert.equal(fit(byId(17), { ...base, mn: 0, precip: 2 }), 1, 'an unknown month does not restrict the season');
 // the missions without cond are always eligible, whatever the situation
-assert.ok(data.accidents.filter((a) => a.cond !== 1).length === data.accidents.length - 32, 'the other missions have no condition at all');
+assert.ok(data.accidents.filter((a) => a.cond !== 1).length === data.accidents.length - 34, 'the other missions have no condition at all');
 
 // 6. the profiles that turn it on by default
 assert.ok(text('aircraft factory EXPERT PILOT').includes('"COND_MISSIONS"') && text('aircraft factory EXPERT HEMS').includes('"COND_MISSIONS"'), 'both expert profiles set the option');
 
-console.log('Condition missions PASS: 32 missions with conditions (no call for a missing person), the option in the profiles (expert on, rookie and default off), the tip CND, the decision model on typical situations. Simulator reads (month, wind, temperature at 1300 m) PENDING.');
+console.log('Condition missions PASS: 34 missions with conditions (no call for a missing person), the option in the profiles (expert on, rookie and default off), the tip CND, the decision model on typical situations. Simulator reads (month, wind, temperature at 1300 m) PENDING.');

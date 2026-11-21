@@ -1728,8 +1728,9 @@
         {"text":"ALL CLINICAL PHASES COMPLETE. REVIEW AND SIGN OFF.","color":"green","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"review"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
         {"buttonbar":[{"title":"COMPLETE VISIT","color":"green","commands":[{"call_macro":"advance manual patient visit"}]}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"review"},{"require":{"local":"medical_display_patientlife"},"ne":"died"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
         {"text":"VISIT SIGNED OFF - SELECT TRANSPORT","color":"yellow","align":"center","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
-        {"buttonbar":[{"title":"HEMS PRIORITY","commands":[{"call_macro":"complete manual patient visit","params":{"transport":"helicopter"}}]},{"title":"GROUND","commands":[{"call_macro":"complete manual patient visit","params":{"transport":"ambulance"}}],"disabled_condition":{"require":{"local":"medical_display_ground_ok"},"ne":1}}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
+        {"buttonbar":[{"title":"HEMS PRIORITY","commands":[{"call_macro":"complete manual patient visit","params":{"transport":"helicopter"}}],"disabled_condition":{"require":{"local":"medical_display_hems_ok"},"ne":1}},{"title":"GROUND","commands":[{"call_macro":"complete manual patient visit","params":{"transport":"ambulance"}}],"disabled_condition":{"require":{"local":"medical_display_ground_ok"},"ne":1}}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
         {"text":"{0}","params":[{"local":"medical_display_ground_reason"}],"color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}},{"require":{"local":"medical_display_ground_ok"},"ne":1}],"eq":1}},
+        {"text":"{0}","params":[{"local":"medical_display_hems_reason"}],"color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}},{"require":{"local":"medical_display_hems_ok"},"ne":1}],"eq":1}},
         {"text":"MANUAL VISIT COMPLETED - {0} transport selected.","color":"green","params":[{"local":"medical_display_manual_transport"}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"complete"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"PATIENT DIED - MANUAL VISIT CLOSED.","color":"red","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"aborted"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"TRANSPORT: {0}","params":[{"local":"medical_display_decision_text"}],"color":"yellow","show_condition":{"and":[{"require":{"local":"medical_display_decision_show"},"eq":1},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
@@ -7179,7 +7180,7 @@
     ]}
   ],
   "manual transport check": [
-    {"#comment":"Next patch of Dr.DougRoss 2026-11-19 (N2), adapted: decides whether GROUND may be chosen at the end of a manual visit (param patient 1-3). GROUND needs an ambulance on scene and a ground-suitable patient: SpO2 >= 90, HR 50-120, GCS >= 8, L:HEALTH not 1, the same vital-sign values as multipatient registry live ground suitability, so a GROUND choice is never taken back by the helicopter reserve. The manual choice stays above the always-by-helicopter setting and the Life Score thresholds (rule of the live suitability). Writes medical_display_ground_ok and medical_display_ground_reason."},
+    {"#comment":"Transport choice of a manual visit (rules of the owner, 2026-11-20, after the talk with Dr.DougRoss). The player may make the mistake and the consequences follow: GROUND is possible for any patient while an ambulance on scene is still free (one patient per ambulance), HEMS for one patient only (never two by helicopter). Combinations: 1 patient either; 2 patients one HEMS and one GROUND, or both GROUND; 3 patients one HEMS and two GROUND, or all three GROUND (the HEMS crew returns to the helicopter). A patient who is not stable (SpO2 < 90, HR outside 50-120, GCS < 8, L:HEALTH 1) is recommended HEMS: GROUND for him counts an error and costs Life Score. The helicopter reserve and the live ground suitability follow the manual choice. Writes medical_display_ground_ok / _reason, medical_display_hems_ok / _reason and manual_pN_transport_recommend (param patient 1-3)."},
     {"if": {"param":"patient"}, "eq": 1,
       "then": [
         {"set":{"local":"mtc_spo2"},"value":{"local":"SPO2"}},
@@ -7204,33 +7205,95 @@
     {"set":{"local":"mtc_amb"},"value":0},
     {"if": {"has_object":"ambulance1"}, "eq": 1,
       "then": [
-        {"set":{"local":"mtc_amb"},"value":1}
+        {"set":{"local":"mtc_amb"},"value":{"add":[{"local":"mtc_amb"},1]}}
     ]},
     {"if": {"has_object":"ambulance2"}, "eq": 1,
       "then": [
-        {"set":{"local":"mtc_amb"},"value":1}
+        {"set":{"local":"mtc_amb"},"value":{"add":[{"local":"mtc_amb"},1]}}
+    ]},
+    {"set":{"local":"mtc_other_ground"},"value":0},
+    {"set":{"local":"mtc_other_hems"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient"},"ne":1},
+        {"require":{"local":"manual_p1_transport_choice"},"eq":"ambulance"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_other_ground"},"value":{"add":[{"local":"mtc_other_ground"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient"},"ne":1},
+        {"require":{"local":"manual_p1_transport_choice"},"eq":"helicopter"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_other_hems"},"value":{"add":[{"local":"mtc_other_hems"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient"},"ne":2},
+        {"require":{"local":"manual_p2_transport_choice"},"eq":"ambulance"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_other_ground"},"value":{"add":[{"local":"mtc_other_ground"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient"},"ne":2},
+        {"require":{"local":"manual_p2_transport_choice"},"eq":"helicopter"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_other_hems"},"value":{"add":[{"local":"mtc_other_hems"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient"},"ne":3},
+        {"require":{"local":"manual_p3_transport_choice"},"eq":"ambulance"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_other_ground"},"value":{"add":[{"local":"mtc_other_ground"},1]}}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"patient"},"ne":3},
+        {"require":{"local":"manual_p3_transport_choice"},"eq":"helicopter"}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_other_hems"},"value":{"add":[{"local":"mtc_other_hems"},1]}}
     ]},
     {"set":{"local":"medical_display_ground_ok"},"value":0},
-    {"if": {"local":"mtc_amb"}, "ne": 1,
+    {"set":{"local":"medical_display_ground_reason"},"value":""},
+    {"if": {"local":"mtc_amb"}, "eq": 0,
       "then": [
         {"set":{"local":"medical_display_ground_reason"},"value":"GROUND not available: no ambulance on scene"}
       ],"else": [
-        {"if": {
-          "and": [
-            {"require":{"local":"mtc_spo2"},"gte":90},
-            {"require":{"local":"mtc_hr"},"gte":50},
-            {"require":{"local":"mtc_hr"},"lte":120},
-            {"require":{"local":"mtc_gcs"},"gte":8},
-            {"require":{"local":"mtc_health"},"ne":1}
-          ]}, "eq": 1,
+        {"if": {"local":"mtc_amb"}, "gt": {"local":"mtc_other_ground"},
           "then": [
-            {"set":{"local":"medical_display_ground_ok"},"value":1},
-            {"set":{"local":"medical_display_ground_reason"},"value":""}
+            {"set":{"local":"medical_display_ground_ok"},"value":1}
           ],"else": [
-            {"set":{"local":"medical_display_ground_reason"},"value":"GROUND not available: patient not stable for ground transport"}
+            {"set":{"local":"medical_display_ground_reason"},"value":"GROUND not available: every ambulance on scene already takes a patient"}
         ]}
     ]},
-    {"#comment":"N3: recommendation. Helicopter when GROUND is not possible, ambulance above LIFESCORE_THR_HI, between the thresholds both choices are correct (either)."},
+    {"set":{"local":"medical_display_hems_ok"},"value":1},
+    {"set":{"local":"medical_display_hems_reason"},"value":""},
+    {"if": {"local":"mtc_other_hems"}, "gt": 0,
+      "then": [
+        {"set":{"local":"medical_display_hems_ok"},"value":0},
+        {"set":{"local":"medical_display_hems_reason"},"value":"Only one patient can go by helicopter: choose GROUND for this one"}
+    ]},
+    {"set":{"local":"mtc_stable"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"mtc_spo2"},"gte":90},
+        {"require":{"local":"mtc_hr"},"gte":50},
+        {"require":{"local":"mtc_hr"},"lte":120},
+        {"require":{"local":"mtc_gcs"},"gte":8},
+        {"require":{"local":"mtc_health"},"ne":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_stable"},"value":1}
+    ]},
+    {"#comment":"Recommendation: HEMS for a patient who is not stable; for a stable one the ambulance above LIFESCORE_THR_HI, between the thresholds both are correct."},
     {"set":{"local":"mtc_recommend"},"value":"helicopter"},
     {"if": {"param":"patient"}, "eq": 1,
       "then": [
@@ -7244,7 +7307,7 @@
       "then": [
         {"set":{"local":"mtc_ls"},"value":{"local":"LIFESCORE3"}}
     ]},
-    {"if": {"local":"medical_display_ground_ok"}, "eq": 1,
+    {"if": {"local":"mtc_stable"}, "eq": 1,
       "then": [
         {"set":{"local":"mtc_recommend"},"value":"either"},
         {"if": {"local":"mtc_ls"}, "gt": {"global":"LIFESCORE_THR_HI"},
@@ -7278,6 +7341,15 @@
           "then": [
             {"set_message":{"text":"{0}","params":[{"local":"medical_display_ground_reason"}]}},
             {"return":0}
+        ]},
+        {"if": {
+          "and": [
+            {"require":{"param":"transport"},"eq":"helicopter"},
+            {"require":{"local":"medical_display_hems_ok"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set_message":{"text":"{0}","params":[{"local":"medical_display_hems_reason"}]}},
+            {"return":0}
         ]}
     ]},
     {"if": {
@@ -7287,6 +7359,21 @@
         {"require":{"local":"manual_p1_state"},"eq":"transport"}
       ]}, "eq": 1,
       "then": [
+        {"if": {
+          "and": [
+            {"require":{"param":"transport"},"eq":"ambulance"},
+            {"require":{"local":"manual_p1_transport_recommend"},"eq":"helicopter"}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"manual_p1_error_count"}, "eq": null,
+              "then": [
+                {"set":{"local":"manual_p1_error_count"},"value":0}
+            ]},
+            {"set":{"local":"manual_p1_error_count"},"value":{"add":[{"local":"manual_p1_error_count"},1]}},
+            {"set":{"local":"LIFESCORE"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE"},{"floor":{"rand":[2,6]}}]},0,100]}},
+            {"set":{"local":"manual_p1_transport_feedback"},"value":"Unstable patient: ground transport is risky (transport choice counted as error)"},
+            {"set_message":{"text":"{0}","params":[{"local":"manual_p1_transport_feedback"}]}}
+        ]},
         {"if": {
           "and": [
             {"require":{"param":"transport"},"eq":"helicopter"},
@@ -7323,6 +7410,21 @@
       "then": [
         {"if": {
           "and": [
+            {"require":{"param":"transport"},"eq":"ambulance"},
+            {"require":{"local":"manual_p2_transport_recommend"},"eq":"helicopter"}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"manual_p2_error_count"}, "eq": null,
+              "then": [
+                {"set":{"local":"manual_p2_error_count"},"value":0}
+            ]},
+            {"set":{"local":"manual_p2_error_count"},"value":{"add":[{"local":"manual_p2_error_count"},1]}},
+            {"set":{"local":"LIFESCORE2"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE2"},{"floor":{"rand":[2,6]}}]},0,100]}},
+            {"set":{"local":"manual_p2_transport_feedback"},"value":"Unstable patient: ground transport is risky (transport choice counted as error)"},
+            {"set_message":{"text":"{0}","params":[{"local":"manual_p2_transport_feedback"}]}}
+        ]},
+        {"if": {
+          "and": [
             {"require":{"param":"transport"},"eq":"helicopter"},
             {"require":{"local":"manual_p2_transport_recommend"},"eq":"ambulance"}
           ]}, "eq": 1,
@@ -7355,6 +7457,21 @@
         {"require":{"local":"manual_p3_state"},"eq":"transport"}
       ]}, "eq": 1,
       "then": [
+        {"if": {
+          "and": [
+            {"require":{"param":"transport"},"eq":"ambulance"},
+            {"require":{"local":"manual_p3_transport_recommend"},"eq":"helicopter"}
+          ]}, "eq": 1,
+          "then": [
+            {"if": {"local":"manual_p3_error_count"}, "eq": null,
+              "then": [
+                {"set":{"local":"manual_p3_error_count"},"value":0}
+            ]},
+            {"set":{"local":"manual_p3_error_count"},"value":{"add":[{"local":"manual_p3_error_count"},1]}},
+            {"set":{"local":"LIFESCORE3"},"value":{"clamp":[{"subtract":[{"local":"LIFESCORE3"},{"floor":{"rand":[2,6]}}]},0,100]}},
+            {"set":{"local":"manual_p3_transport_feedback"},"value":"Unstable patient: ground transport is risky (transport choice counted as error)"},
+            {"set_message":{"text":"{0}","params":[{"local":"manual_p3_transport_feedback"}]}}
+        ]},
         {"if": {
           "and": [
             {"require":{"param":"transport"},"eq":"helicopter"},
@@ -8295,6 +8412,18 @@
     {"return":{"local":"manual_label_out"}}
   ],
   "initialize patient extra clinical state": [
+    {"if": {"param":"patient"}, "eq": 1,
+      "then": [
+        {"set":{"local":"P1_FC_PROFILE"},"value":{"param":"profile","path":"flight_constraint_profile"}}
+    ]},
+    {"if": {"param":"patient"}, "eq": 2,
+      "then": [
+        {"set":{"local":"P2_FC_PROFILE"},"value":{"param":"profile","path":"flight_constraint_profile"}}
+    ]},
+    {"if": {"param":"patient"}, "eq": 3,
+      "then": [
+        {"set":{"local":"P3_FC_PROFILE"},"value":{"param":"profile","path":"flight_constraint_profile"}}
+    ]},
     {"if": {"param":"patient"}, "eq": 1,
       "then": [
         {"set":{"local":"P1_ECG_RHYTHM"},"value":{"if":{"param":"profile","path":"ecg_rhythm"},"ne":null,"then":{"param":"profile","path":"ecg_rhythm"},"else":"SINUS"}},

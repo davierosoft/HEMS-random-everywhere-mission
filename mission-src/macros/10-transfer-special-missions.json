@@ -107,6 +107,7 @@
     {"set":{"local":"CARLS_DF_SAR_NORMAL_ACTIVE"},"value":"yes"},
     {"create_thread": {
       "commands": [
+        {"wait_for":{"var":["L:LOAD","number"]},"gte":100},
         {"while": {"var":["L:HOISTED","number"]}, "eq": 0,
           "do": [
             {"call_macro":"DF emergency beacon update","params":{"object":"injured_human","frequency":282575,"frequency_mhz":282.575,"offset_m":5,"range_m":25000,"source":"SAR","status":"SAR BEACON"}},
@@ -120,6 +121,7 @@
     {"set":{"local":"CARLS_DF_SAR_CRASH_ACTIVE"},"value":"yes"},
     {"create_thread": {
       "commands": [
+        {"wait_for":{"var":["L:LOAD","number"]},"gte":100},
         {"while": {"var":["L:HOISTED","number"]}, "eq": 0,
           "do": [
             {"call_macro":"DF emergency beacon update","params":{"object":"ADELT","frequency":121500,"frequency_mhz":121.5,"offset_m":0.1,"range_m":40000,"source":"SAR","status":"SAR ELT"}},
@@ -4104,11 +4106,11 @@
     {"#comment":"Diagnostics (report 2026-11-19: the DF on 121.5 pointed nowhere above the SAR target of mission 17): the state of every condition of this update is kept in locals that any snapshot dumps. DF_DBG_OBJ 1 when the beacon object exists, DF_DBG_DIST its distance in meters (-1 unknown), DF_DBG_MODE the tuning mode, DF_DBG_VALID and DF_DBG_FREQ the CARLS DF channel (variables), DF_DBG_GFREQ the global frequency, DF_DBG_FREQ_ASK the frequency this beacon needs (-2 when the distance could not be read)."},
     {"set":{"local":"DF_DBG_OBJ"},"value":0},
     {"set":{"local":"DF_DBG_DIST"},"value":-1},
-    {"if": {"has_object":"{param:object}"}, "eq": 1,
+    {"if": {"has_object":{"param":"object"}}, "eq": 1,
       "then": [
         {"set":{"local":"DF_DBG_OBJ"},"value":1},
         {"try": [
-            {"set":{"local":"DF_DBG_DIST"},"value":{"floor":{"object":"{param:object}","var":"distance:m"}}}
+            {"set":{"local":"DF_DBG_DIST"},"value":{"floor":{"object":{"param":"object"},"var":"distance:m"}}}
           ],
           "catch": [
             {"set":{"local":"DF_DBG_DIST"},"value":-2}
@@ -4119,20 +4121,41 @@
     {"set":{"local":"DF_DBG_FREQ"},"value":{"var":["L:CARLS_DF_FREQUENCY","number"]}},
     {"set":{"local":"DF_DBG_GFREQ"},"value":{"global":"CARLS_DF_FREQUENCY"}},
     {"set":{"local":"DF_DBG_FREQ_ASK"},"value":{"param":"frequency"}},
-    {"#comment":"User rule 2026-11-19: the DF depends only on the CARLS being switched on (L:CARLS_State not 0), never on the CARLS connection to the dispatcher (L:CARLS_CONNECTED). Once the CARLS is on the DF receives on the active frequency; with the CARLS off it receives nothing (beacon cleared). DF_DBG_STATE keeps the value for the snapshots."},
-    {"set":{"local":"DF_DBG_STATE"},"value":{"var":["L:CARLS_State","number"]}},
-    {"if": {
-      "and": [
-        {"require":{"var":["L:CARLS_State","number"]},"ne":0},
-        {"require":{"has_object":"{param:object}"},"eq":1},
-        {"require":{"object":"{param:object}","var":"distance:m"},"lte":{"local":"DF_EMERGENCY_RX_RANGE_M"}}
-      ]}, "eq": 1,
+    {"#comment":"User rule 2026-11-20 (DF logic): when the mission has an emergency transmitter and the tuning is automatic, the SAME value (L:CARLS_DF_FREQUENCY, written by CARLS DF set active channel together with the global CARLS_DF_FREQUENCY) tunes both the CARLS DF page and the FND (set_df freq = that value / 1000): they can never differ. When the beacon is not tuned (CARLS off, no beacon object, out of range, manual channel different) the FND follows the frequency saved on the DF page (global CARLS_DF_FREQUENCY, the last one selected), see DF emergency beacon clear. The user rule of 2026-11-19 stays: the DF depends only on L:CARLS_State not 0, never on L:CARLS_CONNECTED. Diagnostics (snapshot_guidance): DF_DBG_RESULT text, DF_DBG_FND (MHz sent to the FND), DF_DBG_CARLS_L / DF_DBG_CARLS_G (CARLS variable and global), DF_DBG_REASON (0 tuned, 1 CARLS off, 2 no beacon object, 3 out of range, 4 manual channel differs), DF_DBG_COUNT (updates)."},
+    {"if": {"local":"DF_DBG_COUNT"}, "eq": null,
+      "then": [
+        {"set":{"local":"DF_DBG_COUNT"},"value":0}
+    ]},
+    {"set":{"local":"DF_DBG_COUNT"},"value":{"add":[{"local":"DF_DBG_COUNT"},1]}},
+    {"set":{"local":"DF_DBG_REASON"},"value":0},
+    {"if": {"var":["L:CARLS_State","number"]}, "eq": 0,
+      "then": [
+        {"set":{"local":"DF_DBG_REASON"},"value":1}
+      ],"else": [
+        {"if": {"local":"DF_DBG_OBJ"}, "eq": 0,
+          "then": [
+            {"set":{"local":"DF_DBG_REASON"},"value":2}
+          ],"else": [
+            {"if": {
+              "and": [
+                {"require":{"object":{"param":"object"},"var":"distance:m"},"lte":{"local":"DF_EMERGENCY_RX_RANGE_M"}}
+              ]}, "ne": 1,
+              "then": [
+                {"set":{"local":"DF_DBG_REASON"},"value":3}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"DF_DBG_REASON"}, "eq": 0,
       "then": [
         {"if": {"global":"CARLS_DF_TUNING_MODE"}, "ne": "manual",
           "then": [
             {"call_macro":"CARLS DF set active channel","params":{"frequency":{"param":"frequency"},"source":{"param":"source"},"modulation":"AM"}},
-            {"set_df":{"location":{"bearing":0,"dist":{"param":"offset_m"},"object":"{param:object}"},"freq":{"param":"frequency_mhz"}}},
-            {"set":{"local":"CARLS_DF_REFERENCE_STATUS"},"value":{"param":"status"}}
+            {"set":{"local":"DF_DBG_SETDF_OBJ"},"value":{"param":"object"}},
+            {"set":{"local":"DF_DBG_SETDF_FREQ"},"value":{"divide":[{"var":["L:CARLS_DF_FREQUENCY","number"]},1000]}},
+            {"set":{"local":"DF_DBG_SETDF_AT"},"value":{"var":["L:MISSION_TIME","number"]}},
+            {"set_df":{"location":{"bearing":0,"dist":{"param":"offset_m"},"object":{"param":"object"}},"freq":{"divide":[{"var":["L:CARLS_DF_FREQUENCY","number"]},1000]}}},
+            {"set":{"local":"CARLS_DF_REFERENCE_STATUS"},"value":{"param":"status"}},
+            {"set":{"local":"DF_DBG_RESULT"},"value":"AUTO beacon tuned on CARLS and FND"}
           ],"else": [
             {"if": {
               "and": [
@@ -4141,29 +4164,40 @@
                 {"require":{"global":"CARLS_DF_FREQUENCY"},"eq":{"param":"frequency"}}
               ]}, "eq": 1,
               "then": [
-                {"set_df":{"location":{"bearing":0,"dist":{"param":"offset_m"},"object":"{param:object}"},"freq":{"param":"frequency_mhz"}}},
-                {"set":{"local":"CARLS_DF_REFERENCE_STATUS"},"value":{"param":"status"}}
+                {"set":{"local":"DF_DBG_SETDF_OBJ"},"value":{"param":"object"}},
+                {"set":{"local":"DF_DBG_SETDF_FREQ"},"value":{"divide":[{"var":["L:CARLS_DF_FREQUENCY","number"]},1000]}},
+                {"set":{"local":"DF_DBG_SETDF_AT"},"value":{"var":["L:MISSION_TIME","number"]}},
+                {"set_df":{"location":{"bearing":0,"dist":{"param":"offset_m"},"object":{"param":"object"}},"freq":{"divide":[{"var":["L:CARLS_DF_FREQUENCY","number"]},1000]}}},
+                {"set":{"local":"CARLS_DF_REFERENCE_STATUS"},"value":{"param":"status"}},
+                {"set":{"local":"DF_DBG_RESULT"},"value":"MANUAL beacon on the CARLS channel"}
+              ],"else": [
+                {"set":{"local":"DF_DBG_REASON"},"value":4},
+                {"call_macro":"DF emergency beacon clear","params":{"frequency":{"param":"frequency"},"frequency_mhz":{"param":"frequency_mhz"},"reset_range":"no"}},
+                {"set":{"local":"DF_DBG_RESULT"},"value":"MANUAL channel differs: FND on the saved frequency"}
             ]}
         ]}
       ],"else": [
-        {"call_macro":"DF emergency beacon clear","params":{"frequency":{"param":"frequency"},"frequency_mhz":{"param":"frequency_mhz"},"reset_range":"no"}}
-    ]}
+        {"call_macro":"DF emergency beacon clear","params":{"frequency":{"param":"frequency"},"frequency_mhz":{"param":"frequency_mhz"},"reset_range":"no"}},
+        {"set":{"local":"DF_DBG_RESULT"},"value":"no beacon tuned: FND on the saved frequency"}
+    ]},
+    {"set":{"local":"DF_DBG_CARLS_L"},"value":{"var":["L:CARLS_DF_FREQUENCY","number"]}},
+    {"set":{"local":"DF_DBG_CARLS_G"},"value":{"global":"CARLS_DF_FREQUENCY"}}
   ],
   "DF emergency beacon clear": [
-    {"if": {"global":"CARLS_DF_TUNING_MODE"}, "ne": "manual",
+    {"#comment":"User rule 2026-11-20: without a tuned beacon the FND is tuned to the frequency saved on the CARLS DF page (global CARLS_DF_FREQUENCY, the last one selected or set by the mission), never to the frequency of the mission beacon that is not being received. CARLS DF clear bearing does exactly that (set_df freq without location); before the DF page was ever initialised the startup sync loads the default and does the same."},
+    {"if": {"global":"CARLS_DF_INITIALIZED"}, "ne": 1,
       "then": [
-        {"set_df":{"freq":{"param":"frequency_mhz"}}}
+        {"set":{"local":"DF_DBG_SETDF_OBJ"},"value":"none (frequency only)"},
+        {"set":{"local":"DF_DBG_SETDF_FREQ"},"value":{"divide":[{"global":"CARLS_DF_FREQUENCY"},1000]}},
+        {"set":{"local":"DF_DBG_SETDF_AT"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"call_macro":"CARLS DF startup sync"}
       ],"else": [
-        {"if": {
-          "and": [
-            {"require":{"var":["L:CARLS_DF_ACTIVE_VALID","number"]},"eq":1},
-            {"require":{"var":["L:CARLS_DF_FREQUENCY","number"]},"eq":{"param":"frequency"}},
-            {"require":{"global":"CARLS_DF_FREQUENCY"},"eq":{"param":"frequency"}}
-          ]}, "eq": 1,
-          "then": [
-            {"set_df":{"freq":{"param":"frequency_mhz"}}}
-        ]}
+        {"set":{"local":"DF_DBG_SETDF_OBJ"},"value":"none (frequency only)"},
+        {"set":{"local":"DF_DBG_SETDF_FREQ"},"value":{"divide":[{"global":"CARLS_DF_FREQUENCY"},1000]}},
+        {"set":{"local":"DF_DBG_SETDF_AT"},"value":{"var":["L:MISSION_TIME","number"]}},
+        {"call_macro":"CARLS DF clear bearing"}
     ]},
+    {"set":{"local":"DF_DBG_FND"},"value":{"divide":[{"global":"CARLS_DF_FREQUENCY"},1000]}},
     {"set":{"local":"CARLS_DF_REFERENCE_STATUS"},"value":"NO MISSION BEACON"},
     {"if": {"param":"reset_range"}, "eq": "yes",
       "then": [
@@ -4174,6 +4208,7 @@
     {"set":{"local":"CARLS_DF_SAR_PLB_PERSON_ACTIVE"},"value":"yes"},
     {"create_thread": {
       "commands": [
+        {"wait_for":{"var":["L:LOAD","number"]},"gte":100},
         {"while": {"var":["L:HOISTED","number"]}, "eq": 0,
           "do": [
             {"call_macro":"DF emergency beacon update","params":{"object":"injured_human","frequency":121500,"frequency_mhz":121.5,"offset_m":5,"range_m":12000,"source":"PLB","status":"PLB PERSON"}},

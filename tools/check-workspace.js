@@ -99,6 +99,7 @@ const scripts = [
   'test-flight-report-2026-10-24.js',
   'test-hr-scene-block.js',
   'test-speech-bridge.js',
+  'test-df-tuning-logic.js',
   'test-global-reset-sync.js',
   'audit-drive-speeds.js',
   'test-heli-rescuer-and-ambulance.js',

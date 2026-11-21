@@ -26,7 +26,7 @@ assert.deepEqual(built.unkeyed, [], 'every spoken text has a key (node tools/voi
 assert.equal(fs.readFileSync(path.join(__dirname, 'voice-texts.json'), 'utf8'), render(built.texts), 'tools/voice-texts.json is the list of the sources (node tools/voice-texts.js sync)');
 const keys = Object.keys(built.texts);
 assert.equal(keys.filter((key) => key.startsWith('CHK.')).length, 377, 'the checklist rows');
-assert.equal(keys.filter((key) => /^DSC\.\d+\.[1-4]$/.test(key)).length, 320, 'the dispatch descriptions: 80 incidents with 4 variants');
+assert.equal(keys.filter((key) => /^DSC\.\d+\.[1-4]$/.test(key)).length, 340, 'the dispatch descriptions: 85 incidents with 4 variants');
 for (const key of keys) assert.match(key, /^[A-Za-z0-9_.-]{1,40}$/, `${key} is a valid pack key`);
 assert.ok(!keys.some((key) => key.startsWith('DSP.')), 'DSP.* is the prefix of the dispatcher messages of the base pack: the descriptions use DSC');
 

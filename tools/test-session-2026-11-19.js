@@ -52,7 +52,8 @@ assert.ok(read('voicepacks/EN.xml').includes('RAD.NEED'), 'the EN pack has RAD.N
 
 // 6 DF depends on the CARLS power only
 const df = JSON.stringify(macros('10-transfer-special-missions.json')['DF emergency beacon update'].filter((c) => !c['#comment']));
-assert.ok(df.includes('"var":["L:CARLS_State","number"]},"ne":0'), 'the DF update requires the CARLS on');
+// 2026-11-20: the same rule written as the reason 1 of the DF logic (CARLS_State equal to 0 means no beacon is tuned)
+assert.ok(df.includes('"var":["L:CARLS_State","number"]},"eq":0') && df.includes('"DF_DBG_REASON"},"value":1'), 'the DF update requires the CARLS on');
 assert.ok(!df.includes('CARLS_CONNECTED'), 'the DF update never depends on the CARLS connection');
 
 // 7 diagnostics

@@ -112,6 +112,12 @@ assert.equal(result.count, bridge.ACTIONS.length);
   for (const a of bridge.ACTIONS.filter((x) => x.noReadback)) assert.ok(rb.includes('"eq":' + a.code + ',"then":[{"return":0}]'), 'no readback for ' + a.id);
   assert.ok(text(macros['speech patient status']).includes('"local":"ops_progress_active"},"eq":1') && text(macros['speech read dispatch']).includes('"vrd_last"'), 'patient status splits flight and ground, repeat dispatch clears the memory of the read');
 }
+// every page with the status bar shows the dynamic SAY tips line and the commands page goes back to the Settings (user request 2026-11-20)
+for (const [name, m] of Object.entries(macros)) {
+  const s = text(m);
+  if (s.includes('"image":"sbar00"')) assert.ok(s.includes('TIP_SHOW') && s.includes('"TIP_LINE"'), `page with status bar and no SAY tips line: ${name}`);
+}
+assert.ok(text(macros['speech commands page']).includes('"call_macro":"settings"'), 'the commands page BACK must return to the Settings');
 console.log(`Speech bridge PASS: ${bridge.ACTIONS.length} actions generated from the live button conditions, mailbox order, setting in every layer, declaration for the Companion. HPG/MSFS and Companion runtime PENDING.`);
 
 // 3b. the loop never waits for an action (user rule 2026-11-16): after the availability test every action sets result 1 and runs in a thread of its own, wrapped in a try that records sp_error; the acknowledgement therefore never depends on how long a macro lasts

@@ -139,9 +139,11 @@ const emergencyUpdateJson = compact(emergencyUpdate);
 const emergencyClearJson = compact(emergencyClear);
 expect(Array.isArray(emergencyUpdate) && Array.isArray(emergencyClear) && Array.isArray(plbPersonal), 'DF Stations: centralized emergency beacon macros are missing');
 expect(emergencyUpdateJson.includes('"DF_EMERGENCY_RX_RANGE_M"') && emergencyUpdateJson.includes('"rand":[75,125]'), 'DF Stations: emergency reception range must randomize within plus or minus 25 percent');
-expect(emergencyUpdateJson.includes('"has_object":"{param:object}"') && emergencyUpdateJson.includes('"var":"distance:m"'), 'DF Stations: emergency beacon update must require a present emitter and range check');
+expect(emergencyUpdateJson.includes('"has_object":{"param":"object"}') && !emergencyUpdateJson.includes('{param:object}') && emergencyUpdateJson.includes('"var":"distance:m"'), 'DF Stations: emergency beacon update must require a present emitter and range check');
 expect(emergencyUpdateJson.includes('"set_df":{"location"') && emergencyUpdateJson.includes('"CARLS DF set active channel"'), 'DF Stations: in-range emergency beacon update must synchronize CARLS before set_df');
-expect(emergencyClearJson.includes('"set_df":{"freq"') && !emergencyClearJson.includes('"location"'), 'DF Stations: out-of-range emergency beacon clearing must use frequency-only set_df');
+// user rule 2026-11-20: without a tuned beacon the FND follows the frequency saved on the DF page; the clear macro delegates to CARLS DF clear bearing, which is the frequency-only set_df of the global CARLS_DF_FREQUENCY
+const clearBearing = compact(macros['CARLS DF clear bearing'] || []);
+expect(emergencyClearJson.includes('"CARLS DF clear bearing"') && !emergencyClearJson.includes('"set_df"') && !emergencyClearJson.includes('"location"') && clearBearing.includes('"set_df":{"freq":{"divide":[{"global":"CARLS_DF_FREQUENCY"},1000]}}'), 'DF Stations: out-of-range emergency beacon clearing must tune the FND to the saved DF page frequency through CARLS DF clear bearing (frequency-only set_df)');
 expect(assignJson.includes('CARLS_DF_SAR_PLB_PERSON_ACTIVE') && assignJson.includes('DF_EMERGENCY_RX_RANGE_M'), 'DF Stations: manual mission bearing must honor the PLB state and randomized range');
 for (const [name, activeVar, range] of [
   ['pick doctor', 'L:HOLD', 25000],

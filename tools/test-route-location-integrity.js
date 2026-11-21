@@ -7,7 +7,7 @@ const data = JSON.parse(fs.readFileSync('mission-src/data/02-waypoints-and-categ
 const residentialData = (Array.isArray(data) ? data : Object.values(data).flat(Infinity))
   .filter((item) => item?.location_macro === 'Query random apartm detatched hotel');
 const expectedHotelMissionIds = new Set([24, 26, 27, 28]);
-if (residentialData.length !== 15) throw new Error(`unexpected residential query data count: ${residentialData.length}`);
+if (residentialData.length !== 16) throw new Error(`unexpected residential query data count: ${residentialData.length}`);
 if (residentialData.some((item) => item.location_name !== 'rescue_location')) {
   throw new Error('all residential query scenes must route to rescue_location');
 }

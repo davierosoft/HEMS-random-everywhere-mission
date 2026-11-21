@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.32. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.49. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1028,6 +1028,42 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.31, 170.32.
 - **Test:** On a flight with no saved game, open the Debug page and press CAPTURE SNAPSHOT: no Command Failed window appears.
 
+### The autosave and the mission list no longer break the saved game
+
+- The autosave writes the whole mission again and no longer reopens the slot table, so a live save cannot leave the saved game incomplete.
+- **Build history:** 0.997 170.32, 170.34.
+- **Test:** Fly a mission, let the autosave run, then reload the mission and check the saved patient and scene.
+
+### The Companion notices when the mission stops
+
+- The mission refreshes the ready signal of the voice commands every 5 seconds, so the Mission Companion detects a lost mission instead of waiting for it.
+- **Build history:** 0.997 170.38, 170.39.
+- **Test:** Close the mission with the Companion running and check that it reports the loss.
+
+### Mountain pick-up prompt and hoist by voice
+
+- Mountain accidents ask the heli rescuer pick-up prompt according to the real mountain state, and the voice command "hoist on" sets the hoist switch when the crew asks for it.
+- **Build history:** 0.997 170.40.
+- **Test:** Fly a mountain accident and say the hoist command when the crew asks for it.
+
+### Direction Finder follows the saved frequency
+
+- The Direction Finder tunes to the saved frequency when the CARLS is powered and no longer shows 255.000 while the mission loads; CARLS and FND get the same value.
+- **Build history:** 0.997 170.40, 170.44-170.48.
+- **Test:** Save a frequency, reload the mission and check that CARLS and FND show it.
+
+### Recorded voices no longer loop the audio
+
+- With recorded voices selected no voice server connection is attempted, which removes the audio reset loop.
+- **Build history:** 0.997 170.42.
+- **Test:** Select recorded voices and check that the mission starts without audio resets.
+
+### The second ambulance starts on every route
+
+- The second ambulance of a multi-patient call now starts on every kind of scene (for example residential), not only on some of them.
+- **Build history:** 0.997 170.49.
+- **Test:** Fly a residential scene with three or four injured and check that both ambulances start.
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -1270,6 +1306,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - After ACCEPT DISPATCH the tablet shows the line "HOC is replacing old dispatch details with the accepted one. Please wait..." (translated in German, French and Italian) until the new details are ready, instead of showing the old incident.
 - **Build history:** 0.997 170.31.
 - **Test:** Accept a second dispatch and check that the waiting line appears and is replaced by the new incident.
+
+### Voice commands page and tips line
+
+- The voice commands page and the tips line follow the language of the voice commands, the BACK button returns to Settings and the tips line shows on every page with the status bar.
+- **Build history:** 0.997 170.33, 170.43.
+- **Test:** Open the voice commands page in two languages and press BACK.
+
+### Hospital destination page
+
+- The destination of the patient is chosen on a dispatch page (no modal), with coordinates in degrees, the page reopens after each choice, BACK from the custom hospitals discards the choice, and only the transported patient with a diagnosis is listed.
+- **Build history:** 0.997 170.35-170.37.
+- **Test:** Choose a hospital on the map and on the custom page, then go back.
 
 ## NEW FUNCTIONS
 
@@ -1959,6 +2007,36 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.31.
 - **Test:** Hoist with a cable of at least 20 meters and listen for the halfway call.
 
+### Five new emergencies
+
+- Five new scenes: a diving accident at the lake (decompression sickness, gas embolism), chest trauma after a motorway crash (the chest is decompressed with a mini thoracostomy), a dive into a shallow pool (cervical spine), a seizure in late pregnancy at home, and a collapse in the square of a railway station (aortic dissection or unstable pelvis, to a specialised centre).
+- **Build history:** 0.997 170.49.
+- **Test:** Start each of the five calls and treat the patient with the new actions.
+
+### Flight limits for the patient on the stretcher
+
+- Optional setting FLIGHT CONSTRAINTS (off by default): while a patient lies on the stretcher the crew warns you when altitude above 3000 ft, vertical load, bank or nose-up pitch go over the limit of the pathology, and beyond the limit the patient loses SpO2 or lifescore.
+- **Build history:** 0.997 170.49.
+- **Test:** Switch the setting on, carry a patient and exceed the bank limit.
+
+### Voice commands for the destination
+
+- Voice commands 140-149 answer the destination confirmation and the ambulance question of the dispatch page.
+- **Build history:** 0.997 170.35, 170.36.
+- **Test:** Say the commands on the destination page.
+
+### Manual transport choices
+
+- You can choose GROUND for a patient with consequences, send one patient by helicopter, and the ground hand-over is fixed.
+- **Build history:** 0.997 170.41.
+- **Test:** Choose ground transport for one patient of a multi-patient call.
+
+### Wind and rotor noise on the intercom
+
+- The mission publishes the distance of the crew and the ground speed so the Mission Companion adds the wind and rotor noise to the intercom and crew radio lines.
+- **Build history:** 0.997 170.47.
+- **Test:** Open a door with the rotor turning and listen to the intercom.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -2019,6 +2097,7 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.32 (this release):** The Debug page and the snapshot open the saved-game table before reading it (see the entry above).
+- **0.997 170.33-170.49:** Voice commands page language, destination page and voice commands, autosave and heartbeat fixes, manual transport choices, Direction Finder tuning, wind and rotor noise context, second ambulance start, five new emergencies and the optional flight limits (see the entries above).
 - **0.997 170.31:** The target call and the unsafe scene calls, the halfway up call, the first save slot, the waiting line of the accepted dispatch and the German and French lines of the ambulance wait (see the sections above).
 - **0.997 170.30:** More voice commands, the briefing opened by Show dispatch, tips in two pages and safe distances of the medics (see the sections above).
 - **0.997 170.29:** The manual treatment by the doctor and the pause that removes the call stack error (see the sections above).
