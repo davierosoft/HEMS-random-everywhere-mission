@@ -27,10 +27,18 @@
     {"set":{"local":"fc_pickup_alt"},"value":null},
     {"set":{"local":"fc_state_G"},"value":0},
     {"set":{"local":"fc_cd_G"},"value":0},
+    {"set":{"local":"fc_state_GX"},"value":0},
+    {"set":{"local":"fc_cd_GX"},"value":0},
+    {"set":{"local":"fc_state_GZ"},"value":0},
+    {"set":{"local":"fc_cd_GZ"},"value":0},
+    {"set":{"local":"fc_state_NOISE"},"value":0},
+    {"set":{"local":"fc_cd_NOISE"},"value":0},
     {"set":{"local":"fc_state_BANK"},"value":0},
     {"set":{"local":"fc_cd_BANK"},"value":0},
     {"set":{"local":"fc_state_PITCH"},"value":0},
     {"set":{"local":"fc_cd_PITCH"},"value":0},
+    {"set":{"local":"fc_state_PDOWN"},"value":0},
+    {"set":{"local":"fc_cd_PDOWN"},"value":0},
     {"set":{"local":"fc_state_ALT"},"value":0},
     {"set":{"local":"fc_cd_ALT"},"value":0},
     {"set":{"local":"fc_clear_due"},"value":0}
@@ -66,9 +74,39 @@
     {"set":{"local":"fc_lim_g"},"value":0},
     {"set":{"local":"fc_lim_bank"},"value":0},
     {"set":{"local":"fc_lim_pitch"},"value":0},
+    {"set":{"local":"fc_lim_gx"},"value":0},
+    {"set":{"local":"fc_lim_gz"},"value":0},
+    {"set":{"local":"fc_lim_pdown"},"value":0},
+    {"set":{"local":"fc_lim_noise"},"value":0},
     {"set":{"local":"fc_alt_rel"},"value":null},
     {"set":{"local":"fc_alt_abs"},"value":null},
     {"call_macro":"flight constraints limits","params":{"profile":{"local":"fc_profile"}}},
+    {"#comment":"Automatic medical mode: the headset is fitted by default (Andrew 2026-11-21), so the noise never hurts."},
+    {"if": {"global":"P1_MANUAL_MEDICAL_MODE"}, "ne": "manual",
+      "then": [
+        {"set":{"local":"fc_lim_noise"},"value":0}
+    ]},
+    {"if": {"local":"fc_n"}, "eq": 1,
+      "then": [
+        {"if": {"local":"P1_HEADSET"}, "eq": 1,
+          "then": [
+            {"set":{"local":"fc_lim_noise"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"fc_n"}, "eq": 2,
+      "then": [
+        {"if": {"local":"P2_HEADSET"}, "eq": 1,
+          "then": [
+            {"set":{"local":"fc_lim_noise"},"value":0}
+        ]}
+    ]},
+    {"if": {"local":"fc_n"}, "eq": 3,
+      "then": [
+        {"if": {"local":"P3_HEADSET"}, "eq": 1,
+          "then": [
+            {"set":{"local":"fc_lim_noise"},"value":0}
+        ]}
+    ]},
     {"set":{"local":"fc_alt"},"value":{"var":["A:PLANE ALTITUDE","feet"]}},
     {"if": {"local":"fc_pickup_alt"}, "eq": null,
       "then": [
@@ -133,6 +171,174 @@
                 {"if": {"local":"fc_state_G"}, "gt": 0,
                   "then": [
                     {"set":{"local":"fc_state_G"},"value":0},
+                    {"set":{"local":"fc_clear_due"},"value":1}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"fc_lim_gx"}, "gt": 0,
+      "then": [
+        {"set":{"local":"fc_v_GX"},"value":{"var":["ACCELERATION BODY X","Feet per second squared"]}},
+        {"if": {"local":"fc_v_GX"}, "lt": 0,
+          "then": [
+            {"set":{"local":"fc_v_GX"},"value":{"multiply":[{"local":"fc_v_GX"},-1]}}
+        ]},
+        {"set":{"local":"fc_r_GX"},"value":{"multiply":[{"divide":[{"local":"fc_v_GX"},{"local":"fc_lim_gx"}]},100]}},
+        {"set":{"local":"fc_cd_GX"},"value":{"clamp":[{"subtract":[{"local":"fc_cd_GX"},0.5]},0,60]}},
+        {"if": {"local":"fc_r_GX"}, "gte": 100,
+          "then": [
+            {"set":{"local":"fc_pen"},"value":5},
+            {"set":{"local":"fc_tier"},"value":1},
+            {"if": {"local":"fc_r_GX"}, "gte": 130,
+              "then": [
+                {"set":{"local":"fc_pen"},"value":10},
+                {"set":{"local":"fc_tier"},"value":2}
+            ]},
+            {"if": {"local":"fc_cd_GX"}, "lte": 0,
+              "then": [
+                {"call_macro":"flight constraints penalty","params":{"patient":{"local":"fc_n"},"kind":"GX","amount":{"local":"fc_pen"}}},
+                {"set":{"local":"fc_cd_GX"},"value":10}
+            ]},
+            {"if": {"local":"fc_state_GX"}, "lt": {"local":"fc_tier"},
+              "then": [
+                {"set":{"local":"fc_state_GX"},"value":{"local":"fc_tier"}},
+                {"call_macro":"voice say","params":{"key":"FC.GX"}},
+                {"call_macro":"flight constraints tablet","params":{"kind":"GX"}}
+            ]}
+          ],"else": [
+            {"if": {"local":"fc_r_GX"}, "lt": 80,
+              "then": [
+                {"if": {"local":"fc_state_GX"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"fc_state_GX"},"value":0},
+                    {"set":{"local":"fc_clear_due"},"value":1}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"fc_lim_gz"}, "gt": 0,
+      "then": [
+        {"set":{"local":"fc_v_GZ"},"value":{"var":["ACCELERATION BODY Z","Feet per second squared"]}},
+        {"if": {"local":"fc_v_GZ"}, "lt": 0,
+          "then": [
+            {"set":{"local":"fc_v_GZ"},"value":{"multiply":[{"local":"fc_v_GZ"},-1]}}
+        ]},
+        {"set":{"local":"fc_r_GZ"},"value":{"multiply":[{"divide":[{"local":"fc_v_GZ"},{"local":"fc_lim_gz"}]},100]}},
+        {"set":{"local":"fc_cd_GZ"},"value":{"clamp":[{"subtract":[{"local":"fc_cd_GZ"},0.5]},0,60]}},
+        {"if": {"local":"fc_r_GZ"}, "gte": 100,
+          "then": [
+            {"set":{"local":"fc_pen"},"value":5},
+            {"set":{"local":"fc_tier"},"value":1},
+            {"if": {"local":"fc_r_GZ"}, "gte": 130,
+              "then": [
+                {"set":{"local":"fc_pen"},"value":10},
+                {"set":{"local":"fc_tier"},"value":2}
+            ]},
+            {"if": {"local":"fc_cd_GZ"}, "lte": 0,
+              "then": [
+                {"call_macro":"flight constraints penalty","params":{"patient":{"local":"fc_n"},"kind":"GZ","amount":{"local":"fc_pen"}}},
+                {"set":{"local":"fc_cd_GZ"},"value":10}
+            ]},
+            {"if": {"local":"fc_state_GZ"}, "lt": {"local":"fc_tier"},
+              "then": [
+                {"set":{"local":"fc_state_GZ"},"value":{"local":"fc_tier"}},
+                {"call_macro":"voice say","params":{"key":"FC.GZ"}},
+                {"call_macro":"flight constraints tablet","params":{"kind":"GZ"}}
+            ]}
+          ],"else": [
+            {"if": {"local":"fc_r_GZ"}, "lt": 80,
+              "then": [
+                {"if": {"local":"fc_state_GZ"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"fc_state_GZ"},"value":0},
+                    {"set":{"local":"fc_clear_due"},"value":1}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"fc_lim_pdown"}, "gt": 0,
+      "then": [
+        {"set":{"local":"fc_v_PDOWN"},"value":{"var":["PLANE PITCH DEGREES","Radians"]}},
+        {"if": {"local":"fc_v_PDOWN"}, "lt": 0,
+          "then": [
+            {"set":{"local":"fc_v_PDOWN"},"value":0}
+        ]},
+        {"set":{"local":"fc_r_PDOWN"},"value":{"multiply":[{"divide":[{"local":"fc_v_PDOWN"},{"local":"fc_lim_pdown"}]},100]}},
+        {"set":{"local":"fc_cd_PDOWN"},"value":{"clamp":[{"subtract":[{"local":"fc_cd_PDOWN"},0.5]},0,60]}},
+        {"if": {"local":"fc_r_PDOWN"}, "gte": 100,
+          "then": [
+            {"set":{"local":"fc_pen"},"value":5},
+            {"set":{"local":"fc_tier"},"value":1},
+            {"if": {"local":"fc_r_PDOWN"}, "gte": 130,
+              "then": [
+                {"set":{"local":"fc_pen"},"value":10},
+                {"set":{"local":"fc_tier"},"value":2}
+            ]},
+            {"if": {"local":"fc_cd_PDOWN"}, "lte": 0,
+              "then": [
+                {"call_macro":"flight constraints penalty","params":{"patient":{"local":"fc_n"},"kind":"PDOWN","amount":{"local":"fc_pen"}}},
+                {"set":{"local":"fc_cd_PDOWN"},"value":10}
+            ]},
+            {"if": {"local":"fc_state_PDOWN"}, "lt": {"local":"fc_tier"},
+              "then": [
+                {"set":{"local":"fc_state_PDOWN"},"value":{"local":"fc_tier"}},
+                {"call_macro":"voice say","params":{"key":"FC.PDOWN"}},
+                {"call_macro":"flight constraints tablet","params":{"kind":"PDOWN"}}
+            ]}
+          ],"else": [
+            {"if": {"local":"fc_r_PDOWN"}, "lt": 80,
+              "then": [
+                {"if": {"local":"fc_state_PDOWN"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"fc_state_PDOWN"},"value":0},
+                    {"set":{"local":"fc_clear_due"},"value":1}
+                ]}
+            ]}
+        ]}
+    ]},
+    {"if": {"local":"fc_lim_noise"}, "gt": 0,
+      "then": [
+        {"set":{"local":"fc_v_NOISE"},"value":0},
+        {"if": {"var":["L:{local:HXX}_SDK_ROTOR_RPM","number"]}, "gt": 40,
+          "then": [
+            {"if": {"var":["L:{local:HXX}_SDK_ENG_1_N1","number"]}, "gt": 20,
+              "then": [
+                {"set":{"local":"fc_v_NOISE"},"value":1}
+              ],"else": [
+                {"if": {"var":["L:{local:HXX}_SDK_ENG_2_N1","number"]}, "gt": 20,
+                  "then": [
+                    {"set":{"local":"fc_v_NOISE"},"value":1}
+                ]}
+            ]}
+        ]},
+        {"set":{"local":"fc_r_NOISE"},"value":{"multiply":[{"divide":[{"local":"fc_v_NOISE"},{"local":"fc_lim_noise"}]},100]}},
+        {"set":{"local":"fc_cd_NOISE"},"value":{"clamp":[{"subtract":[{"local":"fc_cd_NOISE"},0.5]},0,60]}},
+        {"if": {"local":"fc_r_NOISE"}, "gte": 100,
+          "then": [
+            {"set":{"local":"fc_pen"},"value":5},
+            {"set":{"local":"fc_tier"},"value":1},
+            {"if": {"local":"fc_r_NOISE"}, "gte": 130,
+              "then": [
+                {"set":{"local":"fc_pen"},"value":10},
+                {"set":{"local":"fc_tier"},"value":2}
+            ]},
+            {"if": {"local":"fc_cd_NOISE"}, "lte": 0,
+              "then": [
+                {"call_macro":"flight constraints penalty","params":{"patient":{"local":"fc_n"},"kind":"NOISE","amount":{"local":"fc_pen"}}},
+                {"set":{"local":"fc_cd_NOISE"},"value":10}
+            ]},
+            {"if": {"local":"fc_state_NOISE"}, "lt": {"local":"fc_tier"},
+              "then": [
+                {"set":{"local":"fc_state_NOISE"},"value":{"local":"fc_tier"}},
+                {"call_macro":"voice say","params":{"key":"FC.NOISE"}},
+                {"call_macro":"flight constraints tablet","params":{"kind":"NOISE"}}
+            ]}
+          ],"else": [
+            {"if": {"local":"fc_r_NOISE"}, "lt": 80,
+              "then": [
+                {"if": {"local":"fc_state_NOISE"}, "gt": 0,
+                  "then": [
+                    {"set":{"local":"fc_state_NOISE"},"value":0},
                     {"set":{"local":"fc_clear_due"},"value":1}
                 ]}
             ]}
@@ -265,7 +471,19 @@
                   "then": [
                     {"if": {"local":"fc_state_ALT"}, "eq": 0,
                       "then": [
-                        {"call_macro":"voice say","params":{"key":"FC.CLEAR"}}
+                        {"if": {"local":"fc_state_NOISE"}, "eq": 0,
+                          "then": [
+                            {"if": {"local":"fc_state_GX"}, "eq": 0,
+                              "then": [
+                                {"if": {"local":"fc_state_GZ"}, "eq": 0,
+                                  "then": [
+                                    {"if": {"local":"fc_state_PDOWN"}, "eq": 0,
+                                      "then": [
+                                        {"call_macro":"voice say","params":{"key":"FC.CLEAR"}}
+                                    ]}
+                                ]}
+                            ]}
+                        ]}
                     ]}
                 ]}
             ]}
@@ -279,6 +497,10 @@
         {"set":{"local":"fc_lim_g"},"value":16.09},
         {"set":{"local":"fc_lim_bank"},"value":0.5236},
         {"set":{"local":"fc_lim_pitch"},"value":0.3491},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_rel"},"value":1000}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_GAS_DRAINED",
@@ -286,6 +508,10 @@
         {"set":{"local":"fc_lim_g"},"value":16.09},
         {"set":{"local":"fc_lim_bank"},"value":0.5236},
         {"set":{"local":"fc_lim_pitch"},"value":0.3491},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_rel"},"value":2500}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_HYPOX_SEVERE",
@@ -293,6 +519,10 @@
         {"set":{"local":"fc_lim_g"},"value":19.3},
         {"set":{"local":"fc_lim_bank"},"value":0.5236},
         {"set":{"local":"fc_lim_pitch"},"value":0.5236},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_rel"},"value":1500},
         {"set":{"local":"fc_alt_abs"},"value":4000}
     ]},
@@ -301,6 +531,10 @@
         {"set":{"local":"fc_lim_g"},"value":19.3},
         {"set":{"local":"fc_lim_bank"},"value":0.6109},
         {"set":{"local":"fc_lim_pitch"},"value":0.5236},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_rel"},"value":3000},
         {"set":{"local":"fc_alt_abs"},"value":6000}
     ]},
@@ -309,6 +543,10 @@
         {"set":{"local":"fc_lim_g"},"value":12.87},
         {"set":{"local":"fc_lim_bank"},"value":0.4363},
         {"set":{"local":"fc_lim_pitch"},"value":0.5236},
+        {"set":{"local":"fc_lim_gx"},"value":9.65},
+        {"set":{"local":"fc_lim_gz"},"value":9.65},
+        {"set":{"local":"fc_lim_pdown"},"value":0.0873},
+        {"set":{"local":"fc_lim_noise"},"value":1},
         {"set":{"local":"fc_alt_rel"},"value":3000},
         {"set":{"local":"fc_alt_abs"},"value":8000}
     ]},
@@ -316,13 +554,21 @@
       "then": [
         {"set":{"local":"fc_lim_g"},"value":9.65},
         {"set":{"local":"fc_lim_bank"},"value":0.2618},
-        {"set":{"local":"fc_lim_pitch"},"value":0.2094}
+        {"set":{"local":"fc_lim_pitch"},"value":0.2094},
+        {"set":{"local":"fc_lim_gx"},"value":8.04},
+        {"set":{"local":"fc_lim_gz"},"value":8.04},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_HAEMO_SHOCK",
       "then": [
         {"set":{"local":"fc_lim_g"},"value":9.65},
         {"set":{"local":"fc_lim_bank"},"value":0.4363},
         {"set":{"local":"fc_lim_pitch"},"value":0.0873},
+        {"set":{"local":"fc_lim_gx"},"value":11.26},
+        {"set":{"local":"fc_lim_gz"},"value":11.26},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_abs"},"value":8000}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_AORTA",
@@ -330,6 +576,10 @@
         {"set":{"local":"fc_lim_g"},"value":6.43},
         {"set":{"local":"fc_lim_bank"},"value":0.2618},
         {"set":{"local":"fc_lim_pitch"},"value":0.1745},
+        {"set":{"local":"fc_lim_gx"},"value":6.43},
+        {"set":{"local":"fc_lim_gz"},"value":6.43},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_abs"},"value":8000}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_CARDIAC",
@@ -337,6 +587,10 @@
         {"set":{"local":"fc_lim_g"},"value":12.87},
         {"set":{"local":"fc_lim_bank"},"value":0.5236},
         {"set":{"local":"fc_lim_pitch"},"value":0.5236},
+        {"set":{"local":"fc_lim_gx"},"value":12.87},
+        {"set":{"local":"fc_lim_gz"},"value":12.87},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_abs"},"value":8000}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_OBSTETRIC",
@@ -344,19 +598,31 @@
         {"set":{"local":"fc_lim_g"},"value":9.65},
         {"set":{"local":"fc_lim_bank"},"value":0.3491},
         {"set":{"local":"fc_lim_pitch"},"value":0.1745},
+        {"set":{"local":"fc_lim_gx"},"value":9.65},
+        {"set":{"local":"fc_lim_gz"},"value":9.65},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_rel"},"value":4000}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_PSY_SEIZURE",
       "then": [
         {"set":{"local":"fc_lim_g"},"value":16.09},
         {"set":{"local":"fc_lim_bank"},"value":0.4363},
-        {"set":{"local":"fc_lim_pitch"},"value":0.5236}
+        {"set":{"local":"fc_lim_pitch"},"value":0.5236},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":1}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_PEDI_NEONATE",
       "then": [
         {"set":{"local":"fc_lim_g"},"value":6.43},
         {"set":{"local":"fc_lim_bank"},"value":0.2618},
         {"set":{"local":"fc_lim_pitch"},"value":0.1745},
+        {"set":{"local":"fc_lim_gx"},"value":6.43},
+        {"set":{"local":"fc_lim_gz"},"value":6.43},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":1},
         {"set":{"local":"fc_alt_rel"},"value":2000},
         {"set":{"local":"fc_alt_abs"},"value":6000}
     ]},
@@ -365,23 +631,35 @@
         {"set":{"local":"fc_lim_g"},"value":16.09},
         {"set":{"local":"fc_lim_bank"},"value":0.5236},
         {"set":{"local":"fc_lim_pitch"},"value":0.3491},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0},
         {"set":{"local":"fc_alt_rel"},"value":500}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_ALT_ILLNESS",
       "then": [
         {"set":{"local":"fc_lim_g"},"value":19.3},
         {"set":{"local":"fc_lim_bank"},"value":0.5236},
-        {"set":{"local":"fc_lim_pitch"},"value":0.5236}
+        {"set":{"local":"fc_lim_pitch"},"value":0.5236},
+        {"set":{"local":"fc_lim_gx"},"value":16.09},
+        {"set":{"local":"fc_lim_gz"},"value":16.09},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":0}
     ]},
     {"if": {"param":"profile"}, "eq": "FC_CPR_ONGOING",
       "then": [
         {"set":{"local":"fc_lim_g"},"value":9.65},
         {"set":{"local":"fc_lim_bank"},"value":0.3491},
-        {"set":{"local":"fc_lim_pitch"},"value":0.2618}
+        {"set":{"local":"fc_lim_pitch"},"value":0.2618},
+        {"set":{"local":"fc_lim_gx"},"value":11.26},
+        {"set":{"local":"fc_lim_gz"},"value":11.26},
+        {"set":{"local":"fc_lim_pdown"},"value":0},
+        {"set":{"local":"fc_lim_noise"},"value":1}
     ]}
   ],
   "flight constraints penalty": [
-    {"#comment":"Applies one penalty to patient n: kind ALT lowers the SpO2 (patient 1 SPO2, others Pn_SPO2), every other kind the lifescore through the registry override (slot n) with the local as a fallback outside the live registry."},
+    {"#comment":"Applies one penalty to patient n (kind PITCH also lowers the systolic pressure by amount + 5, i.e. 10 or 15, and the lifescore by 5, as the doctor asked): kind ALT lowers the SpO2 (patient 1 SPO2, others Pn_SPO2), every other kind the lifescore through the registry override (slot n) with the local as a fallback outside the live registry."},
     {"if": {"param":"kind"}, "eq": "ALT",
       "then": [
         {"if": {"param":"patient"}, "eq": 1,
@@ -398,6 +676,25 @@
         ]},
         {"return":1}
     ]},
+    {"if": {"param":"kind"}, "eq": "PITCH",
+      "then": [
+        {"set":{"local":"fc_bp"},"value":{"add":[{"param":"amount"},5]}},
+        {"if": {"param":"patient"}, "eq": 1,
+          "then": [
+            {"set":{"local":"BP_SYS"},"value":{"clamp":[{"subtract":[{"local":"BP_SYS"},{"local":"fc_bp"}]},0,300]}}
+        ]},
+        {"if": {"param":"patient"}, "eq": 2,
+          "then": [
+            {"set":{"local":"P2_BP_SYS"},"value":{"clamp":[{"subtract":[{"local":"P2_BP_SYS"},{"local":"fc_bp"}]},0,300]}}
+        ]},
+        {"if": {"param":"patient"}, "eq": 3,
+          "then": [
+            {"set":{"local":"P3_BP_SYS"},"value":{"clamp":[{"subtract":[{"local":"P3_BP_SYS"},{"local":"fc_bp"}]},0,300]}}
+        ]},
+        {"set":{"local":"fc_amount"},"value":5}
+      ],"else": [
+        {"set":{"local":"fc_amount"},"value":{"param":"amount"}}
+    ]},
     {"set":{"local":"fc_score"},"value":{"local":"LIFESCORE"}},
     {"if": {"param":"patient"}, "eq": 2,
       "then": [
@@ -407,7 +704,7 @@
       "then": [
         {"set":{"local":"fc_score"},"value":{"local":"LIFESCORE3"}}
     ]},
-    {"set":{"local":"fc_score"},"value":{"clamp":[{"subtract":[{"local":"fc_score"},{"param":"amount"}]},0,100]}},
+    {"set":{"local":"fc_score"},"value":{"clamp":[{"subtract":[{"local":"fc_score"},{"local":"fc_amount"}]},0,100]}},
     {"call_macro":"multipatient registry manual lifescore override","params":{"slot":{"param":"patient"},"score":{"local":"fc_score"}},"result":"fc_done"},
     {"if": {"local":"fc_done"}, "ne": 1,
       "then": [
@@ -442,6 +739,39 @@
     {"if": {"param":"kind"}, "eq": "ALT",
       "then": [
         {"call_macro":"post dispatcher message","params":{"from":"crew","text":"FLIGHT LIMIT: too high for the patient."}}
+    ]},
+    {"if": {"param":"kind"}, "eq": "GX",
+      "then": [
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"FLIGHT LIMIT: sideways load too high for the patient."}}
+    ]},
+    {"if": {"param":"kind"}, "eq": "GZ",
+      "then": [
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"FLIGHT LIMIT: braking or acceleration too hard for the patient."}}
+    ]},
+    {"if": {"param":"kind"}, "eq": "PDOWN",
+      "then": [
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"FLIGHT LIMIT: nose too low for the patient."}}
+    ]},
+    {"if": {"param":"kind"}, "eq": "NOISE",
+      "then": [
+        {"call_macro":"post dispatcher message","params":{"from":"crew","text":"FLIGHT LIMIT: engine and rotor noise is hurting the patient."}}
     ]}
+  ],
+  "fit patient headset": [
+    {"#comment":"Free action of the HEMS medical page (Andrew 2026-11-21): hearing protection for the patient in param patient. Never a mandatory step. The flight constraint NOISE ignores a patient with the headset."},
+    {"if": {"param":"patient"}, "eq": 1,
+      "then": [
+        {"set":{"local":"P1_HEADSET"},"value":1}
+    ]},
+    {"if": {"param":"patient"}, "eq": 2,
+      "then": [
+        {"set":{"local":"P2_HEADSET"},"value":1}
+    ]},
+    {"if": {"param":"patient"}, "eq": 3,
+      "then": [
+        {"set":{"local":"P3_HEADSET"},"value":1}
+    ]},
+    {"call_macro":"post dispatcher message","params":{"from":"crew","text":"Headset fitted on the patient."}},
+    {"call_macro":"sync medical patient display"}
   ]
 }

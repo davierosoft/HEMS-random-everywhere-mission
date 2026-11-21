@@ -20,6 +20,11 @@ for (const [name, p] of Object.entries(prof)) {
   set.push({ set: { local: 'fc_lim_g' }, value: +(((p.g_vert_max || 0) - 1) * 32.174).toFixed(2) });
   set.push({ set: { local: 'fc_lim_bank' }, value: +((p.bank_max_deg || 0) * 0.0174533).toFixed(4) });
   set.push({ set: { local: 'fc_lim_pitch' }, value: +((p.pitch_up_max_deg || 0) * 0.0174533).toFixed(4) });
+  set.push({ set: { local: 'fc_lim_gx' }, value: +((p.g_lat_max || 0) * 32.174).toFixed(2) });
+  set.push({ set: { local: 'fc_lim_gz' }, value: +((p.g_long_max || 0) * 32.174).toFixed(2) });
+  set.push({ set: { local: 'fc_lim_pdown' }, value: name === 'FC_ICP_HEAD' ? +((p.pitch_down_max_deg || 0) * 0.0174533).toFixed(4) : 0 });
+  // noise: only profiles with sensitivity 2 or 3; FC_OBSTETRIC stays off until the doctor confirms (its 3 was a guess of the v1 proposal)
+  set.push({ set: { local: 'fc_lim_noise' }, value: (p.noise_sensitivity_0_3 || 0) >= 2 && name !== 'FC_OBSTETRIC' ? 1 : 0 });
   if (p.alt_rel_cap_ft != null) set.push({ set: { local: 'fc_alt_rel' }, value: p.alt_rel_cap_ft });
   if (p.alt_abs_cap_ft != null) set.push({ set: { local: 'fc_alt_abs' }, value: p.alt_abs_cap_ft });
   limits.push({ if: { param: 'profile' }, eq: name, then: set });
@@ -66,8 +71,14 @@ const sample = [
   { if: { local: 'fc_n' }, eq: 3, then: [{ set: { local: 'fc_profile' }, value: { local: 'P3_FC_PROFILE' } }] },
   { if: { local: 'fc_profile' }, eq: null, then: [{ return: 0 }] },
   { set: { local: 'fc_lim_g' }, value: 0 }, { set: { local: 'fc_lim_bank' }, value: 0 }, { set: { local: 'fc_lim_pitch' }, value: 0 },
+  { set: { local: 'fc_lim_gx' }, value: 0 }, { set: { local: 'fc_lim_gz' }, value: 0 }, { set: { local: 'fc_lim_pdown' }, value: 0 }, { set: { local: 'fc_lim_noise' }, value: 0 },
   { set: { local: 'fc_alt_rel' }, value: null }, { set: { local: 'fc_alt_abs' }, value: null },
   { call_macro: 'flight constraints limits', params: { profile: { local: 'fc_profile' } } },
+  { '#comment': 'Automatic medical mode: the headset is fitted by default (Andrew 2026-11-21), so the noise never hurts.' },
+  { if: { global: 'P1_MANUAL_MEDICAL_MODE' }, ne: 'manual', then: [{ set: { local: 'fc_lim_noise' }, value: 0 }] },
+  { if: { local: 'fc_n' }, eq: 1, then: [{ if: { local: 'P1_HEADSET' }, eq: 1, then: [{ set: { local: 'fc_lim_noise' }, value: 0 }] }] },
+  { if: { local: 'fc_n' }, eq: 2, then: [{ if: { local: 'P2_HEADSET' }, eq: 1, then: [{ set: { local: 'fc_lim_noise' }, value: 0 }] }] },
+  { if: { local: 'fc_n' }, eq: 3, then: [{ if: { local: 'P3_HEADSET' }, eq: 1, then: [{ set: { local: 'fc_lim_noise' }, value: 0 }] }] },
   { set: { local: 'fc_alt' }, value: { var: ['A:PLANE ALTITUDE', 'feet'] } },
   { if: { local: 'fc_pickup_alt' }, eq: null, then: [{ set: { local: 'fc_pickup_alt' }, value: { local: 'fc_alt' } }] },
   { set: { local: 'fc_lim_alt' }, value: 0 },
@@ -77,28 +88,40 @@ const sample = [
       { if: { local: 'fc_alt_abs' }, lt: { local: 'fc_lim_alt' }, then: [{ set: { local: 'fc_lim_alt' }, value: { local: 'fc_alt_abs' } }] }] }] },
   { if: { local: 'fc_lim_alt' }, gt: 0, then: [{ if: { local: 'fc_lim_alt' }, lt: 3000, then: [{ set: { local: 'fc_lim_alt' }, value: 3000 }] }] },
   ...block('G', neg('G', { var: ['ACCELERATION BODY Y', 'Feet per second squared'] }), 'fc_lim_g'),
+  ...block('GX', neg('GX', { var: ['ACCELERATION BODY X', 'Feet per second squared'] }), 'fc_lim_gx'),
+  ...block('GZ', neg('GZ', { var: ['ACCELERATION BODY Z', 'Feet per second squared'] }), 'fc_lim_gz'),
+  ...block('PDOWN', [{ set: { local: 'fc_v_PDOWN' }, value: { var: ['PLANE PITCH DEGREES', 'Radians'] } }, { if: { local: 'fc_v_PDOWN' }, lt: 0, then: [{ set: { local: 'fc_v_PDOWN' }, value: 0 }] }], 'fc_lim_pdown'),
+  ...block('NOISE', [{ set: { local: 'fc_v_NOISE' }, value: 0 },
+    { if: g('L:{local:HXX}_SDK_ROTOR_RPM'), gt: 40, then: [{ if: g('L:{local:HXX}_SDK_ENG_1_N1'), gt: 20, then: [{ set: { local: 'fc_v_NOISE' }, value: 1 }], else: [{ if: g('L:{local:HXX}_SDK_ENG_2_N1'), gt: 20, then: [{ set: { local: 'fc_v_NOISE' }, value: 1 }] }] }] }], 'fc_lim_noise'),
   ...block('BANK', neg('BANK', { var: ['PLANE BANK DEGREES', 'Radians'] }), 'fc_lim_bank'),
   ...block('PITCH', [{ set: { local: 'fc_v_PITCH' }, value: { multiply: [{ var: ['PLANE PITCH DEGREES', 'Radians'] }, -1] } }, { if: { local: 'fc_v_PITCH' }, lt: 0, then: [{ set: { local: 'fc_v_PITCH' }, value: 0 }] }], 'fc_lim_pitch'),
   ...block('ALT', [{ set: { local: 'fc_v_ALT' }, value: { local: 'fc_alt' } }], 'fc_lim_alt'),
   { if: { local: 'fc_clear_due' }, eq: 1, then: [
     { set: { local: 'fc_clear_due' }, value: 0 },
-    { if: { local: 'fc_state_G' }, eq: 0, then: [{ if: { local: 'fc_state_BANK' }, eq: 0, then: [{ if: { local: 'fc_state_PITCH' }, eq: 0, then: [{ if: { local: 'fc_state_ALT' }, eq: 0, then: [
-      { call_macro: 'voice say', params: { key: 'FC.CLEAR' } }] }] }] }] }
+    { if: { local: 'fc_state_G' }, eq: 0, then: [{ if: { local: 'fc_state_BANK' }, eq: 0, then: [{ if: { local: 'fc_state_PITCH' }, eq: 0, then: [{ if: { local: 'fc_state_ALT' }, eq: 0, then: [{ if: { local: 'fc_state_NOISE' }, eq: 0, then: [{ if: { local: 'fc_state_GX' }, eq: 0, then: [{ if: { local: 'fc_state_GZ' }, eq: 0, then: [{ if: { local: 'fc_state_PDOWN' }, eq: 0, then: [
+      { call_macro: 'voice say', params: { key: 'FC.CLEAR' } }] }] }] }] }] }] }] }] }
   ] }
 ];
 
 const penalty = [
-  { '#comment': 'Applies one penalty to patient n: kind ALT lowers the SpO2 (patient 1 SPO2, others Pn_SPO2), every other kind the lifescore through the registry override (slot n) with the local as a fallback outside the live registry.' },
+  { '#comment': 'Applies one penalty to patient n (kind PITCH also lowers the systolic pressure by amount + 5, i.e. 10 or 15, and the lifescore by 5, as the doctor asked): kind ALT lowers the SpO2 (patient 1 SPO2, others Pn_SPO2), every other kind the lifescore through the registry override (slot n) with the local as a fallback outside the live registry.' },
   { if: { param: 'kind' }, eq: 'ALT', then: [
     { if: { param: 'patient' }, eq: 1, then: [{ set: { local: 'SPO2' }, value: { clamp: [{ subtract: [{ local: 'SPO2' }, { param: 'amount' }] }, 0, 100] } }] },
     { if: { param: 'patient' }, eq: 2, then: [{ set: { local: 'P2_SPO2' }, value: { clamp: [{ subtract: [{ local: 'P2_SPO2' }, { param: 'amount' }] }, 0, 100] } }] },
     { if: { param: 'patient' }, eq: 3, then: [{ set: { local: 'P3_SPO2' }, value: { clamp: [{ subtract: [{ local: 'P3_SPO2' }, { param: 'amount' }] }, 0, 100] } }] },
     { return: 1 }
   ] },
+  { if: { param: 'kind' }, eq: 'PITCH', then: [
+    { set: { local: 'fc_bp' }, value: { add: [{ param: 'amount' }, 5] } },
+    { if: { param: 'patient' }, eq: 1, then: [{ set: { local: 'BP_SYS' }, value: { clamp: [{ subtract: [{ local: 'BP_SYS' }, { local: 'fc_bp' }] }, 0, 300] } }] },
+    { if: { param: 'patient' }, eq: 2, then: [{ set: { local: 'P2_BP_SYS' }, value: { clamp: [{ subtract: [{ local: 'P2_BP_SYS' }, { local: 'fc_bp' }] }, 0, 300] } }] },
+    { if: { param: 'patient' }, eq: 3, then: [{ set: { local: 'P3_BP_SYS' }, value: { clamp: [{ subtract: [{ local: 'P3_BP_SYS' }, { local: 'fc_bp' }] }, 0, 300] } }] },
+    { set: { local: 'fc_amount' }, value: 5 }
+  ], else: [{ set: { local: 'fc_amount' }, value: { param: 'amount' } }] },
   { set: { local: 'fc_score' }, value: { local: 'LIFESCORE' } },
   { if: { param: 'patient' }, eq: 2, then: [{ set: { local: 'fc_score' }, value: { local: 'LIFESCORE2' } }] },
   { if: { param: 'patient' }, eq: 3, then: [{ set: { local: 'fc_score' }, value: { local: 'LIFESCORE3' } }] },
-  { set: { local: 'fc_score' }, value: { clamp: [{ subtract: [{ local: 'fc_score' }, { param: 'amount' }] }, 0, 100] } },
+  { set: { local: 'fc_score' }, value: { clamp: [{ subtract: [{ local: 'fc_score' }, { local: 'fc_amount' }] }, 0, 100] } },
   { call_macro: 'multipatient registry manual lifescore override', params: { slot: { param: 'patient' }, score: { local: 'fc_score' } }, result: 'fc_done' },
   { if: { local: 'fc_done' }, ne: 1, then: [
     { if: { param: 'patient' }, eq: 1, then: [{ set: { local: 'LIFESCORE' }, value: { local: 'fc_score' } }] },
@@ -108,7 +131,7 @@ const penalty = [
   { return: 1 }
 ];
 
-const text = { G: 'FLIGHT LIMIT: vertical load too high for the patient.', BANK: 'FLIGHT LIMIT: too much bank for the patient.', PITCH: 'FLIGHT LIMIT: nose too high for the patient.', ALT: 'FLIGHT LIMIT: too high for the patient.' };
+const text = { G: 'FLIGHT LIMIT: vertical load too high for the patient.', BANK: 'FLIGHT LIMIT: too much bank for the patient.', PITCH: 'FLIGHT LIMIT: nose too high for the patient.', ALT: 'FLIGHT LIMIT: too high for the patient.', GX: 'FLIGHT LIMIT: sideways load too high for the patient.', GZ: 'FLIGHT LIMIT: braking or acceleration too hard for the patient.', PDOWN: 'FLIGHT LIMIT: nose too low for the patient.', NOISE: 'FLIGHT LIMIT: engine and rotor noise is hurting the patient.' };
 const tablet = Object.keys(text).map((k) => ({ if: { param: 'kind' }, eq: k, then: [{ call_macro: 'post dispatcher message', params: { from: 'crew', text: text[k] } }] }));
 
 const mod = {
@@ -131,7 +154,7 @@ const mod = {
   ],
   'flight constraints reset': [
     { set: { local: 'fc_pickup_alt' }, value: null },
-    ...['G', 'BANK', 'PITCH', 'ALT'].flatMap((k) => [{ set: { local: 'fc_state_' + k }, value: 0 }, { set: { local: 'fc_cd_' + k }, value: 0 }]),
+    ...['G', 'GX', 'GZ', 'NOISE', 'BANK', 'PITCH', 'PDOWN', 'ALT'].flatMap((k) => [{ set: { local: 'fc_state_' + k }, value: 0 }, { set: { local: 'fc_cd_' + k }, value: 0 }]),
     { set: { local: 'fc_clear_due' }, value: 0 }
   ],
   'flight constraints sample': sample,
@@ -141,10 +164,19 @@ const mod = {
   ],
   'flight constraints penalty': penalty,
   'flight constraints tablet': tablet,
+  'fit patient headset': [
+    { '#comment': 'Free action of the HEMS medical page (Andrew 2026-11-21): hearing protection for the patient in param patient. Never a mandatory step. The flight constraint NOISE ignores a patient with the headset.' },
+    { if: { param: 'patient' }, eq: 1, then: [{ set: { local: 'P1_HEADSET' }, value: 1 }] },
+    { if: { param: 'patient' }, eq: 2, then: [{ set: { local: 'P2_HEADSET' }, value: 1 }] },
+    { if: { param: 'patient' }, eq: 3, then: [{ set: { local: 'P3_HEADSET' }, value: 1 }] },
+    { call_macro: 'post dispatcher message', params: { from: 'crew', text: 'Headset fitted on the patient.' } },
+    { call_macro: 'sync medical patient display' }
+  ],
 };
 fs.writeFileSync(root + '25-flight-constraints.json', JSON.stringify(mod, null, 2) + '\n');
 
-// ---- wiring of the option FLIGHT_CONSTRAINTS ----
+// ---- wiring of the option FLIGHT_CONSTRAINTS (first run only: pass --wire; the wiring is already in the sources) ----
+if (!process.argv.includes('--wire')) { console.log('module written, wiring skipped'); process.exit(0); }
 patch(root + '01-bootstrap-settings.json',
   '    {"if": {"global":"SPEECH_TIPS"}, "eq": null,',
   '    {"if": {"global":"FLIGHT_CONSTRAINTS"}, "eq": null,\n      "then": [\n        {"set":{"global":"FLIGHT_CONSTRAINTS"},"value":"no"}\n    ]},\n    {"if": {"global":"SPEECH_TIPS"}, "eq": null,');

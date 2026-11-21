@@ -1,4 +1,4 @@
-# One-shot (2026-11-21): DE/FR/IT screen texts of the 47 new keys (release 0.997 170.49) and the DE/FR pack lines (DSC.75-79, FC.*).
+# One-shot (2026-11-21): DE/FR/IT screen texts of the 49 new keys (UI.3906-3907: FIT HEADSET, added for 170.50) (release 0.997 170.49) and the DE/FR pack lines (DSC.75-79, FC.*).
 # Run: python tools/add-translations-2026-11-21.py   (idempotent)
 import json, re, io
 T = {
@@ -52,6 +52,9 @@ T = {
 'UI.3904': ('Akute Aortendissektion', 'Dissection aortique aiguë', 'Dissezione aortica acuta'),
 'UI.3905': ('Instabile Beckenfraktur mit hämorrhagischem Schock', 'Fracture instable du bassin avec choc hémorragique', 'Frattura instabile del bacino con shock emorragico'),
 }
+T['UI.3906'] = ('KOPFHÖRER ANLEGEN', 'POSER LE CASQUE', 'METTI LE CUFFIE')
+T['UI.3907'] = ('KOPFHÖRER ANGELEGT: Der Lärm schadet dem Patienten nicht mehr.', 'CASQUE POSÉ : le bruit ne gêne plus le patient.', 'CUFFIE MESSE: il rumore non danneggia più il paziente.')
+
 FC = {
  'DE': {'FC.G': ['Captain, bitte sanft steuern, der Patient hält diese Belastungen nicht aus.', 'Vorsicht, Captain, zu viel Last für den Patienten.', 'Bitte weiche Steuereingaben, Captain, der Patient leidet.'],
         'FC.BANK': ['Captain, zu viel Schräglage für den Patienten. Bitte ausgleichen.', 'Bitte die Flächen waagerecht halten, der Patient verträgt diese Schräglage nicht.', 'Captain, die Schräglage verringern, dem Patienten geht es schlechter.'],

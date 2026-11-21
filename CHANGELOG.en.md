@@ -1,3 +1,9 @@
+## Release 0.997 170.50
+
+- VOX pick crew without a loop (stack audit)
+- Scope includes everything changed since the last snapshot (170.49 and 170.50)
+- Flight constraints lateral and longitudinal G, pitch down ICP, noise, pitch up pressure, FIT HEADSET, ICS VOX glitch with crew lines
+
 ## Release 0.997 170.49
 
 - Scene 76 gets its own scene type 34 (unique among the vehicle scenes)

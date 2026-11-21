@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.49. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.50. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -2015,9 +2015,15 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 
 ### Flight limits for the patient on the stretcher
 
-- Optional setting FLIGHT CONSTRAINTS (off by default): while a patient lies on the stretcher the crew warns you when altitude above 3000 ft, vertical load, bank or nose-up pitch go over the limit of the pathology, and beyond the limit the patient loses SpO2 or lifescore.
-- **Build history:** 0.997 170.49.
-- **Test:** Switch the setting on, carry a patient and exceed the bank limit.
+- Optional setting FLIGHT CONSTRAINTS (off by default): while a patient lies on the stretcher the crew warns you when altitude above 3000 ft, vertical, sideways and braking load, bank, nose-up pitch (and nose-down pitch for head injuries) go over the limit of the pathology, and beyond the limit the patient loses SpO2, blood pressure or lifescore. Engine and rotor noise also hurts the patients that cannot bear it, until you fit the headset with the new FIT HEADSET button of the medical page (in automatic medical mode the headset is already on).
+- **Build history:** 0.997 170.49, 170.50.
+- **Test:** Switch the setting on, carry a patient and exceed the bank limit; with a head-injury patient aboard run the engines without the headset and then press FIT HEADSET.
+
+### Crew headset VOX sometimes keys on the noise
+
+- In about one flight in five, with engines on and collective up, a crew member's VOX is set too sensitive and the intercom opens on noise for a second or two, up to five times. After the third time somebody asks everybody to check the VOX, and later one of the crew says it is fixed and does a comm check. The noise itself needs the Companion update (issue 168).
+- **Build history:** 0.997 170.50.
+- **Test:** Fly several times with a crew aboard, engines on and collective up, and wait for the intercom noise and the crew lines.
 
 ### Voice commands for the destination
 
@@ -2097,6 +2103,7 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.32 (this release):** The Debug page and the snapshot open the saved-game table before reading it (see the entry above).
+- **0.997 170.50:** Flight limits for lateral and braking load, noise and headset, and the crew headset VOX glitch (see the entries above).
 - **0.997 170.33-170.49:** Voice commands page language, destination page and voice commands, autosave and heartbeat fixes, manual transport choices, Direction Finder tuning, wind and rotor noise context, second ambulance start, five new emergencies and the optional flight limits (see the entries above).
 - **0.997 170.31:** The target call and the unsafe scene calls, the halfway up call, the first save slot, the waiting line of the accepted dispatch and the German and French lines of the ambulance wait (see the sections above).
 - **0.997 170.30:** More voice commands, the briefing opened by Show dispatch, tips in two pages and safe distances of the medics (see the sections above).
