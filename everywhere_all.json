@@ -1,5 +1,5 @@
 {
-"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.51",
+"title": "HEMS RANDOM AND EVERYWHERE MISSIONS 0.997 170.52",
 
 "id": "HEMSRandE",
 
@@ -17,7 +17,7 @@
 
 "macros": {"version check": [
     {"set":{"local":"MISSION_VERSION"},"value":"0.997"},
-    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.51"},
+    {"set":{"local":"RELEASE_IDENTITY"},"value":"0.997 170.52"},
     {"#comment":"User request of 2026-10-19: the build number follows the release (DEV_VERSION is the second word of RELEASE_IDENTITY, written by release-workflow, so there is a single place to change) and the type is ALPHA until the mission is stable. BUILD_MAJOR / BUILD_MINOR / BUILD_N (major * 1000 + minor: 169.9 comes before 169.64) are what the update notice compares."},
     {"set":{"local":"DEV_VERSION"},"value":{"string:split":{"local":"RELEASE_IDENTITY"},"delimiter":" ","index":1}},
     {"set":{"local":"DEV_TYPE"},"value":"(ALPHA)"},
@@ -91573,6 +91573,12 @@
   ],
   "voice say": [
     {"#comment":"One line of the pack (Mission Companion, voice code APP): <say:KEY> with the argument a for {0}. declut 1 = chatter, skipped by the AUDIO_DECLUT levels 1 to 3 like the other conversations. Used by the macros below."},
+    {"set":{"local":"vsr_declut"},"value":0},
+    {"if": {"param":"declut"}, "eq": 1,
+      "then": [
+        {"set":{"local":"vsr_declut"},"value":1}
+    ]},
+    {"call_macro":"voice say recorded","params":{"key":{"param":"key"},"declut":{"local":"vsr_declut"}}},
     {"if": {
       "and": [
         {"require":{"local":"VCP"},"eq":"APP"},
@@ -91615,6 +91621,395 @@
         ]}
       ],"else": [
         {"call_macro":"voice app check"}
+    ]}
+  ],
+  "voice say recorded": [
+    {"#comment":"Recorded voices (L:HMC_APP_RECORDED 1, 2026-11-22): the lines of voice say are spoken through the voice server (<say:KEY>), which a Companion in recorded mode does not have; the Companion plays the recorded wav of the counters L:xxxAPPnn instead. This table raises the counter of the wav of each fixed line (families APR BRF CRZ DTH GRD HLD HCL DBF HPC MID; the numbers are the lvar of the pack message and the LocalVar of its sound.xml entry). Lines with a value in the text (GRD.ETA.N, APR.WND, HCL.H, APR.PLT.P) have no wav. Called from voice say; param key, param declut (1 = chatter, skipped by the AUDIO_DECLUT levels 1 to 3)."},
+    {"if": {
+      "and": [
+        {"require":{"local":"VCP"},"eq":"APP"},
+        {"require":{"var":["L:HMC_APP_RECORDED","number"]},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"vsr_ok"},"value":1},
+        {"if": {"param":"declut"}, "eq": 1,
+          "then": [
+            {"if": {
+              "and": [
+                {"require":{"global":"AUDIO_DECLUT"},"gt":0},
+                {"require":{"global":"AUDIO_DECLUT"},"lte":3}
+              ]}, "eq": 1,
+              "then": [
+                {"set":{"local":"vsr_ok"},"value":0}
+            ]}
+        ]},
+        {"if": {"local":"vsr_ok"}, "eq": 1,
+          "then": [
+            {"if": {"param":"key"}, "eq": "APR.CHF.G",
+              "then": [
+                {"set":{"var":["L:{local:VCP}93","number"]},"value":{"add":[{"var":["L:{local:VCP}93","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.CHF.H",
+              "then": [
+                {"set":{"var":["L:{local:VCP}94","number"]},"value":{"add":[{"var":["L:{local:VCP}94","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.CPL.N",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}69","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}69","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.CPL.S",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}70","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}70","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.DOC.A",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}46","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}46","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.DOC.N",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}47","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}47","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}55","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}55","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORG.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}95","number"]},"value":{"add":[{"var":["L:{local:VCP}95","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORG.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}48","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}48","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORG.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}56","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}56","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORG.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}57","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}57","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.PLT.G",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}58","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}58","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.PLT.H",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}59","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}59","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.TRF.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}96","number"]},"value":{"add":[{"var":["L:{local:VCP}96","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.TRF.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}49","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}49","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.TRF.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}60","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}60","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.TRF.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}61","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}61","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}97","number"]},"value":{"add":[{"var":["L:{local:VCP}97","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}71","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}71","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}50","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}50","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}62","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}62","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}63","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}63","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.SAR.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}98","number"]},"value":{"add":[{"var":["L:{local:VCP}98","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.SAR.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}72","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}72","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.SAR.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}51","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}51","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.SAR.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}64","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}64","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.SAR.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}65","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}65","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.TRF.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}99","number"]},"value":{"add":[{"var":["L:{local:VCP}99","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.TRF.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}73","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}73","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.TRF.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}52","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}52","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.TRF.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}66","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}66","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.TRF.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}67","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}67","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "CRZ.BACK.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}74","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}74","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "CRZ.BACK.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}53","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}53","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "CRZ.BACK.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}68","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}68","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "CRZ.OUT.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}75","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}75","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "CRZ.OUT.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}54","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}54","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "CRZ.OUT.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}69","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}69","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DTH.CLN.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}55","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}55","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DTH.CLN.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}70","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}70","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DTH.IMP.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}76","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}76","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DTH.IMP.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}56","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}56","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DTH.IMP.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}71","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}71","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.CPR.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}57","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}57","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.DEP.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}100","number"]},"value":{"add":[{"var":["L:{local:VCP}100","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.ETA.0",
+              "then": [
+                {"set":{"var":["L:{local:VCP}101","number"]},"value":{"add":[{"var":["L:{local:VCP}101","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.ETA.1",
+              "then": [
+                {"set":{"var":["L:{local:VCP}102","number"]},"value":{"add":[{"var":["L:{local:VCP}102","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.LOAD.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}103","number"]},"value":{"add":[{"var":["L:{local:VCP}103","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.PLT.OK",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}72","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}72","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.PLT.Q",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}73","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}73","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.RET.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}104","number"]},"value":{"add":[{"var":["L:{local:VCP}104","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.TRT.C",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}58","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}58","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.TRT.M",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}59","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}59","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.TRT.S",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}60","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}60","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.WHO.A",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}61","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}61","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.WHO.H",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}62","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}62","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HLD.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}77","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}77","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HLD.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}63","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}63","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HLD.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}74","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}74","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.INT.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}75","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}75","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.INT.CPL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}78","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}78","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.INT.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}64","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}64","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.INT.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}105","number"]},"value":{"add":[{"var":["L:{local:VCP}105","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.CHF.P",
+              "then": [
+                {"set":{"var":["L:{local:VCP}106","number"]},"value":{"add":[{"var":["L:{local:VCP}106","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "GRD.DEAD",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}65","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}65","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.PLT.T",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}76","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}76","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "BRF.ORG.PLT.B",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}77","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}77","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORG.PLT.T",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}78","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}78","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORG.PLT.B",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}79","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}79","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.WND.C",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}79","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}79","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.ORB",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}80","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}80","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HCL.DOWN",
+              "then": [
+                {"set":{"var":["L:{local:VCP}107","number"]},"value":{"add":[{"var":["L:{local:VCP}107","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HCL.GND",
+              "then": [
+                {"set":{"var":["L:{local:VCP}108","number"]},"value":{"add":[{"var":["L:{local:VCP}108","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HCL.UP",
+              "then": [
+                {"set":{"var":["L:{local:VCP}109","number"]},"value":{"add":[{"var":["L:{local:VCP}109","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HCL.HALF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}110","number"]},"value":{"add":[{"var":["L:{local:VCP}110","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HCL.DOOR",
+              "then": [
+                {"set":{"var":["L:{local:VCP}111","number"]},"value":{"add":[{"var":["L:{local:VCP}111","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HPC.Q",
+              "then": [
+                {"set":{"var":["L:{local:VCP}112","number"]},"value":{"add":[{"var":["L:{local:VCP}112","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "HPC.A",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}80","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}80","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DBF.DEAD",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}66","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}66","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DBF.HARD",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}81","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}81","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DBF.FAIL",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}82","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}82","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DBF.WAIT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}81","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}81","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "DBF.OK",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}82","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}82","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "MID.SET",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}83","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}83","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "MID.HND",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}67","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}67","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.MID.PLT",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}83","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}83","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.MID.DOC",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}68","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}68","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.MID.CHF",
+              "then": [
+                {"set":{"var":["L:{local:VCP}113","number"]},"value":{"add":[{"var":["L:{local:VCP}113","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.MID.END",
+              "then": [
+                {"set":{"var":["L:PLT{local:VCP}84","number"]},"value":{"add":[{"var":["L:PLT{local:VCP}84","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.MUL",
+              "then": [
+                {"set":{"var":["L:PAX3{local:VCP}69","number"]},"value":{"add":[{"var":["L:PAX3{local:VCP}69","number"]},1]}}
+            ]},
+            {"if": {"param":"key"}, "eq": "APR.FIR",
+              "then": [
+                {"set":{"var":["L:CPL{local:VCP}84","number"]},"value":{"add":[{"var":["L:CPL{local:VCP}84","number"]},1]}}
+            ]}
+        ]}
     ]}
   ],
   "voice mission class": [

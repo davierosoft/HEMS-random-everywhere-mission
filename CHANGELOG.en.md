@@ -1,3 +1,11 @@
+## Release 0.997 170.52
+
+- voice say calls the recorded counters first
+- Reindex of the macro format metadata and README count
+- Official formatter applied to the new macro
+- Version check macro follows the displayed release
+- Recorded wavs for 138 pack lines and the recorded-mode counters in voice say
+
 ## Release 0.997 170.51
 
 - Scope: threads root and version check
