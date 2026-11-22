@@ -1472,6 +1472,8 @@
     {"set":{"local":"medical_display_visit_hems"},"value":"-"},
     {"set":{"local":"medical_display_visit_amb1"},"value":"-"},
     {"set":{"local":"medical_display_visit_amb2"},"value":"-"},
+    {"set":{"local":"medical_display_visit_amb3"},"value":"-"},
+    {"set":{"local":"medical_display_visit_amb4"},"value":"-"},
     {"call_macro":"multipatient registry get","params":{"slot":{"local":"medical_display_patient"}},"result":"decision_record"},
     {"if": {"param":"decision_record"}, "ne": null,
       "then": [
@@ -1509,6 +1511,14 @@
             {"if": {"param":"decision_record","path":"resource"}, "eq": "ambulance2",
               "then": [
                 {"set":{"param":"who_short"},"value":"Ambulance 2"}
+            ]},
+            {"if": {"param":"decision_record","path":"resource"}, "eq": "ambulance3",
+              "then": [
+                {"set":{"param":"who_short"},"value":"Ambulance 3"}
+            ]},
+            {"if": {"param":"decision_record","path":"resource"}, "eq": "ambulance4",
+              "then": [
+                {"set":{"param":"who_short"},"value":"Ambulance 4"}
             ]},
             {"set":{"param":"phrase"},"value":"has been assigned to this patient"},
             {"if": {"param":"decision_record","path":"transport_state"}, "eq": "loading",
@@ -1580,9 +1590,13 @@
                     {"call_macro":"medical visit status word","params":{"status":{"param":"$item","path":"hems"}},"result":"w_hems"},
                     {"call_macro":"medical visit status word","params":{"status":{"param":"$item","path":"ambulance1"}},"result":"w_amb1"},
                     {"call_macro":"medical visit status word","params":{"status":{"param":"$item","path":"ambulance2"}},"result":"w_amb2"},
+                    {"call_macro":"medical visit status word","params":{"status":{"param":"$item","path":"ambulance3"}},"result":"w_amb3"},
+                    {"call_macro":"medical visit status word","params":{"status":{"param":"$item","path":"ambulance4"}},"result":"w_amb4"},
                     {"set":{"local":"medical_display_visit_hems"},"value":{"param":"w_hems"}},
                     {"set":{"local":"medical_display_visit_amb1"},"value":{"param":"w_amb1"}},
-                    {"set":{"local":"medical_display_visit_amb2"},"value":{"param":"w_amb2"}}
+                    {"set":{"local":"medical_display_visit_amb2"},"value":{"param":"w_amb2"}},
+                    {"set":{"local":"medical_display_visit_amb3"},"value":{"param":"w_amb3"}},
+                    {"set":{"local":"medical_display_visit_amb4"},"value":{"param":"w_amb4"}}
                 ]}
             ]}
         ]}
@@ -1594,7 +1608,9 @@
     ]},
     {"if": {"local":"AMBU_AVAIL"}, "gte": 2,
       "then": [
-        {"set":{"local":"medical_display_examinations_text"},"value":{"text":"{0} | Ambulance 2 {1}","params":[{"local":"medical_display_examinations_text"},{"local":"medical_display_visit_amb2"}]}}
+        {"set":{"local":"medical_display_examinations_text"},"value":{"text":"{0} | Ambulance 2 {1}","params":[{"local":"medical_display_examinations_text"},{"local":"medical_display_visit_amb2"}]}},
+        {"set":{"local":"medical_display_examinations_text"},"value":{"text":"{0} | Ambulance 3 {1}","params":[{"local":"medical_display_examinations_text"},{"local":"medical_display_visit_amb3"}]}},
+        {"set":{"local":"medical_display_examinations_text"},"value":{"text":"{0} | Ambulance 4 {1}","params":[{"local":"medical_display_examinations_text"},{"local":"medical_display_visit_amb4"}]}}
     ]},
     {"if": {"var":["L:CPR","number"]}, "ne": 2,
       "then": [
@@ -1732,6 +1748,7 @@
         {"text":"VISIT SIGNED OFF - SELECT TRANSPORT","color":"yellow","align":"center","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
         {"buttonbar":[{"title":"HEMS PRIORITY","commands":[{"call_macro":"complete manual patient visit","params":{"transport":"helicopter"}}],"disabled_condition":{"require":{"local":"medical_display_hems_ok"},"ne":1}},{"title":"GROUND","commands":[{"call_macro":"complete manual patient visit","params":{"transport":"ambulance"}}],"disabled_condition":{"require":{"local":"medical_display_ground_ok"},"ne":1}}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}}],"eq":1}},
         {"text":"{0}","params":[{"local":"medical_display_ground_reason"}],"color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}},{"require":{"local":"medical_display_ground_ok"},"ne":1}],"eq":1}},
+        {"buttonbar":[{"title":"CALL AMBULANCE","color":"yellow","commands":[{"call_macro":"call additional ambulance"}]}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}},{"require":{"local":"medical_display_amb_call_ok"},"eq":1}],"eq":1}},
         {"text":"{0}","params":[{"local":"medical_display_hems_reason"}],"color":"orange","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"transport"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"},{"require":{"local":"manual_active_patient"},"eq":{"local":"medical_display_patient"}},{"require":{"local":"medical_display_hems_ok"},"ne":1}],"eq":1}},
         {"text":"MANUAL VISIT COMPLETED - {0} transport selected.","color":"green","params":[{"local":"medical_display_manual_transport"}],"show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"complete"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
         {"text":"PATIENT DIED - MANUAL VISIT CLOSED.","color":"red","show_condition":{"and":[{"require":{"local":"medical_display_manual_mode"},"eq":"manual"},{"require":{"local":"medical_display_manual_state"},"eq":"aborted"},{"require":{"local":"medical_display_report_finalized"},"ne":"yes"}],"eq":1}},
@@ -1796,6 +1813,14 @@
         {"set":{"local":"cpr_provider_present"},"value":1}
     ]},
     {"if": {"local":"ambu2arrived"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"cpr_provider_present"},"value":1}
+    ]},
+    {"if": {"local":"ambu3arrived"}, "eq": "yes",
+      "then": [
+        {"set":{"local":"cpr_provider_present"},"value":1}
+    ]},
+    {"if": {"local":"ambu4arrived"}, "eq": "yes",
       "then": [
         {"set":{"local":"cpr_provider_present"},"value":1}
     ]},
@@ -7213,6 +7238,14 @@
       "then": [
         {"set":{"local":"mtc_amb"},"value":{"add":[{"local":"mtc_amb"},1]}}
     ]},
+    {"if": {"has_object":"ambulance3"}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_amb"},"value":{"add":[{"local":"mtc_amb"},1]}}
+    ]},
+    {"if": {"has_object":"ambulance4"}, "eq": 1,
+      "then": [
+        {"set":{"local":"mtc_amb"},"value":{"add":[{"local":"mtc_amb"},1]}}
+    ]},
     {"set":{"local":"mtc_other_ground"},"value":0},
     {"set":{"local":"mtc_other_hems"},"value":0},
     {"if": {
@@ -7274,6 +7307,25 @@
             {"set":{"local":"medical_display_ground_ok"},"value":1}
           ],"else": [
             {"set":{"local":"medical_display_ground_reason"},"value":"GROUND not available: every ambulance on scene already takes a patient"}
+        ]}
+    ]},
+    {"#comment":"CALL AMBULANCE button: ground is blocked only because every ambulance on scene already has a patient, a free one exists and none is still driving in."},
+    {"set":{"local":"medical_display_amb_call_ok"},"value":0},
+    {"if": {
+      "and": [
+        {"require":{"local":"mtc_amb"},"gt":0},
+        {"require":{"local":"medical_display_ground_ok"},"ne":1},
+        {"require":{"local":"mtc_amb"},"lte":{"local":"mtc_other_ground"}}
+      ]}, "eq": 1,
+      "then": [
+        {"call_macro":"ambulance next free"},
+        {"if": {
+          "and": [
+            {"require":{"local":"ambulance_next_free"},"gt":0},
+            {"require":{"local":"ambulance_pending"},"ne":1}
+          ]}, "eq": 1,
+          "then": [
+            {"set":{"local":"medical_display_amb_call_ok"},"value":1}
         ]}
     ]},
     {"set":{"local":"medical_display_hems_ok"},"value":1},

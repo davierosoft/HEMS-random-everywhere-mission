@@ -1452,11 +1452,11 @@
     {"set":{"local":"patient_crew_visit_generation"},"value":{"add":[{"local":"patient_crew_visit_generation"},1]}},
     {"set":{"local":"patient_crew_visits"},"value":{"create_array":0}},
     {"set":{"local":"crew_movement_log"},"value":{"create_array":0}},
-    {"modify_array":{"local":"patient_crew_visits"},"append":{"create_struct":{"slot":1,"object":"injured_human","owner":"none","ambulance1":"pending","ambulance2":"pending","hems":"pending"}}},
-    {"modify_array":{"local":"patient_crew_visits"},"append":{"create_struct":{"slot":2,"object":"injured_human2","owner":"none","ambulance1":"pending","ambulance2":"pending","hems":"pending"}}},
-    {"modify_array":{"local":"patient_crew_visits"},"append":{"create_struct":{"slot":3,"object":"injured_human3","owner":"none","ambulance1":"pending","ambulance2":"pending","hems":"pending"}}},
+    {"modify_array":{"local":"patient_crew_visits"},"append":{"create_struct":{"slot":1,"object":"injured_human","owner":"none","ambulance1":"pending","ambulance2":"pending","ambulance3":"pending","ambulance4":"pending","hems":"pending"}}},
+    {"modify_array":{"local":"patient_crew_visits"},"append":{"create_struct":{"slot":2,"object":"injured_human2","owner":"none","ambulance1":"pending","ambulance2":"pending","ambulance3":"pending","ambulance4":"pending","hems":"pending"}}},
+    {"modify_array":{"local":"patient_crew_visits"},"append":{"create_struct":{"slot":3,"object":"injured_human3","owner":"none","ambulance1":"pending","ambulance2":"pending","ambulance3":"pending","ambulance4":"pending","hems":"pending"}}},
     {"set":{"local":"HEMS_VISIT_OBJECT"},"value":"accident_location"},
-    {"set":{"local":"patient_crew_tours"},"value":{"create_struct":{"ambulance1":"pending","ambulance2":"pending","hems":"pending"}}}
+    {"set":{"local":"patient_crew_tours"},"value":{"create_struct":{"ambulance1":"pending","ambulance2":"pending","ambulance3":"pending","ambulance4":"pending","hems":"pending"}}}
   ],
   "multipatient registry crew record": [
     {"if": {"local":"patient_crew_visits"}, "eq": null,
@@ -1584,6 +1584,14 @@
       "then": [
         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"visit"},{"create_struct":{"ambulance2":{"param":"state"}}}]}}
     ]},
+    {"if": {"param":"resource"}, "eq": "ambulance3",
+      "then": [
+        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"visit"},{"create_struct":{"ambulance3":{"param":"state"}}}]}}
+    ]},
+    {"if": {"param":"resource"}, "eq": "ambulance4",
+      "then": [
+        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"visit"},{"create_struct":{"ambulance4":{"param":"state"}}}]}}
+    ]},
     {"if": {"param":"resource"}, "eq": "hems",
       "then": [
         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"visit"},{"create_struct":{"hems":{"param":"state"}}}]}}
@@ -1631,6 +1639,22 @@
       "and": [
         {"require":{"param":"resource"},"eq":"ambulance2"},
         {"require":{"param":"visit","path":"ambulance2"},"eq":"completed"}
+      ]}, "eq": 1,
+      "then": [
+        {"return":"completed"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"resource"},"eq":"ambulance3"},
+        {"require":{"param":"visit","path":"ambulance3"},"eq":"completed"}
+      ]}, "eq": 1,
+      "then": [
+        {"return":"completed"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"resource"},"eq":"ambulance4"},
+        {"require":{"param":"visit","path":"ambulance4"},"eq":"completed"}
       ]}, "eq": 1,
       "then": [
         {"return":"completed"}
@@ -1701,7 +1725,9 @@
     {"if": {
       "or": [
         {"require":{"param":"actor"},"eq":"ambustretcher7"},
-        {"require":{"param":"actor"},"eq":"ambustretcher2"}
+        {"require":{"param":"actor"},"eq":"ambustretcher2"},
+        {"require":{"param":"actor"},"eq":"ambustretcher8"},
+        {"require":{"param":"actor"},"eq":"ambustretcher9"}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"multipatient registry stretcher move","params":{"actor":{"param":"actor"},"object":{"param":"object"},"side":{"param":"side"}},"result":"stretcher_arrived"},
@@ -1710,7 +1736,9 @@
     {"if": {
       "or": [
         {"require":{"param":"actor"},"eq":"ambumedic7"},
-        {"require":{"param":"actor"},"eq":"ambumedic2"}
+        {"require":{"param":"actor"},"eq":"ambumedic2"},
+        {"require":{"param":"actor"},"eq":"ambumedic8"},
+        {"require":{"param":"actor"},"eq":"ambumedic9"}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"multipatient registry crew set ground standing","params":{"actor":{"param":"actor"}}}
@@ -1753,7 +1781,9 @@
     {"if": {
       "or": [
         {"require":{"param":"actor"},"eq":"ambumedic7"},
-        {"require":{"param":"actor"},"eq":"ambumedic2"}
+        {"require":{"param":"actor"},"eq":"ambumedic2"},
+        {"require":{"param":"actor"},"eq":"ambumedic8"},
+        {"require":{"param":"actor"},"eq":"ambumedic9"}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"multipatient registry crew set ground standing","params":{"actor":{"param":"actor"}}}
@@ -1781,6 +1811,8 @@
       "or": [
         {"require":{"param":"actor"},"eq":"ambumedic7"},
         {"require":{"param":"actor"},"eq":"ambumedic2"},
+        {"require":{"param":"actor"},"eq":"ambumedic8"},
+        {"require":{"param":"actor"},"eq":"ambumedic9"},
         {"require":{"param":"actor"},"eq":"hoist_crew"},
         {"require":{"param":"actor"},"eq":"pax3"}
       ]}, "ne": 1,
@@ -1830,6 +1862,22 @@
     ]},
     {"if": {
       "and": [
+        {"require":{"param":"resource"},"eq":"ambulance3"},
+        {"require":{"param":"visit","path":"ambulance3"},"eq":"completed"}
+      ]}, "eq": 1,
+      "then": [
+        {"return":"completed"}
+    ]},
+    {"if": {
+      "and": [
+        {"require":{"param":"resource"},"eq":"ambulance4"},
+        {"require":{"param":"visit","path":"ambulance4"},"eq":"completed"}
+      ]}, "eq": 1,
+      "then": [
+        {"return":"completed"}
+    ]},
+    {"if": {
+      "and": [
         {"require":{"param":"resource"},"eq":"hems"},
         {"require":{"param":"visit","path":"hems"},"eq":"completed"}
       ]}, "eq": 1,
@@ -1850,7 +1898,9 @@
     {"if": {
       "or": [
         {"require":{"param":"resource"},"eq":"ambulance1"},
-        {"require":{"param":"resource"},"eq":"ambulance2"}
+        {"require":{"param":"resource"},"eq":"ambulance2"},
+        {"require":{"param":"resource"},"eq":"ambulance3"},
+        {"require":{"param":"resource"},"eq":"ambulance4"}
       ]}, "eq": 1,
       "then": [
         {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew visit","state":"call_multipatient_registry_crew_acquire"}},
@@ -2105,46 +2155,136 @@
             {"return":0}
         ]}
       ],"else": [
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
-        {"call_macro":"multipatient registry crew visit","params":{"patient":1,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit1"},
-        {"if": {
-          "or": [
-            {"require":{"param":"visit1"},"eq":"movement_failed"},
-            {"require":{"param":"visit1"},"eq":"assessment_failed"},
-            {"require":{"param":"visit1"},"eq":"cancelled"}
-          ]}, "eq": 1,
+        {"if": {"param":"resource"}, "eq": "ambulance3",
           "then": [
-            {"return":0}
-        ]},
-        {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
-          "then": [
-            {"return":0}
-        ]},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
-        {"call_macro":"multipatient registry crew visit","params":{"patient":2,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit2"},
-        {"if": {
-          "or": [
-            {"require":{"param":"visit2"},"eq":"movement_failed"},
-            {"require":{"param":"visit2"},"eq":"assessment_failed"},
-            {"require":{"param":"visit2"},"eq":"cancelled"}
-          ]}, "eq": 1,
-          "then": [
-            {"return":0}
-        ]},
-        {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
-          "then": [
-            {"return":0}
-        ]},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
-        {"call_macro":"multipatient registry crew visit","params":{"patient":3,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit3"},
-        {"if": {
-          "or": [
-            {"require":{"param":"visit3"},"eq":"movement_failed"},
-            {"require":{"param":"visit3"},"eq":"assessment_failed"},
-            {"require":{"param":"visit3"},"eq":"cancelled"}
-          ]}, "eq": 1,
-          "then": [
-            {"return":0}
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+            {"call_macro":"multipatient registry crew visit","params":{"patient":3,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit3"},
+            {"if": {
+              "or": [
+                {"require":{"param":"visit3"},"eq":"movement_failed"},
+                {"require":{"param":"visit3"},"eq":"assessment_failed"},
+                {"require":{"param":"visit3"},"eq":"cancelled"}
+              ]}, "eq": 1,
+              "then": [
+                {"return":0}
+            ]},
+            {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
+              "then": [
+                {"return":0}
+            ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+            {"call_macro":"multipatient registry crew visit","params":{"patient":2,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit2"},
+            {"if": {
+              "or": [
+                {"require":{"param":"visit2"},"eq":"movement_failed"},
+                {"require":{"param":"visit2"},"eq":"assessment_failed"},
+                {"require":{"param":"visit2"},"eq":"cancelled"}
+              ]}, "eq": 1,
+              "then": [
+                {"return":0}
+            ]},
+            {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
+              "then": [
+                {"return":0}
+            ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+            {"call_macro":"multipatient registry crew visit","params":{"patient":1,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit1"},
+            {"if": {
+              "or": [
+                {"require":{"param":"visit1"},"eq":"movement_failed"},
+                {"require":{"param":"visit1"},"eq":"assessment_failed"},
+                {"require":{"param":"visit1"},"eq":"cancelled"}
+              ]}, "eq": 1,
+              "then": [
+                {"return":0}
+            ]}
+          ],"else": [
+            {"if": {"param":"resource"}, "eq": "ambulance4",
+              "then": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+                {"call_macro":"multipatient registry crew visit","params":{"patient":3,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit3"},
+                {"if": {
+                  "or": [
+                    {"require":{"param":"visit3"},"eq":"movement_failed"},
+                    {"require":{"param":"visit3"},"eq":"assessment_failed"},
+                    {"require":{"param":"visit3"},"eq":"cancelled"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
+                  "then": [
+                    {"return":0}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+                {"call_macro":"multipatient registry crew visit","params":{"patient":2,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit2"},
+                {"if": {
+                  "or": [
+                    {"require":{"param":"visit2"},"eq":"movement_failed"},
+                    {"require":{"param":"visit2"},"eq":"assessment_failed"},
+                    {"require":{"param":"visit2"},"eq":"cancelled"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
+                  "then": [
+                    {"return":0}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+                {"call_macro":"multipatient registry crew visit","params":{"patient":1,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit1"},
+                {"if": {
+                  "or": [
+                    {"require":{"param":"visit1"},"eq":"movement_failed"},
+                    {"require":{"param":"visit1"},"eq":"assessment_failed"},
+                    {"require":{"param":"visit1"},"eq":"cancelled"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]}
+              ],"else": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+                {"call_macro":"multipatient registry crew visit","params":{"patient":1,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit1"},
+                {"if": {
+                  "or": [
+                    {"require":{"param":"visit1"},"eq":"movement_failed"},
+                    {"require":{"param":"visit1"},"eq":"assessment_failed"},
+                    {"require":{"param":"visit1"},"eq":"cancelled"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
+                  "then": [
+                    {"return":0}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+                {"call_macro":"multipatient registry crew visit","params":{"patient":2,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit2"},
+                {"if": {
+                  "or": [
+                    {"require":{"param":"visit2"},"eq":"movement_failed"},
+                    {"require":{"param":"visit2"},"eq":"assessment_failed"},
+                    {"require":{"param":"visit2"},"eq":"cancelled"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"if": {"param":"tour_generation"}, "ne": {"local":"patient_crew_visit_generation"},
+                  "then": [
+                    {"return":0}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew tour","state":"call_multipatient_registry_crew_visit"}},
+                {"call_macro":"multipatient registry crew visit","params":{"patient":3,"resource":{"param":"resource"},"actor":{"param":"actor"},"provider":{"param":"provider"},"walk":{"param":"walk"},"assistant":{"param":"assistant"},"assistant_walk":{"param":"assistant_walk"}},"result":"visit3"},
+                {"if": {
+                  "or": [
+                    {"require":{"param":"visit3"},"eq":"movement_failed"},
+                    {"require":{"param":"visit3"},"eq":"assessment_failed"},
+                    {"require":{"param":"visit3"},"eq":"cancelled"}
+                  ]}, "eq": 1,
+                  "then": [
+                    {"return":0}
+                ]}
+            ]}
         ]}
     ]},
     {"if": {
@@ -2188,6 +2328,14 @@
       "then": [
         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"tours"},{"create_struct":{"ambulance2":"completed"}}]}}
     ]},
+    {"if": {"param":"resource"}, "eq": "ambulance3",
+      "then": [
+        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"tours"},{"create_struct":{"ambulance3":"completed"}}]}}
+    ]},
+    {"if": {"param":"resource"}, "eq": "ambulance4",
+      "then": [
+        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"tours"},{"create_struct":{"ambulance4":"completed"}}]}}
+    ]},
     {"if": {"param":"resource"}, "eq": "hems",
       "then": [
         {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"tours"},{"create_struct":{"hems":"completed"}}]}}
@@ -2204,11 +2352,21 @@
           "then": [
             {"set":{"local":"multipatient_rescuetrack_sender"},"value":{"local":"ambuname2"}}
           ],"else": [
-            {"if": {"param":"resource"}, "eq": "ambulance1",
+            {"if": {"param":"resource"}, "eq": "ambulance3",
               "then": [
-                {"set":{"local":"multipatient_rescuetrack_sender"},"value":{"local":"ambuname"}}
+                {"set":{"local":"multipatient_rescuetrack_sender"},"value":{"local":"ambuname3"}}
               ],"else": [
-                {"set":{"local":"multipatient_rescuetrack_sender"},"value":"HEMS"}
+                {"if": {"param":"resource"}, "eq": "ambulance4",
+                  "then": [
+                    {"set":{"local":"multipatient_rescuetrack_sender"},"value":{"local":"ambuname4"}}
+                  ],"else": [
+                    {"if": {"param":"resource"}, "eq": "ambulance1",
+                      "then": [
+                        {"set":{"local":"multipatient_rescuetrack_sender"},"value":{"local":"ambuname"}}
+                      ],"else": [
+                        {"set":{"local":"multipatient_rescuetrack_sender"},"value":"HEMS"}
+                    ]}
+                ]}
             ]}
         ]}
     ]},
@@ -2218,15 +2376,27 @@
           "then": [
             {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 2"}
           ],"else": [
-            {"if": {"param":"resource"}, "eq": "ambulance1",
+            {"if": {"param":"resource"}, "eq": "ambulance3",
               "then": [
-                {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 1"}
+                {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 3"}
+              ],"else": [
+                {"if": {"param":"resource"}, "eq": "ambulance4",
+                  "then": [
+                    {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 4"}
+                  ],"else": [
+                    {"if": {"param":"resource"}, "eq": "ambulance1",
+                      "then": [
+                        {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 1"}
+                    ]}
+                ]}
             ]}
         ]}
     ]},
     {"if": {"local":"multipatient_rescuetrack_sender"}, "eq": "6",
       "then": [
-        {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 2"}
+        {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 2"},
+        {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 3"},
+        {"set":{"local":"multipatient_rescuetrack_sender"},"value":"AMBULANCE 4"}
     ]},
     {"set":{"local":"multipatient_rescuetrack_label"},"value":{"local":"multipatient_rescuetrack_sender"}},
     {"if": {"param":"resource"}, "eq": "ambulance1",
@@ -2235,7 +2405,26 @@
       ],"else": [
         {"if": {"param":"resource"}, "eq": "ambulance2",
           "then": [
-            {"set":{"local":"multipatient_rescuetrack_label"},"value":{"text":"Ambulance {0} crew","params":[{"local":"multipatient_rescuetrack_sender"}]}}
+            {"if": {"param":"resource"}, "eq": "ambulance2",
+              "then": [
+                {"set":{"local":"multipatient_rescuetrack_label"},"value":{"text":"Ambulance {0} crew","params":[{"local":"multipatient_rescuetrack_sender"}]}}
+            ]}
+          ],"else": [
+            {"if": {"param":"resource"}, "eq": "ambulance3",
+              "then": [
+                {"if": {"param":"resource"}, "eq": "ambulance3",
+                  "then": [
+                    {"set":{"local":"multipatient_rescuetrack_label"},"value":{"text":"Ambulance {0} crew","params":[{"local":"multipatient_rescuetrack_sender"}]}}
+                ]}
+              ],"else": [
+                {"if": {"param":"resource"}, "eq": "ambulance4",
+                  "then": [
+                    {"if": {"param":"resource"}, "eq": "ambulance4",
+                      "then": [
+                        {"set":{"local":"multipatient_rescuetrack_label"},"value":{"text":"Ambulance {0} crew","params":[{"local":"multipatient_rescuetrack_sender"}]}}
+                    ]}
+                ]}
+            ]}
         ]}
     ]},
     {"if": {"local":"HELOVICTIMS"}, "gte": 1,
@@ -3131,6 +3320,28 @@
             {"return":0}
         ]}
     ]},
+    {"if": {"param":"resource"}, "eq": "ambulance3",
+      "then": [
+        {"if": {"local":"patient_crew_tours"}, "eq": null,
+          "then": [
+            {"return":0}
+        ]},
+        {"if": {"local":"patient_crew_tours","path":"ambulance3"}, "ne": "completed",
+          "then": [
+            {"return":0}
+        ]}
+    ]},
+    {"if": {"param":"resource"}, "eq": "ambulance4",
+      "then": [
+        {"if": {"local":"patient_crew_tours"}, "eq": null,
+          "then": [
+            {"return":0}
+        ]},
+        {"if": {"local":"patient_crew_tours","path":"ambulance4"}, "ne": "completed",
+          "then": [
+            {"return":0}
+        ]}
+    ]},
     {"if": {"param":"resource"}, "eq": "hems",
       "then": [
         {"if": {"local":"patient_crew_tours"}, "eq": null,
@@ -3162,6 +3373,20 @@
               "then": [
                 {"return":0}
             ]}
+        ]},
+        {"if": {"param":"resource"}, "eq": "ambulance3",
+          "then": [
+            {"if": {"param":"visit","path":"ambulance3"}, "ne": "completed",
+              "then": [
+                {"return":0}
+            ]}
+        ]},
+        {"if": {"param":"resource"}, "eq": "ambulance4",
+          "then": [
+            {"if": {"param":"visit","path":"ambulance4"}, "ne": "completed",
+              "then": [
+                {"return":0}
+            ]}
         ]}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew barrier","state":"call_multipatient_registry_crew_eligibility"}},
@@ -3183,6 +3408,20 @@
               "then": [
                 {"return":0}
             ]}
+        ]},
+        {"if": {"param":"resource"}, "eq": "ambulance3",
+          "then": [
+            {"if": {"param":"visit","path":"ambulance3"}, "ne": "completed",
+              "then": [
+                {"return":0}
+            ]}
+        ]},
+        {"if": {"param":"resource"}, "eq": "ambulance4",
+          "then": [
+            {"if": {"param":"visit","path":"ambulance4"}, "ne": "completed",
+              "then": [
+                {"return":0}
+            ]}
         ]}
     ]},
     {"call_macro":"ground crew runtime trace","params":{"macro":"hems_visit","actor":"n/a","target":"multipatient registry crew barrier","state":"call_multipatient_registry_crew_eligibility"}},
@@ -3201,6 +3440,20 @@
         {"if": {"param":"resource"}, "eq": "ambulance2",
           "then": [
             {"if": {"param":"visit","path":"ambulance2"}, "ne": "completed",
+              "then": [
+                {"return":0}
+            ]}
+        ]},
+        {"if": {"param":"resource"}, "eq": "ambulance3",
+          "then": [
+            {"if": {"param":"visit","path":"ambulance3"}, "ne": "completed",
+              "then": [
+                {"return":0}
+            ]}
+        ]},
+        {"if": {"param":"resource"}, "eq": "ambulance4",
+          "then": [
+            {"if": {"param":"visit","path":"ambulance4"}, "ne": "completed",
               "then": [
                 {"return":0}
             ]}
@@ -3236,6 +3489,8 @@
     {"set":{"local":"HEMS_TRANSPORT_TICKET"},"value":null},
     {"set":{"local":"ambulance1_transport_ticket"},"value":null},
     {"set":{"local":"ambulance2_transport_ticket"},"value":null},
+    {"set":{"local":"ambulance3_transport_ticket"},"value":null},
+    {"set":{"local":"ambulance4_transport_ticket"},"value":null},
     {"create_thread": {
       "commands": [
         {"set":{"param":"generation"},"value":{"local":"patient_live_generation"}},
@@ -3537,6 +3792,22 @@
         {"if": {"local":"ambulance2_reach_last"}, "ne": {"param":"state"},
           "then": [
             {"set":{"local":"ambulance2_reach_last"},"value":{"param":"state"}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
+        ]}
+    ]},
+    {"if": {"param":"vehicle"}, "eq": "ambulance3",
+      "then": [
+        {"if": {"local":"ambulance3_reach_last"}, "ne": {"param":"state"},
+          "then": [
+            {"set":{"local":"ambulance3_reach_last"},"value":{"param":"state"}},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
+        ]}
+    ]},
+    {"if": {"param":"vehicle"}, "eq": "ambulance4",
+      "then": [
+        {"if": {"local":"ambulance4_reach_last"}, "ne": {"param":"state"},
+          "then": [
+            {"set":{"local":"ambulance4_reach_last"},"value":{"param":"state"}},
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_reach","actor":{"param":"vehicle"},"target":{"param":"patient_object"},"state":{"param":"state"}}}
         ]}
     ]},
@@ -3961,7 +4232,20 @@
       "then": [
         {"set":{"param":"ticket"},"value":{"local":"ambulance1_transport_ticket"}}
       ],"else": [
-        {"set":{"param":"ticket"},"value":{"local":"ambulance2_transport_ticket"}}
+        {"if": {"param":"resource"}, "eq": "ambulance2",
+          "then": [
+            {"set":{"param":"ticket"},"value":{"local":"ambulance2_transport_ticket"}}
+          ],"else": [
+            {"if": {"param":"resource"}, "eq": "ambulance3",
+              "then": [
+                {"set":{"param":"ticket"},"value":{"local":"ambulance3_transport_ticket"}}
+              ],"else": [
+                {"if": {"param":"resource"}, "eq": "ambulance4",
+                  "then": [
+                    {"set":{"param":"ticket"},"value":{"local":"ambulance4_transport_ticket"}}
+                ]}
+            ]}
+        ]}
     ]},
     {"if": {"param":"ticket"}, "eq": null,
       "then": [
@@ -3990,7 +4274,20 @@
       "then": [
         {"set":{"local":"ambulance1_transport_ticket"},"value":{"param":"ticket"}}
       ],"else": [
-        {"set":{"local":"ambulance2_transport_ticket"},"value":{"param":"ticket"}}
+        {"if": {"param":"resource"}, "eq": "ambulance2",
+          "then": [
+            {"set":{"local":"ambulance2_transport_ticket"},"value":{"param":"ticket"}}
+          ],"else": [
+            {"if": {"param":"resource"}, "eq": "ambulance3",
+              "then": [
+                {"set":{"local":"ambulance3_transport_ticket"},"value":{"param":"ticket"}}
+              ],"else": [
+                {"if": {"param":"resource"}, "eq": "ambulance4",
+                  "then": [
+                    {"set":{"local":"ambulance4_transport_ticket"},"value":{"param":"ticket"}}
+                ]}
+            ]}
+        ]}
     ]},
     {"wait_for":{"local":"ambulance_shelter_state"},"ne":"loading"},
     {"call_macro":"multipatient registry live ensure stretcher","params":{"vehicle":{"param":"resource"}}},
@@ -4002,7 +4299,20 @@
           "then": [
             {"set":{"local":"ambulance1_transport_ticket"},"value":null}
           ],"else": [
-            {"set":{"local":"ambulance2_transport_ticket"},"value":null}
+            {"if": {"param":"resource"}, "eq": "ambulance2",
+              "then": [
+                {"set":{"local":"ambulance2_transport_ticket"},"value":null}
+              ],"else": [
+                {"if": {"param":"resource"}, "eq": "ambulance3",
+                  "then": [
+                    {"set":{"local":"ambulance3_transport_ticket"},"value":null}
+                  ],"else": [
+                    {"if": {"param":"resource"}, "eq": "ambulance4",
+                      "then": [
+                        {"set":{"local":"ambulance4_transport_ticket"},"value":null}
+                    ]}
+                ]}
+            ]}
         ]}
     ]},
     {"return":{"param":"ok"}}
@@ -4120,18 +4430,53 @@
         {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambumedic7","target":"ambulance1","state":"loaded_stretcher_and_medic_destroyed"}},
         {"set":{"object":"ambulance1","var":"VAR 2"},"value":0}
       ],"else": [
-        {"if": {"has_object":"ambustretcher2"}, "eq": 1,
+        {"if": {"param":"vehicle"}, "eq": "ambulance2",
           "then": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load","state":"destroy"}},
-            {"destroy_object":"ambustretcher2"}
-        ]},
-        {"if": {"has_object":"ambumedic2"}, "eq": 1,
-          "then": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load","state":"destroy"}},
-            {"destroy_object":"ambumedic2"}
-        ]},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambumedic2","target":"ambulance2","state":"loaded_stretcher_and_medic_destroyed"}},
-        {"set":{"object":"ambulance2","var":"VAR 2"},"value":0}
+            {"if": {"has_object":"ambustretcher2"}, "eq": 1,
+              "then": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load","state":"destroy"}},
+                {"destroy_object":"ambustretcher2"}
+            ]},
+            {"if": {"has_object":"ambumedic2"}, "eq": 1,
+              "then": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load","state":"destroy"}},
+                {"destroy_object":"ambumedic2"}
+            ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambumedic2","target":"ambulance2","state":"loaded_stretcher_and_medic_destroyed"}},
+            {"set":{"object":"ambulance2","var":"VAR 2"},"value":0}
+          ],"else": [
+            {"if": {"param":"vehicle"}, "eq": "ambulance3",
+              "then": [
+                {"if": {"has_object":"ambustretcher8"}, "eq": 1,
+                  "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry live ground load","state":"destroy"}},
+                    {"destroy_object":"ambustretcher8"}
+                ]},
+                {"if": {"has_object":"ambumedic8"}, "eq": 1,
+                  "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry live ground load","state":"destroy"}},
+                    {"destroy_object":"ambumedic8"}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambumedic8","target":"ambulance3","state":"loaded_stretcher_and_medic_destroyed"}},
+                {"set":{"object":"ambulance3","var":"VAR 2"},"value":0}
+              ],"else": [
+                {"if": {"param":"vehicle"}, "eq": "ambulance4",
+                  "then": [
+                    {"if": {"has_object":"ambustretcher9"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry live ground load","state":"destroy"}},
+                        {"destroy_object":"ambustretcher9"}
+                    ]},
+                    {"if": {"has_object":"ambumedic9"}, "eq": 1,
+                      "then": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry live ground load","state":"destroy"}},
+                        {"destroy_object":"ambumedic9"}
+                    ]},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambumedic9","target":"ambulance4","state":"loaded_stretcher_and_medic_destroyed"}},
+                    {"set":{"object":"ambulance4","var":"VAR 2"},"value":0}
+                ]}
+            ]}
+        ]}
     ]},
     {"#comment":"Flight log of 2026-10-19: the doctor of a hoist operation never went up. HOISTING waits (Waiting for ambulance crew operations to be completed) until L:STEP is above 6 or L:AMBUSTRETCHERFULL is 0; with the live registry nothing set either, so the wait never ended. The patient is loaded: the stretcher is not full any more."},
     {"set":{"var":["L:AMBUSTRETCHERFULL","number"]},"value":0},
@@ -4196,6 +4541,64 @@
             {"call_macro":"drive ambulance2 safe multiplier","params":{"to":"ambulance2_assigned_route","fallback":"ambulance2_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}}
         ]},
         {"call_macro":"park_ambulance2"}
+    ]},
+    {"if": {"param":"vehicle"}, "eq": "ambulance3",
+      "then": [
+        {"create_location": "ambulance3_assigned_hospital",
+          "zones": [
+            {"zone":{"location":"unhospital"}}
+        ]},
+        {"call_macro":"legacy scene routing check"},
+        {"set":{"local":"rd_ambulance3_assigned_route"},"value":"yes"},
+        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+          "then": [
+            {"create_route":{"name":"ambulance3_assigned_route","query":{"from":"ambulance3","to":"ambulance3_assigned_hospital","type":"car"}}},
+            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+            {"if": {"local":"route_check_value"}, "gt": 0,
+              "then": [
+                {"set":{"local":"rd_ambulance3_assigned_route"},"value":"no"}
+            ]}
+        ]},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"ambulance3_restart_at_slow_speed"}
+        ]}},
+        {"if": {"local":"rd_ambulance3_assigned_route"}, "eq": "yes",
+          "then": [
+            {"call_macro":"drive ambulance3 safe","params":{"to":["ambulance3_assigned_hospital"],"fallback":"ambulance3_assigned_hospital","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance3","var":"distance:m","to":"ambulance3_assigned_hospital"},24.6]},120]}}}
+          ],"else": [
+            {"call_macro":"drive ambulance3 safe multiplier","params":{"to":"ambulance3_assigned_route","fallback":"ambulance3_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}}
+        ]},
+        {"call_macro":"park_ambulance3"}
+    ]},
+    {"if": {"param":"vehicle"}, "eq": "ambulance4",
+      "then": [
+        {"create_location": "ambulance4_assigned_hospital",
+          "zones": [
+            {"zone":{"location":"unhospital"}}
+        ]},
+        {"call_macro":"legacy scene routing check"},
+        {"set":{"local":"rd_ambulance4_assigned_route"},"value":"yes"},
+        {"if": {"local":"legacy_scene_routing"}, "eq": "no",
+          "then": [
+            {"create_route":{"name":"ambulance4_assigned_route","query":{"from":"ambulance4","to":"ambulance4_assigned_hospital","type":"car"}}},
+            {"set":{"local":"route_check_value"},"value":{"param":"$CREATE_ROUTE:DURATION"}},
+            {"if": {"local":"route_check_value"}, "gt": 0,
+              "then": [
+                {"set":{"local":"rd_ambulance4_assigned_route"},"value":"no"}
+            ]}
+        ]},
+        {"create_thread": {
+          "commands": [
+            {"call_macro":"ambulance4_restart_at_slow_speed"}
+        ]}},
+        {"if": {"local":"rd_ambulance4_assigned_route"}, "eq": "yes",
+          "then": [
+            {"call_macro":"drive ambulance4 safe","params":{"to":["ambulance4_assigned_hospital"],"fallback":"ambulance4_assigned_hospital","speed":80,"var1":0,"timeout":{"add":[{"divide":[{"location":"ambulance4","var":"distance:m","to":"ambulance4_assigned_hospital"},24.6]},120]}}}
+          ],"else": [
+            {"call_macro":"drive ambulance4 safe multiplier","params":{"to":"ambulance4_assigned_route","fallback":"ambulance4_assigned_hospital","speed":4,"var1":0,"speedMultiplier":1.5,"timeout":{"add":[{"divide":[{"param":"$CREATE_ROUTE:DURATION"},1.5]},120]}}}
+        ]},
+        {"call_macro":"park_ambulance4"}
     ]},
     {"call_macro":"multipatient registry submit","params":{"operation":"transition","arguments":{"create_struct":{"ticket":{"param":"ticket"},"from":"loaded","to":"transported"}}},"result":"ok"},
     {"if": {"param":"ticket","path":"slot"}, "eq": 1,
@@ -4269,7 +4672,9 @@
             {"if": {
               "or": [
                 {"require":{"param":"$item","path":"resource"},"eq":"ambulance1"},
-                {"require":{"param":"$item","path":"resource"},"eq":"ambulance2"}
+                {"require":{"param":"$item","path":"resource"},"eq":"ambulance2"},
+                {"require":{"param":"$item","path":"resource"},"eq":"ambulance3"},
+                {"require":{"param":"$item","path":"resource"},"eq":"ambulance4"}
               ]}, "eq": 1,
               "then": [
                 {"set":{"local":"HEMS_GROUND_READY_COUNT"},"value":{"add":[{"local":"HEMS_GROUND_READY_COUNT"},1]}}
@@ -5409,7 +5814,9 @@
                     {"if": {
                       "or": [
                         {"require":{"param":"closing","path":"provider"},"eq":"ambulance1"},
-                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance2"}
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance2"},
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance3"},
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance4"}
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"P1_GROUND_TRANSPORTED"},"value":"yes"},
@@ -5426,7 +5833,9 @@
                     {"if": {
                       "or": [
                         {"require":{"param":"closing","path":"provider"},"eq":"ambulance1"},
-                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance2"}
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance2"},
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance3"},
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance4"}
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"P2_GROUND_TRANSPORTED"},"value":"yes"}
@@ -5441,7 +5850,9 @@
                     {"if": {
                       "or": [
                         {"require":{"param":"closing","path":"provider"},"eq":"ambulance1"},
-                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance2"}
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance2"},
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance3"},
+                        {"require":{"param":"closing","path":"provider"},"eq":"ambulance4"}
                       ]}, "eq": 1,
                       "then": [
                         {"set":{"local":"P3_GROUND_TRANSPORTED"},"value":"yes"}
@@ -6565,27 +6976,82 @@
             {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher7","target":"multipatient registry stretcher move","state":"drive_done"}}
         ]}
       ],"else": [
-        {"set":{"local":"AMBU2_STRETCHER_MOVE_TARGET"},"value":{"param":"object"}},
-        {"if": {"location":"ambustretcher2","var":"distance:m","to":"ambulance2"}, "lte": 12,
+        {"if": {"param":"actor"}, "eq": "ambustretcher2",
           "then": [
-            {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":{"param":"object"}}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
-            {"drive_object":{"name":"ambustretcher2","to":[{"bearing2":180,"dist":6,"object":"ambulance2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"}],"VAR1":1,"speed":5}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
+            {"set":{"local":"AMBU2_STRETCHER_MOVE_TARGET"},"value":{"param":"object"}},
+            {"if": {"location":"ambustretcher2","var":"distance:m","to":"ambulance2"}, "lte": 12,
+              "then": [
+                {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":{"param":"object"}}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
+                {"drive_object":{"name":"ambustretcher2","to":[{"bearing2":180,"dist":6,"object":"ambulance2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"}],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
+              ],"else": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
+                {"drive_object":{"name":"ambustretcher2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"}],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
+            ]},
+            {"if": {"param":"side"}, "eq": 270,
+              "then": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
+                {"drive_object":{"name":"ambustretcher2","to":[{"bearing2":270,"dist":3,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}},{"bearing2":270,"dist":0.7,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
+              ],"else": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
+                {"drive_object":{"name":"ambustretcher2","to":[{"bearing2":90,"dist":3,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}},{"bearing2":90,"dist":0.7,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
+            ]}
           ],"else": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
-            {"drive_object":{"name":"ambustretcher2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"}],"VAR1":1,"speed":5}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
-        ]},
-        {"if": {"param":"side"}, "eq": 270,
-          "then": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
-            {"drive_object":{"name":"ambustretcher2","to":[{"bearing2":270,"dist":3,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}},{"bearing2":270,"dist":0.7,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
-          ],"else": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_start"}},
-            {"drive_object":{"name":"ambustretcher2","to":[{"bearing2":90,"dist":3,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}},{"bearing2":90,"dist":0.7,"object":{"local":"AMBU2_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry stretcher move","state":"drive_done"}}
+            {"if": {"param":"actor"}, "eq": "ambustretcher8",
+              "then": [
+                {"set":{"local":"AMBU3_STRETCHER_MOVE_TARGET"},"value":{"param":"object"}},
+                {"if": {"location":"ambustretcher8","var":"distance:m","to":"ambulance3"}, "lte": 12,
+                  "then": [
+                    {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":{"param":"object"}}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_start"}},
+                    {"drive_object":{"name":"ambustretcher8","to":[{"bearing2":180,"dist":6,"object":"ambulance3"},{"bearing":0,"dist":0,"object":{"local":"AMBU3_X"}},{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher8"}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_done"}}
+                  ],"else": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_start"}},
+                    {"drive_object":{"name":"ambustretcher8","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher8"}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_done"}}
+                ]},
+                {"if": {"param":"side"}, "eq": 270,
+                  "then": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_start"}},
+                    {"drive_object":{"name":"ambustretcher8","to":[{"bearing2":270,"dist":3,"object":{"local":"AMBU3_STRETCHER_MOVE_TARGET"}},{"bearing2":270,"dist":0.7,"object":{"local":"AMBU3_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_done"}}
+                  ],"else": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_start"}},
+                    {"drive_object":{"name":"ambustretcher8","to":[{"bearing2":90,"dist":3,"object":{"local":"AMBU3_STRETCHER_MOVE_TARGET"}},{"bearing2":90,"dist":0.7,"object":{"local":"AMBU3_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry stretcher move","state":"drive_done"}}
+                ]}
+              ],"else": [
+                {"if": {"param":"actor"}, "eq": "ambustretcher9",
+                  "then": [
+                    {"set":{"local":"AMBU4_STRETCHER_MOVE_TARGET"},"value":{"param":"object"}},
+                    {"if": {"location":"ambustretcher9","var":"distance:m","to":"ambulance4"}, "lte": 12,
+                      "then": [
+                        {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":{"param":"object"}}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_start"}},
+                        {"drive_object":{"name":"ambustretcher9","to":[{"bearing2":180,"dist":6,"object":"ambulance4"},{"bearing":0,"dist":0,"object":{"local":"AMBU4_X"}},{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher9"}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_done"}}
+                      ],"else": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_start"}},
+                        {"drive_object":{"name":"ambustretcher9","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher9"}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_done"}}
+                    ]},
+                    {"if": {"param":"side"}, "eq": 270,
+                      "then": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_start"}},
+                        {"drive_object":{"name":"ambustretcher9","to":[{"bearing2":270,"dist":3,"object":{"local":"AMBU4_STRETCHER_MOVE_TARGET"}},{"bearing2":270,"dist":0.7,"object":{"local":"AMBU4_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_done"}}
+                      ],"else": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_start"}},
+                        {"drive_object":{"name":"ambustretcher9","to":[{"bearing2":90,"dist":3,"object":{"local":"AMBU4_STRETCHER_MOVE_TARGET"}},{"bearing2":90,"dist":0.7,"object":{"local":"AMBU4_STRETCHER_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry stretcher move","state":"drive_done"}}
+                    ]}
+                ]}
+            ]}
         ]}
     ]},
     {"return":1}
@@ -6630,14 +7096,41 @@
         {"set":{"object":"ambustretcher7","var":"VAR 2"},"value":1},
         {"set":{"object":"ambustretcher7","var":"COUPLED"},"value":0}
       ],"else": [
-        {"if": {"has_object":"ambustretcher2"}, "eq": 0,
+        {"if": {"param":"vehicle"}, "eq": "ambulance2",
           "then": [
-            {"create_object":{"name":"ambustretcher2","title":"Airbus H145 Medic Stretcher","location":{"bearing2":180,"dist":3,"object":"ambulance2"}}},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ensure stretcher","state":"created"}}
-        ]},
-        {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
-        {"set":{"object":"ambustretcher2","var":"VAR 2"},"value":1},
-        {"set":{"object":"ambustretcher2","var":"COUPLED"},"value":0}
+            {"if": {"has_object":"ambustretcher2"}, "eq": 0,
+              "then": [
+                {"create_object":{"name":"ambustretcher2","title":"Airbus H145 Medic Stretcher","location":{"bearing2":180,"dist":3,"object":"ambulance2"}}},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ensure stretcher","state":"created"}}
+            ]},
+            {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
+            {"set":{"object":"ambustretcher2","var":"VAR 2"},"value":1},
+            {"set":{"object":"ambustretcher2","var":"COUPLED"},"value":0}
+          ],"else": [
+            {"if": {"param":"vehicle"}, "eq": "ambulance3",
+              "then": [
+                {"if": {"has_object":"ambustretcher8"}, "eq": 0,
+                  "then": [
+                    {"create_object":{"name":"ambustretcher8","title":"Airbus H145 Medic Stretcher","location":{"bearing2":180,"dist":3,"object":"ambulance3"}}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry live ensure stretcher","state":"created"}}
+                ]},
+                {"set":{"object":"ambustretcher8","var":"VAR 1"},"value":0},
+                {"set":{"object":"ambustretcher8","var":"VAR 2"},"value":1},
+                {"set":{"object":"ambustretcher8","var":"COUPLED"},"value":0}
+              ],"else": [
+                {"if": {"param":"vehicle"}, "eq": "ambulance4",
+                  "then": [
+                    {"if": {"has_object":"ambustretcher9"}, "eq": 0,
+                      "then": [
+                        {"create_object":{"name":"ambustretcher9","title":"Airbus H145 Medic Stretcher","location":{"bearing2":180,"dist":3,"object":"ambulance4"}}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry live ensure stretcher","state":"created"}}
+                    ]},
+                    {"set":{"object":"ambustretcher9","var":"VAR 1"},"value":0},
+                    {"set":{"object":"ambustretcher9","var":"VAR 2"},"value":1},
+                    {"set":{"object":"ambustretcher9","var":"COUPLED"},"value":0}
+                ]}
+            ]}
+        ]}
     ]},
     {"return":1}
   ],
@@ -6741,23 +7234,61 @@
                 {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
             ]}
           ],"else": [
-            {"if": {"param":"actor"}, "eq": "hoist_crew",
+            {"if": {"param":"actor"}, "eq": "ambumedic8",
               "then": [
-                {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":5,"vmax":7},"result":"cws_sp"},
-                {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
-                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
-              ],"else": [
-                {"if": {"param":"actor"}, "eq": "pax3",
+                {"if": {"location":"ambumedic8","var":"distance:m","to":"ambulance3"}, "lte": 12,
                   "then": [
-                    {"if": {"local":"CREW"}, "eq": 3,
+                    {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":{"param":"object"}}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive closest","state":"drive_start"}},
+                    {"call_macro":"crew walk speed","params":{"actor":"ambumedic8","vmin":4,"vmax":5},"result":"cws_sp"},
+                    {"drive_object":{"name":"ambumedic8","to":[{"bearing2":180,"dist":6,"object":"ambulance3"},{"bearing":0,"dist":0,"object":{"local":"AMBU3_X"}},{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic8"}],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive closest","state":"drive_done"}},
+                    {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
+                  ],"else": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive closest","state":"drive_start"}},
+                    {"call_macro":"crew walk speed","params":{"actor":"ambumedic8","vmin":4,"vmax":7},"result":"cws_sp"},
+                    {"drive_object":{"name":"ambumedic8","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic8"}],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive closest","state":"drive_done"}},
+                    {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
+                ]}
+              ],"else": [
+                {"if": {"param":"actor"}, "eq": "ambumedic9",
+                  "then": [
+                    {"if": {"location":"ambumedic9","var":"distance:m","to":"ambulance4"}, "lte": 12,
                       "then": [
-                        {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":5,"vmax":7},"result":"cws_sp"},
-                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":{"param":"cws_sp"}}},
-                        {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                        {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":{"param":"object"}}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive closest","state":"drive_start"}},
+                        {"call_macro":"crew walk speed","params":{"actor":"ambumedic9","vmin":4,"vmax":5},"result":"cws_sp"},
+                        {"drive_object":{"name":"ambumedic9","to":[{"bearing2":180,"dist":6,"object":"ambulance4"},{"bearing":0,"dist":0,"object":{"local":"AMBU4_X"}},{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic9"}],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive closest","state":"drive_done"}},
+                        {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
                       ],"else": [
-                        {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":5,"vmax":7},"result":"cws_sp"},
-                        {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
-                        {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive closest","state":"drive_start"}},
+                        {"call_macro":"crew walk speed","params":{"actor":"ambumedic9","vmin":4,"vmax":7},"result":"cws_sp"},
+                        {"drive_object":{"name":"ambumedic9","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic9"}],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive closest","state":"drive_done"}},
+                        {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
+                    ]}
+                  ],"else": [
+                    {"if": {"param":"actor"}, "eq": "hoist_crew",
+                      "then": [
+                        {"call_macro":"crew walk speed","params":{"actor":"hoist_crew","vmin":5,"vmax":7},"result":"cws_sp"},
+                        {"drive_object":{"name":"hoist_crew","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"hoist_crew"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
+                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
+                      ],"else": [
+                        {"if": {"param":"actor"}, "eq": "pax3",
+                          "then": [
+                            {"if": {"local":"CREW"}, "eq": 3,
+                              "then": [
+                                {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":5,"vmax":7},"result":"cws_sp"},
+                                {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":16,"speed":{"param":"cws_sp"}}},
+                                {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                              ],"else": [
+                                {"call_macro":"crew walk speed","params":{"actor":"pax3","vmin":5,"vmax":7},"result":"cws_sp"},
+                                {"drive_object":{"name":"pax3","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"pax3"}],"VAR1":3,"speed":{"param":"cws_sp"}}},
+                                {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                            ]}
+                        ]}
                     ]}
                 ]}
             ]}
@@ -6773,7 +7304,17 @@
           "then": [
             {"set":{"local":"AMBU2_MOVE_TARGET"},"value":{"param":"object"}}
           ],"else": [
-            {"set":{"local":"CREW_MOVE_TARGET"},"value":{"param":"object"}}
+            {"if": {"param":"actor"}, "eq": "ambumedic8",
+              "then": [
+                {"set":{"local":"AMBU3_MOVE_TARGET"},"value":{"param":"object"}}
+              ],"else": [
+                {"if": {"param":"actor"}, "eq": "ambumedic9",
+                  "then": [
+                    {"set":{"local":"AMBU4_MOVE_TARGET"},"value":{"param":"object"}}
+                  ],"else": [
+                    {"set":{"local":"CREW_MOVE_TARGET"},"value":{"param":"object"}}
+                ]}
+            ]}
         ]}
     ]},
     {"if": {"param":"side"}, "eq": 270,
@@ -6800,26 +7341,50 @@
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry crew drive side","state":"drive_done"}},
                 {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
               ],"else": [
-                {"if": {"param":"actor"}, "eq": "hoist_crew",
+                {"if": {"param":"actor"}, "eq": "ambumedic8",
                   "then": [
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_start"}},
+                    {"drive_object":{"name":"ambumedic8","to":[{"bearing2":270,"dist":3,"object":{"local":"AMBU3_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_done"}},
+                    {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_start"}},
+                    {"drive_object":{"name":"ambumedic8","to":[{"bearing2":270,"dist":0.3,"object":{"local":"AMBU3_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_done"}},
+                    {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
                   ],"else": [
-                    {"if": {"param":"actor"}, "eq": "pax3",
+                    {"if": {"param":"actor"}, "eq": "ambumedic9",
                       "then": [
-                        {"if": {"local":"CREW"}, "eq": 3,
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_start"}},
+                        {"drive_object":{"name":"ambumedic9","to":[{"bearing2":270,"dist":3,"object":{"local":"AMBU4_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_done"}},
+                        {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_start"}},
+                        {"drive_object":{"name":"ambumedic9","to":[{"bearing2":270,"dist":0.3,"object":{"local":"AMBU4_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_done"}},
+                        {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
+                      ],"else": [
+                        {"if": {"param":"actor"}, "eq": "hoist_crew",
                           "then": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                            {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                            {"drive_object":{"name":"hoist_crew","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
                           ],"else": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                            {"if": {"param":"actor"}, "eq": "pax3",
+                              "then": [
+                                {"if": {"local":"CREW"}, "eq": 3,
+                                  "then": [
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                                  ],"else": [
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":270,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                                ]}
+                            ]}
                         ]}
                     ]}
                 ]}
@@ -6848,26 +7413,50 @@
                 {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry crew drive side","state":"drive_done"}},
                 {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
               ],"else": [
-                {"if": {"param":"actor"}, "eq": "hoist_crew",
+                {"if": {"param":"actor"}, "eq": "ambumedic8",
                   "then": [
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
-                    {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                    {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_start"}},
+                    {"drive_object":{"name":"ambumedic8","to":[{"bearing2":90,"dist":3,"object":{"local":"AMBU3_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_done"}},
+                    {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_start"}},
+                    {"drive_object":{"name":"ambumedic8","to":[{"bearing2":90,"dist":1,"object":{"local":"AMBU3_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry crew drive side","state":"drive_done"}},
+                    {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
                   ],"else": [
-                    {"if": {"param":"actor"}, "eq": "pax3",
+                    {"if": {"param":"actor"}, "eq": "ambumedic9",
                       "then": [
-                        {"if": {"local":"CREW"}, "eq": 3,
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_start"}},
+                        {"drive_object":{"name":"ambumedic9","to":[{"bearing2":90,"dist":3,"object":{"local":"AMBU4_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_done"}},
+                        {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_start"}},
+                        {"drive_object":{"name":"ambumedic9","to":[{"bearing2":90,"dist":1,"object":{"local":"AMBU4_MOVE_TARGET"}}],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry crew drive side","state":"drive_done"}},
+                        {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
+                      ],"else": [
+                        {"if": {"param":"actor"}, "eq": "hoist_crew",
                           "then": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":14},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                            {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1},
+                            {"drive_object":{"name":"hoist_crew","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                            {"set":{"object":"hoist_crew","var":"VAR 1"},"value":1}
                           ],"else": [
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":1},
-                            {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
-                            {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                            {"if": {"param":"actor"}, "eq": "pax3",
+                              "then": [
+                                {"if": {"local":"CREW"}, "eq": 3,
+                                  "then": [
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":14},
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":16,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":14}
+                                  ],"else": [
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":1},
+                                    {"drive_object":{"name":"pax3","to":[{"bearing2":90,"dist":0.3,"object":{"local":"CREW_MOVE_TARGET"}}],"VAR1":3,"speed":5}},
+                                    {"set":{"object":"pax3","var":"VAR 1"},"value":1}
+                                ]}
+                            ]}
                         ]}
                     ]}
                 ]}
@@ -6998,122 +7587,371 @@
             ]}
         ]}
       ],"else": [
-        {"create_location": "AMB2X90",
-          "zones": [
-            {"zone":{"location":{"bearing2":90,"dist":5,"object":"ambulance2"}}}
-        ]},
-        {"create_location": "AMB2X270",
-          "zones": [
-            {"zone":{"location":{"bearing2":270,"dist":5,"object":"ambulance2"}}}
-        ]},
-        {"create_location": "AMB2X180",
-          "zones": [
-            {"zone":{"location":{"bearing2":180,"dist":12,"object":"ambulance2"}}}
-        ]},
-        {"sleep":0.2},
-        {"set":{"local":"AMBU2_X"},"value":"AMB2X180"},
-        {"if": {"param":"target"}, "eq": "injured_human",
+        {"if": {"param":"vehicle"}, "eq": 2,
           "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"injured_human"},
+            {"create_location": "AMB2X90",
+              "zones": [
+                {"zone":{"location":{"bearing2":90,"dist":5,"object":"ambulance2"}}}
+            ]},
+            {"create_location": "AMB2X270",
+              "zones": [
+                {"zone":{"location":{"bearing2":270,"dist":5,"object":"ambulance2"}}}
+            ]},
+            {"create_location": "AMB2X180",
+              "zones": [
+                {"zone":{"location":{"bearing2":180,"dist":12,"object":"ambulance2"}}}
+            ]},
+            {"sleep":0.2},
+            {"set":{"local":"AMBU2_X"},"value":"AMB2X180"},
+            {"if": {"param":"target"}, "eq": "injured_human",
               "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human"},
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"injured_human"},
                   "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
                 ]}
-              ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human"},
+            ]},
+            {"if": {"param":"target"}, "eq": "injured_human2",
+              "then": [
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"injured_human2"},
                   "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human2"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human2"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
+                ]}
+            ]},
+            {"if": {"param":"target"}, "eq": "injured_human3",
+              "then": [
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"injured_human3"},
+                  "then": [
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human3"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human3"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
+                ]}
+            ]},
+            {"if": {"param":"target"}, "eq": "ambustretcher7",
+              "then": [
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher7"},
+                  "then": [
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher7"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher7"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
+                ]}
+            ]},
+            {"if": {"param":"target"}, "eq": "ambustretcher2",
+              "then": [
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher2"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher2"},
+                  "then": [
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher2"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher2"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
+                ]}
+            ]},
+            {"if": {"param":"target"}, "eq": "ambumedic7",
+              "then": [
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambumedic7"},
+                  "then": [
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic7"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic7"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
+                ]}
+            ]},
+            {"if": {"param":"target"}, "eq": "ambumedic2",
+              "then": [
+                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic2"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambumedic2"},
+                  "then": [
+                    {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic2"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    ]}
+                  ],"else": [
+                    {"if": {"location":"AMB2X270","var":"distance:m","to":"ambumedic2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic2"},
+                      "then": [
+                        {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    ]}
                 ]}
             ]}
-        ]},
-        {"if": {"param":"target"}, "eq": "injured_human2",
-          "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"injured_human2"},
+          ],"else": [
+            {"if": {"param":"vehicle"}, "eq": 3,
               "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human2"},
+                {"create_location": "AMB3X90",
+                  "zones": [
+                    {"zone":{"location":{"bearing2":90,"dist":5,"object":"ambulance3"}}}
+                ]},
+                {"create_location": "AMB3X270",
+                  "zones": [
+                    {"zone":{"location":{"bearing2":270,"dist":5,"object":"ambulance3"}}}
+                ]},
+                {"create_location": "AMB3X180",
+                  "zones": [
+                    {"zone":{"location":{"bearing2":180,"dist":12,"object":"ambulance3"}}}
+                ]},
+                {"sleep":0.2},
+                {"set":{"local":"AMBU3_X"},"value":"AMB3X180"},
+                {"if": {"param":"target"}, "eq": "injured_human",
                   "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"injured_human"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"injured_human"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"injured_human"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
+                ]},
+                {"if": {"param":"target"}, "eq": "injured_human2",
+                  "then": [
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"injured_human2"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"injured_human2"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"injured_human2"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
+                ]},
+                {"if": {"param":"target"}, "eq": "injured_human3",
+                  "then": [
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"injured_human3"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"injured_human3"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"injured_human3"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
+                ]},
+                {"if": {"param":"target"}, "eq": "ambustretcher7",
+                  "then": [
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"ambustretcher7"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambustretcher7"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambustretcher7"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
+                ]},
+                {"if": {"param":"target"}, "eq": "ambustretcher8",
+                  "then": [
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"ambustretcher8"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"ambustretcher8"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"ambustretcher8"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambustretcher8"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"ambustretcher8"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambustretcher8"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
+                ]},
+                {"if": {"param":"target"}, "eq": "ambumedic7",
+                  "then": [
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"ambumedic7"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambumedic7"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambumedic7"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
+                ]},
+                {"if": {"param":"target"}, "eq": "ambumedic8",
+                  "then": [
+                    {"if": {"location":"AMB3X90","var":"distance:m","to":"ambumedic8"}, "lt": {"location":"AMB3X270","var":"distance:m","to":"ambumedic8"},
+                      "then": [
+                        {"if": {"location":"AMB3X90","var":"distance:m","to":"ambumedic8"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambumedic8"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X90"}
+                        ]}
+                      ],"else": [
+                        {"if": {"location":"AMB3X270","var":"distance:m","to":"ambumedic8"}, "lt": {"location":"AMB3X180","var":"distance:m","to":"ambumedic8"},
+                          "then": [
+                            {"set":{"local":"AMBU3_X"},"value":"AMB3X270"}
+                        ]}
+                    ]}
                 ]}
               ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human2"},
+                {"if": {"param":"vehicle"}, "eq": 4,
                   "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
-                ]}
-            ]}
-        ]},
-        {"if": {"param":"target"}, "eq": "injured_human3",
-          "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"injured_human3"},
-              "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human3"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
-                ]}
-              ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"injured_human3"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
-                ]}
-            ]}
-        ]},
-        {"if": {"param":"target"}, "eq": "ambustretcher7",
-          "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher7"},
-              "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher7"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
-                ]}
-              ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher7"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
-                ]}
-            ]}
-        ]},
-        {"if": {"param":"target"}, "eq": "ambustretcher2",
-          "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher2"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher2"},
-              "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambustretcher2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher2"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
-                ]}
-              ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"ambustretcher2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambustretcher2"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
-                ]}
-            ]}
-        ]},
-        {"if": {"param":"target"}, "eq": "ambumedic7",
-          "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambumedic7"},
-              "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic7"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
-                ]}
-              ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic7"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
-                ]}
-            ]}
-        ]},
-        {"if": {"param":"target"}, "eq": "ambumedic2",
-          "then": [
-            {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic2"}, "lt": {"location":"AMB2X270","var":"distance:m","to":"ambumedic2"},
-              "then": [
-                {"if": {"location":"AMB2X90","var":"distance:m","to":"ambumedic2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic2"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X90"}
-                ]}
-              ],"else": [
-                {"if": {"location":"AMB2X270","var":"distance:m","to":"ambumedic2"}, "lt": {"location":"AMB2X180","var":"distance:m","to":"ambumedic2"},
-                  "then": [
-                    {"set":{"local":"AMBU2_X"},"value":"AMB2X270"}
+                    {"create_location": "AMB4X90",
+                      "zones": [
+                        {"zone":{"location":{"bearing2":90,"dist":5,"object":"ambulance4"}}}
+                    ]},
+                    {"create_location": "AMB4X270",
+                      "zones": [
+                        {"zone":{"location":{"bearing2":270,"dist":5,"object":"ambulance4"}}}
+                    ]},
+                    {"create_location": "AMB4X180",
+                      "zones": [
+                        {"zone":{"location":{"bearing2":180,"dist":12,"object":"ambulance4"}}}
+                    ]},
+                    {"sleep":0.2},
+                    {"set":{"local":"AMBU4_X"},"value":"AMB4X180"},
+                    {"if": {"param":"target"}, "eq": "injured_human",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"injured_human"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"injured_human"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"injured_human"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"injured_human"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]},
+                    {"if": {"param":"target"}, "eq": "injured_human2",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"injured_human2"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"injured_human2"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"injured_human2"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"injured_human2"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]},
+                    {"if": {"param":"target"}, "eq": "injured_human3",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"injured_human3"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"injured_human3"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"injured_human3"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"injured_human3"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]},
+                    {"if": {"param":"target"}, "eq": "ambustretcher7",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"ambustretcher7"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambustretcher7"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"ambustretcher7"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambustretcher7"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]},
+                    {"if": {"param":"target"}, "eq": "ambustretcher9",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"ambustretcher9"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"ambustretcher9"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"ambustretcher9"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambustretcher9"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"ambustretcher9"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambustretcher9"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]},
+                    {"if": {"param":"target"}, "eq": "ambumedic7",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"ambumedic7"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambumedic7"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"ambumedic7"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambumedic7"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]},
+                    {"if": {"param":"target"}, "eq": "ambumedic9",
+                      "then": [
+                        {"if": {"location":"AMB4X90","var":"distance:m","to":"ambumedic9"}, "lt": {"location":"AMB4X270","var":"distance:m","to":"ambumedic9"},
+                          "then": [
+                            {"if": {"location":"AMB4X90","var":"distance:m","to":"ambumedic9"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambumedic9"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X90"}
+                            ]}
+                          ],"else": [
+                            {"if": {"location":"AMB4X270","var":"distance:m","to":"ambumedic9"}, "lt": {"location":"AMB4X180","var":"distance:m","to":"ambumedic9"},
+                              "then": [
+                                {"set":{"local":"AMBU4_X"},"value":"AMB4X270"}
+                            ]}
+                        ]}
+                    ]}
                 ]}
             ]}
         ]}
@@ -7249,63 +8087,192 @@
             ]}
         ]}
       ],"else": [
-        {"if": {"has_object":"ambustretcher2"}, "eq": 0,
+        {"if": {"param":"vehicle"}, "eq": "ambulance2",
           "then": [
-            {"return":0}
-        ]},
-        {"set":{"object":"ambustretcher2","var":"COUPLED"},"value":0},
-        {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
-        {"set":{"object":"ambustretcher2","var":"VAR 2"},"value":1},
-        {"call_macro":"multipatient registry crew move","params":{"actor":"ambustretcher2","object":{"param":"record","path":"object"},"walk":1,"side":270},"result":"arrived"},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"stretcher_arrived_call_returned"}},
-        {"if": {"param":"arrived"}, "ne": 1,
-          "then": [
-            {"return":0}
-        ]},
-        {"call_macro":"multipatient registry live load patient","params":{"slot":{"param":"ticket","path":"slot"}}},
-        {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
-        {"set":{"object":"ambustretcher2","var":"VAR 2"},"value":3},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"patient_packed_stretcher_var2_3"}},
-        {"set":{"object":"ambulance2","var":"VAR 2"},"value":1},
-        {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambustretcher2"}},
-        {"if": {"has_object":"ambustretcher2"}, "eq": 1,
-          "then": [
-            {"try": [
-                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_start"}},
-                {"drive_object":{"name":"ambustretcher2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":5}},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_done"}}
-              ],
-              "catch": [
-                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":{"text":"stretcher_drive_error {0}","params":[{"param":"$ERROR"}]}}}
-            ]}
-        ]},
-        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"stretcher_drive_to_vehicle_done"}},
-        {"if": {"has_object":"ambustretcher2"}, "eq": 1,
-          "then": [
-            {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":{"text":"stretcher_after_drive_distance_to_vehicle {0}","params":[{"round":{"location":"ambustretcher2","var":"distance:m","to":"ambulance2"},"to":1}]}}}
-        ]},
-        {"try": [
-            {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance2","location":"ambulance2"}}]}}
-          ],
-          "catch": [
-            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":{"text":"record_shelter_error {0}","params":[{"param":"$ERROR"}]}}}
-        ]},
-        {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambumedic2"}},
-        {"if": {"has_object":"ambumedic2"}, "eq": 1,
-          "then": [
-            {"try": [
-                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_start"}},
-                {"call_macro":"crew walk speed","params":{"actor":"ambumedic2","vmin":4,"vmax":5},"result":"cws_sp"},
-                {"drive_object":{"name":"ambumedic2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":{"param":"cws_sp"}}},
-                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_done"}}
-              ],
-              "catch": [
-                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":{"text":"medic_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+            {"if": {"has_object":"ambustretcher2"}, "eq": 0,
+              "then": [
+                {"return":0}
             ]},
+            {"set":{"object":"ambustretcher2","var":"COUPLED"},"value":0},
+            {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
+            {"set":{"object":"ambustretcher2","var":"VAR 2"},"value":1},
+            {"call_macro":"multipatient registry crew move","params":{"actor":"ambustretcher2","object":{"param":"record","path":"object"},"walk":1,"side":270},"result":"arrived"},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"stretcher_arrived_call_returned"}},
+            {"if": {"param":"arrived"}, "ne": 1,
+              "then": [
+                {"return":0}
+            ]},
+            {"call_macro":"multipatient registry live load patient","params":{"slot":{"param":"ticket","path":"slot"}}},
+            {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
+            {"set":{"object":"ambustretcher2","var":"VAR 2"},"value":3},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"patient_packed_stretcher_var2_3"}},
+            {"set":{"object":"ambulance2","var":"VAR 2"},"value":1},
+            {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambustretcher2"}},
+            {"if": {"has_object":"ambustretcher2"}, "eq": 1,
+              "then": [
+                {"try": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                    {"drive_object":{"name":"ambustretcher2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":5}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":"drive_done"}}
+                  ],
+                  "catch": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher2","target":"multipatient registry live ground load objects","state":{"text":"stretcher_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+                ]}
+            ]},
+            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":"stretcher_drive_to_vehicle_done"}},
+            {"if": {"has_object":"ambustretcher2"}, "eq": 1,
+              "then": [
+                {"set":{"object":"ambustretcher2","var":"VAR 1"},"value":0},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":{"text":"stretcher_after_drive_distance_to_vehicle {0}","params":[{"round":{"location":"ambustretcher2","var":"distance:m","to":"ambulance2"},"to":1}]}}}
+            ]},
+            {"try": [
+                {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance2","location":"ambulance2"}}]}}
+              ],
+              "catch": [
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher2","target":"ambulance2","state":{"text":"record_shelter_error {0}","params":[{"param":"$ERROR"}]}}}
+            ]},
+            {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambumedic2"}},
             {"if": {"has_object":"ambumedic2"}, "eq": 1,
               "then": [
-                {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
+                {"try": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                    {"call_macro":"crew walk speed","params":{"actor":"ambumedic2","vmin":4,"vmax":5},"result":"cws_sp"},
+                    {"drive_object":{"name":"ambumedic2","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic2"},{"bearing":0,"dist":0,"object":{"local":"AMBU2_X"}},{"bearing2":180,"dist":6,"object":"ambulance2"},"ambulance2"],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":"drive_done"}}
+                  ],
+                  "catch": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic2","target":"multipatient registry live ground load objects","state":{"text":"medic_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+                ]},
+                {"if": {"has_object":"ambumedic2"}, "eq": 1,
+                  "then": [
+                    {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
+                ]}
+            ]}
+          ],"else": [
+            {"if": {"param":"vehicle"}, "eq": "ambulance3",
+              "then": [
+                {"if": {"has_object":"ambustretcher8"}, "eq": 0,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"set":{"object":"ambustretcher8","var":"COUPLED"},"value":0},
+                {"set":{"object":"ambustretcher8","var":"VAR 1"},"value":0},
+                {"set":{"object":"ambustretcher8","var":"VAR 2"},"value":1},
+                {"call_macro":"multipatient registry crew move","params":{"actor":"ambustretcher8","object":{"param":"record","path":"object"},"walk":1,"side":270},"result":"arrived"},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher8","target":"ambulance3","state":"stretcher_arrived_call_returned"}},
+                {"if": {"param":"arrived"}, "ne": 1,
+                  "then": [
+                    {"return":0}
+                ]},
+                {"call_macro":"multipatient registry live load patient","params":{"slot":{"param":"ticket","path":"slot"}}},
+                {"set":{"object":"ambustretcher8","var":"VAR 1"},"value":0},
+                {"set":{"object":"ambustretcher8","var":"VAR 2"},"value":3},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher8","target":"ambulance3","state":"patient_packed_stretcher_var2_3"}},
+                {"set":{"object":"ambulance3","var":"VAR 2"},"value":1},
+                {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambustretcher8"}},
+                {"if": {"has_object":"ambustretcher8"}, "eq": 1,
+                  "then": [
+                    {"try": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                        {"drive_object":{"name":"ambustretcher8","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher8"},{"bearing":0,"dist":0,"object":{"local":"AMBU3_X"}},{"bearing2":180,"dist":6,"object":"ambulance3"},"ambulance3"],"VAR1":1,"speed":5}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry live ground load objects","state":"drive_done"}}
+                      ],
+                      "catch": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher8","target":"multipatient registry live ground load objects","state":{"text":"stretcher_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+                    ]}
+                ]},
+                {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher8","target":"ambulance3","state":"stretcher_drive_to_vehicle_done"}},
+                {"if": {"has_object":"ambustretcher8"}, "eq": 1,
+                  "then": [
+                    {"set":{"object":"ambustretcher8","var":"VAR 1"},"value":0},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher8","target":"ambulance3","state":{"text":"stretcher_after_drive_distance_to_vehicle {0}","params":[{"round":{"location":"ambustretcher8","var":"distance:m","to":"ambulance3"},"to":1}]}}}
+                ]},
+                {"try": [
+                    {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance3","location":"ambulance3"}}]}}
+                  ],
+                  "catch": [
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher8","target":"ambulance3","state":{"text":"record_shelter_error {0}","params":[{"param":"$ERROR"}]}}}
+                ]},
+                {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambumedic8"}},
+                {"if": {"has_object":"ambumedic8"}, "eq": 1,
+                  "then": [
+                    {"try": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                        {"call_macro":"crew walk speed","params":{"actor":"ambumedic8","vmin":4,"vmax":5},"result":"cws_sp"},
+                        {"drive_object":{"name":"ambumedic8","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic8"},{"bearing":0,"dist":0,"object":{"local":"AMBU3_X"}},{"bearing2":180,"dist":6,"object":"ambulance3"},"ambulance3"],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry live ground load objects","state":"drive_done"}}
+                      ],
+                      "catch": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic8","target":"multipatient registry live ground load objects","state":{"text":"medic_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+                    ]},
+                    {"if": {"has_object":"ambumedic8"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
+                    ]}
+                ]}
+              ],"else": [
+                {"if": {"param":"vehicle"}, "eq": "ambulance4",
+                  "then": [
+                    {"if": {"has_object":"ambustretcher9"}, "eq": 0,
+                      "then": [
+                        {"return":0}
+                    ]},
+                    {"set":{"object":"ambustretcher9","var":"COUPLED"},"value":0},
+                    {"set":{"object":"ambustretcher9","var":"VAR 1"},"value":0},
+                    {"set":{"object":"ambustretcher9","var":"VAR 2"},"value":1},
+                    {"call_macro":"multipatient registry crew move","params":{"actor":"ambustretcher9","object":{"param":"record","path":"object"},"walk":1,"side":270},"result":"arrived"},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher9","target":"ambulance4","state":"stretcher_arrived_call_returned"}},
+                    {"if": {"param":"arrived"}, "ne": 1,
+                      "then": [
+                        {"return":0}
+                    ]},
+                    {"call_macro":"multipatient registry live load patient","params":{"slot":{"param":"ticket","path":"slot"}}},
+                    {"set":{"object":"ambustretcher9","var":"VAR 1"},"value":0},
+                    {"set":{"object":"ambustretcher9","var":"VAR 2"},"value":3},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher9","target":"ambulance4","state":"patient_packed_stretcher_var2_3"}},
+                    {"set":{"object":"ambulance4","var":"VAR 2"},"value":1},
+                    {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambustretcher9"}},
+                    {"if": {"has_object":"ambustretcher9"}, "eq": 1,
+                      "then": [
+                        {"try": [
+                            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                            {"drive_object":{"name":"ambustretcher9","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambustretcher9"},{"bearing":0,"dist":0,"object":{"local":"AMBU4_X"}},{"bearing2":180,"dist":6,"object":"ambulance4"},"ambulance4"],"VAR1":1,"speed":5}},
+                            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry live ground load objects","state":"drive_done"}}
+                          ],
+                          "catch": [
+                            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambustretcher9","target":"multipatient registry live ground load objects","state":{"text":"stretcher_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+                        ]}
+                    ]},
+                    {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher9","target":"ambulance4","state":"stretcher_drive_to_vehicle_done"}},
+                    {"if": {"has_object":"ambustretcher9"}, "eq": 1,
+                      "then": [
+                        {"set":{"object":"ambustretcher9","var":"VAR 1"},"value":0},
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher9","target":"ambulance4","state":{"text":"stretcher_after_drive_distance_to_vehicle {0}","params":[{"round":{"location":"ambustretcher9","var":"distance:m","to":"ambulance4"},"to":1}]}}}
+                    ]},
+                    {"try": [
+                        {"set":{"param":"mutation"},"value":{"struct":{"js:get":"Object"},"function":"assign","params":[{"param":"record"},{"create_struct":{"shelter":"ambulance4","location":"ambulance4"}}]}}
+                      ],
+                      "catch": [
+                        {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_crew","actor":"ambustretcher9","target":"ambulance4","state":{"text":"record_shelter_error {0}","params":[{"param":"$ERROR"}]}}}
+                    ]},
+                    {"call_macro":"multipatient registry ambulance scene point","params":{"vehicle":2,"target":"ambumedic9"}},
+                    {"if": {"has_object":"ambumedic9"}, "eq": 1,
+                      "then": [
+                        {"try": [
+                            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry live ground load objects","state":"drive_start"}},
+                            {"call_macro":"crew walk speed","params":{"actor":"ambumedic9","vmin":4,"vmax":5},"result":"cws_sp"},
+                            {"drive_object":{"name":"ambumedic9","to":[{"closest":["LUP","RUP","RDWN","LDWN"],"to":"ambumedic9"},{"bearing":0,"dist":0,"object":{"local":"AMBU4_X"}},{"bearing2":180,"dist":6,"object":"ambulance4"},"ambulance4"],"VAR1":1,"speed":{"param":"cws_sp"}}},
+                            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry live ground load objects","state":"drive_done"}}
+                          ],
+                          "catch": [
+                            {"call_macro":"ground crew runtime trace","params":{"macro":"ambulance_ops","actor":"ambumedic9","target":"multipatient registry live ground load objects","state":{"text":"medic_drive_error {0}","params":[{"param":"$ERROR"}]}}}
+                        ]},
+                        {"if": {"has_object":"ambumedic9"}, "eq": 1,
+                          "then": [
+                            {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
+                        ]}
+                    ]}
+                ]}
             ]}
         ]}
     ]},
@@ -7331,7 +8298,26 @@
               ],"else": [
                 {"if": {"param":"actor"}, "eq": "ambumedic2",
                   "then": [
-                    {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
+                    {"if": {"param":"actor"}, "eq": "ambumedic2",
+                      "then": [
+                        {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
+                    ]}
+                  ],"else": [
+                    {"if": {"param":"actor"}, "eq": "ambumedic8",
+                      "then": [
+                        {"if": {"param":"actor"}, "eq": "ambumedic8",
+                          "then": [
+                            {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
+                        ]}
+                      ],"else": [
+                        {"if": {"param":"actor"}, "eq": "ambumedic9",
+                          "then": [
+                            {"if": {"param":"actor"}, "eq": "ambumedic9",
+                              "then": [
+                                {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
+                            ]}
+                        ]}
+                    ]}
                 ]}
             ]}
         ]}
@@ -7346,13 +8332,23 @@
           "then": [
             {"set":{"object":"ambumedic2","var":"VAR 1"},"value":0}
           ],"else": [
-            {"if": {"param":"actor"}, "eq": "hoist_crew",
+            {"if": {"param":"actor"}, "eq": "ambumedic8",
               "then": [
-                {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                {"set":{"object":"ambumedic8","var":"VAR 1"},"value":0}
               ],"else": [
-                {"if": {"param":"actor"}, "eq": "pax3",
+                {"if": {"param":"actor"}, "eq": "ambumedic9",
                   "then": [
-                    {"set":{"object":"pax3","var":"VAR 1"},"value":0}
+                    {"set":{"object":"ambumedic9","var":"VAR 1"},"value":0}
+                  ],"else": [
+                    {"if": {"param":"actor"}, "eq": "hoist_crew",
+                      "then": [
+                        {"set":{"object":"hoist_crew","var":"VAR 1"},"value":0}
+                      ],"else": [
+                        {"if": {"param":"actor"}, "eq": "pax3",
+                          "then": [
+                            {"set":{"object":"pax3","var":"VAR 1"},"value":0}
+                        ]}
+                    ]}
                 ]}
             ]}
         ]}

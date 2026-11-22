@@ -92,8 +92,8 @@ for (const name of ['UpdateRescueTrack', 'Update_dispatchphase from raw', 'Updat
 // synchronous: a distance must not decide whether the drive completed, so the gate is gone and the distance is traced instead.
 const multi = read('17-multipatient-runtime.json');
 const loadObjects = JSON.stringify(multi['multipatient registry live ground load objects']);
-assert.ok(!/"location":"ambustretcher[27]","var":"distance:m","to":"ambulance[12]"\},"gt":4/.test(loadObjects), 'the live ground load must not abort on the distance of the stretcher to the vehicle centre');
-assert.equal((loadObjects.match(/stretcher_after_drive_distance_to_vehicle/g) || []).length, 2, 'both vehicles trace the distance after the stretcher drive');
+assert.ok(!/"location":"ambustretcher[2789]","var":"distance:m","to":"ambulance[1-4]"\},"gt":4/.test(loadObjects), 'the live ground load must not abort on the distance of the stretcher to the vehicle centre');
+assert.equal((loadObjects.match(/stretcher_after_drive_distance_to_vehicle/g) || []).length, 4, 'every ambulance (1 to 4) traces the distance after the stretcher drive');
 assert.ok(JSON.stringify(multi['multipatient registry live ground load']).includes('objects_not_loaded'), 'a load that stops on the objects says why in the trace');
 
 // 5. Third tester report (2026-10-11, build 169.45): the second dispatch started on the location of the first. objective1 rebuilds

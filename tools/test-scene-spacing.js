@@ -77,18 +77,18 @@ const frontal = (road, a, b) => Math.abs(road.pos[a][1] - road.pos[b][1]);
 
 // ---- static contract --------------------------------------------------------------------------
 {
-  const watchers = ['park_ambulance1_scene', 'park_ambulance2_scene', 'park_police', 'park_firetruck1', 'park_firetruck2'];
+  const watchers = ['park_ambulance1_scene', 'park_ambulance2_scene', 'park_ambulance3_scene', 'park_ambulance4_scene', 'park_police', 'park_firetruck1', 'park_firetruck2'];
   for (const name of watchers) {
     const calls = collect(macros[name], (c) => c.create_thread && JSON.stringify(c.create_thread.commands) === JSON.stringify([{ call_macro: 'scene spacing watch' }]));
     assert.equal(calls.length, 1, `${name} starts the scene watchdog once, in its own thread`);
   }
-  assert.deepEqual(collect(macros['scene spacing watch'], (c) => c.call_macro).map((c) => c.call_macro), ['scene spacing ambulance2', 'scene spacing ambulance1', 'scene spacing police'], 'ambulance 2, ambulance 1, then the police; no fire engine step');
+  assert.deepEqual(collect(macros['scene spacing watch'], (c) => c.call_macro).map((c) => c.call_macro), ['scene spacing ambulance2', 'scene spacing ambulance3', 'scene spacing ambulance4', 'scene spacing ambulance1', 'scene spacing police'], 'ambulances 2, 3, 4, ambulance 1, then the police; no fire engine step');
   // priority: nobody reverses for a lower priority vehicle, the fire engines never reverse
   const yields = (name) => collect(macros[name], (c) => c.call_macro === 'scene spacing pair').length;
-  assert.equal(yields('scene spacing ambulance1'), 3); assert.equal(yields('scene spacing ambulance2'), 3); assert.equal(yields('scene spacing police'), 4);
+  assert.equal(yields('scene spacing ambulance1'), 5); assert.equal(yields('scene spacing ambulance2'), 3); assert.equal(yields('scene spacing ambulance3'), 4); assert.equal(yields('scene spacing ambulance4'), 5); assert.equal(yields('scene spacing police'), 6);
   const text = (name) => JSON.stringify(macros[name]);
   assert.ok(!text('scene spacing ambulance1').includes('"location":"police"') && !text('scene spacing ambulance1').includes('"has_object":"police"'), 'an ambulance never yields to the police');
-  for (const name of ['scene spacing ambulance1', 'scene spacing ambulance2', 'scene spacing police', 'scene spacing watch', 'scene spacing pair']) {
+  for (const name of ['scene spacing ambulance1', 'scene spacing ambulance2', 'scene spacing ambulance3', 'scene spacing ambulance4', 'scene spacing police', 'scene spacing watch', 'scene spacing pair']) {
     assert.equal(collect(macros[name], (c) => c.set?.object?.startsWith('firetruck') || c.drive_object?.name?.startsWith('firetruck')).length, 0, `${name} never moves a fire engine`);
     assert.ok(!text(name).includes('bearing2'), `${name} never moves sideways`);
   }

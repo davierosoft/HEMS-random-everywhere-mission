@@ -44,9 +44,9 @@ const calls = [];
 for (const [name, body] of Object.entries(macros)) {
   collect(body, (n) => n.call_macro === 'Query closest nodes with sampling').forEach((n) => calls.push({ macro: name, params: n.params }));
 }
-assert.equal(calls.length, 13, 'thirteen callers of the sampling query');
+assert.equal(calls.length, 15, 'fifteen callers of the sampling query (two more: ambulances 3 and 4)');
 const soft13 = calls.filter((c) => c.params.NONBLOCKING === 1).map((c) => c.params.LOCATION_NAME).sort();
-assert.deepEqual(soft13, ['ambu1test', 'ambu2test', 'fire_station', 'hangar', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'police_station', 'police_station'].sort(), 'the hangar, the hospital door, the stations and the ambulance tests do not bother the user');
+assert.deepEqual(soft13, ['ambu1test', 'ambu2test', 'ambu3test', 'ambu4test', 'fire_station', 'hangar', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'hospitaltemp', 'police_station', 'police_station'].sort(), 'the hangar, the hospital door, the stations and the ambulance tests do not bother the user');
 const hardCalls = calls.filter((c) => c.params.NONBLOCKING !== 1);
 assert.deepEqual(hardCalls.map((c) => c.params.LOCATION_NAME), ['userA'], 'the search of the pitch keeps the error: nothing follows it');
 

@@ -20,3 +20,5 @@ German table (RESCUETRACK_ID 1) key to phase: 0 Abgemeldet (8), 1 Frei Wache (6)
 ## Open
 - Needs a build 170.51 (an explicit request), then `ui-texts.js sync` and the DE/FR/IT translations of the new English texts (log-off and "already accepted" messages, "8. Resource logged off", CARLS texts); runtime test in the simulator (checklist in his notes).
 - Test updated: `tools/test-end-of-mission-flow.js` (the writer of `MISSION_END_WAITING` 2 is now `end shift`). `tools/test-snapshot-ground-guards.js` fails on `DF_DBG_STATE` also on the 170.50 artifact (pre-existing, not part of this change).
+
+- Translations (2026-11-22, 170.53): the two refusal messages are plain `set_message` fields (UI.3908-3911, DE/FR/IT). The status names (`statusMessages0/1`), `Status sent: {0}` and the CARLS short texts are not reachable by the screen-text pipeline: draft Companion issue 170 in `C:\re41\outputs\flight-constraints\Issue_STATUS_TEXTS_TRANSLATION_draft.md` (not opened).
