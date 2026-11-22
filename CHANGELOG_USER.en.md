@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.55. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.56. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1076,6 +1076,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.55.
 - **Test:** Load a saved custom profile and check that every settings page option shows a selected button; pick each factory profile and check crew tips and chatter are on and fuel is FIXED only for ROOKIE PILOT.
 
+### Settings entries in the right section
+
+- The winch control mode now appears under the winch settings and the tablet wifi connection under the avionics settings, instead of inside another section. The ULTRAFAST and FAST buttons now mark the settings profile as CUSTOM like every other change.
+- **Build history:** 0.997 170.56.
+- **Test:** Open the settings page, expand the winch and avionics sections and check the two entries; press ULTRAFAST and check the profile shows CUSTOM.
+
 ### The destination cannot be confirmed twice
 
 - After the hospital destination is confirmed, the destination page is replaced and a map or custom database selection still waiting is cancelled, so a second confirmation can no longer start a second set of ambulance arrivals ("duplicate object" error).
@@ -2146,7 +2152,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.32 (this release):** The Debug page and the snapshot open the saved-game table before reading it (see the entry above).
-- **0.997 170.55 (this release):** Settings no longer blank after loading an older saved profile, the factory profiles complete, and the destination that cannot be confirmed twice (see the entries above).
+- **0.997 170.56 (this release):** Settings entries in the right section (see the entry above).
+- **0.997 170.55:** Settings no longer blank after loading an older saved profile, the factory profiles complete, and the destination that cannot be confirmed twice (see the entries above).
 - **0.997 170.54:** The CALL AMBULANCE button and the third and fourth ambulance (see Call a third and fourth ambulance from the medical page).
 - **0.997 170.53:** The systolic pressure ceiling of 230 and the translated status refusal messages (see the entries above).
 - **0.997 170.52:** Recorded crew voices for the chats and the fixed crew lines (see Recorded crew voices for the chats and the fixed crew lines).

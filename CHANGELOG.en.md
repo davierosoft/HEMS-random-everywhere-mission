@@ -1,3 +1,8 @@
+## Release 0.997 170.56
+
+- Settings: winch control and tablet wifi rows moved to their own sections, ULTRAFAST/FAST mark the profile custom
+- Settings: winch control and tablet wifi rows moved to their own sections, ULTRAFAST/FAST mark the profile custom
+
 ## Release 0.997 170.55
 
 - Settings defaults and profiles: stored profile without a key keeps the default, factory profiles complete, FUEL_START and eight options join the profiles, destination confirmation closes a pending map selection and rebuilds the dispatch page
