@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.52. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.53. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1064,6 +1064,13 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.49.
 - **Test:** Fly a residential scene with three or four injured and check that both ambulances start.
 
+### Wrong vasopressor can raise the pressure up to 230
+
+- The systolic pressure ceiling of the multi-patient registry is now 230 (it was 220), so a wrong vasopressor shows the full value the doctor specified and it is no longer cut back.
+- **Build history:** 0.997 170.53.
+- **Test:** With two patients, give the wrong vasopressor and check the systolic pressure on the tablet can go above 220.
+
+
 ## UI
 
 ### Status bar with connection icons and a clean dispatcher message
@@ -2055,6 +2062,12 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.52.
 - **Test:** Choose recorded voices in the Mission Companion, accept a dispatch with the whole crew aboard and listen to the boarding and briefing chats; then fly an approach and a ground operation and listen to the fixed crew lines.
 
+### Status refusal messages in your language
+
+- When the log-off status is refused during a mission, or the accept status is pressed while a dispatch is active, the message now appears in the screen language of the Companion (German, French or Italian) instead of English only.
+- **Build history:** 0.997 170.53.
+- **Test:** With the Companion in French, press the log-off status during a mission and read the message.
+
 ## Build coverage ledger
 
 Every build in the requested coverage has been reviewed. The ledger avoids repeating player-facing descriptions already listed above.
@@ -2115,7 +2128,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.32 (this release):** The Debug page and the snapshot open the saved-game table before reading it (see the entry above).
-- **0.997 170.52 (this release):** Recorded crew voices for the chats and the fixed crew lines (see Recorded crew voices for the chats and the fixed crew lines).
+- **0.997 170.53 (this release):** The systolic pressure ceiling of 230 and the translated status refusal messages (see the entries above).
+- **0.997 170.52:** Recorded crew voices for the chats and the fixed crew lines (see Recorded crew voices for the chats and the fixed crew lines).
 - **0.997 170.51:** Dispatcher status reports that follow lift-off, flight and log-off (see Dispatcher status reports follow the real flight).
 - **0.997 170.50:** Flight limits for lateral and braking load, noise and headset, and the crew headset VOX glitch (see the entries above).
 - **0.997 170.33-170.49:** Voice commands page language, destination page and voice commands, autosave and heartbeat fixes, manual transport choices, Direction Finder tuning, wind and rotor noise context, second ambulance start, five new emergencies and the optional flight limits (see the entries above).

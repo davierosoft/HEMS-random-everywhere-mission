@@ -1,3 +1,8 @@
+## Release 0.997 170.53
+
+- Declare version check and voice say macros changed since the baseline (170.52 recorded voice counters and the version string)
+- Systolic pressure ceiling 230 in the multipatient registry physiology and translatable status refusal messages (DE/FR/IT)
+
 ## Release 0.997 170.52
 
 - voice say calls the recorded counters first
