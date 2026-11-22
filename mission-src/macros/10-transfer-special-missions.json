@@ -1082,6 +1082,8 @@
                 {"sleep":3},
                 {"call_macro":"user destination menu"}
               ],"else": [
+                {"call_macro":"destination close selection"},
+                {"call_macro":"Mission dispatch"},
                 {"call_macro":"manual_hospital_destination_setup"}
             ]}
         ]}
@@ -1096,6 +1098,8 @@
             {"sleep":1},
             {"call_macro":"user destination menu"}
           ],"else": [
+            {"call_macro":"destination close selection"},
+            {"call_macro":"Mission dispatch"},
             {"sleep":1},
             {"create_thread": {
               "commands": [
@@ -1114,6 +1118,8 @@
             {"sleep":1},
             {"call_macro":"user destination menu"}
           ],"else": [
+            {"call_macro":"destination close selection"},
+            {"call_macro":"Mission dispatch"},
             {"sleep":1},
             {"set_message":{"text":"Waiting for crew to be aboard before proceeding"}},
             {"wait_for":{"var":["L:HOISTED","number"]},"eq":1},
@@ -1143,6 +1149,8 @@
                 {"sleep":3},
                 {"call_macro":"user destination menu"}
               ],"else": [
+                {"call_macro":"destination close selection"},
+                {"call_macro":"Mission dispatch"},
                 {"call_macro":"manual_hospital_destination_setup"}
             ]}
         ]}
@@ -1157,6 +1165,8 @@
             {"sleep":3},
             {"call_macro":"crew emergency destination menu"}
           ],"else": [
+            {"call_macro":"destination close selection"},
+            {"call_macro":"Mission dispatch"},
             {"set":{"local":"CREW_DEST_CONFIRMED"},"value":"yes"}
         ]}
     ]}
@@ -1214,6 +1224,18 @@
     ]},
     {"call_macro":"destination selection done"}
   ],
+  "destination close selection": [
+    {"#comment":"A confirmed destination closes a map or custom DB selection that is still waiting (ACCEPT / CANCEL on the map, custom DB page): an automatic reject, so the destination cannot be changed after the confirmation. destination_close_auto tells destination selection done not to open the destination page again."},
+    {"if": {
+      "or": [
+        {"require":{"local":"destination_map_waiting"},"eq":1},
+        {"require":{"local":"destination_db_waiting"},"eq":1}
+      ]}, "eq": 1,
+      "then": [
+        {"set":{"local":"destination_close_auto"},"value":1},
+        {"call_macro":"destination cancel selection"}
+    ]}
+  ],
   "destination cancel selection": [
     {"#comment":"CANCEL SELECTION: ends a map or custom DB selection that is waiting (the page was opened again from the briefing while it runs). The map actions are removed and accept is set to reject, so the waiting macro continues as it does for the Cancel of the map; the custom DB wait ends with modalwait cancel. The selection macros end in destination selection done, which clears the busy flag."},
     {"call_macro":"trace button","params":{"kind":"page","name":"Cancel selection"}},
@@ -1234,6 +1256,14 @@
   ],
   "destination selection done": [
     {"#comment":"A hospital was selected from the map, the list or the custom DB, or the selection was cancelled or discarded (Back link of the custom DB page, reject on the map): the busy and waiting flags go down and the destination page opens again with the current destination, to confirm or edit it (user rule 2026-11-18, replaces the rule of 2026-11-16)."},
+    {"if": {"local":"destination_close_auto"}, "eq": 1,
+      "then": [
+        {"set":{"local":"destination_close_auto"},"value":0},
+        {"set":{"local":"destination_map_waiting"},"value":0},
+        {"set":{"local":"destination_db_waiting"},"value":0},
+        {"set":{"local":"destination_busy"},"value":0},
+        {"return":0}
+    ]},
     {"set":{"local":"destination_map_waiting"},"value":0},
     {"set":{"local":"destination_db_waiting"},"value":0},
     {"set":{"local":"destination_busy"},"value":0},

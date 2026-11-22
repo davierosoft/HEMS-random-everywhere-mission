@@ -30,7 +30,7 @@ assert.strictEqual(load({}, null), null, 'no value: the default of objective1 ap
 // the migration comes after the load of the value
 function findArrays(node, out = []) { if (Array.isArray(node)) { out.push(node); node.forEach((c) => findArrays(c, out)); } else if (node && typeof node === 'object') Object.values(node).forEach((c) => findArrays(c, out)); return out; }
 const arr = findArrays(macros).find((a) => a.includes(mig));
-const iSet = arr.findIndex((c) => c.set && c.set.global === 'location_ref' && c.value && c.value.key === 'location_ref');
+const iSet = arr.findIndex((c) => c.if && c.if.local === 'preset_read' && Array.isArray(c.then) && c.then.some((t) => t.set && t.set.global === 'location_ref'));
 assert.ok(iSet >= 0 && iSet < arr.indexOf(mig), 'the migration follows the load of the value');
 // the briefing does not show the option (user rule 2026-11-06: no debug values on the briefing)
 assert.ok(!fs.readFileSync(path.join(__dirname, '..', 'mission-src/root/03-briefing.json'), 'utf8').includes('location_ref'), 'briefing has no location_ref');

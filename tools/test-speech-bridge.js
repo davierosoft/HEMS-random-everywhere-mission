@@ -55,7 +55,7 @@ assert.equal(result.count, bridge.ACTIONS.length);
 {
   assert.ok(text(macros['settings first run defaults']).includes('{"if":{"global":"SPEECH_COMMANDS"},"eq":null,"then":[{"set":{"global":"SPEECH_COMMANDS"},"value":"yes"}]}'), 'first-run default yes');
   assert.ok(text(macros['save custom aircraft profile']).includes('"key":"SPEECH_COMMANDS"},"value":{"global":"SPEECH_COMMANDS"}'), 'saved in the aircraft profile');
-  assert.ok(text(macros['load custom aircraft profile']).includes('"global":"SPEECH_COMMANDS"},"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SPEECH_COMMANDS"}'), 'loaded from the aircraft profile');
+  assert.ok(text(macros['load custom aircraft profile']).includes('"value":{"table":{"static":{"param":"PROFILE_TABLE"}},"key":"SPEECH_COMMANDS"}') && text(macros['load custom aircraft profile']).includes('"set":{"global":"SPEECH_COMMANDS"},"value":{"local":"preset_read"}'), 'loaded from the aircraft profile');
   for (const profile of ['DEFAULT', 'ROOKIE PILOT', 'EXPERT PILOT', 'EXPERT HEMS']) assert.ok(text(macros[`aircraft factory ${profile}`]).includes('"set":{"global":"SPEECH_COMMANDS"},"value":"yes"'), 'factory profile ' + profile + ' keeps the speech commands on');
   const settings = text(macros.settings);
   assert.ok(settings.includes('"title":"OFF","select_condition":{"require":{"global":"SPEECH_COMMANDS"},"ne":"yes"}') && settings.includes('"set":{"global":"SPEECH_COMMANDS"},"value":"yes"},{"call_macro":"mark aircraft profile custom"},{"call_macro":"speech bridge start"}'), 'tablet switch starts the bridge and marks the profile custom');

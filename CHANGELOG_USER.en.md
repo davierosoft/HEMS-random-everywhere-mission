@@ -1,6 +1,6 @@
 # HEMS Random Everywhere Missions - User Changelog
 
-This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.54. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
+This changelog covers every final player-facing change from the July baseline: 0.997 1 through 0.997 142, plus every development checkpoint and release through 0.997 170.55. It is written for pilots: it explains what changes on the tablet and in the mission. Each feature appears once only, in its most relevant section.
 
 It also covers the Mission Companion app up to version 0.37, which speaks the voices of the mission and updates itself and the mission.
 
@@ -1070,6 +1070,18 @@ The checks below are simulator checks. The changes recorded after build 142, up 
 - **Build history:** 0.997 170.54.
 - **Test:** Manual HEMS control, three injured, choose GROUND for the first two patients and check that CALL AMBULANCE appears for the third and the next ambulance arrives.
 
+### Settings no longer blank after loading an older saved profile
+
+- Loading a saved settings profile written before an option existed no longer erases that option: it keeps its default, so every button shows a selection. The factory profiles now also carry the crew voice, crew chatter, tips, tips language, easter eggs, clock, dispatcher, skipping of online searches, fuel mode, fuel start level, fuel truck, kit and maintenance presence options.
+- **Build history:** 0.997 170.55.
+- **Test:** Load a saved custom profile and check that every settings page option shows a selected button; pick each factory profile and check crew tips and chatter are on and fuel is FIXED only for ROOKIE PILOT.
+
+### The destination cannot be confirmed twice
+
+- After the hospital destination is confirmed, the destination page is replaced and a map or custom database selection still waiting is cancelled, so a second confirmation can no longer start a second set of ambulance arrivals ("duplicate object" error).
+- **Build history:** 0.997 170.55.
+- **Test:** Choose a hospital on the map, reopen the menu, confirm the destination and check that the map ACCEPT and CANCEL buttons disappear and no error appears on arrival.
+
 ### Wrong vasopressor can raise the pressure up to 230
 
 - The systolic pressure ceiling of the multi-patient registry is now 230 (it was 220), so a wrong vasopressor shows the full value the doctor specified and it is no longer cut back.
@@ -2134,7 +2146,8 @@ Every build in the requested coverage has been reviewed. The ledger avoids repea
 - **0.997 170.02:** The second dispatch offered with its ACCEPT DISPATCH button and no repeat of the previous incident when nothing can be drawn (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.03:** No late offer of a replaced first dispatch, and complete dispatch diagnostics (see The second dispatch is offered with its ACCEPT DISPATCH button).
 - **0.997 170.32 (this release):** The Debug page and the snapshot open the saved-game table before reading it (see the entry above).
-- **0.997 170.54 (this release):** The CALL AMBULANCE button and the third and fourth ambulance (see Call a third and fourth ambulance from the medical page).
+- **0.997 170.55 (this release):** Settings no longer blank after loading an older saved profile, the factory profiles complete, and the destination that cannot be confirmed twice (see the entries above).
+- **0.997 170.54:** The CALL AMBULANCE button and the third and fourth ambulance (see Call a third and fourth ambulance from the medical page).
 - **0.997 170.53:** The systolic pressure ceiling of 230 and the translated status refusal messages (see the entries above).
 - **0.997 170.52:** Recorded crew voices for the chats and the fixed crew lines (see Recorded crew voices for the chats and the fixed crew lines).
 - **0.997 170.51:** Dispatcher status reports that follow lift-off, flight and log-off (see Dispatcher status reports follow the real flight).

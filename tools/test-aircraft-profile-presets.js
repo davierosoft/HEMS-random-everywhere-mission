@@ -56,6 +56,27 @@ for (const [macro, slot] of [['savetemp', 0], ['save1', 1], ['save2', 2], ['save
   requireTrue(!serialized.match(/toLocaleTimeString[^}]*params[^\]]*,\s*\{/), `${macro} passes unsupported locale options to toLocaleTimeString`);
 }
 
+
+// a stored profile without a key must not erase the default of the global (SETTINGS_DEFAULTS.md)
+const rawLoad = [];
+(function scan(v) { if (Array.isArray(v)) v.forEach(scan); else if (v && typeof v === 'object') { if (v.set && v.set.global && v.value && v.value.table && v.value.key) rawLoad.push(v.set.global); Object.values(v).forEach(scan); } })(presets['load custom aircraft profile']);
+requireTrue(rawLoad.length === 0, `load custom aircraft profile writes straight from a table key (a missing key would erase the default): ${rawLoad.slice(0, 5).join(', ')}`);
+
+
+// the value of a global found null at the first start is the value of the factory DEFAULT profile (owner rule 2026-11-22, SETTINGS_DEFAULTS.md)
+{
+  const firstRun = {};
+  const lifeObjective = lifecycle.objective1;
+  const bootstrap = JSON.parse(fs.readFileSync(path.join(root, 'mission-src/macros/01-bootstrap-settings.json'), 'utf8'))['settings first run defaults'];
+  (function scan(v) { if (Array.isArray(v)) v.forEach(scan); else if (v && typeof v === 'object') { if (v.if && v.if.global && v.eq === null && Array.isArray(v.then)) { const s = v.then.find((x) => x && x.set && x.set.global === v.if.global); if (s && !(v.if.global in firstRun)) firstRun[v.if.global] = s.value; } Object.values(v).forEach(scan); } })([bootstrap, lifeObjective]);
+  const factoryDefault = {};
+  (function scan(v) { if (Array.isArray(v)) v.forEach(scan); else if (v && typeof v === 'object') { if (v.set && v.set.global && 'value' in v) factoryDefault[v.set.global] = v.value; Object.values(v).forEach(scan); } })(profiles['aircraft factory DEFAULT']);
+  // owner decision 2026-11-22: these keep their first-start value, the factory DEFAULT profile differs on purpose
+  const knownDivergence = new Set(['BOARDING_HOLD_GLOBAL', 'HOIST_SPEED', 'SAR_MAX_RADIUS', 'CANCELTHRESHOLD', 'MARSHAL_START_ENABLED', 'RINGONCE', 'CARLSPBIT']);
+  const differ = Object.keys(factoryDefault).filter((k) => !knownDivergence.has(k) && k in firstRun && typeof factoryDefault[k] !== 'object' && JSON.stringify(firstRun[k]) !== JSON.stringify(factoryDefault[k]));
+  requireTrue(differ.length === 0, `first-start default differs from the factory DEFAULT profile: ${differ.map((k) => `${k} ${JSON.stringify(firstRun[k])} vs ${JSON.stringify(factoryDefault[k])}`).join('; ')}`);
+}
+
 const renderer = profiles['aircraft profiles page'].find((entry) => Array.isArray(entry.set_dispatch));
 requireTrue(renderer, 'aircraft profile renderer is missing');
 const profilePage = profiles['aircraft profiles page'];

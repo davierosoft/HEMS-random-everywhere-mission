@@ -1,3 +1,7 @@
+## Release 0.997 170.55
+
+- Settings defaults and profiles: stored profile without a key keeps the default, factory profiles complete, FUEL_START and eight options join the profiles, destination confirmation closes a pending map selection and rebuilds the dispatch page
+
 ## Release 0.997 170.54
 
 - Additional ground ambulances 3 and 4 (macros/27-ambulance-additional.json, generated from the ambulance 2 family), ambulance next free / call additional ambulance, CALL AMBULANCE button of the HEMS medical page; ambulance 3 and 4 in the registry, transport check, clearance, reset and snapshot; DE/FR/IT texts UI.3912-3916
