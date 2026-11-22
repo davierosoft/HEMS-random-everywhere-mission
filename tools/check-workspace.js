@@ -61,6 +61,7 @@ const scripts = [
   'test-aircraft-profile-presets.js',
   'test-radio-context.js',
   'test-voice-texts.js',
+  'pack-versions.js',
   'ui-texts.js',
   'test-ui-text-width.js',
   'test-tip-ui-names.js',
